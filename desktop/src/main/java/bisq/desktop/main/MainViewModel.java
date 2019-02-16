@@ -423,10 +423,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private void showFirstPopupIfResyncSPVRequested() {
         Popup firstPopup = new Popup<>();
         firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
-        if (getBtcSyncProgress().get() == 1) {
+        if (bisqSetup.getBtcSyncProgress().get() == 1) {
             showSecondPopupIfResyncSPVRequested(firstPopup);
         } else {
-            getBtcSyncProgress().addListener((observable, oldValue, newValue) -> {
+            bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> {
                 if ((double) newValue == 1)
                     showSecondPopupIfResyncSPVRequested(firstPopup);
             });
@@ -525,7 +525,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         return combinedInfo;
     }
 
-    DoubleProperty getBtcSyncProgress() {
+    DoubleProperty getCombinedSyncProgress() {
         return combinedSyncProgress;
     }
 
