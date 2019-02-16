@@ -48,9 +48,18 @@ public class RevolutForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
-                ((RevolutAccountPayload) paymentAccountPayload).getAccountId());
+        String accountId = ((RevolutAccountPayload) paymentAccountPayload).getAccountId();
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, getTitle(accountId), accountId);
+
         return gridRow;
+    }
+
+    private static String getTitle(String accountId) {
+        // From 0.9.4 on we only allow phone nr. as with emails we got too many disputes as users used an email which was
+        // not registered at Revolut. It seems that phone numbers need to be registered at least we have no reports from
+        // arbitrators with such cases. Thought email is still supported for backward compatibility.
+        // We might still get emails from users who have registered when email was supported
+        return accountId.contains("@") ? Res.get("payment.revolut.email") : Res.get("payment.revolut.phoneNr");
     }
 
     public RevolutForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
@@ -65,7 +74,7 @@ public class RevolutForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId"));
+        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.phoneNr"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setAccountId(newValue);
@@ -102,8 +111,8 @@ public class RevolutForm extends PaymentMethodForm {
                 account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.revolut.accountId"),
-                account.getAccountId()).second;
+        String accountId = account.getAccountId();
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, getTitle(accountId), accountId).second;
         field.setMouseTransparent(false);
         addLimitations(true);
         addCurrenciesGrid(false);

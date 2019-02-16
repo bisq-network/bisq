@@ -79,6 +79,7 @@ import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
+import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
@@ -263,6 +264,13 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .show();
                         } else if (paymentAccount instanceof CashDepositAccount) {
                             new Popup<>().information(Res.get("payment.cashDeposit.info"))
+                                    .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iConfirm"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
+                        } else if (paymentAccount instanceof RevolutAccount) {
+                            new Popup<>().information(Res.get("payment.revolut.info"))
                                     .width(700)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
