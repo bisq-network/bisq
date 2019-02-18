@@ -394,21 +394,24 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void addPayoutAmountTextFields() {
         buyerPayoutAmountInputTextField = new InputTextField();
+        buyerPayoutAmountInputTextField.setLabelFloat(true);
         buyerPayoutAmountInputTextField.setEditable(false);
         buyerPayoutAmountInputTextField.setPromptText(Res.get("disputeSummaryWindow.payoutAmount.buyer"));
 
         sellerPayoutAmountInputTextField = new InputTextField();
+        sellerPayoutAmountInputTextField.setLabelFloat(true);
         sellerPayoutAmountInputTextField.setPromptText(Res.get("disputeSummaryWindow.payoutAmount.seller"));
         sellerPayoutAmountInputTextField.setEditable(false);
 
         isLoserPublisherCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.payoutAmount.invert"));
 
         VBox vBox = new VBox();
-        vBox.setSpacing(10);
+        vBox.setSpacing(15);
         vBox.getChildren().addAll(buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField, isLoserPublisherCheckBox);
-
-        VBox vBox2 = addTopLabelWithVBox(gridPane, rowIndex, Res.get("disputeSummaryWindow.payout"), vBox, 10).second;
-        GridPane.setColumnIndex(vBox2, 1);
+        GridPane.setMargin(vBox, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setColumnIndex(vBox, 1);
+        gridPane.getChildren().add(vBox);
     }
 
     private void addReasonControls() {
