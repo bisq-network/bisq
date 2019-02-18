@@ -139,18 +139,10 @@ public abstract class Metric extends Configurable implements Runnable {
     protected abstract void execute();
 
     /**
-     * Initiate graceful shutdown of the Metric.
-     */
-    public void shutdown() {
-        log.debug("{} shutdown requested", getName());
-        disable();
-    }
-
-    /**
      * initiate an orderly shutdown on all metrics. Blocks until all metrics are
      * shut down or after one minute.
      */
-    public final static void haltAllMetrics() {
+    public static void haltAllMetrics() {
         executor.shutdown();
 
         try {

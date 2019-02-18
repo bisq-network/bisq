@@ -75,8 +75,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private NetworkNode networkNode;
     private final File torHiddenServiceDir = new File("monitor/work/metric_p2pNetworkLoad");
     private final ThreadGate hsReady = new ThreadGate();
-    private Map<String, Counter> buckets = new ConcurrentHashMap<>();
-    private KeepAliveManager keepAliveManager;
+    private final Map<String, Counter> buckets = new ConcurrentHashMap<>();
 
     /**
      * Buffers the last X message we received. New messages will only be logged in case
@@ -187,7 +186,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 peerExchangeManager
                         .requestReportedPeersFromSeedNodes(seedNodeRepository.getSeedNodeAddresses().iterator().next());
 
-                keepAliveManager = new KeepAliveManager(networkNode, peerManager);
+                KeepAliveManager keepAliveManager = new KeepAliveManager(networkNode, peerManager);
                 keepAliveManager.start();
 
                 networkNode.addMessageListener(this);
@@ -254,12 +253,5 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
     @Override
     public void onRequestCustomBridges() {
-    }
-
-    @Override
-    public void shutdown() {
-        keepAliveManager.shutDown();
-
-        super.shutdown();
     }
 }

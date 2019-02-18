@@ -53,7 +53,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshot {
     }
 
     private class MyStatistics implements Statistics<Counter> {
-        private Map<String, Counter> buckets = new HashMap<>();
+        private final Map<String, Counter> buckets = new HashMap<>();
 
         @Override
         public Statistics create() {
