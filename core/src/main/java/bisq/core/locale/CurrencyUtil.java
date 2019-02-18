@@ -20,6 +20,7 @@ package bisq.core.locale;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.governance.asset.AssetService;
+import bisq.core.filter.FilterManager;
 
 import bisq.asset.Asset;
 import bisq.asset.AssetRegistry;
@@ -122,31 +123,38 @@ public class CurrencyUtil {
 
     public static List<CryptoCurrency> getMainCryptoCurrencies() {
         final List<CryptoCurrency> result = new ArrayList<>();
+        result.add(new CryptoCurrency("XRC", "Bitcoin Rhodium"));
+
         if (DevEnv.isDaoTradingActivated())
             result.add(new CryptoCurrency("BSQ", "BSQ"));
-        if (!baseCurrencyCode.equals("BTC"))
-            result.add(new CryptoCurrency("BTC", "Bitcoin"));
-        if (!baseCurrencyCode.equals("DASH"))
-            result.add(new CryptoCurrency("DASH", "Dash"));
+
+        result.add(new CryptoCurrency("BEAM", "Beam"));
+        result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("ETC", "Ether Classic"));
         result.add(new CryptoCurrency("GRC", "Gridcoin"));
-        if (!baseCurrencyCode.equals("LTC"))
-            result.add(new CryptoCurrency("LTC", "Litecoin"));
+        result.add(new CryptoCurrency("GRIN", "Grin"));
+        result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
-        result.add(new CryptoCurrency("MT", "Mycelium Token", true));
         result.add(new CryptoCurrency("NMC", "Namecoin"));
-        result.add(new CryptoCurrency("SC", "Siacoin"));
         result.add(new CryptoCurrency("SF", "Siafund"));
-        result.add(new CryptoCurrency("UNO", "Unobtanium"));
         result.add(new CryptoCurrency("ZEC", "Zcash"));
         result.sort(TradeCurrency::compareTo);
 
         return result;
     }
 
-    // At OKPay you can exchange internally those currencies
+    public static List<CryptoCurrency> getRemovedCryptoCurrencies() {
+        final List<CryptoCurrency> currencies = new ArrayList<>();
+        currencies.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
+        currencies.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
+        currencies.add(new CryptoCurrency("ACH", "AchieveCoin"));
+        currencies.add(new CryptoCurrency("SC", "SpaceCash"));
+        currencies.add(new CryptoCurrency("PPI", "PiedPiper Coin"));
+        currencies.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
+        return currencies;
+    }
+
     public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("USD"),
@@ -156,34 +164,6 @@ public class CurrencyUtil {
                 new FiatCurrency("UAH"),
                 new FiatCurrency("KZT"),
                 new FiatCurrency("BRL")
-        ));
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllOKPayCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("EUR"),
-                new FiatCurrency("USD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("HRK"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("ZAR"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("CNY")
         ));
         currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
@@ -390,7 +370,12 @@ public class CurrencyUtil {
         if (isCryptoCurrency(currencyCode)) {
             // We might not find the name in case we have a call for a removed asset.
             // If BTC is the code (used in tests) we also want return Bitcoin as name.
-            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" : Res.get("shared.na");
+            final Optional<CryptoCurrency> removedCryptoCurrency = getRemovedCryptoCurrencies().stream()
+                    .filter(cryptoCurrency -> cryptoCurrency.getCode().equals(currencyCode))
+                    .findAny();
+
+            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" :
+                    removedCryptoCurrency.isPresent() ? removedCryptoCurrency.get().getName() : Res.get("shared.na");
             return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(btcOrRemovedAsset);
         }
         try {
@@ -484,6 +469,12 @@ public class CurrencyUtil {
         throw new IllegalArgumentException("We are on mainnet and we could not find an asset with network type mainnet");
     }
 
+    public static Optional<Asset> findAsset(String tickerSymbol) {
+        return assetRegistry.stream()
+                .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
+                .findAny();
+    }
+
     public static Optional<Asset> findAsset(String tickerSymbol, BaseCurrencyNetwork baseCurrencyNetwork) {
         return assetRegistry.stream()
                 .filter(asset -> asset.getTickerSymbol().equals(tickerSymbol))
@@ -492,9 +483,10 @@ public class CurrencyUtil {
     }
 
     // Excludes all assets which got removed by DAO voting
-    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService) {
+    public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService, FilterManager filterManager) {
         return getAllSortedCryptoCurrencies().stream()
                 .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
+                .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
     }
 }

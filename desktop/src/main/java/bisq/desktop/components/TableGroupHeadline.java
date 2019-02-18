@@ -70,7 +70,7 @@ public class TableGroupHeadline extends Pane {
     private void setActive() {
         setId("titled-group-bg-active");
         label.setId("titled-group-bg-label-active");
-        label.getStyleClass().add("highlight");
+        label.getStyleClass().add("highlight-static");
     }
 
     public String getText() {

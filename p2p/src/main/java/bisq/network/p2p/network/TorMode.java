@@ -35,11 +35,11 @@ import bisq.common.storage.FileUtil;
 public abstract class TorMode {
 
     /**
-     * The directory where the <code>private_key</code> file sits in. Kept private,
-     * because it is only valid for the {@link TorMode#doRollingBackup()} due to the
-     * inner workings of the <code>Netlayer</code> dependency.
+     * The sub-directory where the <code>private_key</code> file sits in. Kept
+     * private, because it only concerns implementations of {@link TorMode}.
      */
-    private final File hiddenServiceDirectory;
+    protected static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
+
     protected final File torDir;
 
     /**
@@ -51,9 +51,8 @@ public abstract class TorMode {
      *                         necessarily equal
      *                         {@link TorMode#getHiddenServiceDirectory()}.
      */
-    public TorMode(File torDir, String hiddenServiceDir) {
+    public TorMode(File torDir) {
         this.torDir = torDir;
-        this.hiddenServiceDirectory = new File(torDir, hiddenServiceDir);
     }
 
     /**
@@ -70,9 +69,9 @@ public abstract class TorMode {
      * other stuff to the hiddenServiceDir, thus, selecting nothing (i.e.
      * <code>""</code>) as a hidden service directory is fine. {@link ExternalTor},
      * however, does not have a Tor installation path and thus, takes the hidden
-     * service path literally. Hence, we set
-     * <code>"torDir/externalTorHiddenService"</code> as the hidden service
-     * directory.
+     * service path literally. Hence, we set <code>"torDir/hiddenservice"</code> as
+     * the hidden service directory. By doing so, we use the same
+     * <code>private_key</code> file as in {@link NewTor} mode.
      * 
      * @return <code>""</code> in {@link NewTor} Mode,
      *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
@@ -84,7 +83,7 @@ public abstract class TorMode {
      * Do a rolling backup of the "private_key" file.
      */
     protected void doRollingBackup() {
-        FileUtil.rollingBackup(hiddenServiceDirectory, "private_key", 20);
+        FileUtil.rollingBackup(new File(torDir, HIDDEN_SERVICE_DIRECTORY), "private_key", 20);
     }
 
 }

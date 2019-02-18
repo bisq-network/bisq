@@ -33,8 +33,13 @@ bg color of non edit textFields: fafafa
 }
 
 @font-face {
+    src: url("/fonts/IBMPlexSans-Light.ttf");
+}
+
+@font-face {
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
+
 
 .root {
     -bs-very-dark-grey3: #444; /* 3 usages */
@@ -298,12 +303,12 @@ bg color of non edit textFields: fafafa
     -fx-cursor: hand;
 }
 
-.jfx-button:hover {
-    -fx-background-color: derive(-bs-rd-grey-light, 30%);
+.jfx-button:hover, .jfx-button:focused {
+    -fx-background-color: derive(-bs-rd-grey-light, -10%);
 }
 
-.action-button:hover {
-    -fx-background-color: derive(-bs-rd-green-dark, 30%);
+.action-button:hover, .action-button:focused {
+    -fx-background-color: derive(-bs-rd-green-dark, -10%);
 }
 
 .action-button {
@@ -519,6 +524,10 @@ bg color of non edit textFields: fafafa
     -fx-background-radius: 15;
     -fx-pref-width: 15;
     -fx-pref-height: 15;
+}
+
+.jfx-badge.new .badge-pane {
+    -fx-pref-width: 30;
 }
 
 .jfx-badge .label {
@@ -1718,8 +1727,9 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-#buy-button-big:hover, #buy-button:hover {
-    -fx-background-color: derive(-bs-buy, 30%);
+#buy-button-big:hover, #buy-button:hover,
+#buy-button-big:focused, #buy-button:focused {
+    -fx-background-color: derive(-bs-buy, -10%);
 }
 
 #sell-button-big {
@@ -1733,8 +1743,9 @@ textfield */
     -fx-text-fill: -bs-rd-white;
 }
 
-#sell-button-big:hover, #sell-button:hover {
-    -fx-background-color: derive(-bs-sell, 30%);
+#sell-button-big:hover, #sell-button:hover,
+#sell-button-big:focused, #sell-button:focused {
+    -fx-background-color: derive(-bs-sell, -10%);
 }
 
 #sell-button-big.grey-style, #buy-button-big.grey-style,
@@ -1999,6 +2010,43 @@ textfield */
 
 .dao-remove-proposal-icon {
     -fx-text-fill: -fx-accent;
+}
+
+.dao-news-titled-group .titled-group-bg-label-active {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-teaser {
+    -fx-font-size: 1.538em;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-header {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-green-dark;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-news-section-content, .dao-news-content, .dao-news-section-link {
+    -fx-font-size: 0.923em;
+}
+
+.dao-news-section-content {
+    -fx-text-fill: -bs-rd-black;
+}
+
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-fill: -bs-rd-font-light;
+}
+
+.dao-news-link {
+    -fx-text-fill: -fx-accent;
+    -fx-padding: 16 0 0 0;
+}
+
+.dao-news-link .hyperlink {
+    -fx-fill: -fx-accent;
 }
 
 /********************************************************************************************************************

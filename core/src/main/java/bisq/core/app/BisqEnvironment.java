@@ -27,7 +27,6 @@ import bisq.core.filter.FilterManager;
 import bisq.network.NetworkOptionKeys;
 
 import bisq.common.CommonOptionKeys;
-import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.storage.Storage;
@@ -108,15 +107,6 @@ public class BisqEnvironment extends StandardEnvironment {
     }
 
     protected static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
-
-    public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
-        //noinspection ConstantConditions,PointlessBooleanExpression
-        return DevEnv.isDaoActivated() && isBaseCurrencySupportingBsq();
-    }
-
-    public static boolean isBaseCurrencySupportingBsq() {
-        return getBaseCurrencyNetwork().getCurrencyCode().equals("BTC");
-    }
 
     public static NetworkParameters getParameters() {
         return getBaseCurrencyNetwork().getParameters();

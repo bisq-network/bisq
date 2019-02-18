@@ -90,6 +90,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
@@ -118,18 +119,17 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
-    private final double initialOfferTableViewHeight = 109;
-    private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight / 4.0) + 10.0; // initial visible row count=4
+    private final double initialOfferTableViewHeight = 121;
+    private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight - 30) / 5.0; // initial visible row count=5, header height=30
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerOfferTableRow);
-        return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + (extraRows * pixelsPerOfferTableRow));
+        return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + ((extraRows + 1) * pixelsPerOfferTableRow));
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter,
                               @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
@@ -336,22 +336,29 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private void updateChartData() {
         seriesBuy.getData().clear();
         seriesSell.getData().clear();
+        areaChart.getData().clear();
+
+        final Supplier<Optional<? extends XYChart.Data>> optionalMaxSupplier = () ->
+                Optional.of(new XYChart.Data<>(Double.MAX_VALUE, Double.MAX_VALUE));
 
         final Optional<XYChart.Data> buyMinOptional = model.getBuyData().stream()
                 .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(() -> Optional.of(new XYChart.Data<>(Double.MAX_VALUE, Double.MAX_VALUE)));
+                .or(optionalMaxSupplier);
+
+        final Supplier<Optional<? extends XYChart.Data>> optionalMinSupplier = () ->
+                Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE));
 
         final Optional<XYChart.Data> buyMaxOptional = model.getBuyData().stream()
                 .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(() -> Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE)));
+                .or(optionalMinSupplier);
 
         final Optional<XYChart.Data> sellMinOptional = model.getSellData().stream()
                 .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(() -> Optional.of(new XYChart.Data<>(Double.MAX_VALUE, Double.MAX_VALUE)));
+                .or(optionalMaxSupplier);
 
         final Optional<XYChart.Data> sellMaxOptional = model.getSellData().stream()
                 .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(() -> Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE)));
+                .or(optionalMinSupplier);
 
         final double minValue = Double.min((double) buyMinOptional.get().getXValue(), (double) sellMinOptional.get().getXValue());
         final double maxValue = Double.max((double) buyMaxOptional.get().getXValue(), (double) sellMaxOptional.get().getXValue());
@@ -369,12 +376,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesBuy.getData().addAll(model.getBuyData());
         //noinspection unchecked
         seriesSell.getData().addAll(model.getSellData());
+        areaChart.getData().addAll(seriesBuy, seriesSell);
     }
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(initialOfferTableViewHeight);
-        tableView.setPrefHeight(121);
+        tableView.setPrefHeight(initialOfferTableViewHeight);
         tableView.setMinWidth(480);
         tableView.getStyleClass().add("offer-table");
 

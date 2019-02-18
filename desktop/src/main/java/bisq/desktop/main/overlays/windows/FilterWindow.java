@@ -140,6 +140,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
         InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.preventPublicBtcNetwork"));
+        CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("filterWindow.disableDao"));
 
         final Filter filter = filterManager.getDevelopersFilter();
         if (filter != null) {
@@ -180,6 +181,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
 
+            disableDaoCheckBox.setSelected(filter.isDisableDao());
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
@@ -264,7 +266,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             seedNodes,
                             priceRelayNodes,
                             preventPublicBtcNetworkCheckBox.isSelected(),
-                            btcNodes),
+                            btcNodes,
+                            disableDaoCheckBox.isSelected()),
                     keyInputTextField.getText()))
                 hide();
             else

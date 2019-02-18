@@ -25,7 +25,7 @@ public class Profiler {
     }
 
     public static String printSystemLoadString() {
-        return "System load: Memory (MB)): " + getUsedMemoryInMB() + " / No. of threads: " + Thread.activeCount();
+        return "System load: Memory (MB): " + getUsedMemoryInMB() + " / No. of threads: " + Thread.activeCount();
     }
 
     public static long getUsedMemoryInMB() {
@@ -35,4 +35,11 @@ public class Profiler {
         return total - free;
     }
 
+    public static long getFreeMemoryInMB() {
+        return Runtime.getRuntime().freeMemory() / 1024 / 1024;
+    }
+
+    public static long getTotalMemoryInMB() {
+        return Runtime.getRuntime().totalMemory() / 1024 / 1024;
+    }
 }

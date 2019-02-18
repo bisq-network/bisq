@@ -49,6 +49,7 @@ import bisq.common.util.Tuple4;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import com.jfoenix.controls.JFXComboBox;
@@ -158,9 +159,13 @@ public class FormBuilder {
     }
 
     public static Label addMultilineLabel(GridPane gridPane, int rowIndex, String text, double top) {
+        return addMultilineLabel(gridPane, rowIndex, text, top, 600);
+    }
+
+    public static Label addMultilineLabel(GridPane gridPane, int rowIndex, String text, double top, double maxWidth) {
         Label label = new AutoTooltipLabel(text);
         label.setWrapText(true);
-        label.setMaxWidth(600);
+        label.setMaxWidth(maxWidth);
         GridPane.setHalignment(label, HPos.LEFT);
         GridPane.setHgrow(label, Priority.ALWAYS);
         GridPane.setRowIndex(label, rowIndex);
@@ -309,7 +314,7 @@ public class FormBuilder {
     }
 
     public static HyperlinkWithIcon addHyperlinkWithIcon(GridPane gridPane, int rowIndex, String title, String url, double top) {
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, MaterialDesignIcon.LINK);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
@@ -318,7 +323,6 @@ public class FormBuilder {
         gridPane.getChildren().add(hyperlinkWithIcon);
         return hyperlinkWithIcon;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + HyperlinkWithIcon
@@ -340,7 +344,7 @@ public class FormBuilder {
                                                                              double top) {
         Label label = addLabel(gridPane, rowIndex, labelTitle, top);
 
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, AwesomeIcon.EXTERNAL_LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, MaterialDesignIcon.LINK);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
@@ -371,7 +375,7 @@ public class FormBuilder {
                                                                                       String value,
                                                                                       String url,
                                                                                       double top) {
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(value, AwesomeIcon.EXTERNAL_LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(value, MaterialDesignIcon.LINK);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         hyperlinkWithIcon.getStyleClass().add("hyperlink-with-icon");
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);

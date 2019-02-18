@@ -17,28 +17,147 @@
 
 package bisq.monitor;
 
-import bisq.monitor.metrics.MetricsModel;
+import bisq.monitor.metric.P2PNetworkLoad;
+import bisq.monitor.metric.P2PNetworkMessageSnapshot;
+import bisq.monitor.metric.P2PRoundTripTime;
+import bisq.monitor.metric.TorHiddenServiceStartupTime;
+import bisq.monitor.metric.TorRoundTripTime;
+import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.reporter.GraphiteReporter;
 
-import com.google.inject.Injector;
+import org.berndpruenster.netlayer.tor.NativeTor;
+import org.berndpruenster.netlayer.tor.Tor;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.io.File;
+import java.io.FileInputStream;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+
+
+import sun.misc.Signal;
+
+/**
+ * Monitor executable for the Bisq network.
+ *
+ * @author Florian Reimair
+ */
 @Slf4j
 public class Monitor {
-    @Setter
-    private Injector injector;
-    @Getter
-    private MetricsModel metricsModel;
 
-    public Monitor() {
+    public static final File TOR_WORKING_DIR = new File("monitor/monitor-tor");
+    private static String[] args = {};
+
+    public static void main(String[] args) throws Throwable {
+        Monitor.args = args;
+        new Monitor().start();
     }
 
-    public void startApplication() {
-        metricsModel = injector.getInstance(MetricsModel.class);
+    /**
+     * A list of all active {@link Metric}s
+     */
+    private final List<Metric> metrics = new ArrayList<>();
 
-        MonitorAppSetup appSetup = injector.getInstance(MonitorAppSetup.class);
-        appSetup.start();
+    /**
+     * Starts up all configured Metrics.
+     *
+     * @throws Throwable in case something goes wrong
+     */
+    private void start() throws Throwable {
+
+        // start Tor
+        Tor.setDefault(new NativeTor(TOR_WORKING_DIR, null, null, false));
+
+        // assemble Metrics
+        // - create reporters
+//        ConsoleReporter consoleReporter = new ConsoleReporter();
+        Reporter graphiteReporter = new GraphiteReporter();
+
+        // - add available metrics with their reporters
+        metrics.add(new TorStartupTime(graphiteReporter));
+        metrics.add(new TorRoundTripTime(graphiteReporter));
+        metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
+        metrics.add(new P2PRoundTripTime(graphiteReporter));
+        metrics.add(new P2PNetworkLoad(graphiteReporter));
+        metrics.add(new P2PNetworkMessageSnapshot(graphiteReporter));
+
+        // prepare configuration reload
+        // Note that this is most likely only work on Linux
+        Signal.handle(new Signal("USR1"), signal -> reload());
+
+        // configure Metrics
+        // - which also starts the metrics if appropriate
+        Properties properties = getProperties();
+        for (Metric current : metrics)
+            current.configure(properties);
+
+        // exit Metrics gracefully on shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                // set the name of the Thread for debugging purposes
+                setName("shutdownHook");
+
+                for (Metric current : metrics) {
+                    current.shutdown();
+                }
+
+                // wait for the metrics to gracefully shut down
+                for (Metric current : metrics)
+                    try {
+                        current.join();
+                    } catch (InterruptedException ignore) {
+                    }
+
+                log.info("shutting down tor");
+                Tor tor = Tor.getDefault();
+                checkNotNull(tor, "tor must not be null");
+                tor.shutdown();
+
+                log.info("system halt");
+            }
+        });
+
+        // prevent the main thread to terminate
+        log.info("joining metrics...");
+        for (Metric current : metrics)
+            current.join();
+    }
+
+    /**
+     * Reload the configuration from disk.
+     */
+    private void reload() {
+        try {
+            Properties properties = getProperties();
+            for (Metric current : metrics)
+                current.configure(properties);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Overloads a default set of properties with a file if given
+     *
+     * @return a set of properties
+     * @throws Exception in case something goes wrong
+     */
+    private Properties getProperties() throws Exception {
+        Properties defaults = new Properties();
+        defaults.load(Monitor.class.getClassLoader().getResourceAsStream("metrics.properties"));
+
+        Properties result = new Properties(defaults);
+
+        if (args.length > 0)
+            result.load(new FileInputStream(args[0]));
+
+        return result;
     }
 }

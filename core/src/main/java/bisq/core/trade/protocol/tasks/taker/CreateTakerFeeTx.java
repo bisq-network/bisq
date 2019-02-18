@@ -25,11 +25,11 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
+import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
-import bisq.common.UserThread;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
@@ -41,7 +41,6 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
-    private Transaction tradeFeeTx;
 
     @SuppressWarnings({"WeakerAccess", "unused"})
     public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
@@ -65,7 +64,7 @@ public class CreateTakerFeeTx extends TradeTask {
             Address changeAddress = changeAddressEntry.getAddress();
             final TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             if (trade.isCurrencyForTakerFeeBtc()) {
-                tradeFeeTx = tradeWalletService.createBtcTradingFeeTx(
+                tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
@@ -77,20 +76,15 @@ public class CreateTakerFeeTx extends TradeTask {
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {
-                                // we delay one render frame to be sure we don't get called before the method call has
-                                // returned (tradeFeeTx would be null in that case)
-                                UserThread.execute(() -> {
-                                    if (!completed) {
-                                        processModel.setTakeOfferFeeTx(tradeFeeTx);
-                                        trade.setTakerFeeTxId(tradeFeeTx.getHashAsString());
-                                        walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                                        trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-
-                                        complete();
-                                    } else {
-                                        log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                                    }
-                                });
+                                if (!completed) {
+                                    processModel.setTakeOfferFeeTx(transaction);
+                                    trade.setTakerFeeTxId(transaction.getHashAsString());
+                                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+                                    trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
+                                    complete();
+                                } else {
+                                    log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
+                                }
                             }
 
                             @Override
@@ -154,7 +148,13 @@ public class CreateTakerFeeTx extends TradeTask {
                 });
             }
         } catch (Throwable t) {
-            failed(t);
+            if (t instanceof DaoDisabledException) {
+                failed("You cannot pay the trade fee in BSQ at the moment because the DAO features have been " +
+                        "disabled due technical problems. Please use the BTC fee option until the issues are resolved. " +
+                        "For more information please visit the Bisq Forum.");
+            } else {
+                failed(t);
+            }
         }
     }
 }

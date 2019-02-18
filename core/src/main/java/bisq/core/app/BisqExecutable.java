@@ -75,7 +75,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupCompleteListener {
 
     private final String fullName;
     private final String scriptName;
@@ -271,8 +271,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
 
     protected void startAppSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
+        bisqSetup.addBisqSetupCompleteListener(this);
         bisqSetup.start();
     }
+
+    public abstract void onSetupComplete();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -479,9 +482,9 @@ public abstract class BisqExecutable implements GracefulShutDownHandler {
                 .describedAs(format("%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST));
 
         parser.accepts(BtcOptionKeys.REG_TEST_HOST,
-                format("(default: %s)", RegTestHost.DEFAULT))
+                format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))
                 .withRequiredArg()
-                .ofType(RegTestHost.class);
+                .describedAs("host");
 
         parser.accepts(BtcOptionKeys.BTC_NODES,
                 "Custom nodes used for BitcoinJ as comma separated IP addresses.")

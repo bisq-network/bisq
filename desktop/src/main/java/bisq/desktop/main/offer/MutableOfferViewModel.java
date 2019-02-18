@@ -34,7 +34,6 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
@@ -223,21 +222,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public void activate() {
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
-                switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                    case "BTC":
-                        amount.set("1");
-                        price.set("0.0002");
-                        break;
-                    case "LTC":
-                        amount.set("50");
-                        price.set("40");
-                        break;
-                    case "DASH":
-                        amount.set("0.1");
-                        price.set("40");
-                        break;
-                }
-
+                amount.set("1");
+                price.set("0.0002");
                 minAmount.set(amount.get());
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();
@@ -680,9 +666,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         updateButtonDisableState();
     }
 
-    void onShowPayFundsScreen() {
+    void onShowPayFundsScreen(Runnable actionHandler) {
         dataModel.estimateTxSize();
-        dataModel.requestTxFee();
+        dataModel.requestTxFee(actionHandler);
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
     }
@@ -746,16 +732,17 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             InputValidator.ValidationResult result = isBtcInputValid(minAmount.get());
             minAmountValidationResult.set(result);
             if (result.isValid) {
-                syncMinAmountWithAmount = dataModel.getMinAmount().getValue().equals(dataModel.getAmount().getValue());
+                Coin minAmountAsCoin = dataModel.getMinAmount().get();
+                syncMinAmountWithAmount = minAmountAsCoin != null && minAmountAsCoin.equals(dataModel.getAmount().get());
                 setMinAmountToModel();
-                minAmount.set(btcFormatter.formatCoin(dataModel.getMinAmount().get()));
+                this.minAmount.set(btcFormatter.formatCoin(minAmountAsCoin));
 
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
-                    amount.set(minAmount.get());
+                    this.amount.set(this.minAmount.get());
                 } else {
                     minAmountValidationResult.set(result);
-                    if (amount.get() != null)
-                        amountValidationResult.set(isBtcInputValid(amount.get()));
+                    if (this.amount.get() != null)
+                        amountValidationResult.set(isBtcInputValid(this.amount.get()));
                 }
             } else {
                 syncMinAmountWithAmount = true;
@@ -960,6 +947,18 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             return totalToPay;
         else
             return totalToPay + " + " + bsqFormatter.formatCoinWithCode(dataModel.getMakerFee());
+    }
+
+    public String getFundsStructure() {
+        String fundsStructure;
+        if (dataModel.isCurrencyForMakerFeeBtc()) {
+            fundsStructure = Res.get("createOffer.fundsBox.fundsStructure",
+                    getSecurityDepositWithCode(), getMakerFeePercentage(), getTxFeePercentage());
+        } else {
+            fundsStructure = Res.get("createOffer.fundsBox.fundsStructure.BSQ",
+                    getSecurityDepositWithCode(), getTxFeePercentage(), bsqFormatter.formatCoinWithCode(dataModel.getMakerFee()));
+        }
+        return fundsStructure;
     }
 
     public String getTxFee() {

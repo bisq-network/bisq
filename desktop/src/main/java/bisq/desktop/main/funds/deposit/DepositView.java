@@ -20,7 +20,6 @@ package bisq.desktop.main.funds.deposit;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressTextField;
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
@@ -49,7 +48,7 @@ import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -98,7 +97,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
-    TableColumn<DepositListItem, DepositListItem> selectColumn, addressColumn, balanceColumn, confirmationsColumn, usageColumn;
+    TableColumn<DepositListItem, DepositListItem> addressColumn, balanceColumn, confirmationsColumn, usageColumn;
     private ImageView qrCodeImageView;
     private AddressTextField addressTextField;
     private Button generateNewAddressButton;
@@ -134,7 +133,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     public void initialize() {
 
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
-        selectColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.select")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
         confirmationsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.confirmations")));
@@ -152,7 +150,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
             }
         };
 
-        setSelectColumnCellFactory();
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
         setUsageColumnCellFactory();
@@ -342,42 +339,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
         });
     }
 
-    private void setSelectColumnCellFactory() {
-        selectColumn.getStyleClass().add("first-column");
-        selectColumn.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        selectColumn.setCellFactory(
-                new Callback<>() {
-
-                    @Override
-                    public TableCell<DepositListItem, DepositListItem> call(TableColumn<DepositListItem,
-                            DepositListItem> column) {
-                        return new TableCell<>() {
-                            Button button;
-
-                            @Override
-                            public void updateItem(final DepositListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = new AutoTooltipButton(Res.get("shared.select"));
-                                        setGraphic(button);
-                                    }
-                                    button.setOnAction(e -> tableView.getSelectionModel().select(item));
-                                } else {
-                                    setGraphic(null);
-                                    if (button != null) {
-                                        button.setOnAction(null);
-                                        button = null;
-                                    }
-                                }
-                            }
-                        };
-                    }
-                });
-    }
-
     private void setAddressColumnCellFactory() {
+        addressColumn.getStyleClass().add("first-column");
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
 
         addressColumn.setCellFactory(
@@ -396,7 +359,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    field = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
+                                    field = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
                                     field.setOnAction(event -> {
                                         openBlockExplorer(item);
                                         tableView.getSelectionModel().select(item);

@@ -19,6 +19,11 @@ package bisq.core.locale;
 
 import bisq.core.btc.BaseCurrencyNetwork;
 
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+import bisq.asset.Coin;
+import bisq.asset.coins.Ether;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -34,18 +39,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-
-
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-import bisq.asset.Coin;
-import bisq.asset.coins.Ether;
-
 public class CurrencyUtilTest {
 
     @Before
     public void setup() {
+
         Locale.setDefault(new Locale("en", "US"));
+        Res.setBaseCurrencyCode("BTC");
+        Res.setBaseCurrencyName("Bitcoin");
     }
 
     @Test
@@ -126,6 +127,12 @@ public class CurrencyUtilTest {
         bsq = (Coin) CurrencyUtil.findAsset(assetRegistry, "BSQ", BaseCurrencyNetwork.BTC_REGTEST, daoTradingActivated).get();
         assertEquals("BSQ", bsq.getTickerSymbol());
         assertEquals(Coin.Network.REGTEST, bsq.getNetwork());
+    }
+
+    @Test
+    public void testGetNameAndCodeOfRemovedAsset() {
+        assertEquals("Bitcoin Cash (BCH)", CurrencyUtil.getNameAndCode("BCH"));
+        assertEquals("N/A (XYZ)", CurrencyUtil.getNameAndCode("XYZ"));
     }
 
     class MockAssetRegistry extends AssetRegistry {

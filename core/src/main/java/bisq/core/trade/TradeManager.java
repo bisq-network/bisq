@@ -239,6 +239,13 @@ public class TradeManager implements PersistedDataHost {
 
         tradableList.getList().addListener((ListChangeListener<Trade>) change -> onTradesChanged());
         onTradesChanged();
+
+        getAddressEntriesForAvailableBalanceStream()
+                .filter(addressEntry -> addressEntry.getOfferId() != null)
+                .forEach(addressEntry -> {
+                    log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
+                    btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
+                });
     }
 
     public void shutDown() {
@@ -628,10 +635,6 @@ public class TradeManager implements PersistedDataHost {
             @Override
             public void onMinuteTick() {
                 updateTradePeriodState();
-            }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
             }
         });
     }

@@ -21,7 +21,6 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
-import bisq.desktop.components.paymentmethods.CashAppForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
@@ -32,7 +31,6 @@ import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
-import bisq.desktop.components.paymentmethods.OKPayForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
 import bisq.desktop.components.paymentmethods.PopmoneyForm;
@@ -45,7 +43,6 @@ import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
-import bisq.desktop.components.paymentmethods.VenmoForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
@@ -56,7 +53,6 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 import bisq.desktop.util.validation.AliPayValidator;
 import bisq.desktop.util.validation.BICValidator;
-import bisq.desktop.util.validation.CashAppValidator;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
 import bisq.desktop.util.validation.F2FValidator;
@@ -64,7 +60,6 @@ import bisq.desktop.util.validation.HalCashValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
-import bisq.desktop.util.validation.OKPayValidator;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
 import bisq.desktop.util.validation.PromptPayValidator;
@@ -72,7 +67,6 @@ import bisq.desktop.util.validation.RevolutValidator;
 import bisq.desktop.util.validation.SwishValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
-import bisq.desktop.util.validation.VenmoValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
 
 import bisq.core.app.BisqEnvironment;
@@ -85,6 +79,7 @@ import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
+import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
@@ -125,11 +120,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
     private final InputValidator inputValidator;
-    private final OKPayValidator okPayValidator;
     private final UpholdValidator upholdValidator;
-    private final CashAppValidator cashAppValidator;
     private final MoneyBeamValidator moneyBeamValidator;
-    private final VenmoValidator venmoValidator;
     private final PopmoneyValidator popmoneyValidator;
     private final RevolutValidator revolutValidator;
     private final AliPayValidator aliPayValidator;
@@ -157,11 +149,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             IBANValidator ibanValidator,
                             BICValidator bicValidator,
                             InputValidator inputValidator,
-                            OKPayValidator okPayValidator,
                             UpholdValidator upholdValidator,
-                            CashAppValidator cashAppValidator,
                             MoneyBeamValidator moneyBeamValidator,
-                            VenmoValidator venmoValidator,
                             PopmoneyValidator popmoneyValidator,
                             RevolutValidator revolutValidator,
                             AliPayValidator aliPayValidator,
@@ -183,11 +172,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
         this.inputValidator = inputValidator;
-        this.okPayValidator = okPayValidator;
         this.upholdValidator = upholdValidator;
-        this.cashAppValidator = cashAppValidator;
         this.moneyBeamValidator = moneyBeamValidator;
-        this.venmoValidator = venmoValidator;
         this.popmoneyValidator = popmoneyValidator;
         this.revolutValidator = revolutValidator;
         this.aliPayValidator = aliPayValidator;
@@ -283,6 +269,13 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
+                        } else if (paymentAccount instanceof RevolutAccount) {
+                            new Popup<>().information(Res.get("payment.revolut.info"))
+                                    .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iConfirm"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
                         } else {
                             doSaveNewAccount(paymentAccount);
                         }
@@ -340,7 +333,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
-        List<PaymentMethod> list = PaymentMethod.getActivePaymentMethods().stream()
+        List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
@@ -413,16 +406,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
         switch (paymentMethod.getId()) {
-            case PaymentMethod.OK_PAY_ID:
-                return new OKPayForm(paymentAccount, accountAgeWitnessService, okPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
-            case PaymentMethod.CASH_APP_ID:
-                return new CashAppForm(paymentAccount, accountAgeWitnessService, cashAppValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.MONEY_BEAM_ID:
                 return new MoneyBeamForm(paymentAccount, accountAgeWitnessService, moneyBeamValidator, inputValidator, root, gridRow, formatter);
-            case PaymentMethod.VENMO_ID:
-                return new VenmoForm(paymentAccount, accountAgeWitnessService, venmoValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.POPMONEY_ID:
                 return new PopmoneyForm(paymentAccount, accountAgeWitnessService, popmoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.REVOLUT_ID:

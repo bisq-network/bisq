@@ -81,10 +81,6 @@ public class P2pNetworkListItem {
             @Override
             public void onMinuteTick() {
             }
-
-            @Override
-            public void onMissedSecondTick(long missed) {
-            }
         };
         clock.addListener(listener);
         onLastActivityChanged(statistic.getLastActivityTimestamp());

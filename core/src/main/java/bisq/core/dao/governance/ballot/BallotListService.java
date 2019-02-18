@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.ballot;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalService;
@@ -25,14 +24,17 @@ import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 
+import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
 
-import javafx.collections.ListChangeListener;
+import javafx.collections.ListChangeListener.Change;
+import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -76,28 +78,41 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void addListeners() {
-        proposalService.getProposalPayloads().addListener((ListChangeListener<ProposalPayload>) c -> {
-            c.next();
-            if (c.wasAdded()) {
-                c.getAddedSubList().stream()
-                        .map(ProposalPayload::getProposal)
-                        .filter(proposal -> ballotList.stream()
-                                .noneMatch(ballot -> ballot.getProposal().equals(proposal)))
-                        .forEach(proposal -> {
-                            Ballot ballot = new Ballot(proposal); // vote is null
-                            log.info("We create a new ballot with a proposal and add it to our list. " +
-                                    "Vote is null at that moment. proposalTxId={}", proposal.getTxId());
-                            if (!ballotList.contains(ballot)) {
-                                ballotList.add(ballot);
-                                listeners.forEach(l -> l.onListChanged(ballotList.getList()));
-                            } else {
-                                log.warn("Ballot already exist on our ballotList");
-                            }
-                        });
-                persist();
-            }
-        });
+    public final void addListeners() {
+        ObservableList<ProposalPayload> payloads = proposalService.getProposalPayloads();
+        payloads.addListener(this::onChanged);
+    }
+
+    private void onChanged(Change<? extends ProposalPayload> change) {
+        change.next();
+        if (change.wasAdded()) {
+            List<? extends ProposalPayload> addedPayloads = change.getAddedSubList();
+            addedPayloads.stream()
+                    .map(ProposalPayload::getProposal)
+                    .filter(this::isNewProposal)
+                    .forEach(this::registerProposalAsBallot);
+            persist();
+        }
+    }
+
+    private boolean isNewProposal(Proposal proposal) {
+        return ballotList.stream()
+                .map(Ballot::getProposal)
+                .noneMatch(proposal::equals);
+    }
+
+    private void registerProposalAsBallot(Proposal proposal) {
+        Ballot ballot = new Ballot(proposal); // vote is null
+        if (log.isInfoEnabled()) {
+            log.info("We create a new ballot with a proposal and add it to our list. " +
+                    "Vote is null at that moment. proposalTxId={}", proposal.getTxId());
+        }
+        if (ballotList.contains(ballot)) {
+            log.warn("Ballot {} already exists on our ballotList", ballot);
+        } else {
+            ballotList.add(ballot);
+            listeners.forEach(listener -> listener.onListChanged(ballotList.getList()));
+        }
     }
 
     @Override
@@ -111,7 +126,7 @@ public class BallotListService implements PersistedDataHost, DaoSetupService {
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (DevEnv.isDaoActivated()) {
             BallotList persisted = storage.initAndGetPersisted(ballotList, 100);
             if (persisted != null) {
                 ballotList.clear();

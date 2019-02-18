@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RunningTor extends TorMode {
 
-    private static final String EXTERNAL_TOR_HIDDEN_SERVICE = "externalTorHiddenService";
     private final int controlPort;
     private final String password;
     private final File cookieFile;
@@ -49,7 +48,7 @@ public class RunningTor extends TorMode {
 
     public RunningTor(final File torDir, final int controlPort, final String password, final String cookieFile,
             final boolean useSafeCookieAuthentication) {
-        super(torDir, EXTERNAL_TOR_HIDDEN_SERVICE);
+        super(torDir);
         this.controlPort = controlPort;
         this.password = password;
         this.cookieFile = new File(cookieFile);
@@ -81,7 +80,7 @@ public class RunningTor extends TorMode {
 
     @Override
     public String getHiddenServiceDirectory() {
-        return new File(torDir, EXTERNAL_TOR_HIDDEN_SERVICE).getAbsolutePath();
+        return new File(torDir, HIDDEN_SERVICE_DIRECTORY).getAbsolutePath();
     }
 
 }

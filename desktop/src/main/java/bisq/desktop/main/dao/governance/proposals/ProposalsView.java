@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.governance.proposals;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -50,6 +51,7 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
@@ -111,8 +113,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final PhasesView phasesView;
     private final DaoStateService daoStateService;
     private final ChangeParamValidator changeParamValidator;
+    private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
+    private final Navigation navigation;
 
     private final ObservableList<ProposalsListItem> listItems = FXCollections.observableArrayList();
     private final SortedList<ProposalsListItem> sortedList = new SortedList<>(listItems);
@@ -154,15 +158,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           PhasesView phasesView,
                           DaoStateService daoStateService,
                           ChangeParamValidator changeParamValidator,
+                          Preferences preferences,
                           BsqFormatter bsqFormatter,
-                          BSFormatter btcFormatter) {
+                          BSFormatter btcFormatter,
+                          Navigation navigation) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
         this.changeParamValidator = changeParamValidator;
+        this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
+        this.navigation = navigation;
     }
 
     @Override
@@ -266,11 +274,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         updateViews();
     }
 
@@ -514,17 +518,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
         daoFacade.publishBlindVote(stake,
                 () -> {
-                    voteButtonBusyAnimation.stop();
-                    voteButtonInfoLabel.setText("");
                     if (!DevEnv.isDevMode())
                         new Popup<>().feedback(Res.get("dao.blindVote.success")).show();
-
-                    updateViews();
                 }, exception -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
                     new Popup<>().warning(exception.toString()).show();
                 });
+
+        // We reset UI without waiting for callback as callback might be slow and then the user could click
+        // multiple times.
+        voteButtonBusyAnimation.stop();
+        voteButtonInfoLabel.setText("");
+        updateViews();
     }
 
     private void updateStateAfterVote() {
@@ -613,7 +619,9 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             } else {
                 String msg = "We found multiple MyVote entries in that cycle. That is not supported by the UI.";
                 log.warn(msg);
-                new Popup<>().error(msg).show();
+                String id = "multipleVotes";
+                if (preferences.showAgain(id))
+                    new Popup<>().warning(msg).dontShowAgainId(id).show();
             }
             voteButton.setVisible(false);
             voteButton.setManaged(false);
@@ -668,7 +676,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void createEmptyProposalDisplay() {
-        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade, changeParamValidator);
+        proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade,
+                changeParamValidator, navigation);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);
@@ -688,6 +697,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         meritTextField.setText(bsqFormatter.formatCoinWithCode(Coin.ZERO));
         voteFields.add(meritLabel);
         voteFields.add(meritTextField);
+        voteFields.add(meritTuple.third);
 
         stakeInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("dao.proposal.myVote.stake"));
@@ -712,6 +722,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 Res.get("dao.proposal.myVote.button"));
         voteButton = voteButtonTuple.first;
         voteButtons.add(voteButton);
+        voteFields.add(voteButtonTuple.forth);
         voteButtonBusyAnimation = voteButtonTuple.second;
         voteButtonInfoLabel = voteButtonTuple.third;
     }

@@ -29,4 +29,13 @@ public class BlockHashNotConnectingException extends Exception {
     public BlockHashNotConnectingException(RawBlock rawBlock) {
         this.rawBlock = rawBlock;
     }
+
+    @Override
+    public String toString() {
+        return "BlockHashNotConnectingException{" +
+                "\n     rawBlock.getHash=" + rawBlock.getHash() +
+                "\n     rawBlock.getHeight=" + rawBlock.getHeight() +
+                "\n     rawBlock.getPreviousBlockHash=" + rawBlock.getPreviousBlockHash() +
+                "\n} " + super.toString();
+    }
 }

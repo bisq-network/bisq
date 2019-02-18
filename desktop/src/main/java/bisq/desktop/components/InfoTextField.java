@@ -66,11 +66,11 @@ public class InfoTextField extends AnchorPane {
         textField.setId("info-field");
 
         infoIcon = getIcon(AwesomeIcon.INFO_SIGN);
-        infoIcon.setLayoutY(3);
+        infoIcon.setLayoutY(5);
         infoIcon.getStyleClass().addAll("icon", "info");
 
         privacyIcon = getIcon(AwesomeIcon.EYE_CLOSE);
-        privacyIcon.setLayoutY(3);
+        privacyIcon.setLayoutY(5);
         privacyIcon.getStyleClass().addAll("icon", "info");
 
         AnchorPane.setRightAnchor(infoIcon, 7.0);
@@ -94,6 +94,7 @@ public class InfoTextField extends AnchorPane {
         currentIcon = infoIcon;
 
         hideIcons();
+        setActionHandlers(node);
     }
 
     public void setContentForPrivacyPopOver(Node node) {

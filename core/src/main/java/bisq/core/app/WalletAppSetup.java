@@ -23,8 +23,6 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
-import org.libdohj.Version;
-
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
@@ -34,8 +32,10 @@ import javax.inject.Inject;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -70,6 +70,8 @@ public class WalletAppSetup {
     private final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
     @Getter
     private int numBtcPeers = 0;
+    @Getter
+    private final BooleanProperty useTorForBTC = new SimpleBooleanProperty();
 
     @Inject
     public WalletAppSetup(WalletsManager walletsManager,
@@ -82,6 +84,7 @@ public class WalletAppSetup {
         this.bisqEnvironment = bisqEnvironment;
         this.preferences = preferences;
         this.formatter = formatter;
+        this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
     }
 
     void init(@Nullable Consumer<String> chainFileLockedExceptionHandler,
@@ -90,8 +93,8 @@ public class WalletAppSetup {
               Runnable walletPasswordHandler,
               Runnable downloadCompleteHandler,
               Runnable walletInitializedHandler) {
-        log.info("Initialize WalletAppSetup with BitcoinJ version {} and LibDohJ version {} with hash of BitcoinJ commit {}",
-                VersionMessage.BITCOINJ_VERSION, Version.VERSION, Version.BITCOINJ_VERSION);
+        log.info("Initialize WalletAppSetup with BitcoinJ version {} and hash of BitcoinJ commit {}",
+                VersionMessage.BITCOINJ_VERSION, "cd30ad5b");
 
         ObjectProperty<Throwable> walletServiceException = new SimpleObjectProperty<>();
         btcInfoBinding = EasyBind.combine(walletsSetup.downloadPercentageProperty(),

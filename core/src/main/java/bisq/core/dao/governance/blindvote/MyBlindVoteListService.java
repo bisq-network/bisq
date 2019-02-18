@@ -35,7 +35,6 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -158,7 +157,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void readPersisted() {
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq()) {
+        if (DevEnv.isDaoActivated()) {
             MyBlindVoteList persisted = storage.initAndGetPersisted(myBlindVoteList, 100);
             if (persisted != null) {
                 myBlindVoteList.clear();
@@ -171,14 +170,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
-    }
 
     @Override
     public void onParseBlockChainComplete() {
@@ -355,7 +346,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private void rePublishOnceWellConnected() {
         int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
-        if ((p2PService.getNumConnectedPeers().get() > minPeers && p2PService.isBootstrapped()) || DevEnv.isDevMode()) {
+        if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
+                BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
             int chainHeight = periodService.getChainHeight();
             myBlindVoteList.stream()
                     .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),

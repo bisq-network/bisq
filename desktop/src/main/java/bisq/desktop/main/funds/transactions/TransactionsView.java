@@ -56,6 +56,7 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -154,7 +155,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));
-        tableView.getStyleClass().add("large-rows");
 
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
@@ -387,7 +387,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String addressString = item.getAddressString();
                                     field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                            AwesomeIcon.EXTERNAL_LINK, item.getReceived());
+                                            MaterialDesignIcon.LINK, item.getReceived());
                                     field.setOnAction(event -> openAddressInBlockExplorer(item));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                     setGraphic(field);
@@ -420,7 +420,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);

@@ -44,7 +44,6 @@ class BondListItem {
     private final String bondDetails;
     private final BondState bondState;
     private final String bondStateString;
-    private final Date lockupDate;
 
     BondListItem(Bond bond, BsqFormatter bsqFormatter) {
         this.bond = bond;
@@ -59,8 +58,7 @@ class BondListItem {
             bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
         }
         lockupTxId = bond.getLockupTxId();
-        lockupDate = new Date(bond.getLockupDate());
-        lockupDateString = bsqFormatter.formatDateTime(lockupDate);
+        lockupDateString = bond.getLockupDate() > 0 ? bsqFormatter.formatDateTime(new Date(bond.getLockupDate())) : "-";
         bondState = bond.getBondState();
         bondStateString = Res.get("dao.bond.bondState." + bond.getBondState().name());
     }

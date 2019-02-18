@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DaoStateSnapshotService implements DaoStateListener {
-    private static final int SNAPSHOT_GRID = 10;
+    private static final int SNAPSHOT_GRID = 20;
 
     private final DaoStateService daoStateService;
     private final GenesisTxInfo genesisTxInfo;
@@ -70,10 +70,8 @@ public class DaoStateSnapshotService implements DaoStateListener {
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
+    // We listen to each ParseTxsComplete event even if the batch processing of all blocks at startup is not completed
+    // as we need to write snapshots during that batch processing.
     @Override
     public void onParseTxsComplete(Block block) {
         int chainHeight = block.getHeight();
@@ -99,14 +97,6 @@ public class DaoStateSnapshotService implements DaoStateListener {
             snapshotCandidate = daoStateService.getClone();
             log.info("Cloned new snapshotCandidate at height " + chainHeight);
         }
-    }
-
-    private boolean isValidHeight(int heightOfLastBlock) {
-        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 
@@ -149,6 +139,10 @@ public class DaoStateSnapshotService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isValidHeight(int heightOfLastBlock) {
+        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
+    }
 
     private void applyEmptySnapshot(DaoState persisted) {
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();

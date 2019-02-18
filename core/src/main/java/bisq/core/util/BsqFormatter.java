@@ -20,6 +20,7 @@ package bisq.core.util;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.util.validation.BtcAddressValidator;
@@ -36,6 +37,9 @@ import org.bitcoinj.utils.MonetaryFormat;
 import javax.inject.Inject;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,13 +48,16 @@ public class BsqFormatter extends BSFormatter {
     @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
     private final String prefix = "B";
-    private final DecimalFormat amountFormat = new DecimalFormat("###,###,###.##");
-    private final DecimalFormat marketCapFormat = new DecimalFormat("###,###,###");
+    private DecimalFormat amountFormat;
+    private DecimalFormat marketCapFormat;
     private final MonetaryFormat btcCoinFormat;
 
     @Inject
     public BsqFormatter() {
         super();
+
+        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> setFormatter(newValue));
+        setFormatter(GlobalSettings.getLocale());
 
         btcCoinFormat = super.coinFormat;
 
@@ -59,18 +66,21 @@ public class BsqFormatter extends BSFormatter {
             case "BTC":
                 coinFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
                 break;
-            case "LTC":
-                coinFormat = new MonetaryFormat().shift(3).code(3, "BSQ").minDecimals(5);
-                break;
-            case "DASH":
-                // BSQ for DASH not used/supported
-                coinFormat = new MonetaryFormat().shift(3).code(3, "???").minDecimals(5);
-                break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
         }
 
         amountFormat.setMinimumFractionDigits(2);
+    }
+
+    private void setFormatter(Locale locale) {
+        amountFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
+        amountFormat.setMinimumFractionDigits(2);
+        amountFormat.setMaximumFractionDigits(2);
+
+        marketCapFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
+        marketCapFormat = new DecimalFormat();
+        marketCapFormat.setMaximumFractionDigits(0);
     }
 
     /**
@@ -145,7 +155,8 @@ public class BsqFormatter extends BSFormatter {
     public String formatParamValue(Param param, String value) {
         switch (param.getParamType()) {
             case UNDEFINED:
-                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+                // In case we add a new param old clients will not know that enum and fall back to UNDEFINED.
+                return "";
             case BSQ:
                 return formatCoinWithCode(parseToCoin(value));
             case BTC:

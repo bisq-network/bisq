@@ -151,12 +151,10 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             }
 
             @Override
-            public void onMissedSecondTick(long missed) {
-                if (missed > Clock.IDLE_TOLERANCE) {
-                    log.info("We have been in standby mode for {} sec", missed / 1000);
-                    stopped = false;
-                    listeners.stream().forEach(Listener::onAwakeFromStandby);
-                }
+            public void onAwakeFromStandby(long missedMs) {
+                // TODO is "stopped = false;" correct?
+                stopped = false;
+                listeners.forEach(Listener::onAwakeFromStandby);
             }
         };
         clock.addListener(listener);

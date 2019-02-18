@@ -28,6 +28,8 @@ import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
+import bisq.desktop.main.presentation.DaoPresentation;
+import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -65,11 +67,14 @@ import com.google.inject.Inject;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 import javafx.collections.ObservableList;
@@ -89,6 +94,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private final TradePresentation tradePresentation;
     private final DisputePresentation disputePresentation;
     private final MarketPricePresentation marketPricePresentation;
+    private final DaoPresentation daoPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final Preferences preferences;
@@ -107,6 +113,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
+    private DoubleProperty combinedSyncProgress = new SimpleDoubleProperty(-1);
     private final BooleanProperty isSplashScreenRemoved = new SimpleBooleanProperty();
     private Timer checkNumberOfBtcPeersTimer;
     private Timer checkNumberOfP2pNetworkPeersTimer;
@@ -128,6 +135,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                          TradePresentation tradePresentation,
                          DisputePresentation disputePresentation,
                          MarketPricePresentation marketPricePresentation,
+                         DaoPresentation daoPresentation,
                          P2PService p2PService,
                          TradeManager tradeManager,
                          Preferences preferences,
@@ -149,6 +157,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         this.tradePresentation = tradePresentation;
         this.disputePresentation = disputePresentation;
         this.marketPricePresentation = marketPricePresentation;
+        this.daoPresentation = daoPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.preferences = preferences;
@@ -169,6 +178,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         BalanceWithConfirmationTextField.setWalletService(btcWalletService);
 
         GUIUtil.setFeeService(feeService);
+        GUIUtil.setPreferences(preferences);
 
         setupHandlers();
         bisqSetup.addBisqSetupCompleteListener(this);
@@ -222,6 +232,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         setupBtcNumPeersWatcher();
 
         marketPricePresentation.setup();
+        daoPresentation.setup();
 
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
@@ -283,7 +294,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                     .show();
         });
         bisqSetup.setVoteResultExceptionHandler(voteResultException -> {
-            new Popup<>().error(voteResultException.toString()).show();
+            log.warn(voteResultException.toString());
         });
 
         bisqSetup.setChainFileLockedExceptionHandler(msg -> {
@@ -349,6 +360,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
+
+        bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
+        daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
+
     }
 
     private void setupP2PNumPeersWatcher() {
@@ -408,10 +423,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private void showFirstPopupIfResyncSPVRequested() {
         Popup firstPopup = new Popup<>();
         firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
-        if (getBtcSyncProgress().get() == 1) {
+        if (bisqSetup.getBtcSyncProgress().get() == 1) {
             showSecondPopupIfResyncSPVRequested(firstPopup);
         } else {
-            getBtcSyncProgress().addListener((observable, oldValue, newValue) -> {
+            bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> {
                 if ((double) newValue == 1)
                     showSecondPopupIfResyncSPVRequested(firstPopup);
             });
@@ -455,6 +470,16 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         }
     }
 
+    private void updateBtcSyncProgress() {
+        final DoubleProperty btcSyncProgress = bisqSetup.getBtcSyncProgress();
+
+        if (btcSyncProgress.doubleValue() < 1) {
+            combinedSyncProgress.set(btcSyncProgress.doubleValue());
+        } else {
+            combinedSyncProgress.set(daoPresentation.getBsqSyncProgress().doubleValue());
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MainView delegate getters
@@ -495,11 +520,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     // Wallet
     StringProperty getBtcInfo() {
-        return bisqSetup.getBtcInfo();
+        final StringProperty combinedInfo = new SimpleStringProperty();
+        combinedInfo.bind(Bindings.concat(bisqSetup.getBtcInfo(), " ", daoPresentation.getBsqInfo()));
+        return combinedInfo;
     }
 
-    DoubleProperty getBtcSyncProgress() {
-        return bisqSetup.getBtcSyncProgress();
+    DoubleProperty getCombinedSyncProgress() {
+        return combinedSyncProgress;
     }
 
     StringProperty getWalletServiceErrorMsg() {
@@ -508,6 +535,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     StringProperty getBtcSplashSyncIconId() {
         return bisqSetup.getBtcSplashSyncIconId();
+    }
+
+    BooleanProperty getUseTorForBTC() {
+        return bisqSetup.getUseTorForBTC();
     }
 
     // P2P
@@ -562,5 +593,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     public ObservableList<PriceFeedComboBoxItem> getPriceFeedComboBoxItems() {
         return marketPricePresentation.getPriceFeedComboBoxItems();
+    }
+
+    public BooleanProperty getShowDaoUpdatesNotification() {
+        return daoPresentation.getShowDaoUpdatesNotification();
     }
 }

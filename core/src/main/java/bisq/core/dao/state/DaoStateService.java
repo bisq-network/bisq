@@ -68,6 +68,7 @@ public class DaoStateService implements DaoSetupService {
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
+    private boolean parseBlockChainComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +200,6 @@ public class DaoStateService implements DaoSetupService {
                     "That might happen in edge cases at reorgs.");
         } else {
             daoState.getBlocks().add(block);
-            daoStateListeners.forEach(l -> l.onEmptyBlockAdded(block));
 
             log.info("New Block added at blockHeight " + block.getHeight());
         }
@@ -207,11 +207,23 @@ public class DaoStateService implements DaoSetupService {
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
+        // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
+        // blocks as that cause performance issues. In earlier versions when we updated at each block it took
+        // 50 sec. for 4000 blocks, after that change it was about 4 sec.
+        if (parseBlockChainComplete)
+            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+
         daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed
     public void onParseBlockChainComplete() {
+        parseBlockChainComplete = true;
+
+        getLastBlock().ifPresent(block -> {
+            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+        });
+
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
     }
 
@@ -576,6 +588,7 @@ public class DaoStateService implements DaoSetupService {
     public void addNonBsqTxOutput(TxOutput txOutput) {
         checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
                 "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
+        log.info("addNonBsqTxOutput: txOutput={}", txOutput);
         daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
@@ -775,7 +788,7 @@ public class DaoStateService implements DaoSetupService {
         if (optionalTxOutput.isPresent()) {
             TxOutput lockupTxOutput = optionalTxOutput.get();
             if (isUnspent(lockupTxOutput.getKey())) {
-                log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can confiscate it.", lockupTxOutput.getKey());
                 doConfiscateBond(lockupTxId);
             } else {
                 // We lookup for the unlock tx which need to be still in unlocking state
@@ -784,7 +797,7 @@ public class DaoStateService implements DaoSetupService {
                 String unlockTxId = optionalSpentInfo.get().getTxId();
                 if (isUnlockingAndUnspent(unlockTxId)) {
                     // We found the unlock tx is still not spend
-                    log.warn("lockupTxOutput {} is still unspent. We confiscate it.", lockupTxOutput.getKey());
+                    log.warn("confiscateBond: lockupTxOutput {} is still unspent so we can We confiscate it.", lockupTxOutput.getKey());
                     doConfiscateBond(lockupTxId);
                 } else {
                     // We could be more radical here and confiscate the output if it is unspent but lock time is over,
@@ -896,8 +909,20 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getEvaluatedProposalList();
     }
 
+    public void addEvaluatedProposalSet(Set<EvaluatedProposal> evaluatedProposals) {
+        evaluatedProposals.stream()
+                .filter(e -> !daoState.getEvaluatedProposalList().contains(e))
+                .forEach(daoState.getEvaluatedProposalList()::add);
+    }
+
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
         return daoState.getDecryptedBallotsWithMeritsList();
+    }
+
+    public void addDecryptedBallotsWithMeritsSet(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+        decryptedBallotsWithMeritsSet.stream()
+                .filter(e -> !daoState.getDecryptedBallotsWithMeritsList().contains(e))
+                .forEach(daoState.getDecryptedBallotsWithMeritsList()::add);
     }
 
 

@@ -17,12 +17,12 @@
 
 package bisq.core.btc.wallet;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.dao.DaoKillSwitch;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -116,62 +116,60 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.nonBsqCoinSelector = nonBsqCoinSelector;
         this.daoStateService = daoStateService;
 
-        if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
-            walletsSetup.addSetupCompletedHandler(() -> {
-                wallet = walletsSetup.getBsqWallet();
-                if (wallet != null) {
-                    wallet.setCoinSelector(bsqCoinSelector);
-                    wallet.addEventListener(walletEventListener);
+        walletsSetup.addSetupCompletedHandler(() -> {
+            wallet = walletsSetup.getBsqWallet();
+            if (wallet != null) {
+                wallet.setCoinSelector(bsqCoinSelector);
+                wallet.addEventListener(walletEventListener);
 
-                    //noinspection deprecation
-                    wallet.addEventListener(new AbstractWalletEventListener() {
-                        @Override
-                        public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            updateBsqWalletTransactions();
-                        }
+                //noinspection deprecation
+                wallet.addEventListener(new AbstractWalletEventListener() {
+                    @Override
+                    public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onReorganize(Wallet wallet) {
-                            log.warn("onReorganize ");
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onReorganize(Wallet wallet) {
+                        log.warn("onReorganize ");
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onKeysAdded(List<ECKey> keys) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onKeysAdded(List<ECKey> keys) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
+                        updateBsqWalletTransactions();
+                    }
 
-                        @Override
-                        public void onWalletChanged(Wallet wallet) {
-                            updateBsqWalletTransactions();
-                        }
+                    @Override
+                    public void onWalletChanged(Wallet wallet) {
+                        updateBsqWalletTransactions();
+                    }
 
-                    });
-                }
+                });
+            }
 
-                final BlockChain chain = walletsSetup.getChain();
-                if (chain != null) {
-                    chain.addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
-                    chainHeightProperty.set(chain.getBestChainHeight());
-                    updateBsqWalletTransactions();
-                }
-            });
-        }
+            final BlockChain chain = walletsSetup.getChain();
+            if (chain != null) {
+                chain.addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
+                chainHeightProperty.set(chain.getBestChainHeight());
+                updateBsqWalletTransactions();
+            }
+        });
 
         daoStateService.addBsqStateListener(this);
     }
@@ -182,17 +180,9 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         if (isWalletReady())
             updateBsqWalletTransactions();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 
@@ -466,6 +456,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public Transaction getPreparedSendTx(String receiverAddress, Coin receiverAmount)
             throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
@@ -497,6 +488,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     public Transaction getPreparedSendBtcTx(String receiverAddress, Coin receiverAmount)
             throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
@@ -535,6 +527,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public Transaction getPreparedBurnFeeTx(Coin fee) throws InsufficientBsqException {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         final Transaction tx = new Transaction(params);
         addInputsAndChangeOutputForTx(tx, fee, bsqCoinSelector);
         // printTx("getPreparedFeeTx", tx);
@@ -572,6 +565,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // We create a tx with Bsq inputs for the fee, one output for the stake and optional one BSQ change output.
     // As the fee amount will be missing in the output those BSQ fees are burned.
     public Transaction getPreparedBlindVoteTx(Coin fee, Coin stake) throws InsufficientBsqException {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         tx.addOutput(new TransactionOutput(params, tx, stake, getUnusedAddress()));
         addInputsAndChangeOutputForTx(tx, fee.add(stake), bsqCoinSelector);
@@ -585,6 +579,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedVoteRevealTx(TxOutput stakeTxOutput) {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         final Coin stake = Coin.valueOf(stakeTxOutput.getValue());
         Transaction blindVoteTx = getTransaction(stakeTxOutput.getTxId());
@@ -603,6 +598,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedLockupTx(Coin lockupAmount) throws AddressFormatException, InsufficientBsqException {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(lockupAmount), "The amount is too low (dust limit).");
         tx.addOutput(new TransactionOutput(params, tx, lockupAmount, getUnusedAddress()));
@@ -616,6 +612,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedUnlockTx(TxOutput lockupTxOutput) throws AddressFormatException {
+        DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         // Unlocking means spending the full value of the locked txOutput to another txOutput with the same value
         Coin amountToUnlock = Coin.valueOf(lockupTxOutput.getValue());

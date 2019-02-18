@@ -17,9 +17,11 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.DefaultAddressValidator;
 
+@AltCoinAccountDisclaimer("account.altcoin.popup.XZC.msg")
 public class Zcoin extends Coin {
 
     public Zcoin() {
