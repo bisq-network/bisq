@@ -65,7 +65,7 @@ public class PriceNodeStats extends Metric {
     private static final String IGNORE = "dashTxFee ltcTxFee dogeTxFee";
     // poor mans JSON parser
     private final Pattern stringNumberPattern = Pattern.compile("\"(.+)\" ?: ?(\\d+)");
-    private final Pattern pricePattern = Pattern.compile("\"price\" ?: ?([\\d\\.]+)");
+    private final Pattern pricePattern = Pattern.compile("\"price\" ?: ?([\\d.]+)");
     private final Pattern currencyCodePattern = Pattern.compile("\"currencyCode\" ?: ?\"([A-Z]+)\"");
     private final List<Object> assets = Arrays.asList(new AssetRegistry().stream().map(Asset::getTickerSymbol).toArray());
 

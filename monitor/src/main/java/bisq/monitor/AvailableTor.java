@@ -29,7 +29,7 @@ import bisq.network.p2p.network.TorMode;
  */
 public class AvailableTor extends TorMode {
 
-    private String hiddenServiceDirectory;
+    private final String hiddenServiceDirectory;
 
     public AvailableTor(File torWorkingDirectory, String hiddenServiceDirectory) {
         super(torWorkingDirectory);

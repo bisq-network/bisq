@@ -34,15 +34,15 @@ public abstract class Reporter extends Configurable {
     /**
      * Report our findings.
      *
-     * @param value
+     * @param value the value to report
      */
     public abstract void report(long value);
 
     /**
      * Report our findings
      *
-     * @param value
-     * @param prefix
+     * @param value the value to report
+     * @param prefix a common prefix to be included in the tag name
      */
     public abstract void report(long value, String prefix);
 

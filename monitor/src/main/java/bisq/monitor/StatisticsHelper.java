@@ -48,7 +48,7 @@ public class StatisticsHelper {
         // - p25, median, p75
         Integer[] percentiles = new Integer[] { 25, 50, 75 };
         for (Integer percentile : percentiles) {
-            double rank = statistics.getCount() * percentile / 100;
+            double rank = statistics.getCount() * percentile / 100.0;
             Long percentileValue;
             if (samples.size() <= rank + 1)
                 percentileValue = samples.get(samples.size() - 1);

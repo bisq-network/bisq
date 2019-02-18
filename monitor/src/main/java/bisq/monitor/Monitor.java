@@ -139,7 +139,7 @@ public class Monitor {
     /**
      * Reload the configuration from disk.
      * 
-     * @throws Exception
+     * @throws Exception if something goes wrong
      */
     private void configure() throws Exception {
         Properties properties = getProperties();

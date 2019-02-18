@@ -78,8 +78,8 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
     private NetworkNode networkNode;
     private final File torHiddenServiceDir = new File("monitor/work/metric_" + this.getClass().getSimpleName());
     private int nonce;
-    Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
-    private Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
+    final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
+    private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
@@ -119,7 +119,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
      */
     private class MyStatistics  implements  Statistics<Counter> {
 
-        private Map<String, Counter> buckets = new HashMap<>();
+        private final Map<String, Counter> buckets = new HashMap<>();
 
         @Override
         public Statistics create() {
@@ -225,7 +225,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
     /**
      * Report all the stuff. Uses the configured reporter directly.
      */
-    protected void report() {
+    void report() {
 
         // report
         Map<String, String> report = new HashMap<>();
