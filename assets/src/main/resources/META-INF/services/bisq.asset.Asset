@@ -17,6 +17,7 @@ bisq.asset.coins.BSQ$Regtest
 bisq.asset.coins.BSQ$Testnet
 bisq.asset.coins.Byteball
 bisq.asset.coins.Chaucha
+bisq.asset.coins.CloakCoin
 bisq.asset.coins.Counterparty
 bisq.asset.coins.Croat
 bisq.asset.coins.Dash
