@@ -132,7 +132,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("GRIN", "Grin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
@@ -152,6 +151,9 @@ public class CurrencyUtil {
         currencies.add(new CryptoCurrency("SC", "SpaceCash"));
         currencies.add(new CryptoCurrency("PPI", "PiedPiper Coin"));
         currencies.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
+        currencies.add(new CryptoCurrency("GRC", "Gridcoin"));
+        currencies.add(new CryptoCurrency("LTZ", "LitecoinZ"));
+        currencies.add(new CryptoCurrency("ZOC", "01coin"));
         return currencies;
     }
 

@@ -33,6 +33,8 @@ import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.T
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+//TODO cannot be run in IntelliJ IDE as parameter is not supported. OfferPayload is final so it is not so trivial to
+// replace that.
 public class TradableListTest {
 
     @Test
