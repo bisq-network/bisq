@@ -322,11 +322,7 @@ public class WalletConfig extends AbstractIdleService {
      * Override this to use a {@link BlockStore} that isn't the default of {@link SPVBlockStore}.
      */
     private BlockStore provideBlockStore(File file) throws BlockStoreException {
-        if (Utilities.isWindows()) {
-            return new NonMMappedSPVBlockStore(params, file);
-        } else {
-            return new SPVBlockStore(params, file);
-        }
+        return new ClearableSPVBlockStore(params, file);
     }
 
     /**
@@ -409,11 +405,8 @@ public class WalletConfig extends AbstractIdleService {
                         // we created both wallets at the same time
                         time = seed.getCreationTimeSeconds();
                         if (chainFileExists) {
-                            log.info("Deleting the chain file in preparation from restore.");
-                            vStore.close();
-                            if (!chainFile.delete())
-                                throw new IOException("Failed to delete chain file in preparation for restore.");
-                            vStore = provideBlockStore(chainFile);
+                            log.info("Clearing the chain file in preparation from restore.");
+                            ((ClearableSPVBlockStore)vStore).clear();
                         }
                     } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
@@ -425,11 +418,8 @@ public class WalletConfig extends AbstractIdleService {
                     else
                         log.warn("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
                 } else if (chainFileExists) {
-                    log.info("Deleting the chain file in preparation from restore.");
-                    vStore.close();
-                    if (!chainFile.delete())
-                        throw new IOException("Failed to delete chain file in preparation for restore.");
-                    vStore = provideBlockStore(chainFile);
+                    log.info("Clearing the chain file in preparation from restore.");
+                    ((ClearableSPVBlockStore)vStore).clear();
                 }
             }
             vChain = new BlockChain(params, vStore);
