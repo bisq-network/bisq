@@ -32,6 +32,7 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -39,6 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * @author Florian Reimair
  */
+@Disabled
 public class PriceNodeStatsTests {
 
     private final static File torWorkingDirectory = new File("monitor/" + PriceNodeStatsTests.class.getSimpleName());
