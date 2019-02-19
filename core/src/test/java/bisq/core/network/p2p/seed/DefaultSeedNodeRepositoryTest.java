@@ -19,6 +19,8 @@ package bisq.core.network.p2p.seed;
 
 import bisq.core.app.BisqEnvironment;
 
+import bisq.network.p2p.NodeAddress;
+
 import org.springframework.core.env.PropertySource;
 
 import org.junit.Assert;
@@ -28,7 +30,19 @@ public class DefaultSeedNodeRepositoryTest {
 
     @Test
     public void getSeedNodes() {
-        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new BisqEnvironment(new PropertySource.StubPropertySource("name")));
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new BisqEnvironment(new PropertySource.StubPropertySource("name")), null);
         Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
+    }
+
+    @Test
+    public void manualSeedNodes() {
+        String seed1 = "asdf:8001";
+        String seed2 = "fdsa:6001";
+        String seedNodes = seed1 + "," + seed2;
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new BisqEnvironment(new PropertySource.StubPropertySource("name")), seedNodes);
+        Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
+        Assert.assertEquals(2, DUT.getSeedNodeAddresses().size());
+        Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed1)));
+        Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
     }
 }
