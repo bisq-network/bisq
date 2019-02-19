@@ -652,6 +652,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 return BTC_MAIN_NET_EXPLORERS;
             case BTC_TESTNET:
             case BTC_REGTEST:
+            case BTC_DAO_TESTNET:
                 return BTC_TEST_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
