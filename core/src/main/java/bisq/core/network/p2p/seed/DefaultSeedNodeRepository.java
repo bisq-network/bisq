@@ -17,59 +17,71 @@
 
 package bisq.core.network.p2p.seed;
 
+import bisq.core.app.BisqEnvironment;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import javax.inject.Inject;
 
-import java.util.Set;
-import java.util.stream.Stream;
+import java.net.URL;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class DefaultSeedNodeRepository implements SeedNodeRepository {
-
-    private final Set<NodeAddress> seedNodeAddresses;
-    private final Set<NodeAddress> torSeedNodeAddresses;
-    private final Set<NodeAddress> localhostSeedNodeAddresses;
+    private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
+    private static final String ENDING = ".seednodes";
+    private static final Collection<NodeAddress> cache = new HashSet<>();
+    private static Collection<NodeAddress> excludes = new HashSet<>();
+    private final BisqEnvironment bisqEnvironment;
 
     @Inject
-    public DefaultSeedNodeRepository(SeedNodeAddressLookup lookup) {
-        this.seedNodeAddresses = lookup.resolveNodeAddresses();
-        this.torSeedNodeAddresses = DefaultSeedNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
-        this.localhostSeedNodeAddresses = DefaultSeedNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
+    public DefaultSeedNodeRepository(BisqEnvironment environment) {
+        bisqEnvironment = environment;
     }
 
-    @Override
-    public Set<NodeAddress> getSeedNodeAddresses() {
-        return seedNodeAddresses;
-    }
+    private void reload() {
+        try {
+            // read appropriate file
+            final URL file = DefaultSeedNodeRepository.class.getClassLoader().getResource(BisqEnvironment.getBaseCurrencyNetwork().getNetwork().toLowerCase() + ENDING);
+            final BufferedReader seedNodeFile = new BufferedReader(new FileReader(file.getFile()));
 
-    @Override
-    public String getOperator(NodeAddress nodeAddress) {
-        switch (nodeAddress.getFullAddress()) {
-            case "5quyxpxheyvzmb2d.onion:8000":
-                return "@miker";
-            case "ef5qnzx6znifo3df.onion:8000":
-                return "@manfredkarrer";
-            case "s67qglwhkgkyvr74.onion:8000":
-                return "@emzy";
-            case "jhgcy2won7xnslrb.onion:8000":
-                return "@manfredkarrer";
-            case "3f3cu2yw7u457ztq.onion:8000":
-                return "@manfredkarrer";
-            case "723ljisnynbtdohi.onion:8000":
-                return "@manfredkarrer";
-            case "rm7b56wbrcczpjvl.onion:8000":
-                return "@manfredkarrer";
-            case "fl3mmribyxgrv63c.onion:8000":
-                return "@manfredkarrer";
-            default:
-                return "Undefined";
+            // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
+            cache.clear();
+
+            // refill the cache
+            seedNodeFile.lines().forEach(s -> {
+                final Matcher matcher = pattern.matcher(s);
+                if(matcher.find())
+                    cache.add(new NodeAddress(matcher.group(1)));
+            });
+
+            // filter
+            if(bisqEnvironment.getBannedSeedNodes() != null)
+                cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(s -> new NodeAddress(s)).collect(Collectors.toSet()));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
-    @Override
+    public Collection<NodeAddress> getSeedNodeAddresses() {
+        if(cache.isEmpty())
+            reload();
+
+        return cache;
+    }
+
     public boolean isSeedNode(NodeAddress nodeAddress) {
-        return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
-                .anyMatch(e -> e.equals(nodeAddress));
+        if(cache.isEmpty())
+            reload();
+        return cache.contains(nodeAddress);
     }
 }
