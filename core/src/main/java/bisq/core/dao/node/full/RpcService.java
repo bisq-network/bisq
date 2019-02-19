@@ -105,7 +105,7 @@ public class RpcService {
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet ? "8332" :
                         isTestnet ? "18332" :
-                                isDaoTestNet ? "18554" :
+                                isDaoTestNet ? "18443" :
                                         "18443"; // regtest
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
