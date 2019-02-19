@@ -422,8 +422,7 @@ public class CurrencyUtil {
     // We want all coins available also in testnet or regtest for testing purpose
     public static boolean coinMatchesNetworkIfMainnet(Coin coin, BaseCurrencyNetwork baseCurrencyNetwork) {
         boolean matchesNetwork = assetMatchesNetwork(coin, baseCurrencyNetwork);
-        return !baseCurrencyNetwork.isMainnet() ||
-                matchesNetwork;
+        return !baseCurrencyNetwork.isMainnet() || matchesNetwork;
     }
 
     private static CryptoCurrency assetToCryptoCurrency(Asset asset) {

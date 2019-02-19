@@ -27,6 +27,7 @@ import lombok.Getter;
 public enum BaseCurrencyNetwork {
     BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"),
     BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET", "Bitcoin"),
+    BTC_DAO_TESTNET(RegTestParams.get(), "BTC", "DAO_TESTNET", "Bitcoin"), // server side regtest
     BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin");
 
     @Getter
@@ -51,6 +52,10 @@ public enum BaseCurrencyNetwork {
 
     public boolean isTestnet() {
         return "TESTNET".equals(network);
+    }
+
+    public boolean isDaoTestNet() {
+        return BTC_DAO_TESTNET.name().equals(network);
     }
 
     public boolean isRegtest() {

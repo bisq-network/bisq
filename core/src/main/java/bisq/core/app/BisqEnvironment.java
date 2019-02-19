@@ -166,8 +166,7 @@ public class BisqEnvironment extends StandardEnvironment {
     public static boolean isDaoActivated(Environment environment) {
         Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false);
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
-        return daoActivatedFromOptions || isRegTestOrTestNet;
+        return daoActivatedFromOptions || !baseCurrencyNetwork.isMainnet();
     }
 
 
