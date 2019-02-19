@@ -591,7 +591,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         // We allow switching to testnet to make it easier for users to test the testnet DAO version
         baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                .filter(BaseCurrencyNetwork::isBitcoin)
                 .filter(e -> !e.isRegtest())
                 .collect(Collectors.toList());
         selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));

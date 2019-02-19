@@ -68,6 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
+import static bisq.core.btc.BaseCurrencyNetwork.BTC_DAO_TESTNET;
 import static bisq.core.btc.BaseCurrencyNetwork.BTC_MAINNET;
 import static bisq.core.btc.BaseCurrencyNetwork.BTC_REGTEST;
 import static bisq.core.btc.BaseCurrencyNetwork.BTC_TESTNET;
@@ -479,7 +480,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 format("Base currency network (default: %s)", BisqEnvironment.getDefaultBaseCurrencyNetwork().name()))
                 .withRequiredArg()
                 .ofType(String.class)
-                .describedAs(format("%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST));
+                .describedAs(format("%s|%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST, BTC_DAO_TESTNET));
 
         parser.accepts(BtcOptionKeys.REG_TEST_HOST,
                 format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))
