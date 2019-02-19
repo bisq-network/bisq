@@ -17,29 +17,18 @@
 
 package bisq.core.network.p2p.seed;
 
-import com.google.common.collect.ImmutableSet;
+import bisq.core.app.BisqEnvironment;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Set;
+import org.springframework.core.env.PropertySource;
 
-import org.jetbrains.annotations.NotNull;
+import org.junit.Assert;
+import org.junit.Test;
 
-class ImmutableSetDecorator<T> extends AbstractSet<T> {
-    private final Set<T> delegate;
+public class DefaultSeedNodeRepositoryTest {
 
-    public ImmutableSetDecorator(Set<T> delegate) {
-        this.delegate = ImmutableSet.copyOf(delegate);
-    }
-
-    @NotNull
-    @Override
-    public Iterator<T> iterator() {
-        return delegate.iterator();
-    }
-
-    @Override
-    public int size() {
-        return delegate.size();
+    @Test
+    public void getSeedNodes() {
+        DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new BisqEnvironment(new PropertySource.StubPropertySource("name")));
+        Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
     }
 }
