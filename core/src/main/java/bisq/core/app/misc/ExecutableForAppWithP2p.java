@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
     private static final long MAX_MEMORY_MB_DEFAULT = 500;
-    private static final long CHECK_MEMORY_PERIOD_SEC = 10;
+    private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     private volatile boolean stopped;
     private static long maxMemory = MAX_MEMORY_MB_DEFAULT;
 
