@@ -209,6 +209,7 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("ONION");
         newlyAdded.add("FJC");
         newlyAdded.add("LYTX");
+        newlyAdded.add("LTZ");
         newlyAdded.add("MILE");
         newlyAdded.add("PRSN");
         newlyAdded.add("TUSD");
