@@ -101,10 +101,12 @@ public class RpcService {
         boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
         boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
         boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
+        boolean isDaoTestNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet();
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet ? "8332" :
                         isTestnet ? "18332" :
-                                "18443"; // regtest
+                                isDaoTestNet ? "18554" :
+                                        "18443"; // regtest
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         this.dumpBlockchainData = dumpBlockchainData;
