@@ -55,7 +55,7 @@ public enum BaseCurrencyNetwork {
     }
 
     public boolean isDaoTestNet() {
-        return BTC_DAO_TESTNET.name().equals(network);
+        return "DAO_TESTNET".equals(network);
     }
 
     public boolean isRegtest() {
