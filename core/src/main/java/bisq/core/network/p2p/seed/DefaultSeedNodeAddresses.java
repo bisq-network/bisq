@@ -90,7 +90,6 @@ class DefaultSeedNodeAddresses {
 
             // explorer
             // new NodeAddress("gtif46mfxirv533z.onion:8003")
-            //
     );
 
     private DefaultSeedNodeAddresses() {

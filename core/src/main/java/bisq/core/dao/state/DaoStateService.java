@@ -197,7 +197,7 @@ public class DaoStateService implements DaoSetupService {
         if (daoState.getBlocks().isEmpty() && block.getHeight() != getGenesisBlockHeight()) {
             log.warn("We don't have any blocks yet and we received a block which is not the genesis block. " +
                     "We ignore that block as the first block need to be the genesis block. " +
-                    "That might happen in edge cases at reorgs.");
+                    "That might happen in edge cases at reorgs. Received block={}", block);
         } else {
             daoState.getBlocks().add(block);
 
