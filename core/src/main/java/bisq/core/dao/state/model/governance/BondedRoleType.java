@@ -31,29 +31,29 @@ import lombok.Getter;
  */
 public enum BondedRoleType {
     // admins
-    GITHUB_ADMIN(50_000, 60, "https://github.com/bisq-network/roles/issues/16", true),
-    FORUM_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/19", true),
-    TWITTER_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/21", true),
-    ROCKET_CHAT_ADMIN(20_000, 60, "https://github.com/bisq-network/roles/issues/79", true),
-    YOUTUBE_ADMIN(5_000, 60, "https://github.com/bisq-network/roles/issues/56", true),
+    GITHUB_ADMIN(50_000, 60, "https://bisq.network/roles/16", true),
+    FORUM_ADMIN(20_000, 60, "https://bisq.network/roles/19", true),
+    TWITTER_ADMIN(20_000, 60, "https://bisq.network/roles/21", true),
+    ROCKET_CHAT_ADMIN(20_000, 60, "https://bisq.network/roles/79", true),
+    YOUTUBE_ADMIN(5_000, 60, "https://bisq.network/roles/56", true),
 
     // maintainers
-    BISQ_MAINTAINER(50_000, 60, "https://github.com/bisq-network/roles/issues/63", true),
+    BISQ_MAINTAINER(50_000, 60, "https://bisq.network/roles/63", true),
 
     // operators
-    WEBSITE_OPERATOR(50_000, 60, "https://github.com/bisq-network/roles/issues/12", true),
-    FORUM_OPERATOR(50_000, 60, "https://github.com/bisq-network/roles/issues/19", true),
-    SEED_NODE_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/15", true),
-    PRICE_NODE_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/14", true),
-    BTC_NODE_OPERATOR(5_000, 60, "https://github.com/bisq-network/roles/issues/67", true),
-    MARKETS_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/9", true),
-    BSQ_EXPLORER_OPERATOR(20_000, 60, "https://github.com/bisq-network/roles/issues/11", true),
+    WEBSITE_OPERATOR(50_000, 60, "https://bisq.network/roles/12", true),
+    FORUM_OPERATOR(50_000, 60, "https://bisq.network/roles/19", true),
+    SEED_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/15", true),
+    PRICE_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/14", true),
+    BTC_NODE_OPERATOR(5_000, 60, "https://bisq.network/roles/67", true),
+    MARKETS_OPERATOR(20_000, 60, "https://bisq.network/roles/9", true),
+    BSQ_EXPLORER_OPERATOR(20_000, 60, "https://bisq.network/roles/11", true),
 
     // other
-    DOMAIN_NAME_HOLDER(50_000, 60, "https://github.com/bisq-network/roles/issues/77", false),
-    DNS_ADMIN(50_000, 60, "https://github.com/bisq-network/roles/issues/18", false),
+    DOMAIN_NAME_HOLDER(50_000, 60, "https://bisq.network/roles/77", false),
+    DNS_ADMIN(50_000, 60, "https://bisq.network/roles/18", false),
     MEDIATOR(10_000, 60, "N/A", true),
-    ARBITRATOR(200_000, 60, "https://github.com/bisq-network/roles/issues/13", true);
+    ARBITRATOR(200_000, 60, "https://bisq.network/roles/13", true);
 
 
     // Satoshi value of BSQ bond

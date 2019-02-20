@@ -60,7 +60,7 @@ public class BisqInstaller {
     private static final String FINGER_PRINT_CHRIS_BEAMS = "5BC5ED73";
     private static final String FINGER_PRINT_CHRISTOPH_ATTENEDER = "29CDFD3B";
     private static final String PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/";
-    private static final String DOWNLOAD_HOST_URL = "https://github.com/bisq-network/exchange/releases/download/";
+    private static final String DOWNLOAD_HOST_URL = "https://bisq.network/downloads/";
 
     public boolean isSupportedOS() {
         return Utilities.isOSX() || Utilities.isWindows() || Utilities.isLinux();
