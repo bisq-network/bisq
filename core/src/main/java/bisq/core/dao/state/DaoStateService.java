@@ -201,12 +201,13 @@ public class DaoStateService implements DaoSetupService {
         } else {
             daoState.getBlocks().add(block);
 
-            log.info("New Block added at blockHeight " + block.getHeight());
+            log.info("New Block added at blockHeight {}", block.getHeight());
         }
     }
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
+        log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
         // blocks as that cause performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
@@ -218,6 +219,7 @@ public class DaoStateService implements DaoSetupService {
 
     // Called after parsing of all pending blocks is completed
     public void onParseBlockChainComplete() {
+        log.info("Parse blockchain completed");
         parseBlockChainComplete = true;
 
         getLastBlock().ifPresent(block -> {
