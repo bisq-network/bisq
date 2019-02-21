@@ -976,6 +976,6 @@ public class GUIUtil {
 
     public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
         if (txId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId);
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
     }
 }
