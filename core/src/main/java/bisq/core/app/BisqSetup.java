@@ -417,30 +417,35 @@ public class BisqSetup {
     }
 
     private void checkIfLocalHostNodeIsRunning() {
-        Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
-            Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
-            Socket socket = null;
-            try {
-                socket = new Socket();
-                socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
-                        BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
-                log.info("Localhost Bitcoin node detected.");
-                UserThread.execute(() -> {
-                    bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
-                    step3();
-                });
-            } catch (Throwable e) {
-                UserThread.execute(BisqSetup.this::step3);
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException ignore) {
+        // For DAO testnet we ignore local btc node
+        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet()) {
+            step3();
+        } else {
+            Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
+                Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
+                Socket socket = null;
+                try {
+                    socket = new Socket();
+                    socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
+                            BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
+                    log.info("Localhost Bitcoin node detected.");
+                    UserThread.execute(() -> {
+                        bisqEnvironment.setBitcoinLocalhostNodeRunning(true);
+                        step3();
+                    });
+                } catch (Throwable e) {
+                    UserThread.execute(BisqSetup.this::step3);
+                } finally {
+                    if (socket != null) {
+                        try {
+                            socket.close();
+                        } catch (IOException ignore) {
+                        }
                     }
                 }
-            }
-        });
-        checkIfLocalHostNodeIsRunningThread.start();
+            });
+            checkIfLocalHostNodeIsRunningThread.start();
+        }
     }
 
     private void readMapsFromResources() {
