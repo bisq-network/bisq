@@ -7,11 +7,13 @@
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
 version=0.9.3-SNAPSHOT
-if [ ! -f "$JAVA_HOME/bin/javapackager" ] && [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
-    JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
-else
-    echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
-    exit 1
+if [ ! -f "$JAVA_HOME/bin/javapackager" ]; then
+	if [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
+    	JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
+	else
+	    echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
+	    exit 1
+	fi
 fi
 
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
@@ -117,7 +119,7 @@ fi
 echo Generating rpm package
 $JAVA_HOME/bin/javapackager \
     -deploy \
-    -BappVersion=$version_base \
+    -BappVersion=$version \
     -Bcategory=Network \
     -Bemail=contact@bisq.network \
     -BlicenseType=GPLv3 \
@@ -134,8 +136,8 @@ $JAVA_HOME/bin/javapackager \
     -outfile Bisq-$version \
     -v
 
-if [ ! -f "$base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm" ]; then
-    echo No rpm file found at $base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm
+if [ ! -f "$base_dir/desktop/package/linux/bisq-$version-1.x86_64.rpm" ]; then
+    echo No rpm file found at $base_dir/desktop/package/linux/bisq-$version-1.x86_64.rpm
     exit 3
 fi
 
@@ -148,10 +150,11 @@ mv $base_dir/desktop/package/linux/bisq-$version.deb $base_dir/desktop/package/l
 echo SHA256 of $base_dir/desktop/package/linux/Bisq-$version.deb:
 shasum -a256 $base_dir/desktop/package/linux/Bisq-$version.deb | awk '{print $1}' | tee $base_dir/desktop/package/linux/Bisq-$version.deb.txt
 
-if [ -f "$base_dir/desktop/package/linux/Bisq-$version_base-1.x86_64.rpm" ]; then
-    rm "$base_dir/desktop/package/linux/Bisq-$version_base-1.x86_64.rpm"
-fi
-mv $base_dir/desktop/package/linux/bisq-$version_base-1.x86_64.rpm $base_dir/desktop/package/linux/Bisq-$version.rpm
+# FIXME: My Ubuntu somehow also deletes the lower case file
+# if [ -f "$base_dir/desktop/package/linux/Bisq-$version-1.x86_64.rpm" ]; then
+#     rm "$base_dir/desktop/package/linux/Bisq-$version-1.x86_64.rpm"
+# fi
+mv $base_dir/desktop/package/linux/bisq-$version-1.x86_64.rpm $base_dir/desktop/package/linux/Bisq-$version.rpm
 
 echo SHA256 of $base_dir/desktop/package/linux/Bisq-$version.rpm:
 shasum -a256 $base_dir/desktop/package/linux/Bisq-$version.rpm | awk '{print $1}' | tee $base_dir/desktop/package/linux/Bisq-$version.rpm.txt
