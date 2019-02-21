@@ -257,7 +257,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -279,11 +278,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
-                final long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
-                final long availableBalance = bsqWalletService.getAvailableBalance().value;
+                long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
+                long availableBalance = bsqWalletService.getAvailableBalance().value;
 
                 if (requiredBond > availableBalance) {
-                    final long missing = requiredBond - availableBalance;
+                    long missing = requiredBond - availableBalance;
                     new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
                             bsqFormatter.formatCoinWithCode(missing)))
                             .actionButtonText(Res.get("dao.proposal.create.publish"))
@@ -291,6 +290,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                                 showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
                             })
                             .show();
+                } else {
+                    showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
                 }
             } else {
                 showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txSize, fee);
@@ -330,7 +331,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     private void doPublishMyProposal(Proposal proposal, Transaction transaction) {
-
         busyLabel.setVisible(true);
         busyAnimation.play();
         makeProposalButton.setDisable(true);
