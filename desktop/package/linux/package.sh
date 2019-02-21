@@ -7,11 +7,13 @@
 #   - Ensure JAVA_HOME below is pointing to OracleJDK 10 directory
 
 version=0.9.3-SNAPSHOT
-if [ ! -f "$JAVA_HOME/bin/javapackager" ] && [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
-    JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
-else
-    echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
-    exit 1
+if [ ! -f "$JAVA_HOME/bin/javapackager" ]; then
+	if [ -d "/usr/lib/jvm/jdk-10.0.2" ]; then
+    	JAVA_HOME=/usr/lib/jvm/jdk-10.0.2
+	else
+	    echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
+	    exit 1
+	fi
 fi
 
 base_dir=$( cd "$(dirname "$0")" ; pwd -P )/../../..
