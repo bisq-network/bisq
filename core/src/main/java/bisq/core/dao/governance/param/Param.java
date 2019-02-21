@@ -100,9 +100,9 @@ public enum Param {
     // but can be also a burner address if we prefer to burn the BTC
     RECIPIENT_BTC_ADDRESS(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
-            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
-                    "2N5J6MyjAsWnashimGiNwoRzUXThsQzRmbv" : // regtest
-                    "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV", // testnet
+            BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ?
+                    "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
+                    "mquz1zFmhs7iy8qJTkhY7C9bhJ5S3g8Xim", // regtest or DAO testnet (regtest)
             ParamType.ADDRESS),
 
     // Fee for activating an asset or re-listing after deactivation due lack of trade activity. Fee per day of trial period without activity checks.
@@ -128,43 +128,43 @@ public enum Param {
             "3601" :    // mainnet; 24 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "4" :       // regtest
-                    "380",      // testnet; 2.6 days
+                    "380",      // testnet or dao testnet (server side regtest); 2.6 days
             ParamType.BLOCK, 3, 3),
     PHASE_BREAK1(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "149" :     // mainnet; 1 day
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "1" :       // regtest
-                    "10",       // testnet
+                    "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 3, 3),
     PHASE_BLIND_VOTE(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "601" :     // mainnet; 4 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
-                    "300",      // testnet; 2 days
+                    "300",      // testnet or dao testnet (server side regtest); 2 days
             ParamType.BLOCK, 3, 3),
     PHASE_BREAK2(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "1" :       // regtest
-                    "10",       // testnet
+                    "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 3, 23),
     PHASE_VOTE_REVEAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "301" :     // mainnet; 2 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
-                    "300",      // testnet; 2 days
+                    "300",      // testnet or dao testnet (server side regtest); 2 days
             ParamType.BLOCK, 3, 3),
     PHASE_BREAK3(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "1" :       // regtest
-                    "10",       // testnet
+                    "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 3, 3),
     PHASE_RESULT(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "10" :      // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
-                    "2",        // testnet
+                    "2",        // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 3, 3);
 
     @Getter

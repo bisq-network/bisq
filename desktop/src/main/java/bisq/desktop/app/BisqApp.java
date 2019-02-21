@@ -238,10 +238,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         // configure the primary stage
         String appName = injector.getInstance(Key.get(String.class, Names.named(AppOptionKeys.APP_NAME_KEY)));
-        if (BisqEnvironment.getBaseCurrencyNetwork().isTestnet())
-            appName += " [TESTNET]";
-        else if (BisqEnvironment.getBaseCurrencyNetwork().isRegtest())
-            appName += " [REGTEST]";
+        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
+            appName += " [" + Res.get(BisqEnvironment.getBaseCurrencyNetwork().name()) + "]";
+
         stage.setTitle(appName);
         stage.setScene(scene);
         stage.setMinWidth(MIN_WINDOW_WIDTH);
