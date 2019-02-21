@@ -225,8 +225,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             @Override
             public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
                 return baseCurrencyNetwork != null ?
-                        (baseCurrencyNetwork.getCurrencyName() + "_" + baseCurrencyNetwork.getNetwork())
-                        : "";
+                        Res.get(baseCurrencyNetwork.name()) :
+                        Res.get("na");
             }
 
             @Override
