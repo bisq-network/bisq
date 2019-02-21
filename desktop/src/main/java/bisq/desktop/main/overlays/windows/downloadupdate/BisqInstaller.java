@@ -63,7 +63,7 @@ public class BisqInstaller {
     private static final String DOWNLOAD_HOST_URL = "https://github.com/bisq-network/exchange/releases/download/";
 
     public boolean isSupportedOS() {
-        return Utilities.isOSX() || Utilities.isWindows() || Utilities.isLinux();
+        return Utilities.isOSX() || Utilities.isWindows() || Utilities.isDebianLinux() || Utilities.isRedHatLinux();
     }
 
     public Optional<DownloadTask> download(String version) {
@@ -211,10 +211,12 @@ public class BisqInstaller {
             fileName = prefix + version + ".dmg";
         else if (Utilities.isWindows())
             fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".exe";
-        else if (Utilities.isLinux())
+        else if (Utilities.isDebianLinux())
             fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".deb";
+        else if (Utilities.isRedHatLinux())
+            fileName = prefix + Utilities.getOSArchitecture() + "bit-" + version + ".rpm";
         else
-            throw new RuntimeException("No suitable OS found, use osCheck before calling this method.");
+            throw new RuntimeException("No suitable install package available for your OS.");
 
         return FileDescriptor.builder()
                 .type(DownloadType.INSTALLER)

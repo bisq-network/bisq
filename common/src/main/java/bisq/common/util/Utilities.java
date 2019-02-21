@@ -171,6 +171,14 @@ public class Utilities {
         return getOSName().contains("linux");
     }
 
+    public static boolean isDebianLinux() {
+        return isLinux() && new File("/etc/debian_version").isFile();
+    }
+
+    public static boolean isRedHatLinux() {
+        return isLinux() && new File("/etc/redhat-release").isFile();
+    }
+
     private static String getOSName() {
         return System.getProperty("os.name").toLowerCase(Locale.US);
     }
