@@ -209,9 +209,12 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private PeerGroup createPeerGroup() {
+        PeerGroup peerGroup;
         // no proxy case.
         if (socks5Proxy == null) {
-            return new PeerGroup(params, vChain);
+            peerGroup = new PeerGroup(params, vChain);
+            // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
+            // if local btc node is not synced with our dao testnet master node.
         } else {
             // proxy case (tor).
             Proxy proxy = new Proxy(Proxy.Type.SOCKS,
@@ -224,18 +227,18 @@ public class WalletConfig extends AbstractIdleService {
                     new BlockingClientManager() :
                     new BlockingClientManager(proxySocketFactory);
 
-            PeerGroup peerGroup = new PeerGroup(params, vChain, blockingClientManager);
+            peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
             blockingClientManager.setConnectTimeoutMillis(TIMEOUT);
             peerGroup.setConnectTimeoutMillis(TIMEOUT);
-
-            // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
-            // if local btc node is not synced with our dao testnet master node.
-            if (BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet())
-                peerGroup.setUseLocalhostPeerWhenPossible(false);
-
-            return peerGroup;
         }
+
+        // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
+        // if local btc node is not synced with our dao testnet master node.
+        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet())
+            peerGroup.setUseLocalhostPeerWhenPossible(false);
+
+        return peerGroup;
     }
 
     /**
@@ -410,7 +413,7 @@ public class WalletConfig extends AbstractIdleService {
                         time = seed.getCreationTimeSeconds();
                         if (chainFileExists) {
                             log.info("Clearing the chain file in preparation from restore.");
-                            ((ClearableSPVBlockStore)vStore).clear();
+                            ((ClearableSPVBlockStore) vStore).clear();
                         }
                     } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
@@ -423,7 +426,7 @@ public class WalletConfig extends AbstractIdleService {
                         log.warn("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
                 } else if (chainFileExists) {
                     log.info("Clearing the chain file in preparation from restore.");
-                    ((ClearableSPVBlockStore)vStore).clear();
+                    ((ClearableSPVBlockStore) vStore).clear();
                 }
             }
             vChain = new BlockChain(params, vStore);
