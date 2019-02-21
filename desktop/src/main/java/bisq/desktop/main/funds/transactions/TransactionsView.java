@@ -286,7 +286,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void openAddressInBlockExplorer(TransactionsListItem item) {
         if (item.getAddressString() != null) {
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
         }
     }
 

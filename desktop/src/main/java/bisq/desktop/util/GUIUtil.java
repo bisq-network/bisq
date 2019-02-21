@@ -589,10 +589,12 @@ public class GUIUtil {
         }
     }
 
-
     public static void openWebPage(String target) {
+        openWebPage(target, true);
+    }
 
-        if (target.contains("bisq.network")) {
+    public static void openWebPage(String target, boolean useReferrer) {
+        if (useReferrer && target.contains("bisq.network")) {
             // add utm parameters
             target = appendURI(target, "utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_" +
                     preferences.getUserLanguage());

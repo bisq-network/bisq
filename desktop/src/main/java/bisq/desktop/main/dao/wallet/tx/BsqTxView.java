@@ -616,12 +616,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void openTxInBlockExplorer(BsqTxListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId(), false);
     }
 
     private void openAddressInBlockExplorer(BsqTxListItem item) {
         if (item.getAddress() != null) {
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress(), false);
         }
     }
 }

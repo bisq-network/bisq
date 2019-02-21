@@ -286,7 +286,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void openBlockExplorer(DepositListItem item) {
         if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
