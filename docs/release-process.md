@@ -82,7 +82,7 @@ with following configuration:
 Build output expected in deploy directory (opened after successful build process):
   
   1. `Bisq-${NEW-VERSION}.dmg` macOS signed installer 
-  2. `Bisq-${NEW-VERSION}.jar` Ddterministic fat jar 
+  2. `Bisq-${NEW-VERSION}.jar` Deterministic fat jar 
   3. `Bisq-${NEW-VERSION}.jar.txt` sha256 sum of deterministic fat jar 
   
 The build scripts also copies over the deterministic fat jar into the shared folders for the other VMs (Windows & Linux).
