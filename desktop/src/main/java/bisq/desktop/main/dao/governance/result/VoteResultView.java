@@ -921,9 +921,4 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 });
         votesTableView.getColumns().add(column);
     }
-
-    private void openTxInBlockExplorer(String txId) {
-        if (txId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId);
-    }
 }
