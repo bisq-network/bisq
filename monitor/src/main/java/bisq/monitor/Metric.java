@@ -94,10 +94,6 @@ public abstract class Metric extends Configurable implements Runnable {
 
             Version.setBaseCryptoNetworkId(Integer.parseInt(properties.getProperty("System." + BASE_CURRENCY_NETWORK, "1"))); // defaults to BTC_TESTNET
 
-            // add all capabilities
-            if(Capabilities.getSupportedCapabilities().isEmpty())
-                Arrays.stream(Capabilities.Capability.values()).forEach(capability -> Capabilities.addCapability(capability.ordinal()));
-
             // decide whether to enable or disable the task
             if (configuration.isEmpty() || !configuration.getProperty("enabled", "false").equals("true")
                     || !configuration.containsKey(INTERVAL)) {

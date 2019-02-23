@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.core.env.PropertySource;
 
 import bisq.common.Clock;
+import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -136,6 +137,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         super.configure(properties);
 
         history = Collections.synchronizedMap(new FixedSizeHistoryTracker(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
+
+        // add all capabilities
+        if(!Capabilities.getSupportedCapabilities().contains(Capabilities.Capability.DAO_FULL_NODE.ordinal()))
+            Capabilities.addCapability(Capabilities.Capability.DAO_FULL_NODE.ordinal());
     }
 
     @Override
