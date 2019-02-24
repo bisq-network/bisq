@@ -19,7 +19,12 @@ package bisq.monitor.reporter;
 
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
+
+import bisq.core.btc.BaseCurrencyNetwork;
+
 import bisq.network.p2p.NodeAddress;
+
+import bisq.common.app.Version;
 
 import org.berndpruenster.netlayer.tor.TorSocket;
 
@@ -45,15 +50,18 @@ public class GraphiteReporter extends Reporter {
 
     @Override
     public void report(long value) {
-        report(value, "bisq");
+        report(value, "");
     }
 
     @Override
     public void report(Map<String, String> values, String prefix) {
         long timestamp = System.currentTimeMillis() / 1000;
         values.forEach((key, value) -> {
-            String report = prefix + ("".equals(key) ? "" : (prefix.isEmpty() ? "" : ".") + key) + " " + value + " "
-                    + timestamp + "\n";
+            // https://graphite.readthedocs.io/en/latest/feeding-carbon.html
+            String report = "bisq" + (Version.getBaseCurrencyNetwork() != 0 ? "-" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].getNetwork() : "")
+                    + (prefix.isEmpty() ? "" : "." + prefix)
+                    + (key.isEmpty() ? "" : "." + key)
+                    + " " + value + " " + timestamp + "\n";
 
             try {
                 NodeAddress nodeAddress = OnionParser.getNodeAddress(configuration.getProperty("serviceUrl"));
@@ -85,6 +93,6 @@ public class GraphiteReporter extends Reporter {
 
     @Override
     public void report(Map<String, String> values) {
-        report(values, "bisq");
+        report(values, "");
     }
 }

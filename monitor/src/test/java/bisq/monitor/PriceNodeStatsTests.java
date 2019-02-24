@@ -17,35 +17,38 @@
 
 package bisq.monitor;
 
-import bisq.monitor.metric.P2PNetworkLoad;
-import bisq.monitor.reporter.ConsoleReporter;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Map;
-import java.util.Properties;
+import bisq.monitor.metric.PriceNodeStats;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
+
+import java.io.File;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.Assert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
- * Test the round trip time metric against the hidden service of tor project.org.
- *
  * @author Florian Reimair
  */
 @Disabled
-class P2PNetworkLoadTests {
+public class PriceNodeStatsTests {
+
+    private final static File torWorkingDirectory = new File("monitor/" + PriceNodeStatsTests.class.getSimpleName());
 
     /**
      * A dummy Reporter for development purposes.
      */
-    private class DummyReporter extends ConsoleReporter {
+    private class DummyReporter extends Reporter {
 
         private Map<String, String> results;
 
@@ -54,64 +57,55 @@ class P2PNetworkLoadTests {
             Assert.fail();
         }
 
-        Map<String, String> hasResults() {
+        public Map<String, String> results() {
             return results;
         }
 
         @Override
         public void report(Map<String, String> values) {
-            Assert.fail();
-        }
-
-        @Override
-        public void report(long value, String prefix) {
-            Assert.fail();
+            results = values;
         }
 
         @Override
         public void report(Map<String, String> values, String prefix) {
-            super.report(values, prefix);
-            results = values;
+            report(values);
+        }
+
+        @Override
+        public void report(long value, String prefix) {
+            report(value);
         }
     }
 
     @BeforeAll
-    static void setup() throws TorCtlException {
+    public static void setup() throws TorCtlException {
         // simulate the tor instance available to all metrics
-        Tor.setDefault(new NativeTor(Monitor.TOR_WORKING_DIR));
+        Tor.setDefault(new NativeTor(torWorkingDirectory));
     }
 
     @Test
-    void run() throws Exception {
+    public void connect() {
         DummyReporter reporter = new DummyReporter();
+        Metric DUT = new PriceNodeStats(reporter);
 
-        // configure
+
         Properties configuration = new Properties();
-        configuration.put("P2PNetworkLoad.enabled", "true");
-        configuration.put("P2PNetworkLoad.run.interval", "10");
-        configuration.put("P2PNetworkLoad.run.hosts",
-                "http://fl3mmribyxgrv63c.onion:8000, http://3f3cu2yw7u457ztq.onion:8000");
+        configuration.put("PriceNodeStats.run.hosts", "http://5bmpx76qllutpcyp.onion");
 
-        Metric DUT = new P2PNetworkLoad(reporter);
-        // start
         DUT.configure(configuration);
 
-        // give it some time to start and then stop
-        while (!DUT.enabled())
-            Thread.sleep(500);
-        Thread.sleep(20000);
+        DUT.execute();
 
-        Metric.haltAllMetrics();
-
-        // observe results
-        Map<String, String> results = reporter.hasResults();
-        Assert.assertFalse(results.isEmpty());
+        Assert.assertNotNull(reporter.results());
+        Assert.assertTrue(reporter.results.size() > 0);
     }
 
     @AfterAll
-    static void cleanup() {
+    public static void cleanup() {
         Tor tor = Tor.getDefault();
         checkNotNull(tor, "tor must not be null");
         tor.shutdown();
+        torWorkingDirectory.delete();
     }
+
 }

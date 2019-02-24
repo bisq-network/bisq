@@ -38,7 +38,7 @@ public class TorHiddenServiceStartupTime extends Metric {
 
     private static final String SERVICE_PORT = "run.servicePort";
     private static final String LOCAL_PORT = "run.localPort";
-    private final String hiddenServiceDirectory = "metric_" + getName();
+    private final String hiddenServiceDirectory = "monitor/work/metric_" + getName();
     private final ThreadGate gate = new ThreadGate();
 
     public TorHiddenServiceStartupTime(Reporter reporter) {
@@ -67,7 +67,7 @@ public class TorHiddenServiceStartupTime extends Metric {
                 servicePort);
         hiddenServiceSocket.addReadyListener(socket -> {
             // stop the timer and report
-            reporter.report(System.currentTimeMillis() - start, "bisq." + getName());
+            reporter.report(System.currentTimeMillis() - start, getName());
             log.debug("the hidden service is ready");
             gate.proceed();
             return null;

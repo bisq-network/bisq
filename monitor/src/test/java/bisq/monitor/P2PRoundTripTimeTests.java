@@ -105,8 +105,7 @@ class P2PRoundTripTimeTests {
         while (!DUT.enabled())
             Thread.sleep(2000);
 
-        DUT.shutdown();
-        DUT.join();
+        Metric.haltAllMetrics();
 
         // observe results
         Map<String, String> results = reporter.hasResults();

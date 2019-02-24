@@ -17,12 +17,15 @@
 
 package bisq.monitor;
 
+import bisq.monitor.metric.P2PMarketStats;
 import bisq.monitor.metric.P2PNetworkLoad;
-import bisq.monitor.metric.P2PNetworkMessageSnapshot;
+import bisq.monitor.metric.P2PSeedNodeSnapshot;
 import bisq.monitor.metric.P2PRoundTripTime;
+import bisq.monitor.metric.PriceNodeStats;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.reporter.ConsoleReporter;
 import bisq.monitor.reporter.GraphiteReporter;
 
 import org.berndpruenster.netlayer.tor.NativeTor;
@@ -51,7 +54,7 @@ import sun.misc.Signal;
 @Slf4j
 public class Monitor {
 
-    public static final File TOR_WORKING_DIR = new File("monitor/monitor-tor");
+    public static final File TOR_WORKING_DIR = new File("monitor/work/monitor-tor");
     private static String[] args = {};
 
     public static void main(String[] args) throws Throwable {
@@ -76,8 +79,12 @@ public class Monitor {
 
         // assemble Metrics
         // - create reporters
-//        ConsoleReporter consoleReporter = new ConsoleReporter();
         Reporter graphiteReporter = new GraphiteReporter();
+
+        // only use ConsoleReporter if requested (for debugging for example)
+        Properties properties = getProperties();
+        if ("true".equals(properties.getProperty("System.useConsoleReporter", "false")))
+            graphiteReporter = new ConsoleReporter();
 
         // - add available metrics with their reporters
         metrics.add(new TorStartupTime(graphiteReporter));
@@ -85,17 +92,24 @@ public class Monitor {
         metrics.add(new TorHiddenServiceStartupTime(graphiteReporter));
         metrics.add(new P2PRoundTripTime(graphiteReporter));
         metrics.add(new P2PNetworkLoad(graphiteReporter));
-        metrics.add(new P2PNetworkMessageSnapshot(graphiteReporter));
+        metrics.add(new P2PSeedNodeSnapshot(graphiteReporter));
+        metrics.add(new P2PMarketStats(graphiteReporter));
+        metrics.add(new PriceNodeStats(graphiteReporter));
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux
-        Signal.handle(new Signal("USR1"), signal -> reload());
+        Signal.handle(new Signal("USR1"), signal -> {
+            try {
+                configure();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        });
 
         // configure Metrics
         // - which also starts the metrics if appropriate
-        Properties properties = getProperties();
-        for (Metric current : metrics)
-            current.configure(properties);
+        configure();
 
         // exit Metrics gracefully on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -104,43 +118,33 @@ public class Monitor {
                 // set the name of the Thread for debugging purposes
                 setName("shutdownHook");
 
-                for (Metric current : metrics) {
-                    current.shutdown();
+                log.info("system shutdown initiated");
+
+                log.info("shutting down active metrics...");
+                Metric.haltAllMetrics();
+
+                try {
+                    log.info("shutting down tor...");
+                    Tor tor = Tor.getDefault();
+                    checkNotNull(tor, "tor must not be null");
+                    tor.shutdown();
+                } catch (Throwable ignore) {
                 }
-
-                // wait for the metrics to gracefully shut down
-                for (Metric current : metrics)
-                    try {
-                        current.join();
-                    } catch (InterruptedException ignore) {
-                    }
-
-                log.info("shutting down tor");
-                Tor tor = Tor.getDefault();
-                checkNotNull(tor, "tor must not be null");
-                tor.shutdown();
 
                 log.info("system halt");
             }
         });
-
-        // prevent the main thread to terminate
-        log.info("joining metrics...");
-        for (Metric current : metrics)
-            current.join();
     }
 
     /**
      * Reload the configuration from disk.
+     * 
+     * @throws Exception if something goes wrong
      */
-    private void reload() {
-        try {
-            Properties properties = getProperties();
-            for (Metric current : metrics)
-                current.configure(properties);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private void configure() throws Exception {
+        Properties properties = getProperties();
+        for (Metric current : metrics)
+            current.configure(properties);
     }
 
     /**
@@ -150,13 +154,14 @@ public class Monitor {
      * @throws Exception in case something goes wrong
      */
     private Properties getProperties() throws Exception {
-        Properties defaults = new Properties();
-        defaults.load(Monitor.class.getClassLoader().getResourceAsStream("metrics.properties"));
+        Properties result = new Properties();
 
-        Properties result = new Properties(defaults);
-
+        // if we have a config file load the config file, else, load the default config
+        // from the resources
         if (args.length > 0)
             result.load(new FileInputStream(args[0]));
+        else
+            result.load(Monitor.class.getClassLoader().getResourceAsStream("metrics.properties"));
 
         return result;
     }

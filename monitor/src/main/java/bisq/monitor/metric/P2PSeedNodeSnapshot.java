@@ -21,18 +21,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import org.jetbrains.annotations.NotNull;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
@@ -54,6 +55,9 @@ import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
+
+import java.net.MalformedURLException;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -66,17 +70,34 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 @Slf4j
-public class P2PNetworkMessageSnapshot extends Metric implements MessageListener, SetupListener {
+public class P2PSeedNodeSnapshot extends Metric implements MessageListener, SetupListener {
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
+    Statistics statistics;
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("metric_p2pNetworkMessageStatus");
+    private final File torHiddenServiceDir = new File("monitor/work/metric_" + this.getClass().getSimpleName());
     private int nonce;
-    private Map<NodeAddress, Map<String, Counter>> bucketsPerHost = new ConcurrentHashMap<>();
-    private Set<byte[]> hashes = new HashSet<>();
+    final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
+    private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
+
+    /**
+     * Statistics Interface for use with derived classes.
+     *
+     * @param <T> the value type of the statistics implementation
+     */
+    protected interface Statistics<T> {
+
+        Statistics create();
+
+        void log(ProtectedStoragePayload message);
+
+        Map<String, T> values();
+
+        void reset();
+    }
 
     /**
      * Efficient way to count message occurrences.
@@ -93,10 +114,43 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         }
     }
 
-    public P2PNetworkMessageSnapshot(Reporter reporter) {
+    /**
+     * Use a counter to do statistics.
+     */
+    private class MyStatistics  implements  Statistics<Counter> {
+
+        private final Map<String, Counter> buckets = new HashMap<>();
+
+        @Override
+        public Statistics create() {
+            return new MyStatistics();
+        }
+
+        @Override
+        public synchronized void log(ProtectedStoragePayload message) {
+
+            // For logging different data types
+            String className = message.getClass().getSimpleName();
+
+            buckets.putIfAbsent(className, new Counter());
+            buckets.get(className).increment();
+        }
+
+        @Override
+        public Map<String, Counter> values() {
+            return buckets;
+        }
+
+        @Override
+        public synchronized void reset() {
+            buckets.clear();
+        }
+    }
+
+    public P2PSeedNodeSnapshot(Reporter reporter) {
         super(reporter);
 
-        Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
+        statistics = new MyStatistics();
     }
 
     @Override
@@ -136,7 +190,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                         Futures.addCallback(future, new FutureCallback<>() {
                             @Override
                             public void onSuccess(Connection connection) {
-                                connection.addMessageListener(P2PNetworkMessageSnapshot.this);
+                                connection.addMessageListener(P2PSeedNodeSnapshot.this);
                                 log.debug("Send PreliminaryDataRequest to " + connection + " succeeded.");
                             }
 
@@ -165,27 +219,64 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         threadList.forEach(Thread::start);
         gate.await();
 
+        report();
+    }
+
+    /**
+     * Report all the stuff. Uses the configured reporter directly.
+     */
+    void report() {
+
         // report
         Map<String, String> report = new HashMap<>();
         // - assemble histograms
-        bucketsPerHost.forEach((host, buckets) -> buckets.forEach((type, counter) -> report
-                .put(OnionParser.prettyPrint(host) + "." + type, String.valueOf(counter.value()))));
+        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((type, counter) -> report
+                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, String.valueOf(((Counter) counter).value()))));
+
+        // - assemble diffs
+        //   - transfer values
+        Map<String, Statistics> messagesPerHost = new HashMap<>();
+        bucketsPerHost.forEach((host, value) -> messagesPerHost.put(OnionParser.prettyPrint(host), value));
+
+        //   - pick reference seed node and its values
+        Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
+        Map<String, Counter> referenceValues = messagesPerHost.get(referenceHost.get()).values();
+
+        //   - calculate diffs
+        messagesPerHost.forEach(
+            (host, statistics) -> {
+                statistics.values().forEach((messageType, count) -> {
+                    try {
+                        report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
+                                String.valueOf(referenceValues.get(messageType).value() - ((Counter) count).value()));
+                    } catch (MalformedURLException ignore) {
+                        log.error("we should never got here");
+                    }
+                });
+                try {
+                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost.get());
+                } catch (MalformedURLException ignore) {
+                    log.error("we should never got here");
+                }
+            });
+
+        // cleanup for next run
+        bucketsPerHost.forEach((host, statistics) -> statistics.reset());
 
         // when our hash cache exceeds a hard limit, we clear the cache and start anew
         if (hashes.size() > 150000)
             hashes.clear();
 
-        // report our findings iff we have not just started anew
-        reporter.report(report, "bisq." + getName());
+        reporter.report(report, getName());
     }
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataResponse) {
 
+            Statistics result = this.statistics.create();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
-            Map<String, Counter> buckets = new HashMap<>();
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
             dataSet.forEach(e -> {
                 final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
@@ -194,11 +285,7 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                     return;
                 }
 
-                // For logging different data types
-                String className = protectedStoragePayload.getClass().getSimpleName();
-
-                buckets.putIfAbsent(className, new Counter());
-                buckets.get(className).increment();
+                result.log(protectedStoragePayload);
             });
 
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
@@ -207,15 +294,19 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
                 persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
 
                     // memorize message hashes
+                    //Byte[] bytes = new Byte[persistableNetworkPayload.getHash().length];
+                    //Arrays.setAll(bytes, n -> persistableNetworkPayload.getHash()[n]);
+
+                    //hashes.add(bytes);
+
                     hashes.add(persistableNetworkPayload.getHash());
                 });
             }
 
             checkNotNull(connection.peersNodeAddressProperty(),
                     "although the property is nullable, we need it to not be null");
-            bucketsPerHost.put(connection.peersNodeAddressProperty().getValue(), buckets);
+            bucketsPerHost.put(connection.peersNodeAddressProperty().getValue(), result);
 
-            connection.removeMessageListener(this);
             connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
             gate.proceed();
         } else if (networkEnvelope instanceof CloseConnectionMessage) {
@@ -223,7 +314,6 @@ public class P2PNetworkMessageSnapshot extends Metric implements MessageListener
         } else {
             log.warn("Got a message of type <{}>, expected <GetDataResponse>",
                     networkEnvelope.getClass().getSimpleName());
-            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
         }
     }
 
