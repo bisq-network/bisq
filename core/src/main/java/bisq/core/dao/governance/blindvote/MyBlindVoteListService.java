@@ -221,6 +221,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             publishTx(resultHandler, exceptionHandler, blindVoteTx);
         } catch (CryptoException | TransactionVerificationException | InsufficientMoneyException |
                 WalletException | IOException exception) {
+            log.error(exception.toString());
+            exception.printStackTrace();
             exceptionHandler.handleException(exception);
         }
     }

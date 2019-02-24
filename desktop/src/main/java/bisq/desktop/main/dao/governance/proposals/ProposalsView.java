@@ -40,6 +40,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.state.DaoStateListener;
@@ -261,10 +262,12 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        if (isBlindVotePhaseButNotLastBlock())
+        Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
+        if (isBlindVotePhaseButNotLastBlock()) {
+            Coin availableForVoting = confirmedBalance.subtract(blindVoteFee);
             stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
-                    bsqFormatter.formatCoinWithCode(confirmedBalance)));
-        else
+                    bsqFormatter.formatCoinWithCode(availableForVoting)));
+        } else
             stakeInputTextField.setPromptText("");
     }
 
@@ -523,6 +526,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 }, exception -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
+                    updateViews();
                     new Popup<>().warning(exception.toString()).show();
                 });
 
