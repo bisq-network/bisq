@@ -211,7 +211,14 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Scene createAndConfigScene(MainView mainView, Injector injector) {
-        Rectangle maxWindowBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        Rectangle maxWindowBounds = new Rectangle();
+        try {
+            maxWindowBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        } catch (IllegalArgumentException e) {
+            // Multi-screen environments may encounter IllegalArgumentException (Window must not be zero)
+            // Just ignore the exception and continue, which means the window will use the minimum window size below
+            // since we are unable to determine if we can use a larger size
+        }
         Scene scene = new Scene(mainView.getRoot(),
                 maxWindowBounds.width < INITIAL_WINDOW_WIDTH ?
                         (maxWindowBounds.width < MIN_WINDOW_WIDTH ? MIN_WINDOW_WIDTH : maxWindowBounds.width) :
