@@ -160,16 +160,11 @@ public class GetDataRequestHandler {
             boolean doAdd = false;
             if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
                 final Capabilities supportedCapabilities = connection.getSupportedCapabilities();
-                if (supportedCapabilities.hasCapabilities()) {
-                    if (supportedCapabilities.isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
-                        doAdd = true;
-                    else
-                        log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                                "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-                } else {
-                    log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
+                if (supportedCapabilities.isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
+                    doAdd = true;
+                else
+                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
                             "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
-                }
             } else {
                 doAdd = true;
             }
