@@ -31,6 +31,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -38,7 +39,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -159,25 +159,15 @@ public class GetDataRequestHandler {
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             boolean doAdd = false;
             if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
-                final List<Integer> requiredCapabilities = ((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities();
-                final List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
-                if (supportedCapabilities != null) {
-                    for (int messageCapability : requiredCapabilities) {
-                        for (int connectionCapability : supportedCapabilities) {
-                            if (messageCapability == connectionCapability) {
-                                doAdd = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!doAdd)
+                final Capabilities supportedCapabilities = connection.getSupportedCapabilities();
+                if (supportedCapabilities.hasCapabilities()) {
+                    if (supportedCapabilities.isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
+                        doAdd = true;
+                    else
                         log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
-                                "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
-                                "Supported capabilities is: " + supportedCapabilities.toString() + "\n" +
                                 "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                 } else {
                     log.debug("We do not send the message to the peer because he uses an old version which does not support capabilities.\n" +
-                            "Required capabilities is: " + requiredCapabilities.toString() + "\n" +
                             "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
                 }
             } else {

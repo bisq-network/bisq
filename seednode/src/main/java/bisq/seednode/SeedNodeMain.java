@@ -25,9 +25,12 @@ import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.setup.CommonSetup;
 
 import joptsimple.OptionSet;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,7 +63,10 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void addCapabilities() {
-        Capabilities.addCapability(Capabilities.Capability.SEED_NODE.ordinal());
+        // TODO got even worse after refactoring
+        List<Integer> current = Capabilities.toIntList(Capabilities.app);
+        current.add(Capability.SEED_NODE.ordinal());
+        Capabilities.app.resetCapabilities(Capabilities.fromIntList(current));
     }
 
     @Override

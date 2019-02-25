@@ -28,7 +28,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import io.bisq.generated.protobuffer.PB;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,10 +43,10 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
     private final int requestNonce;
     private final Set<Peer> reportedPeers;
     @Nullable
-    private final List<Integer> supportedCapabilities;
+    private final Capabilities supportedCapabilities;
 
     public GetPeersResponse(int requestNonce, Set<Peer> reportedPeers) {
-        this(requestNonce, reportedPeers, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
+        this(requestNonce, reportedPeers, Capabilities.app, Version.getP2PMessageVersion());
     }
 
 
@@ -57,7 +56,7 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
 
     private GetPeersResponse(int requestNonce,
                              Set<Peer> reportedPeers,
-                             @Nullable List<Integer> supportedCapabilities,
+                             @Nullable Capabilities supportedCapabilities,
                              int messageVersion) {
         super(messageVersion);
         this.requestNonce = requestNonce;
@@ -73,7 +72,7 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
                         .map(Peer::toProtoMessage)
                         .collect(Collectors.toList()));
 
-        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
 
         return getNetworkEnvelopeBuilder()
                 .setGetPeersResponse(builder)
@@ -86,12 +85,12 @@ public final class GetPeersResponse extends NetworkEnvelope implements PeerExcha
                 .map(peer -> {
                     NodeAddress nodeAddress = new NodeAddress(peer.getNodeAddress().getHostName(),
                             peer.getNodeAddress().getPort());
-                    return new Peer(nodeAddress, peer.getSupportedCapabilitiesList());
+                    return new Peer(nodeAddress, Capabilities.fromIntList(peer.getSupportedCapabilitiesList()));
                 })
                 .collect(Collectors.toCollection(HashSet::new));
         return new GetPeersResponse(proto.getRequestNonce(),
                 reportedPeers,
-                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
     }
 }

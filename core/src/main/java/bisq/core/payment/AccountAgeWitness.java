@@ -24,6 +24,7 @@ import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
@@ -31,10 +32,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Value;
@@ -104,10 +102,8 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
 
     // Pre 0.6 version don't know the new message type and throw an error which leads to disconnecting the peer.
     @Override
-    public List<Integer> getRequiredCapabilities() {
-        return new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal()
-        ));
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.ACCOUNT_AGE_WITNESS);
     }
 
     @Override

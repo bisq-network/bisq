@@ -20,14 +20,13 @@ package bisq.network.p2p.peers.peerexchange;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.SupportedCapabilitiesListener;
 
+import bisq.common.app.Capabilities;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,31 +38,28 @@ import javax.annotation.Nullable;
 @Getter
 @EqualsAndHashCode(exclude = {"date"}) // failedConnectionAttempts is transient and therefore excluded anyway
 @Slf4j
-public final class Peer implements NetworkPayload, PersistablePayload, SupportedCapabilitiesListener {
+public final class Peer extends Capabilities implements NetworkPayload, PersistablePayload, SupportedCapabilitiesListener {
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
     private final NodeAddress nodeAddress;
     private final long date;
     // Added in v. 0.7.1
-    @Setter
-    private List<Integer> supportedCapabilities = new ArrayList<>();
 
     @Setter
     transient private int failedConnectionAttempts = 0;
 
-    public Peer(NodeAddress nodeAddress, @Nullable List<Integer> supportedCapabilities) {
-        this(nodeAddress, new Date().getTime(),
-                supportedCapabilities == null ? new ArrayList<>() : supportedCapabilities);
+    public Peer(NodeAddress nodeAddress, @Nullable Capabilities supportedCapabilities) {
+        this(nodeAddress, new Date().getTime(), supportedCapabilities);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Peer(NodeAddress nodeAddress, long date, List<Integer> supportedCapabilities) {
+    private Peer(NodeAddress nodeAddress, long date, Capabilities supportedCapabilities) {
+        super(supportedCapabilities);
         this.nodeAddress = nodeAddress;
         this.date = date;
-        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
@@ -71,15 +67,14 @@ public final class Peer implements NetworkPayload, PersistablePayload, Supported
         return PB.Peer.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
                 .setDate(date)
-                .addAllSupportedCapabilities(supportedCapabilities)
+                .addAllSupportedCapabilities(Capabilities.toIntList(this))
                 .build();
     }
 
     public static Peer fromProto(PB.Peer proto) {
         return new Peer(NodeAddress.fromProto(proto.getNodeAddress()),
                 proto.getDate(),
-                proto.getSupportedCapabilitiesList().isEmpty() ?
-                        new ArrayList<>() : new ArrayList<>(proto.getSupportedCapabilitiesList()));
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()));
     }
 
 
@@ -100,9 +95,9 @@ public final class Peer implements NetworkPayload, PersistablePayload, Supported
     }
 
     @Override
-    public void onChanged(List<Integer> supportedCapabilities) {
-        if (supportedCapabilities != null && !supportedCapabilities.isEmpty())
-            this.supportedCapabilities = supportedCapabilities;
+    public void onChanged(Capabilities supportedCapabilities) {
+        if (supportedCapabilities.hasCapabilities())
+            resetCapabilities(supportedCapabilities);
     }
 
 
@@ -110,7 +105,7 @@ public final class Peer implements NetworkPayload, PersistablePayload, Supported
     public String toString() {
         return "Peer{" +
                 "\n     nodeAddress=" + nodeAddress +
-                ",\n     supportedCapabilities=" + supportedCapabilities +
+                ",\n     supportedCapabilities=" + capabilities +
                 ",\n     failedConnectionAttempts=" + failedConnectionAttempts +
                 ",\n     date=" + date +
                 "\n}";

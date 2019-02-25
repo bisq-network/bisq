@@ -15,10 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p.network;
+package bisq.common.app;
 
-import bisq.common.app.Capabilities;
-
-public interface SupportedCapabilitiesListener {
-    void onChanged(Capabilities supportedCapabilities);
+// We can define here special features the client is supporting.
+// Useful for updates to new versions where a new data type would break backwards compatibility or to
+// limit a node to certain behaviour and roles like the seed nodes.
+// We don't use the Enum in any serialized data, as changes in the enum would break backwards compatibility. We use the ordinal integer instead.
+// Sequence in the enum must not be changed (append only).
+public enum Capability {
+    TRADE_STATISTICS,
+    TRADE_STATISTICS_2,
+    ACCOUNT_AGE_WITNESS,
+    SEED_NODE,
+    DAO_FULL_NODE,
+    PROPOSAL,
+    BLIND_VOTE,
+    ACK_MSG,
+    BSQ_BLOCK
 }
