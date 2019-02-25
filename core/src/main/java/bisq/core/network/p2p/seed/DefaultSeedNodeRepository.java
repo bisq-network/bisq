@@ -68,7 +68,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         // else, we fetch the seed nodes from our resources
         try {
             // read appropriate file
-            final URL file = DefaultSeedNodeRepository.class.getClassLoader().getResource(BisqEnvironment.getBaseCurrencyNetwork().getNetwork().toLowerCase() + ENDING);
+            final URL file = DefaultSeedNodeRepository.class.getClassLoader().getResource(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
             final BufferedReader seedNodeFile = new BufferedReader(new FileReader(file.getFile()));
 
             // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
