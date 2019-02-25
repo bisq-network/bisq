@@ -619,13 +619,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         // it from old versions, so we filter those.
         Optional<Peer> optionalPeer = allPeers.stream()
                 .filter(peer -> peer.getNodeAddress().equals(peersNodeAddress))
-                .filter(peer -> peer.getSupportedCapabilities() != null)
-                .filter(peer -> !peer.getSupportedCapabilities().isEmpty())
+                .filter(peer -> peer.hasCapabilities())
                 .findAny();
         if (optionalPeer.isPresent()) {
             Peer peer = optionalPeer.get();
             boolean result = Connection.isCapabilityRequired(message) &&
-                    !Connection.isCapabilitySupported((CapabilityRequiringPayload) message, peer.getSupportedCapabilities());
+                    !peer.isCapabilitySupported(((CapabilityRequiringPayload) message).getRequiredCapabilities());
 
             if (result)
                 log.warn("We don't send the message because the peer does not support the required capability. " +

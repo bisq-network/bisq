@@ -310,26 +310,17 @@ public class Connection implements MessageListener {
     private boolean isCapabilitySupported(Proto msg) {
         if (msg instanceof AddDataMessage) {
             final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) msg).getProtectedStorageEntry()).getProtectedStoragePayload();
-            return protectedStoragePayload instanceof CapabilityRequiringPayload && isCapabilitySupported((CapabilityRequiringPayload) protectedStoragePayload);
+            return protectedStoragePayload instanceof CapabilityRequiringPayload && sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
         } else if (msg instanceof AddPersistableNetworkPayloadMessage) {
             final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) msg).getPersistableNetworkPayload();
-            return persistableNetworkPayload instanceof CapabilityRequiringPayload && isCapabilitySupported((CapabilityRequiringPayload) persistableNetworkPayload);
+            return persistableNetworkPayload instanceof CapabilityRequiringPayload && sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
         } else {
-            return msg instanceof CapabilityRequiringPayload && isCapabilitySupported((CapabilityRequiringPayload) msg);
+            return msg instanceof CapabilityRequiringPayload && sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
         }
     }
 
-    private boolean isCapabilitySupported(CapabilityRequiringPayload payload) {
-        return isCapabilitySupported(payload, sharedModel.getSupportedCapabilities());
-    }
-
-    public static boolean isCapabilitySupported(CapabilityRequiringPayload payload, List<Integer> supportedCapabilities) {
-        final List<Integer> requiredCapabilities = payload.getRequiredCapabilities();
-        return Capabilities.isCapabilitySupported(requiredCapabilities, supportedCapabilities);
-    }
-
     @Nullable
-    public List<Integer> getSupportedCapabilities() {
+    public Capabilities getSupportedCapabilities() {
         return sharedModel.getSupportedCapabilities();
     }
 
@@ -601,7 +592,7 @@ public class Connection implements MessageListener {
      * Holds all shared data between Connection and InputHandler
      * Runs in same thread as Connection
      */
-    private static class SharedModel {
+    private static class SharedModel extends Capabilities {
         private static final Logger log = LoggerFactory.getLogger(SharedModel.class);
 
         private final Connection connection;
@@ -612,9 +603,6 @@ public class Connection implements MessageListener {
         private volatile boolean stopped;
         private CloseConnectionReason closeConnectionReason;
         private RuleViolation ruleViolation;
-        @Nullable
-        private List<Integer> supportedCapabilities;
-
 
         SharedModel(Connection connection, Socket socket) {
             this.connection = connection;
@@ -654,18 +642,8 @@ public class Connection implements MessageListener {
         }
 
         @Nullable
-        public List<Integer> getSupportedCapabilities() {
-            return supportedCapabilities;
-        }
-
-        @SuppressWarnings("NullableProblems")
-        public void setSupportedCapabilities(List<Integer> supportedCapabilities) {
-            this.supportedCapabilities = supportedCapabilities;
-            connection.capabilitiesListeners.forEach(l -> {
-                SupportedCapabilitiesListener supportedCapabilitiesListener = l.get();
-                if (supportedCapabilitiesListener != null)
-                    supportedCapabilitiesListener.onChanged(supportedCapabilities);
-            });
+        public Capabilities getSupportedCapabilities() {
+            return new Capabilities(capabilities);
         }
 
         public void handleConnectionException(Throwable e) {
@@ -727,7 +705,7 @@ public class Connection implements MessageListener {
                     ",\n     stopped=" + stopped +
                     ",\n     closeConnectionReason=" + closeConnectionReason +
                     ",\n     ruleViolation=" + ruleViolation +
-                    ",\n     supportedCapabilities=" + supportedCapabilities +
+                    ",\n     supportedCapabilities=" + capabilities +
                     "\n}";
         }
     }
@@ -895,8 +873,8 @@ public class Connection implements MessageListener {
                             return;
                         }
 
-                        if (sharedModel.getSupportedCapabilities() == null && networkEnvelope instanceof SupportedCapabilitiesMessage)
-                            sharedModel.setSupportedCapabilities(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
+                        if (networkEnvelope instanceof SupportedCapabilitiesMessage)
+                            sharedModel.resetCapabilities(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
 
                         if (networkEnvelope instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down

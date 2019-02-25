@@ -25,7 +25,6 @@ import bisq.common.crypto.PubKeyRing;
 
 import io.bisq.generated.protobuffer.PB;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,7 +41,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private final PubKeyRing pubKeyRing;
     private final long takersTradePrice;
     @Nullable
-    private final List<Integer> supportedCapabilities;
+    private final Capabilities supportedCapabilities;
 
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
@@ -50,7 +49,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         this(offerId,
                 pubKeyRing,
                 takersTradePrice,
-                Capabilities.getSupportedCapabilities(),
+                Capabilities.app,
                 Version.getP2PMessageVersion(),
                 UUID.randomUUID().toString());
     }
@@ -63,7 +62,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private OfferAvailabilityRequest(String offerId,
                                      PubKeyRing pubKeyRing,
                                      long takersTradePrice,
-                                     @Nullable List<Integer> supportedCapabilities,
+                                     @Nullable Capabilities supportedCapabilities,
                                      int messageVersion,
                                      @Nullable String uid) {
         super(messageVersion, offerId, uid);
@@ -79,7 +78,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakersTradePrice(takersTradePrice);
 
-        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
 
         return getNetworkEnvelopeBuilder()
@@ -91,7 +90,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         return new OfferAvailabilityRequest(proto.getOfferId(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),
-                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid());
     }
