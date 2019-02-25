@@ -113,6 +113,7 @@ import java.io.OutputStreamWriter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -139,9 +140,14 @@ public class GUIUtil {
     public final static int AMOUNT_DECIMALS = 4;
 
     private static FeeService feeService;
+    private static Preferences preferences;
 
     public static void setFeeService(FeeService feeService) {
         GUIUtil.feeService = feeService;
+    }
+
+    public static void setPreferences(Preferences preferences) {
+        GUIUtil.preferences = preferences;
     }
 
     public static double getScrollbarWidth(Node scrollablePane) {
@@ -167,7 +173,7 @@ public class GUIUtil {
         //noinspection UnusedAssignment
         String key = "miningFeeInfo";
         //noinspection ConstantConditions,ConstantConditions
-        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key) && BisqEnvironment.getBaseCurrencyNetwork().isBitcoin()) {
+        if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable)
                     .useIUnderstandButton()
@@ -211,15 +217,17 @@ public class GUIUtil {
                 PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
+                    final HashSet<PaymentAccount> paymentAccounts = new HashSet<>();
                     persisted.getList().forEach(paymentAccount -> {
                         final String id = paymentAccount.getId();
                         if (user.getPaymentAccount(id) == null) {
-                            user.addPaymentAccount(paymentAccount);
+                            paymentAccounts.add(paymentAccount);
                             msg.append(Res.get("guiUtil.accountExport.tradingAccount", id));
                         } else {
                             msg.append(Res.get("guiUtil.accountImport.noImport", id));
                         }
                     });
+                    user.addImportedPaymentAccounts(paymentAccounts);
                     new Popup<>().feedback(Res.get("guiUtil.accountImport.imported", path, msg)).show();
 
                 } else {
@@ -581,21 +589,55 @@ public class GUIUtil {
         }
     }
 
-
     public static void openWebPage(String target) {
+        openWebPage(target, true);
+    }
+
+    public static void openWebPage(String target, boolean useReferrer) {
+        if (useReferrer && target.contains("bisq.network")) {
+            // add utm parameters
+            target = appendURI(target, "utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_" +
+                    preferences.getUserLanguage());
+        }
+
         String key = "warnOpenURLWhenTorEnabled";
         if (DontShowAgainLookup.showAgain(key)) {
+            final String finalTarget = target;
             new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
                         DontShowAgainLookup.dontShowAgain(key, true);
-                        doOpenWebPage(target);
+                        doOpenWebPage(finalTarget);
                     })
                     .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
-                    .onClose(() -> Utilities.copyToClipboard(target))
+                    .onClose(() -> Utilities.copyToClipboard(finalTarget))
                     .show();
         } else {
             doOpenWebPage(target);
+        }
+    }
+
+    private static String appendURI(String uri, String appendQuery) {
+        try {
+            final URI oldURI = new URI(uri);
+
+            String newQuery = oldURI.getQuery();
+
+            if (newQuery == null) {
+                newQuery = appendQuery;
+            } else {
+                newQuery += "&" + appendQuery;
+            }
+
+            URI newURI = new URI(oldURI.getScheme(), oldURI.getAuthority(), oldURI.getPath(),
+                    newQuery, oldURI.getFragment());
+
+            return newURI.toString();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+
+            return uri;
         }
     }
 
@@ -934,6 +976,6 @@ public class GUIUtil {
 
     public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
         if (txId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId);
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
     }
 }

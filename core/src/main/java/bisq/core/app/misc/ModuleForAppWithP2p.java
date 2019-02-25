@@ -20,6 +20,7 @@ package bisq.core.app.misc;
 import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.TorSetup;
 import bisq.core.arbitration.ArbitratorModule;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
@@ -74,6 +75,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
+        bind(TorSetup.class).in(Singleton.class);
 
         bind(SeedNodeAddressLookup.class).in(Singleton.class);
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);

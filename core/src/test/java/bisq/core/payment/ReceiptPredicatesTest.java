@@ -94,7 +94,7 @@ public class ReceiptPredicatesTest {
 
     @Test
     public void testIsEqualPaymentMethods() {
-        final PaymentMethod method = new PaymentMethod("1");
+        PaymentMethod method = PaymentMethod.getDummyPaymentMethod("1");
 
         Offer offer = mock(Offer.class);
         when(offer.getPaymentMethod()).thenReturn(method);

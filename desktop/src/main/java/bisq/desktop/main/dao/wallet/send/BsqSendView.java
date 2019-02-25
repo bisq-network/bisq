@@ -244,6 +244,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                             txSize,
                             receiversAddressInputTextField.getText(),
                             bsqFormatter,
+                            btcFormatter,
                             () -> {
                                 receiversAddressInputTextField.setText("");
                                 amountInputTextField.setText("");
@@ -298,6 +299,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                             miningFee,
                             txSize, receiversBtcAddressInputTextField.getText(),
                             btcFormatter,
+                            btcFormatter,
                             () -> {
                                 receiversBtcAddressInputTextField.setText("");
                                 btcAmountInputTextField.setText("");
@@ -330,16 +332,17 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                              Transaction txWithBtcFee,
                              Coin miningFee,
                              int txSize, String address,
-                             BSFormatter formatter,
+                             BSFormatter amountFormatter, // can be BSQ or BTC formatter
+                             BSFormatter feeFormatter,
                              ResultHandler resultHandler) {
         new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                 .confirmation(Res.get("dao.wallet.send.sendFunds.details",
-                        formatter.formatCoinWithCode(receiverAmount),
+                        amountFormatter.formatCoinWithCode(receiverAmount),
                         address,
-                        formatter.formatCoinWithCode(miningFee),
+                        feeFormatter.formatCoinWithCode(miningFee),
                         CoinUtil.getFeePerByte(miningFee, txSize),
                         txSize / 1000d,
-                        formatter.formatCoinWithCode(receiverAmount)))
+                        amountFormatter.formatCoinWithCode(receiverAmount)))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     walletsManager.publishAndCommitBsqTx(txWithBtcFee, new TxBroadcaster.Callback() {

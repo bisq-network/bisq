@@ -337,7 +337,7 @@ public class DisputeManager implements PersistedDataHost {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
             if (!storedDisputeOptional.isPresent() || reOpen) {
                 String sysMsg = dispute.isSupportTicket() ?
-                        Res.get("support.youOpenedTicket")
+                        Res.get("support.youOpenedTicket", disputeInfo)
                         : Res.get("support.youOpenedDispute", disputeInfo);
 
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(

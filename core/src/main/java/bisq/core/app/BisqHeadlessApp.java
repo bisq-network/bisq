@@ -78,26 +78,26 @@ public class BisqHeadlessApp implements HeadlessApp {
             log.info("onDisplayTacHandler: We accept the tacs automatically in headless mode");
             acceptedHandler.run();
         });
-        bisqSetup.setCryptoSetupFailedHandler(msg -> log.info("onCryptoSetupFailedHandler: msg={}", msg));
+        bisqSetup.setCryptoSetupFailedHandler(msg -> log.error("onCryptoSetupFailedHandler: msg={}", msg));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> log.info("onDisplayTorNetworkSettingsHandler: show={}", show));
-        bisqSetup.setSpvFileCorruptedHandler(msg -> log.info("onSpvFileCorruptedHandler: msg={}", msg));
-        bisqSetup.setChainFileLockedExceptionHandler(msg -> log.info("onChainFileLockedExceptionHandler: msg={}", msg));
+        bisqSetup.setSpvFileCorruptedHandler(msg -> log.error("onSpvFileCorruptedHandler: msg={}", msg));
+        bisqSetup.setChainFileLockedExceptionHandler(msg -> log.error("onChainFileLockedExceptionHandler: msg={}", msg));
         bisqSetup.setLockedUpFundsHandler(msg -> log.info("onLockedUpFundsHandler: msg={}", msg));
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(() -> log.info("onShowFirstPopupIfResyncSPVRequestedHandler"));
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> log.info("onRequestWalletPasswordHandler"));
         bisqSetup.setDisplayUpdateHandler((alert, key) -> log.info("onDisplayUpdateHandler"));
         bisqSetup.setDisplayAlertHandler(alert -> log.info("onDisplayAlertHandler. alert={}", alert));
         bisqSetup.setDisplayPrivateNotificationHandler(privateNotification -> log.info("onDisplayPrivateNotificationHandler. privateNotification={}", privateNotification));
-        bisqSetup.setDaoErrorMessageHandler(errorMessage -> log.info("onDaoErrorMessageHandler. errorMessage={}", errorMessage));
-        bisqSetup.setDaoWarnMessageHandler(warnMessage -> log.info("onDaoWarnMessageHandler. warnMessage={}", warnMessage));
+        bisqSetup.setDaoErrorMessageHandler(errorMessage -> log.error("onDaoErrorMessageHandler. errorMessage={}", errorMessage));
+        bisqSetup.setDaoWarnMessageHandler(warnMessage -> log.warn("onDaoWarnMessageHandler. warnMessage={}", warnMessage));
         bisqSetup.setDisplaySecurityRecommendationHandler(key -> log.info("onDisplaySecurityRecommendationHandler"));
         bisqSetup.setDisplayLocalhostHandler(key -> log.info("onDisplayLocalhostHandler"));
-        bisqSetup.setWrongOSArchitectureHandler(msg -> log.info("onWrongOSArchitectureHandler. msg={}", msg));
-        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.info("voteResultException={}", voteResultException));
+        bisqSetup.setWrongOSArchitectureHandler(msg -> log.error("onWrongOSArchitectureHandler. msg={}", msg));
+        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException));
 
         //TODO move to bisqSetup
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.info("getCorruptedDatabaseFiles. files={}", files));
-        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.info("onTakeOfferRequestErrorMessageHandler"));
+        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));
+        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> log.error("onTakeOfferRequestErrorMessageHandler"));
     }
 
     public void stop() {

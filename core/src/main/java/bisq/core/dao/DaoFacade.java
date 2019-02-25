@@ -187,14 +187,6 @@ public class DaoFacade implements DaoSetupService {
                 if (blockHeight > 0 && periodService.getCurrentCycle() != null)
                     periodService.getCurrentCycle().getPhaseForHeight(blockHeight).ifPresent(phaseProperty::set);
             }
-
-            @Override
-            public void onParseTxsComplete(Block block) {
-            }
-
-            @Override
-            public void onParseBlockChainComplete() {
-            }
         });
     }
 
@@ -402,17 +394,17 @@ public class DaoFacade implements DaoSetupService {
             case PROPOSAL:
                 break;
             case BREAK1:
-                firstBlock++;
+                firstBlock--;
                 break;
             case BLIND_VOTE:
                 break;
             case BREAK2:
-                firstBlock++;
+                firstBlock--;
                 break;
             case VOTE_REVEAL:
                 break;
             case BREAK3:
-                firstBlock++;
+                firstBlock--;
                 break;
             case RESULT:
                 break;
@@ -449,7 +441,7 @@ public class DaoFacade implements DaoSetupService {
         return lastBlock;
     }
 
-    // Because last block in request and voting phases must not be used fo making a tx as it will get confirmed in the
+    // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
     // next block which would be already the next phase we hide that last block to the user and add it to the break.
     public int getDurationForPhaseForDisplay(DaoPhase.Phase phase) {
         int duration = periodService.getDurationForPhase(phase, daoStateService.getChainHeight());
@@ -480,6 +472,10 @@ public class DaoFacade implements DaoSetupService {
         return duration;
     }
 
+    public int getCurrentCycleDuration() {
+        return periodService.getCurrentCycle().getDuration();
+    }
+
     // listeners for phase change
     public ReadOnlyObjectProperty<DaoPhase.Phase> phaseProperty() {
         return phaseProperty;
@@ -487,6 +483,14 @@ public class DaoFacade implements DaoSetupService {
 
     public int getChainHeight() {
         return daoStateService.getChainHeight();
+    }
+
+    public Optional<Block> getBlockAtChainHeight() {
+        return getBlockAtHeight(getChainHeight());
+    }
+
+    public Optional<Block> getBlockAtHeight(int chainHeight) {
+        return daoStateService.getBlockAtHeight(chainHeight);
     }
 
 

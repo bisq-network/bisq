@@ -27,7 +27,6 @@ import bisq.core.filter.FilterManager;
 import bisq.network.NetworkOptionKeys;
 
 import bisq.common.CommonOptionKeys;
-import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.storage.Storage;
@@ -109,15 +108,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected static BaseCurrencyNetwork baseCurrencyNetwork = getDefaultBaseCurrencyNetwork();
 
-    public static boolean isDAOActivatedAndBaseCurrencySupportingBsq() {
-        //noinspection ConstantConditions,PointlessBooleanExpression
-        return DevEnv.isDaoActivated() && isBaseCurrencySupportingBsq();
-    }
-
-    public static boolean isBaseCurrencySupportingBsq() {
-        return getBaseCurrencyNetwork().getCurrencyCode().equals("BTC");
-    }
-
     public static NetworkParameters getParameters() {
         return getBaseCurrencyNetwork().getParameters();
     }
@@ -176,8 +166,7 @@ public class BisqEnvironment extends StandardEnvironment {
     public static boolean isDaoActivated(Environment environment) {
         Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false);
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-        boolean isRegTestOrTestNet = (baseCurrencyNetwork.isTestnet() || baseCurrencyNetwork.isRegtest());
-        return daoActivatedFromOptions || isRegTestOrTestNet;
+        return daoActivatedFromOptions || !baseCurrencyNetwork.isMainnet();
     }
 
 

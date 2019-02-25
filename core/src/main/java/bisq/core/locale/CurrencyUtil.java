@@ -132,7 +132,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("GRIN", "Grin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
@@ -144,7 +143,20 @@ public class CurrencyUtil {
         return result;
     }
 
-    // At OKPay you can exchange internally those currencies
+    public static List<CryptoCurrency> getRemovedCryptoCurrencies() {
+        final List<CryptoCurrency> currencies = new ArrayList<>();
+        currencies.add(new CryptoCurrency("BCH", "Bitcoin Cash"));
+        currencies.add(new CryptoCurrency("BCHC", "Bitcoin Clashic"));
+        currencies.add(new CryptoCurrency("ACH", "AchieveCoin"));
+        currencies.add(new CryptoCurrency("SC", "SpaceCash"));
+        currencies.add(new CryptoCurrency("PPI", "PiedPiper Coin"));
+        currencies.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
+        currencies.add(new CryptoCurrency("GRC", "Gridcoin"));
+        currencies.add(new CryptoCurrency("LTZ", "LitecoinZ"));
+        currencies.add(new CryptoCurrency("ZOC", "01coin"));
+        return currencies;
+    }
+
     public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("USD"),
@@ -154,34 +166,6 @@ public class CurrencyUtil {
                 new FiatCurrency("UAH"),
                 new FiatCurrency("KZT"),
                 new FiatCurrency("BRL")
-        ));
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllOKPayCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("EUR"),
-                new FiatCurrency("USD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("HRK"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("ZAR"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("CNY")
         ));
         currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
@@ -388,7 +372,12 @@ public class CurrencyUtil {
         if (isCryptoCurrency(currencyCode)) {
             // We might not find the name in case we have a call for a removed asset.
             // If BTC is the code (used in tests) we also want return Bitcoin as name.
-            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" : Res.get("shared.na");
+            final Optional<CryptoCurrency> removedCryptoCurrency = getRemovedCryptoCurrencies().stream()
+                    .filter(cryptoCurrency -> cryptoCurrency.getCode().equals(currencyCode))
+                    .findAny();
+
+            String btcOrRemovedAsset = "BTC".equals(currencyCode) ? "Bitcoin" :
+                    removedCryptoCurrency.isPresent() ? removedCryptoCurrency.get().getName() : Res.get("shared.na");
             return getCryptoCurrency(currencyCode).map(TradeCurrency::getName).orElse(btcOrRemovedAsset);
         }
         try {
@@ -433,8 +422,7 @@ public class CurrencyUtil {
     // We want all coins available also in testnet or regtest for testing purpose
     public static boolean coinMatchesNetworkIfMainnet(Coin coin, BaseCurrencyNetwork baseCurrencyNetwork) {
         boolean matchesNetwork = assetMatchesNetwork(coin, baseCurrencyNetwork);
-        return !baseCurrencyNetwork.isMainnet() ||
-                matchesNetwork;
+        return !baseCurrencyNetwork.isMainnet() || matchesNetwork;
     }
 
     private static CryptoCurrency assetToCryptoCurrency(Asset asset) {

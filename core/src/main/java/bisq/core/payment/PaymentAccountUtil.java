@@ -106,7 +106,7 @@ public class PaymentAccountUtil {
 
     @Nullable
     public static String getCountryCode(PaymentAccount paymentAccount) {
-        // That is optional and set to null if not supported (AltCoins, OKPay,...)
+        // That is optional and set to null if not supported (AltCoins,...)
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
             Country country = (((CountryBasedPaymentAccount) paymentAccount)).getCountry();
             return country != null ? country.code : null;
@@ -115,7 +115,7 @@ public class PaymentAccountUtil {
     }
 
     // TODO no code duplication found in UI code (added for API)
-    // That is optional and set to null if not supported (AltCoins, OKPay,...)
+    // That is optional and set to null if not supported (AltCoins,...)
    /* public static String getCountryCode(PaymentAccount paymentAccount) {
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
             Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();

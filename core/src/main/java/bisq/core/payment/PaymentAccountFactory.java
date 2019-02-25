@@ -22,16 +22,10 @@ import bisq.core.payment.payload.PaymentMethod;
 public class PaymentAccountFactory {
     public static PaymentAccount getPaymentAccount(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
-            case PaymentMethod.OK_PAY_ID:
-                return new OKPayAccount();
             case PaymentMethod.UPHOLD_ID:
                 return new UpholdAccount();
-            case PaymentMethod.CASH_APP_ID:
-                return new CashAppAccount();
             case PaymentMethod.MONEY_BEAM_ID:
                 return new MoneyBeamAccount();
-            case PaymentMethod.VENMO_ID:
-                return new VenmoAccount();
             case PaymentMethod.POPMONEY_ID:
                 return new PopmoneyAccount();
             case PaymentMethod.REVOLUT_ID:

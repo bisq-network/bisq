@@ -69,9 +69,10 @@ public class ProtoUtil {
         E result = Enums.getIfPresent(enumType, name).orNull();
         if (result == null) {
             log.error("Invalid value for enum " + enumType.getSimpleName() + ": " + name);
-            // TODO returning null here can cause problems in caller. Maybe we should throw an exception? Or maybe
-            // better to ensure that enums have always a default value with represents an undefined state and we fall
-            // back to that.
+            result = Enums.getIfPresent(enumType, "UNDEFINED").orNull();
+            log.error("We try to lookup for an enum entry with name 'UNDEFINED' and use that if available, " +
+                    "otherwise the enum is null. enum={}", result);
+            return result;
         }
         return result;
     }

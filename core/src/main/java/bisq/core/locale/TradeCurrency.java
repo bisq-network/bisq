@@ -35,6 +35,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public abstract class TradeCurrency implements PersistablePayload, Comparable<TradeCurrency> {
     protected final String code;
+    @EqualsAndHashCode.Exclude
     protected final String name;
 
     public TradeCurrency(String code, String name) {

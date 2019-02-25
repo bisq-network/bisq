@@ -32,6 +32,7 @@ import bisq.desktop.main.dao.bonding.dashboard.BondingDashboardView;
 import bisq.desktop.main.dao.bonding.reputation.MyReputationView;
 import bisq.desktop.main.dao.bonding.roles.RolesView;
 
+import bisq.core.dao.governance.bond.Bond;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -44,6 +45,8 @@ import javafx.scene.layout.VBox;
 
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 @FxmlView
 public class BondingView extends ActivatableViewAndModel {
@@ -70,12 +73,19 @@ public class BondingView extends ActivatableViewAndModel {
 
     @Override
     public void initialize() {
-        listener = viewPath -> {
-            if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
-                return;
+        listener = new Navigation.Listener() {
+            @Override
+            public void onNavigationRequested(ViewPath path) {
+            }
 
-            selectedViewClass = viewPath.tip();
-            loadView(selectedViewClass);
+            @Override
+            public void onNavigationRequested(ViewPath viewPath, @Nullable Object data) {
+                if (viewPath.size() != 4 || viewPath.indexOf(bisq.desktop.main.dao.bonding.BondingView.class) != 2)
+                    return;
+
+                selectedViewClass = viewPath.tip();
+                loadView(selectedViewClass, data);
+            }
         };
 
         toggleGroup = new ToggleGroup();
@@ -106,11 +116,11 @@ public class BondingView extends ActivatableViewAndModel {
             if (selectedViewClass == null)
                 selectedViewClass = RolesView.class;
 
-            loadView(selectedViewClass);
+            loadView(selectedViewClass, null);
 
         } else if (viewPath.size() == 4 && viewPath.indexOf(BondingView.class) == 2) {
             selectedViewClass = viewPath.get(3);
-            loadView(selectedViewClass);
+            loadView(selectedViewClass, null);
         }
     }
 
@@ -125,13 +135,18 @@ public class BondingView extends ActivatableViewAndModel {
         bonds.deactivate();
     }
 
-    private void loadView(Class<? extends View> viewClass) {
+    private void loadView(Class<? extends View> viewClass, @Nullable Object data) {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof BondingDashboardView) toggleGroup.selectToggle(dashboard);
         else if (view instanceof RolesView) toggleGroup.selectToggle(bondedRoles);
         else if (view instanceof MyReputationView) toggleGroup.selectToggle(reputation);
-        else if (view instanceof BondsView) toggleGroup.selectToggle(bonds);
+        else if (view instanceof BondsView) {
+            toggleGroup.selectToggle(bonds);
+            if (data instanceof Bond)
+                ((BondsView) view).setSelectedBond((Bond) data);
+        }
+
     }
 }

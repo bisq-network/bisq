@@ -17,7 +17,6 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -300,7 +299,7 @@ public class ProcessModel implements Model, PersistablePayload {
 
     public Transaction resolveTakeOfferFeeTx(Trade trade) {
         if (takeOfferFeeTx == null) {
-            if (BisqEnvironment.isBaseCurrencySupportingBsq() && !trade.isCurrencyForTakerFeeBtc())
+            if (!trade.isCurrencyForTakerFeeBtc())
                 takeOfferFeeTx = bsqWalletService.getTransaction(takeOfferFeeTxId);
             else
                 takeOfferFeeTx = btcWalletService.getTransaction(takeOfferFeeTxId);

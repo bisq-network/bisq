@@ -38,8 +38,6 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.CoinUtil;
@@ -63,7 +61,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import org.apache.commons.lang3.StringUtils;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -136,7 +134,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
     private Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
-    private Set<String> fromAddresses;
+    private Set<String> fromAddresses = new HashSet<>();
     private Coin totalAvailableAmountOfSelectedItems = Coin.ZERO;
     private Coin amountAsCoin = Coin.ZERO;
     private Coin sendersAmount = Coin.ZERO;
@@ -156,8 +154,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @Inject
     private WithdrawalView(BtcWalletService walletService,
                            TradeManager tradeManager,
-                           ClosedTradableManager closedTradableManager,
-                           FailedTradesManager failedTradesManager,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
                            BSFormatter formatter,
@@ -440,7 +436,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private void openBlockExplorer(WithdrawalListItem item) {
         if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
     }
 
 
@@ -552,7 +548,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setAlignment(Pos.CENTER);

@@ -174,16 +174,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         updateWithBsqBlockChainData();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
     }
 
 
@@ -231,7 +223,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             priceTextField.setText(bsqFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
 
             marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
-                    priceFeedService.getMarketPrice("USD"), availableAmount));
+                    priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),
+                    availableAmount));
         } else {
             priceTextField.setText(Res.get("shared.na"));
             marketCapTextField.setText(Res.get("shared.na"));

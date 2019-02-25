@@ -20,9 +20,9 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
+import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
@@ -67,8 +67,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        PriceFeedService priceFeedService,
                        FilterManager filterManager,
                        AccountAgeWitnessService accountAgeWitnessService,
-                       TradeWalletService tradeWalletService,
                        FeeService feeService,
+                       TxFeeEstimationService txFeeEstimationService,
                        ReferralIdService referralIdService,
                        BSFormatter btcFormatter,
                        CorePersistenceProtoResolver corePersistenceProtoResolver) {
@@ -82,8 +82,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 priceFeedService,
                 filterManager,
                 accountAgeWitnessService,
-                tradeWalletService,
                 feeService,
+                txFeeEstimationService,
                 referralIdService,
                 btcFormatter);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
@@ -127,6 +127,18 @@ class EditOfferDataModel extends MutableOfferDataModel {
         }
 
         allowAmountUpdate = false;
+    }
+
+    @Override
+    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+        try {
+            return super.initWithData(direction, tradeCurrency);
+        } catch (NullPointerException e) {
+            if (e.getMessage().contains("tradeCurrency")) {
+                throw new IllegalArgumentException("Offers of removed assets cannot be edited. You can only cancel it.", e);
+            }
+            return false;
+        }
     }
 
     @Override

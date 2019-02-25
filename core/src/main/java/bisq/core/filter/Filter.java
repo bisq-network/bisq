@@ -32,6 +32,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -85,6 +86,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private Map<String, String> extraDataMap;
     private PublicKey ownerPubKey;
 
+    // added in v0.9.4
+    private final boolean disableDao;
+
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
@@ -94,7 +98,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   @Nullable List<String> seedNodes,
                   @Nullable List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
-                  @Nullable List<String> btcNodes) {
+                  @Nullable List<String> btcNodes,
+                  boolean disableDao) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -105,6 +110,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.priceRelayNodes = priceRelayNodes;
         this.preventPublicBtcNetwork = preventPublicBtcNetwork;
         this.btcNodes = btcNodes;
+        this.disableDao = disableDao;
     }
 
 
@@ -123,6 +129,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   @Nullable List<String> priceRelayNodes,
                   boolean preventPublicBtcNetwork,
                   @Nullable List<String> btcNodes,
+                  boolean disableDao,
                   String signatureAsBase64,
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
@@ -135,7 +142,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 seedNodes,
                 priceRelayNodes,
                 preventPublicBtcNetwork,
-                btcNodes);
+                btcNodes,
+                disableDao);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = extraDataMap;
@@ -156,7 +164,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
                 .setSignatureAsBase64(signatureAsBase64)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
-                .setPreventPublicBtcNetwork(preventPublicBtcNetwork);
+                .setPreventPublicBtcNetwork(preventPublicBtcNetwork)
+                .setDisableDao(disableDao);
 
         Optional.ofNullable(bannedCurrencies).ifPresent(builder::addAllBannedCurrencies);
         Optional.ofNullable(bannedPaymentMethods).ifPresent(builder::addAllBannedPaymentMethods);
@@ -170,18 +179,19 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     public static Filter fromProto(PB.Filter proto) {
-        return new Filter(proto.getBannedOfferIdsList().stream().collect(Collectors.toList()),
-                proto.getBannedNodeAddressList().stream().collect(Collectors.toList()),
+        return new Filter(new ArrayList<>(proto.getBannedOfferIdsList()),
+                new ArrayList<>(proto.getBannedNodeAddressList()),
                 proto.getBannedPaymentAccountsList().stream()
                         .map(PaymentAccountFilter::fromProto)
                         .collect(Collectors.toList()),
-                CollectionUtils.isEmpty(proto.getBannedCurrenciesList()) ? null : proto.getBannedCurrenciesList().stream().collect(Collectors.toList()),
-                CollectionUtils.isEmpty(proto.getBannedPaymentMethodsList()) ? null : proto.getBannedPaymentMethodsList().stream().collect(Collectors.toList()),
-                CollectionUtils.isEmpty(proto.getArbitratorsList()) ? null : proto.getArbitratorsList().stream().collect(Collectors.toList()),
-                CollectionUtils.isEmpty(proto.getSeedNodesList()) ? null : proto.getSeedNodesList().stream().collect(Collectors.toList()),
-                CollectionUtils.isEmpty(proto.getPriceRelayNodesList()) ? null : proto.getPriceRelayNodesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBannedCurrenciesList()) ? null : new ArrayList<>(proto.getBannedCurrenciesList()),
+                CollectionUtils.isEmpty(proto.getBannedPaymentMethodsList()) ? null : new ArrayList<>(proto.getBannedPaymentMethodsList()),
+                CollectionUtils.isEmpty(proto.getArbitratorsList()) ? null : new ArrayList<>(proto.getArbitratorsList()),
+                CollectionUtils.isEmpty(proto.getSeedNodesList()) ? null : new ArrayList<>(proto.getSeedNodesList()),
+                CollectionUtils.isEmpty(proto.getPriceRelayNodesList()) ? null : new ArrayList<>(proto.getPriceRelayNodesList()),
                 proto.getPreventPublicBtcNetwork(),
-                CollectionUtils.isEmpty(proto.getBtcNodesList()) ? null : proto.getBtcNodesList().stream().collect(Collectors.toList()),
+                CollectionUtils.isEmpty(proto.getBtcNodesList()) ? null : new ArrayList<>(proto.getBtcNodesList()),
+                proto.getDisableDao(),
                 proto.getSignatureAsBase64(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());

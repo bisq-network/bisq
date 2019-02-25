@@ -52,9 +52,11 @@ import javafx.beans.property.SimpleLongProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -88,8 +90,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/")
-    )
-    );
+    ));
     private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/testnet/tx/", "https://blockstream.info/testnet/address/"),
             new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/address/"),
@@ -99,31 +100,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
+    private static final ArrayList<BlockChainExplorer> BTC_DAO_TEST_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
+            new BlockChainExplorer("BTC DAO-testnet explorer", "https://bisq.network/explorer/btc/dao_testnet/tx/", "https://bisq.network/explorer/btc/dao_testnet/address/")
+    ));
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
             "https://explorer.bisq.network/Address.html?addr=");
     public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
             "https://explorer.bisq.network/testnet/Address.html?addr=");
-
-    private static final ArrayList<BlockChainExplorer> LTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/ltc/tx/", "https://live.blockcypher.com/ltc/address/"),
-            new BlockChainExplorer("CryptoID", "https://chainz.cryptoid.info/ltc/tx.dws?", "https://chainz.cryptoid.info/ltc/address.dws?"),
-            new BlockChainExplorer("Abe Search", "http://explorer.litecoin.net/tx/", "http://explorer.litecoin.net/address/"),
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTC/", "https://chain.so/address/LTC/"),
-            new BlockChainExplorer("Blockr.io", "http://ltc.blockr.io/tx/info/", "http://ltc.blockr.io/address/info/")
-    ));
-
-    private static final ArrayList<BlockChainExplorer> LTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/LTCTEST/", "https://chain.so/address/LTCTEST/")
-    ));
-
-    private static final ArrayList<BlockChainExplorer> DASH_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/dash/", "https://chain.so/address/dash/")
-    ));
-    private static final ArrayList<BlockChainExplorer> DASH_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("SoChain", "https://chain.so/tx/DASHTEST/", "https://chain.so/address/DASHTEST/")
-    ));
-
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -141,6 +125,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
+    private final ObservableMap<String, Boolean> dontShowAgainMapAsObservable = FXCollections.observableHashMap();
 
     private final Storage<PreferencesPayload> storage;
     private final BisqEnvironment bisqEnvironment;
@@ -243,14 +228,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                     setBlockChainExplorerMainNet(BTC_MAIN_NET_EXPLORERS.get(0));
                     setBlockChainExplorerTestNet(BTC_TEST_NET_EXPLORERS.get(0));
                     break;
-                case "LTC":
-                    setBlockChainExplorerMainNet(LTC_MAIN_NET_EXPLORERS.get(0));
-                    setBlockChainExplorerTestNet(LTC_TEST_NET_EXPLORERS.get(0));
-                    break;
-                case "DASH":
-                    setBlockChainExplorerMainNet(DASH_MAIN_NET_EXPLORERS.get(0));
-                    setBlockChainExplorerTestNet(DASH_TEST_NET_EXPLORERS.get(0));
-                    break;
                 default:
                     throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
             }
@@ -279,6 +256,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
+        dontShowAgainMapAsObservable.putAll(getDontShowAgainMap());
 
         // Override settings with options if set
         if (useTorFlagFromOptions != null && !useTorFlagFromOptions.isEmpty()) {
@@ -328,11 +306,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void dontShowAgain(String key, boolean dontShowAgain) {
         prefPayload.getDontShowAgainMap().put(key, dontShowAgain);
         persist();
+        dontShowAgainMapAsObservable.put(key, dontShowAgain);
     }
 
     public void resetDontShowAgain() {
         prefPayload.getDontShowAgainMap().clear();
         persist();
+        dontShowAgainMapAsObservable.clear();
     }
 
 
@@ -657,31 +637,35 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return tradeCurrenciesAsObservable;
     }
 
+    public ObservableMap<String, Boolean> getDontShowAgainMapAsObservable() {
+        return dontShowAgainMapAsObservable;
+    }
+
     public BlockChainExplorer getBlockChainExplorer() {
-        if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
-            return prefPayload.getBlockChainExplorerMainNet();
-        else
-            return prefPayload.getBlockChainExplorerTestNet();
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        switch (baseCurrencyNetwork) {
+            case BTC_MAINNET:
+                return prefPayload.getBlockChainExplorerMainNet();
+            case BTC_TESTNET:
+            case BTC_REGTEST:
+                return prefPayload.getBlockChainExplorerTestNet();
+            case BTC_DAO_TESTNET:
+                return BTC_DAO_TEST_NET_EXPLORERS.get(0);
+            default:
+                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
+        }
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
             case BTC_TESTNET:
             case BTC_REGTEST:
                 return BTC_TEST_NET_EXPLORERS;
-            case LTC_MAINNET:
-                return LTC_MAIN_NET_EXPLORERS;
-            case LTC_TESTNET:
-            case LTC_REGTEST:
-                return LTC_TEST_NET_EXPLORERS;
-            case DASH_MAINNET:
-                return DASH_MAIN_NET_EXPLORERS;
-            case DASH_REGTEST:
-            case DASH_TESTNET:
-                return DASH_TEST_NET_EXPLORERS;
+            case BTC_DAO_TESTNET:
+                return BTC_DAO_TEST_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
@@ -692,10 +676,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean getUseTorForBitcoinJ() {
-        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet.
-        // At testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
-        if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
+        // We override the useTorForBitcoinJ and set it to false if we detected a localhost node or if we are not on mainnet,
+        // unless the useTorForBtc parameter is explicitly provided.
+        // On testnet there are very few Bitcoin tor nodes and we don't provide tor nodes.
+        if ((!BisqEnvironment.getBaseCurrencyNetwork().isMainnet()
                 || bisqEnvironment.isBitcoinLocalhostNodeRunning())
+                && (useTorFlagFromOptions == null || useTorFlagFromOptions.isEmpty()))
             return false;
         else
             return prefPayload.isUseTorForBitcoinJ();

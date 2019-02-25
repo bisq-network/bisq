@@ -19,12 +19,19 @@ package bisq.asset.coins;
 
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-
-import org.libdohj.params.DogecoinMainNetParams;
+import bisq.asset.NetworkParametersAdapter;
 
 public class Dogecoin extends Coin {
 
     public Dogecoin() {
-        super("Dogecoin", "DOGE", new Base58BitcoinAddressValidator(DogecoinMainNetParams.get()));
+        super("Dogecoin", "DOGE", new Base58BitcoinAddressValidator(new DogecoinMainNetParams()), Network.MAINNET);
+    }
+
+    public static class DogecoinMainNetParams extends NetworkParametersAdapter {
+        public DogecoinMainNetParams() {
+            this.addressHeader = 30;
+            this.p2shHeader = 22;
+            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
+        }
     }
 }

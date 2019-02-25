@@ -80,7 +80,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -172,8 +171,6 @@ public class WalletConfig extends AbstractIdleService {
                 // We have already the chain here so we can use this to distinguish.
                 List<DeterministicKeyChain> deterministicKeyChains = keyChainGroup.getDeterministicKeyChains();
                 if (!deterministicKeyChains.isEmpty() && deterministicKeyChains.get(0) instanceof BisqDeterministicKeyChain) {
-                    checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
-                            "called BisqWalletFactory.create with BisqDeterministicKeyChain");
                     return new BsqWallet(params, keyChainGroup);
                 } else {
                     return new Wallet(params, keyChainGroup);
@@ -184,8 +181,6 @@ public class WalletConfig extends AbstractIdleService {
             public Wallet create(NetworkParameters params, KeyChainGroup keyChainGroup, boolean isBsqWallet) {
                 // This is called at first startup when we create the wallet
                 if (isBsqWallet) {
-                    checkArgument(BisqEnvironment.isBaseCurrencySupportingBsq(), "BisqEnvironment.isBaseCurrencySupportingBsq() is false but we get get " +
-                            "called BisqWalletFactory.create with isBsqWallet=true");
                     return new BsqWallet(params, keyChainGroup);
                 } else {
                     return new Wallet(params, keyChainGroup);
@@ -214,9 +209,12 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     private PeerGroup createPeerGroup() {
+        PeerGroup peerGroup;
         // no proxy case.
         if (socks5Proxy == null) {
-            return new PeerGroup(params, vChain);
+            peerGroup = new PeerGroup(params, vChain);
+            // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
+            // if local btc node is not synced with our dao testnet master node.
         } else {
             // proxy case (tor).
             Proxy proxy = new Proxy(Proxy.Type.SOCKS,
@@ -224,18 +222,23 @@ public class WalletConfig extends AbstractIdleService {
                             socks5Proxy.getPort()));
 
             ProxySocketFactory proxySocketFactory = new ProxySocketFactory(proxy);
-            // we dont use tor mode if we have a local node running
+            // We don't use tor mode if we have a local node running
             BlockingClientManager blockingClientManager = bisqEnvironment.isBitcoinLocalhostNodeRunning() ?
                     new BlockingClientManager() :
                     new BlockingClientManager(proxySocketFactory);
 
-            PeerGroup peerGroup = new PeerGroup(params, vChain, blockingClientManager);
+            peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
             blockingClientManager.setConnectTimeoutMillis(TIMEOUT);
             peerGroup.setConnectTimeoutMillis(TIMEOUT);
-
-            return peerGroup;
         }
+
+        // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
+        // if local btc node is not synced with our dao testnet master node.
+        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet())
+            peerGroup.setUseLocalhostPeerWhenPossible(false);
+
+        return peerGroup;
     }
 
     /**
@@ -326,7 +329,7 @@ public class WalletConfig extends AbstractIdleService {
      * Override this to use a {@link BlockStore} that isn't the default of {@link SPVBlockStore}.
      */
     private BlockStore provideBlockStore(File file) throws BlockStoreException {
-        return new SPVBlockStore(params, file);
+        return new ClearableSPVBlockStore(params, file);
     }
 
     /**
@@ -394,11 +397,9 @@ public class WalletConfig extends AbstractIdleService {
                 keyChainGroup = new BisqKeyChainGroup(params, new BisqDeterministicKeyChain(vBtcWallet.getKeyChainSeed()), false);
 
             // BSQ wallet
-            if (BisqEnvironment.isBaseCurrencySupportingBsq()) {
-                vBsqWalletFile = new File(directory, bsqWalletFileName);
-                vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
-                vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
-            }
+            vBsqWalletFile = new File(directory, bsqWalletFileName);
+            vBsqWallet = createOrLoadWallet(vBsqWalletFile, shouldReplayWallet, keyChainGroup, true, seed);
+            vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -411,11 +412,8 @@ public class WalletConfig extends AbstractIdleService {
                         // we created both wallets at the same time
                         time = seed.getCreationTimeSeconds();
                         if (chainFileExists) {
-                            log.info("Deleting the chain file in preparation from restore.");
-                            vStore.close();
-                            if (!chainFile.delete())
-                                throw new IOException("Failed to delete chain file in preparation for restore.");
-                            vStore = new SPVBlockStore(params, chainFile);
+                            log.info("Clearing the chain file in preparation from restore.");
+                            ((ClearableSPVBlockStore) vStore).clear();
                         }
                     } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
@@ -427,11 +425,8 @@ public class WalletConfig extends AbstractIdleService {
                     else
                         log.warn("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
                 } else if (chainFileExists) {
-                    log.info("Deleting the chain file in preparation from restore.");
-                    vStore.close();
-                    if (!chainFile.delete())
-                        throw new IOException("Failed to delete chain file in preparation for restore.");
-                    vStore = new SPVBlockStore(params, chainFile);
+                    log.info("Clearing the chain file in preparation from restore.");
+                    ((ClearableSPVBlockStore) vStore).clear();
                 }
             }
             vChain = new BlockChain(params, vStore);
@@ -446,8 +441,9 @@ public class WalletConfig extends AbstractIdleService {
             // before we're actually connected the broadcast waits for an appropriate number of connections.
             if (peerAddresses != null) {
                 for (PeerAddress addr : peerAddresses) vPeerGroup.addAddress(addr);
-                log.info("We try to connect to {} btc nodes", numConnectionForBtc);
-                vPeerGroup.setMaxConnections(Math.min(numConnectionForBtc, peerAddresses.length));
+                int maxConnections = Math.min(numConnectionForBtc, peerAddresses.length);
+                log.info("We try to connect to {} btc nodes", maxConnections);
+                vPeerGroup.setMaxConnections(maxConnections);
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));

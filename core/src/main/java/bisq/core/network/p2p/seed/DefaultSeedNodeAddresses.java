@@ -42,21 +42,8 @@ class DefaultSeedNodeAddresses {
 
             // regtest
             new NodeAddress("localhost:2002"),
-            new NodeAddress("localhost:3002"),
+            new NodeAddress("localhost:3002")
             /*    new NodeAddress("localhost:4002"),*/
-
-            // LTC
-            // mainnet
-            new NodeAddress("localhost:2003"),
-
-            // regtest
-            new NodeAddress("localhost:2005"),
-
-            // DOGE regtest
-            new NodeAddress("localhost:2008"),
-
-            // DASH regtest
-            new NodeAddress("localhost:2011")
     );
 
     // Addresses are used if their port match the network id:
@@ -80,8 +67,10 @@ class DefaultSeedNodeAddresses {
 
             // BTC testnet
             // new NodeAddress("vjkh4ykq7x5skdlt.onion:8001"), // local dev test
-            new NodeAddress("fjr5w4eckjghqtnu.onion:8001"), // testnet seed 1
-            new NodeAddress("74w2sttlo4qk6go3.onion:8001"), // testnet seed 2
+            //new NodeAddress("fjr5w4eckjghqtnu.onion:8001"), // testnet seed 1
+           /* new NodeAddress("74w2sttlo4qk6go3.onion:8001"), // testnet seed 2
+            new NodeAddress("jmc5ajqvtnzqaggm.onion:8001"), // testnet seed 3
+            new NodeAddress("3d56s6acbi3vk52v.onion:8001"), // testnet seed 4*/
 
             // BTC regtest
             // For development you need to change that to your local onion addresses
@@ -93,13 +82,14 @@ class DefaultSeedNodeAddresses {
             new NodeAddress("rxdkppp3vicnbgqt.onion:8002"),
             new NodeAddress("4ie52dse64kaarxw.onion:8002"),
 
-            // LTC mainnet
-            new NodeAddress("acyvotgewx46pebw.onion:8003"),
-            new NodeAddress("pklgy3vdfn3obkur.onion:8003"),
+            // DAO TESTNET (server side regtest dedicated for DAO testing)
+            new NodeAddress("fjr5w4eckjghqtnu.onion:8003"), // testnet seed 1
+            new NodeAddress("74w2sttlo4qk6go3.onion:8003"), // testnet seed 2
+            new NodeAddress("jmc5ajqvtnzqaggm.onion:8003"), // testnet seed 3
+            new NodeAddress("3d56s6acbi3vk52v.onion:8003") //  testnet seed 4
 
-            // DASH mainnet
-            new NodeAddress("toeu5ikb27ydscxt.onion:8006"),
-            new NodeAddress("ae4yvaivhnekkhqf.onion:8006")
+            // explorer
+            // new NodeAddress("gtif46mfxirv533z.onion:8003")
     );
 
     private DefaultSeedNodeAddresses() {

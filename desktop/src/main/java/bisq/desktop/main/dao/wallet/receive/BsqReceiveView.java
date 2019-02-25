@@ -28,6 +28,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
@@ -61,28 +62,32 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        gridRow = bsqBalanceUtil.addGroup(root, gridRow);
+        if (DevEnv.isDaoActivated()) {
+            gridRow = bsqBalanceUtil.addGroup(root, gridRow);
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1,
-                Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
-        GridPane.setColumnSpan(titledGroupBg, 3);
-        Tuple3<Label, BsqAddressTextField, VBox> tuple = addLabelBsqAddressTextField(root, gridRow,
-                Res.get("dao.wallet.receive.bsqAddress"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addressTextField = tuple.second;
-        GridPane.setColumnSpan(tuple.third, 3);
+            TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 1,
+                    Res.get("dao.wallet.receive.fundYourWallet"), Layout.GROUP_DISTANCE);
+            GridPane.setColumnSpan(titledGroupBg, 3);
+            Tuple3<Label, BsqAddressTextField, VBox> tuple = addLabelBsqAddressTextField(root, gridRow,
+                    Res.get("dao.wallet.receive.bsqAddress"),
+                    Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+            addressTextField = tuple.second;
+            GridPane.setColumnSpan(tuple.third, 3);
+        }
     }
 
     @Override
     protected void activate() {
-        bsqBalanceUtil.activate();
+        if (DevEnv.isDaoActivated())
+            bsqBalanceUtil.activate();
 
         addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
     }
 
     @Override
     protected void deactivate() {
-        bsqBalanceUtil.deactivate();
+        if (DevEnv.isDaoActivated())
+            bsqBalanceUtil.deactivate();
     }
 }
 

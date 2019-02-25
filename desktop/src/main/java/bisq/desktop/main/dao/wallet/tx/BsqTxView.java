@@ -27,7 +27,6 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -40,12 +39,15 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.app.DevEnv;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
 
@@ -135,7 +137,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         chainSyncIndicator = new JFXProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        if (BisqEnvironment.isDAOActivatedAndBaseCurrencySupportingBsq())
+        if (DevEnv.isDaoActivated())
             chainSyncIndicator.setProgress(-1);
         else
             chainSyncIndicator.setProgress(0);
@@ -214,17 +216,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-    }
-
-    @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
 
-    @Override
-    public void onParseBlockChainComplete() {
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -334,7 +329,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, AwesomeIcon.EXTERNAL_LINK);
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -405,7 +400,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             // Received
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                                    AwesomeIcon.EXTERNAL_LINK, item.isReceived());
+                                                    MaterialDesignIcon.LINK, item.isReceived());
                                             field.setOnAction(event -> openAddressInBlockExplorer(item));
                                             field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                             setGraphic(field);
@@ -433,13 +428,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
-                TableCell<BsqTxListItem, BsqTxListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                     BsqTxListItem> column) {
-                return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final BsqTxListItem item, boolean empty) {
@@ -464,13 +458,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMaxWidth(column.getMinWidth());
 
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<TableColumn<BsqTxListItem, BsqTxListItem>,
-                TableCell<BsqTxListItem, BsqTxListItem>>() {
+        column.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                     BsqTxListItem> column) {
-                return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                return new TableCell<>() {
 
                     @Override
                     public void updateItem(final BsqTxListItem item, boolean empty) {
@@ -623,12 +616,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void openTxInBlockExplorer(BsqTxListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId(), false);
     }
 
     private void openAddressInBlockExplorer(BsqTxListItem item) {
         if (item.getAddress() != null) {
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress(), false);
         }
     }
 }

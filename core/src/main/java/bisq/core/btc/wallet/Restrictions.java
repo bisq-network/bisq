@@ -48,83 +48,32 @@ public class Restrictions {
 
     public static Coin getMinTradeAmount() {
         if (MIN_TRADE_AMOUNT == null)
-            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                case "BTC":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 2 USD @ 20000 USD/BTC
-                    break;
-                case "LTC":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(100_000); // 0.04 EUR @ 40 EUR/LTC
-                    break;
-                case "DASH":
-                    MIN_TRADE_AMOUNT = Coin.valueOf(20_000L); // 0.03 EUR at @ 150 EUR/DASH;
-                    break;
-            }
+            MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 2 USD @ 20000 USD/BTC
         return MIN_TRADE_AMOUNT;
     }
 
     // Can be reduced but not increased. Otherwise would break existing offers!
     public static Coin getMaxBuyerSecurityDeposit() {
         if (MAX_BUYER_SECURITY_DEPOSIT == null)
-            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                case "BTC":
-                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(5_000_000); // 1000 USD @ 20000 USD/BTC
-                    break;
-                case "LTC":
-                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_200_000_000); // 500 EUR @ 40 EUR/LTC
-                    break;
-                case "DASH":
-                    MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(300_000_000L); // 450 EUR @ 150 EUR/DASH;
-                    break;
-            }
-
+            MAX_BUYER_SECURITY_DEPOSIT = Coin.valueOf(5_000_000); // 1000 USD @ 20000 USD/BTC
         return MAX_BUYER_SECURITY_DEPOSIT;
     }
 
     public static Coin getMinBuyerSecurityDeposit() {
         if (MIN_BUYER_SECURITY_DEPOSIT == null)
-            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                case "BTC":
-                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000); // 10 USD @ 20000 USD/BTC
-                    break;
-                case "LTC":
-                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(6_000_000); // 2.4 EUR @ 40 EUR/LTC
-                    break;
-                case "DASH":
-                    MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_500_000L); // 2.5 EUR @ 150 EUR/DASH;
-                    break;
-            }
+            MIN_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000); // 10 USD @ 20000 USD/BTC
         return MIN_BUYER_SECURITY_DEPOSIT;
     }
 
     public static Coin getDefaultBuyerSecurityDeposit() {
         if (DEFAULT_BUYER_SECURITY_DEPOSIT == null)
-            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                case "BTC":
-                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000); // 200 EUR @ 20000 USD/BTC
-                    break;
-                case "LTC":
-                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(200_000_000); // 75 EUR @ 40 EUR/LTC
-                    break;
-                case "DASH":
-                    DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(50_000_000L); // 75 EUR @ 150 EUR/DASH;
-                    break;
-            }
+            DEFAULT_BUYER_SECURITY_DEPOSIT = Coin.valueOf(1_000_000); // 200 EUR @ 20000 USD/BTC
         return DEFAULT_BUYER_SECURITY_DEPOSIT;
     }
 
     public static Coin getSellerSecurityDeposit() {
         if (SELLER_SECURITY_DEPOSIT == null)
-            switch (BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode()) {
-                case "BTC":
-                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(300_000); // 60 USD @ 20000 USD/BTC
-                    break;
-                case "LTC":
-                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(60_000_000); // 25 EUR @ 40 EUR/LTC
-                    break;
-                case "DASH":
-                    SELLER_SECURITY_DEPOSIT = Coin.valueOf(15_000_000L); // 25 EUR @ 150 EUR/DASH;
-                    break;
-            }
+            SELLER_SECURITY_DEPOSIT = Coin.valueOf(300_000); // 60 USD @ 20000 USD/BTC
         return SELLER_SECURITY_DEPOSIT;
     }
 }

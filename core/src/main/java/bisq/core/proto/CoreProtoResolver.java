@@ -22,7 +22,6 @@ import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.payment.AccountAgeWitness;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
-import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import bisq.core.payment.payload.ClearXchangeAccountPayload;
@@ -34,7 +33,6 @@ import bisq.core.payment.payload.InteracETransferAccountPayload;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.NationalBankAccountPayload;
-import bisq.core.payment.payload.OKPayAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
 import bisq.core.payment.payload.PopmoneyAccountPayload;
@@ -47,7 +45,6 @@ import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
-import bisq.core.payment.payload.VenmoAccountPayload;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
@@ -113,18 +110,12 @@ public class CoreProtoResolver implements ProtoResolver {
                     return FasterPaymentsAccountPayload.fromProto(proto);
                 case INTERAC_E_TRANSFER_ACCOUNT_PAYLOAD:
                     return InteracETransferAccountPayload.fromProto(proto);
-                case O_K_PAY_ACCOUNT_PAYLOAD:
-                    return OKPayAccountPayload.fromProto(proto);
                 case UPHOLD_ACCOUNT_PAYLOAD:
                     return UpholdAccountPayload.fromProto(proto);
-                case CASH_APP_ACCOUNT_PAYLOAD:
-                    return CashAppAccountPayload.fromProto(proto);
                 case MONEY_BEAM_ACCOUNT_PAYLOAD:
                     return MoneyBeamAccountPayload.fromProto(proto);
                 case MONEY_GRAM_ACCOUNT_PAYLOAD:
                     return MoneyGramAccountPayload.fromProto(proto);
-                case VENMO_ACCOUNT_PAYLOAD:
-                    return VenmoAccountPayload.fromProto(proto);
                 case POPMONEY_ACCOUNT_PAYLOAD:
                     return PopmoneyAccountPayload.fromProto(proto);
                 case REVOLUT_ACCOUNT_PAYLOAD:

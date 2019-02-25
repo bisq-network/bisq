@@ -5,7 +5,7 @@
 The Bisq pricenode is a simple HTTP service that fetches, transforms and relays data from third-party price providers to Bisq exchange clients on request. Available prices include:
 
  - Bitcoin exchange rates, available at `/getAllMarketPrices`, and
- - Bitcoin, Litecoin, Dash, and Dogecoin mining fee rates, available at `/getFees`
+ - Bitcoin mining fee rates, available at `/getFees`
 
 Pricenodes are deployed in production as Tor hidden services. This is not because the location of these nodes needs to be kept secret, but rather so that Bisq exchange clients do not need to exit the Tor network in order to get price data.
 

@@ -18,7 +18,8 @@
 package bisq.asset;
 
 /**
- * The supported "address" (better wallet URL) format is IP:port or the grinbox format.
+ * We only support the grinbox format as it is currently the only tool which offers a validation options of sender.
+ * Beside that is the IP:port format very insecure with MITM attacks.
  *
  * Here is the information from a conversation with the Grinbox developer regarding the Grinbox address format.
  *
@@ -53,7 +54,6 @@ public class GrinAddressValidator implements AddressValidator {
 
 
     // Regex for IP validation borrowed from https://stackoverflow.com/questions/53497/regular-expression-that-matches-valid-ipv6-addresses
-    private static final String IPV4 = "((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])";
     private static final String PORT = "((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))$";
     private static final String DOMAIN = "[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\\.[a-zA-Z]{2,}$";
     private static final String KEY = "[a-km-zA-HJ-NP-Z1-9]{52}$";
@@ -64,13 +64,9 @@ public class GrinAddressValidator implements AddressValidator {
     @Override
     public AddressValidationResult validate(String address) {
         if (address == null || address.length() == 0)
-            return AddressValidationResult.invalidAddress("Address may not be empty");
+            return AddressValidationResult.invalidAddress("Address may not be empty (only Grinbox format is supported)");
 
-        if (address.matches("^" + IPV4 + ":" + PORT))
-            return AddressValidationResult.validAddress();
-
-
-        // We might have a grinbox address
+        // We only support grinbox address
         String key;
         String domain = null;
         String port = null;
@@ -92,13 +88,13 @@ public class GrinAddressValidator implements AddressValidator {
         }
 
         if (!key.matches("^" + KEY))
-            return AddressValidationResult.invalidAddress("Invalid key");
+            return AddressValidationResult.invalidAddress("Invalid key (only Grinbox format is supported)");
 
         if (domain != null && !domain.matches("^" + DOMAIN))
-            return AddressValidationResult.invalidAddress("Invalid domain");
+            return AddressValidationResult.invalidAddress("Invalid domain (only Grinbox format is supported)");
 
         if (port != null && !port.matches("^" + PORT))
-            return AddressValidationResult.invalidAddress("Invalid port");
+            return AddressValidationResult.invalidAddress("Invalid port (only Grinbox format is supported)");
 
         return AddressValidationResult.validAddress();
 

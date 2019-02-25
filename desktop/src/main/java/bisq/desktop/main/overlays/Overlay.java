@@ -343,6 +343,7 @@ public abstract class Overlay<T extends Overlay> {
     public T error(String message) {
         type = Type.Error;
         showReportErrorButtons();
+        width = 1100;
         if (headLine == null)
             this.headLine = Res.get("popup.headline.error");
         this.message = message;
@@ -373,7 +374,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq-network/bisq-desktop/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://bisq.network/source/bisq/issues"));
         //noinspection unchecked
         return (T) this;
     }
@@ -825,7 +826,7 @@ public abstract class Overlay<T extends Overlay> {
         gitHubButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bisq-network/bisq-desktop/issues");
+            GUIUtil.openWebPage("https://bisq.network/source/bisq/issues");
             hide();
         });
     }

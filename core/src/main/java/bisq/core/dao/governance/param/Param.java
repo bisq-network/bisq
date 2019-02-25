@@ -100,9 +100,9 @@ public enum Param {
     // but can be also a burner address if we prefer to burn the BTC
     RECIPIENT_BTC_ADDRESS(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
-            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
-                    "2N5J6MyjAsWnashimGiNwoRzUXThsQzRmbv" : // regtest
-                    "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV", // testnet
+            BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ?
+                    "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
+                    "mquz1zFmhs7iy8qJTkhY7C9bhJ5S3g8Xim", // regtest or DAO testnet (regtest)
             ParamType.ADDRESS),
 
     // Fee for activating an asset or re-listing after deactivation due lack of trade activity. Fee per day of trial period without activity checks.
@@ -110,25 +110,9 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
-    // TODO for testnet we want to have a short cycle of about a week (1012 blocks)
-    PHASE_UNDEFINED("0", ParamType.BLOCK),
-    PHASE_PROPOSAL("380", ParamType.BLOCK, 3, 3),     // 2,6 days
-    PHASE_BREAK1("10", ParamType.BLOCK, 3, 3),       // 10 blocks
-    PHASE_BLIND_VOTE("300", ParamType.BLOCK, 3, 3),   // 2 days
-    PHASE_BREAK2("10", ParamType.BLOCK, 3, 23),      // 10 blocks
-    PHASE_VOTE_REVEAL("300", ParamType.BLOCK, 3, 3),  // 2 day
-    PHASE_BREAK3("10", ParamType.BLOCK, 3, 3),       // 10 blocks
-    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);       // 2 blocks
-
-    // TODO for dev testing we use very short periods...
-    /*PHASE_UNDEFINED("0", ParamType.BLOCK),
-    PHASE_PROPOSAL("4", ParamType.BLOCK, 3, 3),
-    PHASE_BREAK1("1", ParamType.BLOCK, 3, 3),
-    PHASE_BLIND_VOTE("2", ParamType.BLOCK, 3, 3),
-    PHASE_BREAK2("1", ParamType.BLOCK, 3, 23),
-    PHASE_VOTE_REVEAL("2", ParamType.BLOCK, 3, 3),
-    PHASE_BREAK3("1", ParamType.BLOCK, 3, 3),
-    PHASE_RESULT("2", ParamType.BLOCK, 3, 3);*/
+    LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days
+    ARBITRATOR_FEE("0", ParamType.BTC),
+    MAX_TRADE_LIMIT("2", ParamType.BTC), // max trade limit for lowest risk payment method. Others will get derived from that.
 
     // See: https://github.com/bisq-network/proposals/issues/46
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
@@ -137,26 +121,65 @@ public enum Param {
     // phases and subtract 1 block from the following breaks.
     // So in the UI the user will see 3600 blocks and the last
     // block of the technical 3601 blocks is displayed as part of the break1 phase.
-  /*  PHASE_UNDEFINED("0"),
-    PHASE_PROPOSAL("3601"),      // 24 days
-    PHASE_BREAK1("149"),        // 1 day
-    PHASE_BLIND_VOTE("601"),    // 4 days
-    PHASE_BREAK2("9"),        // 10 blocks
-    PHASE_VOTE_REVEAL("301"),   // 2 days
-    PHASE_BREAK3("9"),        // 10 blocks
-    PHASE_RESULT("10);        // 10 block*/
+    // For testnet we want to have a short cycle of about a week (1012 blocks)
+    // For regtest we use very short periods
+    PHASE_UNDEFINED("0", ParamType.BLOCK),
+    PHASE_PROPOSAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "3601" :    // mainnet; 24 days
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "4" :       // regtest
+                    "380",      // testnet or dao testnet (server side regtest); 2.6 days
+            ParamType.BLOCK, 3, 3),
+    PHASE_BREAK1(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "149" :     // mainnet; 1 day
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "1" :       // regtest
+                    "10",       // testnet or dao testnet (server side regtest)
+            ParamType.BLOCK, 3, 3),
+    PHASE_BLIND_VOTE(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "601" :     // mainnet; 4 days
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "2" :       // regtest
+                    "300",      // testnet or dao testnet (server side regtest); 2 days
+            ParamType.BLOCK, 3, 3),
+    PHASE_BREAK2(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "9" :       // mainnet
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "1" :       // regtest
+                    "10",       // testnet or dao testnet (server side regtest)
+            ParamType.BLOCK, 3, 23),
+    PHASE_VOTE_REVEAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "301" :     // mainnet; 2 days
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "2" :       // regtest
+                    "300",      // testnet or dao testnet (server side regtest); 2 days
+            ParamType.BLOCK, 3, 3),
+    PHASE_BREAK3(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "9" :       // mainnet
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "1" :       // regtest
+                    "10",       // testnet or dao testnet (server side regtest)
+            ParamType.BLOCK, 3, 3),
+    PHASE_RESULT(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
+            "10" :      // mainnet
+            BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
+                    "2" :       // regtest
+                    "2",        // testnet or dao testnet (server side regtest)
+            ParamType.BLOCK, 3, 3);
 
     @Getter
     private final String defaultValue;
     @Getter
     private final ParamType paramType;
+    // If 0 we ignore check for max decrease
     @Getter
     private final double maxDecrease;
+    // If 0 we ignore check for max increase
     @Getter
     private final double maxIncrease;
 
     Param(String defaultValue, ParamType paramType) {
-        this(defaultValue, paramType, 1, 1);
+        this(defaultValue, paramType, 0, 0);
     }
 
     /**

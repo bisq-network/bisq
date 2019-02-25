@@ -20,37 +20,51 @@ package bisq.desktop.util;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
+
+import bisq.common.util.Utilities;
 
 import javafx.util.StringConverter;
+
+import java.net.URI;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import static bisq.desktop.maker.CurrencyListItemMakers.bitcoinItem;
-import static bisq.desktop.maker.CurrencyListItemMakers.euroItem;
-import static bisq.desktop.maker.CurrencyListItemMakers.numberOfTrades;
-import static bisq.desktop.maker.PreferenceMakers.empty;
 import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
 import static bisq.desktop.maker.TradeCurrencyMakers.euro;
-import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+
+
+import org.mockito.ArgumentCaptor;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Utilities.class, Preferences.class})
+@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class GUIUtilTest {
 
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
         GlobalSettings.setLocale(new Locale("en", "US"));
+        Res.setBaseCurrencyCode("BTC");
+        Res.setBaseCurrencyName("Bitcoin");
     }
 
-    // @Christoph: not sure if that was removed with intentions in the release branch.
-    // I leave it here commented out in case it happened due a merge mistake.
-    /*
     @Test
     public void testTradeCurrencyConverter() {
         Map<String, Integer> offerCounts = new HashMap<String, Integer>() {{
@@ -68,16 +82,39 @@ public class GUIUtilTest {
     }
 
     @Test
-    public void testCurrencyListWithOffersConverter() {
-        Res.setBaseCurrencyCode("BTC");
-        Res.setBaseCurrencyName("Bitcoin");
-        StringConverter<CurrencyListItem> currencyListItemConverter = GUIUtil.getCurrencyListItemConverter(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"),
-                empty);
+    public void testOpenURLWithCampaignParameters() throws Exception {
+        Preferences preferences = mock(Preferences.class);
+        DontShowAgainLookup.setPreferences(preferences);
+        GUIUtil.setPreferences(preferences);
+        when(preferences.showAgain("warnOpenURLWhenTorEnabled")).thenReturn(false);
+        when(preferences.getUserLanguage()).thenReturn("en");
 
-        assertEquals("✦ Bitcoin (BTC) - 10 offers", currencyListItemConverter.toString(make(bitcoinItem.but(with(numberOfTrades, 10)))));
-        assertEquals("★ Euro (EUR) - 0 offers", currencyListItemConverter.toString(make(euroItem)));
-        assertEquals("★ Euro (EUR) - 1 offer", currencyListItemConverter.toString(make(euroItem.but(with(numberOfTrades, 1)))));
+        PowerMockito.mockStatic(Utilities.class);
+        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
+        PowerMockito.doNothing().when(Utilities.class, "openURI", captor.capture());
 
-    }*/
+        GUIUtil.openWebPage("https://bisq.network");
+
+        assertEquals("https://bisq.network?utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_en", captor.getValue().toString());
+
+        GUIUtil.openWebPage("https://docs.bisq.network/trading-rules.html#f2f-trading");
+
+        assertEquals("https://docs.bisq.network/trading-rules.html?utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_en#f2f-trading", captor.getValue().toString());
+    }
+
+    @Test
+    public void testOpenURLWithoutCampaignParameters() throws Exception {
+        Preferences preferences = mock(Preferences.class);
+        DontShowAgainLookup.setPreferences(preferences);
+        GUIUtil.setPreferences(preferences);
+        when(preferences.showAgain("warnOpenURLWhenTorEnabled")).thenReturn(false);
+
+        PowerMockito.mockStatic(Utilities.class);
+        ArgumentCaptor<URI> captor = ArgumentCaptor.forClass(URI.class);
+        PowerMockito.doNothing().when(Utilities.class, "openURI", captor.capture());
+
+        GUIUtil.openWebPage("https://www.github.com");
+
+        assertEquals("https://www.github.com", captor.getValue().toString());
+    }
 }

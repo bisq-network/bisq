@@ -66,7 +66,7 @@ public abstract class Configurable {
      * Set the name used to filter through configuration properties. See
      * {@link Configurable#configure(Properties)}.
      *
-     * @param name
+     * @param name the name of the configurable
      */
     protected void setName(String name) {
         this.name = name;

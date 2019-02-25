@@ -48,7 +48,7 @@ import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -286,7 +286,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     private void openBlockExplorer(DepositListItem item) {
         if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +359,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    field = new HyperlinkWithIcon(address, AwesomeIcon.EXTERNAL_LINK);
+                                    field = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
                                     field.setOnAction(event -> {
                                         openBlockExplorer(item);
                                         tableView.getSelectionModel().select(item);
