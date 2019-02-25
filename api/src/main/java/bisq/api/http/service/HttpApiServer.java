@@ -1,10 +1,19 @@
 package bisq.api.http.service;
 
+import bisq.api.http.exceptions.ExceptionMappers;
+import bisq.api.http.service.auth.ApiPasswordManager;
+import bisq.api.http.service.auth.AuthFilter;
+import bisq.api.http.service.auth.TokenRegistry;
+
 import bisq.core.app.BisqEnvironment;
+
+import javax.servlet.DispatcherType;
 
 import javax.inject.Inject;
 
 import java.net.InetSocketAddress;
+
+import java.util.EnumSet;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +25,7 @@ import org.eclipse.jetty.server.Slf4jRequestLog;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -26,12 +36,16 @@ import org.glassfish.jersey.servlet.ServletContainer;
 public class HttpApiServer {
     private final HttpApiInterfaceV1 httpApiInterfaceV1;
     private final BisqEnvironment bisqEnvironment;
+    private final TokenRegistry tokenRegistry;
+    private final ApiPasswordManager apiPasswordManager;
 
     @Inject
-    public HttpApiServer(HttpApiInterfaceV1 httpApiInterfaceV1,
-                         BisqEnvironment bisqEnvironment) {
-        this.httpApiInterfaceV1 = httpApiInterfaceV1;
+    public HttpApiServer(ApiPasswordManager apiPasswordManager, BisqEnvironment bisqEnvironment, HttpApiInterfaceV1 httpApiInterfaceV1,
+                         TokenRegistry tokenRegistry) {
+        this.apiPasswordManager = apiPasswordManager;
         this.bisqEnvironment = bisqEnvironment;
+        this.httpApiInterfaceV1 = httpApiInterfaceV1;
+        this.tokenRegistry = tokenRegistry;
     }
 
     public void startServer() {
@@ -52,11 +66,13 @@ public class HttpApiServer {
 
     private ContextHandler buildAPIHandler() {
         ResourceConfig resourceConfig = new ResourceConfig();
+        ExceptionMappers.register(resourceConfig);
         resourceConfig.register(httpApiInterfaceV1);
         resourceConfig.packages("io.swagger.v3.jaxrs2.integration.resources");
         ServletContextHandler servletContextHandler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS | ServletContextHandler.NO_SECURITY);
         servletContextHandler.setContextPath("/");
         servletContextHandler.addServlet(new ServletHolder(new ServletContainer(resourceConfig)), "/*");
+        setupAuth(servletContextHandler);
         return servletContextHandler;
     }
 
@@ -76,5 +92,10 @@ public class HttpApiServer {
         swaggerUIContext.setContextPath("/docs");
         swaggerUIContext.setHandler(swaggerUIResourceHandler);
         return swaggerUIContext;
+    }
+
+    private void setupAuth(ServletContextHandler appContextHandler) {
+        AuthFilter authFilter = new AuthFilter(apiPasswordManager, tokenRegistry);
+        appContextHandler.addFilter(new FilterHolder(authFilter), "/*", EnumSet.allOf(DispatcherType.class));
     }
 }
