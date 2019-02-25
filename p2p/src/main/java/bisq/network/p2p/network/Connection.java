@@ -291,31 +291,16 @@ public class Connection implements MessageListener {
     }
 
     public boolean noCapabilityRequiredOrCapabilityIsSupported(Proto msg) {
-        return !isCapabilityRequired(msg) || isCapabilitySupported(msg);
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean isCapabilityRequired(Proto msg) {
-        if (msg instanceof AddDataMessage) {
-            final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) msg).getProtectedStorageEntry()).getProtectedStoragePayload();
-            return protectedStoragePayload instanceof CapabilityRequiringPayload;
-        } else if (msg instanceof AddPersistableNetworkPayloadMessage) {
-            final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) msg).getPersistableNetworkPayload();
-            return persistableNetworkPayload instanceof CapabilityRequiringPayload;
-        } else {
-            return msg instanceof CapabilityRequiringPayload;
-        }
-    }
-
-    private boolean isCapabilitySupported(Proto msg) {
         if (msg instanceof AddDataMessage) {
             final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) msg).getProtectedStorageEntry()).getProtectedStoragePayload();
             return protectedStoragePayload instanceof CapabilityRequiringPayload && sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
         } else if (msg instanceof AddPersistableNetworkPayloadMessage) {
             final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) msg).getPersistableNetworkPayload();
             return persistableNetworkPayload instanceof CapabilityRequiringPayload && sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
+        } else if(msg instanceof CapabilityRequiringPayload) {
+            return sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
         } else {
-            return msg instanceof CapabilityRequiringPayload && sharedModel.isCapabilitySupported(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
+            return true;
         }
     }
 
