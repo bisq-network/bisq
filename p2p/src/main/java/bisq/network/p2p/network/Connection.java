@@ -263,8 +263,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                 } catch (Throwable t) {
                     handleException(t);
                 }
-            } else {
-                log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", networkEnvelope, getSupportedCapabilities());
             }
         } else {
             log.debug("called sendMessage but was already stopped");
@@ -272,22 +270,27 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     }
 
     public boolean noCapabilityRequiredOrCapabilityIsSupported(Proto msg) {
+        boolean result;
         if (msg instanceof AddDataMessage) {
             final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) msg).getProtectedStorageEntry()).getProtectedStoragePayload();
-            return protectedStoragePayload instanceof CapabilityRequiringPayload && isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
+            result = !(protectedStoragePayload instanceof CapabilityRequiringPayload);
+            if(!result)
+                result = isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
         } else if (msg instanceof AddPersistableNetworkPayloadMessage) {
             final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) msg).getPersistableNetworkPayload();
-            return persistableNetworkPayload instanceof CapabilityRequiringPayload && isCapabilitySupported(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
+            result = !(persistableNetworkPayload instanceof CapabilityRequiringPayload);
+            if(!result)
+                result =  isCapabilitySupported(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
         } else if(msg instanceof CapabilityRequiringPayload) {
-            return isCapabilitySupported(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
+            result = isCapabilitySupported(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
         } else {
-            return true;
+            result = true;
         }
-    }
 
-    @Nullable
-    public Capabilities getSupportedCapabilities() {
-        return new Capabilities(capabilities);
+        if (!result)
+            log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", msg, capabilities);
+
+        return result;
     }
 
     public void addMessageListener(MessageListener messageListener) {
