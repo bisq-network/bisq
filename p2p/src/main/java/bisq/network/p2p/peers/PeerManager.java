@@ -449,7 +449,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             // If a node is trying to send too many list we treat it as rule violation.
             // Reported list include the connected list. We use the max value and give some extra headroom.
             // Will trigger a shutdown after 2nd time sending too much
-            connection.reportIllegalRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
+            connection.reportInvalidRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
         }
     }
 
