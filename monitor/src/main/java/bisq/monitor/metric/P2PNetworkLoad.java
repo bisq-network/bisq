@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.springframework.core.env.PropertySource;
 
 import bisq.common.Clock;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -139,8 +141,11 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         history = Collections.synchronizedMap(new FixedSizeHistoryTracker(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
 
         // add all capabilities
-        if(!Capabilities.getSupportedCapabilities().contains(Capabilities.Capability.DAO_FULL_NODE.ordinal()))
-            Capabilities.addCapability(Capabilities.Capability.DAO_FULL_NODE.ordinal());
+        List<Integer> capabilityOrdinals = Capabilities.toIntList(Capabilities.app);
+        if(!capabilityOrdinals.contains(Capability.DAO_FULL_NODE.ordinal())) {
+            capabilityOrdinals.add(Capability.DAO_FULL_NODE.ordinal());
+            Capabilities.app.resetCapabilities(Capabilities.fromIntList(capabilityOrdinals));
+        }
     }
 
     @Override
