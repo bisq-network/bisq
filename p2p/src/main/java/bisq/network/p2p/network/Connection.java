@@ -316,11 +316,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
         capabilitiesListeners.add(new WeakReference<>(listener));
     }
 
-    @SuppressWarnings({"unused", "UnusedReturnValue"})
-    public boolean reportIllegalRequest(RuleViolation ruleViolation) {
-        return reportInvalidRequest(ruleViolation);
-    }
-
     // TODO either use the argument or delete it
     private boolean violatesThrottleLimit(NetworkEnvelope networkEnvelope) {
         long now = System.currentTimeMillis();
