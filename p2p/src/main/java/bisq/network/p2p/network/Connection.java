@@ -96,7 +96,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * All handlers are called on User thread.
  */
 @Slf4j
-public class Connection extends Capabilities implements MessageListener {
+public class Connection extends Capabilities implements Runnable, MessageListener {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -146,7 +146,6 @@ public class Connection extends Capabilities implements MessageListener {
     private final int sendMsgThrottleSleep;
 
     // set in init
-    private InputHandler inputHandler;
     private SynchronizedProtoOutputStream protoOutputStream;
 
     // mutable data, set from other threads but not changed internally.
@@ -186,10 +185,11 @@ public class Connection extends Capabilities implements MessageListener {
         else
             portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
 
-        init(peersNodeAddress, networkProtoResolver);
+        this.networkProtoResolver = networkProtoResolver;
+        init(peersNodeAddress);
     }
 
-    private void init(@Nullable NodeAddress peersNodeAddress, NetworkProtoResolver networkProtoResolver) {
+    private void init(@Nullable NodeAddress peersNodeAddress) {
         try {
             socket.setSoTimeout(SOCKET_TIMEOUT);
             // Need to access first the ObjectOutputStream otherwise the ObjectInputStream would block
@@ -198,10 +198,9 @@ public class Connection extends Capabilities implements MessageListener {
             // the associated ObjectOutputStream on the other end of the connection has written.
             // It will not return until that header has been read.
             protoOutputStream = new SynchronizedProtoOutputStream(socket.getOutputStream(), statistic);
-            InputStream protoInputStream = socket.getInputStream();
+            protoInputStream = socket.getInputStream();
             // We create a thread for handling inputStream data
-            inputHandler = new InputHandler(this, protoInputStream, portInfo, this, networkProtoResolver);
-            singleThreadExecutor.submit(inputHandler);
+            singleThreadExecutor.submit(this);
 
             // Use Peer as default, in case of other types they will set it as soon as possible.
             peerType = PeerType.PEER;
@@ -496,8 +495,6 @@ public class Connection extends Capabilities implements MessageListener {
 
     private void setStopFlags() {
         stopped = true;
-        if (inputHandler != null)
-            inputHandler.stop();
     }
 
     private void doShutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
@@ -637,11 +634,6 @@ public class Connection extends Capabilities implements MessageListener {
     }
     private CloseConnectionReason closeConnectionReason;
 
-
-        public Socket getSocket() {
-            return socket;
-        }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -649,30 +641,12 @@ public class Connection extends Capabilities implements MessageListener {
     // Runs in same thread as Connection, receives a message, performs several checks on it
     // (including throttling limits, validity and statistics)
     // and delivers it to the message listener given in the constructor.
-    private static class InputHandler implements Runnable {
-        private static final Logger log = LoggerFactory.getLogger(InputHandler.class);
-
-        private final Connection sharedModel;
-        private final InputStream protoInputStream;
-        private final String portInfo;
-        private final MessageListener messageListener;
+        private InputStream protoInputStream;
         private final NetworkProtoResolver networkProtoResolver;
 
-        private volatile boolean stopped;
         private long lastReadTimeStamp;
         private boolean threadNameSet;
 
-        public InputHandler(Connection sharedModel,
-                            InputStream protoInputStream,
-                            String portInfo,
-                            MessageListener messageListener,
-                            NetworkProtoResolver networkProtoResolver) {
-            this.sharedModel = sharedModel;
-            this.protoInputStream = protoInputStream;
-            this.portInfo = portInfo;
-            this.messageListener = messageListener;
-            this.networkProtoResolver = networkProtoResolver;
-        }
 
         public void stop() {
             if (!stopped) {
@@ -692,21 +666,17 @@ public class Connection extends Capabilities implements MessageListener {
             try {
                 Thread.currentThread().setName("InputHandler");
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
-                    if (!threadNameSet && sharedModel != null &&
-                            sharedModel.getPeersNodeAddressOptional().isPresent()) {
-                        Thread.currentThread().setName("InputHandler-" + sharedModel.getPeersNodeAddressOptional().get().getFullAddress());
+                    if (!threadNameSet && getPeersNodeAddressOptional().isPresent()) {
+                        Thread.currentThread().setName("InputHandler-" + getPeersNodeAddressOptional().get().getFullAddress());
                         threadNameSet = true;
                     }
                     try {
-                        if (sharedModel.getSocket() != null &&
-                                sharedModel.getSocket().isClosed()) {
-                            log.warn("Socket is null or closed socket={}", sharedModel.getSocket());
+                        if (socket != null &&
+                                socket.isClosed()) {
+                            log.warn("Socket is null or closed socket={}", socket);
                             stopAndShutDown(CloseConnectionReason.SOCKET_CLOSED);
                             return;
                         }
-
-                        Connection connection = checkNotNull(sharedModel, "connection must not be null");
-                        log.trace("InputHandler waiting for incoming network_messages.\n\tConnection=" + connection);
 
                         // Throttle inbound network_messages
                         long now = System.currentTimeMillis();
@@ -760,10 +730,10 @@ public class Connection extends Capabilities implements MessageListener {
                         }*/
 
                         // We want to track the size of each object even if it is invalid data
-                        connection.statistic.addReceivedBytes(size);
+                        statistic.addReceivedBytes(size);
 
                         // We want to track the network_messages also before the checks, so do it early...
-                        connection.statistic.addReceivedMessage(networkEnvelope);
+                        statistic.addReceivedMessage(networkEnvelope);
 
                         // First we check the size
                         boolean exceeds;
@@ -790,7 +760,7 @@ public class Connection extends Capabilities implements MessageListener {
                                 return;
                         }
 
-                        if (connection.violatesThrottleLimit(networkEnvelope)
+                        if (violatesThrottleLimit(networkEnvelope)
                                 && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                             return;
 
@@ -805,12 +775,12 @@ public class Connection extends Capabilities implements MessageListener {
                         }
 
                         if (networkEnvelope instanceof SupportedCapabilitiesMessage)
-                            sharedModel.resetCapabilities(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
+                            resetCapabilities(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
 
                         if (networkEnvelope instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down
                             log.info("CloseConnectionMessage received. Reason={}\n\t" +
-                                    "connection={}", proto.getCloseConnectionMessage().getReason(), connection);
+                                    "connection={}", proto.getCloseConnectionMessage().getReason(), this);
                             if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                                 log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
                                 stopAndShutDown(CloseConnectionReason.PEER_BANNED);
@@ -821,10 +791,10 @@ public class Connection extends Capabilities implements MessageListener {
                         } else if (!stopped) {
                             // We don't want to get the activity ts updated by ping/pong msg
                             if (!(networkEnvelope instanceof KeepAliveMessage))
-                                connection.statistic.updateLastActivityTimestamp();
+                                statistic.updateLastActivityTimestamp();
 
                             if (networkEnvelope instanceof GetDataRequest)
-                                connection.setPeerType(PeerType.INITIAL_DATA_REQUEST);
+                                setPeerType(PeerType.INITIAL_DATA_REQUEST);
 
                             // First a seed node gets a message from a peer (PreliminaryDataRequest using
                             // AnonymousMessage interface) which does not have its hidden service
@@ -841,7 +811,7 @@ public class Connection extends Capabilities implements MessageListener {
                             // 4. DirectMessage (implements SendersNodeAddressMessage)
                             if (networkEnvelope instanceof SendersNodeAddressMessage) {
                                 NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress();
-                                Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+                                Optional<NodeAddress> peersNodeAddressOptional = getPeersNodeAddressOptional();
                                 if (peersNodeAddressOptional.isPresent()) {
                                     // If we have already the peers address we check again if it matches our stored one
                                     checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
@@ -851,51 +821,41 @@ public class Connection extends Capabilities implements MessageListener {
                                     // We must not shut down a banned peer at that moment as it would trigger a connection termination
                                     // and we could not send the CloseConnectionMessage.
                                     // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
-                                    connection.setPeersNodeAddress(senderNodeAddress);
+                                    setPeersNodeAddress(senderNodeAddress);
                                 }
                             }
 
                             if (networkEnvelope instanceof PrefixedSealedAndSignedMessage)
-                                connection.setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
+                                setPeerType(Connection.PeerType.DIRECT_MSG_PEER);
 
-                            messageListener.onMessage(networkEnvelope, connection);
+                            onMessage(networkEnvelope, this);
                         }
                     } catch (InvalidClassException e) {
                         log.error(e.getMessage());
                         e.printStackTrace();
-                        reportInvalidRequest(RuleViolation.INVALID_CLASS);
+                        reactOnInvalidRequest(RuleViolation.INVALID_CLASS);
                     } catch (ProtobufferException | NoClassDefFoundError e) {
                         log.error(e.getMessage());
                         e.printStackTrace();
-                        reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                        reactOnInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                     } catch (Throwable t) {
-                        sharedModel.handleException(t);
+                        handleException(t);
                     }
                 }
             } catch (Throwable t) {
-                sharedModel.handleException(t);
+                handleException(t);
             }
         }
 
         private void stopAndShutDown(CloseConnectionReason reason) {
             stop();
-            sharedModel.shutDown(reason);
+            shutDown(reason);
         }
 
-        private boolean reportInvalidRequest(RuleViolation ruleViolation) {
-            boolean causedShutDown = sharedModel.reportInvalidRequest(ruleViolation);
+        private boolean reactOnInvalidRequest(RuleViolation ruleViolation) {
+            boolean causedShutDown = reportInvalidRequest(ruleViolation);
             if (causedShutDown)
                 stop();
             return causedShutDown;
         }
-
-        @Override
-        public String toString() {
-            return "InputHandler{" +
-                    "sharedSpace=" + sharedModel +
-                    ", port=" + portInfo +
-                    ", stopped=" + stopped +
-                    '}';
-        }
-    }
 }
