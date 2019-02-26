@@ -457,19 +457,19 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                                 getRuleViolation().name() : closeConnectionReason.name();
                         sendMessage(new CloseConnectionMessage(reason));
 
-                        setStopFlags();
+                        stopped = true;
 
                         Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
                     } catch (Throwable t) {
                         log.error(t.getMessage());
                         t.printStackTrace();
                     } finally {
-                        setStopFlags();
+                        stopped = true;
                         UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
                     }
                 }).start();
             } else {
-                setStopFlags();
+                stopped = true;
                 doShutDown(closeConnectionReason, shutDownCompleteHandler);
             }
         } else {
@@ -477,10 +477,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
             log.debug("stopped was already at shutDown call");
             UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
         }
-    }
-
-    private void setStopFlags() {
-        stopped = true;
     }
 
     private void doShutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
@@ -495,6 +491,14 @@ public class Connection extends Capabilities implements Runnable, MessageListene
             e.printStackTrace();
         } finally {
             protoOutputStream.onConnectionShutdown();
+
+            try {
+                protoInputStream.close();
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+            }
+
             MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete " + this.toString());
@@ -822,13 +826,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                 }
             } catch (Throwable t) {
                 handleException(t);
-            } finally {
-                try {
-                    protoInputStream.close();
-                } catch (IOException e) {
-                    log.error(e.getMessage());
-                    e.printStackTrace();
-                }
             }
         }
 }
