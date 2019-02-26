@@ -647,20 +647,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
         private long lastReadTimeStamp;
         private boolean threadNameSet;
 
-
-        public void stop() {
-            if (!stopped) {
-                try {
-                    protoInputStream.close();
-                } catch (IOException e) {
-                    log.error("IOException at InputHandler.stop\n" + e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    stopped = true;
-                }
-            }
-        }
-
         @Override
         public void run() {
             try {
@@ -674,7 +660,7 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                         if (socket != null &&
                                 socket.isClosed()) {
                             log.warn("Socket is null or closed socket={}", socket);
-                            stopAndShutDown(CloseConnectionReason.SOCKET_CLOSED);
+                            shutDown(CloseConnectionReason.SOCKET_CLOSED);
                             return;
                         }
 
@@ -696,7 +682,7 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                                 log.info("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
                             else
                                 log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
-                            stopAndShutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
+                            shutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
                             return;
                         }
 
@@ -783,9 +769,9 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                                     "connection={}", proto.getCloseConnectionMessage().getReason(), this);
                             if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                                 log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
-                                stopAndShutDown(CloseConnectionReason.PEER_BANNED);
+                                shutDown(CloseConnectionReason.PEER_BANNED);
                             } else {
-                                stopAndShutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
+                                shutDown(CloseConnectionReason.CLOSE_REQUESTED_BY_PEER);
                             }
                             return;
                         } else if (!stopped) {
@@ -833,29 +819,24 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                     } catch (InvalidClassException e) {
                         log.error(e.getMessage());
                         e.printStackTrace();
-                        reactOnInvalidRequest(RuleViolation.INVALID_CLASS);
+                        reportInvalidRequest(RuleViolation.INVALID_CLASS);
                     } catch (ProtobufferException | NoClassDefFoundError e) {
                         log.error(e.getMessage());
                         e.printStackTrace();
-                        reactOnInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
+                        reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                     } catch (Throwable t) {
                         handleException(t);
                     }
                 }
             } catch (Throwable t) {
                 handleException(t);
+            } finally {
+                try {
+                    protoInputStream.close();
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                    e.printStackTrace();
+                }
             }
-        }
-
-        private void stopAndShutDown(CloseConnectionReason reason) {
-            stop();
-            shutDown(reason);
-        }
-
-        private boolean reactOnInvalidRequest(RuleViolation ruleViolation) {
-            boolean causedShutDown = reportInvalidRequest(ruleViolation);
-            if (causedShutDown)
-                stop();
-            return causedShutDown;
         }
 }
