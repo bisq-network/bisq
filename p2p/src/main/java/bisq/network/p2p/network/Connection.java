@@ -151,8 +151,10 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     private Optional<NodeAddress> peersNodeAddressOptional = Optional.<NodeAddress>empty();
     @Getter
     private volatile boolean stopped;
+
+    // Use Peer as default, in case of other types they will set it as soon as possible.
     @Getter
-    private PeerType peerType;
+    private PeerType peerType = PeerType.PEER;
     @Getter
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Tuple2<Long, String>> messageTimeStamps = new ArrayList<>();
@@ -202,9 +204,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
             protoInputStream = socket.getInputStream();
             // We create a thread for handling inputStream data
             singleThreadExecutor.submit(this);
-
-            // Use Peer as default, in case of other types they will set it as soon as possible.
-            peerType = PeerType.PEER;
 
             if (peersNodeAddress != null)
                 setPeersNodeAddress(peersNodeAddress);
