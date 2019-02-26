@@ -205,8 +205,6 @@ public class BroadcastHandler implements PeerManager.Listener {
                             }
                         }
                     });
-                } else {
-                    log.debug("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", Utilities.toTruncatedString(message, 200), connection.getSupportedCapabilities());
                 }
             } else {
                 onFault("Connection stopped already", false);
