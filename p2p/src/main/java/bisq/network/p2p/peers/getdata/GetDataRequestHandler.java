@@ -31,7 +31,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Capabilities;
 import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;

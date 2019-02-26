@@ -308,9 +308,9 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
                 });
             }
 
-            checkNotNull(connection.peersNodeAddressProperty(),
+            checkNotNull(connection.getPeersNodeAddressProperty(),
                     "although the property is nullable, we need it to not be null");
-            bucketsPerHost.put(connection.peersNodeAddressProperty().getValue(), result);
+            bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
 
             connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
             gate.proceed();
