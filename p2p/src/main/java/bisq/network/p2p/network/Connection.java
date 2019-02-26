@@ -53,7 +53,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.net.Socket;
@@ -81,6 +80,7 @@ import java.util.stream.Collectors;
 
 import java.lang.ref.WeakReference;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
@@ -132,9 +132,11 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     private final Socket socket;
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
+    @Getter
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     // holder of state shared between InputHandler and Connection
+    @Getter
     private final Statistic statistic;
     private final int msgThrottlePer10Sec;
     private final int msgThrottlePerSec;
@@ -145,14 +147,22 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     private SynchronizedProtoOutputStream protoOutputStream;
 
     // mutable data, set from other threads but not changed internally.
+    @Getter
     private Optional<NodeAddress> peersNodeAddressOptional = Optional.<NodeAddress>empty();
+    @Getter
     private volatile boolean stopped;
+    @Getter
     private PeerType peerType;
+    @Getter
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
     private final List<Tuple2<Long, String>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
+
+    @Getter
+    private RuleViolation ruleViolation;
+    private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -395,43 +405,13 @@ public class Connection extends Capabilities implements Runnable, MessageListene
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<NodeAddress> getPeersNodeAddressOptional() {
-        return peersNodeAddressOptional;
-    }
-
-    public String getUid() {
-        return uid;
-    }
-
     public boolean hasPeersNodeAddress() {
         return peersNodeAddressOptional.isPresent();
     }
-
-    public boolean isStopped() {
-        return stopped;
-    }
-
-    public PeerType getPeerType() {
-        return peerType;
-    }
-
-    public ReadOnlyObjectProperty<NodeAddress> peersNodeAddressProperty() {
-        return peersNodeAddressProperty;
-    }
-
-    public RuleViolation getRuleViolation() {
-        return ruleViolation;
-    }
-
-    public Statistic getStatistic() {
-        return statistic;
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ShutDown
@@ -564,8 +544,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
      * Holds all shared data between Connection and InputHandler
      * Runs in same thread as Connection
      */
-    private RuleViolation ruleViolation;
-    private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
 
 
     public boolean reportInvalidRequest(RuleViolation ruleViolation) {
