@@ -546,7 +546,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                 ", peerType=" + peerType +
                 ", portInfo=" + portInfo +
                 ", uid='" + uid + '\'' +
-                ", closeConnectionReason=" + closeConnectionReason +
                 ", ruleViolation=" + ruleViolation +
                 ", ruleViolations=" + ruleViolations +
                 ", supportedCapabilities=" + capabilities +
@@ -599,6 +598,8 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     }
 
     private void handleException(Throwable e) {
+        CloseConnectionReason closeConnectionReason;
+
         if (e instanceof SocketException) {
             if (socket.isClosed())
                 closeConnectionReason = CloseConnectionReason.SOCKET_CLOSED;
@@ -628,7 +629,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
         }
         shutDown(closeConnectionReason);
     }
-    private CloseConnectionReason closeConnectionReason;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // InputHandler
