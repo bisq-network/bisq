@@ -135,7 +135,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     private final Socket socket;
     // private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
-    private final String portInfo;
     private final String uid;
     private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
     // holder of state shared between InputHandler and Connection
@@ -179,11 +178,6 @@ public class Connection extends Capabilities implements Runnable, MessageListene
         sendMsgThrottleSleep = connectionConfig.getSendMsgThrottleSleep();
 
         addMessageListener(messageListener);
-
-        if (socket.getLocalPort() == 0)
-            portInfo = "port=" + socket.getPort();
-        else
-            portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
 
         this.networkProtoResolver = networkProtoResolver;
         init(peersNodeAddress);
@@ -540,6 +534,12 @@ public class Connection extends Capabilities implements Runnable, MessageListene
 
     @SuppressWarnings("unused")
     public String printDetails() {
+        String portInfo;
+        if (socket.getLocalPort() == 0)
+            portInfo = "port=" + socket.getPort();
+        else
+            portInfo = "localPort=" + socket.getLocalPort() + "/port=" + socket.getPort();
+
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
                 ", peerType=" + peerType +
