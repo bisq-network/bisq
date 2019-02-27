@@ -378,9 +378,10 @@ public class Connection implements MessageListener {
                             .collect(Collectors.toList()).toString());
                 }
             }
-            // we limit to max 1000 (MSG_THROTTLE_PER_10SEC) entries
-            messageTimeStamps.remove(0);
         }
+        // we limit to max 1000 (MSG_THROTTLE_PER_10SEC) entries
+        while(messageTimeStamps.size() > MSG_THROTTLE_PER_10_SEC)
+            messageTimeStamps.remove(0);
 
         messageTimeStamps.add(new Tuple2<>(now, networkEnvelope));
         return violated;
