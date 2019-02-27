@@ -32,12 +32,14 @@ import org.springframework.core.env.PropertySource;
 
 import bisq.common.Clock;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
+import bisq.core.network.p2p.seed.SeedNodeAddressLookup;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.monitor.AvailableTor;
@@ -160,6 +162,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
             // boot up P2P node
             File storageDir = torHiddenServiceDir;
+            String seedNodes = "";
             try {
                 BisqEnvironment environment = new BisqEnvironment(new PropertySource<String>("name") {
 
@@ -174,7 +177,8 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
                         networkProtoResolver, storageDir);
-                DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(environment, null);
+                DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(
+                        new SeedNodeAddressLookup(environment, false, Version.getBaseCurrencyNetwork(), null, seedNodes));
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new Clock(),
                         persistenceProtoResolver, maxConnections, storageDir);
 

@@ -19,11 +19,13 @@ package bisq.network.p2p.seed;
 
 import bisq.network.p2p.NodeAddress;
 
-import java.util.Collection;
+import java.util.Set;
 
 public interface SeedNodeRepository {
 
     boolean isSeedNode(NodeAddress nodeAddress);
 
-    Collection<NodeAddress> getSeedNodeAddresses();
+    Set<NodeAddress> getSeedNodeAddresses();
+
+    String getOperator(NodeAddress nodeAddress);
 }

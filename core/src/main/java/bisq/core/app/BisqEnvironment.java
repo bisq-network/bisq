@@ -57,7 +57,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -346,7 +345,7 @@ public class BisqEnvironment extends StandardEnvironment {
             bannedPriceRelayNodes = !bannedPriceRelayNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedPriceRelayNodesAsString).split(",")) : null;
 
             final String bannedSeedNodesAsString = getProperty(FilterManager.BANNED_SEED_NODES, "");
-            bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : new ArrayList<>();
+            bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : null;
 
             final String bannedBtcNodesAsString = getProperty(FilterManager.BANNED_BTC_NODES, "");
             bannedBtcNodes = !bannedBtcNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedBtcNodesAsString).split(",")) : null;
