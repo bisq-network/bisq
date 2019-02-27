@@ -43,7 +43,6 @@ import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
@@ -77,7 +76,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import java.lang.ref.WeakReference;
 
@@ -162,7 +160,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private PeerType peerType = PeerType.PEER;
     @Getter
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
-    private final List<Tuple2<Long, String>> messageTimeStamps = new ArrayList<>();
+    private final List<Long> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
@@ -342,47 +340,33 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         capabilitiesListeners.add(new WeakReference<>(listener));
     }
 
-    // TODO either use the argument or delete it
-    private boolean violatesThrottleLimit(NetworkEnvelope networkEnvelope) {
+    private boolean violatesThrottleLimit() {
         long now = System.currentTimeMillis();
-        boolean violated = false;
-        //TODO remove message storage after network is tested stable
-        if (messageTimeStamps.size() >= msgThrottlePerSec) {
-            // check if we got more than 200 (MSG_THROTTLE_PER_SEC) msg per sec.
-            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - msgThrottlePerSec).first;
-            // if duration < 1 sec we received too much network_messages
-            violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
-            if (violated) {
-                log.error("violatesThrottleLimit MSG_THROTTLE_PER_SEC ");
-                log.error("elapsed " + (now - compareValue));
-                log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second)
-                        .collect(Collectors.toList()).toString());
-            }
-        }
 
-        if (messageTimeStamps.size() >= msgThrottlePer10Sec) {
-            if (!violated) {
-                // check if we got more than 50 msg per 10 sec.
-                long compareValue = messageTimeStamps.get(messageTimeStamps.size() - msgThrottlePer10Sec).first;
-                // if duration < 10 sec we received too much network_messages
-                violated = now - compareValue < TimeUnit.SECONDS.toMillis(10);
+        messageTimeStamps.add(now);
 
-                if (violated) {
-                    log.error("violatesThrottleLimit MSG_THROTTLE_PER_10_SEC ");
-                    log.error("elapsed " + (now - compareValue));
-                    log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second)
-                            .collect(Collectors.toList()).toString());
-                }
-            }
-        }
-        // we limit to max 1000 (MSG_THROTTLE_PER_10SEC) entries
-        while (messageTimeStamps.size() > msgThrottlePer10Sec)
+        // clean list
+        while(messageTimeStamps.size() > msgThrottlePer10Sec)
             messageTimeStamps.remove(0);
 
-        messageTimeStamps.add(new Tuple2<>(now, networkEnvelope.getClass().getName()));
-        return violated;
+        return violatesThrottleLimit(now,1, msgThrottlePerSec) || violatesThrottleLimit(now,10, msgThrottlePer10Sec);
+    }
+
+    private boolean violatesThrottleLimit(long now, int seconds, int messageCountLimit) {
+        if (messageTimeStamps.size() >= messageCountLimit) {
+
+            // find the entry in the message timestamp history which determines whether we overshot the limit or not
+            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - messageCountLimit);
+
+            // if duration < seconds sec we received too much network_messages
+            if(now - compareValue < TimeUnit.SECONDS.toMillis(seconds)) {
+                log.error("violatesThrottleLimit {}/{} second(s)", messageCountLimit, seconds);
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -747,8 +731,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                             return;
                     }
 
-                    if (violatesThrottleLimit(networkEnvelope)
-                            && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
+                    if (violatesThrottleLimit() && reportInvalidRequest(RuleViolation.THROTTLE_LIMIT_EXCEEDED))
                         return;
 
                     // Check P2P network ID
