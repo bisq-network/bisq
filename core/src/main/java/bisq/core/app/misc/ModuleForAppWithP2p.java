@@ -26,7 +26,6 @@ import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
-import bisq.core.network.p2p.seed.SeedNodeAddressLookup;
 import bisq.core.offer.OfferModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -77,7 +76,6 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
         bind(TorSetup.class).in(Singleton.class);
 
-        bind(SeedNodeAddressLookup.class).in(Singleton.class);
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
