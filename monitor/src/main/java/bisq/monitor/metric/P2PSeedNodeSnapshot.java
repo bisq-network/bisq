@@ -82,7 +82,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     Statistics statistics;
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("monitor/work/metric_" + this.getClass().getSimpleName());
+    private final File torHiddenServiceDir = new File("metric_" + getName());
     private int nonce;
     final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
