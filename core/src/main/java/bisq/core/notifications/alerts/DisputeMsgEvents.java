@@ -61,9 +61,9 @@ public class DisputeMsgEvents {
 
     private void setDisputeListener(Dispute dispute) {
         //TODO use weak ref or remove listener
-        log.info("We got a dispute added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
+        log.debug("We got a dispute added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
         dispute.getDisputeCommunicationMessages().addListener((ListChangeListener<DisputeCommunicationMessage>) c -> {
-            log.info("We got a DisputeCommunicationMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
+            log.debug("We got a DisputeCommunicationMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(this::setDisputeCommunicationMessage);

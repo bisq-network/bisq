@@ -169,7 +169,6 @@ public class MobileNotificationService {
                                 boolean useSound,
                                 Consumer<String> resultHandler,
                                 Consumer<Throwable> errorHandler) throws Exception {
-        log.info("Send message: '{}'", message.getMessage());
         if (mobileModel.getKey() == null)
             return false;
 
@@ -198,6 +197,9 @@ public class MobileNotificationService {
 
         if (!doSend)
             return false;
+
+        log.info("Send message: '{}'", message.getMessage());
+
 
         log.info("sendMessage message={}", message);
         Gson gson = new Gson();
