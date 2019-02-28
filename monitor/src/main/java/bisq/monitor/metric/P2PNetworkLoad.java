@@ -76,7 +76,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private static final String MAX_CONNECTIONS = "run.maxConnections";
     private static final String HISTORY_SIZE = "run.historySize";
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("monitor/work/metric_p2pNetworkLoad");
+    private final File torHiddenServiceDir = new File("metric_" + getName());
     private final ThreadGate hsReady = new ThreadGate();
     private final Map<String, Counter> buckets = new ConcurrentHashMap<>();
 

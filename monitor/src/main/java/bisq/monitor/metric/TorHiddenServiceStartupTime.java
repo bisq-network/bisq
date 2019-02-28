@@ -18,6 +18,7 @@
 package bisq.monitor.metric;
 
 import bisq.monitor.Metric;
+import bisq.monitor.Monitor;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
 
@@ -38,7 +39,7 @@ public class TorHiddenServiceStartupTime extends Metric {
 
     private static final String SERVICE_PORT = "run.servicePort";
     private static final String LOCAL_PORT = "run.localPort";
-    private final String hiddenServiceDirectory = "monitor/work/metric_" + getName();
+    private final String hiddenServiceDirectory = "metric_" + getName();
     private final ThreadGate gate = new ThreadGate();
 
     public TorHiddenServiceStartupTime(Reporter reporter) {
@@ -53,7 +54,7 @@ public class TorHiddenServiceStartupTime extends Metric {
         int servicePort = Integer.parseInt(configuration.getProperty(SERVICE_PORT, "9999"));
 
         // clear directory so we get a new onion address every time
-        new File(hiddenServiceDirectory).delete();
+        new File(Monitor.TOR_WORKING_DIR + "/" + hiddenServiceDirectory).delete();
 
         log.debug("creating the hidden service");
 
