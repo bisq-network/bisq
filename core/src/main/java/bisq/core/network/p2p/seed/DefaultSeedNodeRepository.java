@@ -26,11 +26,9 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import java.net.URL;
-
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -66,26 +64,21 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         }
 
         // else, we fetch the seed nodes from our resources
-        try {
-            // read appropriate file
-            final URL file = DefaultSeedNodeRepository.class.getClassLoader().getResource(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
-            final BufferedReader seedNodeFile = new BufferedReader(new FileReader(file.getFile()));
+        final InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
+        final BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
 
-            // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
-            cache.clear();
+        // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
+        cache.clear();
 
-            // refill the cache
-            seedNodeFile.lines().forEach(s -> {
-                final Matcher matcher = pattern.matcher(s);
-                if(matcher.find())
-                    cache.add(new NodeAddress(matcher.group(1)));
-            });
+        // refill the cache
+        seedNodeFile.lines().forEach(s -> {
+            final Matcher matcher = pattern.matcher(s);
+            if(matcher.find())
+                cache.add(new NodeAddress(matcher.group(1)));
+        });
 
-            // filter
-            cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(s -> new NodeAddress(s)).collect(Collectors.toSet()));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        // filter
+        cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(s -> new NodeAddress(s)).collect(Collectors.toSet()));
     }
 
     public Collection<NodeAddress> getSeedNodeAddresses() {
