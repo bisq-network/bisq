@@ -1,7 +1,7 @@
 # Building Bisq
 
 _You will need [OpenJDK 10](https://jdk.java.net/10/) installed and configured as the default system JDK to complete the following instructions. See the `scripts` directory for scripts that can be used to install and configure the JDK automatically._
-
+> TIP: If you are on MacOS, run the script with this command `. scripts/install_java.sh`.
 
 ## Clone
 
