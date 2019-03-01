@@ -34,6 +34,7 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
@@ -100,10 +101,13 @@ public class BondingViewUtils {
                             Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
+                BSFormatter formatter = new BSFormatter();
+                String duration = formatter.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
                 new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
                         .confirmation(Res.get("dao.bond.reputation.lockup.details",
                                 bsqFormatter.formatCoinWithCode(lockupAmount),
-                                lockupTime
+                                lockupTime,
+                                duration
                         ))
                         .actionButtonText(Res.get("shared.yes"))
                         .onAction(() -> publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler))
@@ -143,10 +147,13 @@ public class BondingViewUtils {
 
             try {
                 if (!DevEnv.isDevMode()) {
+                    BSFormatter formatter = new BSFormatter();
+                    String duration = formatter.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),
-                                    lockTime
+                                    lockTime,
+                                    duration
                             ))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> publishUnlockTx(lockupTxId, resultHandler))
