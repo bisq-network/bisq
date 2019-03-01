@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost {
-    private UnconfirmedBsqChangeOutputList unconfirmedBsqChangeOutputList = new UnconfirmedBsqChangeOutputList();
+    private final UnconfirmedBsqChangeOutputList unconfirmedBsqChangeOutputList = new UnconfirmedBsqChangeOutputList();
     private final Storage<UnconfirmedBsqChangeOutputList> storage;
 
     @Inject
@@ -136,7 +136,6 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
         if (unconfirmedBsqChangeOutputList.containsTxOutput(txOutput))
             return;
 
-        log.error("We add txOutput {}", txOutput);
         unconfirmedBsqChangeOutputList.add(txOutput);
         persist();
     }
@@ -148,7 +147,6 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     }
 
     public void onTransactionConfidenceChanged(Transaction tx) {
-        log.info("onTransactionConfidenceChanged {}, {}", tx.getHashAsString(), tx.getConfidence().getConfidenceType());
         if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
             removeConnectedOutputsOfInputsOfTx(tx);
 
@@ -179,9 +177,8 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
                 .map(TransactionInput::getConnectedOutput)
                 .filter(Objects::nonNull)
                 .map(UnconfirmedTxOutput::fromTransactionOutput)
-                .filter(txOutput -> unconfirmedBsqChangeOutputList.containsTxOutput(txOutput))
+                .filter(unconfirmedBsqChangeOutputList::containsTxOutput)
                 .forEach(txOutput -> {
-                    log.error("removed TransactionOutput {}", txOutput);
                     unconfirmedBsqChangeOutputList.remove(txOutput);
                     persist();
                 });
@@ -189,6 +186,5 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
 
     private void persist() {
         storage.queueUpForSave();
-        log.error("persist unconfirmedBsqChangeOutputList " + unconfirmedBsqChangeOutputList);
     }
 }
