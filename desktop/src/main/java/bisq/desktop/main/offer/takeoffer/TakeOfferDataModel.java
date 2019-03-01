@@ -626,7 +626,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     public Coin getBsqBalance() {
-        return bsqWalletService.getAvailableBalance();
+        return bsqWalletService.getAvailableConfirmedBalance();
     }
 
     public boolean isHalCashAccount() {

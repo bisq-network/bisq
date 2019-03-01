@@ -201,11 +201,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockupBondsBalance,
+                                 Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
         updateList();
     }
@@ -219,7 +220,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -106,9 +106,10 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     }
 
     public void activate() {
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableConfirmedBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
+                bsqWalletService.getUnconfirmedChangeBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockupBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
@@ -124,12 +125,15 @@ public class BsqBalanceUtil implements BsqBalanceListener {
     public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
 
         boolean isNonBsqBalanceAvailable = availableNonBsqBalance.value > 0;
 
+        //TODO MK
+        // Coin availableAndChange = availableBalance.add(unconfirmedChangeBalance);
         availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
         unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
         lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));

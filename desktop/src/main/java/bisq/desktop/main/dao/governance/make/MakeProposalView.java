@@ -279,7 +279,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
                 long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
-                long availableBalance = bsqWalletService.getAvailableBalance().value;
+                long availableBalance = bsqWalletService.getAvailableConfirmedBalance().value;
 
                 if (requiredBond > availableBalance) {
                     long missing = requiredBond - availableBalance;

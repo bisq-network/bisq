@@ -478,9 +478,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     @Override
-    public void onUpdateBalances(Coin availableBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
@@ -730,7 +731,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     public Coin getBsqBalance() {
-        return bsqWalletService.getAvailableBalance();
+        return bsqWalletService.getAvailableConfirmedBalance();
     }
 
     public void setMarketPriceAvailable(boolean marketPriceAvailable) {

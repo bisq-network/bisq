@@ -130,7 +130,7 @@ public class OfferUtil {
      * @return
      */
     public static boolean isBsqForMakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
         Coin makerFee = getMakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true, otherwise we would disable BSQ
@@ -159,7 +159,7 @@ public class OfferUtil {
     }
 
     public static boolean isBsqForTakerFeeAvailable(BsqWalletService bsqWalletService, @Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableBalance();
+        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
         Coin takerFee = getTakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true, otherwise we would disable BSQ

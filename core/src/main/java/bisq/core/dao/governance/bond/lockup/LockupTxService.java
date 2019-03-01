@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.bond.BondConsensus;
+import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.handlers.ExceptionHandler;
 
@@ -73,7 +74,7 @@ public class LockupTxService {
             byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupReason, hash);
             Transaction lockupTx = createLockupTx(lockupAmount, opReturnData);
 
-            walletsManager.publishAndCommitBsqTx(lockupTx, new TxBroadcaster.Callback() {
+            walletsManager.publishAndCommitBsqTx(lockupTx, TxType.LOCKUP, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     resultHandler.accept(transaction.getHashAsString());

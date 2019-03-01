@@ -97,7 +97,7 @@ public class EditOfferDataModelTest {
         when(accountAgeWitnessService.getMyTradeLimit(any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("US", "United States", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
-        when(bsqWalletService.getAvailableBalance()).thenReturn(Coin.ZERO);
+        when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
 
         model = new EditOfferDataModel(null,
                 btcWalletService, bsqWalletService, empty, user,

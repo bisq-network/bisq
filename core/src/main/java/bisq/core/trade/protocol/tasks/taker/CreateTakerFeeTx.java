@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -109,7 +110,7 @@ public class CreateTakerFeeTx extends TradeTask {
 
                 Transaction signedTx = processModel.getBsqWalletService().signTx(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
-                bsqWalletService.commitTx(signedTx);
+                bsqWalletService.commitTx(signedTx, TxType.PAY_TRADE_FEE);
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception
                 // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));

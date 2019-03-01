@@ -411,8 +411,7 @@ public abstract class WalletService {
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // BalanceType.AVAILABLE
-    public Coin getAvailableBalance() {
+    public Coin getAvailableConfirmedBalance() {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
@@ -583,10 +582,6 @@ public abstract class WalletService {
         return wallet.getActiveKeyChain().findKeyFromPubKey(pubKey);
     }
 
-    public Address freshReceiveAddress() {
-        return wallet.freshReceiveAddress();
-    }
-
     public boolean isEncrypted() {
         return wallet.isEncrypted();
     }
@@ -722,7 +717,7 @@ public abstract class WalletService {
                 if (balanceListener.getAddress() != null)
                     balance = getBalanceForAddress(balanceListener.getAddress());
                 else
-                    balance = getAvailableBalance();
+                    balance = getAvailableConfirmedBalance();
 
                 balanceListener.onBalanceChanged(balance, tx);
             }
