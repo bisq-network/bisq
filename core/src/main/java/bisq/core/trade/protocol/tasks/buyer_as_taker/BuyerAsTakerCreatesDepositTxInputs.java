@@ -18,8 +18,8 @@
 package bisq.core.trade.protocol.tasks.buyer_as_taker;
 
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.model.InputsAndChangeOutput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -51,12 +51,11 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             Address takersAddress = walletService.getOrCreateAddressEntry(processModel.getOffer().getId(),
                     AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-            Address takersChangeAddress = walletService.getFreshAddressEntry().getAddress();
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositsTxInputs(
+                    processModel.getTakeOfferFeeTx(),
                     takerInputAmount,
                     txFee.subtract(bsqTakerFee),
-                    takersAddress,
-                    takersChangeAddress);
+                    takersAddress);
             processModel.setRawTransactionInputs(result.rawTransactionInputs);
             processModel.setChangeOutputValue(result.changeOutputValue);
             processModel.setChangeOutputAddress(result.changeOutputAddress);

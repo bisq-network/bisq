@@ -34,6 +34,7 @@ import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDeposi
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
 import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
@@ -141,6 +142,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 VerifyPeersAccountAgeWitness.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
+                TakerPublishFeeTx.class,
                 SellerAsTakerSignAndPublishDepositTx.class,
                 TakerSendDepositTxPublishedMessage.class,
                 PublishTradeStatistics.class
