@@ -97,6 +97,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private final DaoPresentation daoPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
+    @Getter
     private final Preferences preferences;
     private final PrivateNotificationManager privateNotificationManager;
     private final WalletPasswordWindow walletPasswordWindow;
@@ -589,6 +590,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     IntegerProperty getMarketPriceUpdated() {
         return marketPricePresentation.getMarketPriceUpdated();
+    }
+
+    StringProperty getMarketPrice() {
+        return marketPricePresentation.getMarketPrice();
     }
 
     public ObservableList<PriceFeedComboBoxItem> getPriceFeedComboBoxItems() {
