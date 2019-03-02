@@ -589,6 +589,12 @@ public class BtcWalletService extends WalletService {
         return getOrCreateAddressEntry(context, addressEntry);
     }
 
+    public AddressEntry getNewAddressEntry(String offerId, AddressEntry.Context context) {
+        AddressEntry entry = new AddressEntry(wallet.freshReceiveKey(), context, offerId);
+        addressEntryList.addAddressEntry(entry);
+        return entry;
+    }
+
     private AddressEntry getOrCreateAddressEntry(AddressEntry.Context context, Optional<AddressEntry> addressEntry) {
         if (addressEntry.isPresent()) {
             return addressEntry.get();

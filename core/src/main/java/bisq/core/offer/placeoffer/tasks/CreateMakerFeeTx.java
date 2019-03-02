@@ -80,6 +80,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         offer.getMakerFee(),
                         offer.getTxFee(),
                         arbitrator.getBtcAddress(),
+                        true,
                         new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {
