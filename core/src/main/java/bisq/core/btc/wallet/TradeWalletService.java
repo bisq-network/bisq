@@ -176,7 +176,8 @@ public class TradeWalletService {
                                              Coin tradingFee,
                                              Coin txFee,
                                              String feeReceiverAddresses,
-                                             TxBroadcaster.Callback callback)
+                                             boolean doBroadcast,
+                                             @Nullable TxBroadcaster.Callback callback)
             throws InsufficientMoneyException, AddressFormatException {
         log.debug("fundingAddress " + fundingAddress.toString());
         log.debug("reservedForTradeAddress " + reservedForTradeAddress.toString());
@@ -216,7 +217,8 @@ public class TradeWalletService {
             wallet.completeTx(sendRequest);
             WalletService.printTx("tradingFeeTx", tradingFeeTx);
 
-            broadcastTx(tradingFeeTx, callback);
+            if (doBroadcast && callback != null)
+                broadcastTx(tradingFeeTx, callback);
 
             return tradingFeeTx;
         } catch (Throwable t) {
@@ -327,15 +329,15 @@ public class TradeWalletService {
      * The taker creates a dummy transaction to get the input(s) and optional change output for the amount and the takersAddress for that trade.
      * That will be used to send to the maker for creating the deposit transaction.
      *
+     *
+     * @param takeOfferFeeTx The take offer fee tx
      * @param inputAmount   Amount of takers input
      * @param txFee         Mining fee
-     * @param takersAddress Address of taker
      * @return A data container holding the inputs, the output value and address
      * @throws TransactionVerificationException
-     * @throws WalletException
      */
-    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Coin inputAmount, Coin txFee, Address takersAddress, Address takersChangeAddress) throws
-            TransactionVerificationException, WalletException {
+    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Transaction takeOfferFeeTx, Coin inputAmount, Coin txFee, Address takersAddress) throws
+            TransactionVerificationException {
         log.debug("takerCreatesDepositsTxInputs called");
         log.debug("inputAmount " + inputAmount.toFriendlyString());
         log.debug("txFee " + txFee.toFriendlyString());
@@ -349,14 +351,12 @@ public class TradeWalletService {
         /*
          The tx we create has that structure:
 
-         IN[0]  any input > inputAmount (including tx fee) (unsigned)
-         IN[1...n] optional inputs supported, but normally there is just 1 input (unsigned)
+         IN[0]  input from taker fee tx > inputAmount (including tx fee) (unsigned)
          OUT[0] dummyOutputAmount (inputAmount - tx fee)
-         OUT[1] Optional Change = inputAmount - dummyOutputAmount - tx fee
 
-         We are only interested in the inputs and the optional change output.
+         We are only interested in the inputs.
+         We get the exact input value from the taker fee tx so we don't create a change output.
          */
-
 
         // inputAmount includes the tx fee. So we subtract the fee to get the dummyOutputAmount.
         Coin dummyOutputAmount = inputAmount.subtract(txFee);
@@ -370,11 +370,12 @@ public class TradeWalletService {
         // Find the needed inputs to pay the output, optionally add 1 change output.
         // Normally only 1 input and no change output is used, but we support multiple inputs and 1 change output.
         // Our spending transaction output is from the create offer fee payment.
-        addAvailableInputsAndChangeOutputs(dummyTX, takersAddress, takersChangeAddress, txFee);
 
-        // The completeTx() call signs the input, but we don't want to pass over signed tx inputs so we remove the signature
+        // We created the take offer fee tx in the structure that the second output is for the funds for the deposit tx.
+        TransactionOutput reservedForTradeOutput = takeOfferFeeTx.getOutputs().get(1);
+        dummyTX.addInput(reservedForTradeOutput);
+
         WalletService.removeSignatures(dummyTX);
-
         WalletService.verifyTransaction(dummyTX);
 
         //WalletService.printTx("dummyTX", dummyTX);
@@ -388,20 +389,13 @@ public class TradeWalletService {
                 })
                 .collect(Collectors.toList());
 
-        // We don't support more then 1 change outputs, so there are max. 2 outputs
-        checkArgument(dummyTX.getOutputs().size() < 3);
-        // Only interested in optional change output, the dummy output at index 0 is ignored (that's why we use index 1)
-        TransactionOutput changeOutput = dummyTX.getOutputs().size() == 2 ? dummyTX.getOutputs().get(1) : null;
-        long changeOutputValue = 0L;
-        String changeOutputAddress = null;
-        if (changeOutput != null) {
-            changeOutputValue = changeOutput.getValue().getValue();
-            Address addressFromP2PKHScript = changeOutput.getAddressFromP2PKHScript(params);
-            checkNotNull(addressFromP2PKHScript, "changeOutput.getAddressFromP2PKHScript(params) must not be null");
-            changeOutputAddress = addressFromP2PKHScript.toString();
-        }
 
-        return new InputsAndChangeOutput(new ArrayList<>(rawTransactionInputList), changeOutputValue, changeOutputAddress);
+        // TODO changeOutputValue and changeOutputAddress is not used as taker spends exact amount from fee tx.
+        // Change is handled already at the fee tx creation so the handling of a change output for the deposit tx
+        // can be removed here. We still keep it atm as we prefer to not introduce a larger
+        // refactoring. When new trade protocol gets implemented this can be cleaned.
+        // The maker though can have a change output if the taker takes less as the max. offer amount!
+        return new InputsAndChangeOutput(new ArrayList<>(rawTransactionInputList), 0, null);
     }
 
     /**

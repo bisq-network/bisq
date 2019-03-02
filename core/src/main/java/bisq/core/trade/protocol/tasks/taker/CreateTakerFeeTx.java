@@ -18,12 +18,9 @@
 package bisq.core.trade.protocol.tasks.taker;
 
 import bisq.core.arbitration.Arbitrator;
-import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.offer.availability.ArbitratorSelection;
@@ -36,8 +33,6 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
@@ -56,15 +51,25 @@ public class CreateTakerFeeTx extends TradeTask {
                     processModel.getArbitratorManager());
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
+
+            // We enforce here to create a MULTI_SIG and TRADE_PAYOUT address entry to avoid that the change output would be used later
+            // for those address entries. Because we do not commit our fee tx yet the change address would
+            // appear as unused and therefor selected for the outputs for the MS tx.
+            // That would cause incorrect display of the balance as
+            // the change output would be considered as not available balance (part of the locked trade amount).
+            walletService.getNewAddressEntry(id, AddressEntry.Context.MULTI_SIG);
+            walletService.getNewAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
+
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING);
             AddressEntry reservedForTradeAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
             AddressEntry changeAddressEntry = walletService.getFreshAddressEntry();
             Address fundingAddress = addressEntry.getAddress();
             Address reservedForTradeAddress = reservedForTradeAddressEntry.getAddress();
             Address changeAddress = changeAddressEntry.getAddress();
-            final TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            Transaction transaction;
             if (trade.isCurrencyForTakerFeeBtc()) {
-                tradeWalletService.createBtcTradingFeeTx(
+                transaction = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
                         reservedForTradeAddress,
                         changeAddress,
@@ -73,31 +78,9 @@ public class CreateTakerFeeTx extends TradeTask {
                         trade.getTakerFee(),
                         trade.getTxFee(),
                         arbitrator.getBtcAddress(),
-                        new TxBroadcaster.Callback() {
-                            @Override
-                            public void onSuccess(Transaction transaction) {
-                                if (!completed) {
-                                    processModel.setTakeOfferFeeTx(transaction);
-                                    trade.setTakerFeeTxId(transaction.getHashAsString());
-                                    walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                                    trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-                                    complete();
-                                } else {
-                                    log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(TxBroadcastException exception) {
-                                if (!completed) {
-                                    failed(exception);
-                                } else {
-                                    log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
-                                }
-                            }
-                        });
+                        false,
+                        null);
             } else {
-                final BsqWalletService bsqWalletService = processModel.getBsqWalletService();
                 Transaction preparedBurnFeeTx = processModel.getBsqWalletService().getPreparedBurnFeeTx(trade.getTakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
@@ -106,47 +89,17 @@ public class CreateTakerFeeTx extends TradeTask {
                         processModel.getFundsNeededForTradeAsLong(),
                         processModel.isUseSavingsWallet(),
                         trade.getTxFee());
-
-                Transaction signedTx = processModel.getBsqWalletService().signTx(txWithBsqFee);
-                WalletService.checkAllScriptSignaturesForTx(signedTx);
-                bsqWalletService.commitTx(signedTx);
-                // We need to create another instance, otherwise the tx would trigger an invalid state exception
-                // if it gets committed 2 times
-                tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(signedTx));
-
-                bsqWalletService.broadcastTx(signedTx, new TxBroadcaster.Callback() {
-                    @Override
-                    public void onSuccess(@Nullable Transaction transaction) {
-                        if (!completed) {
-                            if (transaction != null) {
-                                log.debug("Successfully sent tx with id " + transaction.getHashAsString());
-                                trade.setTakerFeeTxId(transaction.getHashAsString());
-                                processModel.setTakeOfferFeeTx(transaction);
-                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
-                                trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
-
-                                complete();
-                            }
-                        } else {
-                            log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(TxBroadcastException exception) {
-                        if (!completed) {
-                            log.error(exception.toString());
-                            exception.printStackTrace();
-                            trade.setErrorMessage("An error occurred.\n" +
-                                    "Error message:\n"
-                                    + exception.getMessage());
-                            failed(exception);
-                        } else {
-                            log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
-                        }
-                    }
-                });
+                transaction = processModel.getBsqWalletService().signTx(txWithBsqFee);
+                WalletService.checkAllScriptSignaturesForTx(transaction);
             }
+
+            // We did not broadcast and commit the tx yet to avoid issues with lost trade fee in case the
+            // take offer attempt failed.
+
+            trade.setTakerFeeTxId(transaction.getHashAsString());
+            processModel.setTakeOfferFeeTx(transaction);
+            walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
+            complete();
         } catch (Throwable t) {
             if (t instanceof DaoDisabledException) {
                 failed("You cannot pay the trade fee in BSQ at the moment because the DAO features have been " +
