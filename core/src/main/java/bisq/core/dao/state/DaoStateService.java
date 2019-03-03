@@ -758,6 +758,10 @@ public class DaoStateService implements DaoSetupService {
         return getTx(unlockTxId).flatMap(tx -> getTx(tx.getTxInputs().get(0).getConnectedTxOutputTxId()));
     }
 
+    public Optional<Tx> getUnlockTxFromLockupTxId(String lockupTxId) {
+        return getTx(lockupTxId).flatMap(tx -> getSpentInfo(tx.getTxOutputs().get(0))).flatMap(spentInfo -> getTx(spentInfo.getTxId()));
+    }
+
     // Unlocked
     public Optional<Integer> getUnlockBlockHeight(String txId) {
         return getTx(txId).map(Tx::getUnlockBlockHeight);
@@ -827,7 +831,7 @@ public class DaoStateService implements DaoSetupService {
         daoState.getConfiscatedLockupTxList().add(lockupTxId);
     }
 
-    public boolean isConfiscated(TxOutputKey txOutputKey) {
+    public boolean isConfiscatedOutput(TxOutputKey txOutputKey) {
         if (isLockupOutput(txOutputKey))
             return isConfiscatedLockupTxOutput(txOutputKey.getTxId());
         else if (isUnspentUnlockOutput(txOutputKey))
@@ -835,17 +839,13 @@ public class DaoStateService implements DaoSetupService {
         return false;
     }
 
-    public boolean isConfiscated(String lockupTxId) {
-        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
-    }
-
     public boolean isConfiscatedLockupTxOutput(String lockupTxId) {
-        return isConfiscated(lockupTxId);
+        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
     }
 
     public boolean isConfiscatedUnlockTxOutput(String unlockTxId) {
         return getLockupTxFromUnlockTxId(unlockTxId).
-                map(lockupTx -> isConfiscated(lockupTx.getId())).
+                map(lockupTx -> isConfiscatedLockupTxOutput(lockupTx.getId())).
                 orElse(false);
     }
 

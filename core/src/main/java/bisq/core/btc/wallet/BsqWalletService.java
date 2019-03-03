@@ -261,15 +261,17 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .filter(txOutput -> confirmedTxIdSet.contains(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum());
+
         lockupBondsBalance = Coin.valueOf(daoStateService.getLockupTxOutputs().stream()
                 .filter(txOutput -> daoStateService.isUnspent(txOutput.getKey()))
-                /*.filter(txOutput -> !daoStateService.isSpentByUnlockTx(txOutput))*/ // TODO SQ
+                .filter(txOutput -> !daoStateService.isConfiscatedLockupTxOutput(txOutput.getTxId()))
                 .filter(txOutput -> confirmedTxIdSet.contains(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum());
 
         unlockingBondsBalance = Coin.valueOf(daoStateService.getUnspentUnlockingTxOutputsStream()
                 .filter(txOutput -> confirmedTxIdSet.contains(txOutput.getTxId()))
+                .filter(txOutput -> !daoStateService.isConfiscatedUnlockTxOutput(txOutput.getTxId()))
                 .mapToLong(TxOutput::getValue)
                 .sum());
 
