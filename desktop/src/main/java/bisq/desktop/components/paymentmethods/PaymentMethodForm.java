@@ -31,7 +31,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -166,7 +166,7 @@ public abstract class PaymentMethodForm {
         else if (!paymentAccount.getTradeCurrencies().isEmpty())
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
-            tradeCurrency = paymentAccount instanceof CryptoCurrencyAccount ?
+            tradeCurrency = paymentAccount instanceof AssetAccount ?
                     CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
                     CurrencyUtil.getDefaultTradeCurrency();
 
@@ -174,7 +174,7 @@ public abstract class PaymentMethodForm {
         final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
         final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
 
-        final String limitationsText = paymentAccount instanceof CryptoCurrencyAccount ?
+        final String limitationsText = paymentAccount instanceof AssetAccount ?
                 Res.get("payment.maxPeriodAndLimitCrypto",
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))))
