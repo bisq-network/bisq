@@ -29,7 +29,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.util.BSFormatter;
@@ -68,7 +68,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
                                       PaymentAccountPayload paymentAccountPayload,
                                       String labelTitle) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, labelTitle,
-                ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress());
+                ((AssetsAccountPayload) paymentAccountPayload).getAddress());
         return gridRow;
     }
 

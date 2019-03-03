@@ -25,7 +25,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
@@ -116,7 +116,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
             });
         }
 
-        if (!(paymentAccount instanceof CryptoCurrencyAccount))
+        if (!(paymentAccount instanceof AssetAccount))
             accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
     }
 
@@ -142,7 +142,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
             ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> paymentAccount instanceof CryptoCurrencyAccount)
+                    .filter(paymentAccount -> paymentAccount instanceof AssetAccount)
                     .collect(Collectors.toList()));
             GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
         }
