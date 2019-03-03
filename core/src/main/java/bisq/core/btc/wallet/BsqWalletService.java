@@ -212,6 +212,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             // unlockingBondsBalance
                             long outputs = tx.getOutputs().stream()
                                     .filter(out -> out.isMine(wallet))
+                                    .filter(TransactionOutput::isAvailableForSpending)
                                     .mapToLong(out -> out.getValue().value)
                                     .sum();
                             // Account for spending of locked connectedOutputs
