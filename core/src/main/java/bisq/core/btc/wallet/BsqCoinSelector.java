@@ -39,7 +39,8 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
 
     @Inject
     public BsqCoinSelector(DaoStateService daoStateService, UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService) {
-        super(true);
+        // permitForeignPendingTx is not relevant here as we do not support pending foreign utxos anyway.
+        super(false);
         this.daoStateService = daoStateService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
     }

@@ -47,6 +47,11 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
         this.storage = storage;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PersistedDataHost
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void readPersisted() {
         if (DevEnv.isDaoActivated()) {

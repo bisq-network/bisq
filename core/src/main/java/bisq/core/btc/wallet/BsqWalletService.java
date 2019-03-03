@@ -191,8 +191,10 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     @Override
     public void onParseTxsCompleteAfterBatchProcessing(Block block) {
-        if (isWalletReady())
+        if (isWalletReady()) {
+            wallet.getTransactions(false).forEach(unconfirmedBsqChangeOutputListService::onTransactionConfidenceChanged);
             updateBsqWalletTransactions();
+        }
     }
 
 
@@ -249,6 +251,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                         })
                         .sum()
         );
+
         Set<String> confirmedTxIdSet = getTransactions(false).stream()
                 .filter(tx -> tx.getConfidence().getConfidenceType() == BUILDING)
                 .map(Transaction::getHashAsString)

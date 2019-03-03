@@ -55,7 +55,10 @@ public class WalletsManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletsManager(BtcWalletService btcWalletService, TradeWalletService tradeWalletService, BsqWalletService bsqWalletService, WalletsSetup walletsSetup) {
+    public WalletsManager(BtcWalletService btcWalletService,
+                          TradeWalletService tradeWalletService,
+                          BsqWalletService bsqWalletService,
+                          WalletsSetup walletsSetup) {
         this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
