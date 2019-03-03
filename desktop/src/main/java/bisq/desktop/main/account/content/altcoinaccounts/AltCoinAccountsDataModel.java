@@ -27,7 +27,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -83,7 +82,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private void fillAndSortPaymentAccounts() {
         if (user.getPaymentAccounts() != null) {
             paymentAccounts.setAll(user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                    .filter(paymentAccount -> paymentAccount.getPaymentMethod().isAsset())
                     .collect(Collectors.toList()));
             paymentAccounts.sort((o1, o2) -> o1.getCreationDate().compareTo(o2.getCreationDate()));
         }

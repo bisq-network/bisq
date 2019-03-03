@@ -39,9 +39,9 @@ import javax.annotation.Nullable;
 @Setter
 @Getter
 @Slf4j
-public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
+public final class LiveAssetsAccountPayload extends AssetsAccountPayload {
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, String id) {
+    public LiveAssetsAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -50,11 +50,11 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CryptoCurrencyAccountPayload(String paymentMethod,
-                                         String id,
-                                         String address,
-                                         long maxTradePeriod,
-                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+    private LiveAssetsAccountPayload(String paymentMethod,
+                                     String id,
+                                     String address,
+                                     long maxTradePeriod,
+                                     @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 address,
@@ -65,17 +65,16 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                .setLiveAssetsAccountPayload(PB.LiveAssetsAccountPayload.newBuilder()
                         .setAddress(address))
                 .build();
     }
 
-    public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
+    public static LiveAssetsAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new LiveAssetsAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getCryptoCurrencyAccountPayload().getAddress(),
+                proto.getLiveAssetsAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
-
 }

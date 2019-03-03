@@ -532,18 +532,16 @@ public class GUIUtil {
     public static Callback<ListView<PaymentMethod>, ListCell<PaymentMethod>> getPaymentMethodCellFactory() {
         return p -> new ListCell<>() {
             @Override
-            protected void updateItem(PaymentMethod item, boolean empty) {
-                super.updateItem(item, empty);
+            protected void updateItem(PaymentMethod method, boolean empty) {
+                super.updateItem(method, empty);
 
-                if (item != null && !empty) {
-
-                    String id = item.getId();
+                if (method != null && !empty) {
+                    String id = method.getId();
 
                     HBox box = new HBox();
                     box.setSpacing(20);
-                    final boolean isBlockchainPaymentMethod = item.equals(PaymentMethod.BLOCK_CHAINS);
                     Label paymentType = new AutoTooltipLabel(
-                            isBlockchainPaymentMethod ? Res.get("shared.crypto") : Res.get("shared.fiat"));
+                            method.isAsset() ? Res.get("shared.crypto") : Res.get("shared.fiat"));
 
                     paymentType.getStyleClass().add("currency-label-small");
                     Label paymentMethod = new AutoTooltipLabel(Res.get(id));

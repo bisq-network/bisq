@@ -27,7 +27,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -56,7 +56,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class CryptoCurrencyForm extends PaymentMethodForm {
-    private final CryptoCurrencyAccount cryptoCurrencyAccount;
+    private final AssetAccount assetAccount;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AssetService assetService;
     private final FilterManager filterManager;
@@ -82,7 +82,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
                               AssetService assetService,
                               FilterManager filterManager) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        this.cryptoCurrencyAccount = (CryptoCurrencyAccount) paymentAccount;
+        this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
         this.filterManager = filterManager;
@@ -99,7 +99,7 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         addressInputTextField.setValidator(altCoinAddressValidator);
 
         addressInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            cryptoCurrencyAccount.setAddress(newValue);
+            assetAccount.setAddress(newValue);
             updateFromInputs();
         });
 
@@ -109,9 +109,9 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     public void updateFromInputs() {
-        if (addressInputTextField != null && cryptoCurrencyAccount.getSingleTradeCurrency() != null)
+        if (addressInputTextField != null && assetAccount.getSingleTradeCurrency() != null)
             addressInputTextField.setPromptText(Res.get("payment.altcoin.address.dyn",
-                    cryptoCurrencyAccount.getSingleTradeCurrency().getName()));
+                    assetAccount.getSingleTradeCurrency().getName()));
         super.updateFromInputs();
     }
 
@@ -131,14 +131,14 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                cryptoCurrencyAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                assetAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
-                Res.get(cryptoCurrencyAccount.getPaymentMethod().getId()));
+                Res.get(assetAccount.getPaymentMethod().getId()));
         Tuple3<Label, TextField, VBox> tuple2 = addCompactTopLabelTextField(gridPane, ++gridRow,
-                Res.get("payment.altcoin.address"), cryptoCurrencyAccount.getAddress());
+                Res.get("payment.altcoin.address"), assetAccount.getAddress());
         TextField field = tuple2.second;
         field.setMouseTransparent(false);
-        final TradeCurrency singleTradeCurrency = cryptoCurrencyAccount.getSingleTradeCurrency();
+        final TradeCurrency singleTradeCurrency = assetAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 nameAndCode);
@@ -147,12 +147,12 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
     @Override
     public void updateAllInputsValid() {
-        TradeCurrency selectedTradeCurrency = cryptoCurrencyAccount.getSelectedTradeCurrency();
+        TradeCurrency selectedTradeCurrency = assetAccount.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
             altCoinAddressValidator.setCurrencyCode(selectedTradeCurrency.getCode());
             allInputsValid.set(isAccountNameValid()
-                    && altCoinAddressValidator.validate(cryptoCurrencyAccount.getAddress()).isValid
-                    && cryptoCurrencyAccount.getSingleTradeCurrency() != null);
+                    && altCoinAddressValidator.validate(assetAccount.getAddress()).isValid
+                    && assetAccount.getSingleTradeCurrency() != null);
         }
     }
 
