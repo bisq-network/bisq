@@ -281,7 +281,7 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer(), 0);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
-            case PaymentMethod.LIVE_ASSETS_ID:
+            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
                 gridRow = AssetsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);

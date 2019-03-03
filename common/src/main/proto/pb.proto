@@ -725,7 +725,7 @@ message PaymentAccountPayload {
         HalCashAccountPayload hal_cash_account_payload = 24;
         PromptPayAccountPayload prompt_pay_account_payload = 25;
         AdvancedCashAccountPayload advanced_cash_account_payload = 26;
-        LiveAssetsAccountPayload live_assets_account_payload = 27;
+        InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -837,7 +837,7 @@ message CryptoCurrencyAccountPayload {
     string address = 1;
 }
 
-message LiveAssetsAccountPayload {
+message InstantCryptoCurrencyAccountPayload {
     string address = 1;
 }
 
