@@ -91,7 +91,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateLists();
     }
 

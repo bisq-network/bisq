@@ -272,7 +272,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         int chainHeight = daoStateService.getChainHeight();
         bsqFeePerDay = daoStateService.getParamValueAsCoin(Param.ASSET_LISTING_FEE_PER_DAY, chainHeight).value;
         minVolumeInBtc = daoStateService.getParamValueAsCoin(Param.ASSET_MIN_VOLUME, chainHeight).value;

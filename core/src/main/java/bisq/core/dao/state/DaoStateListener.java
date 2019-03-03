@@ -30,6 +30,6 @@ public interface DaoStateListener {
     default void onParseBlockComplete(Block block) {
     }
 
-    default void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    default void onParseBlockCompleteAfterBatchProcessing(Block block) {
     }
 }

@@ -85,7 +85,7 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         bsqWalletService.addBsqBalanceListener(this);
         triggerUpdate();
     }

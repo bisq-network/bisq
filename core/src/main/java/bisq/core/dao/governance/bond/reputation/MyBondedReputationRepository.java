@@ -81,7 +81,7 @@ public class MyBondedReputationRepository implements DaoSetupService {
     public void addListeners() {
         daoStateService.addDaoStateListener(new DaoStateListener() {
             @Override
-            public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+            public void onParseBlockCompleteAfterBatchProcessing(Block block) {
                 update();
             }
         });

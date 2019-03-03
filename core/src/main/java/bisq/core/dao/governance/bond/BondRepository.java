@@ -157,7 +157,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     public void addListeners() {
         daoStateService.addDaoStateListener(new DaoStateListener() {
             @Override
-            public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+            public void onParseBlockCompleteAfterBatchProcessing(Block block) {
                 update();
             }
         });

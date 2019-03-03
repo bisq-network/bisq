@@ -222,7 +222,7 @@ public class DaoStateService implements DaoSetupService {
         // blocks as that cause performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
         if (parseBlockChainComplete)
-            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+            daoStateListeners.forEach(l -> l.onParseBlockCompleteAfterBatchProcessing(block));
     }
 
     // Called after parsing of all pending blocks is completed
@@ -231,7 +231,7 @@ public class DaoStateService implements DaoSetupService {
         parseBlockChainComplete = true;
 
         getLastBlock().ifPresent(block -> {
-            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+            daoStateListeners.forEach(l -> l.onParseBlockCompleteAfterBatchProcessing(block));
         });
 
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);

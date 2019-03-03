@@ -105,7 +105,7 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         applyData(block.getHeight());
     }
 

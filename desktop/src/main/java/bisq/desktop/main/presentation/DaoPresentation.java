@@ -102,7 +102,7 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
 
