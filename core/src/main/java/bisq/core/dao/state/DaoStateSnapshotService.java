@@ -62,7 +62,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
         this.cycleService = cycleService;
         this.daoStateStorageService = daoStateStorageService;
 
-        this.daoStateService.addBsqStateListener(this);
+        this.daoStateService.addDaoStateListener(this);
     }
 
 

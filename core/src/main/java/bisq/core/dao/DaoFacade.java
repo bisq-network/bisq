@@ -181,7 +181,7 @@ public class DaoFacade implements DaoSetupService {
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(new DaoStateListener() {
+        daoStateService.addDaoStateListener(new DaoStateListener() {
             @Override
             public void onNewBlockHeight(int blockHeight) {
                 if (blockHeight > 0 && periodService.getCurrentCycle() != null)
@@ -196,11 +196,11 @@ public class DaoFacade implements DaoSetupService {
 
 
     public void addBsqStateListener(DaoStateListener listener) {
-        daoStateService.addBsqStateListener(listener);
+        daoStateService.addDaoStateListener(listener);
     }
 
     public void removeBsqStateListener(DaoStateListener listener) {
-        daoStateService.removeBsqStateListener(listener);
+        daoStateService.removeDaoStateListener(listener);
     }
 
 

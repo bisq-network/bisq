@@ -210,13 +210,19 @@ public class DaoStateService implements DaoSetupService {
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
         log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
+
+        // Need to be called before onParseTxsCompleteAfterBatchProcessing as we use it in
+        // VoteResult and other listeners like balances usually listen on onParseTxsCompleteAfterBatchProcessing
+        // so we need to make sure that vote result calculation is completed before (e.g. for comp. request to
+        // update balance).
+        // TODO the dependency on ordering is nto good here.... Listeners should not depend on order of execution.
+        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
         // blocks as that cause performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
         if (parseBlockChainComplete)
             daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
-
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
     }
 
     // Called after parsing of all pending blocks is completed
@@ -951,11 +957,11 @@ public class DaoStateService implements DaoSetupService {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBsqStateListener(DaoStateListener listener) {
+    public void addDaoStateListener(DaoStateListener listener) {
         daoStateListeners.add(listener);
     }
 
-    public void removeBsqStateListener(DaoStateListener listener) {
+    public void removeDaoStateListener(DaoStateListener listener) {
         daoStateListeners.remove(listener);
     }
 }

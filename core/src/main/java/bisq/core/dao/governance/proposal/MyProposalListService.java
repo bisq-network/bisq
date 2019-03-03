@@ -95,7 +95,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishOnceWellConnected();
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
 

@@ -70,13 +70,13 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
 
     public void activate() {
         bsqWalletService.addBsqBalanceListener(this);
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
         triggerUpdate();
     }
 
     public void deactivate() {
         bsqWalletService.removeBsqBalanceListener(this);
-        daoStateService.removeBsqStateListener(this);
+        daoStateService.removeDaoStateListener(this);
     }
 
 

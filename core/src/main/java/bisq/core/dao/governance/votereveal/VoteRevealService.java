@@ -134,7 +134,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             if (c.wasAdded())
                 c.getAddedSubList().forEach(exception -> log.error(exception.toString()));
         });
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override

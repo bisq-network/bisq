@@ -102,7 +102,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override

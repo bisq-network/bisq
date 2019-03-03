@@ -111,7 +111,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
         // Listen for tempProposals
         p2PService.addHashSetChangedListener(this);
         // Listen for proposalPayloads

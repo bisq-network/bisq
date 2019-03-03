@@ -79,7 +79,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(this);
     }
 

@@ -64,7 +64,7 @@ public class BallotListPresentation implements BallotListService.BallotListChang
         this.periodService = periodService;
         this.proposalValidator = proposalValidator;
 
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
         ballotListService.addListener(this);
     }
 

@@ -173,15 +173,14 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 });
             }
 
-            final BlockChain chain = walletsSetup.getChain();
+            BlockChain chain = walletsSetup.getChain();
             if (chain != null) {
                 chain.addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
                 chainHeightProperty.set(chain.getBestChainHeight());
-                updateBsqWalletTransactions();
             }
         });
 
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
 
