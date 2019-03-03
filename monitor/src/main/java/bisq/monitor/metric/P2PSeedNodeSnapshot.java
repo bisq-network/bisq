@@ -47,8 +47,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.net.MalformedURLException;
 
-import java.io.File;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,9 +78,6 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     Statistics statistics;
-    private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("metric_" + getName());
-    private int nonce;
     final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private final ThreadGate gate = new ThreadGate();
@@ -160,9 +155,9 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
     @Override
     protected void execute() {
         // start the network node
-        networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
+        final NetworkNode networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
                 new CoreNetworkProtoResolver(), false,
-                new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
+                new AvailableTor(Monitor.TOR_WORKING_DIR, "unused"));
         // we do not need to start the networkNode, as we do not need the HS
         //networkNode.start(this);
 
@@ -179,9 +174,8 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
                         NodeAddress target = OnionParser.getNodeAddress(current);
 
                         // do the data request
-                        nonce = new Random().nextInt();
                         SettableFuture<Connection> future = networkNode.sendMessage(target,
-                                new PreliminaryGetDataRequest(nonce, hashes));
+                                new PreliminaryGetDataRequest(new Random().nextInt(), hashes));
 
                         Futures.addCallback(future, new FutureCallback<>() {
                             @Override
