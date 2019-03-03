@@ -155,6 +155,21 @@ public class Utilities {
         return executor;
     }
 
+    /**
+     * @return true if <code>defaults read -g AppleInterfaceStyle</code> has an exit status of <code>0</code> (i.e. _not_ returning "key not found").
+     */
+    public static boolean isMacMenuBarDarkMode() {
+        try {
+            // check for exit status only. Once there are more modes than "dark" and "default", we might need to analyze string contents..
+            final Process process = Runtime.getRuntime().exec(new String[] {"defaults", "read", "-g", "AppleInterfaceStyle"});
+            process.waitFor(100, TimeUnit.MILLISECONDS);
+            return process.exitValue() == 0;
+        } catch (IOException | InterruptedException | IllegalThreadStateException ex) {
+            // IllegalThreadStateException thrown by proc.exitValue(), if process didn't terminate
+            return false;
+        }
+    }
+
     public static boolean isUnix() {
         return isOSX() || isLinux() || getOSName().contains("freebsd");
     }
