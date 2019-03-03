@@ -89,7 +89,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String BLOCK_CHAINS_ID = "BLOCK_CHAINS";
     public static final String PROMPT_PAY_ID = "PROMPT_PAY";
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
-    public static final String LIVE_ASSETS_ID = "LIVE_ASSETS";
+    public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
 
     public static PaymentMethod UPHOLD;
     public static PaymentMethod MONEY_BEAM;
@@ -117,7 +117,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod BLOCK_CHAINS;
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
-    public static PaymentMethod LIVE_ASSETS;
+    public static PaymentMethod BLOCK_CHAINS_INSTANT;
 
     // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
     // than new trade limit) and violate the maker expectation when he created the offer (duration).
@@ -170,7 +170,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             // Altcoins
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // Altcoins with 1 hour trade period
-            LIVE_ASSETS = new PaymentMethod(LIVE_ASSETS_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+            BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
     ));
 
     static {
@@ -298,6 +298,6 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     }
 
     public boolean isAsset() {
-        return this.equals(LIVE_ASSETS) || this.equals(BLOCK_CHAINS);
+        return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
 }

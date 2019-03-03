@@ -74,8 +74,8 @@ public class PaymentAccountFactory {
                 return new PromptPayAccount();
             case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashAccount();
-            case PaymentMethod.LIVE_ASSETS_ID:
-                return new LiveAssetsAccount();
+            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
+                return new InstantCryptoCurrencyAccount();
             default:
                 throw new RuntimeException("Not supported PaymentMethod: " + paymentMethod);
         }

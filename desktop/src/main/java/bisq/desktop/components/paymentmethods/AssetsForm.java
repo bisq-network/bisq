@@ -29,7 +29,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
-import bisq.core.payment.LiveAssetsAccount;
+import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -65,7 +65,7 @@ public class AssetsForm extends PaymentMethodForm {
     private final FilterManager filterManager;
 
     private InputTextField addressInputTextField;
-    private CheckBox liveAssetCheckBox;
+    private CheckBox tradeInstantCheckBox;
     private boolean tradeInstant;
 
     public static int addFormForBuyer(GridPane gridPane,
@@ -92,7 +92,7 @@ public class AssetsForm extends PaymentMethodForm {
         this.assetService = assetService;
         this.filterManager = filterManager;
 
-        tradeInstant = paymentAccount instanceof LiveAssetsAccount;
+        tradeInstant = paymentAccount instanceof InstantCryptoCurrencyAccount;
     }
 
     @Override
@@ -102,11 +102,11 @@ public class AssetsForm extends PaymentMethodForm {
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
 
-        liveAssetCheckBox = FormBuilder.addLabelCheckBox(gridPane, ++gridRow,
+        tradeInstantCheckBox = FormBuilder.addLabelCheckBox(gridPane, ++gridRow,
                 Res.get("payment.altcoin.tradeInstantCheckbox"), 10);
-        liveAssetCheckBox.setSelected(tradeInstant);
-        liveAssetCheckBox.setOnAction(e -> {
-            tradeInstant = liveAssetCheckBox.isSelected();
+        tradeInstantCheckBox.setSelected(tradeInstant);
+        tradeInstantCheckBox.setOnAction(e -> {
+            tradeInstant = tradeInstantCheckBox.isSelected();
             if (tradeInstant)
                 new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
         });
@@ -127,15 +127,15 @@ public class AssetsForm extends PaymentMethodForm {
     @Override
     public PaymentAccount getPaymentAccount() {
         if (tradeInstant) {
-            LiveAssetsAccount liveAssetsAccount = new LiveAssetsAccount();
-            liveAssetsAccount.init();
-            liveAssetsAccount.setAccountName(paymentAccount.getAccountName());
-            liveAssetsAccount.setSaltAsHex(paymentAccount.getSaltAsHex());
-            liveAssetsAccount.setSalt(paymentAccount.getSalt());
-            liveAssetsAccount.setSingleTradeCurrency(paymentAccount.getSingleTradeCurrency());
-            liveAssetsAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
-            liveAssetsAccount.setAddress(assetAccount.getAddress());
-            return liveAssetsAccount;
+            InstantCryptoCurrencyAccount instantCryptoCurrencyAccount = new InstantCryptoCurrencyAccount();
+            instantCryptoCurrencyAccount.init();
+            instantCryptoCurrencyAccount.setAccountName(paymentAccount.getAccountName());
+            instantCryptoCurrencyAccount.setSaltAsHex(paymentAccount.getSaltAsHex());
+            instantCryptoCurrencyAccount.setSalt(paymentAccount.getSalt());
+            instantCryptoCurrencyAccount.setSingleTradeCurrency(paymentAccount.getSingleTradeCurrency());
+            instantCryptoCurrencyAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
+            instantCryptoCurrencyAccount.setAddress(assetAccount.getAddress());
+            return instantCryptoCurrencyAccount;
         } else {
             return paymentAccount;
         }

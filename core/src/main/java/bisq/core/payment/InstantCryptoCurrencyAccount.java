@@ -17,21 +17,21 @@
 
 package bisq.core.payment;
 
-import bisq.core.payment.payload.LiveAssetsAccountPayload;
+import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class LiveAssetsAccount extends AssetAccount {
+public final class InstantCryptoCurrencyAccount extends AssetAccount {
 
-    public LiveAssetsAccount() {
-        super(PaymentMethod.LIVE_ASSETS);
+    public InstantCryptoCurrencyAccount() {
+        super(PaymentMethod.BLOCK_CHAINS_INSTANT);
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new LiveAssetsAccountPayload(paymentMethod.getId(), id);
+        return new InstantCryptoCurrencyPayload(paymentMethod.getId(), id);
     }
 }
