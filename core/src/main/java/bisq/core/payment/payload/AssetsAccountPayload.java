@@ -17,13 +17,10 @@
 
 package bisq.core.payment.payload;
 
-import io.bisq.generated.protobuffer.PB;
+import bisq.core.locale.Res;
 
-import com.google.protobuf.Message;
+import java.nio.charset.Charset;
 
-import org.springframework.util.CollectionUtils;
-
-import java.util.HashMap;
 import java.util.Map;
 
 import lombok.EqualsAndHashCode;
@@ -39,9 +36,10 @@ import javax.annotation.Nullable;
 @Setter
 @Getter
 @Slf4j
-public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
+public abstract class AssetsAccountPayload extends PaymentAccountPayload {
+    protected String address = "";
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, String id) {
+    protected AssetsAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -50,32 +48,35 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CryptoCurrencyAccountPayload(String paymentMethod,
-                                         String id,
-                                         String address,
-                                         long maxTradePeriod,
-                                         @Nullable Map<String, String> excludeFromJsonDataMap) {
+    protected AssetsAccountPayload(String paymentMethod,
+                                   String id,
+                                   String address,
+                                   long maxTradePeriod,
+                                   @Nullable Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
-                address,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
+        this.address = address;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public String getPaymentDetails() {
+        return Res.getWithCol("payment.altcoin.receiver.address") + " " + address;
     }
 
     @Override
-    public Message toProtoMessage() {
-        return getPaymentAccountPayloadBuilder()
-                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
-                        .setAddress(address))
-                .build();
+    public String getPaymentDetailsForTradePopup() {
+        return getPaymentDetails();
     }
 
-    public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
-                proto.getId(),
-                proto.getCryptoCurrencyAccountPayload().getAddress(),
-                proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(address.getBytes(Charset.forName("UTF-8")));
     }
-
 }

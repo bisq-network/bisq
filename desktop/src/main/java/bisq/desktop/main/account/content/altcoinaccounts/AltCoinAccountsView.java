@@ -18,6 +18,7 @@
 package bisq.desktop.main.account.content.altcoinaccounts;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
@@ -45,6 +46,7 @@ import bisq.asset.Asset;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 
 import javax.inject.Inject;
 
@@ -54,14 +56,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
 
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelListView;
 
@@ -79,6 +84,8 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private TitledGroupBg accountTitledGroupBg;
     private Button saveNewAccountButton;
     private int gridRow = 0;
+    private Button addLiveAssetAccountButton;
+
 
     @Inject
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
@@ -167,11 +174,84 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         paymentAccountsListView.setPrefHeight(2 * Layout.LIST_ROW_HEIGHT + 14);
         setPaymentAccountsCellFactory();
 
-        Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
+        // TODO just for dev
+        Tuple4<Button, Button, Button, Button> tuple4 = add4Buttons(root, ++gridRow, Res.get("shared.addNewAccount"),
+                "Add Live Assets account", Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"), 15);
+        addAccountButton = tuple4.first;
+        addLiveAssetAccountButton = tuple4.second;
+        exportButton = tuple4.third;
+        importButton = tuple4.forth;
+        addLiveAssetAccountButton.setOnAction(event -> addNewLiveAssetAccount());
+
+      /*  Tuple3<Button, Button, Button> tuple3 = add3ButtonsAfterGroup(root, ++gridRow, Res.get("shared.addNewAccount"),
                 Res.get("shared.ExportAccounts"), Res.get("shared.importAccounts"));
         addAccountButton = tuple3.first;
         exportButton = tuple3.second;
         importButton = tuple3.third;
+        */
+    }
+
+    //TODO just temp for dev
+    private Tuple4<Button, Button, Button, Button> add4Buttons(GridPane gridPane,
+                                                               int rowIndex,
+                                                               String title1,
+                                                               String title2,
+                                                               String title3,
+                                                               String title4,
+                                                               double top) {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        Button button1 = new AutoTooltipButton(title1);
+
+        button1.getStyleClass().add("action-button");
+        button1.setDefaultButton(true);
+        button1.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button1, Priority.ALWAYS);
+
+        Button button2 = new AutoTooltipButton(title2);
+        button2.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button2, Priority.ALWAYS);
+
+        Button button3 = new AutoTooltipButton(title3);
+        button3.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button3, Priority.ALWAYS);
+
+        Button button4 = new AutoTooltipButton(title4);
+        button4.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(button4, Priority.ALWAYS);
+
+        hBox.getChildren().addAll(button1, button2, button3, button4);
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setColumnIndex(hBox, 0);
+        GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
+        gridPane.getChildren().add(hBox);
+        return new Tuple4<>(button1, button2, button3, button4);
+    }
+
+    //TODO temp for dev
+    private void addNewLiveAssetAccount() {
+        paymentAccountsListView.getSelectionModel().clearSelection();
+        removeAccountRows();
+        addAccountButton.setDisable(true);
+        accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
+
+        if (paymentMethodForm != null) {
+            FormBuilder.removeRowsFromGridPane(root, 3, paymentMethodForm.getGridRow() + 1);
+            GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
+        }
+        gridRow = 2;
+        // We don't separate here between normal altcoin and live assets
+        paymentMethodForm = getPaymentMethodForm(PaymentMethod.LIVE_ASSETS);
+
+        paymentMethodForm.addFormForAddAccount();
+        gridRow = paymentMethodForm.getGridRow();
+        Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
+        saveNewAccountButton = tuple2.first;
+        saveNewAccountButton.setOnAction(event -> onSaveNewAccount(paymentMethodForm.getPaymentAccount()));
+        saveNewAccountButton.disableProperty().bind(paymentMethodForm.allInputsValidProperty().not());
+        Button cancelButton = tuple2.second;
+        cancelButton.setOnAction(event -> onCancelNewAccount());
+        GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
     }
 
     // Add new account form
@@ -221,7 +301,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        final PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
         paymentAccount.init();
         return getPaymentMethodForm(paymentAccount);
     }

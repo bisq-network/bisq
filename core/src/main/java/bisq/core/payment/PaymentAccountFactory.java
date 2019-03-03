@@ -74,6 +74,8 @@ public class PaymentAccountFactory {
                 return new PromptPayAccount();
             case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashAccount();
+            case PaymentMethod.LIVE_ASSETS_ID:
+                return new LiveAssetsAccount();
             default:
                 throw new RuntimeException("Not supported PaymentMethod: " + paymentMethod);
         }
