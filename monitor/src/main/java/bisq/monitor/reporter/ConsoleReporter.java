@@ -56,7 +56,7 @@ public class ConsoleReporter extends Reporter {
             String report = "bisq" + (Version.getBaseCurrencyNetwork() != 0 ? "-" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].getNetwork() : "")
                     + (prefix.isEmpty() ? "" : "." + prefix)
                     + (key.isEmpty() ? "" : "." + key)
-                    + " " + value + " " + timestamp + "\n";
+                    + " " + value + " " + timestamp;
             System.err.println("Report: " + report);
         });
     }
