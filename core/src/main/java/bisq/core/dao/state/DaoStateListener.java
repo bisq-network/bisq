@@ -27,7 +27,7 @@ public interface DaoStateListener {
     }
 
     // Called before onParseTxsCompleteAfterBatchProcessing in case batch processing is complete
-    default void onParseTxsComplete(Block block) {
+    default void onParseBlockComplete(Block block) {
     }
 
     default void onParseTxsCompleteAfterBatchProcessing(Block block) {

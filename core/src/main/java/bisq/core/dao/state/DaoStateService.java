@@ -216,7 +216,7 @@ public class DaoStateService implements DaoSetupService {
         // so we need to make sure that vote result calculation is completed before (e.g. for comp. request to
         // update balance).
         // TODO the dependency on ordering is nto good here.... Listeners should not depend on order of execution.
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+        daoStateListeners.forEach(l -> l.onParseBlockComplete(block));
 
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
         // blocks as that cause performance issues. In earlier versions when we updated at each block it took

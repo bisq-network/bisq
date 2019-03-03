@@ -153,7 +153,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseBlockComplete(Block block) {
         maybeCalculateVoteResult(block.getHeight());
     }
 
