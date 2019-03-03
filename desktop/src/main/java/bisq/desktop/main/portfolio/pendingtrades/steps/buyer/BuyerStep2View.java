@@ -22,10 +22,10 @@ import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.AssetsForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
-import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
@@ -284,7 +284,7 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.LIVE_ASSETS_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
-                gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
+                gridRow = AssetsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             case PaymentMethod.PROMPT_PAY_ID:
                 gridRow = PromptPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);

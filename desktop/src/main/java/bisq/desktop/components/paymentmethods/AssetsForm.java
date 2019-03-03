@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
@@ -28,6 +29,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
+import bisq.core.payment.LiveAssetsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -39,6 +41,7 @@ import bisq.common.util.Tuple3;
 
 import org.apache.commons.lang3.StringUtils;
 
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -55,13 +58,15 @@ import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyI
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
-public class CryptoCurrencyForm extends PaymentMethodForm {
+public class AssetsForm extends PaymentMethodForm {
     private final AssetAccount assetAccount;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AssetService assetService;
     private final FilterManager filterManager;
 
     private InputTextField addressInputTextField;
+    private CheckBox liveAssetCheckBox;
+    private boolean tradeInstant;
 
     public static int addFormForBuyer(GridPane gridPane,
                                       int gridRow,
@@ -72,20 +77,22 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public CryptoCurrencyForm(PaymentAccount paymentAccount,
-                              AccountAgeWitnessService accountAgeWitnessService,
-                              AltCoinAddressValidator altCoinAddressValidator,
-                              InputValidator inputValidator,
-                              GridPane gridPane,
-                              int gridRow,
-                              BSFormatter formatter,
-                              AssetService assetService,
-                              FilterManager filterManager) {
+    public AssetsForm(PaymentAccount paymentAccount,
+                      AccountAgeWitnessService accountAgeWitnessService,
+                      AltCoinAddressValidator altCoinAddressValidator,
+                      InputValidator inputValidator,
+                      GridPane gridPane,
+                      int gridRow,
+                      BSFormatter formatter,
+                      AssetService assetService,
+                      FilterManager filterManager) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
         this.filterManager = filterManager;
+
+        tradeInstant = paymentAccount instanceof LiveAssetsAccount;
     }
 
     @Override
@@ -94,6 +101,16 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
+
+        liveAssetCheckBox = FormBuilder.addLabelCheckBox(gridPane, ++gridRow,
+                Res.get("payment.altcoin.tradeInstantCheckbox"), 10);
+        liveAssetCheckBox.setSelected(tradeInstant);
+        liveAssetCheckBox.setOnAction(e -> {
+            tradeInstant = liveAssetCheckBox.isSelected();
+            if (tradeInstant)
+                new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
+        });
+
         addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));
         addressInputTextField.setValidator(altCoinAddressValidator);
@@ -105,6 +122,23 @@ public class CryptoCurrencyForm extends PaymentMethodForm {
 
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
+    }
+
+    @Override
+    public PaymentAccount getPaymentAccount() {
+        if (tradeInstant) {
+            LiveAssetsAccount liveAssetsAccount = new LiveAssetsAccount();
+            liveAssetsAccount.init();
+            liveAssetsAccount.setAccountName(paymentAccount.getAccountName());
+            liveAssetsAccount.setSaltAsHex(paymentAccount.getSaltAsHex());
+            liveAssetsAccount.setSalt(paymentAccount.getSalt());
+            liveAssetsAccount.setSingleTradeCurrency(paymentAccount.getSingleTradeCurrency());
+            liveAssetsAccount.setSelectedTradeCurrency(paymentAccount.getSelectedTradeCurrency());
+            liveAssetsAccount.setAddress(assetAccount.getAddress());
+            return liveAssetsAccount;
+        } else {
+            return paymentAccount;
+        }
     }
 
     @Override
