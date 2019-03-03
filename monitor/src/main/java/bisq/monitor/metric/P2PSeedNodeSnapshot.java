@@ -32,7 +32,6 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -76,7 +75,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  */
 @Slf4j
-public class P2PSeedNodeSnapshot extends Metric implements MessageListener, SetupListener {
+public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
@@ -86,7 +85,6 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
     private int nonce;
     final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
-    private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
     /**
@@ -161,20 +159,12 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
 
     @Override
     protected void execute() {
-        // in case we do not have a NetworkNode up and running, we create one
-        if (null == networkNode) {
-            // prepare the gate
-            hsReady.engage();
-
-            // start the network node
-            networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
-                    new CoreNetworkProtoResolver(), false,
-                    new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
-            networkNode.start(this);
-
-            // wait for the HS to be published
-            hsReady.await();
-        }
+        // start the network node
+        networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
+                new CoreNetworkProtoResolver(), false,
+                new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
+        // we do not need to start the networkNode, as we do not need the HS
+        //networkNode.start(this);
 
         // clear our buckets
         bucketsPerHost.clear();
@@ -320,23 +310,5 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
             log.warn("Got a message of type <{}>, expected <GetDataResponse>",
                     networkEnvelope.getClass().getSimpleName());
         }
-    }
-
-    @Override
-    public void onTorNodeReady() {
-    }
-
-    @Override
-    public void onHiddenServicePublished() {
-        // open the gate
-        hsReady.proceed();
-    }
-
-    @Override
-    public void onSetupFailed(Throwable throwable) {
-    }
-
-    @Override
-    public void onRequestCustomBridges() {
     }
 }
