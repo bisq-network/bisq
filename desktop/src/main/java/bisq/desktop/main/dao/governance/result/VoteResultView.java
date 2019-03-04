@@ -333,7 +333,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         });
         Collections.reverse(cycleListItemList);
 
-        GUIUtil.setFitToRowsForTableView(cyclesTableView, 24, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 2, 4);
     }
 
 
@@ -409,7 +409,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(proposalsTableView, 33, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 2, 4);
     }
 
 
@@ -480,7 +480,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 });
 
         voteListItemList.sort(Comparator.comparing(VoteListItem::getBlindVoteTxId));
-        GUIUtil.setFitToRowsForTableView(votesTableView, 33, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(votesTableView, 25, 28, 2, 4);
     }
 
 
