@@ -197,7 +197,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(availableConfirmedBalance.add(unconfirmedChangeBalance));
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;
         sendButton.setDisable(!isValid);
@@ -207,7 +207,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         sendBtcButton.setDisable(!isBtcValid);
 
         setSendBtcGroupVisibleState(availableNonBsqBalance.isPositive());
-
     }
 
     private void addSendBsqGroup() {
