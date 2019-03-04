@@ -25,7 +25,6 @@ import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -322,7 +321,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isBlockChainMethod() {
-        return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS);
+        return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().isAsset();
     }
 
     public int getNumPastTrades(Trade trade) {

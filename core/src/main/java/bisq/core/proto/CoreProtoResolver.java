@@ -29,6 +29,7 @@ import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
+import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
@@ -132,6 +133,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return PromptPayAccountPayload.fromProto(proto);
                 case ADVANCED_CASH_ACCOUNT_PAYLOAD:
                     return AdvancedCashAccountPayload.fromProto(proto);
+                case INSTANT_CRYPTO_CURRENCY_ACCOUNT_PAYLOAD:
+                    return InstantCryptoCurrencyPayload.fromProto(proto);
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PaymentAccountPayload). messageCase=" + messageCase);
             }

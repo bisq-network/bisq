@@ -19,7 +19,7 @@ package bisq.desktop.main.account.content.altcoinaccounts;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
+import bisq.desktop.components.paymentmethods.AssetsForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -221,13 +221,13 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        final PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
         paymentAccount.init();
         return getPaymentMethodForm(paymentAccount);
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
+        return new AssetsForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
                 inputValidator, root, gridRow, formatter, assetService, filterManager);
     }
 

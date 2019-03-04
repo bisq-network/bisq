@@ -39,9 +39,9 @@ import javax.annotation.Nullable;
 @Setter
 @Getter
 @Slf4j
-public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
+public final class InstantCryptoCurrencyPayload extends AssetsAccountPayload {
 
-    public CryptoCurrencyAccountPayload(String paymentMethod, String id) {
+    public InstantCryptoCurrencyPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -50,7 +50,7 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private CryptoCurrencyAccountPayload(String paymentMethod,
+    private InstantCryptoCurrencyPayload(String paymentMethod,
                                          String id,
                                          String address,
                                          long maxTradePeriod,
@@ -65,17 +65,16 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                .setInstantCryptoCurrencyAccountPayload(PB.InstantCryptoCurrencyAccountPayload.newBuilder()
                         .setAddress(address))
                 .build();
     }
 
-    public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
+    public static InstantCryptoCurrencyPayload fromProto(PB.PaymentAccountPayload proto) {
+        return new InstantCryptoCurrencyPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getCryptoCurrencyAccountPayload().getAddress(),
+                proto.getInstantCryptoCurrencyAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
                 CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
-
 }
