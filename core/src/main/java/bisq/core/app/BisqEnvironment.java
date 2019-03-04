@@ -25,6 +25,7 @@ import bisq.core.exceptions.BisqException;
 import bisq.core.filter.FilterManager;
 
 import bisq.network.NetworkOptionKeys;
+import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.Version;
@@ -193,7 +194,8 @@ public class BisqEnvironment extends StandardEnvironment {
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, referralId, daoActivated;
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight,
+            referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
 
     protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
 
@@ -283,12 +285,20 @@ public class BisqEnvironment extends StandardEnvironment {
         externalTorCookieFile = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) :
                 "";
-        externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) ?
-                true :
-                false;
-        torStreamIsolation = commandLineProperties.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION) ?
-                true :
-                false;
+        externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE);
+        torStreamIsolation = commandLineProperties.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION);
+        msgThrottlePerSec = commandLineProperties.containsProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC) :
+                String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC);
+        msgThrottlePer10Sec = commandLineProperties.containsProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC) :
+                String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_10_SEC);
+        sendMsgThrottleTrigger = commandLineProperties.containsProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER) :
+                String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER);
+        sendMsgThrottleSleep = commandLineProperties.containsProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP) ?
+                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP) :
+                String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_SLEEP);
 
         //RpcOptionKeys
         rpcUser = commandLineProperties.containsProperty(DaoOptionKeys.RPC_USER) ?
@@ -466,6 +476,11 @@ public class BisqEnvironment extends StandardEnvironment {
                     setProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE, "true");
                 if (torStreamIsolation)
                     setProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION, "true");
+
+                setProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC, msgThrottlePerSec);
+                setProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC, msgThrottlePer10Sec);
+                setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, sendMsgThrottleTrigger);
+                setProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, sendMsgThrottleSleep);
 
                 setProperty(AppOptionKeys.APP_DATA_DIR_KEY, appDataDir);
                 setProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API, desktopWithHttpApi);
