@@ -72,7 +72,7 @@ public class TxBroadcaster {
                 // not 100% if that is always the case. Just added that comment to make clear that this might be a risky
                 // strategy and might need improvement if we get problems.
                 // UPDATE: We got reported an wallet problem that a tx was added twice and wallet could not be loaded anymore even after a SPV resync.
-                // So it seems that this trategy is too risky to cause more problems as it tries to solve.
+                // So it seems that this strategy is too risky to cause more problems as it tries to solve.
                 // Need more work from a BitcoinJ expert! For now we comment the call out here but leave it as reference
                 // for future improvements.
                 // exception.getWallet().maybeCommitTx(tx);
