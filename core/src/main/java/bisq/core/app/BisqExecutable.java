@@ -341,11 +341,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .describedAs("host:port[,...]");
 
-        parser.accepts(NetworkOptionKeys.MY_ADDRESS,
-                "My own onion address (used for bootstrap nodes to exclude itself)")
-                .withRequiredArg()
-                .describedAs("host:port");
-
         parser.accepts(NetworkOptionKeys.BAN_LIST,
                 "Nodes to exclude from network connections.")
                 .withRequiredArg()
