@@ -21,6 +21,7 @@ import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -48,7 +49,11 @@ public class TakerPublishFeeTx extends TradeTask {
             Transaction takeOfferFeeTx = processModel.getTakeOfferFeeTx();
 
             if (trade.isCurrencyForTakerFeeBtc()) {
-                // We get the tx committed in the broadcast process
+                // We committed to be sure the tx gets into the wallet even in the broadcast process it would be
+                // committed as well, but if user would close app before success handler returns the commit would not
+                // be done.
+                tradeWalletService.commitTx(takeOfferFeeTx);
+
                 tradeWalletService.broadcastTx(takeOfferFeeTx,
                         new TxBroadcaster.Callback() {
                             @Override
@@ -64,7 +69,7 @@ public class TakerPublishFeeTx extends TradeTask {
                         });
             } else {
                 BsqWalletService bsqWalletService = processModel.getBsqWalletService();
-                bsqWalletService.commitTx(takeOfferFeeTx);
+                bsqWalletService.commitTx(takeOfferFeeTx, TxType.PAY_TRADE_FEE);
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception
                 // if it gets committed 2 times
                 tradeWalletService.commitTx(tradeWalletService.getClonedTransaction(takeOfferFeeTx));
@@ -106,5 +111,4 @@ public class TakerPublishFeeTx extends TradeTask {
             failed(t);
         }
     }
-
 }
