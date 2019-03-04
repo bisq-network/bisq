@@ -72,6 +72,11 @@ public class PriceNodeStatsTests {
         }
 
         @Override
+        public void report(String key, String value, String timestamp, String prefix) {
+
+        }
+
+        @Override
         public void report(long value, String prefix) {
             report(value);
         }
