@@ -33,6 +33,7 @@ import bisq.core.trade.TradeManager;
 
 import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
@@ -415,6 +416,27 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         parser.accepts(NetworkOptionKeys.TOR_STREAM_ISOLATION,
                 "Use stream isolation for Tor [experimental!].");
+
+        parser.accepts(NetworkOptionKeys.MSG_THROTTLE_PER_SEC,
+                format("Message throttle per sec for connection class (default: %s)",
+                        String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC)))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC,
+                format("Message throttle per 10 sec for connection class (default: %s)",
+                        String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_10_SEC)))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER,
+                format("Time in ms when we trigger a sleep if 2 messages are sent (default: %s)",
+                        String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER)))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP,
+                format("Pause in ms to sleep if we get too many messages to send (default: %s)",
+                        String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_SLEEP)))
+                .withRequiredArg()
+                .ofType(int.class);
 
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,

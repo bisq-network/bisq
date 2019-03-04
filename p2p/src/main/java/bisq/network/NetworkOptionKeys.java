@@ -36,4 +36,8 @@ public class NetworkOptionKeys {
     public static final String EXTERNAL_TOR_COOKIE_FILE = "torControlCookieFile";
     public static final String EXTERNAL_TOR_USE_SAFECOOKIE = "torControlUseSafeCookieAuth";
     public static final String TOR_STREAM_ISOLATION = "torStreamIsolation";
+    public static final String MSG_THROTTLE_PER_SEC = "msgThrottlePerSec";
+    public static final String MSG_THROTTLE_PER_10_SEC = "msgThrottlePer10Sec";
+    public static final String SEND_MSG_THROTTLE_TRIGGER = "sendMsgThrottleTrigger";
+    public static final String SEND_MSG_THROTTLE_SLEEP = "sendMsgThrottleSleep";
 }
