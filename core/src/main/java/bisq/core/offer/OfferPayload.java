@@ -356,7 +356,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
 
     @Override
     public long getTTL() {
-        return TimeUnit.MINUTES.toMillis(7);
+        return TimeUnit.MINUTES.toMillis(9);
     }
 
     @Override
