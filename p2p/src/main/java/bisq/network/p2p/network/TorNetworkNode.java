@@ -249,11 +249,12 @@ public class TorNetworkNode extends NetworkNode {
             try {
                 // get tor
                 Tor.setDefault(torMode.getTor());
-                UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
 
                 // start hidden service
                 long ts2 = new Date().getTime();
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
+                nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
+                UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
                         log.info("\n################################################################\n" +

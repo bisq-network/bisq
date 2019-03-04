@@ -84,7 +84,6 @@ public class DummySeedNode {
     // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
 
     public static final String USAGE = "Usage:\n" +
-            "--myAddress=<my onion address>\n" +
             "--networkId=[0|1|2] (Mainnet = 0, TestNet = 1, Regtest = 2)\n" +
             "--maxConnections=<No. of max. connections allowed>\n" +
             "--useLocalhostForP2P=[true|false]\n" +
@@ -100,12 +99,7 @@ public class DummySeedNode {
                 String arg = arg1;
                 if (arg.startsWith("--"))
                     arg = arg.substring(2);
-                if (arg.startsWith(NetworkOptionKeys.MY_ADDRESS)) {
-                    arg = arg.substring(NetworkOptionKeys.MY_ADDRESS.length() + 1);
-                    checkArgument(arg.contains(":") && arg.split(":").length == 2 && arg.split(":")[1].length() > 3, "Wrong program argument: " + arg);
-                    mySeedNodeAddress = new NodeAddress(arg);
-                    log.debug("From processArgs: mySeedNodeAddress=" + mySeedNodeAddress);
-                } else if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
+                if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
                     arg = arg.substring(NetworkOptionKeys.NETWORK_ID.length() + 1);
                     networkId = Integer.parseInt(arg);
                     log.debug("From processArgs: networkId=" + networkId);
