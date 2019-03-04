@@ -48,6 +48,8 @@ import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
 
+import javax.inject.Inject;
+
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -113,17 +115,19 @@ public class Connection implements MessageListener {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Inject
+    private static ConnectionConfig connectionConfig;
+
     // Leaving some constants package-private for tests to know limits.
     static final int PERMITTED_MESSAGE_SIZE = 200 * 1024;                       // 200 kb
     static final int MAX_PERMITTED_MESSAGE_SIZE = 10 * 1024 * 1024;         // 10 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
-    static final int MSG_THROTTLE_PER_SEC = 200;              // With MAX_MSG_SIZE of 200kb results in bandwidth of 40MB/sec or 5 mbit/sec
-    static final int MSG_THROTTLE_PER_10_SEC = 1000;          // With MAX_MSG_SIZE of 200kb results in bandwidth of 20MB/sec or 2.5 mbit/sec
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(120);
 
     public static int getPermittedMessageSize() {
         return PERMITTED_MESSAGE_SIZE;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Class fields
@@ -138,6 +142,10 @@ public class Connection implements MessageListener {
     // holder of state shared between InputHandler and Connection
     private final SharedModel sharedModel;
     private final Statistic statistic;
+    private final int msgThrottlePer10Sec;
+    private final int msgThrottlePerSec;
+    private final int sendMsgThrottleTrigger;
+    private final int sendMsgThrottleSleep;
 
     // set in init
     private InputHandler inputHandler;
@@ -148,7 +156,7 @@ public class Connection implements MessageListener {
     private volatile boolean stopped;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
-    private final List<Tuple2<Long, NetworkEnvelope>> messageTimeStamps = new ArrayList<>();
+    private final List<Tuple2<Long, String>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
@@ -158,12 +166,20 @@ public class Connection implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Connection(Socket socket, MessageListener messageListener, ConnectionListener connectionListener,
-               @Nullable NodeAddress peersNodeAddress, NetworkProtoResolver networkProtoResolver) {
+    Connection(Socket socket,
+               MessageListener messageListener,
+               ConnectionListener connectionListener,
+               @Nullable NodeAddress peersNodeAddress,
+               NetworkProtoResolver networkProtoResolver) {
         this.socket = socket;
         this.connectionListener = connectionListener;
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
+
+        msgThrottlePerSec = connectionConfig.getMsgThrottlePerSec();
+        msgThrottlePer10Sec = connectionConfig.getMsgThrottlePer10Sec();
+        sendMsgThrottleTrigger = connectionConfig.getSendMsgThrottleTrigger();
+        sendMsgThrottleSleep = connectionConfig.getSendMsgThrottleSleep();
 
         addMessageListener(messageListener);
 
@@ -200,7 +216,6 @@ public class Connection implements MessageListener {
             log.trace("New connection created: " + this.toString());
 
             UserThread.execute(() -> connectionListener.onConnection(this));
-
         } catch (Throwable e) {
             handleException(e);
         }
@@ -228,15 +243,16 @@ public class Connection implements MessageListener {
                     // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
-                    if (elapsed < 20) {
-                        log.debug("We got 2 sendMessage requests in less than 20 ms. We set the thread to sleep " +
-                                        "for 50 ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}",
-                                lastSendTimeStamp, now, elapsed);
-                        Thread.sleep(50);
+                    if (elapsed < sendMsgThrottleTrigger) {
+                        log.warn("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
+                                        "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
+                                sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
+                                networkEnvelope.getClass().getSimpleName());
+                        Thread.sleep(sendMsgThrottleSleep);
                     }
 
                     lastSendTimeStamp = now;
-                    String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
+                    String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
                     PB.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
                     log.debug("Sending message: {}", Utilities.toTruncatedString(proto.toString(), 10000));
@@ -349,24 +365,24 @@ public class Connection implements MessageListener {
         long now = System.currentTimeMillis();
         boolean violated = false;
         //TODO remove message storage after network is tested stable
-        if (messageTimeStamps.size() >= MSG_THROTTLE_PER_SEC) {
+        if (messageTimeStamps.size() >= msgThrottlePerSec) {
             // check if we got more than 200 (MSG_THROTTLE_PER_SEC) msg per sec.
-            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_SEC).first;
+            long compareValue = messageTimeStamps.get(messageTimeStamps.size() - msgThrottlePerSec).first;
             // if duration < 1 sec we received too much network_messages
             violated = now - compareValue < TimeUnit.SECONDS.toMillis(1);
             if (violated) {
                 log.error("violatesThrottleLimit MSG_THROTTLE_PER_SEC ");
                 log.error("elapsed " + (now - compareValue));
                 log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
+                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second)
                         .collect(Collectors.toList()).toString());
             }
         }
 
-        if (messageTimeStamps.size() >= MSG_THROTTLE_PER_10_SEC) {
+        if (messageTimeStamps.size() >= msgThrottlePer10Sec) {
             if (!violated) {
                 // check if we got more than 50 msg per 10 sec.
-                long compareValue = messageTimeStamps.get(messageTimeStamps.size() - MSG_THROTTLE_PER_10_SEC).first;
+                long compareValue = messageTimeStamps.get(messageTimeStamps.size() - msgThrottlePer10Sec).first;
                 // if duration < 10 sec we received too much network_messages
                 violated = now - compareValue < TimeUnit.SECONDS.toMillis(10);
 
@@ -374,16 +390,16 @@ public class Connection implements MessageListener {
                     log.error("violatesThrottleLimit MSG_THROTTLE_PER_10_SEC ");
                     log.error("elapsed " + (now - compareValue));
                     log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
+                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second)
                             .collect(Collectors.toList()).toString());
                 }
             }
         }
         // we limit to max 1000 (MSG_THROTTLE_PER_10SEC) entries
-        while(messageTimeStamps.size() > MSG_THROTTLE_PER_10_SEC)
+        while (messageTimeStamps.size() > msgThrottlePer10Sec)
             messageTimeStamps.remove(0);
 
-        messageTimeStamps.add(new Tuple2<>(now, networkEnvelope));
+        messageTimeStamps.add(new Tuple2<>(now, networkEnvelope.getClass().getName()));
         return violated;
     }
 
@@ -395,7 +411,7 @@ public class Connection implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-        UserThread.execute(() -> messageListeners.stream().forEach(e -> e.onMessage(networkEnvelope, connection)));
+        UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
     }
 
 
@@ -478,7 +494,7 @@ public class Connection implements MessageListener {
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
         log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional, closeConnectionReason);
         if (!stopped) {
-            String peersNodeAddress = peersNodeAddressOptional.isPresent() ? peersNodeAddressOptional.get().toString() : "null";
+            String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                     "ShutDown connection:"
                     + "\npeersNodeAddress=" + peersNodeAddress
@@ -606,7 +622,7 @@ public class Connection implements MessageListener {
         private List<Integer> supportedCapabilities;
 
 
-        public SharedModel(Connection connection, Socket socket) {
+        SharedModel(Connection connection, Socket socket) {
             this.connection = connection;
             this.socket = socket;
         }
@@ -704,7 +720,7 @@ public class Connection implements MessageListener {
             stopped = true;
         }
 
-        public RuleViolation getRuleViolation() {
+        RuleViolation getRuleViolation() {
             return ruleViolation;
         }
 
@@ -743,11 +759,11 @@ public class Connection implements MessageListener {
         private long lastReadTimeStamp;
         private boolean threadNameSet;
 
-        public InputHandler(SharedModel sharedModel,
-                            InputStream protoInputStream,
-                            String portInfo,
-                            MessageListener messageListener,
-                            NetworkProtoResolver networkProtoResolver) {
+        InputHandler(SharedModel sharedModel,
+                     InputStream protoInputStream,
+                     String portInfo,
+                     MessageListener messageListener,
+                     NetworkProtoResolver networkProtoResolver) {
             this.sharedModel = sharedModel;
             this.protoInputStream = protoInputStream;
             this.portInfo = portInfo;
