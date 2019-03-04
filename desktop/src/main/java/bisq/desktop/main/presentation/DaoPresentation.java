@@ -102,7 +102,7 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
 
@@ -119,7 +119,7 @@ public class DaoPresentation implements DaoStateListener {
             showNotification.set(preferences.showAgain(DAO_NEWS));
 
         this.btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
 
         onUpdateAnyChainHeight();
     }

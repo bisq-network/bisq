@@ -959,6 +959,7 @@ message PersistableEnvelope {
         DaoStateStore dao_state_store = 24;
         MyReputationList my_reputation_list = 25;
         MyProofOfBurnList my_proof_of_burn_list = 26;
+        UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
     }
 }
 
@@ -1410,6 +1411,12 @@ message BaseTxOutput {
     }
 }
 
+message UnconfirmedTxOutput {
+    int32 index = 1;
+    int64 value = 2;
+    string tx_id = 3;
+}
+
 message RawTxOutput {
 }
 
@@ -1574,6 +1581,10 @@ message MyProofOfBurn {
 
 message MyProofOfBurnList {
     repeated MyProofOfBurn my_proof_of_burn = 1;
+}
+
+message UnconfirmedBsqChangeOutputList {
+    repeated UnconfirmedTxOutput unconfirmed_tx_output = 1;
 }
 
 message TempProposalPayload {

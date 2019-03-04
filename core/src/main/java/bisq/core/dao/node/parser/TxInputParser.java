@@ -68,7 +68,7 @@ public class TxInputParser {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void process(TxOutputKey txOutputKey, int blockHeight, String txId, int inputIndex) {
-        if (!daoStateService.isConfiscated(txOutputKey)) {
+        if (!daoStateService.isConfiscatedOutput(txOutputKey)) {
             daoStateService.getUnspentTxOutput(txOutputKey)
                     .ifPresent(connectedTxOutput -> {
                         long inputValue = connectedTxOutput.getValue();

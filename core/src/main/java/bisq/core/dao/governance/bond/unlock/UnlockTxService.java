@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.handlers.ExceptionHandler;
 
@@ -73,7 +74,7 @@ public class UnlockTxService {
             checkArgument(optionalLockupTxOutput.isPresent(), "lockupTxOutput must be present");
             TxOutput lockupTxOutput = optionalLockupTxOutput.get();
             Transaction unlockTx = getUnlockTx(lockupTxOutput);
-            walletsManager.publishAndCommitBsqTx(unlockTx, new TxBroadcaster.Callback() {
+            walletsManager.publishAndCommitBsqTx(unlockTx, TxType.UNLOCK, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     resultHandler.accept(transaction.getHashAsString());

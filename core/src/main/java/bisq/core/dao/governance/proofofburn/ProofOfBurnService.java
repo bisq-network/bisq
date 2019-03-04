@@ -31,6 +31,7 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -101,7 +102,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override
@@ -121,7 +122,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateList();
     }
 
@@ -149,7 +150,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
 
     public void publishTransaction(Transaction transaction, String preImageAsString, ResultHandler resultHandler,
                                    ErrorMessageHandler errorMessageHandler) {
-        walletsManager.publishAndCommitBsqTx(transaction, new TxBroadcaster.Callback() {
+        walletsManager.publishAndCommitBsqTx(transaction, TxType.PROOF_OF_BURN, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("Proof of burn tx has been published. TxId={}", transaction.getHashAsString());

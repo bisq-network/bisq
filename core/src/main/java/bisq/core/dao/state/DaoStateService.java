@@ -53,6 +53,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -68,6 +69,7 @@ public class DaoStateService implements DaoSetupService {
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
+    @Getter
     private boolean parseBlockChainComplete;
 
 
@@ -208,13 +210,19 @@ public class DaoStateService implements DaoSetupService {
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
         log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
+
+        // Need to be called before onParseTxsCompleteAfterBatchProcessing as we use it in
+        // VoteResult and other listeners like balances usually listen on onParseTxsCompleteAfterBatchProcessing
+        // so we need to make sure that vote result calculation is completed before (e.g. for comp. request to
+        // update balance).
+        // TODO the dependency on ordering is nto good here.... Listeners should not depend on order of execution.
+        daoStateListeners.forEach(l -> l.onParseBlockComplete(block));
+
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
         // blocks as that cause performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
         if (parseBlockChainComplete)
-            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
-
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+            daoStateListeners.forEach(l -> l.onParseBlockCompleteAfterBatchProcessing(block));
     }
 
     // Called after parsing of all pending blocks is completed
@@ -223,7 +231,7 @@ public class DaoStateService implements DaoSetupService {
         parseBlockChainComplete = true;
 
         getLastBlock().ifPresent(block -> {
-            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+            daoStateListeners.forEach(l -> l.onParseBlockCompleteAfterBatchProcessing(block));
         });
 
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
@@ -750,6 +758,10 @@ public class DaoStateService implements DaoSetupService {
         return getTx(unlockTxId).flatMap(tx -> getTx(tx.getTxInputs().get(0).getConnectedTxOutputTxId()));
     }
 
+    public Optional<Tx> getUnlockTxFromLockupTxId(String lockupTxId) {
+        return getTx(lockupTxId).flatMap(tx -> getSpentInfo(tx.getTxOutputs().get(0))).flatMap(spentInfo -> getTx(spentInfo.getTxId()));
+    }
+
     // Unlocked
     public Optional<Integer> getUnlockBlockHeight(String txId) {
         return getTx(txId).map(Tx::getUnlockBlockHeight);
@@ -819,7 +831,7 @@ public class DaoStateService implements DaoSetupService {
         daoState.getConfiscatedLockupTxList().add(lockupTxId);
     }
 
-    public boolean isConfiscated(TxOutputKey txOutputKey) {
+    public boolean isConfiscatedOutput(TxOutputKey txOutputKey) {
         if (isLockupOutput(txOutputKey))
             return isConfiscatedLockupTxOutput(txOutputKey.getTxId());
         else if (isUnspentUnlockOutput(txOutputKey))
@@ -827,17 +839,13 @@ public class DaoStateService implements DaoSetupService {
         return false;
     }
 
-    public boolean isConfiscated(String lockupTxId) {
-        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
-    }
-
     public boolean isConfiscatedLockupTxOutput(String lockupTxId) {
-        return isConfiscated(lockupTxId);
+        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
     }
 
     public boolean isConfiscatedUnlockTxOutput(String unlockTxId) {
         return getLockupTxFromUnlockTxId(unlockTxId).
-                map(lockupTx -> isConfiscated(lockupTx.getId())).
+                map(lockupTx -> isConfiscatedLockupTxOutput(lockupTx.getId())).
                 orElse(false);
     }
 
@@ -949,11 +957,11 @@ public class DaoStateService implements DaoSetupService {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBsqStateListener(DaoStateListener listener) {
+    public void addDaoStateListener(DaoStateListener listener) {
         daoStateListeners.add(listener);
     }
 
-    public void removeBsqStateListener(DaoStateListener listener) {
+    public void removeDaoStateListener(DaoStateListener listener) {
         daoStateListeners.remove(listener);
     }
 }

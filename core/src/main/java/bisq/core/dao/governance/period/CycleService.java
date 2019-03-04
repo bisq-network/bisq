@@ -62,7 +62,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override

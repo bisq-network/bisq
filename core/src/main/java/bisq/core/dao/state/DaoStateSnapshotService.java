@@ -62,7 +62,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
         this.cycleService = cycleService;
         this.daoStateStorageService = daoStateStorageService;
 
-        this.daoStateService.addBsqStateListener(this);
+        this.daoStateService.addDaoStateListener(this);
     }
 
 
@@ -73,7 +73,7 @@ public class DaoStateSnapshotService implements DaoStateListener {
     // We listen to each ParseTxsComplete event even if the batch processing of all blocks at startup is not completed
     // as we need to write snapshots during that batch processing.
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseBlockComplete(Block block) {
         int chainHeight = block.getHeight();
 
         // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be

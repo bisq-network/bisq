@@ -17,12 +17,14 @@
 
 package bisq.desktop.main.dao.wallet;
 
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -42,45 +44,127 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @Slf4j
-public class BsqBalanceUtil implements BsqBalanceListener {
+public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
     private final BsqWalletService bsqWalletService;
+    private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
 
     // Displaying general BSQ info
-    private TextField availableBalanceTextField, availableNonBsqBalanceTextField, unverifiedBalanceTextField, lockedForVoteBalanceTextField,
-            lockedInBondsBalanceTextField, totalBalanceTextField;
+    private TextField availableBalanceTextField, verifiedBalanceTextField, availableNonBsqBalanceTextField,
+            unverifiedBalanceTextField, lockedForVoteBalanceTextField,
+            lockedInBondsBalanceTextField, unconfirmedChangTextField;
 
     // Displaying bond dashboard info
     private TextField lockupAmountTextField, unlockingAmountTextField;
-    private TitledGroupBg titledGroupBg;
     private Label availableNonBsqBalanceLabel;
 
     @Inject
     private BsqBalanceUtil(BsqWalletService bsqWalletService,
+                           DaoStateService daoStateService,
                            BsqFormatter bsqFormatter) {
         this.bsqWalletService = bsqWalletService;
+        this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
     }
 
+
+    public void activate() {
+        bsqWalletService.addBsqBalanceListener(this);
+        daoStateService.addDaoStateListener(this);
+        triggerUpdate();
+    }
+
+    public void deactivate() {
+        bsqWalletService.removeBsqBalanceListener(this);
+        daoStateService.removeDaoStateListener(this);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        bsqWalletService.addBsqBalanceListener(this);
+        triggerUpdate();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBalanceListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onUpdateBalances(Coin availableBalance,
+                                 Coin availableNonBsqBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockupBondsBalance,
+                                 Coin unlockingBondsBalance) {
+        boolean isNonBsqBalanceAvailable = availableNonBsqBalance.value > 0;
+
+        availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
+        Coin verified = availableBalance.subtract(unconfirmedChangeBalance);
+        verifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(verified));
+        unconfirmedChangTextField.setText(bsqFormatter.formatCoinWithCode(unconfirmedChangeBalance));
+        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
+
+        lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
+        lockedInBondsBalanceTextField.setText(bsqFormatter.formatCoinWithCode(
+                lockupBondsBalance.add(unlockingBondsBalance)));
+        if (lockupAmountTextField != null && unlockingAmountTextField != null) {
+            lockupAmountTextField.setText(bsqFormatter.formatCoinWithCode(lockupBondsBalance));
+            unlockingAmountTextField.setText(bsqFormatter.formatCoinWithCode(unlockingBondsBalance));
+        }
+
+        availableNonBsqBalanceLabel.setVisible(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceLabel.setManaged(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceTextField.setVisible(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceTextField.setManaged(isNonBsqBalanceAvailable);
+        availableNonBsqBalanceTextField.setText(bsqFormatter.formatBTCWithCode(availableNonBsqBalance.value));
+    }
+
+
+    private void triggerUpdate() {
+        onUpdateBalances(bsqWalletService.getAvailableConfirmedBalance(),
+                bsqWalletService.getAvailableNonBsqBalance(),
+                bsqWalletService.getUnverifiedBalance(),
+                bsqWalletService.getUnconfirmedChangeBalance(),
+                bsqWalletService.getLockedForVotingBalance(),
+                bsqWalletService.getLockupBondsBalance(),
+                bsqWalletService.getUnlockingBondsBalance());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public int addGroup(GridPane gridPane, int gridRow) {
         int startIndex = gridRow;
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 3, Res.get("dao.wallet.dashboard.myBalance"));
+        addTitledGroupBg(gridPane, gridRow, 4, Res.get("dao.wallet.dashboard.myBalance"));
         availableBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow,
                 Res.get("dao.availableBsqBalance"), Layout.FIRST_ROW_DISTANCE).second;
+        verifiedBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
+                Res.get("dao.verifiedBsqBalance")).second;
+        unconfirmedChangTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
+                Res.get("dao.unconfirmedChangeBalance")).second;
         unverifiedBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
                 Res.get("dao.unverifiedBsqBalance")).second;
-        totalBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow,
-                Res.get("dao.totalBsqBalance")).second;
 
         gridRow = startIndex;
         int columnIndex = 2;
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, columnIndex, 3, "");
+        addTitledGroupBg(gridPane, gridRow, columnIndex, 4, "");
         lockedForVoteBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow, columnIndex,
                 Res.get("dao.lockedForVoteBalance"), Layout.FIRST_ROW_DISTANCE).second;
         lockedInBondsBalanceTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
                 Res.get("dao.lockedInBonds")).second;
         Tuple3<Label, TextField, VBox> tuple3 = FormBuilder.addTopLabelReadOnlyTextField(gridPane, ++gridRow, columnIndex,
                 Res.get("dao.availableNonBsqBalance"));
+        // Match left column
+        ++gridRow;
 
         // TODO add unlockingBondsBalanceTextField
 
@@ -103,55 +187,5 @@ public class BsqBalanceUtil implements BsqBalanceListener {
                 Res.get("dao.bond.dashboard.unlockingAmount")).second;
 
         return gridRow;
-    }
-
-    public void activate() {
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
-                bsqWalletService.getAvailableNonBsqBalance(),
-                bsqWalletService.getUnverifiedBalance(),
-                bsqWalletService.getLockedForVotingBalance(),
-                bsqWalletService.getLockupBondsBalance(),
-                bsqWalletService.getUnlockingBondsBalance());
-        bsqWalletService.addBsqBalanceListener(this);
-    }
-
-    public void deactivate() {
-        bsqWalletService.removeBsqBalanceListener(this);
-    }
-
-
-    @Override
-    public void onUpdateBalances(Coin availableBalance,
-                                 Coin availableNonBsqBalance,
-                                 Coin unverifiedBalance,
-                                 Coin lockedForVotingBalance,
-                                 Coin lockupBondsBalance,
-                                 Coin unlockingBondsBalance) {
-
-        boolean isNonBsqBalanceAvailable = availableNonBsqBalance.value > 0;
-
-        availableBalanceTextField.setText(bsqFormatter.formatCoinWithCode(availableBalance));
-        unverifiedBalanceTextField.setText(bsqFormatter.formatCoinWithCode(unverifiedBalance));
-        lockedForVoteBalanceTextField.setText(bsqFormatter.formatCoinWithCode(lockedForVotingBalance));
-        lockedInBondsBalanceTextField.setText(bsqFormatter.formatCoinWithCode(
-                lockupBondsBalance.add(unlockingBondsBalance)));
-
-        if (lockupAmountTextField != null && unlockingAmountTextField != null) {
-            lockupAmountTextField.setText(bsqFormatter.formatCoinWithCode(lockupBondsBalance));
-            unlockingAmountTextField.setText(bsqFormatter.formatCoinWithCode(unlockingBondsBalance));
-        }
-
-        availableNonBsqBalanceLabel.setVisible(isNonBsqBalanceAvailable);
-        availableNonBsqBalanceLabel.setManaged(isNonBsqBalanceAvailable);
-        availableNonBsqBalanceTextField.setVisible(isNonBsqBalanceAvailable);
-        availableNonBsqBalanceTextField.setManaged(isNonBsqBalanceAvailable);
-        availableNonBsqBalanceTextField.setText(bsqFormatter.formatBTCWithCode(availableNonBsqBalance.value));
-
-        final Coin total = availableBalance
-                .add(unverifiedBalance)
-                .add(lockedForVotingBalance)
-                .add(lockupBondsBalance)
-                .add(unlockingBondsBalance);
-        totalBalanceTextField.setText(bsqFormatter.formatCoinWithCode(total));
     }
 }
