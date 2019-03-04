@@ -57,8 +57,18 @@ public abstract class Reporter extends Configurable {
      * Report our findings.
      *
      * @param values Map<metric name, metric value>
-     * @param prefix for example "bisq.torStartupTime"
+     * @param prefix for example "torStartupTime"
      */
     public abstract void report(Map<String, String> values, String prefix);
+
+    /**
+     * Report our findings one by one.
+     *
+     * @param key the metric name
+     * @param value the value to report
+     * @param timestamp a unix timestamp in milliseconds
+     * @param prefix for example "torStartupTime"
+     */
+    public abstract void report(String key, String value, String timestamp, String prefix);
 
 }
