@@ -148,7 +148,7 @@ public class Connection implements MessageListener {
     private volatile boolean stopped;
     private PeerType peerType;
     private final ObjectProperty<NodeAddress> peersNodeAddressProperty = new SimpleObjectProperty<>();
-    private final List<Tuple2<Long, NetworkEnvelope>> messageTimeStamps = new ArrayList<>();
+    private final List<Tuple2<Long, String>> messageTimeStamps = new ArrayList<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private volatile long lastSendTimeStamp = 0;
     private final CopyOnWriteArraySet<WeakReference<SupportedCapabilitiesListener>> capabilitiesListeners = new CopyOnWriteArraySet<>();
@@ -358,7 +358,7 @@ public class Connection implements MessageListener {
                 log.error("violatesThrottleLimit MSG_THROTTLE_PER_SEC ");
                 log.error("elapsed " + (now - compareValue));
                 log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
+                        .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second)
                         .collect(Collectors.toList()).toString());
             }
         }
@@ -374,7 +374,7 @@ public class Connection implements MessageListener {
                     log.error("violatesThrottleLimit MSG_THROTTLE_PER_10_SEC ");
                     log.error("elapsed " + (now - compareValue));
                     log.error("messageTimeStamps: \n\t" + messageTimeStamps.stream()
-                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second.getClass().getName())
+                            .map(e -> "\n\tts=" + e.first.toString() + " message=" + e.second)
                             .collect(Collectors.toList()).toString());
                 }
             }
@@ -383,7 +383,7 @@ public class Connection implements MessageListener {
         while(messageTimeStamps.size() > MSG_THROTTLE_PER_10_SEC)
             messageTimeStamps.remove(0);
 
-        messageTimeStamps.add(new Tuple2<>(now, networkEnvelope));
+        messageTimeStamps.add(new Tuple2<>(now, networkEnvelope.getClass().getName()));
         return violated;
     }
 
