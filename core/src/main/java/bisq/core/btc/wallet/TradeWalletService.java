@@ -1072,7 +1072,6 @@ public class TradeWalletService {
         // We need to recreate the tx otherwise we get a null pointer...
         Transaction transaction = new Transaction(params, serializedTransaction);
         transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);
-        log.trace("transaction from serializedTransaction: " + transaction.toString());
 
         if (wallet != null)
             wallet.receivePending(transaction, null, true);

@@ -302,7 +302,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 list.addAll(filteredSeedNodeAddresses);
 
                 log.debug("Number of peers in list for connectToMorePeers: {}", list.size());
-                log.trace("Filtered connectToMorePeers list: list=" + list);
+                log.trace("Filtered connectToMorePeers list: list={}", list);
                 if (!list.isEmpty()) {
                     // Don't shuffle as we want the seed nodes at the last entries
                     NodeAddress nextCandidate = list.get(0);
@@ -400,8 +400,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 handlerMap.get(nodeAddress).cancel();
                 handlerMap.remove(nodeAddress);
             }
-        } else {
-            log.trace("closeHandler: nodeAddress not set in connection " + connection);
         }
     }
 

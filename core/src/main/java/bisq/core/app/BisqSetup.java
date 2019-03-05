@@ -464,7 +464,6 @@ public class BisqSetup {
         Thread checkCryptoThread = new Thread(() -> {
             try {
                 Thread.currentThread().setName("checkCryptoThread");
-                log.trace("Run crypto test");
                 // just use any simple dummy msg
                 Ping payload = new Ping(1, 1);
                 SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,

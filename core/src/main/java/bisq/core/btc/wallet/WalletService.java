@@ -197,7 +197,6 @@ public abstract class WalletService {
 
     public static void checkWalletConsistency(Wallet wallet) throws WalletException {
         try {
-            log.trace("Check if wallet is consistent before commit.");
             checkNotNull(wallet);
             checkState(wallet.isConsistent());
         } catch (Throwable t) {
@@ -209,7 +208,6 @@ public abstract class WalletService {
 
     public static void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
         try {
-            log.trace("Verify transaction " + transaction);
             transaction.verify();
         } catch (Throwable t) {
             t.printStackTrace();
@@ -226,7 +224,6 @@ public abstract class WalletService {
 
     public static void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
         try {
-            log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
             input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
         } catch (Throwable t) {
