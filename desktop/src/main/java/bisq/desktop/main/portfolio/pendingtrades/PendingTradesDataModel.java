@@ -44,7 +44,6 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.app.Log;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -348,7 +347,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onListChanged() {
-        Log.traceCall();
         list.clear();
         list.addAll(tradeManager.getTradableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
 
@@ -438,7 +436,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
-        Log.traceCall("depositTx=" + depositTx);
         byte[] depositTxSerialized = null;
         byte[] payoutTxSerialized = null;
         String depositTxHashAsString = null;

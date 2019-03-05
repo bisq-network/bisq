@@ -20,7 +20,6 @@ package bisq.network.p2p.network;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import java.net.ServerSocket;
@@ -77,12 +76,10 @@ public class LocalhostNetworkNode extends NetworkNode {
 
         // simulate tor connection delay
         UserThread.runAfter(() -> {
-            Log.traceCall("torNode created");
             setupListeners.stream().forEach(SetupListener::onTorNodeReady);
 
             // simulate tor HS publishing delay
             UserThread.runAfter(() -> {
-                Log.traceCall("hiddenService created");
                 try {
                     startServer(new ServerSocket(servicePort));
                 } catch (IOException e) {

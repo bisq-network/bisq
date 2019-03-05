@@ -29,7 +29,6 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -169,7 +168,6 @@ public class RequestBlocksHandler implements MessageListener {
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetBlocksResponse) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
-                Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetBlocksResponse getBlocksResponse = (GetBlocksResponse) networkEnvelope;
                     if (getBlocksResponse.getRequestNonce() == nonce) {
@@ -214,7 +212,6 @@ public class RequestBlocksHandler implements MessageListener {
     }
 
     private void cleanup() {
-        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(this);
         stopTimeoutTimer();

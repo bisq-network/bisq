@@ -29,8 +29,6 @@ import bisq.core.btc.setup.WalletConfig;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 
-import bisq.common.app.Log;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
@@ -1056,8 +1054,6 @@ public class TradeWalletService {
      * @throws VerificationException
      */
     public Transaction addTxToWallet(Transaction transaction) throws VerificationException {
-        Log.traceCall("transaction " + transaction.toString());
-
         // We need to recreate the transaction otherwise we get a null pointer...
         Transaction result = new Transaction(params, transaction.bitcoinSerialize());
         result.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
@@ -1073,8 +1069,6 @@ public class TradeWalletService {
      * @throws VerificationException
      */
     public Transaction addTxToWallet(byte[] serializedTransaction) throws VerificationException {
-        Log.traceCall();
-
         // We need to recreate the tx otherwise we get a null pointer...
         Transaction transaction = new Transaction(params, serializedTransaction);
         transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);

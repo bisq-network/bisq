@@ -22,7 +22,6 @@ import bisq.network.p2p.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
@@ -150,7 +149,6 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
-        Log.traceCall();
         BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
         BooleanProperty networkNodeShutDown = networkNodeShutDown();
         BooleanProperty shutDownTimerTriggered = shutDownTimerTriggered();
@@ -225,7 +223,6 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void restartTor(String errorMessage) {
-        Log.traceCall();
         log.info("Restarting Tor");
         restartCounter++;
         if (restartCounter <= MAX_RESTART_ATTEMPTS) {
@@ -249,8 +246,6 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTorAndHiddenService(int localPort, int servicePort) {
-        Log.traceCall();
-
         ListenableFuture<Void> future = executorService.submit(() -> {
             try {
                 // get tor
@@ -270,7 +265,6 @@ public class TorNetworkNode extends NetworkNode {
                             @Override
                             public void run() {
                                 try {
-                                    Log.traceCall("hiddenService created");
                                     nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                                     startServer(socket);
                                     UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));

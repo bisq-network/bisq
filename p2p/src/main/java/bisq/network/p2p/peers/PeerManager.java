@@ -32,7 +32,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.Clock;
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
@@ -161,8 +160,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     public void shutDown() {
-        Log.traceCall();
-
         networkNode.removeConnectionListener(this);
         clock.removeListener(listener);
         stopCheckMaxConnectionsTimer();
@@ -301,7 +298,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private boolean checkMaxConnections() {
-        Log.traceCall("maxConnections=" + maxConnections);
         Set<Connection> allConnections = networkNode.getAllConnections();
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
@@ -366,7 +362,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void removeAnonymousPeers() {
-        Log.traceCall();
         networkNode.getAllConnections().stream()
                 .filter(connection -> !connection.hasPeersNodeAddress())
                 .forEach(connection -> UserThread.runAfter(() -> {
@@ -382,7 +377,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void removeSuperfluousSeedNodes() {
-        Log.traceCall();
         if (networkNode.getConfirmedConnections().size() > disconnectFromSeedNode) {
             List<Connection> seedNodes = networkNode.getConfirmedConnections().stream()
                     .filter(this::isSeedNode)
@@ -426,7 +420,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void removeTooOldReportedPeers() {
-        Log.traceCall();
         List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
         Set<Peer> reportedPeersToRemove = reportedPeersClone.stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.getDate().getTime() > MAX_AGE)
@@ -460,7 +453,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void purgeReportedPeersIfExceeds() {
-        Log.traceCall();
         int size = reportedPeers.size();
         if (size > MAX_REPORTED_PEERS) {
             log.info("We have already {} reported peers which exceeds our limit of {}." +
@@ -532,7 +524,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void removeTooOldPersistedPeers() {
-        Log.traceCall();
         Set<Peer> persistedPeersToRemove = persistedPeers.stream()
                 .filter(reportedPeer -> new Date().getTime() - reportedPeer.getDate().getTime() > MAX_AGE)
                 .collect(Collectors.toSet());
@@ -540,7 +531,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     private void purgePersistedPeersIfExceeds() {
-        Log.traceCall();
         int size = persistedPeers.size();
         int limit = MAX_PERSISTED_PEERS;
         if (size > limit) {
@@ -611,7 +601,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     public void handleConnectionFault(NodeAddress nodeAddress, @Nullable Connection connection) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
         log.debug("handleConnectionFault called: nodeAddress=" + nodeAddress);
         boolean doRemovePersistedPeer = false;
         removeReportedPeer(nodeAddress);

@@ -31,7 +31,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -92,8 +91,6 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
-        Log.traceCall(getDataRequest + "\n\tconnection=" + connection);
-
         GetDataResponse getDataResponse = new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connection),
                 getFilteredPersistableNetworkPayload(getDataRequest, connection),
                 getDataRequest.getNonce(),

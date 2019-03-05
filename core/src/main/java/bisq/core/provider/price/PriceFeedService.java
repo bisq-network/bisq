@@ -30,7 +30,6 @@ import bisq.network.http.HttpClient;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
@@ -393,7 +392,6 @@ public class PriceFeedService {
     }
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
-        Log.traceCall();
         PriceRequest priceRequest = new PriceRequest();
         SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = priceRequest.requestAllPrices(provider);
         Futures.addCallback(future, new FutureCallback<Tuple2<Map<String, Long>, Map<String, MarketPrice>>>() {
