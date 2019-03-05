@@ -727,7 +727,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return buyerSecurityDeposit;
     }
 
-    private Coin getBuyerSecurityDepositAsCoin() {
+    protected Coin getBuyerSecurityDepositAsCoin() {
         Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(buyerSecurityDeposit.get(), amount.get());
         return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }

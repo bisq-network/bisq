@@ -105,6 +105,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public final StringProperty amount = new SimpleStringProperty();
     public final StringProperty minAmount = new SimpleStringProperty();
     final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
+    final StringProperty buyerSecurityDepositInBTC = new SimpleStringProperty();
 
     // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
@@ -420,10 +421,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
 
         amountAsCoinListener = (ov, oldValue, newValue) -> {
-            if (newValue != null)
+            if (newValue != null) {
                 amount.set(btcFormatter.formatCoin(newValue));
-            else
+                buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
+            } else {
                 amount.set("");
+                buyerSecurityDepositInBTC.set("");
+            }
 
             applyMakerFee();
         };
@@ -455,10 +459,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         };
 
         securityDepositAsDoubleListener = (ov, oldValue, newValue) -> {
-            if (newValue != null)
+            if (newValue != null) {
                 buyerSecurityDeposit.set(btcFormatter.formatToPercent((double) newValue));
-            else
+                buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
+            } else {
                 buyerSecurityDeposit.set("");
+                buyerSecurityDepositInBTC.set("");
+            }
         };
 
 
