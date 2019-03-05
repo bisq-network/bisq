@@ -28,6 +28,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.NewBadge;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -122,6 +123,7 @@ import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 public abstract class MutableOfferView<M extends MutableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
+    public static final String BUYER_SECURITY_DEPOSIT_NEWS = "buyerSecurityDepositNews0.9.5";
     protected final Navigation navigation;
     private final Preferences preferences;
     private final Transitions transitions;
@@ -1042,7 +1044,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        advancedOptionsBox.getChildren().addAll(getBuyerSecurityDepositBox(), getTradeFeeFieldsBox());
+        // add new badge for this new feature for this release
+        // TODO: remove it with 0.9.6+
+        NewBadge securityDepositBoxWithNewBadge = new NewBadge(getBuyerSecurityDepositBox(),
+                BUYER_SECURITY_DEPOSIT_NEWS, preferences);
+
+        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTradeFeeFieldsBox());
 
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
