@@ -334,7 +334,6 @@ configure(project(':monitor')) {
     }
 
     dependencies {
-        compile project(':p2p')
         compile project(':core')
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
@@ -343,10 +342,6 @@ configure(project(':monitor')) {
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.2') {
-            exclude(module: 'slf4j-api')
-        }
 
         testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.2'
         testCompile 'org.junit.jupiter:junit-jupiter-params:5.3.2'
