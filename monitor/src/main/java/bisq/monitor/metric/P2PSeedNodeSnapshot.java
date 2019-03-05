@@ -237,7 +237,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
                 statistics.values().forEach((messageType, count) -> {
                     try {
                         report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(referenceValues.get(messageType).value() - ((Counter) count).value()));
+                                String.valueOf(((Counter) count).value() - referenceValues.get(messageType).value()));
                     } catch (MalformedURLException ignore) {
                         log.error("we should never got here");
                     }
