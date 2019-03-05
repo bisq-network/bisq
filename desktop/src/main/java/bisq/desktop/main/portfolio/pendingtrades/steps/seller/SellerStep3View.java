@@ -132,6 +132,7 @@ public class SellerStep3View extends TradeStepView {
                             break;
                     }
                 } else {
+                    log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
                     confirmButton.setDisable(true);
                     statusLabel.setText("");
                 }
