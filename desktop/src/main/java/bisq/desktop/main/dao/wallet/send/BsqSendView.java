@@ -353,7 +353,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     walletsManager.publishAndCommitBsqTx(txWithBtcFee, txType, new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            log.debug("Successfully sent tx with id " + txWithBtcFee.getHashAsString());
+                            log.debug("Successfully sent tx with id {}", txWithBtcFee.getHashAsString());
                         }
 
                         @Override

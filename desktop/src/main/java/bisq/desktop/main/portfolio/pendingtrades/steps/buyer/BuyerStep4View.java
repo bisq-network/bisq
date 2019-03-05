@@ -44,7 +44,6 @@ import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -113,7 +112,6 @@ public class BuyerStep4View extends TradeStepView {
 
     @Override
     public void deactivate() {
-        Log.traceCall();
         super.deactivate();
         //withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
         // withdrawButton.disableProperty().unbind();

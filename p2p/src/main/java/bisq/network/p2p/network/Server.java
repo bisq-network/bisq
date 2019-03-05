@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.network;
 
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import java.net.ServerSocket;
@@ -51,7 +50,6 @@ class Server implements Runnable {
                   ConnectionListener connectionListener,
                   NetworkProtoResolver networkProtoResolver) {
         this.networkProtoResolver = networkProtoResolver;
-        Log.traceCall();
         this.serverSocket = serverSocket;
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
@@ -59,7 +57,6 @@ class Server implements Runnable {
 
     @Override
     public void run() {
-        Log.traceCall();
         try {
             // Thread created by NetworkNode
             Thread.currentThread().setName("Server-" + serverSocket.getLocalPort());
@@ -77,8 +74,8 @@ class Server implements Runnable {
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"
                                 + "\nlocalPort/port=" + serverSocket.getLocalPort()
-                                + "/" + socket.getPort()
-                                + "\nconnection.uid=" + connection.getUid()
+                                + "/{}" +
+                                "\nconnection.uid={}", socket.getPort(), connection.getUid()
                                 + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                         if (!stopped)
@@ -98,7 +95,6 @@ class Server implements Runnable {
     }
 
     public void shutDown() {
-        Log.traceCall();
         if (!stopped) {
             stopped = true;
 

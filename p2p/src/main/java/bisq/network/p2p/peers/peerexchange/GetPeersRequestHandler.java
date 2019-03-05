@@ -26,7 +26,6 @@ import bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -84,8 +83,6 @@ class GetPeersRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void handle(GetPeersRequest getPeersRequest, final Connection connection) {
-        Log.traceCall("getPeersRequest=" + getPeersRequest + "\n\tconnection=" + connection + "\n\tthis=" + this);
-
         checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
                 "The peers address must have been already set at the moment");
         GetPeersResponse getPeersResponse = new GetPeersResponse(getPeersRequest.getNonce(),

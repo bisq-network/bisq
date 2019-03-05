@@ -114,7 +114,6 @@ public class Storage<T extends PersistableEnvelope> {
     // Save delayed and on a background thread
     public void queueUpForSave(T persistable) {
         if (persistable != null) {
-            log.trace("save " + fileName);
             checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
             fileManager.saveLater(persistable);
@@ -125,7 +124,6 @@ public class Storage<T extends PersistableEnvelope> {
 
     public void queueUpForSave(T persistable, long delayInMilli) {
         if (persistable != null) {
-            log.trace("save " + fileName);
             checkNotNull(storageFile, "storageFile = null. Call setupFileStorage before using read/write.");
 
             fileManager.saveLater(persistable, delayInMilli);

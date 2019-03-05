@@ -25,8 +25,6 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep4View;
 
 import bisq.core.locale.Res;
 
-import bisq.common.app.Log;
-
 import org.fxmisc.easybind.EasyBind;
 
 public class BuyerSubView extends TradeSubView {
@@ -73,7 +71,6 @@ public class BuyerSubView extends TradeSubView {
     @Override
     protected void onViewStateChanged(PendingTradesViewModel.State viewState) {
         if (viewState != null) {
-            Log.traceCall(viewState.toString());
             PendingTradesViewModel.BuyerState buyerState = (PendingTradesViewModel.BuyerState) viewState;
 
             step1.setDisabled();

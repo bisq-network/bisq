@@ -121,7 +121,7 @@ public class AlertManager {
             user.setDevelopersAlert(alert);
             boolean result = p2PService.addProtectedStorageEntry(alert, true);
             if (result) {
-                log.trace("Add alertMessage to network was successful. AlertMessage = " + alert);
+                log.trace("Add alertMessage to network was successful. AlertMessage={}", alert);
             }
 
         }
@@ -132,7 +132,7 @@ public class AlertManager {
         Alert alert = user.getDevelopersAlert();
         if (isKeyValid(privKeyString) && alert != null) {
             if (p2PService.removeData(alert, true))
-                log.trace("Remove alertMessage from network was successful. AlertMessage = " + alert);
+                log.trace("Remove alertMessage from network was successful. AlertMessage={}", alert);
 
             user.setDevelopersAlert(null);
             return true;

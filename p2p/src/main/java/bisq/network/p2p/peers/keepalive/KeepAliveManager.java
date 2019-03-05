@@ -29,7 +29,6 @@ import bisq.network.p2p.peers.keepalive.messages.Pong;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
@@ -77,7 +76,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     }
 
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(this);
         networkNode.removeConnectionListener(this);
@@ -103,7 +101,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof Ping) {
-            Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 Ping ping = (Ping) networkEnvelope;
 
@@ -115,7 +112,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
-                        log.trace("Pong sent successfully");
                     }
 
                     @Override
@@ -144,12 +140,10 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
         closeHandler(connection);
     }
 
@@ -164,7 +158,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
     @Override
     public void onAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopKeepAliveTimer();
         stopped = true;
@@ -173,7 +166,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         restart();
@@ -181,7 +173,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
     @Override
     public void onAwakeFromStandby() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
@@ -203,7 +194,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
 
     private void keepAlive() {
         if (!stopped) {
-            Log.traceCall();
             networkNode.getConfirmedConnections().stream()
                     .filter(connection -> connection instanceof OutboundConnection &&
                             connection.getStatistic().getLastActivityAge() > LAST_ACTIVITY_AGE_MS)

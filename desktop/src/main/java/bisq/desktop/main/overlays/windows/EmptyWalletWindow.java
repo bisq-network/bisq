@@ -238,7 +238,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                         },
                         (errorMessage) -> {
                             emptyWalletButton.setDisable(false);
-                            log.debug("wallet empty failed " + errorMessage);
+                            log.error("wallet empty failed {}", errorMessage);
                         });
             } catch (InsufficientMoneyException | AddressFormatException e1) {
                 e1.printStackTrace();

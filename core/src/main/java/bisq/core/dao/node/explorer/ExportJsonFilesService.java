@@ -161,7 +161,6 @@ public class ExportJsonFilesService implements DaoSetupService {
 
             Futures.addCallback(future, new FutureCallback<>() {
                 public void onSuccess(Void ignore) {
-                    log.trace("onSuccess");
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {

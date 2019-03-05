@@ -29,7 +29,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
@@ -88,7 +87,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     }
 
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(this);
         networkNode.removeConnectionListener(this);
@@ -134,7 +132,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
     }
 
     @Override
@@ -165,7 +162,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopPeriodicTimer();
         stopRetryTimer();
@@ -175,7 +171,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         restart();
@@ -183,7 +178,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
 
     @Override
     public void onAwakeFromStandby() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
@@ -198,7 +192,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetPeersRequest) {
-            Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -291,7 +284,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     }
 
     private void requestWithAvailablePeers() {
-        Log.traceCall();
         if (!stopped) {
             if (!peerManager.hasSufficientConnections()) {
                 // We create a new list of not connected candidates
@@ -310,7 +302,7 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 list.addAll(filteredSeedNodeAddresses);
 
                 log.debug("Number of peers in list for connectToMorePeers: {}", list.size());
-                log.trace("Filtered connectToMorePeers list: list=" + list);
+                log.trace("Filtered connectToMorePeers list: list={}", list);
                 if (!list.isEmpty()) {
                     // Don't shuffle as we want the seed nodes at the last entries
                     NodeAddress nextCandidate = list.get(0);
@@ -401,7 +393,6 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
     }
 
     private void closeHandler(Connection connection) {
-        Log.traceCall();
         Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
         if (peersNodeAddressOptional.isPresent()) {
             NodeAddress nodeAddress = peersNodeAddressOptional.get();
@@ -409,13 +400,10 @@ public class PeerExchangeManager implements MessageListener, ConnectionListener,
                 handlerMap.get(nodeAddress).cancel();
                 handlerMap.remove(nodeAddress);
             }
-        } else {
-            log.trace("closeHandler: nodeAddress not set in connection " + connection);
         }
     }
 
     private void closeAllHandlers() {
-        Log.traceCall();
         handlerMap.values().stream().forEach(PeerExchangeHandler::cancel);
         handlerMap.clear();
     }

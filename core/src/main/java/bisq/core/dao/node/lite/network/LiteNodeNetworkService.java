@@ -32,7 +32,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Tuple2;
 
@@ -125,7 +124,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @SuppressWarnings("Duplicates")
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         stopRetryTimer();
         networkNode.removeMessageListener(this);
@@ -165,12 +163,10 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
         closeHandler(connection);
 
         if (peerManager.isNodeBanned(closeConnectionReason, connection)) {
@@ -192,7 +188,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopRetryTimer();
         stopped = true;
@@ -202,7 +197,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         tryWithNewSeedNode(lastRequestedBlockHeight);
@@ -309,7 +303,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void tryWithNewSeedNode(int startBlockHeight) {
-        Log.traceCall();
         if (retryTimer == null) {
             retryCounter++;
             if (retryCounter <= MAX_RETRY) {
@@ -357,7 +350,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             NodeAddress nodeAddress = peersNodeAddressOptional.get();
             removeFromRequestBlocksHandlerMap(nodeAddress);
         } else {
-            log.trace("closeHandler: nodeAddress not set in connection " + connection);
+            log.trace("closeHandler: nodeAddress not set in connection {}", connection);
         }
     }
 

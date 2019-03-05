@@ -32,7 +32,6 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.inject.name.Named;
@@ -133,7 +132,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         stopRetryTimer();
         networkNode.removeMessageListener(this);
@@ -152,7 +150,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     public boolean requestPreliminaryData() {
-        Log.traceCall();
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
             Collections.shuffle(nodeAddresses);
@@ -174,7 +171,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     public void requestUpdateData() {
-        Log.traceCall();
         checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "nodeAddressOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         isPreliminaryDataRequest = false;
@@ -214,12 +210,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
         closeHandler(connection);
 
         if (peerManager.isNodeBanned(closeConnectionReason, connection) && connection.getPeersNodeAddressOptional().isPresent()) {
@@ -240,7 +234,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopRetryTimer();
         stopped = true;
@@ -249,7 +242,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         restart();
@@ -257,7 +249,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onAwakeFromStandby() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
@@ -272,7 +263,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataRequest) {
-            Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -324,7 +314,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager,
@@ -417,10 +406,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void restart() {
-        Log.traceCall();
         if (retryTimer == null) {
             retryTimer = UserThread.runAfter(() -> {
-                        log.trace("retryTimer called");
                         stopped = false;
 
                         stopRetryTimer();
@@ -485,7 +472,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 handlerMap.remove(nodeAddress);
             }
         } else {
-            log.trace("closeRequestDataHandler: nodeAddress not set in connection " + connection);
+            log.trace("closeRequestDataHandler: nodeAddress not set in connection {}", connection);
         }
     }
 

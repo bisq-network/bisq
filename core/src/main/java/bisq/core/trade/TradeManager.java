@@ -49,7 +49,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Clock;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
@@ -224,7 +223,6 @@ public class TradeManager implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        Log.traceCall();
         if (p2PService.isBootstrapped())
             initPendingTrades();
         else
@@ -252,8 +250,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void initPendingTrades() {
-        Log.traceCall();
-
         List<Trade> addTradeToFailedTradesList = new ArrayList<>();
         List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();

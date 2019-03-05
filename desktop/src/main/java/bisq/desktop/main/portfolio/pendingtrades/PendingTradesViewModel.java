@@ -37,7 +37,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Clock;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
 
 import org.bitcoinj.core.Coin;
 
@@ -345,7 +344,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTradeStateChanged(Trade.State tradeState) {
-        Log.traceCall(tradeState.toString());
         log.debug("UI tradeState={}, id={}",
                 tradeState,
                 trade != null ? trade.getShortId() : "trade is null");

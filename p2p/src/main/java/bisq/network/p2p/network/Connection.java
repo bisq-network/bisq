@@ -38,7 +38,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.Proto;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
-import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -213,8 +212,6 @@ public class Connection implements MessageListener {
             if (peersNodeAddress != null)
                 setPeersNodeAddress(peersNodeAddress);
 
-            log.trace("New connection created: " + this.toString());
-
             UserThread.execute(() -> connectionListener.onConnection(this));
         } catch (Throwable e) {
             handleException(e);
@@ -238,8 +235,6 @@ public class Connection implements MessageListener {
         if (!stopped) {
             if (noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
                 try {
-                    Log.traceCall();
-
                     // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
@@ -505,7 +500,6 @@ public class Connection implements MessageListener {
             if (closeConnectionReason.sendCloseMessage) {
                 new Thread(() -> {
                     Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
-                    Log.traceCall("sendCloseConnectionMessage");
                     try {
                         String reason = closeConnectionReason == CloseConnectionReason.RULE_VIOLATION ?
                                 sharedModel.getRuleViolation().name() : closeConnectionReason.name();
@@ -803,7 +797,7 @@ public class Connection implements MessageListener {
                         }
 
                         Connection connection = checkNotNull(sharedModel.connection, "connection must not be null");
-                        log.trace("InputHandler waiting for incoming network_messages.\n\tConnection=" + connection);
+                        log.trace("InputHandler waiting for incoming network_messages.\n\tConnection={}", connection);
 
                         // Throttle inbound network_messages
                         long now = System.currentTimeMillis();

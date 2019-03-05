@@ -44,7 +44,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -504,7 +503,6 @@ public abstract class Trade implements Tradable, Model {
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
-        Log.traceCall();
         processModel.onAllServicesInitialized(offer,
                 tradeManager,
                 openOfferManager,
@@ -639,7 +637,6 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setDisputeState(DisputeState disputeState) {
-        Log.traceCall("disputeState=" + disputeState + "\n\ttrade=" + this);
         boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);

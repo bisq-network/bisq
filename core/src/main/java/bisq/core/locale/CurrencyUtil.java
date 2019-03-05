@@ -383,7 +383,7 @@ public class CurrencyUtil {
         try {
             return Currency.getInstance(currencyCode).getDisplayName();
         } catch (Throwable t) {
-            log.debug("No currency name available " + t.getMessage());
+            log.debug("No currency name available {}", t.getMessage());
             return currencyCode;
         }
     }
