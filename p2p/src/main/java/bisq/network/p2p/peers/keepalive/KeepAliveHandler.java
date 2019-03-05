@@ -26,7 +26,6 @@ import bisq.network.p2p.peers.keepalive.messages.Pong;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -100,7 +99,6 @@ class KeepAliveHandler implements MessageListener {
     }
 
     private void sendPing(Connection connection) {
-        Log.traceCall("connection=" + connection + " / this=" + this);
         if (!stopped) {
             Ping ping = new Ping(nonce, connection.getStatistic().roundTripTimeProperty().get());
             sendTs = System.currentTimeMillis();
@@ -146,7 +144,6 @@ class KeepAliveHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof Pong) {
-            Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 Pong pong = (Pong) networkEnvelope;
                 if (pong.getRequestNonce() == nonce) {

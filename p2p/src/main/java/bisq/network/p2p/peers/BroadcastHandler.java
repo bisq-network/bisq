@@ -24,7 +24,6 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -117,8 +116,6 @@ public class BroadcastHandler implements PeerManager.Listener {
         this.resultHandler = resultHandler;
         this.listener = listener;
 
-        Log.traceCall("Sender=" + sender + "\n\t" +
-                "Message=" + Utilities.toTruncatedString(message));
         Set<Connection> connectedPeersSet = networkNode.getConfirmedConnections()
                 .stream()
                 .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))

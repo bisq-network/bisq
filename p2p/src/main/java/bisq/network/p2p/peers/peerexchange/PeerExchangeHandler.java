@@ -28,7 +28,6 @@ import bisq.network.p2p.peers.peerexchange.messages.GetPeersResponse;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -88,7 +87,6 @@ class PeerExchangeHandler implements MessageListener {
     }
 
     public void cancel() {
-        Log.traceCall();
         cleanup();
     }
 
@@ -164,7 +162,6 @@ class PeerExchangeHandler implements MessageListener {
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetPeersResponse) {
             if (!stopped) {
-                Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
                 GetPeersResponse getPeersResponse = (GetPeersResponse) networkEnvelope;
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -192,7 +189,6 @@ class PeerExchangeHandler implements MessageListener {
 
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, CloseConnectionReason closeConnectionReason, NodeAddress nodeAddress) {
-        Log.traceCall();
         cleanup();
        /* if (connection == null)
             peerManager.shutDownConnection(nodeAddress, closeConnectionReason);
@@ -204,7 +200,6 @@ class PeerExchangeHandler implements MessageListener {
     }
 
     private void cleanup() {
-        Log.traceCall();
         stopped = true;
         if (connection != null)
             connection.removeMessageListener(this);

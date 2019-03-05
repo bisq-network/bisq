@@ -20,7 +20,6 @@ package bisq.network.p2p.network;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
@@ -258,7 +257,6 @@ public abstract class NetworkNode implements MessageListener {
 
 
     public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope networkEnvelope) {
-        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(networkEnvelope) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
@@ -307,7 +305,6 @@ public abstract class NetworkNode implements MessageListener {
 
 
     public void shutDown(Runnable shutDownCompleteHandler) {
-        Log.traceCall();
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             if (server != null) {

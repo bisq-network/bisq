@@ -65,7 +65,6 @@ public class DummySeedNode {
     private Level logLevel = Level.WARN;
 
     public DummySeedNode(String defaultUserDataDir) {
-        Log.traceCall("defaultUserDataDir=" + defaultUserDataDir);
         this.defaultUserDataDir = defaultUserDataDir;
     }
 

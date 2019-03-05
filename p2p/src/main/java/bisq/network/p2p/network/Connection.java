@@ -38,7 +38,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.Proto;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
-import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -238,8 +237,6 @@ public class Connection implements MessageListener {
         if (!stopped) {
             if (noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
                 try {
-                    Log.traceCall();
-
                     // Throttle outbound network_messages
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
@@ -505,7 +502,6 @@ public class Connection implements MessageListener {
             if (closeConnectionReason.sendCloseMessage) {
                 new Thread(() -> {
                     Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
-                    Log.traceCall("sendCloseConnectionMessage");
                     try {
                         String reason = closeConnectionReason == CloseConnectionReason.RULE_VIOLATION ?
                                 sharedModel.getRuleViolation().name() : closeConnectionReason.name();
