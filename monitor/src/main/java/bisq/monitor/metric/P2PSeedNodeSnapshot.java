@@ -17,31 +17,15 @@
 
 package bisq.monitor.metric;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import org.jetbrains.annotations.NotNull;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
-
-import bisq.common.proto.network.NetworkEnvelope;
-import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
 import bisq.monitor.Metric;
 import bisq.monitor.Monitor;
 import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.ThreadGate;
+
+import bisq.core.proto.network.CoreNetworkProtoResolver;
+
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -56,16 +40,38 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
+import bisq.common.proto.network.NetworkEnvelope;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
+
 import java.net.MalformedURLException;
 
+import java.io.File;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Contacts a list of hosts and asks them for all the data excluding persisted messages. The
  * answers are then compiled into buckets of message types. Based on these
  * buckets, the Metric reports (for each host) the message types observed and
  * their number.
- * 
+ *
  * @author Florian Reimair
  *
  */
@@ -191,7 +197,6 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
                             @Override
                             public void onSuccess(Connection connection) {
                                 connection.addMessageListener(P2PSeedNodeSnapshot.this);
-                                log.debug("Send PreliminaryDataRequest to " + connection + " succeeded.");
                             }
 
                             @Override

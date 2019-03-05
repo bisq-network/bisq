@@ -115,7 +115,7 @@ public class Res {
                     .replace("Bitcoin", baseCurrencyName)
                     .replace("bitcoin", baseCurrencyNameLowerCase);
         } catch (MissingResourceException e) {
-            log.warn("Missing resource for key: " + key);
+            log.warn("Missing resource for key: {}", key);
             e.printStackTrace();
             if (DevEnv.isDevMode())
                 UserThread.runAfter(() -> {

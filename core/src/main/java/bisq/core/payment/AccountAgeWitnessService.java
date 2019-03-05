@@ -329,7 +329,7 @@ public class AccountAgeWitnessService {
 
         // Check if the peers trade limit is not less than the trade amount
         if (!verifyPeersTradeLimit(trade, peersWitness, peersCurrentDate, errorMessageHandler)) {
-            log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload " + peersPaymentAccountPayload);
+            log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload {}", peersPaymentAccountPayload);
             return false;
         }
         // Check if the signature is correct

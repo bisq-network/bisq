@@ -345,7 +345,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 candidates.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
                 Connection connection = candidates.remove(0);
                 log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection: {}", candidates.size(), connection);
-                log.debug("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
+                log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
                 if (!connection.isStopped())
                     connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
                 return true;
@@ -370,7 +370,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                     // because he needs longer for the HS publishing
                     if (!connection.hasPeersNodeAddress() && !connection.isStopped()) {
                         log.debug("We close the connection as the peer address is still unknown.\n\t" +
-                                "connection=" + connection);
+                                "connection={}", connection);
                         connection.shutDown(CloseConnectionReason.UNKNOWN_PEER_ADDRESS);
                     }
                 }, REMOVE_ANONYMOUS_PEER_SEC));
@@ -386,7 +386,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 seedNodes.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
                 log.debug("Number of seed node connections to disconnect. Current size=" + seedNodes.size());
                 Connection connection = seedNodes.get(0);
-                log.debug("We are going to shut down the oldest connection.\n\tconnection=" + connection.toString());
+                log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
                 connection.shutDown(CloseConnectionReason.TOO_MANY_SEED_NODES_CONNECTED,
                         () -> UserThread.runAfter(this::removeSuperfluousSeedNodes, 200, TimeUnit.MILLISECONDS));
             }

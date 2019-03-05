@@ -257,7 +257,7 @@ public class FilterManager {
 
             boolean result = p2PService.addProtectedStorageEntry(filter, true);
             if (result)
-                log.trace("Add filter to network was successful. FilterMessage = " + filter);
+                log.trace("Add filter to network was successful. FilterMessage = {}", filter);
 
         }
         return isKeyValid;
@@ -269,7 +269,7 @@ public class FilterManager {
             if (filter == null) {
                 log.warn("Developers filter is null");
             } else if (p2PService.removeData(filter, true)) {
-                log.trace("Remove filter from network was successful. FilterMessage = " + filter);
+                log.trace("Remove filter from network was successful. FilterMessage = {}", filter);
                 user.setDevelopersFilter(null);
             } else {
                 log.warn("Filter remove failed");

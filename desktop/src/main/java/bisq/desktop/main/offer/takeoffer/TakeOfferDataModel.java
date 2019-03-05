@@ -488,7 +488,7 @@ class TakeOfferDataModel extends OfferDataModel {
                 totalToPayAsCoin.set(feeAndSecDeposit);
 
             updateBalance();
-            log.debug("totalToPayAsCoin " + totalToPayAsCoin.get().toFriendlyString());
+            log.debug("totalToPayAsCoin {}", totalToPayAsCoin.get().toFriendlyString());
         }
     }
 

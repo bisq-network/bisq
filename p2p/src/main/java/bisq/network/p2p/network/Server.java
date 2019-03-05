@@ -74,8 +74,8 @@ class Server implements Runnable {
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"
                                 + "\nlocalPort/port=" + serverSocket.getLocalPort()
-                                + "/" + socket.getPort()
-                                + "\nconnection.uid=" + connection.getUid()
+                                + "/{}" +
+                                "\nconnection.uid={}", socket.getPort(), connection.getUid()
                                 + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
                         if (!stopped)

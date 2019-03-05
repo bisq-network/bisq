@@ -133,7 +133,6 @@ public class FileManager<T extends PersistableEnvelope> {
     }
 
     public synchronized void removeFile(String fileName) {
-        log.debug("removeFile" + fileName);
         File file = new File(dir, fileName);
         boolean result = file.delete();
         if (!result)

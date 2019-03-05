@@ -380,7 +380,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyOfferState(Offer.State state) {
-        log.debug("applyOfferState state = " + state);
         offerWarning.set(null);
 
         // We have 2 situations handled here:
@@ -459,8 +458,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     private void applyTradeState(Trade.State tradeState) {
-        log.debug("applyTradeState state = " + tradeState);
-
         if (trade.isDepositPublished()) {
             if (trade.getDepositTx() != null) {
                 if (takeOfferSucceededHandler != null)
