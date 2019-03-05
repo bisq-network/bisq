@@ -308,7 +308,7 @@ public class BisqInstaller {
                         .loadUrl(installerFileDescriptor.getLoadUrl().concat(suffix))
                         .build());
             } else {
-                log.debug("We have already a file with the key: " + key.getId());
+                log.debug("We have already a file with the key: {}", key.getId());
             }
         }
         return result;

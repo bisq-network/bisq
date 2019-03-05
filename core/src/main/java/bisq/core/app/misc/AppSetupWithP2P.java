@@ -77,7 +77,6 @@ public class AppSetupWithP2P extends AppSetup {
         // we apply at startup the reading of persisted data but don't want to get it triggered in the constructor
         persistedDataHosts.forEach(e -> {
             try {
-                log.info("call readPersisted at " + e.getClass().getSimpleName());
                 e.readPersisted();
             } catch (Throwable e1) {
                 log.error("readPersisted error", e1);
@@ -120,7 +119,7 @@ public class AppSetupWithP2P extends AppSetup {
                 if (connection.getPeerType() == Connection.PeerType.SEED_NODE &&
                         closeConnectionReason == CloseConnectionReason.RULE_VIOLATION) {
                     log.warn("RULE_VIOLATION onDisconnect closeConnectionReason=" + closeConnectionReason);
-                    log.warn("RULE_VIOLATION onDisconnect connection=" + connection);
+                    log.warn("RULE_VIOLATION onDisconnect connection={}", connection);
                 }
             }
 

@@ -594,7 +594,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 return false;
             }
         } else {
-            log.trace("Sequence number is valid (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber);
             return true;
         }
     }
@@ -624,7 +623,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 return false;
             }
         } else {
-            log.trace("Sequence number has increased (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber + " / hashOfData=" + hashOfData.toString());
             return true;
         }
     }
@@ -768,7 +766,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             });
             sb.append("\n------------------------------------------------------------\n");
             log.debug(sb.toString());
-            log.debug("Data set " + info + " operation: size=" + map.values().size());
+            //log.debug("Data set " + info + " operation: size=" + map.values().size());
         }
     }
 

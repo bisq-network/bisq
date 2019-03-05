@@ -797,7 +797,7 @@ public class Connection implements MessageListener {
                         }
 
                         Connection connection = checkNotNull(sharedModel.connection, "connection must not be null");
-                        log.trace("InputHandler waiting for incoming network_messages.\n\tConnection=" + connection);
+                        log.trace("InputHandler waiting for incoming network_messages.\n\tConnection={}", connection);
 
                         // Throttle inbound network_messages
                         long now = System.currentTimeMillis();

@@ -177,14 +177,14 @@ public class TradeWalletService {
                                              boolean doBroadcast,
                                              @Nullable TxBroadcaster.Callback callback)
             throws InsufficientMoneyException, AddressFormatException {
-        log.debug("fundingAddress " + fundingAddress.toString());
-        log.debug("reservedForTradeAddress " + reservedForTradeAddress.toString());
-        log.debug("changeAddress " + changeAddress.toString());
-        log.info("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
-        log.debug("useSavingsWallet " + useSavingsWallet);
-        log.info("tradingFee " + tradingFee.toPlainString());
-        log.info("txFee " + txFee.toPlainString());
-        log.debug("feeReceiverAddresses " + feeReceiverAddresses);
+        log.debug("fundingAddress {}", fundingAddress.toString());
+        log.debug("reservedForTradeAddress {}", reservedForTradeAddress.toString());
+        log.debug("changeAddress {}", changeAddress.toString());
+        log.info("reservedFundsForOffer {}", reservedFundsForOffer.toPlainString());
+        log.debug("useSavingsWallet {}", useSavingsWallet);
+        log.info("tradingFee {}", tradingFee.toPlainString());
+        log.info("txFee {}", txFee.toPlainString());
+        log.debug("feeReceiverAddresses {}", feeReceiverAddresses);
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
@@ -240,12 +240,12 @@ public class TradeWalletService {
             TransactionVerificationException, WalletException,
             InsufficientMoneyException, AddressFormatException {
 
-        log.debug("preparedBsqTx " + preparedBsqTx.toString());
-        log.debug("fundingAddress " + fundingAddress.toString());
-        log.debug("changeAddress " + changeAddress.toString());
-        log.debug("reservedFundsForOffer " + reservedFundsForOffer.toPlainString());
-        log.debug("useSavingsWallet " + useSavingsWallet);
-        log.debug("txFee " + txFee.toPlainString());
+        log.debug("preparedBsqTx {}", preparedBsqTx.toString());
+        log.debug("fundingAddress {}", fundingAddress.toString());
+        log.debug("changeAddress {}", changeAddress.toString());
+        log.debug("reservedFundsForOffer {}", reservedFundsForOffer.toPlainString());
+        log.debug("useSavingsWallet {}", useSavingsWallet);
+        log.debug("txFee {}", txFee.toPlainString());
 
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
@@ -337,9 +337,9 @@ public class TradeWalletService {
     public InputsAndChangeOutput takerCreatesDepositsTxInputs(Transaction takeOfferFeeTx, Coin inputAmount, Coin txFee, Address takersAddress) throws
             TransactionVerificationException {
         log.debug("takerCreatesDepositsTxInputs called");
-        log.debug("inputAmount " + inputAmount.toFriendlyString());
-        log.debug("txFee " + txFee.toFriendlyString());
-        log.debug("takersAddress " + takersAddress.toString());
+        log.debug("inputAmount {}", inputAmount.toFriendlyString());
+        log.debug("txFee {}", txFee.toFriendlyString());
+        log.debug("takersAddress {}", takersAddress.toString());
 
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
@@ -430,17 +430,17 @@ public class TradeWalletService {
                                                                          byte[] arbitratorPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         log.debug("makerCreatesAndSignsDepositTx called");
-        log.debug("makerIsBuyer " + makerIsBuyer);
-        log.debug("makerInputAmount " + makerInputAmount.toFriendlyString());
-        log.debug("msOutputAmount " + msOutputAmount.toFriendlyString());
-        log.debug("takerRawInputs " + takerRawTransactionInputs.toString());
-        log.debug("takerChangeOutputValue " + takerChangeOutputValue);
-        log.debug("takerChangeAddressString " + takerChangeAddressString);
-        log.debug("makerAddress " + makerAddress);
-        log.debug("makerChangeAddress " + makerChangeAddress);
-        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("makerIsBuyer {}", makerIsBuyer);
+        log.debug("makerInputAmount {}", makerInputAmount.toFriendlyString());
+        log.debug("msOutputAmount {}", msOutputAmount.toFriendlyString());
+        log.debug("takerRawInputs {}", takerRawTransactionInputs.toString());
+        log.debug("takerChangeOutputValue {}", takerChangeOutputValue);
+        log.debug("takerChangeAddressString {}", takerChangeAddressString);
+        log.debug("makerAddress {}", makerAddress);
+        log.debug("makerChangeAddress {}", makerChangeAddress);
+        log.debug("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!takerRawTransactionInputs.isEmpty());
 
@@ -574,13 +574,13 @@ public class TradeWalletService {
         Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
 
         log.debug("signAndPublishDepositTx called");
-        log.debug("takerIsSeller " + takerIsSeller);
-        log.debug("makersDepositTx " + makersDepositTx.toString());
-        log.debug("buyerConnectedOutputsForAllInputs " + buyerInputs.toString());
-        log.debug("sellerConnectedOutputsForAllInputs " + sellerInputs.toString());
-        log.debug("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.debug("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.debug("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("takerIsSeller {}", takerIsSeller);
+        log.debug("makersDepositTx {}", makersDepositTx.toString());
+        log.debug("buyerConnectedOutputsForAllInputs {}", buyerInputs.toString());
+        log.debug("sellerConnectedOutputsForAllInputs {}", sellerInputs.toString());
+        log.debug("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.debug("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.debug("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
@@ -618,9 +618,9 @@ public class TradeWalletService {
         // Check if OP_RETURN output with contract hash matches the one from the maker
         TransactionOutput contractHashOutput = new TransactionOutput(params, makersDepositTx, Coin.ZERO,
                 ScriptBuilder.createOpReturnScript(contractHash).getProgram());
-        log.debug("contractHashOutput " + contractHashOutput);
+        log.debug("contractHashOutput {}", contractHashOutput);
         TransactionOutput makersContractHashOutput = makersDepositTx.getOutputs().get(1);
-        log.debug("makersContractHashOutput " + makersContractHashOutput);
+        log.debug("makersContractHashOutput {}", makersContractHashOutput);
         if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey()))
             throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching takers version.");
 
@@ -675,11 +675,11 @@ public class TradeWalletService {
                                      byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
         log.trace("sellerSignsPayoutTx called");
-        log.trace("depositTx " + depositTx.toString());
-        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
-        log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
+        log.trace("depositTx {}", depositTx.toString());
+        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
+        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
         log.info("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
         log.info("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
@@ -737,17 +737,17 @@ public class TradeWalletService {
                                                        byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException {
         log.trace("buyerSignsAndFinalizesPayoutTx called");
-        log.trace("depositTx " + depositTx.toString());
-        log.trace("buyerSignature r " + ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
-        log.trace("buyerSignature s " + ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
-        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerPayoutAddressString " + buyerPayoutAddressString);
-        log.trace("sellerPayoutAddressString " + sellerPayoutAddressString);
+        log.trace("depositTx {}", depositTx.toString());
+        log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
+        log.trace("buyerSignature s {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
+        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
+        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         Transaction payoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,
@@ -817,15 +817,15 @@ public class TradeWalletService {
             throws AddressFormatException, TransactionVerificationException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
         log.trace("signDisputedPayoutTx called");
-        log.trace("depositTx " + depositTx.toString());
-        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressString " + buyerAddressString);
-        log.trace("sellerAddressString " + sellerAddressString);
+        log.trace("depositTx {}", depositTx.toString());
+        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerAddressString {}", buyerAddressString);
+        log.trace("sellerAddressString {}", sellerAddressString);
         log.trace("arbitratorKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         // Our MS is index 0
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
@@ -884,17 +884,17 @@ public class TradeWalletService {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
 
         log.trace("signAndFinalizeDisputedPayoutTx called");
-        log.trace("depositTx " + depositTx);
-        log.trace("arbitratorSignature r " + ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).r.toString());
-        log.trace("arbitratorSignature s " + ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).s.toString());
-        log.trace("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressString " + buyerAddressString);
-        log.trace("sellerAddressString " + sellerAddressString);
+        log.trace("depositTx {}", depositTx);
+        log.trace("arbitratorSignature r {}", ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).r.toString());
+        log.trace("arbitratorSignature s {}", ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).s.toString());
+        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerAddressString {}", buyerAddressString);
+        log.trace("sellerAddressString {}", sellerAddressString);
         log.trace("tradersMultiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey " + ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey " + ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey " + ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
 
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
@@ -953,20 +953,20 @@ public class TradeWalletService {
                                                        TxBroadcaster.Callback callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
         log.info("signAndPublishPayoutTx called");
-        log.info("depositTxHex " + depositTxHex);
-        log.info("buyerPayoutAmount " + buyerPayoutAmount.toFriendlyString());
-        log.info("sellerPayoutAmount " + sellerPayoutAmount.toFriendlyString());
-        log.info("arbitratorPayoutAmount " + arbitratorPayoutAmount.toFriendlyString());
-        log.info("buyerAddressString " + buyerAddressString);
-        log.info("sellerAddressString " + sellerAddressString);
-        log.info("arbitratorAddressString " + arbitratorAddressString);
+        log.info("depositTxHex {}", depositTxHex);
+        log.info("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.info("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.info("arbitratorPayoutAmount {}", arbitratorPayoutAmount.toFriendlyString());
+        log.info("buyerAddressString {}", buyerAddressString);
+        log.info("sellerAddressString {}", sellerAddressString);
+        log.info("arbitratorAddressString {}", arbitratorAddressString);
         log.info("buyerPrivateKeyAsHex (not displayed for security reasons)");
         log.info("sellerPrivateKeyAsHex (not displayed for security reasons)");
         log.info("arbitratorPrivateKeyAsHex (not displayed for security reasons)");
-        log.info("buyerPubKeyAsHex " + buyerPubKeyAsHex);
-        log.info("sellerPubKeyAsHex " + sellerPubKeyAsHex);
-        log.info("arbitratorPubKeyAsHex " + arbitratorPubKeyAsHex);
-        log.info("P2SHMultiSigOutputScript " + P2SHMultiSigOutputScript);
+        log.info("buyerPubKeyAsHex {}", buyerPubKeyAsHex);
+        log.info("sellerPubKeyAsHex {}", sellerPubKeyAsHex);
+        log.info("arbitratorPubKeyAsHex {}", arbitratorPubKeyAsHex);
+        log.info("P2SHMultiSigOutputScript {}", P2SHMultiSigOutputScript);
 
         checkNotNull((buyerPrivateKeyAsHex != null || sellerPrivateKeyAsHex != null), "either buyerPrivateKeyAsHex or sellerPrivateKeyAsHex must not be null");
 
