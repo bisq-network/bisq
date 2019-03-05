@@ -1102,13 +1102,15 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Tuple3<HBox, InputTextField, Label> tuple = getEditableValueBox(
                 Res.get("createOffer.securityDeposit.prompt"));
         buyerSecurityDepositInputTextField = tuple.second;
-        Label buyerSecurityDepositBtcLabel = tuple.third;
+        Label buyerSecurityDepositPercentageLabel = tuple.third;
+        // getEditableValueBox delivers BTC, so we overwrite it with %
+        buyerSecurityDepositPercentageLabel.setText("%");
 
         VBox depositBox = getTradeInputBox(tuple.first, Res.get("createOffer.setDeposit")).second;
         depositBox.setMaxWidth(310);
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
-        editOfferElements.add(buyerSecurityDepositBtcLabel);
+        editOfferElements.add(buyerSecurityDepositPercentageLabel);
 
         return depositBox;
     }

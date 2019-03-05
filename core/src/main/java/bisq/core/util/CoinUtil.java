@@ -41,4 +41,24 @@ public class CoinUtil {
     public static double getFeePerByte(Coin miningFee, int txSize) {
         return MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2);
     }
+
+    /**
+     * @param value Btc amount to be converted to percent value. E.g. 0.01 BTC is 1% (of 1 BTC)
+     * @return The percentage value as double (e.g. 1% is 0.01)
+     */
+    public static double getAsPercentPerBtc(Coin value) {
+        double asDouble = (double) value.value;
+        double btcAsDouble = (double) Coin.COIN.value;
+        return MathUtils.roundDouble(asDouble / btcAsDouble, 4);
+    }
+
+    /**
+     * @param percent       The percentage value as double (e.g. 1% is 0.01)
+     * @param amount        The amount as Coin for the percentage calculation
+     * @return The percentage as Coin (e.g. 1% of 1 BTC is 0.01 BTC)
+     */
+    public static Coin getPercentOfAmountAsCoin(double percent, Coin amount) {
+        double amountAsDouble = (double) amount.value;
+        return Coin.valueOf(Math.round(percent * amountAsDouble));
+    }
 }
