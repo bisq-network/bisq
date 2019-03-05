@@ -18,6 +18,7 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.NewBadge;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -34,6 +35,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.validation.AltCoinAddressValidator;
+import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -45,7 +47,12 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import javafx.collections.FXCollections;
 
@@ -55,14 +62,17 @@ import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class AssetsForm extends PaymentMethodForm {
+    public static final String INSTANT_TRADE_NEWS = "instantTradeNews0.9.5";
     private final AssetAccount assetAccount;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AssetService assetService;
     private final FilterManager filterManager;
+    private final Preferences preferences;
 
     private InputTextField addressInputTextField;
     private CheckBox tradeInstantCheckBox;
@@ -85,12 +95,14 @@ public class AssetsForm extends PaymentMethodForm {
                       int gridRow,
                       BSFormatter formatter,
                       AssetService assetService,
-                      FilterManager filterManager) {
+                      FilterManager filterManager,
+                      Preferences preferences) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
         this.filterManager = filterManager;
+        this.preferences = preferences;
 
         tradeInstant = paymentAccount instanceof InstantCryptoCurrencyAccount;
     }
@@ -102,7 +114,7 @@ public class AssetsForm extends PaymentMethodForm {
         addTradeCurrencyComboBox();
         currencyComboBox.setPrefWidth(250);
 
-        tradeInstantCheckBox = FormBuilder.addLabelCheckBox(gridPane, ++gridRow,
+        tradeInstantCheckBox = addLabelCheckBox(gridPane, ++gridRow,
                 Res.get("payment.altcoin.tradeInstantCheckbox"), 10);
         tradeInstantCheckBox.setSelected(tradeInstant);
         tradeInstantCheckBox.setOnAction(e -> {
@@ -110,6 +122,20 @@ public class AssetsForm extends PaymentMethodForm {
             if (tradeInstant)
                 new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
         });
+
+        // add new badge for this new feature for this release
+        // TODO: remove it with 0.9.6+
+        gridPane.getChildren().remove(tradeInstantCheckBox);
+        tradeInstantCheckBox.setPadding(new Insets(0, 40, 0, 0));
+
+        NewBadge instantTradeNewsBadge = new NewBadge(tradeInstantCheckBox, INSTANT_TRADE_NEWS, preferences);
+        instantTradeNewsBadge.setAlignment(Pos.CENTER_LEFT);
+        instantTradeNewsBadge.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+        GridPane.setRowIndex(instantTradeNewsBadge, gridRow);
+        GridPane.setHgrow(instantTradeNewsBadge, Priority.NEVER);
+        GridPane.setMargin(instantTradeNewsBadge, new Insets(10, 0, 0, 0));
+        gridPane.getChildren().add(instantTradeNewsBadge);
 
         addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));
