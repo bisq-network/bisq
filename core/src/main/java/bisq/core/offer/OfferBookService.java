@@ -134,7 +134,6 @@ public class OfferBookService {
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload(), true);
         if (result) {
-            log.trace("Add offer to network was successful. OfferPayload ID = " + offer.getId());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Add offer failed");
@@ -144,7 +143,6 @@ public class OfferBookService {
     public void refreshTTL(OfferPayload offerPayload, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         boolean result = p2PService.refreshTTL(offerPayload, true);
         if (result) {
-            log.trace("Refresh TTL was successful. OfferPayload ID = " + offerPayload.getId());
             resultHandler.handleResult();
         } else {
             errorMessageHandler.handleErrorMessage("Refresh TTL failed.");
@@ -161,7 +159,6 @@ public class OfferBookService {
 
     public void removeOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
         if (p2PService.removeData(offerPayload, true)) {
-            log.trace("Remove offer from network was successful. OfferPayload ID = " + offerPayload.getId());
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {

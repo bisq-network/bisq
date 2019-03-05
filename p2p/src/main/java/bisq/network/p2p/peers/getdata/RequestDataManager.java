@@ -408,7 +408,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private void restart() {
         if (retryTimer == null) {
             retryTimer = UserThread.runAfter(() -> {
-                        log.trace("retryTimer called");
                         stopped = false;
 
                         stopRetryTimer();
@@ -473,7 +472,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 handlerMap.remove(nodeAddress);
             }
         } else {
-            log.trace("closeRequestDataHandler: nodeAddress not set in connection " + connection);
+            log.trace("closeRequestDataHandler: nodeAddress not set in connection {}", connection);
         }
     }
 

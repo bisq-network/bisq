@@ -112,7 +112,6 @@ public class KeepAliveManager implements MessageListener, ConnectionListener, Pe
                 Futures.addCallback(future, new FutureCallback<Connection>() {
                     @Override
                     public void onSuccess(Connection connection) {
-                        log.trace("Pong sent successfully");
                     }
 
                     @Override

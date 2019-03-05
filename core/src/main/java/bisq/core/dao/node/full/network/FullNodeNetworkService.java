@@ -145,7 +145,6 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                                 @Override
                                 public void onComplete() {
                                     getBlocksRequestHandlers.remove(uid);
-                                    log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
                                 }
 
                                 @Override

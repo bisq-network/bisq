@@ -212,8 +212,6 @@ public class Connection implements MessageListener {
             if (peersNodeAddress != null)
                 setPeersNodeAddress(peersNodeAddress);
 
-            log.trace("New connection created: " + this.toString());
-
             UserThread.execute(() -> connectionListener.onConnection(this));
         } catch (Throwable e) {
             handleException(e);

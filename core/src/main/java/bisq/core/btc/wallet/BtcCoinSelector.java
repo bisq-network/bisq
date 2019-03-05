@@ -64,7 +64,6 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
             Address address = WalletService.getAddressFromOutput(output);
             boolean containsAddress = addresses.contains(address);
             if (!containsAddress)
-                log.trace("addresses not containing address " + addresses + " / " + address);
             return containsAddress;
         } else {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");

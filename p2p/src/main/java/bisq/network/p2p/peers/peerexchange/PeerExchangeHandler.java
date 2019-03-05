@@ -129,7 +129,6 @@ class PeerExchangeHandler implements MessageListener {
 
                             PeerExchangeHandler.this.connection = connection;
                             connection.addMessageListener(PeerExchangeHandler.this);
-                            log.trace("Send " + getPeersRequest + " to " + nodeAddress + " succeeded.");
                         } else {
                             log.trace("We have stopped that handler already. We ignore that sendGetPeersRequest.onSuccess call.");
                         }

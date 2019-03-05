@@ -94,7 +94,6 @@ public class MakerCreateAndSignContract extends TradeTask {
                     taker.getMultiSigPubKey()
             );
             String contractAsJson = Utilities.objectToJson(contract);
-            log.trace("Contract as json:{}", contractAsJson);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
 
             trade.setContract(contract);

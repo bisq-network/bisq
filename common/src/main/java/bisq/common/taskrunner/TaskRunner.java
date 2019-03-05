@@ -82,7 +82,6 @@ public class TaskRunner<T extends Model> {
     }
 
     void handleComplete() {
-        log.trace("Task completed: " + currentTask.getSimpleName());
         sharedModel.persist();
         next();
     }

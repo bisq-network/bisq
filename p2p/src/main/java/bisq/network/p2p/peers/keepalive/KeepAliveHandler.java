@@ -107,7 +107,6 @@ class KeepAliveHandler implements MessageListener {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.trace("Send " + ping + " to " + connection + " succeeded.");
                         KeepAliveHandler.this.connection = connection;
                         connection.addMessageListener(KeepAliveHandler.this);
                     } else {
@@ -148,7 +147,6 @@ class KeepAliveHandler implements MessageListener {
                 Pong pong = (Pong) networkEnvelope;
                 if (pong.getRequestNonce() == nonce) {
                     int roundTripTime = (int) (System.currentTimeMillis() - sendTs);
-                    log.trace("roundTripTime=" + roundTripTime + "\n\tconnection=" + connection);
                     connection.getStatistic().setRoundTripTime(roundTripTime);
                     cleanup();
                     listener.onComplete();

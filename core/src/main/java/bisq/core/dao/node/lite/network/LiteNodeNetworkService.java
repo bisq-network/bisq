@@ -350,7 +350,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             NodeAddress nodeAddress = peersNodeAddressOptional.get();
             removeFromRequestBlocksHandlerMap(nodeAddress);
         } else {
-            log.trace("closeHandler: nodeAddress not set in connection " + connection);
+            log.trace("closeHandler: nodeAddress not set in connection {}", connection);
         }
     }
 
