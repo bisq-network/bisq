@@ -28,6 +28,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.NewBadge;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -122,6 +123,7 @@ import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 public abstract class MutableOfferView<M extends MutableOfferViewModel> extends ActivatableViewAndModel<AnchorPane, M> {
+    public static final String BUYER_SECURITY_DEPOSIT_NEWS = "buyerSecurityDepositNews0.9.5";
     protected final Navigation navigation;
     private final Preferences preferences;
     private final Transitions transitions;
@@ -136,8 +138,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private BusyAnimation waitingForFundsSpinner;
     private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
     private Button priceTypeToggleButton;
-    private InputTextField buyerSecurityDepositInputTextField, fixedPriceTextField, marketBasedPriceTextField;
-    protected InputTextField amountTextField, minAmountTextField, volumeTextField;
+    private InputTextField fixedPriceTextField;
+    private InputTextField marketBasedPriceTextField;
+    protected InputTextField amountTextField, minAmountTextField, volumeTextField, buyerSecurityDepositInputTextField;
     private TextField currencyTextField;
     private AddressTextField addressTextField;
     private BalanceTextField balanceTextField;
@@ -161,7 +164,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
             tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
-            marketPriceMarginListener, volumeListener;
+            marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
@@ -169,7 +172,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
     private boolean clearXchangeWarningDisplayed, isActivated;
-    private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField;
+    private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
+            buyerSecurityDepositInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
     private Text xIcon, fakeXIcon;
 
@@ -761,6 +765,15 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             }
         };
 
+        buyerSecurityDepositInBTCListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals("")) {
+                Label depositInBTCInfo = createPopoverLabel(Res.get("createOffer.securityDepositInfo", newValue));
+                buyerSecurityDepositInfoInputTextField.setContentForInfoPopOver(depositInBTCInfo);
+            } else {
+                buyerSecurityDepositInfoInputTextField.setContentForInfoPopOver(null);
+            }
+        };
+
         volumeListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals("") && CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get())) {
                 volumeInfoInputTextField.setContentForPrivacyPopOver(createPopoverLabel(Res.get("offerbook.info.roundedFiatVolume")));
@@ -860,6 +873,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.marketPriceMargin.addListener(marketPriceMarginListener);
         model.volume.addListener(volumeListener);
         model.isTradeFeeVisible.addListener(tradeFeeVisibleListener);
+        model.buyerSecurityDepositInBTC.addListener(buyerSecurityDepositInBTCListener);
 
         tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
@@ -892,6 +906,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.marketPriceMargin.removeListener(marketPriceMarginListener);
         model.volume.removeListener(volumeListener);
         model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
+        model.buyerSecurityDepositInBTC.removeListener(buyerSecurityDepositInBTCListener);
         tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
 
@@ -1029,7 +1044,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        advancedOptionsBox.getChildren().addAll(getBuyerSecurityDepositBox(), getTradeFeeFieldsBox());
+        // add new badge for this new feature for this release
+        // TODO: remove it with 0.9.6+
+        NewBadge securityDepositBoxWithNewBadge = new NewBadge(getBuyerSecurityDepositBox(),
+                BUYER_SECURITY_DEPOSIT_NEWS, preferences);
+
+        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTradeFeeFieldsBox());
 
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
@@ -1099,16 +1119,19 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private VBox getBuyerSecurityDepositBox() {
-        Tuple3<HBox, InputTextField, Label> tuple = getEditableValueBox(
+        Tuple3<HBox, InfoInputTextField, Label> tuple = getEditableValueBoxWithInfo(
                 Res.get("createOffer.securityDeposit.prompt"));
-        buyerSecurityDepositInputTextField = tuple.second;
-        Label buyerSecurityDepositBtcLabel = tuple.third;
+        buyerSecurityDepositInfoInputTextField = tuple.second;
+        buyerSecurityDepositInputTextField = buyerSecurityDepositInfoInputTextField.getInputTextField();
+        Label buyerSecurityDepositPercentageLabel = tuple.third;
+        // getEditableValueBox delivers BTC, so we overwrite it with %
+        buyerSecurityDepositPercentageLabel.setText("%");
 
         VBox depositBox = getTradeInputBox(tuple.first, Res.get("createOffer.setDeposit")).second;
         depositBox.setMaxWidth(310);
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
-        editOfferElements.add(buyerSecurityDepositBtcLabel);
+        editOfferElements.add(buyerSecurityDepositPercentageLabel);
 
         return depositBox;
     }

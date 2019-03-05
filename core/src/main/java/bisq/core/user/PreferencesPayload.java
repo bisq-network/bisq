@@ -89,7 +89,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String bitcoinNodes = "";
     private List<String> ignoreTradersList = new ArrayList<>();
     private String directoryChooserPath;
-    private long buyerSecurityDepositAsLong = Restrictions.getDefaultBuyerSecurityDeposit().value;
+
+    @Deprecated // Superseded by buyerSecurityDepositAsPercent
+    private long buyerSecurityDepositAsLong;
+
     private boolean useAnimations;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
@@ -117,6 +120,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     String rpcPw;
     @Nullable
     String takeOfferSelectedPaymentAccountId;
+    private double buyerSecurityDepositAsPercent = Restrictions.getDefaultBuyerSecurityDepositAsPercent();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +176,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseMarketNotifications(useMarketNotifications)
                 .setUsePriceNotifications(usePriceNotifications)
                 .setUseStandbyMode(useStandbyMode)
-                .setIsDaoFullNode(isDaoFullNode);
+                .setIsDaoFullNode(isDaoFullNode)
+                .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -253,6 +258,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getIsDaoFullNode(),
                 proto.getRpcUser().isEmpty() ? null : proto.getRpcUser(),
                 proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
-                proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId());
+                proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
+                proto.getBuyerSecurityDepositAsPercent());
     }
 }
