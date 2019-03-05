@@ -1278,7 +1278,7 @@ message PreferencesPayload {
     string bitcoin_nodes = 27;
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
-    int64 buyer_security_deposit_as_long = 30;
+    int64 buyer_security_deposit_as_long = 30; // Deprectated: Superseded by buyerSecurityDepositAsPercent
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
@@ -1298,6 +1298,7 @@ message PreferencesPayload {
     string rpc_user = 47;
     string rpc_pw = 48;
     string take_offer_selected_payment_account_id = 49;
+    double buyer_security_deposit_as_percent = 50;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

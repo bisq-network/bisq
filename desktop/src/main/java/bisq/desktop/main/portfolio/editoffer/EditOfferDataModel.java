@@ -39,6 +39,7 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -98,7 +99,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
         minAmount.set(null);
         price.set(null);
         volume.set(null);
-        buyerSecurityDeposit.set(null);
+        buyerSecurityDeposit.set(0);
         paymentAccounts.clear();
         paymentAccount = null;
         marketPriceMargin = 0;
@@ -112,7 +113,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
         CurrencyUtil.getTradeCurrency(offer.getCurrencyCode())
                 .ifPresent(c -> this.tradeCurrency = c);
         tradeCurrencyCode.set(offer.getCurrencyCode());
-        buyerSecurityDeposit.set(offer.getBuyerSecurityDeposit());
+        buyerSecurityDeposit.set(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit()));
 
         this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());

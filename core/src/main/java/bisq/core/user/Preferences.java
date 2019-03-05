@@ -39,8 +39,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Coin;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -487,10 +485,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
-    public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
-        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.getMaxBuyerSecurityDeposit().value,
-                Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
-                        buyerSecurityDepositAsLong)));
+    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent) {
+        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent();
+        double min = Restrictions.getMinBuyerSecurityDepositAsPercent();
+        prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
         persist();
     }
 
@@ -696,8 +694,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return withdrawalTxFeeInBytesProperty;
     }
 
-    public Coin getBuyerSecurityDepositAsCoin() {
-        return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
+    public double getBuyerSecurityDepositAsPercent() {
+        double value = prefPayload.getBuyerSecurityDepositAsPercent();
+        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
     }
 
     //TODO remove and use isPayFeeInBtc instead
@@ -775,8 +774,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
 
-        void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
-
         void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
 
         void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
@@ -832,5 +829,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setRpcPw(String value);
 
         void setTakeOfferSelectedPaymentAccountId(String value);
+
+        void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
+
+        double getBuyerSecurityDepositAsPercent();
     }
 }
