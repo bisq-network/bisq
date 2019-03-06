@@ -31,7 +31,4 @@
     <columnConstraints>
         <ColumnConstraints percentWidth="100"/>
     </columnConstraints>
-    <HBox GridPane.rowIndex="8" GridPane.columnSpan="3" alignment="BOTTOM_RIGHT">
-        <AutoTooltipButton fx:id="exportButton"/>
-    </HBox>
 </GridPane>

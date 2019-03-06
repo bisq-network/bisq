@@ -66,11 +66,8 @@ import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 import com.google.common.base.Charsets;
 
@@ -281,7 +278,8 @@ public class GUIUtil {
         File file = fileChooser.showSaveDialog(stage);
         if (file != null) {
             try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
-                outputStreamWriter.write(new Gson().toJson(data));
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                outputStreamWriter.write(gson.toJson(data));
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
