@@ -32,6 +32,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.Clock;
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
@@ -175,7 +176,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList", 1000);
         if (persistedPeerList != null) {
             long peersWithNoCapabilitiesSet = persistedPeerList.getList().stream()
-                    .filter(e -> e.getSupportedCapabilities().isEmpty())
+                    .filter(e -> e.hasCapabilities())
                     .mapToInt(e -> 1)
                     .count();
             if (peersWithNoCapabilitiesSet > 100) {
@@ -448,7 +449,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             // If a node is trying to send too many list we treat it as rule violation.
             // Reported list include the connected list. We use the max value and give some extra headroom.
             // Will trigger a shutdown after 2nd time sending too much
-            connection.reportIllegalRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
+            connection.reportInvalidRequest(RuleViolation.TOO_MANY_REPORTED_PEERS_SENT);
         }
     }
 
@@ -659,19 +660,18 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         // filter(connection -> connection.getPeersNodeAddressOptional().isPresent())
         return networkNode.getConfirmedConnections().stream()
                 .map((Connection connection) -> {
-                    List<Integer> supportedCapabilities = connection.getSupportedCapabilities();
+                    Capabilities supportedCapabilities = new Capabilities(connection);
                     // If we have a new connection the supportedCapabilities is empty.
                     // We lookup if we have already stored the supportedCapabilities at the persisted or reported peers
                     // and if so we use that.
-                    if (supportedCapabilities == null || supportedCapabilities.isEmpty()) {
+                    if (!supportedCapabilities.hasCapabilities()) {
                         Set<Peer> allPeers = new HashSet<>(getPersistedPeers());
                         allPeers.addAll(getReportedPeers());
-                        supportedCapabilities = allPeers.stream().filter(peer -> peer.getNodeAddress().equals(connection.getPeersNodeAddressOptional().get()))
-                                .filter(peer -> !peer.getSupportedCapabilities().isEmpty())
-                                .findAny()
-                                .map(Peer::getSupportedCapabilities)
-                                .filter(list -> !list.isEmpty())
-                                .orElse(new ArrayList<>());
+                        Optional<Peer> ourPeer = allPeers.stream().filter(peer -> peer.getNodeAddress().equals(connection.getPeersNodeAddressOptional().get()))
+                                .filter(peer -> !peer.hasCapabilities())
+                                .findAny();
+                        if(ourPeer.isPresent())
+                            supportedCapabilities = new Capabilities(ourPeer.get());
                     }
                     Peer peer = new Peer(connection.getPeersNodeAddressOptional().get(), supportedCapabilities);
                     connection.addWeakCapabilitiesListener(peer);

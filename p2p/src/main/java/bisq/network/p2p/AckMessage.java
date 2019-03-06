@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -28,9 +29,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -153,10 +151,8 @@ public final class AckMessage extends NetworkEnvelope implements MailboxMessage,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public List<Integer> getRequiredCapabilities() {
-        return new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.ACK_MSG.ordinal()
-        ));
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.ACK_MSG);
     }
 
     @Override
