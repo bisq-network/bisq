@@ -105,6 +105,10 @@ public class ProposalListItem {
     }
 
     public String getDetails() {
+        return ProposalListItem.getProposalDetails(evaluatedProposal, bsqFormatter);
+    }
+
+    public static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         Proposal proposal = evaluatedProposal.getProposal();
         switch (proposal.getType()) {
             case COMPENSATION_REQUEST:

@@ -65,6 +65,10 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.googlecode.jcsv.writer.CSVWriter;
 import com.googlecode.jcsv.writer.internal.CSVWriterBuilder;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+
 import com.google.common.base.Charsets;
 
 import org.apache.commons.lang3.StringUtils;
@@ -260,6 +264,22 @@ public class GUIUtil {
                         .entryConverter(contentConverter)
                         .build();
                 contentWriter.writeAll(list);
+            } catch (RuntimeException | IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                new Popup<>().error(Res.get("guiUtil.accountExport.exportFailed", e.getMessage()));
+            }
+        }
+    }
+
+    public static void exportJSON(String fileName, JsonElement data, Stage stage) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setInitialFileName(fileName);
+        File file = fileChooser.showSaveDialog(stage);
+        if (file != null) {
+            try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(file, false), Charsets.UTF_8)) {
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                outputStreamWriter.write(gson.toJson(data));
             } catch (RuntimeException | IOException e) {
                 e.printStackTrace();
                 log.error(e.getMessage());
