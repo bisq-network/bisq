@@ -8,7 +8,7 @@
 
 @echo off
 
-set version=0.9.4-SNAPSHOT
+set version=0.9.5
 if not exist "%JAVA_HOME%\bin\javapackager.exe" (
     if not exist "%ProgramFiles%\Java\jdk-10.0.2" (
         echo Javapackager not found. Update JAVA_HOME variable to point to OracleJDK.
