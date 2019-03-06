@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.governance.result;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
@@ -34,11 +33,9 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.state.DaoStateListener;
@@ -51,7 +48,6 @@ import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
-import bisq.core.dao.state.model.governance.GenericProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 import bisq.core.dao.state.model.governance.RemoveAssetProposal;
@@ -88,6 +84,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import org.fxmisc.easybind.EasyBind;
@@ -104,7 +101,6 @@ import javafx.util.Callback;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -180,9 +176,10 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         selectedVoteResultListItemListener = (observable, oldValue, newValue) -> onResultsListItemSelected(newValue);
 
         createCyclesTable();
-        exportButton = FormBuilder.addButtonAfterGroup(root, ++gridRow, Res.get("shared.exportJSON"));
-        GridPane.setMargin(exportButton, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
+        exportButton = FormBuilder.addButton(root, ++gridRow, Res.get("shared.exportJSON"));
+        GridPane.setMargin(exportButton, new Insets(20, -10, -40, 0));
         GridPane.setColumnSpan(exportButton, 2);
+        GridPane.setHalignment(exportButton, HPos.RIGHT);
     }
 
     @Override
