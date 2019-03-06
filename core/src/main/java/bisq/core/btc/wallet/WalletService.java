@@ -584,6 +584,7 @@ public abstract class WalletService {
     }
 
     public List<Transaction> getRecentTransactions(int numTransactions, boolean includeDead) {
+        // Returns a list ordered by tx.getUpdateTime() desc
         return wallet.getRecentTransactions(numTransactions, includeDead);
     }
 
