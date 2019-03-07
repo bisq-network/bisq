@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 public class DefaultSeedNodeRepository implements SeedNodeRepository {
+    //TODO add support for localhost addresses
     private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
     private static final String ENDING = ".seednodes";
     private static final Collection<NodeAddress> cache = new HashSet<>();
@@ -56,7 +57,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     private void reload() {
 
         // see if there are any seed nodes configured manually
-        if(seedNodes != null && !seedNodes.isEmpty()) {
+        if (seedNodes != null && !seedNodes.isEmpty()) {
             cache.clear();
             Arrays.stream(seedNodes.split(",")).forEach(s -> cache.add(new NodeAddress(s)));
 
@@ -71,25 +72,29 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
         cache.clear();
 
         // refill the cache
-        seedNodeFile.lines().forEach(s -> {
-            final Matcher matcher = pattern.matcher(s);
-            if(matcher.find())
+        seedNodeFile.lines().forEach(line -> {
+            final Matcher matcher = pattern.matcher(line);
+            if (matcher.find())
                 cache.add(new NodeAddress(matcher.group(1)));
+
+            // Maybe better include in regex...
+            if (line.startsWith("localhost"))
+                cache.add(new NodeAddress(line));
         });
 
         // filter
-        cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(s -> new NodeAddress(s)).collect(Collectors.toSet()));
+        cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
     }
 
     public Collection<NodeAddress> getSeedNodeAddresses() {
-        if(cache.isEmpty())
+        if (cache.isEmpty())
             reload();
 
         return cache;
     }
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
-        if(cache.isEmpty())
+        if (cache.isEmpty())
             reload();
         return cache.contains(nodeAddress);
     }
