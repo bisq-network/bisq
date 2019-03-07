@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.wallet;
+package bisq.desktop.main.dao.economy;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
@@ -27,9 +27,7 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
-import bisq.desktop.main.dao.wallet.send.BsqSendView;
-import bisq.desktop.main.dao.wallet.tx.BsqTxView;
+import bisq.desktop.main.dao.economy.dashboard.BsqDashboardView;
 
 import bisq.core.locale.Res;
 
@@ -47,12 +45,12 @@ import java.util.Arrays;
 import java.util.List;
 
 @FxmlView
-public class BsqWalletView extends ActivatableViewAndModel {
+public class EconomyView extends ActivatableViewAndModel {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem send, receive, transactions;
+    private MenuItem dashboard;
     private Navigation.Listener listener;
 
     @FXML
@@ -64,7 +62,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
     private ToggleGroup toggleGroup;
 
     @Inject
-    private BsqWalletView(CachingViewLoader viewLoader, Navigation navigation) {
+    private EconomyView(CachingViewLoader viewLoader, Navigation navigation) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
     }
@@ -72,7 +70,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
     @Override
     public void initialize() {
         listener = viewPath -> {
-            if (viewPath.size() != 4 || viewPath.indexOf(BsqWalletView.class) != 2)
+            if (viewPath.size() != 4 || viewPath.indexOf(EconomyView.class) != 2)
                 return;
 
             selectedViewClass = viewPath.tip();
@@ -80,38 +78,29 @@ public class BsqWalletView extends ActivatableViewAndModel {
         };
 
         toggleGroup = new ToggleGroup();
-        List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, BsqWalletView.class);
-        send = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.send"), BsqSendView.class, baseNavPath);
-        receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, baseNavPath);
-        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, baseNavPath);
-        leftVBox.getChildren().addAll(send, receive, transactions);
+        List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, EconomyView.class);
+        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, baseNavPath);
+        leftVBox.getChildren().addAll(dashboard);
 
         // TODO just until DAO is enabled
         if (!DevEnv.isDaoActivated()) {
-            send.setDisable(true);
-            transactions.setDisable(true);
+            dashboard.setDisable(true);
         }
     }
 
     @Override
     protected void activate() {
-        send.activate();
-        receive.activate();
-        transactions.activate();
+        dashboard.activate();
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
-        if (viewPath.size() == 3 && viewPath.indexOf(BsqWalletView.class) == 2 ||
+        if (viewPath.size() == 3 && viewPath.indexOf(EconomyView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = BsqSendView.class;
-
-            // TODO just until DAO is enabled
-            if (!DevEnv.isDaoActivated())
-                selectedViewClass = BsqReceiveView.class;
+                selectedViewClass = BsqDashboardView.class;
 
             loadView(selectedViewClass);
-        } else if (viewPath.size() == 4 && viewPath.indexOf(BsqWalletView.class) == 2) {
+        } else if (viewPath.size() == 4 && viewPath.indexOf(EconomyView.class) == 2) {
             selectedViewClass = viewPath.get(3);
             loadView(selectedViewClass);
         }
@@ -122,18 +111,14 @@ public class BsqWalletView extends ActivatableViewAndModel {
     protected void deactivate() {
         navigation.removeListener(listener);
 
-        send.deactivate();
-        receive.deactivate();
-        transactions.deactivate();
+        dashboard.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof BsqSendView) toggleGroup.selectToggle(send);
-        else if (view instanceof BsqReceiveView) toggleGroup.selectToggle(receive);
-        else if (view instanceof BsqTxView) toggleGroup.selectToggle(transactions);
+        if (view instanceof BsqDashboardView) toggleGroup.selectToggle(dashboard);
     }
 
     public Class<? extends View> getSelectedViewClass() {

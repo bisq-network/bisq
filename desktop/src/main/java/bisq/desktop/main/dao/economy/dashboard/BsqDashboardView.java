@@ -15,13 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.wallet.dashboard;
+package bisq.desktop.main.dao.economy.dashboard;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
@@ -57,7 +56,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 @FxmlView
 public class BsqDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
 
-    private final BsqBalanceUtil bsqBalanceUtil;
     private final DaoFacade daoFacade;
     private final PriceFeedService priceFeedService;
     private final Preferences preferences;
@@ -78,12 +76,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqDashboardView(BsqBalanceUtil bsqBalanceUtil,
-                             DaoFacade daoFacade,
+    private BsqDashboardView(DaoFacade daoFacade,
                              PriceFeedService priceFeedService,
                              Preferences preferences,
                              BsqFormatter bsqFormatter) {
-        this.bsqBalanceUtil = bsqBalanceUtil;
         this.daoFacade = daoFacade;
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
@@ -92,16 +88,15 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void initialize() {
-        gridRow = bsqBalanceUtil.addGroup(root, gridRow);
         int columnIndex = 2;
 
         int startRow = gridRow;
-        addTitledGroupBg(root, ++gridRow, 5, Res.get("dao.wallet.dashboard.distribution"), Layout.GROUP_DISTANCE);
-        genesisIssueAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        compRequestIssueAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
-        reimbursementAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
-        burntAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
-        availableAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
+        addTitledGroupBg(root, gridRow, 5, Res.get("dao.wallet.dashboard.distribution"));
+        genesisIssueAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_DISTANCE).second;
+        compRequestIssueAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
+        reimbursementAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
+        burntAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
+        availableAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
 
         gridRow = startRow;
         addTitledGroupBg(root, ++gridRow, columnIndex, 5, Res.get("dao.wallet.dashboard.locked"), Layout.GROUP_DISTANCE);
@@ -154,8 +149,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void activate() {
-        bsqBalanceUtil.activate();
-
         daoFacade.addBsqStateListener(this);
         priceFeedService.updateCounterProperty().addListener(priceChangeListener);
 
@@ -165,7 +158,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Override
     protected void deactivate() {
-        bsqBalanceUtil.deactivate();
         daoFacade.removeBsqStateListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
     }
