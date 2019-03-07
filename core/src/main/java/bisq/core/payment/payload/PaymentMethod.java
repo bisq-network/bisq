@@ -91,6 +91,14 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String ADVANCED_CASH_ID = "ADVANCED_CASH";
     public static final String BLOCK_CHAINS_INSTANT_ID = "BLOCK_CHAINS_INSTANT";
 
+    // Cannot be deleted as it would break old trade history entries
+    @Deprecated
+    public static final String OK_PAY_ID = "OK_PAY";
+    @Deprecated
+    public static final String CASH_APP_ID = "CASH_APP"; // Removed due too high chargeback risk
+    @Deprecated
+    public static final String VENMO_ID = "VENMO";  // Removed due too high chargeback risk
+
     public static PaymentMethod UPHOLD;
     public static PaymentMethod MONEY_BEAM;
     public static PaymentMethod POPMONEY;
@@ -118,6 +126,14 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod PROMPT_PAY;
     public static PaymentMethod ADVANCED_CASH;
     public static PaymentMethod BLOCK_CHAINS_INSTANT;
+
+    // Cannot be deleted as it would break old trade history entries
+    @Deprecated
+    public static PaymentMethod OK_PAY = getDummyPaymentMethod(OK_PAY_ID);
+    @Deprecated
+    public static PaymentMethod CASH_APP = getDummyPaymentMethod(CASH_APP_ID); // Removed due too high chargeback risk
+    @Deprecated
+    public static PaymentMethod VENMO = getDummyPaymentMethod(VENMO_ID); // Removed due too high chargeback risk
 
     // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
     // than new trade limit) and violate the maker expectation when he created the offer (duration).

@@ -229,7 +229,7 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastSendTimeStamp;
                     if (elapsed < sendMsgThrottleTrigger) {
-                        log.warn("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
+                        log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
                                         "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
                                 sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
                                 networkEnvelope.getClass().getSimpleName());
