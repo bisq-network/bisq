@@ -129,11 +129,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
-    public static PaymentMethod OK_PAY;
+    public static PaymentMethod OK_PAY = getDummyPaymentMethod(OK_PAY_ID);
     @Deprecated
-    public static PaymentMethod CASH_APP; // Removed due too high chargeback risk
+    public static PaymentMethod CASH_APP = getDummyPaymentMethod(CASH_APP_ID); // Removed due too high chargeback risk
     @Deprecated
-    public static PaymentMethod VENMO; // Removed due too high chargeback risk
+    public static PaymentMethod VENMO = getDummyPaymentMethod(VENMO_ID); // Removed due too high chargeback risk
 
     // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
     // than new trade limit) and violate the maker expectation when he created the offer (duration).
