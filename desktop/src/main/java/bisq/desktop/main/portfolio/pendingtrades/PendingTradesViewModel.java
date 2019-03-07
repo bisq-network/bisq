@@ -292,8 +292,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getTradeFee() {
-        if (trade != null && dataModel.getOffer() != null) {
-            if (dataModel.getOffer().isCurrencyForMakerFeeBtc() && trade.getTradeAmount() != null) {
+        if (trade != null && dataModel.getOffer() != null && trade.getTradeAmount() != null) {
+            if (dataModel.isMaker() && dataModel.getOffer().isCurrencyForMakerFeeBtc() ||
+                    !dataModel.isMaker() && dataModel.getTrade().isCurrencyForTakerFeeBtc()) {
                 Coin tradeFeeInBTC = dataModel.getTradeFeeInBTC();
                 String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(), btcFormatter);
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
