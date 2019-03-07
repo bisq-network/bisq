@@ -113,6 +113,11 @@ public abstract class NetworkNode implements MessageListener {
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
             ListenableFuture<Connection> future = executorService.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress);
+
+                if(peersNodeAddress.equals(getNodeAddress())){
+                    throw new ConnectException("We do not send a message to ourselves");
+                }
+
                 OutboundConnection outboundConnection = null;
                 try {
                     // can take a while when using tor
@@ -449,5 +454,10 @@ public abstract class NetworkNode implements MessageListener {
     @Nullable
     public NodeAddress getNodeAddress() {
         return nodeAddressProperty.get();
+    }
+
+    @Nullable
+    public ObjectProperty<NodeAddress> getNodeAddressProperty() {
+        return nodeAddressProperty;
     }
 }

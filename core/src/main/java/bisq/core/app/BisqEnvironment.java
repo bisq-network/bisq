@@ -58,6 +58,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -192,7 +193,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
-            myAddress, banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
+            banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight,
             referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
@@ -258,9 +259,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
                 "";
 
-        myAddress = commandLineProperties.containsProperty(NetworkOptionKeys.MY_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.MY_ADDRESS) :
-                "";
         banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
                 (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
                 "";
@@ -355,7 +353,7 @@ public class BisqEnvironment extends StandardEnvironment {
             bannedPriceRelayNodes = !bannedPriceRelayNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedPriceRelayNodesAsString).split(",")) : null;
 
             final String bannedSeedNodesAsString = getProperty(FilterManager.BANNED_SEED_NODES, "");
-            bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : null;
+            bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : new ArrayList<>();
 
             final String bannedBtcNodesAsString = getProperty(FilterManager.BANNED_BTC_NODES, "");
             bannedBtcNodes = !bannedBtcNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedBtcNodesAsString).split(",")) : null;
@@ -461,7 +459,6 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(CommonOptionKeys.USE_DEV_MODE, useDevMode);
 
                 setProperty(NetworkOptionKeys.SEED_NODES_KEY, seedNodes);
-                setProperty(NetworkOptionKeys.MY_ADDRESS, myAddress);
                 setProperty(NetworkOptionKeys.BAN_LIST, banList);
                 setProperty(NetworkOptionKeys.TOR_DIR, Paths.get(btcNetworkDir, "tor").toString());
                 setProperty(NetworkOptionKeys.NETWORK_ID, String.valueOf(baseCurrencyNetwork.ordinal()));
