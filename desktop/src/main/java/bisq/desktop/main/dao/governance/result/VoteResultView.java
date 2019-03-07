@@ -952,13 +952,13 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         sortedCycleListItemList.sorted(Comparator.comparing(CycleListItem::getCycleStartTime)).forEach(cycle -> {
             JsonObject cycleJson = new JsonObject();
-            cycleJson.addProperty("cycleIndex", cycle.getResultsOfCycle().getCycleIndex());
-            cycleJson.addProperty("cycle", cycle.getCycle());
+            cycleJson.addProperty("cycleIndex", cycle.getCycleIndex());
+            cycleJson.addProperty("cycleDateTime", cycle.getCycleDateTime(false));
             cycleJson.addProperty("proposalsCount", cycle.getNumProposals());
             cycleJson.addProperty("votesCount", cycle.getNumVotesAsString());
             cycleJson.addProperty("voteWeight", cycle.getMeritAndStake());
             cycleJson.addProperty("issuance", cycle.getIssuance());
-            cycleJson.addProperty("startDate", cycle.getCycleStartTime());
+            cycleJson.addProperty("startTime", cycle.getCycleStartTime());
             cycleJson.addProperty("totalAcceptedVotes", cycle.getResultsOfCycle().getNumAcceptedVotes());
             cycleJson.addProperty("totalRejectedVotes", cycle.getResultsOfCycle().getNumRejectedVotes());
 
@@ -969,11 +969,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
             evaluatedProposals.forEach(proposal -> {
                 JsonObject proposalJson = new JsonObject();
-                proposalJson.addProperty("dateTime", bsqFormatter.formatDateTime(proposal.getProposal().getCreationDate()));
+                proposalJson.addProperty("dateTime", bsqFormatter.formatDateTime(proposal.getProposal().getCreationDate(), false));
                 proposalJson.addProperty("name", proposal.getProposal().getName());
                 proposalJson.addProperty("link", proposal.getProposal().getLink());
-                proposalJson.addProperty("proposalType", proposal.getProposal().getType().getShortDisplayName());
-                proposalJson.addProperty("details", ProposalListItem.getProposalDetails(proposal, bsqFormatter));
+                proposalJson.addProperty("proposalType", proposal.getProposal().getType().name());
+                proposalJson.addProperty("details", ProposalListItem.getProposalDetails(proposal, bsqFormatter, false));
                 proposalJson.addProperty("voteResult", proposal.isAccepted() ? "Accepted" : "Rejected");
                 proposalJson.addProperty("txId", proposal.getProposalTxId());
                 proposalJson.addProperty("requiredQuorum", proposal.getRequiredQuorum());
@@ -990,7 +990,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 switch (proposal.getProposal().getType()) {
                     case BONDED_ROLE:
                         RoleProposal roleProposal = (RoleProposal) proposal.getProposal();
-                        proposalJson.addProperty("roleType", roleProposal.getRole().getBondedRoleType().getDisplayString());
+                        proposalJson.addProperty("roleType", roleProposal.getRole().getBondedRoleType().name());
                         proposalJson.addProperty("requiredBond", roleProposal.getRole().getBondedRoleType().getRequiredBond());
                         proposalJson.addProperty("allowMultipleHolders", roleProposal.getRole().getBondedRoleType().isAllowMultipleHolders());
                         proposalJson.addProperty("unlockTimeInBlocks", roleProposal.getRole().getBondedRoleType().getUnlockTimeInBlocks());
@@ -998,7 +998,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         break;
                     case CHANGE_PARAM:
                         ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal.getProposal();
-                        proposalJson.addProperty("param", changeParamProposal.getParam().getDisplayString());
+                        proposalJson.addProperty("param", changeParamProposal.getParam().name());
                         proposalJson.addProperty("paramValue", changeParamProposal.getParamValue());
                         proposalJson.addProperty("paramDefaultValue", changeParamProposal.getParam().getDefaultValue());
                         proposalJson.addProperty("paramMaxDecrease", changeParamProposal.getParam().getMaxDecrease());
@@ -1027,26 +1027,33 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 JsonArray votesArray = new JsonArray();
                 evaluatedProposals.stream()
                         .filter(evaluatedProposal -> evaluatedProposal.getProposal().equals(proposal.getProposal()))
-                        .forEach(evaluatedProposal ->
-                                cycle.getResultsOfCycle().getDecryptedVotesForCycle().forEach(decryptedBallotsWithMerits -> {
-                                    JsonObject voteJson = new JsonObject();
-                                    Optional<Vote> vote = decryptedBallotsWithMerits.getVote(proposal.getProposalTxId());
-                                    if (vote.isPresent())
-                                        voteJson.addProperty("vote", vote.get().isAccepted() ? "Accepted" : "Rejected");
-                                    else
-                                        voteJson.addProperty("vote", "Ignored");
+                        .forEach(evaluatedProposal -> {
+                            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = cycle.getResultsOfCycle().getDecryptedVotesForCycle();
+                            // Make sure the votes are sorted so we can easier compare json files from different users
+                            decryptedVotesForCycle.sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
+                            decryptedVotesForCycle.forEach(decryptedBallotsWithMerits -> {
+                                JsonObject voteJson = new JsonObject();
+                                Optional<Vote> vote = decryptedBallotsWithMerits.getVote(proposal.getProposalTxId());
+                                if (vote.isPresent())
+                                    voteJson.addProperty("vote", vote.get().isAccepted() ? "Accepted" : "Rejected");
+                                else
+                                    voteJson.addProperty("vote", "Ignored");
 
-                                    voteJson.addProperty("voteWeight", decryptedBallotsWithMerits.getStake());
-                                    voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
-                                    voteJson.addProperty("blindTxId", decryptedBallotsWithMerits.getBlindVoteTxId());
-                                    voteJson.addProperty("revealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
+                                voteJson.addProperty("voteWeight", decryptedBallotsWithMerits.getMerit(daoStateService));
+                                voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
+                                voteJson.addProperty("blindTxId", decryptedBallotsWithMerits.getBlindVoteTxId());
+                                voteJson.addProperty("revealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
 
-                                    votesArray.add(voteJson);
-                                }));
+                                votesArray.add(voteJson);
+                            });
+                        });
+
+                proposalJson.addProperty("numberOfVotes", votesArray.size());
                 proposalJson.add("votes", votesArray);
-                proposalsArray.add(proposalJson);
 
+                proposalsArray.add(proposalJson);
             });
+            cycleJson.addProperty("numberOfProposals", proposalsArray.size());
             cycleJson.add("proposals", proposalsArray);
             cyclesArray.add(cycleJson);
         });
