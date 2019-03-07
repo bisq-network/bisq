@@ -1618,7 +1618,7 @@ public class FormBuilder {
     public static Tuple2<Label, VBox> getTradeInputBox(Pane amountValueBox, String descriptionText) {
         Label descriptionLabel = new AutoTooltipLabel(descriptionText);
         descriptionLabel.setId("input-description-label");
-        descriptionLabel.setPrefWidth(170);
+        descriptionLabel.setPrefWidth(190);
 
         VBox box = new VBox();
         box.setPadding(new Insets(10, 0, 0, 0));

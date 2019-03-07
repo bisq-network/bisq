@@ -106,6 +106,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public final StringProperty minAmount = new SimpleStringProperty();
     final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositInBTC = new SimpleStringProperty();
+    final StringProperty buyerSecurityDepositLabel = new SimpleStringProperty();
 
     // Price in the viewModel is always dependent on fiat/altcoin: Fiat Fiat/BTC, for altcoins we use inverted price.
     // The domain (dataModel) uses always the same price model (otherCurrencyBTC)
@@ -461,7 +462,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         securityDepositAsDoubleListener = (ov, oldValue, newValue) -> {
             if (newValue != null) {
                 buyerSecurityDeposit.set(btcFormatter.formatToPercent((double) newValue));
-                buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
+                if (dataModel.getAmount().get() != null)
+                    buyerSecurityDepositInBTC.set(btcFormatter.formatCoinWithCode(dataModel.getBuyerSecurityDepositAsCoin()));
             } else {
                 buyerSecurityDeposit.set("");
                 buyerSecurityDepositInBTC.set("");
@@ -599,6 +601,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
 
         buyerSecurityDeposit.set(btcFormatter.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
+        buyerSecurityDepositLabel.set(getSecurityDepositLabel());
 
         applyMakerFee();
         return result;
@@ -917,6 +920,15 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public String getTradeAmount() {
         return btcFormatter.formatCoinWithCode(dataModel.getAmount().get());
+    }
+
+    public String getSecurityDepositLabel() {
+        return dataModel.isBuyOffer() ? Res.get("createOffer.setDepositAsBuyer") : Res.get("createOffer.setDeposit");
+    }
+
+    public String getSecurityDepositPopOverLabel(String depositInBTC) {
+        return dataModel.isBuyOffer() ? Res.get("createOffer.securityDepositInfoAsBuyer", depositInBTC) :
+                Res.get("createOffer.securityDepositInfo", depositInBTC);
     }
 
     public String getSecurityDepositInfo() {

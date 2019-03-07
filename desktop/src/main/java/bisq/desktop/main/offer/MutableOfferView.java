@@ -147,7 +147,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private FundsTextField totalToPayTextField;
     private Label amountDescriptionLabel, priceCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription, tradeFeeDescriptionLabel,
-            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel;
+            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel, buyerSecurityDepositLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -578,6 +578,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.getDataModel().getMissingCoin());
         buyerSecurityDepositInputTextField.textProperty().bindBidirectional(model.buyerSecurityDeposit);
+        buyerSecurityDepositLabel.textProperty().bind(model.buyerSecurityDepositLabel);
         tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);
         tradeFeeInBsqLabel.textProperty().bind(model.tradeFeeInBsqWithFiat);
         tradeFeeDescriptionLabel.textProperty().bind(model.tradeFeeDescription);
@@ -628,6 +629,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         totalToPayTextField.textProperty().unbind();
         addressTextField.amountAsCoinProperty().unbind();
         buyerSecurityDepositInputTextField.textProperty().unbindBidirectional(model.buyerSecurityDeposit);
+        buyerSecurityDepositLabel.textProperty().unbind();
         tradeFeeInBtcLabel.textProperty().unbind();
         tradeFeeInBsqLabel.textProperty().unbind();
         tradeFeeDescriptionLabel.textProperty().unbind();
@@ -767,7 +769,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         buyerSecurityDepositInBTCListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals("")) {
-                Label depositInBTCInfo = createPopoverLabel(Res.get("createOffer.securityDepositInfo", newValue));
+                Label depositInBTCInfo = createPopoverLabel(model.getSecurityDepositPopOverLabel(newValue));
                 buyerSecurityDepositInfoInputTextField.setContentForInfoPopOver(depositInBTCInfo);
             } else {
                 buyerSecurityDepositInfoInputTextField.setContentForInfoPopOver(null);
@@ -1127,7 +1129,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         // getEditableValueBox delivers BTC, so we overwrite it with %
         buyerSecurityDepositPercentageLabel.setText("%");
 
-        VBox depositBox = getTradeInputBox(tuple.first, Res.get("createOffer.setDeposit")).second;
+        Tuple2<Label, VBox> tradeInputBoxTuple = getTradeInputBox(tuple.first, model.getSecurityDepositLabel());
+        VBox depositBox = tradeInputBoxTuple.second;
+        buyerSecurityDepositLabel = tradeInputBoxTuple.first;
         depositBox.setMaxWidth(310);
 
         editOfferElements.add(buyerSecurityDepositInputTextField);
