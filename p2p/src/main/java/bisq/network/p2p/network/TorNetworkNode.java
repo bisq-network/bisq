@@ -92,6 +92,7 @@ public class TorNetworkNode extends NetworkNode {
         super(servicePort, networkProtoResolver);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
+        createExecutorService();
     }
 
 
@@ -105,8 +106,6 @@ public class TorNetworkNode extends NetworkNode {
 
         if (setupListener != null)
             addSetupListener(setupListener);
-
-        createExecutorService();
 
         // Create the tor node (takes about 6 sec.)
         createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort);

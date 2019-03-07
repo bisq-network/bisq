@@ -17,6 +17,7 @@
 
 package bisq.monitor;
 
+import bisq.monitor.metric.MarketStats;
 import bisq.monitor.metric.P2PMarketStats;
 import bisq.monitor.metric.P2PNetworkLoad;
 import bisq.monitor.metric.P2PSeedNodeSnapshot;
@@ -95,6 +96,7 @@ public class Monitor {
         metrics.add(new P2PSeedNodeSnapshot(graphiteReporter));
         metrics.add(new P2PMarketStats(graphiteReporter));
         metrics.add(new PriceNodeStats(graphiteReporter));
+        metrics.add(new MarketStats(graphiteReporter));
 
         // prepare configuration reload
         // Note that this is most likely only work on Linux

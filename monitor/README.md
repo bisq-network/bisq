@@ -93,6 +93,10 @@ PriceNodeStats.enabled=true
 PriceNodeStats.run.interval=42
 PriceNodeStats.run.hosts=http://5bmpx76qllutpcyp.onion, http://xc3nh4juf2hshy7e.onion, http://44mgyoe2b6oqiytt.onion, http://62nvujg5iou3vu3i.onion, http://ceaanhbvluug4we6.onion
 
+#MarketStats Metric
+MarketStats.enabled=true
+MarketStats.run.interval=191
+
 ## Reporters are configured via a set of properties as well.
 ##
 ## In contrast to Metrics, Reporters do not have a minimal set of properties.

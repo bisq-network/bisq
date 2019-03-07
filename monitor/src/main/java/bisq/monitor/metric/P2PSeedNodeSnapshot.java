@@ -32,7 +32,6 @@ import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -47,8 +46,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.net.MalformedURLException;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,17 +73,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  */
 @Slf4j
-public class P2PSeedNodeSnapshot extends Metric implements MessageListener, SetupListener {
+public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     Statistics statistics;
-    private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("monitor/work/metric_" + this.getClass().getSimpleName());
-    private int nonce;
     final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
-    private final ThreadGate hsReady = new ThreadGate();
     private final ThreadGate gate = new ThreadGate();
 
     /**
@@ -161,20 +154,12 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
 
     @Override
     protected void execute() {
-        // in case we do not have a NetworkNode up and running, we create one
-        if (null == networkNode) {
-            // prepare the gate
-            hsReady.engage();
-
-            // start the network node
-            networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
-                    new CoreNetworkProtoResolver(), false,
-                    new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
-            networkNode.start(this);
-
-            // wait for the HS to be published
-            hsReady.await();
-        }
+        // start the network node
+        final NetworkNode networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
+                new CoreNetworkProtoResolver(), false,
+                new AvailableTor(Monitor.TOR_WORKING_DIR, "unused"));
+        // we do not need to start the networkNode, as we do not need the HS
+        //networkNode.start(this);
 
         // clear our buckets
         bucketsPerHost.clear();
@@ -189,9 +174,8 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
                         NodeAddress target = OnionParser.getNodeAddress(current);
 
                         // do the data request
-                        nonce = new Random().nextInt();
                         SettableFuture<Connection> future = networkNode.sendMessage(target,
-                                new PreliminaryGetDataRequest(nonce, hashes));
+                                new PreliminaryGetDataRequest(new Random().nextInt(), hashes));
 
                         Futures.addCallback(future, new FutureCallback<>() {
                             @Override
@@ -253,7 +237,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
                 statistics.values().forEach((messageType, count) -> {
                     try {
                         report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(referenceValues.get(messageType).value() - ((Counter) count).value()));
+                                String.valueOf(((Counter) count).value() - referenceValues.get(messageType).value()));
                     } catch (MalformedURLException ignore) {
                         log.error("we should never got here");
                     }
@@ -320,23 +304,5 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener, Setu
             log.warn("Got a message of type <{}>, expected <GetDataResponse>",
                     networkEnvelope.getClass().getSimpleName());
         }
-    }
-
-    @Override
-    public void onTorNodeReady() {
-    }
-
-    @Override
-    public void onHiddenServicePublished() {
-        // open the gate
-        hsReady.proceed();
-    }
-
-    @Override
-    public void onSetupFailed(Throwable throwable) {
-    }
-
-    @Override
-    public void onRequestCustomBridges() {
     }
 }

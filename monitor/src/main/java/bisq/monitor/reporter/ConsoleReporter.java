@@ -50,15 +50,18 @@ public class ConsoleReporter extends Reporter {
 
     @Override
     public void report(Map<String, String> values, String prefix) {
-        long timestamp = System.currentTimeMillis();
+        String timestamp = String.valueOf(System.currentTimeMillis());
         values.forEach((key, value) -> {
-            // https://graphite.readthedocs.io/en/latest/feeding-carbon.html
-            String report = "bisq" + (Version.getBaseCurrencyNetwork() != 0 ? "-" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].getNetwork() : "")
-                    + (prefix.isEmpty() ? "" : "." + prefix)
-                    + (key.isEmpty() ? "" : "." + key)
-                    + " " + value + " " + timestamp + "\n";
-            System.err.println("Report: " + report);
+            report(key, value, timestamp, prefix);
         });
+    }
+
+    @Override
+    public void report(String key, String value, String timestamp, String prefix) {
+        System.err.println("Report: bisq" + (Version.getBaseCurrencyNetwork() != 0 ? "-" + BaseCurrencyNetwork.values()[Version.getBaseCurrencyNetwork()].getNetwork() : "")
+                + (prefix.isEmpty() ? "" : "." + prefix)
+                + (key.isEmpty() ? "" : "." + key)
+                + " " + value + " " + timestamp);
     }
 
     @Override
