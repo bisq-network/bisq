@@ -46,10 +46,16 @@ public class CycleListItem {
     }
 
     public String getCycle() {
-        int displayIndex = resultsOfCycle.getCycleIndex() + 1;
+        return Res.get("dao.results.results.table.item.cycle", getCycleIndex(), getCycleDateTime(true));
+    }
+
+    public String getCycleDateTime(boolean useLocaleAndLocalTimezone) {
         long cycleStartTime = resultsOfCycle.getCycleStartTime();
-        String dateTime = cycleStartTime > 0 ? bsqFormatter.formatDateTime(new Date(cycleStartTime)) : Res.get("shared.na");
-        return Res.get("dao.results.results.table.item.cycle", displayIndex, dateTime);
+        return cycleStartTime > 0 ? bsqFormatter.formatDateTime(new Date(cycleStartTime), useLocaleAndLocalTimezone) : Res.get("shared.na");
+    }
+
+    public int getCycleIndex() {
+        return resultsOfCycle.getCycleIndex() + 1;
     }
 
     public String getNumProposals() {
