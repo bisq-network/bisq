@@ -445,7 +445,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ProposalDisplay createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
         ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter,
-                daoFacade, null, navigation);
+                daoFacade, null, navigation, preferences);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
