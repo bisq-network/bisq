@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.peers.getdata;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
@@ -33,8 +32,6 @@ import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
-
-import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
@@ -128,10 +125,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
             seedNodeAddresses.remove(myAddress);
 
-            // If we are a seed node we use more redundancy at startup to be sure we get all data.
-            // We cannot use networkNode.getNodeAddress() as nodeAddress as that is null at this point, so we use
-            // new NodeAddress(myAddress) for checking if we are a seed node.
-            // seedNodeAddresses do not contain my own address as that gets filtered out
             if (myAddress != null && seedNodeRepository.isSeedNode(myAddress)) {
                 NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
                 NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;

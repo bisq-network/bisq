@@ -73,15 +73,15 @@ public class DummySeedNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // args: myAddress (incl. port) bitcoinNetworkId maxConnections useLocalhostForP2P seedNodes (separated with |)
+    // args: bitcoinNetworkId maxConnections useLocalhostForP2P seedNodes (separated with |)
     // 2. and 3. args are optional
     // eg. lmvdenjkyvx2ovga.onion:8001 0 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     // localhost:3002 2 50 true
     // localhost:3002 2 50 localhost:4442|localhost:4443 true
-    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
-    // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Usage: -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Example usage: -networkId=0 -maxConnections=20 -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
 
     public static final String USAGE = "Usage:\n" +
             "--networkId=[0|1|2] (Mainnet = 0, TestNet = 1, Regtest = 2)\n" +

@@ -54,7 +54,6 @@ Here is an overview:
  - `--baseCurrencyNetwork`: The BTC network to use. Possible values are: `BTC_REGTEST`, `BTC_TESTNET`, `BTC_MAINNET` (default)
  - `--useLocalhostForP2P`: Uses localhost instead of Tor for Bisq P2P network
  - `--nodePort`: Port number for localhost mode. For seed nodes there is a convention with the last digit is marking the network type and there is a list of hard coded seed nodes addresses (see: `DefaultSeedNodeAddresses.java`). For regtest: 2002 and 3002. For testnet 2001, 3001 and 4001 and for mainnet:  2000, 3000 and 4000. For normal nodes the port can be chosen freely.
- - `--myAddress`: Needed for seed nodes only (e.g.: `localhost:3002`)
  - `--useDevPrivilegeKeys`: Important for dev testing to allow the developer key for arbitration registration
  - `--appName`: Custom application name which is used for the data directory. It is important to separate your nodes to not interfere. If not set, it uses the default `Bisq` directory.
 
@@ -63,7 +62,7 @@ Here is an overview:
 
 For localhost/regtest mode run the `SeedNodeMain` class or `./bisq-seednode` script in the root project dir with following program arguments:
 
-    --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=2002 --myAddress=localhost:2002 --appName=bisq-BTC_REGTEST_Seed_2002
+    --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=2002 --appName=bisq-BTC_REGTEST_Seed_2002
 
 
 ### Run Bisq arbitrator instance

@@ -27,10 +27,5 @@ fi
 if [ ! -z "$USE_LOCALHOST_FOR_P2P" ]; then
     ARGS="$ARGS --useLocalhostForP2P=$USE_LOCALHOST_FOR_P2P"
 fi
-if [ ! -z "$MY_ADDRESS" ]; then
-    ARGS="$ARGS --myAddress=${MY_ADDRESS}"
-elif [ ! -z "$ONION_ADDRESS" ]; then
-    ARGS="$ARGS --myAddress=${ONION_ADDRESS}.onion:$NODE_PORT"
-fi
 
 JAVA_OPTS='-Xms1800m -Xmx1800m' ./build/app/bin/bisq-seednode $ARGS
