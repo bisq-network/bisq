@@ -127,6 +127,7 @@ public class ProposalDisplay {
     @Getter
     private int gridRow;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
+    private HyperlinkWithIcon txHyperlinkWithIcon;
     private int gridRowStartIndex;
     private final List<Runnable> inputChangedListeners = new ArrayList<>();
     @Getter
@@ -218,6 +219,14 @@ public class ProposalDisplay {
 
         linkWithIconContainer.setVisible(false);
         linkWithIconContainer.setManaged(false);
+
+        if (!isMakeProposalScreen) {
+            Tuple3<Label, HyperlinkWithIcon, VBox> uidTuple = addTopLabelHyperlinkWithIcon(gridPane, ++gridRow,
+                    Res.get("dao.proposal.display.txId"), "", "", 0);
+            txHyperlinkWithIcon = uidTuple.second;
+            // TODO HyperlinkWithIcon does not scale automatically (button base, -> make anchorpane as base)
+            txHyperlinkWithIcon.prefWidthProperty().bind(nameTextField.widthProperty());
+        }
 
         int comboBoxValueTextFieldIndex = -1;
         switch (proposalType) {
@@ -475,6 +484,12 @@ public class ProposalDisplay {
             linkWithIconContainer.setManaged(true);
             linkHyperlinkWithIcon.setText(proposal.getLink());
             linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
+        }
+
+        if (txHyperlinkWithIcon != null) {
+            txHyperlinkWithIcon.setText(proposal.getTxId());
+            txHyperlinkWithIcon.setOnAction(e ->
+                    GUIUtil.openWebPage("https://explorer.bisq.network/testnet/tx.html?tx=" + proposal.getTxId()));
         }
 
         if (proposal instanceof CompensationProposal) {
