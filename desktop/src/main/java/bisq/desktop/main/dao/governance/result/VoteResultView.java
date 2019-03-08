@@ -954,7 +954,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             JsonObject cycleJson = new JsonObject();
             cycleJson.addProperty("cycleIndex", cycle.getCycleIndex());
             cycleJson.addProperty("cycleDateTime", cycle.getCycleDateTime(false));
-            cycleJson.addProperty("proposalsCount", cycle.getNumProposals());
             cycleJson.addProperty("votesCount", cycle.getNumVotesAsString());
             cycleJson.addProperty("voteWeight", cycle.getMeritAndStake());
             cycleJson.addProperty("issuance", cycle.getIssuance());
