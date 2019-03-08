@@ -24,11 +24,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * hold a set of capabilities and offers appropriate comparison methods.
  *
  * @author Florian Reimair
  */
+@EqualsAndHashCode
 public class Capabilities {
 
     /**
