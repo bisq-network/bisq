@@ -432,7 +432,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation, null);
 
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.new"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);
