@@ -55,6 +55,7 @@ import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 import bisq.core.util.validation.UrlInputValidator;
@@ -107,6 +108,7 @@ public class ProposalDisplay {
     @Nullable
     private final ChangeParamValidator changeParamValidator;
     private final Navigation navigation;
+    private final Preferences preferences;
 
     @Nullable
     private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
@@ -143,12 +145,13 @@ public class ProposalDisplay {
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
 
     public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
-                           @Nullable ChangeParamValidator changeParamValidator, Navigation navigation) {
+                           @Nullable ChangeParamValidator changeParamValidator, Navigation navigation, @Nullable Preferences preferences) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
         this.changeParamValidator = changeParamValidator;
         this.navigation = navigation;
+        this.preferences = preferences;
 
         // focusOutListener = observable -> inputChangedListeners.forEach(Runnable::run);
 
@@ -489,7 +492,7 @@ public class ProposalDisplay {
         if (txHyperlinkWithIcon != null) {
             txHyperlinkWithIcon.setText(proposal.getTxId());
             txHyperlinkWithIcon.setOnAction(e ->
-                    GUIUtil.openWebPage("https://explorer.bisq.network/testnet/tx.html?tx=" + proposal.getTxId()));
+                    GUIUtil.openTxInBsqBlockExplorer(proposal.getTxId(), preferences));
         }
 
         if (proposal instanceof CompensationProposal) {
