@@ -57,6 +57,7 @@ message NetworkEnvelope {
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
+        NewDaoStateHashMessage new_dao_state_hash_message = 34;
     }
 }
 
@@ -323,6 +324,7 @@ message NewBlockBroadcastMessage {
 
 message RepublishGovernanceDataRequest {
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Payload
@@ -1713,6 +1715,16 @@ message DecryptedBallotsWithMerits {
 
 message DaoStateStore {
     BsqState bsq_state = 1;
+}
+
+message DaoStateHash {
+    int32 blockHeight = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+}
+
+message NewDaoStateHashMessage {
+    DaoStateHash dao_state_hash = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -31,5 +31,6 @@ public enum Capability {
     PROPOSAL,
     BLIND_VOTE,
     ACK_MSG,
-    BSQ_BLOCK
+    BSQ_BLOCK,
+    DAO_STATE
 }

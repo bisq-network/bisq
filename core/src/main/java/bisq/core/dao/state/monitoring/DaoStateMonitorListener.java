@@ -15,24 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.core.dao.state.monitoring;
 
-import bisq.core.dao.state.model.blockchain.Block;
-
-public interface DaoStateListener {
-    default void onNewBlockHeight(int blockHeight) {
-    }
-
-    default void onParseBlockChainComplete() {
-    }
-
-    // Called before onParseTxsCompleteAfterBatchProcessing in case batch processing is complete
-    default void onParseBlockComplete(Block block) {
-    }
-
-    default void onParseBlockCompleteAfterBatchProcessing(Block block) {
-    }
-
-    default void onDaoStateChanged(Block block) {
-    }
+public interface DaoStateMonitorListener {
+    void onDaoStateNetworkConsensusChanged();
 }

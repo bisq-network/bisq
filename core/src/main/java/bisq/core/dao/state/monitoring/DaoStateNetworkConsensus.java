@@ -15,24 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.core.dao.state.monitoring;
 
-import bisq.core.dao.state.model.blockchain.Block;
+import java.util.List;
 
-public interface DaoStateListener {
-    default void onNewBlockHeight(int blockHeight) {
-    }
+import lombok.Value;
 
-    default void onParseBlockChainComplete() {
-    }
+@Value
+public class DaoStateNetworkConsensus {
+    private final List<DaoStateHash> misMatch;
+    private final int numNetworkMessages;
 
-    // Called before onParseTxsCompleteAfterBatchProcessing in case batch processing is complete
-    default void onParseBlockComplete(Block block) {
-    }
-
-    default void onParseBlockCompleteAfterBatchProcessing(Block block) {
-    }
-
-    default void onDaoStateChanged(Block block) {
+    public DaoStateNetworkConsensus(List<DaoStateHash> misMatch, int numNetworkMessages) {
+        this.misMatch = misMatch;
+        this.numNetworkMessages = numNetworkMessages;
     }
 }

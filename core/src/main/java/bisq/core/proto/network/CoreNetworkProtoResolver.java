@@ -31,6 +31,7 @@ import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
+import bisq.core.dao.state.monitoring.messages.NewDaoStateHashMessage;
 import bisq.core.filter.Filter;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
@@ -153,6 +154,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return GetBlocksResponse.fromProto(proto.getGetBlocksResponse(), messageVersion);
                 case NEW_BLOCK_BROADCAST_MESSAGE:
                     return NewBlockBroadcastMessage.fromProto(proto.getNewBlockBroadcastMessage(), messageVersion);
+                case NEW_DAO_STATE_HASH_MESSAGE:
+                    return NewDaoStateHashMessage.fromProto(proto.getNewDaoStateHashMessage(), messageVersion);
 
                 case ADD_PERSISTABLE_NETWORK_PAYLOAD_MESSAGE:
                     return AddPersistableNetworkPayloadMessage.fromProto(proto.getAddPersistableNetworkPayloadMessage(), this, messageVersion);

@@ -78,6 +78,7 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 
 import bisq.common.app.AppModule;
@@ -116,6 +117,7 @@ public class DaoModule extends AppModule {
         bind(DaoStateService.class).in(Singleton.class);
         bind(DaoStateSnapshotService.class).in(Singleton.class);
         bind(DaoStateStorageService.class).in(Singleton.class);
+        bind(DaoStateMonitoringService.class).in(Singleton.class);
         bind(UnconfirmedBsqChangeOutputListService.class).in(Singleton.class);
 
         bind(ExportJsonFilesService.class).in(Singleton.class);

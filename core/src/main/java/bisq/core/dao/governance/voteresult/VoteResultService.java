@@ -235,6 +235,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             }
 
             // Those which did not get accepted will be added to the nonBsq map
+            // FIXME add check for cycle as now we call addNonBsqTxOutput for past rejected comp requests as well
             daoStateService.getIssuanceCandidateTxOutputs().stream()
                     .filter(txOutput -> !daoStateService.isIssuanceTx(txOutput.getTxId()))
                     .forEach(daoStateService::addNonBsqTxOutput);

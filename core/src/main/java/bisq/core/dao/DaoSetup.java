@@ -35,6 +35,7 @@ import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
 import com.google.inject.Inject;
 
@@ -69,7 +70,8 @@ public class DaoSetup {
                     ProofOfBurnService proofOfBurnService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService,
-                    DaoKillSwitch daoKillSwitch) {
+                    DaoKillSwitch daoKillSwitch,
+                    DaoStateMonitoringService daoStateMonitoringService) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
 
@@ -92,6 +94,8 @@ public class DaoSetup {
         daoSetupServices.add(daoFacade);
         daoSetupServices.add(exportJsonFilesService);
         daoSetupServices.add(daoKillSwitch);
+        daoSetupServices.add(daoStateMonitoringService);
+
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }
 
