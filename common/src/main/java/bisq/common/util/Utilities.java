@@ -161,7 +161,7 @@ public class Utilities {
     public static boolean isMacMenuBarDarkMode() {
         try {
             // check for exit status only. Once there are more modes than "dark" and "default", we might need to analyze string contents..
-            final Process process = Runtime.getRuntime().exec(new String[] {"defaults", "read", "-g", "AppleInterfaceStyle"});
+            Process process = Runtime.getRuntime().exec(new String[]{"defaults", "read", "-g", "AppleInterfaceStyle"});
             process.waitFor(100, TimeUnit.MILLISECONDS);
             return process.exitValue() == 0;
         } catch (IOException | InterruptedException | IllegalThreadStateException ex) {
@@ -512,15 +512,29 @@ public class Utilities {
             throw new LimitedKeyStrengthException();
     }
 
-    public static String toTruncatedString(Object message, int maxLength) {
-        if (message != null) {
-            return StringUtils.abbreviate(message.toString(), maxLength).replace("\n", "");
-        }
-        return "null";
+    public static String toTruncatedString(Object message) {
+        return toTruncatedString(message, 200, true);
     }
 
-    public static String toTruncatedString(Object message) {
-        return toTruncatedString(message, 200);
+    public static String toTruncatedString(Object message, int maxLength) {
+        return toTruncatedString(message, maxLength, true);
+    }
+
+    public static String toTruncatedString(Object message, boolean removeLinebreaks) {
+        return toTruncatedString(message, 200, removeLinebreaks);
+    }
+
+    public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
+        if (message == null)
+            return "null";
+
+
+        String result = StringUtils.abbreviate(message.toString(), maxLength);
+        if (removeLinebreaks)
+            return result.replace("\n", "");
+
+        return result;
+
     }
 
     public static String getRandomPrefix(int minLength, int maxLength) {
