@@ -172,7 +172,7 @@ public abstract class Overlay<T extends Overlay> {
     public Overlay() {
     }
 
-    public void show() {
+    public void show(boolean showAgainChecked) {
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
             addHeadLine();
@@ -185,10 +185,14 @@ public abstract class Overlay<T extends Overlay> {
                 addReportErrorButtons();
 
             addButtons();
-            addDontShowAgainCheckBox();
+            addDontShowAgainCheckBox(showAgainChecked);
             applyStyles();
             onShow();
         }
+    }
+
+    public void show() {
+        this.show(false);
     }
 
     protected void onShow() {
@@ -839,17 +843,23 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.getChildren().add(busyAnimation);
     }
 
-    protected void addDontShowAgainCheckBox() {
+    protected void addDontShowAgainCheckBox(boolean isChecked) {
         if (dontShowAgainId != null) {
             // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null)
                 dontShowAgainText = Res.get("popup.doNotShowAgain");
 
             CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
+            dontShowAgainCheckBox.setSelected(isChecked);
+            DontShowAgainLookup.dontShowAgain(dontShowAgainId, isChecked);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
             dontShowAgainCheckBox.setOnAction(e -> DontShowAgainLookup.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
+    }
+
+    protected void addDontShowAgainCheckBox() {
+        this.addDontShowAgainCheckBox(false);
     }
 
     protected void addButtons() {
