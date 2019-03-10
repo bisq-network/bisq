@@ -31,6 +31,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DAOTestingFeedbackWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
@@ -48,14 +49,17 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -63,6 +67,7 @@ import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -101,6 +106,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -203,6 +209,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
+        maybeShowDAOTestingFeedbackWindow();
+
         daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
         daoFacade.getAllBallots().addListener(ballotListChangeListener);
         daoFacade.addBsqStateListener(this);
@@ -221,6 +229,20 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         updateListItems();
         updateViews();
+    }
+
+    private void maybeShowDAOTestingFeedbackWindow() {
+        String testingPopupKey = "daoTestingFeedbackPopup";
+        if (DontShowAgainLookup.showAgain(testingPopupKey)) {
+            UserThread.runAfter(() -> {
+                if (sortedList.size() > 0 && sortedList.stream().map(proposalsListItem -> proposalsListItem.getProposal().getTxId())
+                        .flatMap(key -> bsqWalletService.getWalletTransactions().stream().map(Transaction::getHashAsString)
+                                .filter(key::equals)).findFirst().isPresent())
+                    new DAOTestingFeedbackWindow()
+                            .dontShowAgainId(testingPopupKey)
+                            .show();
+            }, 4, TimeUnit.SECONDS);
+        }
     }
 
     @Override

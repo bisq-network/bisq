@@ -27,6 +27,7 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DAOTestingFeedbackWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -54,12 +55,15 @@ import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -104,6 +108,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -358,7 +363,25 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         });
         Collections.reverse(cycleListItemList);
 
+        maybeShowDAOTestingFeedbackWindow();
+
         GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 2, 4);
+    }
+
+    private void maybeShowDAOTestingFeedbackWindow() {
+        String testingPopupKey = "daoTestingFeedbackPopup";
+        if (DontShowAgainLookup.showAgain(testingPopupKey)) {
+            UserThread.runAfter(() -> {
+                if (sortedCycleListItemList.size() > 0 && (sortedCycleListItemList.get(0).getResultsOfCycle().getEvaluatedProposals().stream().map(EvaluatedProposal::getProposalTxId)
+                        .flatMap(key -> bsqWalletService.getWalletTransactions().stream().map(Transaction::getHashAsString)
+                                .filter(key::equals)).findFirst().isPresent() || sortedCycleListItemList.get(0).getResultsOfCycle().getDecryptedVotesForCycle().stream().map(DecryptedBallotsWithMerits::getBlindVoteTxId)
+                        .flatMap(key -> bsqWalletService.getWalletTransactions().stream().map(Transaction::getHashAsString)
+                                .filter(key::equals)).findFirst().isPresent()))
+                    new DAOTestingFeedbackWindow()
+                            .dontShowAgainId(testingPopupKey)
+                            .show();
+            }, 4, TimeUnit.SECONDS);
+        }
     }
 
 
