@@ -328,7 +328,8 @@ message RepublishGovernanceDataRequest {
 }
 
 message GetDaoStateHashRequest {
-    int32 nonce = 1;
+    int32 from_block_height = 1;
+    int32 nonce = 2;
 }
 
 message GetDaoStateHashResponse {

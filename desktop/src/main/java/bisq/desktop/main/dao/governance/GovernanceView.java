@@ -27,6 +27,7 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.governance.consensus.ConsensusView;
 import bisq.desktop.main.dao.governance.dashboard.GovernanceDashboardView;
 import bisq.desktop.main.dao.governance.make.MakeProposalView;
 import bisq.desktop.main.dao.governance.proposals.ProposalsView;
@@ -56,7 +57,7 @@ public class GovernanceView extends ActivatableViewAndModel {
     private final Navigation navigation;
     private final DaoFacade daoFacade;
 
-    private MenuItem dashboard, make, open, result;
+    private MenuItem dashboard, make, open, result, consensus;
     private Navigation.Listener navigationListener;
 
     @FXML
@@ -102,7 +103,10 @@ public class GovernanceView extends ActivatableViewAndModel {
                 ProposalsView.class, baseNavPath);
         result = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.result"),
                 VoteResultView.class, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard, make, open, result);
+        consensus = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.consensus"),
+                ConsensusView.class, baseNavPath);
+
+        leftVBox.getChildren().addAll(dashboard, make, open, result, consensus);
     }
 
     @Override
@@ -113,6 +117,7 @@ public class GovernanceView extends ActivatableViewAndModel {
         make.activate();
         open.activate();
         result.activate();
+        consensus.activate();
 
         navigation.addListener(navigationListener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -140,6 +145,7 @@ public class GovernanceView extends ActivatableViewAndModel {
         make.deactivate();
         open.deactivate();
         result.deactivate();
+        consensus.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -150,6 +156,7 @@ public class GovernanceView extends ActivatableViewAndModel {
         else if (view instanceof MakeProposalView) toggleGroup.selectToggle(make);
         else if (view instanceof ProposalsView) toggleGroup.selectToggle(open);
         else if (view instanceof VoteResultView) toggleGroup.selectToggle(result);
+        else if (view instanceof ConsensusView) toggleGroup.selectToggle(consensus);
     }
 }
 

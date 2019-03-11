@@ -95,9 +95,9 @@ public class RequestDaoStateHashHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestDaoStateHash() {
+    public void requestDaoStateHash(int fromBlockHeight) {
         if (!stopped) {
-            GetDaoStateHashRequest getDaoStateHashRequest = new GetDaoStateHashRequest(nonce);
+            GetDaoStateHashRequest getDaoStateHashRequest = new GetDaoStateHashRequest(fromBlockHeight, nonce);
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {

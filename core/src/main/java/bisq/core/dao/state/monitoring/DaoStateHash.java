@@ -25,11 +25,13 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
+import java.util.Arrays;
+
 import lombok.Value;
 
 /**
  * Contains the blockHeight, the hash and the previous hash of the dao state.
- * As the hash is created from the dao state at the particular height includes the previous hash we get the history of
+ * As the hash is created from the dao state at the particular height including the previous hash we get the history of
  * the full chain included and we know if the hash matches at a particular height that all the past blocks need to match
  * as well.
  */
@@ -46,6 +48,10 @@ public class DaoStateHash implements PersistablePayload, NetworkPayload {
         this.blockHeight = blockHeight;
         this.hash = hash;
         this.prevHash = prevHash;
+    }
+
+    public boolean hasEqualHash(DaoStateHash other) {
+        return Arrays.equals(hash, other.getHash());
     }
 
 

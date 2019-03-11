@@ -33,10 +33,11 @@ import lombok.Getter;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class GetDaoStateHashRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
+    private final int fromBlockHeight;
     private final int nonce;
 
-    public GetDaoStateHashRequest(int nonce) {
-        this(nonce, Version.getP2PMessageVersion());
+    public GetDaoStateHashRequest(int fromBlockHeight, int nonce) {
+        this(fromBlockHeight, nonce, Version.getP2PMessageVersion());
     }
 
 
@@ -44,8 +45,9 @@ public final class GetDaoStateHashRequest extends NetworkEnvelope implements Dir
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetDaoStateHashRequest(int nonce, int messageVersion) {
+    private GetDaoStateHashRequest(int fromBlockHeight, int nonce, int messageVersion) {
         super(messageVersion);
+        this.fromBlockHeight = fromBlockHeight;
         this.nonce = nonce;
     }
 
@@ -53,12 +55,13 @@ public final class GetDaoStateHashRequest extends NetworkEnvelope implements Dir
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
                 .setGetDaoStateHashRequest(PB.GetDaoStateHashRequest.newBuilder()
+                        .setFromBlockHeight(fromBlockHeight)
                         .setNonce(nonce))
                 .build();
     }
 
     public static NetworkEnvelope fromProto(PB.GetDaoStateHashRequest proto, int messageVersion) {
-        return new GetDaoStateHashRequest(proto.getNonce(), messageVersion);
+        return new GetDaoStateHashRequest(proto.getFromBlockHeight(), proto.getNonce(), messageVersion);
     }
 
     @Override
@@ -69,6 +72,7 @@ public final class GetDaoStateHashRequest extends NetworkEnvelope implements Dir
     @Override
     public String toString() {
         return "GetDaoStateHashRequest{" +
+                ",\n     fromBlockHeight=" + fromBlockHeight +
                 ",\n     nonce=" + nonce +
                 "\n} " + super.toString();
     }

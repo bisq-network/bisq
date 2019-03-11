@@ -178,8 +178,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     public void initialize() {
         super.initialize();
 
-        root.getStyleClass().add("vote-root");
-
         gridRow = phasesView.addGroup(root, gridRow);
 
         proposalDisplayGridPane = new GridPane();

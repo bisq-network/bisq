@@ -2049,6 +2049,14 @@ textfield */
     -fx-fill: -fx-accent;
 }
 
+.dao-inSync {
+    -fx-text-fill: -bs-rd-green;
+}
+
+.dao-inConflict {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                              *
