@@ -55,7 +55,7 @@ public class DAOTestingFeedbackWindow extends Overlay<DAOTestingFeedbackWindow> 
     protected void addMessage() {
         super.addMessage();
 
-        HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("daoTestingFeedbackWindow.linkLabel"),
+        HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("daoTestingFeedbackWindow.surveyLinkLabel"),
                 "https://docs.google.com/forms/d/e/1FAIpQLSdS4YRE9Eox3bvuo4oSJJQCm5Yy54ZclKC_ThUt702PeU4rxw/viewform");
         GridPane.setMargin(survey, new Insets(-6, 0, 10, -4));
 
@@ -69,7 +69,7 @@ public class DAOTestingFeedbackWindow extends Overlay<DAOTestingFeedbackWindow> 
         GridPane.setColumnSpan(messageLabel2, 2);
         gridPane.getChildren().add(messageLabel2);
 
-        HyperlinkWithIcon forum = addHyperlinkWithIcon(gridPane, ++rowIndex, "https://bisq.community",
+        HyperlinkWithIcon forum = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("daoTestingFeedbackWindow.forumLinkLabel"),
                 "https://bisq.community", 40);
         GridPane.setMargin(forum, new Insets(-6, 0, 10, -4));
 
