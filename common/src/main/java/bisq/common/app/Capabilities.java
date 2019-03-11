@@ -96,7 +96,10 @@ public class Capabilities {
      * @return a {@link Capabilities} object
      */
     public static Capabilities fromIntList(List<Integer> capabilities) {
-        return new Capabilities(capabilities.stream().map(integer -> Capability.values()[integer]).collect(Collectors.toSet()));
+        return new Capabilities(capabilities.stream()
+                .filter(integer -> integer < Capability.values().length)
+                .map(integer -> Capability.values()[integer])
+                .collect(Collectors.toSet()));
     }
 
     @Override
