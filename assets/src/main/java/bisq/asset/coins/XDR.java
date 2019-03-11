@@ -22,7 +22,7 @@ import bisq.asset.Coin;
 public class XDR extends Coin {
 
     public XDR() {
-        super("XDR", "XDR", new Mile.MileAddressValidator());
+        super("XDR", "XDR0", new Mile.MileAddressValidator());
     }
 
 }
