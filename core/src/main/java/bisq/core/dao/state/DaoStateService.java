@@ -140,6 +140,8 @@ public class DaoStateService implements DaoSetupService {
 
         daoState.getDecryptedBallotsWithMeritsList().clear();
         daoState.getDecryptedBallotsWithMeritsList().addAll(snapshot.getDecryptedBallotsWithMeritsList());
+
+        daoStateListeners.forEach(l -> l.onSnapshotApplied());
     }
 
     public DaoState getClone() {

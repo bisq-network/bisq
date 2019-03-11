@@ -58,6 +58,8 @@ message NetworkEnvelope {
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
         NewDaoStateHashMessage new_dao_state_hash_message = 34;
+        GetDaoStateHashRequest get_dao_state_hash_request = 35;
+        GetDaoStateHashResponse get_dao_state_hash_response = 36;
     }
 }
 
@@ -325,6 +327,14 @@ message NewBlockBroadcastMessage {
 message RepublishGovernanceDataRequest {
 }
 
+message GetDaoStateHashRequest {
+    int32 nonce = 1;
+}
+
+message GetDaoStateHashResponse {
+    repeated DaoStateHash dao_state_hashes = 1;
+    int32 request_nonce = 2;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Payload

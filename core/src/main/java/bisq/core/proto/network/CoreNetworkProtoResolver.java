@@ -31,6 +31,8 @@ import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
+import bisq.core.dao.state.monitoring.messages.GetDaoStateHashRequest;
+import bisq.core.dao.state.monitoring.messages.GetDaoStateHashResponse;
 import bisq.core.dao.state.monitoring.messages.NewDaoStateHashMessage;
 import bisq.core.filter.Filter;
 import bisq.core.offer.OfferPayload;
@@ -163,6 +165,10 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return AckMessage.fromProto(proto.getAckMessage(), messageVersion);
                 case REPUBLISH_GOVERNANCE_DATA_REQUEST:
                     return RepublishGovernanceDataRequest.fromProto(proto.getRepublishGovernanceDataRequest(), messageVersion);
+                case GET_DAO_STATE_HASH_REQUEST:
+                    return GetDaoStateHashRequest.fromProto(proto.getGetDaoStateHashRequest(), messageVersion);
+                case GET_DAO_STATE_HASH_RESPONSE:
+                    return GetDaoStateHashResponse.fromProto(proto.getGetDaoStateHashResponse(), messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +

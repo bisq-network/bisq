@@ -17,17 +17,36 @@
 
 package bisq.core.dao.state.monitoring;
 
+import bisq.common.util.Utilities;
+
 import java.util.List;
 
 import lombok.Value;
 
+/**
+ * Contains the dao state of at a particular block height we have received from our peers.
+ */
 @Value
-public class DaoStateNetworkConsensus {
-    private final List<DaoStateHash> misMatch;
+public class NetworkDaoState {
+    private final int height;
+    private final List<PeersDaoStateHash> misMatchList;
     private final int numNetworkMessages;
+    private final byte[] myHash;
 
-    public DaoStateNetworkConsensus(List<DaoStateHash> misMatch, int numNetworkMessages) {
-        this.misMatch = misMatch;
+    NetworkDaoState(int height, List<PeersDaoStateHash> misMatchList, int numNetworkMessages, byte[] myHash) {
+        this.height = height;
+        this.misMatchList = misMatchList;
         this.numNetworkMessages = numNetworkMessages;
+        this.myHash = myHash;
+    }
+
+    @Override
+    public String toString() {
+        return "NetworkDaoState{" +
+                "\n     height=" + height +
+                ",\n     misMatchList=" + misMatchList +
+                ",\n     numNetworkMessages=" + numNetworkMessages +
+                ",\n     myHash=" + Utilities.bytesAsHexString(myHash) +
+                "\n}";
     }
 }

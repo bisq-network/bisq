@@ -17,6 +17,18 @@
 
 package bisq.core.dao.state.monitoring;
 
-public interface DaoStateMonitorListener {
-    void onDaoStateNetworkConsensusChanged();
+import lombok.Value;
+
+/**
+ * Wrapper for DaoStateHash objects of peers. If peer address is unknown we use a random string as peers ID.
+ */
+@Value
+class PeersDaoStateHash {
+    private final DaoStateHash daoStateHash;
+    private final String peersNodeAddress;
+
+    PeersDaoStateHash(DaoStateHash daoStateHash, String peersNodeAddress) {
+        this.daoStateHash = daoStateHash;
+        this.peersNodeAddress = peersNodeAddress;
+    }
 }

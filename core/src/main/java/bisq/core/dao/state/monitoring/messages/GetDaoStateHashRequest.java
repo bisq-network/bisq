@@ -17,9 +17,7 @@
 
 package bisq.core.dao.state.monitoring.messages;
 
-import bisq.core.dao.state.monitoring.DaoStateHash;
-
-import bisq.network.p2p.storage.messages.BroadcastMessage;
+import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
@@ -34,11 +32,11 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class NewDaoStateHashMessage extends BroadcastMessage implements CapabilityRequiringPayload {
-    private final DaoStateHash daoStateHash;
+public final class GetDaoStateHashRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
+    private final int nonce;
 
-    public NewDaoStateHashMessage(DaoStateHash daoStateHash) {
-        this(daoStateHash, Version.getP2PMessageVersion());
+    public GetDaoStateHashRequest(int nonce) {
+        this(nonce, Version.getP2PMessageVersion());
     }
 
 
@@ -46,21 +44,21 @@ public final class NewDaoStateHashMessage extends BroadcastMessage implements Ca
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private NewDaoStateHashMessage(DaoStateHash daoStateHash, int messageVersion) {
+    private GetDaoStateHashRequest(int nonce, int messageVersion) {
         super(messageVersion);
-        this.daoStateHash = daoStateHash;
+        this.nonce = nonce;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setNewDaoStateHashMessage(PB.NewDaoStateHashMessage.newBuilder()
-                        .setDaoStateHash(daoStateHash.toProtoMessage()))
+                .setGetDaoStateHashRequest(PB.GetDaoStateHashRequest.newBuilder()
+                        .setNonce(nonce))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NewDaoStateHashMessage proto, int messageVersion) {
-        return new NewDaoStateHashMessage(DaoStateHash.fromProto(proto.getDaoStateHash()), messageVersion);
+    public static NetworkEnvelope fromProto(PB.GetDaoStateHashRequest proto, int messageVersion) {
+        return new GetDaoStateHashRequest(proto.getNonce(), messageVersion);
     }
 
     @Override
@@ -70,8 +68,8 @@ public final class NewDaoStateHashMessage extends BroadcastMessage implements Ca
 
     @Override
     public String toString() {
-        return "NewDaoStateHashMessage{" +
-                "\n     daoStateHash=" + daoStateHash +
+        return "GetDaoStateHashRequest{" +
+                ",\n     nonce=" + nonce +
                 "\n} " + super.toString();
     }
 }

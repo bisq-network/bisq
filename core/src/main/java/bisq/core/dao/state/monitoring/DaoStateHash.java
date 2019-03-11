@@ -27,9 +27,17 @@ import com.google.protobuf.ByteString;
 
 import lombok.Value;
 
+/**
+ * Contains the blockHeight, the hash and the previous hash of the dao state.
+ * As the hash is created from the dao state at the particular height includes the previous hash we get the history of
+ * the full chain included and we know if the hash matches at a particular height that all the past blocks need to match
+ * as well.
+ */
 @Value
 public class DaoStateHash implements PersistablePayload, NetworkPayload {
     private final int blockHeight;
+    // Hash includes prev hash as well as dao state hash. With adding prev hash we can ensure the all the history is
+    // matching if our hash matches.
     private final byte[] hash;
     // For first block the prevHash is an empty byte array
     private final byte[] prevHash;
