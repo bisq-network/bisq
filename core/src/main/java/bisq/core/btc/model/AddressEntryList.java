@@ -25,6 +25,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.wallet.Wallet;
 
@@ -123,22 +124,29 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             persist();
         }
 
-        // We add a confidence listener to get notified about potential new transactions and
+        // We add those listeners to get notified about potential new transactions and
         // add an address entry list in case it does not exist yet. This is mainly needed for restore from seed words
         // but can help as well in case the addressEntry list would miss an address where the wallet was received
         // funds (e.g. if the user sends funds to an address which has not been provided in the main UI - like from the
         // wallet details window).
-        wallet.addTransactionConfidenceEventListener((w, tx) -> {
-            tx.getOutputs().stream()
-                    .filter(output -> output.isMine(wallet))
-                    .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
-                    .filter(Objects::nonNull)
-                    .filter(address -> !listContainsEntryWithAddress(address.toBase58()))
-                    .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
-                    .filter(Objects::nonNull)
-                    .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
-                    .forEach(addressEntry -> list.add(addressEntry));
+        wallet.addCoinsReceivedEventListener((w, tx, prevBalance, newBalance) -> {
+            updateList(tx);
         });
+        wallet.addCoinsSentEventListener((w, tx, prevBalance, newBalance) -> {
+            updateList(tx);
+        });
+    }
+
+    private void updateList(Transaction tx) {
+        tx.getOutputs().stream()
+                .filter(output -> output.isMine(wallet))
+                .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
+                .filter(Objects::nonNull)
+                .filter(address -> !listContainsEntryWithAddress(address.toBase58()))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
+                .filter(Objects::nonNull)
+                .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
+                .forEach(addressEntry -> list.add(addressEntry));
     }
 
     private boolean listContainsEntryWithAddress(String addressString) {
