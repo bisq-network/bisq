@@ -305,6 +305,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     return getDecryptedBallotsWithMerits(voteRevealTxId, currentCycle, voteRevealOpReturnData,
                             blindVoteTxId, hashOfBlindVoteList, blindVoteStake, optionalBlindVote.get());
                 }
+
+                // We are missing P2P network data
                 return getEmptyDecryptedBallotsWithMerits(voteRevealTxId, blindVoteTxId, hashOfBlindVoteList,
                         blindVoteStake);
             } catch (Throwable e) {
