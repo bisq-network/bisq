@@ -34,8 +34,12 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.MyProposalList;
+import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
@@ -124,6 +128,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final Navigation navigation;
+    private MyProposalListService myProposalListService;
+    private MyBlindVoteListService myBlindVoteListService;
     private Button exportButton;
 
     private int gridRow = 0;
@@ -160,7 +166,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                           BsqWalletService bsqWalletService,
                           Preferences preferences,
                           BsqFormatter bsqFormatter,
-                          Navigation navigation) {
+                          Navigation navigation,
+                          MyProposalListService myProposalListService,
+                          MyBlindVoteListService myBlindVoteListService) {
         this.daoFacade = daoFacade;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
@@ -172,6 +180,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
         this.navigation = navigation;
+        this.myProposalListService = myProposalListService;
+        this.myBlindVoteListService = myBlindVoteListService;
     }
 
     @Override
@@ -372,11 +382,10 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         String testingPopupKey = "daoTestingFeedbackPopup";
         if (DontShowAgainLookup.showAgain(testingPopupKey)) {
             UserThread.runAfter(() -> {
-                if (sortedCycleListItemList.size() > 0 && (sortedCycleListItemList.get(0).getResultsOfCycle().getEvaluatedProposals().stream().map(EvaluatedProposal::getProposalTxId)
-                        .flatMap(key -> bsqWalletService.getWalletTransactions().stream().map(Transaction::getHashAsString)
-                                .filter(key::equals)).findFirst().isPresent() || sortedCycleListItemList.get(0).getResultsOfCycle().getDecryptedVotesForCycle().stream().map(DecryptedBallotsWithMerits::getBlindVoteTxId)
-                        .flatMap(key -> bsqWalletService.getWalletTransactions().stream().map(Transaction::getHashAsString)
-                                .filter(key::equals)).findFirst().isPresent()))
+                if (myProposalListService.getList().stream().map(Proposal::getTxId)
+                        .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())) ||
+                myBlindVoteListService.getMyBlindVoteList().stream().map(BlindVote::getTxId)
+                        .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())))
                     new DAOTestingFeedbackWindow()
                             .dontShowAgainId(testingPopupKey)
                             .show();

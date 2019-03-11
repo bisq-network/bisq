@@ -209,8 +209,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
-        maybeShowDAOTestingFeedbackWindow();
-
         daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
         daoFacade.getAllBallots().addListener(ballotListChangeListener);
         daoFacade.addBsqStateListener(this);
@@ -229,20 +227,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         updateListItems();
         updateViews();
-    }
-
-    private void maybeShowDAOTestingFeedbackWindow() {
-        String testingPopupKey = "daoTestingFeedbackPopup";
-        if (DontShowAgainLookup.showAgain(testingPopupKey)) {
-            UserThread.runAfter(() -> {
-                if (sortedList.size() > 0 && sortedList.stream().map(proposalsListItem -> proposalsListItem.getProposal().getTxId())
-                        .flatMap(key -> bsqWalletService.getWalletTransactions().stream().map(Transaction::getHashAsString)
-                                .filter(key::equals)).findFirst().isPresent())
-                    new DAOTestingFeedbackWindow()
-                            .dontShowAgainId(testingPopupKey)
-                            .show();
-            }, 4, TimeUnit.SECONDS);
-        }
     }
 
     @Override
