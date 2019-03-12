@@ -159,24 +159,28 @@ public class RequestDaoStateHashHandler implements MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDaoStateHashResponse) {
-            if (!stopped) {
-                GetDaoStateHashResponse getDaoStateHashResponse = (GetDaoStateHashResponse) networkEnvelope;
-                if (getDaoStateHashResponse.getRequestNonce() == nonce) {
-                    stopTimeoutTimer();
-                    cleanup();
-                    log.info("We received from peer {} a DaoStateHashResponse with {} daoStateHashes",
-                            nodeAddress.getFullAddress(), getDaoStateHashResponse.getDaoStateHashes().size());
-                    listener.onComplete(getDaoStateHashResponse, connection.getPeersNodeAddressOptional());
+            if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
+                if (!stopped) {
+                    GetDaoStateHashResponse getDaoStateHashResponse = (GetDaoStateHashResponse) networkEnvelope;
+                    if (getDaoStateHashResponse.getRequestNonce() == nonce) {
+                        stopTimeoutTimer();
+                        cleanup();
+                        log.info("We received from peer {} a DaoStateHashResponse with {} daoStateHashes",
+                                nodeAddress.getFullAddress(), getDaoStateHashResponse.getDaoStateHashes().size());
+                        listener.onComplete(getDaoStateHashResponse, connection.getPeersNodeAddressOptional());
+                    } else {
+                        log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                                        "handshake (timeout causes connection close but peer might have sent a msg before " +
+                                        "connection was closed).\n\t" +
+                                        "We drop that message. nonce={} / requestNonce={}",
+                                nonce, getDaoStateHashResponse.getRequestNonce());
+                    }
                 } else {
-                    log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
-                                    "handshake (timeout causes connection close but peer might have sent a msg before " +
-                                    "connection was closed).\n\t" +
-                                    "We drop that message. nonce={} / requestNonce={}",
-                            nonce, getDaoStateHashResponse.getRequestNonce());
+                    log.warn("We have stopped already.");
                 }
-            } else {
-                log.warn("We have stopped already.");
             }
+        } else {
+            log.warn("We got a message from another connection and ignore it. That should never happen.");
         }
     }
 
