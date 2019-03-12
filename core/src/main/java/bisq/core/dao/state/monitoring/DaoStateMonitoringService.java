@@ -203,9 +203,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         int height = block.getHeight();
         if (daoStateBlockchain.isEmpty()) {
             // Only at genesis we allow an empty prevHash
-            checkArgument(height == genesisTxInfo.getGenesisBlockHeight(),
-                    "If daoStateBlockchain is empty we need to have received the genesis block.");
-            prevHash = new byte[0];
+            if (height == genesisTxInfo.getGenesisBlockHeight()) {
+                prevHash = new byte[0];
+            } else {
+                log.warn("DaoStateBlockchain is empty but we received the block which was not the genesis block. " +
+                        "We stop execution here.");
+                return;
+            }
         } else {
             // TODO check if in reorg cases it might be a valid case
             checkArgument(height > daoStateBlockchain.getLast().getBlockHeight(),

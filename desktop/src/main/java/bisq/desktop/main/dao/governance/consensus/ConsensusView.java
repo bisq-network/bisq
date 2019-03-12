@@ -230,7 +230,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
         if (item != null) {
             daoStateInConflictListItems.setAll(item.getDaoStateBlock().getInConflictMap().entrySet().stream()
                     .map(e -> new DaoStateInConflictListItem(e.getKey(), e.getValue())).collect(Collectors.toList()));
-            GUIUtil.setFitToRowsForTableView(conflictTableView, 25, 28, 2, 4);
+            GUIUtil.setFitToRowsForTableView(conflictTableView, 38, 28, 2, 4);
             conflictTableView.layout();
         }
     }
