@@ -421,6 +421,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
                 Bond bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
+
+                if (!bond.isActive())
+                    throw new ValidationException("Bond is not locked and can't be confiscated");
+
                 return daoFacade.getConfiscateBondProposalWithTransaction(name, link, bond.getLockupTxId());
             case GENERIC:
                 return daoFacade.getGenericProposalWithTransaction(name, link);

@@ -347,7 +347,8 @@ public class ProposalDisplay {
                             bondType = Res.get("dao.bond.bondedReputation");
                             bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
                         }
-
+                        if (!bond.isActive())
+                            bondDetails += " (" + Res.get("dao.bond.bondInactive") + ")";
                         return bondType + ": " + bondDetails;
                     }
 
