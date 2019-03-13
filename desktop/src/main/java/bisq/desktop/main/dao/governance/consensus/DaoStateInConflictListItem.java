@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.governance.consensus;
 
 import bisq.core.dao.state.monitoring.DaoStateHash;
-import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
 
@@ -32,13 +31,14 @@ class DaoStateInConflictListItem {
     private final String blockHeight;
     private final String hash;
     private final String prevHash;
+    private final DaoStateHash daoStateHash;
 
     DaoStateInConflictListItem(String peerAddress, DaoStateHash daoStateHash) {
+        this.daoStateHash = daoStateHash;
         this.peerAddress = peerAddress;
         blockHeight = String.valueOf(daoStateHash.getBlockHeight());
         hash = Utilities.bytesAsHexString(daoStateHash.getHash());
         prevHash = daoStateHash.getPrevHash().length > 0 ?
-                Utilities.bytesAsHexString(daoStateHash.getPrevHash()) :
-                Res.get("shared.na");
+                Utilities.bytesAsHexString(daoStateHash.getPrevHash()) : "-";
     }
 }

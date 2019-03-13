@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.governance.consensus;
 
 import bisq.core.dao.state.monitoring.DaoStateBlock;
-import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
 
@@ -41,7 +40,7 @@ class DaoStateBlockListItem {
 
         height = String.valueOf(daoStateBlock.getBlockHeight());
         hash = Utilities.bytesAsHexString(daoStateBlock.getHash());
-        prevHash = daoStateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(daoStateBlock.getPrevHash()) : Res.get("shared.na");
+        prevHash = daoStateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(daoStateBlock.getPrevHash()) : "-";
         numNetworkMessages = String.valueOf(daoStateBlock.getPeersMap().size());
         int size = daoStateBlock.getInConflictMap().size();
         numMisMatches = String.valueOf(size);
