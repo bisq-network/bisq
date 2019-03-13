@@ -287,7 +287,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateBlockListItem::getHeight));
+        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getBlockHeight()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(column);
         tableView.getSortOrder().add(column);
@@ -363,7 +363,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateBlockListItem::getNumNetworkMessages));
+        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getPeersMap().size()));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.numMisMatches"));
@@ -387,7 +387,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateBlockListItem::getNumMisMatches));
+        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getInConflictMap().size()));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>("");
@@ -448,7 +448,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateInConflictListItem::getBlockHeight));
+        column.setComparator(Comparator.comparing(e -> e.getDaoStateHash().getBlockHeight()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         conflictTableView.getColumns().add(column);
         conflictTableView.getSortOrder().add(column);
