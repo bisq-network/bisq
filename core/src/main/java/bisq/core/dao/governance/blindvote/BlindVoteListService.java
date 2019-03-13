@@ -105,7 +105,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
 
     @Override
     public void onAdded(PersistableNetworkPayload payload) {
-        onAppendOnlyDataAdded(payload);
+        onAppendOnlyDataAdded(payload, true);
     }
 
 
@@ -126,10 +126,10 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void fillListFromAppendOnlyDataStore() {
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(this::onAppendOnlyDataAdded);
+        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
     }
 
-    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload) {
+    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload, boolean doLog) {
         if (persistableNetworkPayload instanceof BlindVotePayload) {
             BlindVotePayload blindVotePayload = (BlindVotePayload) persistableNetworkPayload;
             if (!blindVotePayloads.contains(blindVotePayload)) {
@@ -140,7 +140,9 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
                 if (blindVoteValidator.areDataFieldsValid(blindVote)) {
                     // We don't validate as we might receive blindVotes from other cycles or phases at startup.
                     blindVotePayloads.add(blindVotePayload);
-                    log.info("We received a blindVotePayload. blindVoteTxId={}", txId);
+                    if (doLog) {
+                        log.info("We received a blindVotePayload. blindVoteTxId={}", txId);
+                    }
                 } else {
                     log.warn("We received an invalid blindVotePayload. blindVoteTxId={}", txId);
                 }
