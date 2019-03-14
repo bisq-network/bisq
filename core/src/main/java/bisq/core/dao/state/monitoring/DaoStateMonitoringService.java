@@ -129,7 +129,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         daoStateNetworkService.addListeners();
 
         // We wait for processing messages until we have completed batch processing
-        int fromBlockHeight = daoStateService.getChainHeight() - 100;
+        int fromBlockHeight = daoStateService.getChainHeight() - 10;
         daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromBlockHeight);
     }
 
@@ -140,7 +140,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Override
     public void onNewDaoStateHashMessage(NewDaoStateHashMessage newDaoStateHashMessage, Connection connection) {
         if (newDaoStateHashMessage.getDaoStateHash().getBlockHeight() <= daoStateService.getChainHeight()) {
-            processPeersDaoStateHash(newDaoStateHashMessage.getDaoStateHash(), connection.getPeersNodeAddressOptional());
+            processPeersDaoStateHash(newDaoStateHashMessage.getDaoStateHash(), connection.getPeersNodeAddressOptional(), true);
         }
     }
 
@@ -154,9 +154,21 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         daoStateNetworkService.sendGetDaoStateHashResponse(connection, getDaoStateHashRequest.getNonce(), daoStateHashes);
     }
 
+
     @Override
-    public void onPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress) {
-        processPeersDaoStateHash(daoStateHash, peersNodeAddress);
+    public void onPeersDaoStateHashes(List<DaoStateHash> daoStateHashes, Optional<NodeAddress> peersNodeAddress) {
+        AtomicBoolean hasChanged = new AtomicBoolean(false);
+
+        daoStateHashes.forEach(daoStateHash -> {
+            boolean changed = processPeersDaoStateHash(daoStateHash, peersNodeAddress, false);
+            if (changed) {
+                hasChanged.set(true);
+            }
+        });
+
+        if (hasChanged.get()) {
+            listeners.forEach(Listener::onDaoStateBlockchainChanged);
+        }
     }
 
 
@@ -244,7 +256,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
     }
 
-    private void processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress) {
+    private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean isInConflict = new AtomicBoolean(this.isInConflict);
         StringBuilder sb = new StringBuilder();
@@ -275,8 +287,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             log.warn(conflictMsg);
         }
 
-        if (changed.get()) {
+        if (notifyListeners && changed.get()) {
             listeners.forEach(Listener::onDaoStateBlockchainChanged);
         }
+
+        return changed.get();
     }
 }

@@ -135,7 +135,9 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         .show())
         );
 
-        onDataUpdate();
+        if (daoStateService.isParseBlockChainComplete()) {
+            onDataUpdate();
+        }
     }
 
     @Override

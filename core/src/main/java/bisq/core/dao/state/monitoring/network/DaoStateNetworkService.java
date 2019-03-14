@@ -71,7 +71,7 @@ public class DaoStateNetworkService implements DaoStateListener, MessageListener
 
         void onGetDaoStateHashRequest(Connection connection, GetDaoStateHashRequest getDaoStateHashRequest);
 
-        void onPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress);
+        void onPeersDaoStateHashes(List<DaoStateHash> daoStateHash, Optional<NodeAddress> peersNodeAddress);
     }
 
     //TODO testing
@@ -106,8 +106,8 @@ public class DaoStateNetworkService implements DaoStateListener, MessageListener
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof NewDaoStateHashMessage) {
             NewDaoStateHashMessage newDaoStateHashMessage = (NewDaoStateHashMessage) networkEnvelope;
-            log.info("We received a NewDaoStateHashMessage {} from peer {}",
-                    newDaoStateHashMessage, connection.getPeersNodeAddressOptional());
+            log.info("We received a newDaoStateHashMessage from peer {}. NewDaoStateHashMessage={} ",
+                    connection.getPeersNodeAddressOptional(), newDaoStateHashMessage);
 
             listeners.forEach(e -> e.onNewDaoStateHashMessage(newDaoStateHashMessage, connection));
         } else if (networkEnvelope instanceof GetDaoStateHashRequest) {
@@ -178,8 +178,7 @@ public class DaoStateNetworkService implements DaoStateListener, MessageListener
                     public void onComplete(GetDaoStateHashResponse getDaoStateHashResponse, Optional<NodeAddress> peersNodeAddress) {
                         log.debug("requestDaoStateHashHandler of outbound connection complete. nodeAddress={}", nodeAddress);
                         requestDaoStateHashHandlerMap.remove(nodeAddress);
-                        getDaoStateHashResponse.getDaoStateHashes()
-                                .forEach(daoStateHash -> listeners.forEach(e -> e.onPeersDaoStateHash(daoStateHash, peersNodeAddress)));
+                        listeners.forEach(e -> e.onPeersDaoStateHashes(getDaoStateHashResponse.getDaoStateHashes(), peersNodeAddress));
                     }
 
                     @Override
