@@ -34,6 +34,7 @@ import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
+import bisq.core.dao.state.DaoEventCoordinator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
@@ -71,11 +72,17 @@ public class DaoSetup {
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService,
                     DaoKillSwitch daoKillSwitch,
-                    DaoStateMonitoringService daoStateMonitoringService) {
+                    DaoStateMonitoringService daoStateMonitoringService,
+                    DaoEventCoordinator daoEventCoordinator) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
 
         // We need to take care of order of execution.
+
+        // For order critical event flow we use the daoEventCoordinator to delegate the calls from anonymous listeners
+        // to concrete clients.
+        daoSetupServices.add(daoEventCoordinator);
+
         daoSetupServices.add(daoStateService);
         daoSetupServices.add(cycleService);
         daoSetupServices.add(ballotListService);

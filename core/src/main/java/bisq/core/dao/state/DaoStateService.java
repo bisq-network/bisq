@@ -46,9 +46,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -123,14 +123,17 @@ public class DaoStateService implements DaoSetupService {
         daoState.getUnspentTxOutputMap().clear();
         daoState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
 
+        daoState.getNonBsqTxOutputMap().clear();
+        daoState.getNonBsqTxOutputMap().putAll(snapshot.getNonBsqTxOutputMap());
+
+        daoState.getSpentInfoMap().clear();
+        daoState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
+
         daoState.getConfiscatedLockupTxList().clear();
         daoState.getConfiscatedLockupTxList().addAll(snapshot.getConfiscatedLockupTxList());
 
         daoState.getIssuanceMap().clear();
         daoState.getIssuanceMap().putAll(snapshot.getIssuanceMap());
-
-        daoState.getSpentInfoMap().clear();
-        daoState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
 
         daoState.getParamChangeList().clear();
         daoState.getParamChangeList().addAll(snapshot.getParamChangeList());
@@ -140,8 +143,6 @@ public class DaoStateService implements DaoSetupService {
 
         daoState.getDecryptedBallotsWithMeritsList().clear();
         daoState.getDecryptedBallotsWithMeritsList().addAll(snapshot.getDecryptedBallotsWithMeritsList());
-
-        daoStateListeners.forEach(l -> l.onSnapshotApplied());
     }
 
     public DaoState getClone() {
@@ -235,7 +236,6 @@ public class DaoStateService implements DaoSetupService {
         // VoteResult and other listeners like balances usually listen on onParseTxsCompleteAfterBatchProcessing
         // so we need to make sure that vote result calculation is completed before (e.g. for comp. request to
         // update balance).
-        // TODO the dependency on ordering is nto good here.... Listeners should not depend on order of execution.
         daoStateListeners.forEach(l -> l.onParseBlockComplete(block));
 
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
@@ -347,8 +347,8 @@ public class DaoStateService implements DaoSetupService {
                 .flatMap(block -> block.getTxs().stream());
     }
 
-    public Map<String, Tx> getTxMap() {
-        return getTxStream().collect(Collectors.toMap(Tx::getId, tx -> tx));
+    public TreeMap<String, Tx> getTxMap() {
+        return new TreeMap<>(getTxStream().collect(Collectors.toMap(Tx::getId, tx -> tx)));
     }
 
     public Set<Tx> getTxs() {
@@ -431,7 +431,7 @@ public class DaoStateService implements DaoSetupService {
     // UnspentTxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
+    public TreeMap<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
         return daoState.getUnspentTxOutputMap();
     }
 
@@ -630,13 +630,12 @@ public class DaoStateService implements DaoSetupService {
         assertDaoStateChange();
         checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
                 "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
-        log.info("addNonBsqTxOutput: txOutput={}", txOutput);
         daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
     public Optional<TxOutput> getBtcTxOutput(TxOutputKey key) {
         // Issuance candidates which did not got accepted in voting are covered here
-        Map<TxOutputKey, TxOutput> nonBsqTxOutputMap = daoState.getNonBsqTxOutputMap();
+        TreeMap<TxOutputKey, TxOutput> nonBsqTxOutputMap = daoState.getNonBsqTxOutputMap();
         if (nonBsqTxOutputMap.containsKey(key))
             return Optional.of(nonBsqTxOutputMap.get(key));
 
@@ -956,9 +955,13 @@ public class DaoStateService implements DaoSetupService {
 
     public void addEvaluatedProposalSet(Set<EvaluatedProposal> evaluatedProposals) {
         assertDaoStateChange();
+
         evaluatedProposals.stream()
                 .filter(e -> !daoState.getEvaluatedProposalList().contains(e))
                 .forEach(daoState.getEvaluatedProposalList()::add);
+
+        // We need deterministic order for the hash chain
+        daoState.getEvaluatedProposalList().sort(Comparator.comparing(EvaluatedProposal::getProposalTxId));
     }
 
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
@@ -967,9 +970,13 @@ public class DaoStateService implements DaoSetupService {
 
     public void addDecryptedBallotsWithMeritsSet(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
         assertDaoStateChange();
+
         decryptedBallotsWithMeritsSet.stream()
                 .filter(e -> !daoState.getDecryptedBallotsWithMeritsList().contains(e))
                 .forEach(daoState.getDecryptedBallotsWithMeritsList()::add);
+
+        // We need deterministic order for the hash chain
+        daoState.getDecryptedBallotsWithMeritsList().sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
     }
 
 
@@ -1000,6 +1007,15 @@ public class DaoStateService implements DaoSetupService {
 
     public void removeDaoStateListener(DaoStateListener listener) {
         daoStateListeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String daoStateToString() {
+        return daoState.toString();
     }
 
 

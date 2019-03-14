@@ -1726,6 +1726,7 @@ message DecryptedBallotsWithMerits {
 
 message DaoStateStore {
     BsqState bsq_state = 1;
+    repeated DaoStateHash dao_state_hash = 2;
 }
 
 message DaoStateHash {

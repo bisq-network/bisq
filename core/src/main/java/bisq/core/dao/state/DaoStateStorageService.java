@@ -18,6 +18,8 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.monitoring.DaoStateHash;
+import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
@@ -30,6 +32,7 @@ import javax.inject.Named;
 
 import java.io.File;
 
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private static final String FILE_NAME = "DaoStateStore";
 
-    private DaoState daoState;
+    private final DaoState daoState;
+    private final DaoStateMonitoringService daoStateMonitoringService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -51,10 +55,12 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     @Inject
     public DaoStateStorageService(ResourceDataStoreService resourceDataStoreService,
                                   DaoState daoState,
+                                  DaoStateMonitoringService daoStateMonitoringService,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   Storage<DaoStateStore> daoSnapshotStorage) {
         super(storageDir, daoSnapshotStorage);
         this.daoState = daoState;
+        this.daoStateMonitoringService = daoStateMonitoringService;
 
         resourceDataStoreService.addService(this);
     }
@@ -69,12 +75,13 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return FILE_NAME;
     }
 
-    public void persist(DaoState daoState) {
-        persist(daoState, 200);
+    public void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
+        persist(daoState, daoStateHashChain, 200);
     }
 
-    public void persist(DaoState daoState, long delayInMilli) {
+    private void persist(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain, long delayInMilli) {
         store.setDaoState(daoState);
+        store.setDaoStateHashChain(daoStateHashChain);
         storage.queueUpForSave(store, delayInMilli);
     }
 
@@ -82,8 +89,12 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return store.getDaoState();
     }
 
+    public LinkedList<DaoStateHash> getPersistedDaoStateHashChain() {
+        return store.getDaoStateHashChain();
+    }
+
     public void resetDaoState(Runnable resultHandler) {
-        persist(new DaoState(), 1);
+        persist(new DaoState(), new LinkedList<>(), 1);
         UserThread.runAfter(resultHandler, 300, TimeUnit.MILLISECONDS);
     }
 
@@ -94,6 +105,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     protected DaoStateStore createStore() {
-        return new DaoStateStore(DaoState.getClone(daoState));
+        return new DaoStateStore(DaoState.getClone(daoState), new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()));
     }
 }

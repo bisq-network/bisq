@@ -37,7 +37,4 @@ public interface DaoStateListener {
     // block arrives.
     default void onDaoStateChanged(Block block) {
     }
-
-    default void onSnapshotApplied() {
-    }
 }

@@ -73,6 +73,7 @@ import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
+import bisq.core.dao.state.DaoEventCoordinator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
@@ -101,6 +102,7 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(DaoSetup.class).in(Singleton.class);
         bind(DaoFacade.class).in(Singleton.class);
+        bind(DaoEventCoordinator.class).in(Singleton.class);
         bind(DaoKillSwitch.class).in(Singleton.class);
 
         // Node, parser
