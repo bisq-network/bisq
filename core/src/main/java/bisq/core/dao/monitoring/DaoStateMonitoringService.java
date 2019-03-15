@@ -233,8 +233,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             }
         } else {
             // TODO check if in reorg cases it might be a valid case
-            checkArgument(height > daoStateBlockChain.getLast().getHeight(),
-                    "We got a block the same blockHeight as our previous block in the daoStateBlockchain.");
+            checkArgument(height == daoStateBlockChain.getLast().getHeight() + 1,
+                    "New block must be 1 block above previous block. height={}, " +
+                            "daoStateBlockChain.getLast().getHeight()={}",
+                    height, daoStateBlockChain.getLast().getHeight());
             prevHash = daoStateBlockChain.getLast().getHash();
         }
         byte[] stateHash = daoStateService.getSerializedDaoState();
@@ -256,6 +258,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
             // We delay broadcast to give peers enough time to have received the block.
             // Otherwise they would ignore our data if received block is in future to their local blockchain.
+            //TODO increase to 5-10 sec
             int delayInSec = 1 + new Random().nextInt(5);
             UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
         }

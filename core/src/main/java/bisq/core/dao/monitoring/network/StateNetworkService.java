@@ -85,6 +85,7 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
     @Getter
     private final Map<NodeAddress, Han> requestStateHashHandlerMap = new HashMap<>();
     private final List<Listener<Msg, Req, StH>> listeners = new CopyOnWriteArrayList<>();
+    private boolean messageListenerAdded;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +148,10 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addListeners() {
-        networkNode.addMessageListener(this);
+        if (!messageListenerAdded) {
+            networkNode.addMessageListener(this);
+            messageListenerAdded = true;
+        }
     }
 
     public void sendGetStateHashesResponse(Connection connection, int nonce, List<StH> stateHashes) {

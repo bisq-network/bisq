@@ -175,9 +175,9 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getCycles();
     }
 
-    public void addCycle(Cycle firstCycle) {
+    public void addCycle(Cycle cycle) {
         assertDaoStateChange();
-        getCycles().add(firstCycle);
+        getCycles().add(cycle);
     }
 
     @Nullable
