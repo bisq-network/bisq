@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.governance.consensus;
 
-import bisq.core.dao.state.monitoring.DaoStateHash;
+import bisq.core.dao.monitoring.model.DaoStateHash;
 
 import bisq.common.util.Utilities;
 
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 class DaoStateInConflictListItem {
     private final String peerAddress;
-    private final String blockHeight;
+    private final String height;
     private final String hash;
     private final String prevHash;
     private final DaoStateHash daoStateHash;
@@ -36,7 +36,7 @@ class DaoStateInConflictListItem {
     DaoStateInConflictListItem(String peerAddress, DaoStateHash daoStateHash) {
         this.daoStateHash = daoStateHash;
         this.peerAddress = peerAddress;
-        blockHeight = String.valueOf(daoStateHash.getBlockHeight());
+        height = String.valueOf(daoStateHash.getHeight());
         hash = Utilities.bytesAsHexString(daoStateHash.getHash());
         prevHash = daoStateHash.getPrevHash().length > 0 ?
                 Utilities.bytesAsHexString(daoStateHash.getPrevHash()) : "-";

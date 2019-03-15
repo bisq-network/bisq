@@ -15,12 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.monitoring.messages;
+package bisq.core.dao.monitoring.network.messages;
 
-import bisq.core.dao.state.monitoring.DaoStateHash;
-
-import bisq.network.p2p.DirectMessage;
-import bisq.network.p2p.ExtendedDataSizePermission;
+import bisq.core.dao.monitoring.model.ProposalStateHash;
 
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -36,12 +33,9 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class GetDaoStateHashResponse extends NetworkEnvelope implements DirectMessage, ExtendedDataSizePermission {
-    private final List<DaoStateHash> daoStateHashes;
-    private final int requestNonce;
-
-    public GetDaoStateHashResponse(List<DaoStateHash> daoStateHashes, int requestNonce) {
-        this(daoStateHashes, requestNonce, Version.getP2PMessageVersion());
+public final class GetProposalStateHashesResponse extends GetStateHashesResponse<ProposalStateHash> {
+    public GetProposalStateHashesResponse(List<ProposalStateHash> proposalStateHashes, int requestNonce) {
+        super(proposalStateHashes, requestNonce, Version.getP2PMessageVersion());
     }
 
 
@@ -49,40 +43,30 @@ public final class GetDaoStateHashResponse extends NetworkEnvelope implements Di
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetDaoStateHashResponse(List<DaoStateHash> daoStateHashes,
-                                    int requestNonce,
-                                    int messageVersion) {
-        super(messageVersion);
-        this.daoStateHashes = daoStateHashes;
-        this.requestNonce = requestNonce;
+    private GetProposalStateHashesResponse(List<ProposalStateHash> proposalStateHashes,
+                                           int requestNonce,
+                                           int messageVersion) {
+        super(proposalStateHashes, requestNonce, messageVersion);
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetDaoStateHashResponse(PB.GetDaoStateHashResponse.newBuilder()
-                        .addAllDaoStateHashes(daoStateHashes.stream()
-                                .map(DaoStateHash::toProtoMessage)
+                .setGetProposalStateHashesResponse(PB.GetProposalStateHashesResponse.newBuilder()
+                        .addAllStateHashes(stateHashes.stream()
+                                .map(ProposalStateHash::toProtoMessage)
                                 .collect(Collectors.toList()))
                         .setRequestNonce(requestNonce))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetDaoStateHashResponse proto, int messageVersion) {
-        return new GetDaoStateHashResponse(proto.getDaoStateHashesList().isEmpty() ?
+    public static NetworkEnvelope fromProto(PB.GetProposalStateHashesResponse proto, int messageVersion) {
+        return new GetProposalStateHashesResponse(proto.getStateHashesList().isEmpty() ?
                 new ArrayList<>() :
-                proto.getDaoStateHashesList().stream()
-                        .map(DaoStateHash::fromProto)
+                proto.getStateHashesList().stream()
+                        .map(ProposalStateHash::fromProto)
                         .collect(Collectors.toList()),
                 proto.getRequestNonce(),
                 messageVersion);
-    }
-
-    @Override
-    public String toString() {
-        return "GetDaoStateHashResponse{" +
-                "\n     daoStateHashes=" + daoStateHashes +
-                ",\n     requestNonce=" + requestNonce +
-                "\n} " + super.toString();
     }
 }

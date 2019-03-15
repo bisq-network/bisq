@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.monitoring.network;
+package bisq.core.dao.monitoring.network;
 
-import bisq.core.dao.state.monitoring.messages.GetDaoStateHashRequest;
-import bisq.core.dao.state.monitoring.messages.GetDaoStateHashResponse;
+import bisq.core.dao.monitoring.network.messages.GetStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetStateHashesResponse;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -43,11 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Sends a GetDaoStateHashRequest to a seed node and listens on corresponding GetDaoStateHashResponse.
- */
 @Slf4j
-public class RequestDaoStateHashHandler implements MessageListener {
+abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res extends GetStateHashesResponse> implements MessageListener {
     private static final long TIMEOUT = 120;
 
 
@@ -55,8 +52,8 @@ public class RequestDaoStateHashHandler implements MessageListener {
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public interface Listener {
-        void onComplete(GetDaoStateHashResponse getDaoStateHashResponse, Optional<NodeAddress> peersNodeAddress);
+    public interface Listener<Res extends GetStateHashesResponse> {
+        void onComplete(Res getStateHashesResponse, Optional<NodeAddress> peersNodeAddress);
 
         @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
@@ -70,9 +67,9 @@ public class RequestDaoStateHashHandler implements MessageListener {
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final NodeAddress nodeAddress;
-    private final Listener listener;
+    private final Listener<Res> listener;
     private Timer timeoutTimer;
-    private final int nonce = new Random().nextInt();
+    final int nonce = new Random().nextInt();
     private boolean stopped;
 
 
@@ -80,10 +77,10 @@ public class RequestDaoStateHashHandler implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestDaoStateHashHandler(NetworkNode networkNode,
-                                      PeerManager peerManager,
-                                      NodeAddress nodeAddress,
-                                      Listener listener) {
+    RequestStateHashesHandler(NetworkNode networkNode,
+                              PeerManager peerManager,
+                              NodeAddress nodeAddress,
+                              Listener<Res> listener) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.nodeAddress = nodeAddress;
@@ -92,18 +89,29 @@ public class RequestDaoStateHashHandler implements MessageListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract Req getGetStateHashesRequest(int fromHeight);
+
+    protected abstract Res castToGetStateHashesResponse(NetworkEnvelope networkEnvelope);
+
+    protected abstract boolean isGetStateHashesResponse(NetworkEnvelope networkEnvelope);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestDaoStateHash(int fromBlockHeight) {
+    public void requestStateHashes(int fromHeight) {
         if (!stopped) {
-            GetDaoStateHashRequest getDaoStateHashRequest = new GetDaoStateHashRequest(fromBlockHeight, nonce);
+            Req getStateHashesRequest = getGetStateHashesRequest(fromHeight);
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                             if (!stopped) {
-                                String errorMessage = "A timeout occurred at sending getDaoStateHashRequest:" + getDaoStateHashRequest +
+                                String errorMessage = "A timeout occurred at sending getStateHashesRequest:" + getStateHashesRequest +
                                         " on peersNodeAddress:" + nodeAddress;
-                                log.debug(errorMessage + " / RequestDaoStateHashHandler=" + RequestDaoStateHashHandler.this);
+                                log.debug(errorMessage + " / RequestStateHashesHandler=" + RequestStateHashesHandler.this);
                                 handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_TIMEOUT);
                             } else {
                                 log.trace("We have stopped already. We ignore that timeoutTimer.run call. " +
@@ -113,14 +121,14 @@ public class RequestDaoStateHashHandler implements MessageListener {
                         TIMEOUT);
             }
 
-            log.info("We send to peer {} a {}.", nodeAddress, getDaoStateHashRequest);
+            log.info("We send to peer {} a {}.", nodeAddress, getStateHashesRequest);
             networkNode.addMessageListener(this);
-            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDaoStateHashRequest);
+            SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getStateHashesRequest);
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.info("Sending of GetDaoStateHashRequest message to peer {} succeeded.", nodeAddress.getHostName());
+                        log.info("Sending of GetProposalStateHashesRequest message to peer {} succeeded.", nodeAddress.getHostName());
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -130,9 +138,9 @@ public class RequestDaoStateHashHandler implements MessageListener {
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
                     if (!stopped) {
-                        String errorMessage = "Sending getDaoStateHashRequest to " + nodeAddress +
+                        String errorMessage = "Sending getStateHashesRequest to " + nodeAddress +
                                 " failed. That is expected if the peer is offline.\n\t" +
-                                "getDaoStateHashRequest=" + getDaoStateHashRequest + "." +
+                                "getStateHashesRequest=" + getStateHashesRequest + "." +
                                 "\n\tException=" + throwable.getMessage();
                         log.error(errorMessage);
                         handleFault(errorMessage, nodeAddress, CloseConnectionReason.SEND_MSG_FAILURE);
@@ -143,7 +151,7 @@ public class RequestDaoStateHashHandler implements MessageListener {
                 }
             });
         } else {
-            log.warn("We have stopped already. We ignore that requestDaoStateHash call.");
+            log.warn("We have stopped already. We ignore that requestProposalsHash call.");
         }
     }
 
@@ -158,22 +166,22 @@ public class RequestDaoStateHashHandler implements MessageListener {
 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
-        if (networkEnvelope instanceof GetDaoStateHashResponse) {
+        if (isGetStateHashesResponse(networkEnvelope)) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
                 if (!stopped) {
-                    GetDaoStateHashResponse getDaoStateHashResponse = (GetDaoStateHashResponse) networkEnvelope;
-                    if (getDaoStateHashResponse.getRequestNonce() == nonce) {
+                    Res getStateHashesResponse = castToGetStateHashesResponse(networkEnvelope);
+                    if (getStateHashesResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
                         cleanup();
-                        log.info("We received from peer {} a DaoStateHashResponse with {} daoStateHashes",
-                                nodeAddress.getFullAddress(), getDaoStateHashResponse.getDaoStateHashes().size());
-                        listener.onComplete(getDaoStateHashResponse, connection.getPeersNodeAddressOptional());
+                        log.info("We received from peer {} a GetStateHashesResponse with {} stateHashes",
+                                nodeAddress.getFullAddress(), getStateHashesResponse.getStateHashes().size());
+                        listener.onComplete(getStateHashesResponse, connection.getPeersNodeAddressOptional());
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
                                         "connection was closed).\n\t" +
                                         "We drop that message. nonce={} / requestNonce={}",
-                                nonce, getDaoStateHashResponse.getRequestNonce());
+                                nonce, getStateHashesResponse.getRequestNonce());
                     }
                 } else {
                     log.warn("We have stopped already.");
@@ -192,7 +200,6 @@ public class RequestDaoStateHashHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {

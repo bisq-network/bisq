@@ -31,12 +31,12 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.ProposalStateMonitoringService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
-import bisq.core.dao.state.DaoEventCoordinator;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
 import com.google.inject.Inject;
 
@@ -73,6 +73,7 @@ public class DaoSetup {
                     ExportJsonFilesService exportJsonFilesService,
                     DaoKillSwitch daoKillSwitch,
                     DaoStateMonitoringService daoStateMonitoringService,
+                    ProposalStateMonitoringService proposalStateMonitoringService,
                     DaoEventCoordinator daoEventCoordinator) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
@@ -102,6 +103,7 @@ public class DaoSetup {
         daoSetupServices.add(exportJsonFilesService);
         daoSetupServices.add(daoKillSwitch);
         daoSetupServices.add(daoStateMonitoringService);
+        daoSetupServices.add(proposalStateMonitoringService);
 
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }

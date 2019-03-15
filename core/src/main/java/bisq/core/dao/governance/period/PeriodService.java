@@ -85,7 +85,7 @@ public final class PeriodService {
                 .isPresent();
     }
 
-    private Optional<Cycle> getCycle(int height) {
+    public Optional<Cycle> getCycle(int height) {
         return daoStateService.getCycle(height);
     }
 

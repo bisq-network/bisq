@@ -15,44 +15,55 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.monitoring;
+package bisq.core.dao.monitoring.model;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.experimental.Delegate;
 
 /**
- * Contains my DaoStateHash at a particular block height and the received daoStateHashes from our peers.
+ * Contains my StateHash at a particular block height and the received stateHash from our peers.
  * The maps get updated over time, this is not an immutable class.
  */
 @Getter
 @EqualsAndHashCode
-public class DaoStateBlock {
-    @Delegate
-    private final DaoStateHash myDaoStateHash;
+public abstract class StateBlock<T extends StateHash> {
+    private final T myStateHash;
 
-    private final Map<String, DaoStateHash> peersMap = new HashMap<>();
-    private final Map<String, DaoStateHash> inConflictMap = new HashMap<>();
+    private final Map<String, T> peersMap = new HashMap<>();
+    private final Map<String, T> inConflictMap = new HashMap<>();
 
-    DaoStateBlock(DaoStateHash myDaoStateHash) {
-        this.myDaoStateHash = myDaoStateHash;
+    StateBlock(T myStateHash) {
+        this.myStateHash = myStateHash;
     }
 
-    public void putInPeersMap(String peersNodeAddressAsString, DaoStateHash daoStateHash) {
-        peersMap.putIfAbsent(peersNodeAddressAsString, daoStateHash);
+    public void putInPeersMap(String peersNodeAddress, T stateHash) {
+        peersMap.putIfAbsent(peersNodeAddress, stateHash);
     }
 
-    public void putInConflictMap(String peersNodeAddressAsString, DaoStateHash daoStateHash) {
-        inConflictMap.putIfAbsent(peersNodeAddressAsString, daoStateHash);
+    public void putInConflictMap(String peersNodeAddress, T stateHash) {
+        inConflictMap.putIfAbsent(peersNodeAddress, stateHash);
+    }
+
+    // Delegates
+    public int getHeight() {
+        return myStateHash.getHeight();
+    }
+
+    public byte[] getHash() {
+        return myStateHash.getHash();
+    }
+
+    public byte[] getPrevHash() {
+        return myStateHash.getPrevHash();
     }
 
     @Override
     public String toString() {
-        return "DaoStateBlock{" +
-                "\n     myDaoStateHash=" + myDaoStateHash +
+        return "StateBlock{" +
+                "\n     myStateHash=" + myStateHash +
                 ",\n     peersMap=" + peersMap +
                 ",\n     inConflictMap=" + inConflictMap +
                 "\n}";

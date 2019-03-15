@@ -15,11 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state;
+package bisq.core.dao;
 
-import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
 import javax.inject.Inject;
 

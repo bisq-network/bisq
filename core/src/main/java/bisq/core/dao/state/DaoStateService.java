@@ -153,10 +153,9 @@ public class DaoStateService implements DaoSetupService {
         return DaoState.getClone(snapshotCandidate);
     }
 
-    public byte[] getDaoStateHash() {
+    public byte[] getSerializedDaoState() {
         return daoState.toProtoMessage().toByteArray();
     }
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

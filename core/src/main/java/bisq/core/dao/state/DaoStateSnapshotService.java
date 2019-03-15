@@ -18,10 +18,10 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.monitoring.DaoStateHash;
-import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
 import javax.inject.Inject;
 

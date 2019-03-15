@@ -15,12 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.monitoring.messages;
+package bisq.core.dao.monitoring.network.messages;
 
-import bisq.core.dao.state.monitoring.DaoStateHash;
-
-import bisq.network.p2p.storage.messages.BroadcastMessage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import bisq.core.dao.monitoring.model.DaoStateHash;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -34,11 +31,9 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class NewDaoStateHashMessage extends BroadcastMessage implements CapabilityRequiringPayload {
-    private final DaoStateHash daoStateHash;
-
+public final class NewDaoStateHashMessage extends NewStateHashMessage<DaoStateHash> {
     public NewDaoStateHashMessage(DaoStateHash daoStateHash) {
-        this(daoStateHash, Version.getP2PMessageVersion());
+        super(daoStateHash, Version.getP2PMessageVersion());
     }
 
 
@@ -47,31 +42,23 @@ public final class NewDaoStateHashMessage extends BroadcastMessage implements Ca
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private NewDaoStateHashMessage(DaoStateHash daoStateHash, int messageVersion) {
-        super(messageVersion);
-        this.daoStateHash = daoStateHash;
+        super(daoStateHash, messageVersion);
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
                 .setNewDaoStateHashMessage(PB.NewDaoStateHashMessage.newBuilder()
-                        .setDaoStateHash(daoStateHash.toProtoMessage()))
+                        .setStateHash(stateHash.toProtoMessage()))
                 .build();
     }
 
     public static NetworkEnvelope fromProto(PB.NewDaoStateHashMessage proto, int messageVersion) {
-        return new NewDaoStateHashMessage(DaoStateHash.fromProto(proto.getDaoStateHash()), messageVersion);
+        return new NewDaoStateHashMessage(DaoStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);
-    }
-
-    @Override
-    public String toString() {
-        return "NewDaoStateHashMessage{" +
-                "\n     daoStateHash=" + daoStateHash +
-                "\n} " + super.toString();
     }
 }

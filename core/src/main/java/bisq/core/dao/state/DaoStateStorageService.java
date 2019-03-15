@@ -17,9 +17,9 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
-import bisq.core.dao.state.monitoring.DaoStateHash;
-import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;

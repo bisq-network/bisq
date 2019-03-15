@@ -29,9 +29,9 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
 import bisq.core.locale.Res;
 
 import javax.inject.Inject;
@@ -172,7 +172,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onDaoStateBlockchainChanged() {
+    public void onDaoStateBlockChainChanged() {
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
         }
@@ -252,7 +252,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
             statusTextField.getStyleClass().remove("dao-inConflict");
         }
 
-        listItems.setAll(daoStateMonitoringService.getDaoStateBlockchain().stream()
+        listItems.setAll(daoStateMonitoringService.getDaoStateBlockChain().stream()
                 .map(DaoStateBlockListItem::new)
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
@@ -289,7 +289,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getBlockHeight()));
+        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getHeight()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(column);
         tableView.getSortOrder().add(column);
@@ -443,14 +443,14 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                             public void updateItem(final DaoStateInConflictListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getBlockHeight());
+                                    setText(item.getHeight());
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(e -> e.getDaoStateHash().getBlockHeight()));
+        column.setComparator(Comparator.comparing(e -> e.getDaoStateHash().getHeight()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         conflictTableView.getColumns().add(column);
         conflictTableView.getSortOrder().add(column);

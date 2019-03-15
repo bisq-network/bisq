@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.dao.governance.consensus;
 
-import bisq.core.dao.state.monitoring.DaoStateBlock;
+import bisq.core.dao.monitoring.model.DaoStateBlock;
 
 import bisq.common.util.Utilities;
 
@@ -38,7 +38,7 @@ class DaoStateBlockListItem {
     DaoStateBlockListItem(DaoStateBlock daoStateBlock) {
         this.daoStateBlock = daoStateBlock;
 
-        height = String.valueOf(daoStateBlock.getBlockHeight());
+        height = String.valueOf(daoStateBlock.getHeight());
         hash = Utilities.bytesAsHexString(daoStateBlock.getHash());
         prevHash = daoStateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(daoStateBlock.getPrevHash()) : "-";
         numNetworkMessages = String.valueOf(daoStateBlock.getPeersMap().size());

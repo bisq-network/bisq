@@ -15,16 +15,18 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.monitoring;
+package bisq.core.dao.monitoring;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.monitoring.model.DaoStateBlock;
+import bisq.core.dao.monitoring.model.DaoStateHash;
+import bisq.core.dao.monitoring.network.DaoStateNetworkService;
+import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.Block;
-import bisq.core.dao.state.monitoring.messages.GetDaoStateHashRequest;
-import bisq.core.dao.state.monitoring.messages.NewDaoStateHashMessage;
-import bisq.core.dao.state.monitoring.network.DaoStateNetworkService;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -68,9 +70,11 @@ import static com.google.common.base.Preconditions.checkArgument;
  * TODO auto recovery
  */
 @Slf4j
-public class DaoStateMonitoringService implements DaoSetupService, DaoStateListener, DaoStateNetworkService.Listener {
+public class DaoStateMonitoringService implements DaoSetupService, DaoStateListener,
+        DaoStateNetworkService.Listener<NewDaoStateHashMessage, GetDaoStateHashesRequest, DaoStateHash> {
+
     public interface Listener {
-        void onDaoStateBlockchainChanged();
+        void onDaoStateBlockChainChanged();
     }
 
     private final DaoStateService daoStateService;
@@ -78,7 +82,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private final GenesisTxInfo genesisTxInfo;
 
     @Getter
-    private final LinkedList<DaoStateBlock> daoStateBlockchain = new LinkedList<>();
+    private final LinkedList<DaoStateBlock> daoStateBlockChain = new LinkedList<>();
     @Getter
     private final LinkedList<DaoStateHash> daoStateHashChain = new LinkedList<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -107,7 +111,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Override
     public void addListeners() {
-        this.daoStateService.addDaoStateListener(this);
+        daoStateService.addDaoStateListener(this);
         daoStateNetworkService.addListener(this);
     }
 
@@ -129,37 +133,36 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         daoStateNetworkService.addListeners();
 
         // We wait for processing messages until we have completed batch processing
-        int fromBlockHeight = daoStateService.getChainHeight() - 10;
-        daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromBlockHeight);
+        int fromHeight = daoStateService.getChainHeight() - 10;
+        daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateNetworkService.Listener
+    // StateNetworkService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewDaoStateHashMessage(NewDaoStateHashMessage newDaoStateHashMessage, Connection connection) {
-        if (newDaoStateHashMessage.getDaoStateHash().getBlockHeight() <= daoStateService.getChainHeight()) {
-            processPeersDaoStateHash(newDaoStateHashMessage.getDaoStateHash(), connection.getPeersNodeAddressOptional(), true);
+    public void onNewStateHashMessage(NewDaoStateHashMessage newStateHashMessage, Connection connection) {
+        if (newStateHashMessage.getStateHash().getHeight() <= daoStateService.getChainHeight()) {
+            processPeersDaoStateHash(newStateHashMessage.getStateHash(), connection.getPeersNodeAddressOptional(), true);
         }
     }
 
     @Override
-    public void onGetDaoStateHashRequest(Connection connection, GetDaoStateHashRequest getDaoStateHashRequest) {
-        int fromBlockHeight = getDaoStateHashRequest.getFromBlockHeight();
-        List<DaoStateHash> daoStateHashes = daoStateBlockchain.stream()
-                .filter(e -> e.getBlockHeight() >= fromBlockHeight)
-                .map(DaoStateBlock::getMyDaoStateHash)
+    public void onGetStateHashRequest(Connection connection, GetDaoStateHashesRequest getStateHashRequest) {
+        int fromHeight = getStateHashRequest.getHeight();
+        List<DaoStateHash> daoStateHashes = daoStateBlockChain.stream()
+                .filter(e -> e.getHeight() >= fromHeight)
+                .map(DaoStateBlock::getMyStateHash)
                 .collect(Collectors.toList());
-        daoStateNetworkService.sendGetDaoStateHashResponse(connection, getDaoStateHashRequest.getNonce(), daoStateHashes);
+        daoStateNetworkService.sendGetStateHashesResponse(connection, getStateHashRequest.getNonce(), daoStateHashes);
     }
 
-
     @Override
-    public void onPeersDaoStateHashes(List<DaoStateHash> daoStateHashes, Optional<NodeAddress> peersNodeAddress) {
+    public void onPeersStateHashes(List<DaoStateHash> stateHashes, Optional<NodeAddress> peersNodeAddress) {
         AtomicBoolean hasChanged = new AtomicBoolean(false);
 
-        daoStateHashes.forEach(daoStateHash -> {
+        stateHashes.forEach(daoStateHash -> {
             boolean changed = processPeersDaoStateHash(daoStateHash, peersNodeAddress, false);
             if (changed) {
                 hasChanged.set(true);
@@ -167,7 +170,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         });
 
         if (hasChanged.get()) {
-            listeners.forEach(Listener::onDaoStateBlockchainChanged);
+            listeners.forEach(Listener::onDaoStateBlockChainChanged);
         }
     }
 
@@ -187,12 +190,14 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     public void applySnapshot(LinkedList<DaoStateHash> persistedDaoStateHashChain) {
         // We could got a reset from a reorg, so we clear all and start over from the genesis block.
         daoStateHashChain.clear();
-        daoStateBlockchain.clear();
+        daoStateBlockChain.clear();
         daoStateNetworkService.reset();
 
-        log.info("Apply snapshot: Last daoStateHash={}", persistedDaoStateHashChain.getLast());
+        if (!persistedDaoStateHashChain.isEmpty()) {
+            log.info("Apply snapshot: Last daoStateHash={}", persistedDaoStateHashChain.getLast());
+        }
         daoStateHashChain.addAll(persistedDaoStateHashChain);
-        daoStateHashChain.forEach(e -> daoStateBlockchain.add(new DaoStateBlock(e)));
+        daoStateHashChain.forEach(e -> daoStateBlockChain.add(new DaoStateBlock(e)));
     }
 
 
@@ -217,7 +222,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         //TODO handle reorgs TODO need to start from gen
         byte[] prevHash;
         int height = block.getHeight();
-        if (daoStateBlockchain.isEmpty()) {
+        if (daoStateBlockChain.isEmpty()) {
             // Only at genesis we allow an empty prevHash
             if (height == genesisTxInfo.getGenesisBlockHeight()) {
                 prevHash = new byte[0];
@@ -228,11 +233,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             }
         } else {
             // TODO check if in reorg cases it might be a valid case
-            checkArgument(height > daoStateBlockchain.getLast().getBlockHeight(),
+            checkArgument(height > daoStateBlockChain.getLast().getHeight(),
                     "We got a block the same blockHeight as our previous block in the daoStateBlockchain.");
-            prevHash = daoStateBlockchain.getLast().getHash();
+            prevHash = daoStateBlockChain.getLast().getHash();
         }
-        byte[] stateHash = daoStateService.getDaoStateHash();
+        byte[] stateHash = daoStateService.getSerializedDaoState();
         // We include the prev. hash in our new hash so we can be sure that if one hash is matching all the past would
         // match as well.
         byte[] combined = ArrayUtils.addAll(prevHash, stateHash);
@@ -240,19 +245,19 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
         DaoStateHash myDaoStateHash = new DaoStateHash(height, hash, prevHash);
         DaoStateBlock daoStateBlock = new DaoStateBlock(myDaoStateHash);
-        daoStateBlockchain.add(daoStateBlock);
+        daoStateBlockChain.add(daoStateBlock);
         daoStateHashChain.add(myDaoStateHash);
         log.debug("Add daoStateBlock at updateHashChain:\n{}", daoStateBlock);
 
         // We only broadcast after parsing of blockchain is complete
         if (parseBlockChainComplete) {
             // We notify listeners only after batch processing to avoid performance issues at UI code
-            listeners.forEach(Listener::onDaoStateBlockchainChanged);
+            listeners.forEach(Listener::onDaoStateBlockChainChanged);
 
             // We delay broadcast to give peers enough time to have received the block.
             // Otherwise they would ignore our data if received block is in future to their local blockchain.
             int delayInSec = 1 + new Random().nextInt(5);
-            UserThread.runAfter(() -> daoStateNetworkService.broadcastMyDaoStateHash(myDaoStateHash), delayInSec);
+            UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
         }
     }
 
@@ -260,20 +265,20 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean isInConflict = new AtomicBoolean(this.isInConflict);
         StringBuilder sb = new StringBuilder();
-        daoStateBlockchain.stream()
-                .filter(e -> e.getBlockHeight() == daoStateHash.getBlockHeight()).findAny()
+        daoStateBlockChain.stream()
+                .filter(e -> e.getHeight() == daoStateHash.getHeight()).findAny()
                 .ifPresent(daoStateBlock -> {
                     String peersNodeAddressAsString = peersNodeAddress.map(NodeAddress::getFullAddress)
                             .orElseGet(() -> "Unknown peer " + new Random().nextInt(10000));
                     daoStateBlock.putInPeersMap(peersNodeAddressAsString, daoStateHash);
-                    if (!daoStateBlock.getMyDaoStateHash().hasEqualHash(daoStateHash)) {
+                    if (!daoStateBlock.getMyStateHash().hasEqualHash(daoStateHash)) {
                         daoStateBlock.putInConflictMap(peersNodeAddressAsString, daoStateHash);
                         isInConflict.set(true);
                         sb.append("We received a block hash from peer ")
                                 .append(peersNodeAddressAsString)
                                 .append(" which conflicts with our block hash.\n")
                                 .append("my daoStateHash=")
-                                .append(daoStateBlock.getMyDaoStateHash())
+                                .append(daoStateBlock.getMyStateHash())
                                 .append("\npeers daoStateHash=")
                                 .append(daoStateHash);
                     }
@@ -288,7 +293,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
 
         if (notifyListeners && changed.get()) {
-            listeners.forEach(Listener::onDaoStateBlockchainChanged);
+            listeners.forEach(Listener::onDaoStateBlockChainChanged);
         }
 
         return changed.get();

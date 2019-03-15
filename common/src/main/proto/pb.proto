@@ -58,8 +58,11 @@ message NetworkEnvelope {
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
         NewDaoStateHashMessage new_dao_state_hash_message = 34;
-        GetDaoStateHashRequest get_dao_state_hash_request = 35;
-        GetDaoStateHashResponse get_dao_state_hash_response = 36;
+        GetDaoStateHashesRequest get_dao_state_hashes_request = 35;
+        GetDaoStateHashesResponse get_dao_state_hashes_response = 36;
+        NewProposalStateHashMessage new_proposal_state_hash_message = 37;
+        GetProposalStateHashesRequest get_proposal_state_hashes_request = 38;
+        GetProposalStateHashesResponse get_proposal_state_hashes_response = 39;
     }
 }
 
@@ -327,13 +330,31 @@ message NewBlockBroadcastMessage {
 message RepublishGovernanceDataRequest {
 }
 
-message GetDaoStateHashRequest {
-    int32 from_block_height = 1;
+message NewDaoStateHashMessage {
+    DaoStateHash state_hash = 1;
+}
+
+message NewProposalStateHashMessage {
+    ProposalStateHash state_hash = 1;
+}
+
+message GetDaoStateHashesRequest {
+    int32 height = 1;
     int32 nonce = 2;
 }
 
-message GetDaoStateHashResponse {
-    repeated DaoStateHash dao_state_hashes = 1;
+message GetProposalStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetDaoStateHashesResponse {
+    repeated DaoStateHash state_hashes = 1;
+    int32 request_nonce = 2;
+}
+
+message GetProposalStateHashesResponse {
+    repeated ProposalStateHash state_hashes = 1;
     int32 request_nonce = 2;
 }
 
@@ -927,7 +948,6 @@ message PromptPayAccountPayload {
 message AdvancedCashAccountPayload {
     string account_nr = 1;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // PersistableEnvelope
@@ -1730,13 +1750,15 @@ message DaoStateStore {
 }
 
 message DaoStateHash {
-    int32 blockHeight = 1;
+    int32 height = 1;
     bytes hash = 2;
     bytes prev_hash = 3;
 }
 
-message NewDaoStateHashMessage {
-    DaoStateHash dao_state_hash = 1;
+message ProposalStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -64,6 +64,10 @@ import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.ProposalStateMonitoringService;
+import bisq.core.dao.monitoring.network.DaoStateNetworkService;
+import bisq.core.dao.monitoring.network.ProposalStateNetworkService;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.FullNode;
@@ -73,14 +77,11 @@ import bisq.core.dao.node.lite.LiteNode;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.TxParser;
-import bisq.core.dao.state.DaoEventCoordinator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.DaoState;
-import bisq.core.dao.state.monitoring.DaoStateMonitoringService;
-import bisq.core.dao.state.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 
 import bisq.common.app.AppModule;
@@ -122,6 +123,8 @@ public class DaoModule extends AppModule {
         bind(DaoStateStorageService.class).in(Singleton.class);
         bind(DaoStateMonitoringService.class).in(Singleton.class);
         bind(DaoStateNetworkService.class).in(Singleton.class);
+        bind(ProposalStateMonitoringService.class).in(Singleton.class);
+        bind(ProposalStateNetworkService.class).in(Singleton.class);
         bind(UnconfirmedBsqChangeOutputListService.class).in(Singleton.class);
 
         bind(ExportJsonFilesService.class).in(Singleton.class);

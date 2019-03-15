@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.state.monitoring.messages;
+package bisq.core.dao.monitoring.network.messages;
 
-import bisq.network.p2p.DirectMessage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+import bisq.core.dao.monitoring.model.ProposalStateHash;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
@@ -32,12 +31,9 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class GetDaoStateHashRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
-    private final int fromBlockHeight;
-    private final int nonce;
-
-    public GetDaoStateHashRequest(int fromBlockHeight, int nonce) {
-        this(fromBlockHeight, nonce, Version.getP2PMessageVersion());
+public final class NewProposalStateHashMessage extends NewStateHashMessage<ProposalStateHash> {
+    public NewProposalStateHashMessage(ProposalStateHash proposalStateHash) {
+        super(proposalStateHash, Version.getP2PMessageVersion());
     }
 
 
@@ -45,35 +41,24 @@ public final class GetDaoStateHashRequest extends NetworkEnvelope implements Dir
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetDaoStateHashRequest(int fromBlockHeight, int nonce, int messageVersion) {
-        super(messageVersion);
-        this.fromBlockHeight = fromBlockHeight;
-        this.nonce = nonce;
+    private NewProposalStateHashMessage(ProposalStateHash proposalStateHash, int messageVersion) {
+        super(proposalStateHash, messageVersion);
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetDaoStateHashRequest(PB.GetDaoStateHashRequest.newBuilder()
-                        .setFromBlockHeight(fromBlockHeight)
-                        .setNonce(nonce))
+                .setNewProposalStateHashMessage(PB.NewProposalStateHashMessage.newBuilder()
+                        .setStateHash(stateHash.toProtoMessage()))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetDaoStateHashRequest proto, int messageVersion) {
-        return new GetDaoStateHashRequest(proto.getFromBlockHeight(), proto.getNonce(), messageVersion);
+    public static NetworkEnvelope fromProto(PB.NewProposalStateHashMessage proto, int messageVersion) {
+        return new NewProposalStateHashMessage(ProposalStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);
-    }
-
-    @Override
-    public String toString() {
-        return "GetDaoStateHashRequest{" +
-                ",\n     fromBlockHeight=" + fromBlockHeight +
-                ",\n     nonce=" + nonce +
-                "\n} " + super.toString();
     }
 }
