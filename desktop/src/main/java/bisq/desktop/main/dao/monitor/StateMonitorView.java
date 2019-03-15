@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.governance.consensus;
+package bisq.desktop.main.dao.monitor;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -23,13 +23,14 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.model.StateBlock;
+import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
@@ -63,29 +64,31 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-
 @FxmlView
-public class ConsensusView extends ActivatableView<GridPane, Void> implements DaoStateListener, DaoStateMonitoringService.Listener {
+public abstract class StateMonitorView<StH extends StateHash,
+        StB extends StateBlock<StH>,
+        BLI extends StateBlockListItem<StH, StB>,
+        CLI extends StateInConflictListItem<StH>>
+        extends ActivatableView<GridPane, Void> implements DaoStateListener, DaoStateMonitoringService.Listener {
     private final DaoStateService daoStateService;
-    private final DaoFacade daoFacade;
-    private final DaoStateMonitoringService daoStateMonitoringService;
+    protected final DaoFacade daoFacade;
 
-    private TextField statusTextField;
-    private Button resyncButton;
-    private TableView<DaoStateBlockListItem> tableView;
-    private TableView<DaoStateInConflictListItem> conflictTableView;
+    protected TextField statusTextField;
+    protected Button resyncButton;
+    private TableView<BLI> tableView;
+    private TableView<CLI> conflictTableView;
 
-    private final ObservableList<DaoStateBlockListItem> listItems = FXCollections.observableArrayList();
-    private final SortedList<DaoStateBlockListItem> sortedList = new SortedList<>(listItems);
-    private final ObservableList<DaoStateInConflictListItem> daoStateInConflictListItems = FXCollections.observableArrayList();
-    private final SortedList<DaoStateInConflictListItem> sortedConflictList = new SortedList<>(daoStateInConflictListItems);
+    protected final ObservableList<BLI> listItems = FXCollections.observableArrayList();
+    private final SortedList<BLI> sortedList = new SortedList<>(listItems);
+    private final ObservableList<CLI> conflictListItems = FXCollections.observableArrayList();
+    private final SortedList<CLI> sortedConflictList = new SortedList<>(conflictListItems);
 
-    private int gridRow = 0;
+    protected int gridRow = 0;
     private Subscription selectedItemSubscription;
-    private BooleanProperty isInConflict = new SimpleBooleanProperty();
+    protected final BooleanProperty isInConflict = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,24 +96,14 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private ConsensusView(DaoStateService daoStateService,
-                          DaoFacade daoFacade,
-                          DaoStateMonitoringService daoStateMonitoringService) {
+    public StateMonitorView(DaoStateService daoStateService,
+                            DaoFacade daoFacade) {
         this.daoStateService = daoStateService;
         this.daoFacade = daoFacade;
-        this.daoStateMonitoringService = daoStateMonitoringService;
     }
 
     @Override
     public void initialize() {
-        super.initialize();
-
-        addTitledGroupBg(root, gridRow, 3, Res.get("dao.governance.consensus.headline"));
-
-        statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
-                Res.get("dao.governance.consensus.state")).second;
-        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.governance.consensus.resync"), 10);
-
         createTableView();
         createDetailsView();
     }
@@ -123,17 +116,9 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
         sortedConflictList.comparatorProperty().bind(conflictTableView.comparatorProperty());
 
         daoStateService.addDaoStateListener(this);
-        daoStateMonitoringService.addListener(this);
 
         resyncButton.visibleProperty().bind(isInConflict);
         resyncButton.managedProperty().bind(isInConflict);
-
-        resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                        .useShutDownButton()
-                        .hideCloseButton()
-                        .show())
-        );
 
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
@@ -148,13 +133,39 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
         sortedConflictList.comparatorProperty().unbind();
 
         daoStateService.removeDaoStateListener(this);
-        daoStateMonitoringService.removeListener(this);
 
         resyncButton.visibleProperty().unbind();
         resyncButton.managedProperty().unbind();
 
         resyncButton.setOnAction(null);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract BLI getStateBlockListItem(StB e);
+
+    protected abstract CLI getStateInConflictListItem(Map.Entry<String, StH> mapEntry);
+
+    protected abstract void requestHashesFromGenesisBlockHeight(String peerAddress);
+
+    protected abstract String getConflictsTableHeader();
+
+    protected abstract String getPeersTableHeader();
+
+    protected abstract String getPrevHashTableHeader();
+
+    protected abstract String getHashTableHeader();
+
+    protected abstract String getBlockHeightTableHeader();
+
+    protected abstract String getRequestHashes();
+
+    protected abstract String getTableHeadLine();
+
+    protected abstract String getConflictTableHeadLine();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +195,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTableView() {
-        TableGroupHeadline headline = new TableGroupHeadline(Res.get("dao.governance.consensus.table.headline"));
+        TableGroupHeadline headline = new TableGroupHeadline(getTableHeadLine());
         GridPane.setRowIndex(headline, ++gridRow);
         GridPane.setMargin(headline, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
         root.getChildren().add(headline);
@@ -204,7 +215,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     }
 
     private void createDetailsView() {
-        TableGroupHeadline conflictTableHeadline = new TableGroupHeadline(Res.get("dao.governance.consensus.conflictTable.headline"));
+        TableGroupHeadline conflictTableHeadline = new TableGroupHeadline(getConflictTableHeadLine());
         GridPane.setRowIndex(conflictTableHeadline, ++gridRow);
         GridPane.setMargin(conflictTableHeadline, new Insets(Layout.GROUP_DISTANCE, -10, -10, -10));
         root.getChildren().add(conflictTableHeadline);
@@ -228,10 +239,10 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     // Handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onSelectItem(DaoStateBlockListItem item) {
+    private void onSelectItem(BLI item) {
         if (item != null) {
-            daoStateInConflictListItems.setAll(item.getDaoStateBlock().getInConflictMap().entrySet().stream()
-                    .map(e -> new DaoStateInConflictListItem(e.getKey(), e.getValue())).collect(Collectors.toList()));
+            conflictListItems.setAll(item.getStateBlock().getInConflictMap().entrySet().stream()
+                    .map(this::getStateInConflictListItem).collect(Collectors.toList()));
             GUIUtil.setFitToRowsForTableView(conflictTableView, 38, 28, 2, 4);
             conflictTableView.layout();
         }
@@ -242,19 +253,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onDataUpdate() {
-        isInConflict.set(daoStateMonitoringService.isInConflict());
-        if (isInConflict.get()) {
-            statusTextField.setText(Res.get("dao.governance.consensus.daoStateNotInSync"));
-            statusTextField.getStyleClass().add("dao-inConflict");
-        } else {
-            statusTextField.setText(Res.get("dao.governance.consensus.daoStateInSync"));
-            statusTextField.getStyleClass().remove("dao-inConflict");
-        }
-
-        listItems.setAll(daoStateMonitoringService.getDaoStateBlockChain().stream()
-                .map(DaoStateBlockListItem::new)
-                .collect(Collectors.toList()));
+    protected void onDataUpdate() {
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
         tableView.layout();
     }
@@ -265,21 +264,19 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createColumns() {
-        TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column;
+        TableColumn<BLI, BLI> column;
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.blockHeight"));
+        column = new AutoTooltipTableColumn<>(getBlockHeightTableHeader());
         column.setMinWidth(110);
-        column.setMaxWidth(column.getMinWidth());
-        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(
-                            TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column) {
+                    public TableCell<BLI, BLI> call(
+                            TableColumn<BLI, BLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                            public void updateItem(final BLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getHeight());
@@ -289,23 +286,23 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getHeight()));
+        column.setComparator(Comparator.comparing(e -> e.getStateBlock().getHeight()));
         column.setSortType(TableColumn.SortType.DESCENDING);
-        tableView.getColumns().add(column);
         tableView.getSortOrder().add(column);
+        tableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.hash"));
+        column = new AutoTooltipTableColumn<>(getHashTableHeader());
         column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(
-                            TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column) {
+                    public TableCell<BLI, BLI> call(
+                            TableColumn<BLI, BLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                            public void updateItem(final BLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getHash());
@@ -315,22 +312,22 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateBlockListItem::getHash));
+        column.setComparator(Comparator.comparing(BLI::getHash));
         tableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.prev"));
+        column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
         column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
 
                     @Override
-                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(TableColumn<DaoStateBlockListItem,
-                            DaoStateBlockListItem> column) {
+                    public TableCell<BLI, BLI> call(TableColumn<BLI,
+                            BLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                            public void updateItem(final BLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getPrevHash());
@@ -340,22 +337,22 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateBlockListItem::getPrevHash));
+        column.setComparator(Comparator.comparing(BLI::getPrevHash));
         tableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.numPeer"));
+        column = new AutoTooltipTableColumn<>(getPeersTableHeader());
         column.setMinWidth(80);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(
-                            TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column) {
+                    public TableCell<BLI, BLI> call(
+                            TableColumn<BLI, BLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                            public void updateItem(final BLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getNumNetworkMessages());
@@ -365,21 +362,21 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getPeersMap().size()));
+        column.setComparator(Comparator.comparing(e -> e.getStateBlock().getPeersMap().size()));
         tableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.numMisMatches"));
+        column = new AutoTooltipTableColumn<>(getConflictsTableHeader());
         column.setMinWidth(80);
         column.setMaxWidth(column.getMinWidth());
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(
-                            TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column) {
+                    public TableCell<BLI, BLI> call(
+                            TableColumn<BLI, BLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                            public void updateItem(final BLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getNumMisMatches());
@@ -389,7 +386,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(e -> e.getDaoStateBlock().getInConflictMap().size()));
+        column.setComparator(Comparator.comparing(e -> e.getStateBlock().getInConflictMap().size()));
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>("");
@@ -399,11 +396,11 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(
-                            TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column) {
+                    public TableCell<BLI, BLI> call(
+                            TableColumn<BLI, BLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                            public void updateItem(final BLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     Label icon;
@@ -426,21 +423,22 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
         tableView.getColumns().add(column);
     }
 
-    private void createConflictColumns() {
-        TableColumn<DaoStateInConflictListItem, DaoStateInConflictListItem> column;
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.blockHeight"));
+    private void createConflictColumns() {
+        TableColumn<CLI, CLI> column;
+
+        column = new AutoTooltipTableColumn<>(getBlockHeightTableHeader());
         column.setMinWidth(80);
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateInConflictListItem, DaoStateInConflictListItem> call(
-                            TableColumn<DaoStateInConflictListItem, DaoStateInConflictListItem> column) {
+                    public TableCell<CLI, CLI> call(
+                            TableColumn<CLI, CLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateInConflictListItem item, boolean empty) {
+                            public void updateItem(final CLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getHeight());
@@ -450,23 +448,23 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(e -> e.getDaoStateHash().getHeight()));
+        column.setComparator(Comparator.comparing(e -> e.getStateHash().getHeight()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         conflictTableView.getColumns().add(column);
         conflictTableView.getSortOrder().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.conflictTable.peer"));
+        column = new AutoTooltipTableColumn<>(getPeersTableHeader());
         column.setMinWidth(80);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateInConflictListItem, DaoStateInConflictListItem> call(
-                            TableColumn<DaoStateInConflictListItem, DaoStateInConflictListItem> column) {
+                    public TableCell<CLI, CLI> call(
+                            TableColumn<CLI, CLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateInConflictListItem item, boolean empty) {
+                            public void updateItem(final CLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getPeerAddress());
@@ -476,21 +474,21 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        // column.setComparator(Comparator.comparing(DaoStateInConflictListItem::getPeerAddress));
+        column.setComparator(Comparator.comparing(CLI::getPeerAddress));
         conflictTableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.hash"));
+        column = new AutoTooltipTableColumn<>(getHashTableHeader());
         column.setMinWidth(150);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateInConflictListItem, DaoStateInConflictListItem> call(
-                            TableColumn<DaoStateInConflictListItem, DaoStateInConflictListItem> column) {
+                    public TableCell<CLI, CLI> call(
+                            TableColumn<CLI, CLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateInConflictListItem item, boolean empty) {
+                            public void updateItem(final CLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getHash());
@@ -500,21 +498,21 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateInConflictListItem::getHash));
+        column.setComparator(Comparator.comparing(CLI::getHash));
         conflictTableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.governance.consensus.table.prev"));
+        column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
         column.setMinWidth(150);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateInConflictListItem, DaoStateInConflictListItem> call(
-                            TableColumn<DaoStateInConflictListItem, DaoStateInConflictListItem> column) {
+                    public TableCell<CLI, CLI> call(
+                            TableColumn<CLI, CLI> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final DaoStateInConflictListItem item, boolean empty) {
+                            public void updateItem(final CLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setText(item.getPrevHash());
@@ -524,7 +522,7 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(DaoStateInConflictListItem::getPrevHash));
+        column.setComparator(Comparator.comparing(CLI::getPrevHash));
         conflictTableView.getColumns().add(column);
 
 
@@ -534,20 +532,20 @@ public class ConsensusView extends ActivatableView<GridPane, Void> implements Da
         column.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<DaoStateInConflictListItem, DaoStateInConflictListItem> call(
-                            TableColumn<DaoStateInConflictListItem, DaoStateInConflictListItem> column) {
+                    public TableCell<CLI, CLI> call(
+                            TableColumn<CLI, CLI> column) {
                         return new TableCell<>() {
                             Button button;
 
                             @Override
-                            public void updateItem(final DaoStateInConflictListItem item, boolean empty) {
+                            public void updateItem(final CLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     if (button == null) {
-                                        button = new AutoTooltipButton(Res.get("dao.governance.consensus.conflictTable.request"));
+                                        button = new AutoTooltipButton(getRequestHashes());
                                         setGraphic(button);
                                     }
-                                    button.setOnAction(e -> daoStateMonitoringService.requestHashesFromGenesisBlockHeight(item.getPeerAddress()));
+                                    button.setOnAction(e -> requestHashesFromGenesisBlockHeight(item.getPeerAddress()));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {

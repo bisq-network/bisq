@@ -15,19 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.governance.consensus;
+package bisq.desktop.main.dao.monitor;
 
-import bisq.core.dao.monitoring.model.DaoStateBlock;
+import bisq.core.dao.monitoring.model.StateBlock;
+import bisq.core.dao.monitoring.model.StateHash;
 
 import bisq.common.util.Utilities;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Value
-class DaoStateBlockListItem {
-    private final DaoStateBlock daoStateBlock;
+@Getter
+@EqualsAndHashCode
+public abstract class StateBlockListItem<StH extends StateHash, StB extends StateBlock<StH>> {
+    private final StateBlock<StH> stateBlock;
     private final String height;
     private final String hash;
     private final String prevHash;
@@ -35,14 +38,14 @@ class DaoStateBlockListItem {
     private final String numMisMatches;
     private final boolean isInSync;
 
-    DaoStateBlockListItem(DaoStateBlock daoStateBlock) {
-        this.daoStateBlock = daoStateBlock;
+    protected StateBlockListItem(StB stateBlock) {
+        this.stateBlock = stateBlock;
 
-        height = String.valueOf(daoStateBlock.getHeight());
-        hash = Utilities.bytesAsHexString(daoStateBlock.getHash());
-        prevHash = daoStateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(daoStateBlock.getPrevHash()) : "-";
-        numNetworkMessages = String.valueOf(daoStateBlock.getPeersMap().size());
-        int size = daoStateBlock.getInConflictMap().size();
+        height = String.valueOf(stateBlock.getHeight());
+        hash = Utilities.bytesAsHexString(stateBlock.getHash());
+        prevHash = stateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(stateBlock.getPrevHash()) : "-";
+        numNetworkMessages = String.valueOf(stateBlock.getPeersMap().size());
+        int size = stateBlock.getInConflictMap().size();
         numMisMatches = String.valueOf(size);
         isInSync = size == 0;
     }

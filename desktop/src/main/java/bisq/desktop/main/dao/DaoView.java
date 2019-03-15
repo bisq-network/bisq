@@ -28,6 +28,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.bonding.BondingView;
 import bisq.desktop.main.dao.burnbsq.BurnBsqView;
 import bisq.desktop.main.dao.governance.GovernanceView;
+import bisq.desktop.main.dao.monitor.MonitorView;
 import bisq.desktop.main.dao.news.NewsView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
@@ -52,7 +53,7 @@ import javafx.beans.value.ChangeListener;
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    private Tab bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, daoNewsTab;
+    private Tab bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, daoNewsTab, monitor;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -80,23 +81,26 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         proposalsTab = new Tab(Res.get("dao.tab.proposals").toUpperCase());
         bondingTab = new Tab(Res.get("dao.tab.bonding").toUpperCase());
         burnBsqTab = new Tab(Res.get("dao.tab.proofOfBurn").toUpperCase());
+        monitor = new Tab(Res.get("dao.tab.monitor").toUpperCase());
 
         bsqWalletTab.setClosable(false);
         proposalsTab.setClosable(false);
         bondingTab.setClosable(false);
         burnBsqTab.setClosable(false);
+        monitor.setClosable(false);
 
         if (!DevEnv.isDaoActivated()) {
+            bsqWalletTab.setDisable(true);
             proposalsTab.setDisable(true);
             bondingTab.setDisable(true);
             burnBsqTab.setDisable(true);
-            bsqWalletTab.setDisable(true);
+            monitor.setDisable(true);
 
             daoNewsTab = new Tab(Res.get("dao.tab.news").toUpperCase());
 
             root.getTabs().add(daoNewsTab);
         } else {
-            root.getTabs().addAll(bsqWalletTab, proposalsTab, bondingTab, burnBsqTab);
+            root.getTabs().addAll(bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitor);
         }
 
         navigationListener = viewPath -> {
@@ -121,6 +125,8 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
             } else if (newValue == burnBsqTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
+            } else if (newValue == monitor) {
+                navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
             }
         };
     }
@@ -141,6 +147,8 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                     navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
                 else if (selectedItem == burnBsqTab)
                     navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
+                else if (selectedItem == monitor)
+                    navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
             }
         } else {
             loadView(NewsView.class);
@@ -173,6 +181,8 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
             selectedTab = bondingTab;
         } else if (view instanceof BurnBsqView) {
             selectedTab = burnBsqTab;
+        } else if (view instanceof MonitorView) {
+            selectedTab = monitor;
         } else if (view instanceof NewsView) {
             selectedTab = daoNewsTab;
         }

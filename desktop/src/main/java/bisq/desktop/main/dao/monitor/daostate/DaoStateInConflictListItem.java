@@ -15,30 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.governance.consensus;
+package bisq.desktop.main.dao.monitor.daostate;
+
+import bisq.desktop.main.dao.monitor.StateInConflictListItem;
 
 import bisq.core.dao.monitoring.model.DaoStateHash;
 
-import bisq.common.util.Utilities;
-
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Value
-class DaoStateInConflictListItem {
-    private final String peerAddress;
-    private final String height;
-    private final String hash;
-    private final String prevHash;
-    private final DaoStateHash daoStateHash;
-
+@EqualsAndHashCode(callSuper = true)
+class DaoStateInConflictListItem extends StateInConflictListItem<DaoStateHash> {
     DaoStateInConflictListItem(String peerAddress, DaoStateHash daoStateHash) {
-        this.daoStateHash = daoStateHash;
-        this.peerAddress = peerAddress;
-        height = String.valueOf(daoStateHash.getHeight());
-        hash = Utilities.bytesAsHexString(daoStateHash.getHash());
-        prevHash = daoStateHash.getPrevHash().length > 0 ?
-                Utilities.bytesAsHexString(daoStateHash.getPrevHash()) : "-";
+        super(peerAddress, daoStateHash);
     }
 }
