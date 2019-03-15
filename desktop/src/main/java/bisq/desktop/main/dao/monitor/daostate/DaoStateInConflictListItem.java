@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 class DaoStateInConflictListItem extends StateInConflictListItem<DaoStateHash> {
-    DaoStateInConflictListItem(String peerAddress, DaoStateHash daoStateHash, int cycleIndex) {
-        super(peerAddress, daoStateHash, cycleIndex);
+    DaoStateInConflictListItem(String peerAddress, DaoStateHash stateHash, int cycleIndex) {
+        super(peerAddress, stateHash, cycleIndex);
     }
 }

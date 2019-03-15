@@ -30,7 +30,7 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public abstract class StateBlock<T extends StateHash> {
-    private final T myStateHash;
+    protected final T myStateHash;
 
     private final Map<String, T> peersMap = new HashMap<>();
     private final Map<String, T> inConflictMap = new HashMap<>();

@@ -132,12 +132,17 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (isNewStateHashMessage(networkEnvelope)) {
             Msg newStateHashMessage = castToNewStateHashMessage(networkEnvelope);
-            log.info("We received a newStateHashMessage from peer {}. NewStateHashMessage={} ",
-                    connection.getPeersNodeAddressOptional(), newStateHashMessage);
-
+            log.info("We received a {} from peer {} with stateHash={} ",
+                    newStateHashMessage.getClass().getSimpleName(),
+                    connection.getPeersNodeAddressOptional(),
+                    newStateHashMessage.getStateHash());
             listeners.forEach(e -> e.onNewStateHashMessage(newStateHashMessage, connection));
         } else if (isGetStateHashesRequest(networkEnvelope)) {
             Req getStateHashRequest = castToGetStateHashRequest(networkEnvelope);
+            log.info("We received a {} from peer {} for height={} ",
+                    getStateHashRequest.getClass().getSimpleName(),
+                    connection.getPeersNodeAddressOptional(),
+                    getStateHashRequest.getHeight());
             listeners.forEach(e -> e.onGetStateHashRequest(connection, getStateHashRequest));
         }
     }
@@ -156,6 +161,8 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
 
     public void sendGetStateHashesResponse(Connection connection, int nonce, List<StH> stateHashes) {
         Res getStateHashesResponse = getGetStateHashesResponse(nonce, stateHashes);
+        log.info("Send {} with {} stateHashes to peer {}", getStateHashesResponse.getClass().getSimpleName(),
+                stateHashes.size(), connection.getPeersNodeAddressOptional());
         connection.sendMessage(getStateHashesResponse);
     }
 
@@ -201,12 +208,9 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
         RequestStateHashesHandler.Listener<Res> listener = new RequestStateHashesHandler.Listener<>() {
             @Override
             public void onComplete(Res getStateHashesResponse, Optional<NodeAddress> peersNodeAddress) {
-                log.debug("requestHashesFromSeedNode of outbound connection complete. nodeAddress={}", nodeAddress);
                 requestStateHashHandlerMap.remove(nodeAddress);
-                listeners.forEach(e -> {
-                    List<StH> stateHashes = getStateHashesResponse.getStateHashes();
-                    e.onPeersStateHashes(stateHashes, peersNodeAddress);
-                });
+                List<StH> stateHashes = getStateHashesResponse.getStateHashes();
+                listeners.forEach(e -> e.onPeersStateHashes(stateHashes, peersNodeAddress));
             }
 
             @Override

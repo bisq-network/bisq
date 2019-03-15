@@ -30,6 +30,7 @@ import bisq.core.dao.monitoring.network.messages.NewProposalStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
+import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 
@@ -54,6 +55,8 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Monitors the DaoState with using a hash fo the complete daoState and make it accessible to the network for
@@ -159,7 +162,13 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         proposalStateNetworkService.addListeners();
 
         // We wait for processing messages until we have completed batch processing
-        int fromHeight = daoStateService.getChainHeight() - 10;
+
+        // We request data from last 5 cycles. We ignore possible duration changes done by voting as that request
+        // period is arbitrary anyway...
+        Cycle currentCycle = periodService.getCurrentCycle();
+        checkNotNull(currentCycle, "currentCycle must not be null");
+        int fromHeight = Math.max(genesisTxInfo.getGenesisBlockHeight(), daoStateService.getChainHeight() - currentCycle.getDuration() * 5);
+
         proposalStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
     }
 
@@ -171,7 +180,6 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     @Override
     public void onNewStateHashMessage(NewProposalStateHashMessage newStateHashMessage, Connection connection) {
         if (newStateHashMessage.getStateHash().getHeight() <= daoStateService.getChainHeight()) {
-            log.debug("onNewStateHashMessage newStateHashMessage ={}", newStateHashMessage);
             processPeersProposalStateHash(newStateHashMessage.getStateHash(), connection.getPeersNodeAddressOptional(), true);
         }
     }
@@ -183,14 +191,12 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                 .filter(e -> e.getHeight() >= fromHeight)
                 .map(ProposalStateBlock::getMyStateHash)
                 .collect(Collectors.toList());
-        log.debug("sendGetStateHashesResponse proposalStateHashes ={}", proposalStateHashes);
         proposalStateNetworkService.sendGetStateHashesResponse(connection, getStateHashRequest.getNonce(), proposalStateHashes);
     }
 
     @Override
     public void onPeersStateHashes(List<ProposalStateHash> stateHashes, Optional<NodeAddress> peersNodeAddress) {
         AtomicBoolean hasChanged = new AtomicBoolean(false);
-        log.debug("onPeersStateHashes stateHashes ={}", stateHashes);
         stateHashes.forEach(daoStateHash -> {
             boolean changed = processPeersProposalStateHash(daoStateHash, peersNodeAddress, false);
             if (changed) {
@@ -239,7 +245,6 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
             List<Proposal> proposals = proposalService.getValidatedProposals().stream()
-                    .filter(proposalValidator::isValidAndConfirmed)
                     .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.PROPOSAL, blockHeight))
                     .sorted(Comparator.comparing(Proposal::getTxId)).collect(Collectors.toList());
 
@@ -254,11 +259,10 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
             }
             byte[] combined = ArrayUtils.addAll(prevHash, serializedProposals);
             byte[] hash = Hash.getSha256Ripemd160hash(combined);
-            ProposalStateHash myProposalStateHash = new ProposalStateHash(blockHeight, hash, prevHash);
+            ProposalStateHash myProposalStateHash = new ProposalStateHash(blockHeight, hash, prevHash, proposals.size());
             ProposalStateBlock proposalStateBlock = new ProposalStateBlock(myProposalStateHash);
             proposalStateBlockChain.add(proposalStateBlock);
             proposalStateHashChain.add(myProposalStateHash);
-            log.info("Add proposalStateBlock at updateHashChain:\n{}", proposalStateBlock);
 
             // We only broadcast after parsing of blockchain is complete
             if (parseBlockChainComplete) {

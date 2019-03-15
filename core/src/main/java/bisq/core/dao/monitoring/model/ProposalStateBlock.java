@@ -26,4 +26,8 @@ public class ProposalStateBlock extends StateBlock<ProposalStateHash> {
     public ProposalStateBlock(ProposalStateHash myProposalStateHash) {
         super(myProposalStateHash);
     }
+
+    public int getNumProposals() {
+        return myStateHash.getNumProposals();
+    }
 }

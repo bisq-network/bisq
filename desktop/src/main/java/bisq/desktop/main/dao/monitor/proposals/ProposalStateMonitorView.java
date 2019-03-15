@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.monitor.proposals;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.main.dao.monitor.StateMonitorView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
@@ -33,6 +34,14 @@ import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.util.Callback;
+
+import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -184,5 +193,65 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
     @Override
     protected void requestHashesFromGenesisBlockHeight(String peerAddress) {
         proposalStateMonitoringService.requestHashesFromGenesisBlockHeight(peerAddress);
+    }
+
+    @Override
+    protected void createColumns() {
+        super.createColumns();
+
+        TableColumn<ProposalStateBlockListItem, ProposalStateBlockListItem> column;
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.table.numProposals"));
+        column.setMinWidth(110);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ProposalStateBlockListItem, ProposalStateBlockListItem> call(
+                            TableColumn<ProposalStateBlockListItem, ProposalStateBlockListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(ProposalStateBlockListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getNumProposals());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(e -> e.getStateBlock().getMyStateHash().getNumProposals()));
+        tableView.getColumns().add(1, column);
+    }
+
+
+    protected void createConflictColumns() {
+        super.createConflictColumns();
+
+        TableColumn<ProposalStateInConflictListItem, ProposalStateInConflictListItem> column;
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.table.numProposals"));
+        column.setMinWidth(110);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ProposalStateInConflictListItem, ProposalStateInConflictListItem> call(
+                            TableColumn<ProposalStateInConflictListItem, ProposalStateInConflictListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(ProposalStateInConflictListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getNumProposals());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(e -> e.getStateHash().getNumProposals()));
+        conflictTableView.getColumns().add(1, column);
     }
 }

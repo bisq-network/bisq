@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 class DaoStateBlockListItem extends StateBlockListItem<DaoStateHash, DaoStateBlock> {
-    DaoStateBlockListItem(DaoStateBlock daoStateBlock, int cycleIndex) {
-        super(daoStateBlock, cycleIndex);
+    DaoStateBlockListItem(DaoStateBlock stateBlock, int cycleIndex) {
+        super(stateBlock, cycleIndex);
     }
 }
 

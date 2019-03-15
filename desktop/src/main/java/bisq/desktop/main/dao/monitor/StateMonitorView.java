@@ -81,8 +81,8 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     protected TextField statusTextField;
     protected Button resyncButton;
-    private TableView<BLI> tableView;
-    private TableView<CLI> conflictTableView;
+    protected TableView<BLI> tableView;
+    protected TableView<CLI> conflictTableView;
 
     protected final ObservableList<BLI> listItems = FXCollections.observableArrayList();
     private final SortedList<BLI> sortedList = new SortedList<>(listItems);
@@ -257,11 +257,11 @@ public abstract class StateMonitorView<StH extends StateHash,
     // TableColumns
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createColumns() {
+    protected void createColumns() {
         TableColumn<BLI, BLI> column;
 
         column = new AutoTooltipTableColumn<>(getBlockHeightTableHeader());
-        column.setMinWidth(110);
+        column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -418,11 +418,11 @@ public abstract class StateMonitorView<StH extends StateHash,
     }
 
 
-    private void createConflictColumns() {
+    protected void createConflictColumns() {
         TableColumn<CLI, CLI> column;
 
         column = new AutoTooltipTableColumn<>(getBlockHeightTableHeader());
-        column.setMinWidth(80);
+        column.setMinWidth(120);
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(

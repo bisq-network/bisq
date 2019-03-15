@@ -1759,6 +1759,7 @@ message ProposalStateHash {
     int32 height = 1;
     bytes hash = 2;
     bytes prev_hash = 3;
+    int32 num_proposals = 4;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

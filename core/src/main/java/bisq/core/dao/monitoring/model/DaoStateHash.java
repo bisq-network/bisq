@@ -36,11 +36,10 @@ public final class DaoStateHash extends StateHash {
 
     @Override
     public PB.DaoStateHash toProtoMessage() {
-        final PB.DaoStateHash.Builder builder = PB.DaoStateHash.newBuilder()
+        return PB.DaoStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
-                .setPrevHash(ByteString.copyFrom(prevHash));
-        return builder.build();
+                .setPrevHash(ByteString.copyFrom(prevHash)).build();
     }
 
     public static DaoStateHash fromProto(PB.DaoStateHash proto) {

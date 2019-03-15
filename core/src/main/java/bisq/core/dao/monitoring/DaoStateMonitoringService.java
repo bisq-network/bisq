@@ -249,7 +249,6 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         DaoStateBlock daoStateBlock = new DaoStateBlock(myDaoStateHash);
         daoStateBlockChain.add(daoStateBlock);
         daoStateHashChain.add(myDaoStateHash);
-        log.debug("Add daoStateBlock at updateHashChain:\n{}", daoStateBlock);
 
         // We only broadcast after parsing of blockchain is complete
         if (parseBlockChainComplete) {

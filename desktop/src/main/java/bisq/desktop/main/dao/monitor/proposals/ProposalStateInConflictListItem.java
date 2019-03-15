@@ -29,7 +29,11 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 class ProposalStateInConflictListItem extends StateInConflictListItem<ProposalStateHash> {
-    ProposalStateInConflictListItem(String peerAddress, ProposalStateHash daoStateHash, int cycleIndex) {
-        super(peerAddress, daoStateHash, cycleIndex);
+    private final String numProposals;
+
+    ProposalStateInConflictListItem(String peerAddress, ProposalStateHash stateHash, int cycleIndex) {
+        super(peerAddress, stateHash, cycleIndex);
+
+        numProposals = String.valueOf(stateHash.getNumProposals());
     }
 }

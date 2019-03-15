@@ -128,7 +128,7 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.info("Sending of GetProposalStateHashesRequest message to peer {} succeeded.", nodeAddress.getHostName());
+                        log.info("Sending of {} message to peer {} succeeded.", getStateHashesRequest.getClass().getSimpleName(), nodeAddress.getHostName());
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -173,8 +173,9 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                     if (getStateHashesResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
                         cleanup();
-                        log.info("We received from peer {} a GetStateHashesResponse with {} stateHashes",
-                                nodeAddress.getFullAddress(), getStateHashesResponse.getStateHashes().size());
+                        log.info("We received from peer {} a {} with {} stateHashes",
+                                nodeAddress.getFullAddress(), getStateHashesResponse.getClass().getSimpleName(),
+                                getStateHashesResponse.getStateHashes().size());
                         listener.onComplete(getStateHashesResponse, connection.getPeersNodeAddressOptional());
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +

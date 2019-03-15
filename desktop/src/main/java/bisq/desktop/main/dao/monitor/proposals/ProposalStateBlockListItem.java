@@ -30,7 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 class ProposalStateBlockListItem extends StateBlockListItem<ProposalStateHash, ProposalStateBlock> {
-    ProposalStateBlockListItem(ProposalStateBlock daoStateBlock, int cycleIndex) {
-        super(daoStateBlock, cycleIndex);
+    private final String numProposals;
+
+    ProposalStateBlockListItem(ProposalStateBlock stateBlock, int cycleIndex) {
+        super(stateBlock, cycleIndex);
+
+        numProposals = String.valueOf(stateBlock.getNumProposals());
     }
 }

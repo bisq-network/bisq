@@ -23,12 +23,17 @@ import io.bisq.generated.protobuffer.PB;
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
-public final class ProposalStateHash extends StateHash {
 
-    public ProposalStateHash(int cycleStartBlockHeight, byte[] hash, byte[] prevHash) {
+public final class ProposalStateHash extends StateHash {
+    @Getter
+    private final int numProposals;
+
+    public ProposalStateHash(int cycleStartBlockHeight, byte[] hash, byte[] prevHash, int numProposals) {
         super(cycleStartBlockHeight, hash, prevHash);
+        this.numProposals = numProposals;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -37,17 +42,25 @@ public final class ProposalStateHash extends StateHash {
 
     @Override
     public PB.ProposalStateHash toProtoMessage() {
-        final PB.ProposalStateHash.Builder builder = PB.ProposalStateHash.newBuilder()
+        return PB.ProposalStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
-                .setPrevHash(ByteString.copyFrom(prevHash));
-        return builder.build();
+                .setPrevHash(ByteString.copyFrom(prevHash))
+                .setNumProposals(numProposals).build();
     }
-
 
     public static ProposalStateHash fromProto(PB.ProposalStateHash proto) {
         return new ProposalStateHash(proto.getHeight(),
                 proto.getHash().toByteArray(),
-                proto.getPrevHash().toByteArray());
+                proto.getPrevHash().toByteArray(),
+                proto.getNumProposals());
+    }
+
+
+    @Override
+    public String toString() {
+        return "ProposalStateHash{" +
+                "\n     numProposals=" + numProposals +
+                "\n} " + super.toString();
     }
 }
