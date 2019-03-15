@@ -139,18 +139,18 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     @Override
     public void onNewBlockHeight(int blockHeight) {
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
+
         if (proposalStateBlockChain.isEmpty() && blockHeight > genesisBlockHeight) {
             // Takes about 150 ms for dao testnet data
             long ts = System.currentTimeMillis();
             for (int i = genesisBlockHeight; i < blockHeight; i++) {
-                updateHashChain(i);
+                maybeUpdateHashChain(i);
             }
             log.info("updateHashChain for {} items took {} ms",
                     blockHeight - genesisBlockHeight,
                     System.currentTimeMillis() - ts);
         }
-
-        updateHashChain(blockHeight);
+        maybeUpdateHashChain(blockHeight);
     }
 
     @Override
@@ -230,11 +230,10 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void updateHashChain(int blockHeight) {
+    private void maybeUpdateHashChain(int blockHeight) {
         // We use first block in blind vote phase to create the hash of our proposals. We prefer to wait as long as
         // possible to increase the chance that we have received all proposals.
-        int blindVoteBlockHeight = periodService.getFirstBlockOfPhase(blockHeight, DaoPhase.Phase.BLIND_VOTE);
-        if (blockHeight != blindVoteBlockHeight) {
+        if (!isFirstBlockOfBlindVotePhase(blockHeight)) {
             return;
         }
 
@@ -255,12 +254,11 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
             }
             byte[] combined = ArrayUtils.addAll(prevHash, serializedProposals);
             byte[] hash = Hash.getSha256Ripemd160hash(combined);
-            int cycleStartBlockHeight = cycle.getHeightOfFirstBlock();
-            ProposalStateHash myProposalStateHash = new ProposalStateHash(cycleStartBlockHeight, hash, prevHash);
+            ProposalStateHash myProposalStateHash = new ProposalStateHash(blockHeight, hash, prevHash);
             ProposalStateBlock proposalStateBlock = new ProposalStateBlock(myProposalStateHash);
             proposalStateBlockChain.add(proposalStateBlock);
             proposalStateHashChain.add(myProposalStateHash);
-            log.debug("Add proposalStateBlock at updateHashChain:\n{}", proposalStateBlock);
+            log.info("Add proposalStateBlock at updateHashChain:\n{}", proposalStateBlock);
 
             // We only broadcast after parsing of blockchain is complete
             if (parseBlockChainComplete) {
@@ -269,6 +267,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
 
                 // We delay broadcast to give peers enough time to have received the block.
                 // Otherwise they would ignore our data if received block is in future to their local blockchain.
+                //TODO increase to 5-10 sec
                 int delayInSec = 1 + new Random().nextInt(5);
                 UserThread.runAfter(() -> proposalStateNetworkService.broadcastMyStateHash(myProposalStateHash), delayInSec);
             }
@@ -311,5 +310,9 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         }
 
         return changed.get();
+    }
+
+    private boolean isFirstBlockOfBlindVotePhase(int blockHeight) {
+        return blockHeight == periodService.getFirstBlockOfPhase(blockHeight, DaoPhase.Phase.BLIND_VOTE);
     }
 }
