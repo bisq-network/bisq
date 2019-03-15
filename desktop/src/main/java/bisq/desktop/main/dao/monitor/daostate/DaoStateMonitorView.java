@@ -23,6 +23,8 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
@@ -35,7 +37,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoStateBlock, DaoStateBlockListItem, DaoStateInConflictListItem> {
+public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoStateBlock, DaoStateBlockListItem, DaoStateInConflictListItem>
+        implements DaoStateMonitoringService.Listener {
     private final DaoStateMonitoringService daoStateMonitoringService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,8 +49,10 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     @Inject
     private DaoStateMonitorView(DaoStateService daoStateService,
                                 DaoFacade daoFacade,
-                                DaoStateMonitoringService daoStateMonitoringService) {
-        super(daoStateService, daoFacade);
+                                DaoStateMonitoringService daoStateMonitoringService,
+                                CycleService cycleService,
+                                PeriodService periodService) {
+        super(daoStateService, daoFacade, cycleService, periodService);
 
         this.daoStateMonitoringService = daoStateMonitoringService;
     }
@@ -57,8 +62,8 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
         FormBuilder.addTitledGroupBg(root, gridRow, 3, Res.get("dao.monitor.daoState.headline"));
 
         statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
-                Res.get("dao.monitor.daoState.state")).second;
-        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.daoState.resync"), 10);
+                Res.get("dao.monitor.state")).second;
+        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
 
         super.initialize();
     }
@@ -84,17 +89,32 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateMonitoringService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onDaoStateBlockChainChanged() {
+        if (daoStateService.isParseBlockChainComplete()) {
+            onDataUpdate();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Implementation abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected DaoStateBlockListItem getStateBlockListItem(DaoStateBlock daoStateBlock) {
-        return new DaoStateBlockListItem(daoStateBlock);
+        int cycleIndex = periodService.getCycle(daoStateBlock.getHeight()).map(cycleService::getCycleIndex).orElse(0);
+        return new DaoStateBlockListItem(daoStateBlock, cycleIndex);
     }
 
     @Override
     protected DaoStateInConflictListItem getStateInConflictListItem(Map.Entry<String, DaoStateHash> mapEntry) {
-        return new DaoStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue());
+        DaoStateHash daoStateHash = mapEntry.getValue();
+        int cycleIndex = periodService.getCycle(daoStateHash.getHeight()).map(cycleService::getCycleIndex).orElse(0);
+        return new DaoStateInConflictListItem(mapEntry.getKey(), daoStateHash, cycleIndex);
     }
 
     @Override
@@ -109,12 +129,12 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
     @Override
     protected String getConflictsTableHeader() {
-        return Res.get("dao.monitor.daoState.table.numMisMatches");
+        return Res.get("dao.monitor.table.conflicts");
     }
 
     @Override
     protected String getPeersTableHeader() {
-        return Res.get("dao.monitor.daoState.table.numPeer");
+        return Res.get("dao.monitor.table.peers");
     }
 
     @Override
@@ -134,7 +154,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
     @Override
     protected String getRequestHashes() {
-        return Res.get("dao.monitor.daoState.conflictTable.request");
+        return Res.get("dao.monitor.requestAlHashes");
     }
 
 

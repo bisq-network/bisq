@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.monitor;
 
 import bisq.core.dao.monitoring.model.StateBlock;
 import bisq.core.dao.monitoring.model.StateHash;
+import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
 
@@ -30,18 +31,17 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode
 public abstract class StateBlockListItem<StH extends StateHash, StB extends StateBlock<StH>> {
-    private final StateBlock<StH> stateBlock;
-    private final String height;
-    private final String hash;
-    private final String prevHash;
-    private final String numNetworkMessages;
-    private final String numMisMatches;
-    private final boolean isInSync;
+    protected final StateBlock<StH> stateBlock;
+    protected final String height;
+    protected final String hash;
+    protected final String prevHash;
+    protected final String numNetworkMessages;
+    protected final String numMisMatches;
+    protected final boolean isInSync;
 
-    protected StateBlockListItem(StB stateBlock) {
+    protected StateBlockListItem(StB stateBlock, int cycleIndex) {
         this.stateBlock = stateBlock;
-
-        height = String.valueOf(stateBlock.getHeight());
+        height = Res.get("dao.monitor.table.cycleBlockHeight", cycleIndex + 1, String.valueOf(stateBlock.getHeight()));
         hash = Utilities.bytesAsHexString(stateBlock.getHash());
         prevHash = stateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(stateBlock.getPrevHash()) : "-";
         numNetworkMessages = String.valueOf(stateBlock.getPeersMap().size());

@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.monitor.daostate;
+package bisq.desktop.main.dao.monitor.proposals;
 
-import bisq.desktop.main.dao.monitor.StateInConflictListItem;
+import bisq.desktop.main.dao.monitor.StateBlockListItem;
 
-import bisq.core.dao.monitoring.model.DaoStateHash;
+import bisq.core.dao.monitoring.model.ProposalStateBlock;
+import bisq.core.dao.monitoring.model.ProposalStateHash;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -28,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @EqualsAndHashCode(callSuper = true)
-class DaoStateInConflictListItem extends StateInConflictListItem<DaoStateHash> {
-    DaoStateInConflictListItem(String peerAddress, DaoStateHash daoStateHash, int cycleIndex) {
-        super(peerAddress, daoStateHash, cycleIndex);
+class ProposalStateBlockListItem extends StateBlockListItem<ProposalStateHash, ProposalStateBlock> {
+    ProposalStateBlockListItem(ProposalStateBlock daoStateBlock, int cycleIndex) {
+        super(daoStateBlock, cycleIndex);
     }
 }

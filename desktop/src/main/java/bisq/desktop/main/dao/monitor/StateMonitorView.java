@@ -28,7 +28,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.monitoring.model.StateBlock;
 import bisq.core.dao.monitoring.model.StateHash;
 import bisq.core.dao.state.DaoStateListener;
@@ -72,9 +73,11 @@ public abstract class StateMonitorView<StH extends StateHash,
         StB extends StateBlock<StH>,
         BLI extends StateBlockListItem<StH, StB>,
         CLI extends StateInConflictListItem<StH>>
-        extends ActivatableView<GridPane, Void> implements DaoStateListener, DaoStateMonitoringService.Listener {
-    private final DaoStateService daoStateService;
+        extends ActivatableView<GridPane, Void> implements DaoStateListener {
+    protected final DaoStateService daoStateService;
     protected final DaoFacade daoFacade;
+    protected final CycleService cycleService;
+    protected final PeriodService periodService;
 
     protected TextField statusTextField;
     protected Button resyncButton;
@@ -97,9 +100,13 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     @Inject
     public StateMonitorView(DaoStateService daoStateService,
-                            DaoFacade daoFacade) {
+                            DaoFacade daoFacade,
+                            CycleService cycleService,
+                            PeriodService periodService) {
         this.daoStateService = daoStateService;
         this.daoFacade = daoFacade;
+        this.cycleService = cycleService;
+        this.periodService = periodService;
     }
 
     @Override
@@ -176,19 +183,6 @@ public abstract class StateMonitorView<StH extends StateHash,
     public void onParseBlockChainComplete() {
         onDataUpdate();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateMonitoringService.Listener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onDaoStateBlockChainChanged() {
-        if (daoStateService.isParseBlockChainComplete()) {
-            onDataUpdate();
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Create table views

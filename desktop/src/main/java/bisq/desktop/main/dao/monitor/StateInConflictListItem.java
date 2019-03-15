@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.monitor;
 
 import bisq.core.dao.monitoring.model.StateHash;
+import bisq.core.locale.Res;
 
 import bisq.common.util.Utilities;
 
@@ -35,10 +36,10 @@ public abstract class StateInConflictListItem<T extends StateHash> {
     private final String prevHash;
     private final T stateHash;
 
-    protected StateInConflictListItem(String peerAddress, T stateHash) {
+    protected StateInConflictListItem(String peerAddress, T stateHash, int cycleIndex) {
         this.stateHash = stateHash;
         this.peerAddress = peerAddress;
-        height = String.valueOf(stateHash.getHeight());
+        height = Res.get("dao.monitor.table.cycleBlockHeight", cycleIndex + 1, String.valueOf(stateHash.getHeight()));
         hash = Utilities.bytesAsHexString(stateHash.getHash());
         prevHash = stateHash.getPrevHash().length > 0 ?
                 Utilities.bytesAsHexString(stateHash.getPrevHash()) : "-";

@@ -17,29 +17,172 @@
 
 package bisq.desktop.main.dao.monitor.proposals;
 
-import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.dao.monitor.StateMonitorView;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
+
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.monitoring.ProposalStateMonitoringService;
+import bisq.core.dao.monitoring.model.ProposalStateBlock;
+import bisq.core.dao.monitoring.model.ProposalStateHash;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
-import javafx.scene.layout.GridPane;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @FxmlView
-public class ProposalStateMonitorView extends ActivatableView<GridPane, Void> {
+public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash, ProposalStateBlock, ProposalStateBlockListItem, ProposalStateInConflictListItem>
+        implements ProposalStateMonitoringService.Listener {
+    private final ProposalStateMonitoringService proposalStateMonitoringService;
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor, lifecycle
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
     @Inject
-    private ProposalStateMonitorView() {
+    private ProposalStateMonitorView(DaoStateService daoStateService,
+                                     DaoFacade daoFacade,
+                                     ProposalStateMonitoringService proposalStateMonitoringService,
+                                     CycleService cycleService,
+                                     PeriodService periodService) {
+        super(daoStateService, daoFacade, cycleService, periodService);
+
+        this.proposalStateMonitoringService = proposalStateMonitoringService;
     }
 
     @Override
     public void initialize() {
+        FormBuilder.addTitledGroupBg(root, gridRow, 3, Res.get("dao.monitor.proposal.headline"));
+
+        statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
+                Res.get("dao.monitor.state")).second;
+        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
+
         super.initialize();
     }
 
     @Override
     protected void activate() {
+        super.activate();
+        proposalStateMonitoringService.addListener(this);
+
+        resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
+                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show())
+        );
     }
 
     @Override
     protected void deactivate() {
+        super.deactivate();
+        proposalStateMonitoringService.removeListener(this);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ProposalStateMonitoringService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onProposalStateBlockChainChanged() {
+        if (daoStateService.isParseBlockChainComplete()) {
+            onDataUpdate();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Implementation abstract methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected ProposalStateBlockListItem getStateBlockListItem(ProposalStateBlock daoStateBlock) {
+        int cycleIndex = periodService.getCycle(daoStateBlock.getHeight()).map(cycleService::getCycleIndex).orElse(0);
+        return new ProposalStateBlockListItem(daoStateBlock, cycleIndex);
+    }
+
+    @Override
+    protected ProposalStateInConflictListItem getStateInConflictListItem(Map.Entry<String, ProposalStateHash> mapEntry) {
+        ProposalStateHash proposalStateHash = mapEntry.getValue();
+        int cycleIndex = periodService.getCycle(proposalStateHash.getHeight()).map(cycleService::getCycleIndex).orElse(0);
+        return new ProposalStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue(), cycleIndex);
+    }
+
+    @Override
+    protected String getTableHeadLine() {
+        return Res.get("dao.monitor.proposal.table.headline");
+    }
+
+    @Override
+    protected String getConflictTableHeadLine() {
+        return Res.get("dao.monitor.proposal.conflictTable.headline");
+    }
+
+    @Override
+    protected String getConflictsTableHeader() {
+        return Res.get("dao.monitor.table.conflicts");
+    }
+
+    @Override
+    protected String getPeersTableHeader() {
+        return Res.get("dao.monitor.table.peers");
+    }
+
+    @Override
+    protected String getPrevHashTableHeader() {
+        return Res.get("dao.monitor.proposal.table.prev");
+    }
+
+    @Override
+    protected String getHashTableHeader() {
+        return Res.get("dao.monitor.proposal.table.hash");
+    }
+
+    @Override
+    protected String getBlockHeightTableHeader() {
+        return Res.get("dao.monitor.proposal.table.cycleBlockHeight");
+    }
+
+    @Override
+    protected String getRequestHashes() {
+        return Res.get("dao.monitor.requestAlHashes");
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Override
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onDataUpdate() {
+        isInConflict.set(proposalStateMonitoringService.isInConflict());
+
+        if (isInConflict.get()) {
+            statusTextField.setText(Res.get("dao.monitor.proposal.daoStateNotInSync"));
+            statusTextField.getStyleClass().add("dao-inConflict");
+        } else {
+            statusTextField.setText(Res.get("dao.monitor.proposal.daoStateInSync"));
+            statusTextField.getStyleClass().remove("dao-inConflict");
+        }
+
+        listItems.setAll(proposalStateMonitoringService.getProposalStateBlockChain().stream()
+                .map(this::getStateBlockListItem)
+                .collect(Collectors.toList()));
+
+        super.onDataUpdate();
+    }
+
+    @Override
+    protected void requestHashesFromGenesisBlockHeight(String peerAddress) {
+        proposalStateMonitoringService.requestHashesFromGenesisBlockHeight(peerAddress);
     }
 }

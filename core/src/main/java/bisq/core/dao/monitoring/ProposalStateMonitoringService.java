@@ -75,9 +75,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ProposalStateMonitoringService implements DaoSetupService, DaoStateListener, ProposalStateNetworkService.Listener<NewProposalStateHashMessage, GetProposalStateHashesRequest, ProposalStateHash> {
-
-
-    interface Listener {
+    public interface Listener {
         void onProposalStateBlockChainChanged();
     }
 
