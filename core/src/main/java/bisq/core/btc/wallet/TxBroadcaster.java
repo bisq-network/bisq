@@ -114,7 +114,6 @@ public class TxBroadcaster {
                     // before the caller is finished.
                     UserThread.execute(() -> callback.onSuccess(tx));
                 } else {
-                    stopAndRemoveTimer(txId); //useless - txId was already removed.
                     log.warn("We got an onSuccess callback for a broadcast which already triggered the timeout.", txId);
                 }
             }
