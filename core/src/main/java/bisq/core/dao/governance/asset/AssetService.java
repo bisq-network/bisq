@@ -33,6 +33,7 @@ import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.trade.statistics.TradeStatistics2;
@@ -286,7 +287,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean wasAssetRemovedByVoting(String tickerSymbol) {
-        boolean isRemoved = getRemoveAssetProposalStream()
+        boolean isRemoved = getAcceptedRemoveAssetProposalStream()
                 .anyMatch(proposal -> proposal.getTickerSymbol().equals(tickerSymbol));
         if (isRemoved)
             log.info("Asset '{}' was removed", CurrencyUtil.getNameAndCode(tickerSymbol));
@@ -306,9 +307,10 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<RemoveAssetProposal> getRemoveAssetProposalStream() {
+    private Stream<RemoveAssetProposal> getAcceptedRemoveAssetProposalStream() {
         return daoStateService.getEvaluatedProposalList().stream()
                 .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RemoveAssetProposal)
+                .filter(EvaluatedProposal::isAccepted)
                 .map(e -> ((RemoveAssetProposal) e.getProposal()));
     }
 

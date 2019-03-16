@@ -781,9 +781,8 @@ public class GUIUtil {
                 seed,
                 () -> UserThread.execute(() -> {
                     log.info("Wallets restored with seed words");
-                    new Popup<>().feedback(Res.get("seed.restore.success"))
-                            .useShutDownButton()
-                            .show();
+                    new Popup<>().feedback(Res.get("seed.restore.success")).hideCloseButton().show();
+                    BisqApp.getShutDownHandler().run();
                 }),
                 throwable -> UserThread.execute(() -> {
                     log.error(throwable.toString());
