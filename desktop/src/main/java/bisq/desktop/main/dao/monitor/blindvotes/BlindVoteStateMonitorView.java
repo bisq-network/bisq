@@ -17,35 +17,241 @@
 
 package bisq.desktop.main.dao.monitor.blindvotes;
 
-import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.main.dao.monitor.StateMonitorView;
+import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.FormBuilder;
+
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
+import bisq.core.dao.monitoring.model.BlindVoteStateBlock;
+import bisq.core.dao.monitoring.model.BlindVoteStateHash;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.locale.Res;
 
 import javax.inject.Inject;
 
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+
+import javafx.util.Callback;
+
+import java.util.Comparator;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @FxmlView
-public class BlindVoteStateMonitorView extends ActivatableView<GridPane, Void> {
-
+public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHash, BlindVoteStateBlock, BlindVoteStateBlockListItem, BlindVoteStateInConflictListItem>
+        implements BlindVoteStateMonitoringService.Listener {
+    private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+
     @Inject
-    private BlindVoteStateMonitorView() {
+    private BlindVoteStateMonitorView(DaoStateService daoStateService,
+                                      DaoFacade daoFacade,
+                                      BlindVoteStateMonitoringService blindVoteStateMonitoringService,
+                                      CycleService cycleService,
+                                      PeriodService periodService) {
+        super(daoStateService, daoFacade, cycleService, periodService);
+
+        this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
     }
 
     @Override
     public void initialize() {
+        FormBuilder.addTitledGroupBg(root, gridRow, 3, Res.get("dao.monitor.blindVote.headline"));
+
+        statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
+                Res.get("dao.monitor.state")).second;
+        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
+
         super.initialize();
     }
 
     @Override
     protected void activate() {
+        super.activate();
+        blindVoteStateMonitoringService.addListener(this);
+
+        resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
+                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show())
+        );
     }
 
     @Override
     protected void deactivate() {
+        super.deactivate();
+        blindVoteStateMonitoringService.removeListener(this);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BlindVoteStateMonitoringService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onBlindVoteStateBlockChainChanged() {
+        if (daoStateService.isParseBlockChainComplete()) {
+            onDataUpdate();
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Implementation abstract methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected BlindVoteStateBlockListItem getStateBlockListItem(BlindVoteStateBlock daoStateBlock) {
+        int cycleIndex = periodService.getCycle(daoStateBlock.getHeight()).map(cycleService::getCycleIndex).orElse(0);
+        return new BlindVoteStateBlockListItem(daoStateBlock, cycleIndex);
+    }
+
+    @Override
+    protected BlindVoteStateInConflictListItem getStateInConflictListItem(Map.Entry<String, BlindVoteStateHash> mapEntry) {
+        BlindVoteStateHash blindVoteStateHash = mapEntry.getValue();
+        int cycleIndex = periodService.getCycle(blindVoteStateHash.getHeight()).map(cycleService::getCycleIndex).orElse(0);
+        return new BlindVoteStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue(), cycleIndex);
+    }
+
+    @Override
+    protected String getTableHeadLine() {
+        return Res.get("dao.monitor.blindVote.table.headline");
+    }
+
+    @Override
+    protected String getConflictTableHeadLine() {
+        return Res.get("dao.monitor.blindVote.conflictTable.headline");
+    }
+
+    @Override
+    protected String getConflictsTableHeader() {
+        return Res.get("dao.monitor.table.conflicts");
+    }
+
+    @Override
+    protected String getPeersTableHeader() {
+        return Res.get("dao.monitor.table.peers");
+    }
+
+    @Override
+    protected String getPrevHashTableHeader() {
+        return Res.get("dao.monitor.blindVote.table.prev");
+    }
+
+    @Override
+    protected String getHashTableHeader() {
+        return Res.get("dao.monitor.blindVote.table.hash");
+    }
+
+    @Override
+    protected String getBlockHeightTableHeader() {
+        return Res.get("dao.monitor.table.header.cycleBlockHeight");
+    }
+
+    @Override
+    protected String getRequestHashes() {
+        return Res.get("dao.monitor.requestAlHashes");
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Override
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onDataUpdate() {
+        isInConflict.set(blindVoteStateMonitoringService.isInConflict());
+
+        if (isInConflict.get()) {
+            statusTextField.setText(Res.get("dao.monitor.blindVote.daoStateNotInSync"));
+            statusTextField.getStyleClass().add("dao-inConflict");
+        } else {
+            statusTextField.setText(Res.get("dao.monitor.blindVote.daoStateInSync"));
+            statusTextField.getStyleClass().remove("dao-inConflict");
+        }
+
+        listItems.setAll(blindVoteStateMonitoringService.getBlindVoteStateBlockChain().stream()
+                .map(this::getStateBlockListItem)
+                .collect(Collectors.toList()));
+
+        super.onDataUpdate();
+    }
+
+    @Override
+    protected void requestHashesFromGenesisBlockHeight(String peerAddress) {
+        blindVoteStateMonitoringService.requestHashesFromGenesisBlockHeight(peerAddress);
+    }
+
+    @Override
+    protected void createColumns() {
+        super.createColumns();
+
+        TableColumn<BlindVoteStateBlockListItem, BlindVoteStateBlockListItem> column;
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.blindVote.table.numBlindVotes"));
+        column.setMinWidth(110);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<BlindVoteStateBlockListItem, BlindVoteStateBlockListItem> call(
+                            TableColumn<BlindVoteStateBlockListItem, BlindVoteStateBlockListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(BlindVoteStateBlockListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getNumBlindVotes());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(e -> e.getStateBlock().getMyStateHash().getNumBlindVotes()));
+        tableView.getColumns().add(1, column);
+    }
+
+
+    protected void createConflictColumns() {
+        super.createConflictColumns();
+
+        TableColumn<BlindVoteStateInConflictListItem, BlindVoteStateInConflictListItem> column;
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.blindVote.table.numBlindVotes"));
+        column.setMinWidth(110);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<BlindVoteStateInConflictListItem, BlindVoteStateInConflictListItem> call(
+                            TableColumn<BlindVoteStateInConflictListItem, BlindVoteStateInConflictListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(BlindVoteStateInConflictListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.getNumBlindVotes());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(e -> e.getStateHash().getNumBlindVotes()));
+        conflictTableView.getColumns().add(1, column);
     }
 }

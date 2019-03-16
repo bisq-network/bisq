@@ -262,6 +262,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         column = new AutoTooltipTableColumn<>(getBlockHeightTableHeader());
         column.setMinWidth(120);
+        column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {

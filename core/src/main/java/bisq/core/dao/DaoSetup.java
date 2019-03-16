@@ -31,6 +31,7 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
+import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.ProposalStateMonitoringService;
 import bisq.core.dao.node.BsqNode;
@@ -74,6 +75,7 @@ public class DaoSetup {
                     DaoKillSwitch daoKillSwitch,
                     DaoStateMonitoringService daoStateMonitoringService,
                     ProposalStateMonitoringService proposalStateMonitoringService,
+                    BlindVoteStateMonitoringService blindVoteStateMonitoringService,
                     DaoEventCoordinator daoEventCoordinator) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
@@ -104,6 +106,7 @@ public class DaoSetup {
         daoSetupServices.add(daoKillSwitch);
         daoSetupServices.add(daoStateMonitoringService);
         daoSetupServices.add(proposalStateMonitoringService);
+        daoSetupServices.add(blindVoteStateMonitoringService);
 
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }

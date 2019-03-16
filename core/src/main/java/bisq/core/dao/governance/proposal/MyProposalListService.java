@@ -96,6 +96,7 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishOnceWellConnected();
         daoStateService.addDaoStateListener(this);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
     }
 
 
@@ -129,9 +130,6 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public void start() {
-    }
 
     // Broadcast tx and publish proposal to P2P network
     public void publishTxAndPayload(Proposal proposal, Transaction transaction, ResultHandler resultHandler,

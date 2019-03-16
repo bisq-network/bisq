@@ -120,6 +120,13 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
                 .collect(Collectors.toList());
     }
 
+    public List<BlindVote> getConfirmedBlindVotes() {
+        return blindVotePayloads.stream()
+                .filter(blindVotePayload -> blindVoteValidator.areDataFieldsValidAndTxConfirmed(blindVotePayload.getBlindVote()))
+                .map(BlindVotePayload::getBlindVote)
+                .collect(Collectors.toList());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

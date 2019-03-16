@@ -190,7 +190,7 @@ public class RequestBlocksHandler implements MessageListener {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
             } else {
-                log.warn("We got a message from another connection and ignore it. That should never happen.");
+                log.warn("We got a message from ourselves. That should never happen.");
             }
         }
     }

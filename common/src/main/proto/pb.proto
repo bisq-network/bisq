@@ -63,6 +63,9 @@ message NetworkEnvelope {
         NewProposalStateHashMessage new_proposal_state_hash_message = 37;
         GetProposalStateHashesRequest get_proposal_state_hashes_request = 38;
         GetProposalStateHashesResponse get_proposal_state_hashes_response = 39;
+        NewBlindVoteStateHashMessage new_blind_vote_state_hash_message = 40;
+        GetBlindVoteStateHashesRequest get_blind_vote_state_hashes_request = 41;
+        GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
     }
 }
 
@@ -338,12 +341,21 @@ message NewProposalStateHashMessage {
     ProposalStateHash state_hash = 1;
 }
 
+message NewBlindVoteStateHashMessage {
+    BlindVoteStateHash state_hash = 1;
+}
+
 message GetDaoStateHashesRequest {
     int32 height = 1;
     int32 nonce = 2;
 }
 
 message GetProposalStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetBlindVoteStateHashesRequest {
     int32 height = 1;
     int32 nonce = 2;
 }
@@ -355,6 +367,11 @@ message GetDaoStateHashesResponse {
 
 message GetProposalStateHashesResponse {
     repeated ProposalStateHash state_hashes = 1;
+    int32 request_nonce = 2;
+}
+
+message GetBlindVoteStateHashesResponse {
+    repeated BlindVoteStateHash state_hashes = 1;
     int32 request_nonce = 2;
 }
 
@@ -1760,6 +1777,13 @@ message ProposalStateHash {
     bytes hash = 2;
     bytes prev_hash = 3;
     int32 num_proposals = 4;
+}
+
+message BlindVoteStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+    int32 num_blind_votes = 4;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

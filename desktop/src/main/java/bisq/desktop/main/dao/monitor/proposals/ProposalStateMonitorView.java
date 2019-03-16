@@ -158,7 +158,7 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
 
     @Override
     protected String getBlockHeightTableHeader() {
-        return Res.get("dao.monitor.proposal.table.cycleBlockHeight");
+        return Res.get("dao.monitor.table.header.cycleBlockHeight");
     }
 
     @Override
@@ -201,7 +201,7 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
 
         TableColumn<ProposalStateBlockListItem, ProposalStateBlockListItem> column;
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.table.numProposals"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.proposal.table.numProposals"));
         column.setMinWidth(110);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
@@ -231,7 +231,7 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
 
         TableColumn<ProposalStateInConflictListItem, ProposalStateInConflictListItem> column;
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.table.numProposals"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.proposal.table.numProposals"));
         column.setMinWidth(110);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(

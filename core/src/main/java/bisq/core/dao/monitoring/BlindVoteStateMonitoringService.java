@@ -18,22 +18,21 @@
 package bisq.core.dao.monitoring;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.blindvote.BlindVoteListService;
+import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.period.PeriodService;
-import bisq.core.dao.governance.proposal.MyProposalList;
-import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.ProposalValidator;
-import bisq.core.dao.monitoring.model.ProposalStateBlock;
-import bisq.core.dao.monitoring.model.ProposalStateHash;
-import bisq.core.dao.monitoring.network.ProposalStateNetworkService;
-import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
-import bisq.core.dao.monitoring.network.messages.NewProposalStateHashMessage;
+import bisq.core.dao.monitoring.model.BlindVoteStateBlock;
+import bisq.core.dao.monitoring.model.BlindVoteStateHash;
+import bisq.core.dao.monitoring.network.BlindVoteStateNetworkService;
+import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.NewBlindVoteStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
-import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -59,41 +58,22 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Monitors the DaoState with using a hash fo the complete daoState and make it accessible to the network for
- * so we can detect quickly if any consensus issue arise. The data does not contain any private user
- * data so sharing it on demand has no privacy concerns.
- *
- * We request the state from the connected seed nodes after batch processing of BSQ is complete as well as we start
- * to listen for broadcast messages from our peers about dao state of new blocks. It could be that the received dao
- * state from the peers is already covering the next block we have not received yet. So we only take data in account
- * which are inside the block height we have already. To avoid such race conditions we delay the broadcasting of our
- * state to the peers to not get ignored it in case they have not received the block yet.
- *
- * We do not persist that chain of hashes and we only create it from the blocks we parse, so we start from the height
- * of the latest block in the snapshot.
- *
- * TODO maybe request full state?
- * TODO add p2p network data for monitoring
- * TODO auto recovery
- */
 @Slf4j
-public class ProposalStateMonitoringService implements DaoSetupService, DaoStateListener, ProposalStateNetworkService.Listener<NewProposalStateHashMessage, GetProposalStateHashesRequest, ProposalStateHash> {
+public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStateListener, BlindVoteStateNetworkService.Listener<NewBlindVoteStateHashMessage, GetBlindVoteStateHashesRequest, BlindVoteStateHash> {
     public interface Listener {
-        void onProposalStateBlockChainChanged();
+        void onBlindVoteStateBlockChainChanged();
     }
 
     private final DaoStateService daoStateService;
-    private final ProposalStateNetworkService proposalStateNetworkService;
+    private final BlindVoteStateNetworkService blindVoteStateNetworkService;
     private final GenesisTxInfo genesisTxInfo;
     private final PeriodService periodService;
-    private final ProposalService proposalService;
-    private final ProposalValidator proposalValidator;
+    private final BlindVoteListService blindVoteListService;
 
     @Getter
-    private final LinkedList<ProposalStateBlock> proposalStateBlockChain = new LinkedList<>();
+    private final LinkedList<BlindVoteStateBlock> blindVoteStateBlockChain = new LinkedList<>();
     @Getter
-    private final LinkedList<ProposalStateHash> proposalStateHashChain = new LinkedList<>();
+    private final LinkedList<BlindVoteStateHash> blindVoteStateHashChain = new LinkedList<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     @Getter
     private boolean isInConflict;
@@ -105,18 +85,16 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalStateMonitoringService(DaoStateService daoStateService,
-                                          ProposalStateNetworkService proposalStateNetworkService,
-                                          GenesisTxInfo genesisTxInfo,
-                                          PeriodService periodService,
-                                          ProposalService proposalService,
-                                          ProposalValidator proposalValidator) {
+    public BlindVoteStateMonitoringService(DaoStateService daoStateService,
+                                           BlindVoteStateNetworkService blindVoteStateNetworkService,
+                                           GenesisTxInfo genesisTxInfo,
+                                           PeriodService periodService,
+                                           BlindVoteListService blindVoteListService) {
         this.daoStateService = daoStateService;
-        this.proposalStateNetworkService = proposalStateNetworkService;
+        this.blindVoteStateNetworkService = blindVoteStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
         this.periodService = periodService;
-        this.proposalService = proposalService;
-        this.proposalValidator = proposalValidator;
+        this.blindVoteListService = blindVoteListService;
     }
 
 
@@ -127,7 +105,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     @Override
     public void addListeners() {
         daoStateService.addDaoStateListener(this);
-        proposalStateNetworkService.addListener(this);
+        blindVoteStateNetworkService.addListener(this);
     }
 
     @Override
@@ -139,11 +117,13 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void onDaoStateChanged(Block block) {
         int blockHeight = block.getHeight();
+
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
 
-        if (proposalStateBlockChain.isEmpty() && blockHeight > genesisBlockHeight) {
+        if (blindVoteStateBlockChain.isEmpty() && blockHeight > genesisBlockHeight) {
             // Takes about 150 ms for dao testnet data
             long ts = System.currentTimeMillis();
             for (int i = genesisBlockHeight; i < blockHeight; i++) {
@@ -159,7 +139,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     @Override
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;
-        proposalStateNetworkService.addListeners();
+        blindVoteStateNetworkService.addListeners();
 
         // We wait for processing messages until we have completed batch processing
 
@@ -169,7 +149,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         checkNotNull(currentCycle, "currentCycle must not be null");
         int fromHeight = Math.max(genesisTxInfo.getGenesisBlockHeight(), daoStateService.getChainHeight() - currentCycle.getDuration() * 5);
 
-        proposalStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
+        blindVoteStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
     }
 
 
@@ -178,34 +158,34 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewStateHashMessage(NewProposalStateHashMessage newStateHashMessage, Connection connection) {
+    public void onNewStateHashMessage(NewBlindVoteStateHashMessage newStateHashMessage, Connection connection) {
         if (newStateHashMessage.getStateHash().getHeight() <= daoStateService.getChainHeight()) {
-            processPeersProposalStateHash(newStateHashMessage.getStateHash(), connection.getPeersNodeAddressOptional(), true);
+            processPeersBlindVoteStateHash(newStateHashMessage.getStateHash(), connection.getPeersNodeAddressOptional(), true);
         }
     }
 
     @Override
-    public void onGetStateHashRequest(Connection connection, GetProposalStateHashesRequest getStateHashRequest) {
+    public void onGetStateHashRequest(Connection connection, GetBlindVoteStateHashesRequest getStateHashRequest) {
         int fromHeight = getStateHashRequest.getHeight();
-        List<ProposalStateHash> proposalStateHashes = proposalStateBlockChain.stream()
+        List<BlindVoteStateHash> blindVoteStateHashes = blindVoteStateBlockChain.stream()
                 .filter(e -> e.getHeight() >= fromHeight)
-                .map(ProposalStateBlock::getMyStateHash)
+                .map(BlindVoteStateBlock::getMyStateHash)
                 .collect(Collectors.toList());
-        proposalStateNetworkService.sendGetStateHashesResponse(connection, getStateHashRequest.getNonce(), proposalStateHashes);
+        blindVoteStateNetworkService.sendGetStateHashesResponse(connection, getStateHashRequest.getNonce(), blindVoteStateHashes);
     }
 
     @Override
-    public void onPeersStateHashes(List<ProposalStateHash> stateHashes, Optional<NodeAddress> peersNodeAddress) {
+    public void onPeersStateHashes(List<BlindVoteStateHash> stateHashes, Optional<NodeAddress> peersNodeAddress) {
         AtomicBoolean hasChanged = new AtomicBoolean(false);
         stateHashes.forEach(daoStateHash -> {
-            boolean changed = processPeersProposalStateHash(daoStateHash, peersNodeAddress, false);
+            boolean changed = processPeersBlindVoteStateHash(daoStateHash, peersNodeAddress, false);
             if (changed) {
                 hasChanged.set(true);
             }
         });
 
         if (hasChanged.get()) {
-            listeners.forEach(Listener::onProposalStateBlockChainChanged);
+            listeners.forEach(Listener::onBlindVoteStateBlockChainChanged);
         }
     }
 
@@ -215,7 +195,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestHashesFromGenesisBlockHeight(String peersAddress) {
-        proposalStateNetworkService.requestHashes(genesisTxInfo.getGenesisBlockHeight(), peersAddress);
+        blindVoteStateNetworkService.requestHashes(genesisTxInfo.getGenesisBlockHeight(), peersAddress);
     }
 
 
@@ -237,67 +217,69 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void maybeUpdateHashChain(int blockHeight) {
-        // We use first block in blind vote phase to create the hash of our proposals. We prefer to wait as long as
-        // possible to increase the chance that we have received all proposals.
+        // We use first block in blind vote phase to create the hash of our blindVotes. We prefer to wait as long as
+        // possible to increase the chance that we have received all blindVotes.
         if (!isFirstBlockOfBlindVotePhase(blockHeight)) {
             return;
         }
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
-            List<Proposal> proposals = proposalService.getValidatedProposals().stream()
-                    .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.PROPOSAL, blockHeight))
-                    .sorted(Comparator.comparing(Proposal::getTxId)).collect(Collectors.toList());
+            List<BlindVote> blindVotes = blindVoteListService.getConfirmedBlindVotes().stream()
+                    .filter(e -> periodService.isTxInCorrectCycle(e.getTxId(), blockHeight))
+                    .sorted(Comparator.comparing(BlindVote::getTxId)).collect(Collectors.toList());
 
-            // We use MyProposalList to get the serialized bytes from the proposals list
-            byte[] serializedProposals = new MyProposalList(proposals).toProtoMessage().toByteArray();
+            // We use MyBlindVoteList to get the serialized bytes from the blindVotes list
+            byte[] serializedBlindVotes = new MyBlindVoteList(blindVotes).toProtoMessage().toByteArray();
 
             byte[] prevHash;
-            if (proposalStateBlockChain.isEmpty()) {
+            if (blindVoteStateBlockChain.isEmpty()) {
                 prevHash = new byte[0];
             } else {
-                prevHash = proposalStateBlockChain.getLast().getHash();
+                prevHash = blindVoteStateBlockChain.getLast().getHash();
             }
-            byte[] combined = ArrayUtils.addAll(prevHash, serializedProposals);
+            byte[] combined = ArrayUtils.addAll(prevHash, serializedBlindVotes);
             byte[] hash = Hash.getSha256Ripemd160hash(combined);
-            ProposalStateHash myProposalStateHash = new ProposalStateHash(blockHeight, hash, prevHash, proposals.size());
-            ProposalStateBlock proposalStateBlock = new ProposalStateBlock(myProposalStateHash);
-            proposalStateBlockChain.add(proposalStateBlock);
-            proposalStateHashChain.add(myProposalStateHash);
+
+
+            BlindVoteStateHash myBlindVoteStateHash = new BlindVoteStateHash(blockHeight, hash, prevHash, blindVotes.size());
+            BlindVoteStateBlock blindVoteStateBlock = new BlindVoteStateBlock(myBlindVoteStateHash);
+            blindVoteStateBlockChain.add(blindVoteStateBlock);
+            blindVoteStateHashChain.add(myBlindVoteStateHash);
 
             // We only broadcast after parsing of blockchain is complete
             if (parseBlockChainComplete) {
                 // We notify listeners only after batch processing to avoid performance issues at UI code
-                listeners.forEach(Listener::onProposalStateBlockChainChanged);
+                listeners.forEach(Listener::onBlindVoteStateBlockChainChanged);
 
                 // We delay broadcast to give peers enough time to have received the block.
                 // Otherwise they would ignore our data if received block is in future to their local blockchain.
                 //TODO increase to 5-10 sec
                 int delayInSec = 1 + new Random().nextInt(5);
-                UserThread.runAfter(() -> proposalStateNetworkService.broadcastMyStateHash(myProposalStateHash), delayInSec);
+                UserThread.runAfter(() -> blindVoteStateNetworkService.broadcastMyStateHash(myBlindVoteStateHash), delayInSec);
             }
         });
     }
 
-    private boolean processPeersProposalStateHash(ProposalStateHash proposalStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
+    private boolean processPeersBlindVoteStateHash(BlindVoteStateHash blindVoteStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean isInConflict = new AtomicBoolean(this.isInConflict);
         StringBuilder sb = new StringBuilder();
-        proposalStateBlockChain.stream()
-                .filter(e -> e.getHeight() == proposalStateHash.getHeight()).findAny()
+        blindVoteStateBlockChain.stream()
+                .filter(e -> e.getHeight() == blindVoteStateHash.getHeight()).findAny()
                 .ifPresent(daoStateBlock -> {
                     String peersNodeAddressAsString = peersNodeAddress.map(NodeAddress::getFullAddress)
                             .orElseGet(() -> "Unknown peer " + new Random().nextInt(10000));
-                    daoStateBlock.putInPeersMap(peersNodeAddressAsString, proposalStateHash);
-                    if (!daoStateBlock.getMyStateHash().hasEqualHash(proposalStateHash)) {
-                        daoStateBlock.putInConflictMap(peersNodeAddressAsString, proposalStateHash);
+                    daoStateBlock.putInPeersMap(peersNodeAddressAsString, blindVoteStateHash);
+                    if (!daoStateBlock.getMyStateHash().hasEqualHash(blindVoteStateHash)) {
+                        daoStateBlock.putInConflictMap(peersNodeAddressAsString, blindVoteStateHash);
                         isInConflict.set(true);
                         sb.append("We received a block hash from peer ")
                                 .append(peersNodeAddressAsString)
                                 .append(" which conflicts with our block hash.\n")
-                                .append("my proposalStateHash=")
+                                .append("my blindVoteStateHash=")
                                 .append(daoStateBlock.getMyStateHash())
-                                .append("\npeers proposalStateHash=")
-                                .append(proposalStateHash);
+                                .append("\npeers blindVoteStateHash=")
+                                .append(blindVoteStateHash);
                     }
                     changed.set(true);
                 });
@@ -310,13 +292,13 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         }
 
         if (notifyListeners && changed.get()) {
-            listeners.forEach(Listener::onProposalStateBlockChainChanged);
+            listeners.forEach(Listener::onBlindVoteStateBlockChainChanged);
         }
 
         return changed.get();
     }
 
     private boolean isFirstBlockOfBlindVotePhase(int blockHeight) {
-        return blockHeight == periodService.getFirstBlockOfPhase(blockHeight, DaoPhase.Phase.BLIND_VOTE);
+        return blockHeight == periodService.getFirstBlockOfPhase(blockHeight, DaoPhase.Phase.VOTE_REVEAL);
     }
 }

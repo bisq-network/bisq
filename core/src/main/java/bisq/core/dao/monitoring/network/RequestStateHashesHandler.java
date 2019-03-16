@@ -187,9 +187,9 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                 } else {
                     log.warn("We have stopped already.");
                 }
+            } else {
+                log.warn("We got a message from ourselves. That should never happen.");
             }
-        } else {
-            log.warn("We got a message from another connection and ignore it. That should never happen.");
         }
     }
 

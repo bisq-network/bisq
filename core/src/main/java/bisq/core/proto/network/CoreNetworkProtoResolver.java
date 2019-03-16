@@ -28,10 +28,13 @@ import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
 import bisq.core.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDataRequest;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
+import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesResponse;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesResponse;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesResponse;
+import bisq.core.dao.monitoring.network.messages.NewBlindVoteStateHashMessage;
 import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
 import bisq.core.dao.monitoring.network.messages.NewProposalStateHashMessage;
 import bisq.core.dao.node.messages.GetBlocksRequest;
@@ -179,6 +182,13 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return GetProposalStateHashesRequest.fromProto(proto.getGetProposalStateHashesRequest(), messageVersion);
                 case GET_PROPOSAL_STATE_HASHES_RESPONSE:
                     return GetProposalStateHashesResponse.fromProto(proto.getGetProposalStateHashesResponse(), messageVersion);
+
+                case NEW_BLIND_VOTE_STATE_HASH_MESSAGE:
+                    return NewBlindVoteStateHashMessage.fromProto(proto.getNewBlindVoteStateHashMessage(), messageVersion);
+                case GET_BLIND_VOTE_STATE_HASHES_REQUEST:
+                    return GetBlindVoteStateHashesRequest.fromProto(proto.getGetBlindVoteStateHashesRequest(), messageVersion);
+                case GET_BLIND_VOTE_STATE_HASHES_RESPONSE:
+                    return GetBlindVoteStateHashesResponse.fromProto(proto.getGetBlindVoteStateHashesResponse(), messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
