@@ -42,7 +42,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
-    private static final String FILE_NAME = "DaoStateStore";
+    //TODO We need to rename as we have a new file structure with the hashchain feature and need to enforce the
+    // new file to be used.
+    // We can rename to DaoStateStore before mainnet launch again.
+    private static final String FILE_NAME = "DaoStateStore2";
 
     private final DaoState daoState;
     private final DaoStateMonitoringService daoStateMonitoringService;

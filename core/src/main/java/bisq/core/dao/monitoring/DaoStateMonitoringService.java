@@ -66,7 +66,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  * of the latest block in the snapshot.
  *
  * TODO maybe request full state?
- * TODO add p2p network data for monitoring
  * TODO auto recovery
  */
 @Slf4j
@@ -74,7 +73,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         DaoStateNetworkService.Listener<NewDaoStateHashMessage, GetDaoStateHashesRequest, DaoStateHash> {
 
     public interface Listener {
-        void onDaoStateBlockChainChanged();
+        void onChangeAfterBatchProcessing();
     }
 
     private final DaoStateService daoStateService;
@@ -170,7 +169,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         });
 
         if (hasChanged.get()) {
-            listeners.forEach(Listener::onDaoStateBlockChainChanged);
+            listeners.forEach(Listener::onChangeAfterBatchProcessing);
         }
     }
 
@@ -194,7 +193,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         daoStateNetworkService.reset();
 
         if (!persistedDaoStateHashChain.isEmpty()) {
-            log.info("Apply snapshot: Last daoStateHash={}", persistedDaoStateHashChain.getLast());
+            log.info("Apply snapshot with {} daoStateHashes. Last daoStateHash={}",
+                    persistedDaoStateHashChain.size(), persistedDaoStateHashChain.getLast());
         }
         daoStateHashChain.addAll(persistedDaoStateHashChain);
         daoStateHashChain.forEach(e -> daoStateBlockChain.add(new DaoStateBlock(e)));
@@ -219,7 +219,6 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateHashChain(Block block) {
-        //TODO handle reorgs TODO need to start from gen
         byte[] prevHash;
         int height = block.getHeight();
         if (daoStateBlockChain.isEmpty()) {
@@ -232,7 +231,6 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 return;
             }
         } else {
-            // TODO check if in reorg cases it might be a valid case
             checkArgument(height == daoStateBlockChain.getLast().getHeight() + 1,
                     "New block must be 1 block above previous block. height={}, " +
                             "daoStateBlockChain.getLast().getHeight()={}",
@@ -253,12 +251,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // We only broadcast after parsing of blockchain is complete
         if (parseBlockChainComplete) {
             // We notify listeners only after batch processing to avoid performance issues at UI code
-            listeners.forEach(Listener::onDaoStateBlockChainChanged);
+            listeners.forEach(Listener::onChangeAfterBatchProcessing);
 
             // We delay broadcast to give peers enough time to have received the block.
             // Otherwise they would ignore our data if received block is in future to their local blockchain.
-            //TODO increase to 5-10 sec
-            int delayInSec = 1 + new Random().nextInt(5);
+            int delayInSec = 5 + new Random().nextInt(10);
             UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
         }
     }
@@ -295,7 +292,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
 
         if (notifyListeners && changed.get()) {
-            listeners.forEach(Listener::onDaoStateBlockChainChanged);
+            listeners.forEach(Listener::onChangeAfterBatchProcessing);
         }
 
         return changed.get();

@@ -253,8 +253,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
 
                 // We delay broadcast to give peers enough time to have received the block.
                 // Otherwise they would ignore our data if received block is in future to their local blockchain.
-                //TODO increase to 5-10 sec
-                int delayInSec = 1 + new Random().nextInt(5);
+                int delayInSec = 5 + new Random().nextInt(10);
                 UserThread.runAfter(() -> blindVoteStateNetworkService.broadcastMyStateHash(myBlindVoteStateHash), delayInSec);
             }
         });

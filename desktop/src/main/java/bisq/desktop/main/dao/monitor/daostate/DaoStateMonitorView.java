@@ -93,7 +93,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onDaoStateBlockChainChanged() {
+    public void onChangeAfterBatchProcessing() {
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
         }

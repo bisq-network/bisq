@@ -50,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  * of the latest block in the snapshot.
  *
  * TODO maybe request full state?
- * TODO add p2p network data for monitoring
  * TODO auto recovery
  */
 @Slf4j
