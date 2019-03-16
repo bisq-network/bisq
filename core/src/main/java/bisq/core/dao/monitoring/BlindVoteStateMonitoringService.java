@@ -58,6 +58,18 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * Monitors the BlindVote P2P network payloads with using a hash of a sorted list of BlindVotes from one cycle and
+ * make it accessible to the network so we can detect quickly if any consensus issue arise.
+ * We create that hash at the first block of the VoteReveal phase. There is one hash created per cycle.
+ * The hash contains the hash of the previous block so we can ensure the validity of the whole history by
+ * comparing the last block.
+ *
+ * We request the state from the connected seed nodes after batch processing of BSQ is complete as well as we start
+ * to listen for broadcast messages from our peers about dao state of new blocks.
+ *
+ * We do NOT persist that chain of hashes as there is only one per cycle and the performance costs are very low.
+ */
 @Slf4j
 public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStateListener, BlindVoteStateNetworkService.Listener<NewBlindVoteStateHashMessage, GetBlindVoteStateHashesRequest, BlindVoteStateHash> {
     public interface Listener {

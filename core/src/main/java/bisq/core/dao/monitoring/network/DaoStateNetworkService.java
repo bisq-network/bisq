@@ -35,23 +35,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Monitors the DaoState with using a hash fo the complete daoState and make it accessible to the network for
- * so we can detect quickly if any consensus issue arise. The data does not contain any private user
- * data so sharing it on demand has no privacy concerns.
- *
- * We request the state from the connected seed nodes after batch processing of BSQ is complete as well as we start
- * to listen for broadcast messages from our peers about dao state of new blocks. It could be that the received dao
- * state from the peers is already covering the next block we have not received yet. So we only take data in account
- * which are inside the block height we have already. To avoid such race conditions we delay the broadcasting of our
- * state to the peers to not get ignored it in case they have not received the block yet.
- *
- * We do not persist that chain of hashes and we only create it from the blocks we parse, so we start from the height
- * of the latest block in the snapshot.
- *
- * TODO maybe request full state?
- * TODO auto recovery
- */
 @Slf4j
 public class DaoStateNetworkService extends StateNetworkService<NewDaoStateHashMessage,
         GetDaoStateHashesRequest,
