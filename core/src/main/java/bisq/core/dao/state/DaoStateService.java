@@ -329,7 +329,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Coin getGenesisTotalSupply() {
-        return GenesisTxInfo.GENESIS_TOTAL_SUPPLY;
+        return Coin.valueOf(genesisTxInfo.getGenesisTotalSupply());
     }
 
     public Optional<Tx> getGenesisTx() {
