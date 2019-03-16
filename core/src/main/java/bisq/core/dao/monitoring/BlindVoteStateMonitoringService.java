@@ -129,6 +129,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void onDaoStateChanged(Block block) {
         int blockHeight = block.getHeight();
@@ -148,6 +149,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
         maybeUpdateHashChain(blockHeight);
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;

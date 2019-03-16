@@ -21,7 +21,6 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateHash;
 import bisq.core.dao.monitoring.network.ProposalStateNetworkService;
@@ -82,7 +81,6 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     private final GenesisTxInfo genesisTxInfo;
     private final PeriodService periodService;
     private final ProposalService proposalService;
-    private final ProposalValidator proposalValidator;
 
     @Getter
     private final LinkedList<ProposalStateBlock> proposalStateBlockChain = new LinkedList<>();
@@ -103,14 +101,12 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                                           ProposalStateNetworkService proposalStateNetworkService,
                                           GenesisTxInfo genesisTxInfo,
                                           PeriodService periodService,
-                                          ProposalService proposalService,
-                                          ProposalValidator proposalValidator) {
+                                          ProposalService proposalService) {
         this.daoStateService = daoStateService;
         this.proposalStateNetworkService = proposalStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
         this.periodService = periodService;
         this.proposalService = proposalService;
-        this.proposalValidator = proposalValidator;
     }
 
 
@@ -133,6 +129,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("Duplicates")
     public void onDaoStateChanged(Block block) {
         int blockHeight = block.getHeight();
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
@@ -150,6 +147,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         maybeUpdateHashChain(blockHeight);
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;
