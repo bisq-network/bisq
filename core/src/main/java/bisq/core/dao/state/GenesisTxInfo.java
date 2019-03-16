@@ -54,6 +54,10 @@ public class GenesisTxInfo {
     private static final String DAO_TESTNET_GENESIS_TX_ID = "cb316a186b9e88d1b8e1ce8dc79cc6a2080cc7bbc6df94f2be325d8253417af1";
     private static final int DAO_TESTNET_GENESIS_BLOCK_HEIGHT = 104; // 2019-02-19
 
+    //TODO create new one
+    private static final String DAO_BETANET_GENESIS_TX_ID = "81855816eca165f17f0668898faa8724a105196e90ffc4993f4cac980176674e";
+    private static final int DAO_BETANET_GENESIS_BLOCK_HEIGHT = 524717; // 2018-05-27
+
     private static final String REGTEST_GENESIS_TX_ID = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
     private static final int REGTEST_GENESIS_BLOCK_HEIGHT = 111;
 
@@ -97,6 +101,7 @@ public class GenesisTxInfo {
         boolean isMainnet = baseCurrencyNetwork.isMainnet();
         boolean isTestnet = baseCurrencyNetwork.isTestnet();
         boolean isDaoTestNet = baseCurrencyNetwork.isDaoTestNet();
+        boolean isDaoBetaNet = baseCurrencyNetwork.isDaoBetaNet();
         boolean isRegtest = baseCurrencyNetwork.isRegtest();
         if (!genesisTxId.isEmpty()) {
             this.genesisTxId = genesisTxId;
@@ -106,6 +111,8 @@ public class GenesisTxInfo {
             this.genesisTxId = TESTNET_GENESIS_TX_ID;
         } else if (isDaoTestNet) {
             this.genesisTxId = DAO_TESTNET_GENESIS_TX_ID;
+        } else if (isDaoBetaNet) {
+            this.genesisTxId = DAO_BETANET_GENESIS_TX_ID;
         } else if (isRegtest) {
             this.genesisTxId = REGTEST_GENESIS_TX_ID;
         } else {
@@ -120,6 +127,8 @@ public class GenesisTxInfo {
             this.genesisBlockHeight = TESTNET_GENESIS_BLOCK_HEIGHT;
         } else if (isDaoTestNet) {
             this.genesisBlockHeight = DAO_TESTNET_GENESIS_BLOCK_HEIGHT;
+        } else if (isDaoBetaNet) {
+            this.genesisBlockHeight = DAO_BETANET_GENESIS_BLOCK_HEIGHT;
         } else if (isRegtest) {
             this.genesisBlockHeight = REGTEST_GENESIS_BLOCK_HEIGHT;
         } else {

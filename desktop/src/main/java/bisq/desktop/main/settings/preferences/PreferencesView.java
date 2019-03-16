@@ -593,7 +593,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // We only show mainnet and dao testnet. Testnet is rather un-usable for application testing when asics
         // create 10000s of blocks per day.
         baseCurrencyNetworks = baseCurrencyNetworks.stream()
-                .filter(e -> e.isMainnet() || e.isDaoTestNet())
+                .filter(e -> e.isMainnet() || e.isDaoTestNet() || e.isDaoBetaNet())
                 .collect(Collectors.toList());
         selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
