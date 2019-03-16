@@ -649,6 +649,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 return prefPayload.getBlockChainExplorerTestNet();
             case BTC_DAO_TESTNET:
                 return BTC_DAO_TEST_NET_EXPLORERS.get(0);
+            case BTC_DAO_BETANET:
+                return prefPayload.getBlockChainExplorerMainNet();
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
@@ -664,6 +666,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 return BTC_TEST_NET_EXPLORERS;
             case BTC_DAO_TESTNET:
                 return BTC_DAO_TEST_NET_EXPLORERS;
+            case BTC_DAO_BETANET:
+                return BTC_MAIN_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
