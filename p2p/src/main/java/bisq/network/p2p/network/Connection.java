@@ -297,7 +297,9 @@ public class Connection extends Capabilities implements Runnable, MessageListene
         }
 
         if (!result)
-            log.info("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", msg, capabilities);
+            log.info("We did not send the message because the peer does not support our required capabilities. " +
+                            "message={}, peer={}, peers supportedCapabilities={}",
+                    msg, peersNodeAddressOptional, capabilities);
 
         return result;
     }
