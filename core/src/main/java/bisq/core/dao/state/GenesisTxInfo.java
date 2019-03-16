@@ -45,23 +45,23 @@ public class GenesisTxInfo {
 
     private static final String MAINNET_GENESIS_TX_ID = "81855816eca165f17f0668898faa8724a105196e90ffc4993f4cac980176674e";
     private static final int MAINNET_GENESIS_BLOCK_HEIGHT = 524717; // 2018-05-27
-    private static final Coin MAINNET_GENESIS_TOTAL_SUPPLY = Coin.valueOf(250_000_000); // 2.5M BSQ / 2.50000000 BTC
+    private static final Coin MAINNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
     private static final String TESTNET_GENESIS_TX_ID = "09e70ce0ab7a962a82a2ca84c9ae8a89140bf1c3fb6f7efad6162e39e4b362ae";
     private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1446300; // 2018-12-02
-    private static final Coin TESTNET_GENESIS_TOTAL_SUPPLY = Coin.valueOf(250_000_000); // 2.5M BSQ / 2.50000000 BTC
+    private static final Coin TESTNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
     private static final String DAO_TESTNET_GENESIS_TX_ID = "cb316a186b9e88d1b8e1ce8dc79cc6a2080cc7bbc6df94f2be325d8253417af1";
     private static final int DAO_TESTNET_GENESIS_BLOCK_HEIGHT = 104; // 2019-02-19
-    private static final Coin DAO_TESTNET_GENESIS_TOTAL_SUPPLY = Coin.valueOf(250_000_000); // 2.5M BSQ / 2.50000000 BTC
+    private static final Coin DAO_TESTNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
-    private static final String DAO_BETANET_GENESIS_TX_ID = "81855816eca165f17f0668898faa8724a105196e90ffc4993f4cac980176674e";
-    private static final int DAO_BETANET_GENESIS_BLOCK_HEIGHT = 524717; // 2018-05-27
-    private static final Coin DAO_BETANET_GENESIS_TOTAL_SUPPLY = Coin.valueOf(100_000); // 1000 BSQ / 0.00100000 BTC  ﻿0.0 79 986 95
+    private static final String DAO_BETANET_GENESIS_TX_ID = "0bd66d8ff26476b55dfaf2a5db0c659a5d8635566488244df25606db63a08bd9";
+    private static final int DAO_BETANET_GENESIS_BLOCK_HEIGHT = 567405; // 2019-03-16
+    private static final Coin DAO_BETANET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("0.49998644"); // 1000 BSQ / 0.49998644 BTC
 
     private static final String REGTEST_GENESIS_TX_ID = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
     private static final int REGTEST_GENESIS_BLOCK_HEIGHT = 111;
-    private static final Coin REGTEST_GENESIS_TOTAL_SUPPLY = Coin.valueOf(250_000_000); // 2.5M BSQ / 2.50000000 BTC
+    private static final Coin REGTEST_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
