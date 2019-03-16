@@ -32,4 +32,9 @@ public interface DaoStateListener {
 
     default void onParseBlockCompleteAfterBatchProcessing(Block block) {
     }
+
+    // Called after the parsing of a block is complete and we do not allow any change in the daoState until the next
+    // block arrives.
+    default void onDaoStateChanged(Block block) {
+    }
 }

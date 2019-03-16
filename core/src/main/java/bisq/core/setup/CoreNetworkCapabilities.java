@@ -39,6 +39,7 @@ public class CoreNetworkCapabilities {
             supportedCapabilities.add(Capability.PROPOSAL);
             supportedCapabilities.add(Capability.BLIND_VOTE);
             supportedCapabilities.add(Capability.BSQ_BLOCK);
+            supportedCapabilities.add(Capability.DAO_STATE);
 
             String isFullDaoNode = bisqEnvironment.getProperty(DaoOptionKeys.FULL_DAO_NODE, String.class, "");
             if (isFullDaoNode != null && !isFullDaoNode.isEmpty())

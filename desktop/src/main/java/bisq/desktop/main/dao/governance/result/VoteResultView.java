@@ -149,6 +149,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ChangeListener<CycleListItem> selectedVoteResultListItemListener;
     private ResultsOfCycle resultsOfCycle;
     private ProposalListItem selectedProposalListItem;
+    private TableView<VoteListItem> votesTableView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -211,6 +212,13 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             JsonElement cyclesJsonArray = getVotingHistoryJson();
             GUIUtil.exportJSON("voteResultsHistory.json", cyclesJsonArray, (Stage) root.getScene().getWindow());
         });
+        if (proposalsTableView != null) {
+            GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 2, 4);
+        }
+        if (votesTableView != null) {
+            GUIUtil.setFitToRowsForTableView(votesTableView, 25, 28, 2, 4);
+        }
+        GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 2, 4);
     }
 
     @Override
@@ -513,7 +521,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         GridPane.setColumnSpan(votesTableHeader, 2);
         root.getChildren().add(votesTableHeader);
 
-        TableView<VoteListItem> votesTableView = new TableView<>();
+        votesTableView = new TableView<>();
         votesTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         votesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 

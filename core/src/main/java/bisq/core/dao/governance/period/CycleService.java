@@ -79,7 +79,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
     public void onNewBlockHeight(int blockHeight) {
         if (blockHeight != genesisBlockHeight)
             maybeCreateNewCycle(blockHeight, daoStateService.getCycles())
-                    .ifPresent(daoStateService.getCycles()::add);
+                    .ifPresent(daoStateService::addCycle);
     }
 
 
@@ -88,7 +88,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addFirstCycle() {
-        daoStateService.getCycles().add(getFirstCycle());
+        daoStateService.addCycle(getFirstCycle());
     }
 
     public int getCycleIndex(Cycle cycle) {

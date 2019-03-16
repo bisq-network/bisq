@@ -189,6 +189,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         setNewRandomSalt();
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     @Override

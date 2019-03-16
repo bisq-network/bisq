@@ -125,7 +125,7 @@ public class RequestBlocksHandler implements MessageListener {
                         TIMEOUT);
             }
 
-            log.info("We send to peer {} a {}.", nodeAddress, getBlocksRequest);
+            log.info("We request blocks from peer {} from block height {}.", nodeAddress, getBlocksRequest.getFromBlockHeight());
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getBlocksRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -190,7 +190,7 @@ public class RequestBlocksHandler implements MessageListener {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
             } else {
-                log.warn("We got a message from another connection and ignore it. That should never happen.");
+                log.warn("We got a message from ourselves. That should never happen.");
             }
         }
     }

@@ -184,8 +184,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     public void initialize() {
         super.initialize();
 
-        root.getStyleClass().add("vote-root");
-
         gridRow = phasesView.addGroup(root, gridRow);
 
         proposalDisplayGridPane = new GridPane();
@@ -226,6 +224,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 bsqWalletService.getUnlockingBondsBalance());
 
         updateListItems();
+        GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 2, 6);
         updateViews();
     }
 
@@ -334,8 +333,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         }
 
         GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 2, 6);
-        tableView.layout();
-        root.layout();
     }
 
     private void createAllFieldsOnProposalDisplay(Proposal proposal, @Nullable Ballot ballot,

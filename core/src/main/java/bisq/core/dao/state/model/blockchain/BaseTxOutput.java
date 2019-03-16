@@ -45,9 +45,10 @@ public abstract class BaseTxOutput implements ImmutableDaoStateModel {
     protected final long value;
     protected final String txId;
 
-    // Only set if dumpBlockchainData is true
+    // Before v0.9.6 it was only set if dumpBlockchainData was set to true but we changed that with 0.9.6
+    // so that is is always set. We still need to support it because of backward compatibility.
     @Nullable
-    protected final PubKeyScript pubKeyScript;
+    protected final PubKeyScript pubKeyScript; // Has about 50 bytes, total size of TxOutput is about 300 bytes.
     @Nullable
     protected final String address;
     @Nullable
@@ -69,7 +70,6 @@ public abstract class BaseTxOutput implements ImmutableDaoStateModel {
         this.address = address;
         this.opReturnData = opReturnData;
         this.blockHeight = blockHeight;
-
     }
 
 

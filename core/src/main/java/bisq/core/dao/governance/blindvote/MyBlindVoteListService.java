@@ -145,6 +145,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     @Override
     public void addListeners() {
         daoStateService.addDaoStateListener(this);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
     }
 
     @Override

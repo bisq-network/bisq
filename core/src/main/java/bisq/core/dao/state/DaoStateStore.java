@@ -17,6 +17,7 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
@@ -25,11 +26,12 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
+import java.util.LinkedList;
+import java.util.stream.Collectors;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -38,13 +40,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DaoStateStore implements PersistableEnvelope {
     // DaoState is always a clone and must not be used for read access beside initial read from disc when we apply
     // the snapshot!
-    @Nullable
     @Getter
     @Setter
-    DaoState daoState;
+    private DaoState daoState;
+    @Getter
+    @Setter
+    private LinkedList<DaoStateHash> daoStateHashChain;
 
-    DaoStateStore(DaoState daoState) {
+    DaoStateStore(DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
         this.daoState = daoState;
+        this.daoStateHashChain = daoStateHashChain;
     }
 
 
@@ -55,13 +60,21 @@ public class DaoStateStore implements PersistableEnvelope {
     public Message toProtoMessage() {
         checkNotNull(daoState, "daoState must not be null when toProtoMessage is invoked");
         PB.DaoStateStore.Builder builder = PB.DaoStateStore.newBuilder()
-                .setBsqState(daoState.getBsqStateBuilder());
+                .setBsqState(daoState.getBsqStateBuilder())
+                .addAllDaoStateHash(daoStateHashChain.stream()
+                        .map(DaoStateHash::toProtoMessage)
+                        .collect(Collectors.toList()));
         return PB.PersistableEnvelope.newBuilder()
                 .setDaoStateStore(builder)
                 .build();
     }
 
     public static PersistableEnvelope fromProto(PB.DaoStateStore proto) {
-        return new DaoStateStore(DaoState.fromProto(proto.getBsqState()));
+        LinkedList<DaoStateHash> daoStateHashList = proto.getDaoStateHashList().isEmpty() ?
+                new LinkedList<>() :
+                new LinkedList<>(proto.getDaoStateHashList().stream()
+                        .map(DaoStateHash::fromProto)
+                        .collect(Collectors.toList()));
+        return new DaoStateStore(DaoState.fromProto(proto.getBsqState()), daoStateHashList);
     }
 }

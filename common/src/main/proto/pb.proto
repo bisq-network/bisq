@@ -57,6 +57,15 @@ message NetworkEnvelope {
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
+        NewDaoStateHashMessage new_dao_state_hash_message = 34;
+        GetDaoStateHashesRequest get_dao_state_hashes_request = 35;
+        GetDaoStateHashesResponse get_dao_state_hashes_response = 36;
+        NewProposalStateHashMessage new_proposal_state_hash_message = 37;
+        GetProposalStateHashesRequest get_proposal_state_hashes_request = 38;
+        GetProposalStateHashesResponse get_proposal_state_hashes_response = 39;
+        NewBlindVoteStateHashMessage new_blind_vote_state_hash_message = 40;
+        GetBlindVoteStateHashesRequest get_blind_vote_state_hashes_request = 41;
+        GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
     }
 }
 
@@ -322,6 +331,48 @@ message NewBlockBroadcastMessage {
 }
 
 message RepublishGovernanceDataRequest {
+}
+
+message NewDaoStateHashMessage {
+    DaoStateHash state_hash = 1;
+}
+
+message NewProposalStateHashMessage {
+    ProposalStateHash state_hash = 1;
+}
+
+message NewBlindVoteStateHashMessage {
+    BlindVoteStateHash state_hash = 1;
+}
+
+message GetDaoStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetProposalStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetBlindVoteStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetDaoStateHashesResponse {
+    repeated DaoStateHash state_hashes = 1;
+    int32 request_nonce = 2;
+}
+
+message GetProposalStateHashesResponse {
+    repeated ProposalStateHash state_hashes = 1;
+    int32 request_nonce = 2;
+}
+
+message GetBlindVoteStateHashesResponse {
+    repeated BlindVoteStateHash state_hashes = 1;
+    int32 request_nonce = 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -914,7 +965,6 @@ message PromptPayAccountPayload {
 message AdvancedCashAccountPayload {
     string account_nr = 1;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // PersistableEnvelope
@@ -1713,6 +1763,27 @@ message DecryptedBallotsWithMerits {
 
 message DaoStateStore {
     BsqState bsq_state = 1;
+    repeated DaoStateHash dao_state_hash = 2;
+}
+
+message DaoStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+}
+
+message ProposalStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+    int32 num_proposals = 4;
+}
+
+message BlindVoteStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+    int32 num_blind_votes = 4;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
