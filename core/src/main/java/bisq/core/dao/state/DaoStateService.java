@@ -107,7 +107,7 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot(DaoState snapshot) {
-        //TODO
+        allowDaoStateChange = true;
         assertDaoStateChange();
 
         log.info("Apply snapshot with chain height {}", snapshot.getChainHeight());

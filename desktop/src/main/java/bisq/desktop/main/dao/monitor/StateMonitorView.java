@@ -400,14 +400,18 @@ public abstract class StateMonitorView<StH extends StateHash,
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     Label icon;
-                                    if (item.isInSync()) {
-                                        icon = FormBuilder.getIcon(AwesomeIcon.OK_CIRCLE);
-                                        icon.getStyleClass().addAll("icon", "dao-inSync");
+                                    if (!item.getStateBlock().getPeersMap().isEmpty()) {
+                                        if (item.isInSync()) {
+                                            icon = FormBuilder.getIcon(AwesomeIcon.OK_CIRCLE);
+                                            icon.getStyleClass().addAll("icon", "dao-inSync");
+                                        } else {
+                                            icon = FormBuilder.getIcon(AwesomeIcon.REMOVE_CIRCLE);
+                                            icon.getStyleClass().addAll("icon", "dao-inConflict");
+                                        }
+                                        setGraphic(icon);
                                     } else {
-                                        icon = FormBuilder.getIcon(AwesomeIcon.REMOVE_CIRCLE);
-                                        icon.getStyleClass().addAll("icon", "dao-inConflict");
+                                        setGraphic(null);
                                     }
-                                    setGraphic(icon);
                                 } else {
                                     setGraphic(null);
                                 }

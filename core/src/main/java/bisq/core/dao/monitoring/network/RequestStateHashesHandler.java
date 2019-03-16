@@ -128,7 +128,9 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.info("Sending of {} message to peer {} succeeded.", getStateHashesRequest.getClass().getSimpleName(), nodeAddress.getHostName());
+                        log.info("Sending of {} message to peer {} succeeded.",
+                                getStateHashesRequest.getClass().getSimpleName(),
+                                nodeAddress.getFullAddress());
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");
@@ -187,8 +189,9 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                 } else {
                     log.warn("We have stopped already.");
                 }
-            } else {
-                log.warn("We got a message from ourselves. That should never happen.");
+            } else if (connection.getPeersNodeAddressOptional().isPresent()) {
+                log.debug("{}: We got a message from another node. We ignore that.",
+                        this.getClass().getSimpleName());
             }
         }
     }
