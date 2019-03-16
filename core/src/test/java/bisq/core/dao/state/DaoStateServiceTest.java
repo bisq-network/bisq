@@ -38,6 +38,7 @@ public class DaoStateServiceTest {
         );
 
         Block block = new Block(0, 1534800000, "fakeblockhash0", null);
+        stateService.onNewBlockHeight(0);
         stateService.onNewBlockWithEmptyTxs(block);
         Assert.assertEquals(
                 "Block has to be genesis block to get added.",
@@ -52,10 +53,13 @@ public class DaoStateServiceTest {
         );
 
         block = new Block(1, 1534800001, "fakeblockhash1", null);
+        stateService.onNewBlockHeight(1);
         stateService.onNewBlockWithEmptyTxs(block);
         block = new Block(2, 1534800002, "fakeblockhash2", null);
+        stateService.onNewBlockHeight(2);
         stateService.onNewBlockWithEmptyTxs(block);
         block = new Block(3, 1534800003, "fakeblockhash3", null);
+        stateService.onNewBlockHeight(3);
         stateService.onNewBlockWithEmptyTxs(block);
         Assert.assertEquals(
                 "Block that was never added should still not exist after adding more blocks.",
