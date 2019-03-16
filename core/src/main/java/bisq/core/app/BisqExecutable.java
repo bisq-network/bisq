@@ -565,6 +565,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 format("Genesis transaction block height when not using the hard coded one (default: %s)", "-1"))
                 .withRequiredArg();
 
+        parser.accepts(DaoOptionKeys.GENESIS_TOTAL_SUPPLY,
+                format("Genesis total supply when not using the hard coded one (default: %s)", "-1"))
+                .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
                 format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "false"))
                 .withRequiredArg()
