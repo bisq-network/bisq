@@ -103,6 +103,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         daoFacade.getBondedRoles().addListener(bondedRoleListChangeListener);
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     @Override

@@ -130,6 +130,9 @@ public abstract class StateMonitorView<StH extends StateHash,
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
         }
+
+        GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
+        GUIUtil.setFitToRowsForTableView(conflictTableView, 38, 28, 2, 4);
     }
 
     @Override
@@ -238,7 +241,6 @@ public abstract class StateMonitorView<StH extends StateHash,
             conflictListItems.setAll(item.getStateBlock().getInConflictMap().entrySet().stream()
                     .map(this::getStateInConflictListItem).collect(Collectors.toList()));
             GUIUtil.setFitToRowsForTableView(conflictTableView, 38, 28, 2, 4);
-            conflictTableView.layout();
         }
     }
 
@@ -249,7 +251,6 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     protected void onDataUpdate() {
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
-        tableView.layout();
     }
 
 

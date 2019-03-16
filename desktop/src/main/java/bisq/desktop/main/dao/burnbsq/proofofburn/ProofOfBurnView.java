@@ -187,6 +187,8 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         preImageTextField.setValidator(new InputValidator());
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
         updateButtonState();
     }
 

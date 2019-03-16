@@ -218,6 +218,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 bsqWalletService.getUnlockingBondsBalance());
 
         updateListItems();
+        GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 2, 6);
         updateViews();
     }
 
@@ -326,8 +327,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         }
 
         GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 2, 6);
-        tableView.layout();
-        root.layout();
     }
 
     private void createAllFieldsOnProposalDisplay(Proposal proposal, @Nullable Ballot ballot,

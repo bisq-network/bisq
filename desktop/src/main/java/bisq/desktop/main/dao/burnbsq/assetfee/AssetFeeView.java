@@ -191,6 +191,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         });
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
         updateButtonState();
 
         feeAmountInputTextField.resetValidation();
