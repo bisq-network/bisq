@@ -195,7 +195,7 @@ public class BisqEnvironment extends StandardEnvironment {
             rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight,
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
             referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
 
     protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
@@ -322,6 +322,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         genesisBlockHeight = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) :
+                "-1";
+        genesisTotalSupply = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY) :
                 "-1";
         daoActivated = commandLineProperties.containsProperty(DaoOptionKeys.DAO_ACTIVATED) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.DAO_ACTIVATED) :
@@ -499,6 +502,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
                 setProperty(DaoOptionKeys.GENESIS_TX_ID, genesisTxId);
                 setProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, genesisBlockHeight);
+                setProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY, genesisTotalSupply);
                 setProperty(DaoOptionKeys.DAO_ACTIVATED, daoActivated);
 
                 setProperty(BtcOptionKeys.BTC_NODES, btcNodes);

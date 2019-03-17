@@ -30,5 +30,6 @@ public class DaoOptionKeys {
     public static final String FULL_DAO_NODE = "fullDaoNode";
     public static final String GENESIS_TX_ID = "genesisTxId";
     public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
+    public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
     public static final String DAO_ACTIVATED = "daoActivated";
 }
