@@ -155,7 +155,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 23),
+            ParamType.BLOCK, 3, 3),
     PHASE_VOTE_REVEAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "301" :     // mainnet; 2 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
