@@ -282,10 +282,18 @@ public class TorNetworkNode extends NetworkNode {
                 });
                 log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
             } catch (TorCtlException e) {
-                log.error("Tor node creation failed: " + (e.getCause() != null ? e.getCause().toString() : e.toString()));
-                restartTor(e.getMessage());
+                String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
+                log.error("Tor node creation failed: {}", msg);
+                if (e.getCause() instanceof IOException) {
+                    // Since we cannot connect to Tor, we cannot do nothing.
+                    // Furthermore, we have no hidden services started yet, so there is no graceful
+                    // shutdown needed either
+                    UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(msg))));
+                } else {
+                    restartTor(e.getMessage());
+                }
             } catch (IOException e) {
-                log.error("Could not connect to running Tor: " + e.getMessage());
+                log.error("Could not connect to running Tor: {}", e.getMessage());
                 // Since we cannot connect to Tor, we cannot do nothing.
                 // Furthermore, we have no hidden services started yet, so there is no graceful
                 // shutdown needed either

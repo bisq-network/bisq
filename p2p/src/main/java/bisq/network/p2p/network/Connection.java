@@ -38,6 +38,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.Proto;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.app.HasCapabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -93,7 +94,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * All handlers are called on User thread.
  */
 @Slf4j
-public class Connection extends Capabilities implements Runnable, MessageListener {
+public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -166,6 +167,8 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     private RuleViolation ruleViolation;
     private final ConcurrentHashMap<RuleViolation, Integer> ruleViolations = new ConcurrentHashMap<>();
 
+    private Capabilities capabilities = new Capabilities();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -217,6 +220,11 @@ public class Connection extends Capabilities implements Runnable, MessageListene
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public Capabilities getCapabilities() {
+        return capabilities;
+    }
 
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
@@ -284,14 +292,14 @@ public class Connection extends Capabilities implements Runnable, MessageListene
             final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) msg).getProtectedStorageEntry()).getProtectedStoragePayload();
             result = !(protectedStoragePayload instanceof CapabilityRequiringPayload);
             if(!result)
-                result = isCapabilitySupported(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
+                result = capabilities.containsAll(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
         } else if (msg instanceof AddPersistableNetworkPayloadMessage) {
             final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) msg).getPersistableNetworkPayload();
             result = !(persistableNetworkPayload instanceof CapabilityRequiringPayload);
             if(!result)
-                result =  isCapabilitySupported(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
+                result =  capabilities.containsAll(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
         } else if(msg instanceof CapabilityRequiringPayload) {
-            result = isCapabilitySupported(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
+            result = capabilities.containsAll(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
         } else {
             result = true;
         }
@@ -739,7 +747,7 @@ public class Connection extends Capabilities implements Runnable, MessageListene
                         }
 
                         if (networkEnvelope instanceof SupportedCapabilitiesMessage)
-                            resetCapabilities(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
+                            capabilities.set(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
 
                         if (networkEnvelope instanceof CloseConnectionMessage) {
                             // If we get a CloseConnectionMessage we shut down

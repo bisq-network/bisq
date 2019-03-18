@@ -21,6 +21,7 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.SupportedCapabilitiesListener;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.HasCapabilities;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
@@ -28,7 +29,6 @@ import io.bisq.generated.protobuffer.PB;
 
 import java.util.Date;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Getter
-@EqualsAndHashCode(exclude = {"date"}, callSuper = true)
-// failedConnectionAttempts is transient and therefore excluded anyway
 @Slf4j
-public final class Peer extends Capabilities implements NetworkPayload, PersistablePayload, SupportedCapabilitiesListener {
+public final class Peer implements HasCapabilities, NetworkPayload, PersistablePayload, SupportedCapabilitiesListener {
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;
 
     private final NodeAddress nodeAddress;
@@ -48,6 +46,7 @@ public final class Peer extends Capabilities implements NetworkPayload, Persista
 
     @Setter
     transient private int failedConnectionAttempts = 0;
+    private Capabilities capabilities = new Capabilities();
 
     public Peer(NodeAddress nodeAddress, @Nullable Capabilities supportedCapabilities) {
         this(nodeAddress, new Date().getTime(), supportedCapabilities);
@@ -58,9 +57,10 @@ public final class Peer extends Capabilities implements NetworkPayload, Persista
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Peer(NodeAddress nodeAddress, long date, Capabilities supportedCapabilities) {
-        super(supportedCapabilities);
+        super();
         this.nodeAddress = nodeAddress;
         this.date = date;
+        this.capabilities.addAll(supportedCapabilities);
     }
 
     @Override
@@ -68,7 +68,7 @@ public final class Peer extends Capabilities implements NetworkPayload, Persista
         return PB.Peer.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
                 .setDate(date)
-                .addAllSupportedCapabilities(Capabilities.toIntList(this))
+                .addAllSupportedCapabilities(Capabilities.toIntList(getCapabilities()))
                 .build();
     }
 
@@ -97,8 +97,8 @@ public final class Peer extends Capabilities implements NetworkPayload, Persista
 
     @Override
     public void onChanged(Capabilities supportedCapabilities) {
-        if (supportedCapabilities.hasCapabilities())
-            resetCapabilities(supportedCapabilities);
+        if (!supportedCapabilities.isEmpty())
+            capabilities.set(supportedCapabilities);
     }
 
 
