@@ -139,7 +139,8 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
             // Takes about 150 ms for dao testnet data
             long ts = System.currentTimeMillis();
             for (int i = genesisBlockHeight; i < blockHeight; i++) {
-                hashChainUpdated = hashChainUpdated || maybeUpdateHashChain(i);
+                boolean isHashChainUpdated = maybeUpdateHashChain(i);
+                hashChainUpdated = hashChainUpdated || isHashChainUpdated;
             }
             if (hashChainUpdated) {
                 log.info("updateHashChain for {} items took {} ms",
