@@ -57,7 +57,7 @@ public class GenesisTxInfo {
 
     private static final String DAO_BETANET_GENESIS_TX_ID = "0bd66d8ff26476b55dfaf2a5db0c659a5d8635566488244df25606db63a08bd9";
     private static final int DAO_BETANET_GENESIS_BLOCK_HEIGHT = 567405; // 2019-03-16
-    private static final Coin DAO_BETANET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("0.49998644"); // 1000 BSQ / 0.49998644 BTC
+    private static final Coin DAO_BETANET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("0.49998644"); // 499 986.44 BSQ / 0.49998644 BTC
 
     private static final String REGTEST_GENESIS_TX_ID = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
     private static final int REGTEST_GENESIS_BLOCK_HEIGHT = 111;
