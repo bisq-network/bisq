@@ -46,7 +46,7 @@ public enum BondedRoleType {
     WEBSITE_OPERATOR(50_000, 60, "https://bisq.network/roles/12", true),
     FORUM_OPERATOR(50_000, 60, "https://bisq.network/roles/19", true),
     SEED_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/15", true),
-    PRICE_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/14", true),
+    DATA_RELAY_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/14", true),
     BTC_NODE_OPERATOR(5_000, 60, "https://bisq.network/roles/67", true),
     MARKETS_OPERATOR(20_000, 60, "https://bisq.network/roles/9", true),
     BSQ_EXPLORER_OPERATOR(20_000, 60, "https://bisq.network/roles/11", true),
