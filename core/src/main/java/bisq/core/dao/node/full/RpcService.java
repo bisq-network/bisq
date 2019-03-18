@@ -222,8 +222,8 @@ public class RpcService {
             List<RawTx> txList = rawBtcBlock.getTx().stream()
                     .map(e -> getTxFromRawTransaction(e, rawBtcBlock))
                     .collect(Collectors.toList());
-            log.debug("requestBtcBlock with all txs took {} ms at blockHeight {}; txList.size={}",
-                    System.currentTimeMillis() - startTs, blockHeight, txList.size());
+            log.info("requestBtcBlock from bitcoind at blockHeight {} with {} txs took {} ms",
+                    blockHeight, txList.size(), System.currentTimeMillis() - startTs);
             return new RawBlock(rawBtcBlock.getHeight(),
                     rawBtcBlock.getTime() * 1000, // rawBtcBlock.getTime() is in sec but we want ms
                     rawBtcBlock.getHash(),
