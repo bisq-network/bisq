@@ -45,6 +45,6 @@ public class CoreNetworkCapabilities {
                 supportedCapabilities.add(Capability.DAO_FULL_NODE);
         }
 
-        Capabilities.app.resetCapabilities(supportedCapabilities);
+        Capabilities.app.set(supportedCapabilities);
     }
 }

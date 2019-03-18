@@ -98,7 +98,7 @@ public final class Peer extends Capabilities implements NetworkPayload, Persista
     @Override
     public void onChanged(Capabilities supportedCapabilities) {
         if (supportedCapabilities.hasCapabilities())
-            resetCapabilities(supportedCapabilities);
+            set(supportedCapabilities);
     }
 
 

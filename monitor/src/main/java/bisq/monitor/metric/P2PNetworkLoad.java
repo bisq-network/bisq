@@ -142,7 +142,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         List<Integer> capabilityOrdinals = Capabilities.toIntList(Capabilities.app);
         if(!capabilityOrdinals.contains(Capability.DAO_FULL_NODE.ordinal())) {
             capabilityOrdinals.add(Capability.DAO_FULL_NODE.ordinal());
-            Capabilities.app.resetCapabilities(Capabilities.fromIntList(capabilityOrdinals));
+            Capabilities.app.set(Capabilities.fromIntList(capabilityOrdinals));
         }
     }
 
