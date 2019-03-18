@@ -156,7 +156,7 @@ public class BsqFormatter extends BSFormatter {
         switch (param.getParamType()) {
             case UNDEFINED:
                 // In case we add a new param old clients will not know that enum and fall back to UNDEFINED.
-                return "";
+                return Res.get("shared.na");
             case BSQ:
                 return formatCoinWithCode(parseToCoin(value));
             case BTC:
@@ -168,7 +168,8 @@ public class BsqFormatter extends BSFormatter {
             case ADDRESS:
                 return value;
             default:
-                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+                log.warn("Param type {} not handled in switch case at formatParamValue", param.getParamType());
+                return Res.get("shared.na");
         }
     }
 
@@ -195,7 +196,7 @@ public class BsqFormatter extends BSFormatter {
     public String parseParamValueToString(Param param, String inputValue) throws ValidationException {
         switch (param.getParamType()) {
             case UNDEFINED:
-                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+                return Res.get("shared.na");
             case BSQ:
                 return formatCoin(parseParamValueToCoin(param, inputValue));
             case BTC:
@@ -212,7 +213,8 @@ public class BsqFormatter extends BSFormatter {
                 else
                     throw new ValidationException(validationResult.errorMessage);
             default:
-                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+                log.warn("Param type {} not handled in switch case at parseParamValueToString", param.getParamType());
+                return Res.get("shared.na");
         }
     }
 }

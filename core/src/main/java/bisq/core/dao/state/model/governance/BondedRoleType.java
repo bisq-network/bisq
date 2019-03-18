@@ -31,6 +31,7 @@ import lombok.Getter;
  * Add entry to translation file "dao.bond.bondedRoleType...."
  */
 public enum BondedRoleType {
+    UNDEFINED(0, 0, "N/A", false),
     // admins
     GITHUB_ADMIN(50_000, 60, "https://bisq.network/roles/16", true),
     FORUM_ADMIN(20_000, 60, "https://bisq.network/roles/19", true),

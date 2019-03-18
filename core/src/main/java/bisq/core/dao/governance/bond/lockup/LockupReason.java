@@ -26,6 +26,7 @@ import lombok.Getter;
  * Reason for locking up a bond.
  */
 public enum LockupReason {
+    UNDEFINED((byte) 0x00),
     BONDED_ROLE((byte) 0x01),
     REPUTATION((byte) 0x02);
 

@@ -115,6 +115,9 @@ public class ChangeParamValidator extends ProposalValidator {
                     throw new AddressFormatException(validationResult.errorMessage);
 
                 break;
+
+            default:
+                log.warn("Param type {} not handled in switch case at validateParamValue", param.getParamType());
         }
 
         // Add here more fine tuned custom validations...
@@ -191,6 +194,9 @@ public class ChangeParamValidator extends ProposalValidator {
             case PHASE_BREAK3:
             case PHASE_RESULT:
                 break;
+
+            default:
+                log.warn("Param {} not handled in switch case at validateParamValue", param);
         }
     }
 
