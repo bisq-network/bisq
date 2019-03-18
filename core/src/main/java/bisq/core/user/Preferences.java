@@ -104,8 +104,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
             "https://explorer.bisq.network/Address.html?addr=");
-    public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
-            "https://explorer.bisq.network/testnet/Address.html?addr=");
+    private static final BlockChainExplorer BSQ_BETA_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.betanet.bisq.network/tx.html?tx=",
+            "https://explorer.betanet.bisq.network/Address.html?addr=");
+    private static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.testnet.bisq.network/tx.html?tx=",
+            "https://explorer.testnet.bisq.network/Address.html?addr=");
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -238,7 +240,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
-        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER : BSQ_TEST_NET_EXPLORER);
+        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER :
+                baseCurrencyNetwork.isDaoBetaNet() ? BSQ_BETA_NET_EXPLORER :
+                        BSQ_TEST_NET_EXPLORER);
 
         // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
