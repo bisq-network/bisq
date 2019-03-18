@@ -89,9 +89,9 @@ public enum Param {
     // it requires min. 50.01%.
     THRESHOLD_COMP_REQUEST("50.01", ParamType.PERCENT, 1.2, 1.2),
     THRESHOLD_REIMBURSEMENT("50.01", ParamType.PERCENT, 1.2, 1.2),
-    THRESHOLD_CHANGE_PARAM("75", ParamType.PERCENT, 1.2, 1.2),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
+    THRESHOLD_CHANGE_PARAM("75.01", ParamType.PERCENT, 1.2, 1.2),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
     THRESHOLD_ROLE("50.01", ParamType.PERCENT, 1.2, 1.2),
-    THRESHOLD_CONFISCATION("85", ParamType.PERCENT, 1.2, 1.2),      // Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
+    THRESHOLD_CONFISCATION("85.01", ParamType.PERCENT, 1.2, 1.2),      // Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
     THRESHOLD_GENERIC("50.01", ParamType.PERCENT, 1.2, 1.2),
     THRESHOLD_REMOVE_ASSET("50.01", ParamType.PERCENT, 1.2, 1.2),
 
