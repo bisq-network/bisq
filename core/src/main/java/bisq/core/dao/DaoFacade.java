@@ -362,7 +362,7 @@ public class DaoFacade implements DaoSetupService {
         return BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
     }
 
-    public Tuple2<Coin, Integer> getMiningFeeAndTxSize(Coin stake)
+    public Tuple2<Coin, Integer> getBlindVoteMiningFeeAndTxSize(Coin stake)
             throws WalletException, InsufficientMoneyException, TransactionVerificationException {
         return myBlindVoteListService.getMiningFeeAndTxSize(stake);
     }
