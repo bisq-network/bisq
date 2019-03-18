@@ -66,7 +66,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         // TODO got even worse after refactoring
         List<Integer> current = Capabilities.toIntList(Capabilities.app);
         current.add(Capability.SEED_NODE.ordinal());
-        Capabilities.app.resetCapabilities(Capabilities.fromIntList(current));
+        Capabilities.app.set(Capabilities.fromIntList(current));
     }
 
     @Override
