@@ -53,29 +53,38 @@ public class Capabilities {
         this.capabilities.addAll(capabilities);
     }
 
-    public void resetCapabilities(Capability... capabilities) {
-        resetCapabilities(Arrays.asList(capabilities));
+    public void set(Capability... capabilities) {
+        set(Arrays.asList(capabilities));
     }
 
-    public void resetCapabilities(Capabilities capabilities) {
-        resetCapabilities(capabilities.capabilities);
+    public void set(Capabilities capabilities) {
+        set(capabilities.capabilities);
     }
 
-    public void resetCapabilities(Collection<Capability> capabilities) {
+    public void set(Collection<Capability> capabilities) {
         this.capabilities.clear();
         this.capabilities.addAll(capabilities);
     }
 
-    public boolean isCapabilitySupported(final Set<Capability> requiredItems) {
+    public void addAll(Capability... capabilities) {
+        this.capabilities.addAll(Arrays.asList(capabilities));
+    }
+
+    public void addAll(Capabilities capabilities) {
+        if(capabilities != null)
+            this.capabilities.addAll(capabilities.capabilities);
+    }
+
+    public boolean containsAll(final Set<Capability> requiredItems) {
         return capabilities.containsAll(requiredItems);
     }
 
-    public boolean isCapabilitySupported(final Capabilities capabilities) {
-        return isCapabilitySupported(capabilities.capabilities);
+    public boolean containsAll(final Capabilities capabilities) {
+        return containsAll(capabilities.capabilities);
     }
 
-    public boolean hasCapabilities() {
-        return !capabilities.isEmpty();
+    public boolean isEmpty() {
+        return capabilities.isEmpty();
     }
 
 

@@ -28,24 +28,14 @@ import java.util.Arrays;
 
 public class CoreNetworkCapabilities {
     public static void setSupportedCapabilities(BisqEnvironment bisqEnvironment) {
-        final ArrayList<Capability> supportedCapabilities = new ArrayList<>(Arrays.asList(
-                Capability.TRADE_STATISTICS,
-                Capability.TRADE_STATISTICS_2,
-                Capability.ACCOUNT_AGE_WITNESS,
-                Capability.ACK_MSG
-        ));
+        Capabilities.app.addAll(Capability.TRADE_STATISTICS, Capability.TRADE_STATISTICS_2, Capability.ACCOUNT_AGE_WITNESS, Capability.ACK_MSG);
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
-            supportedCapabilities.add(Capability.PROPOSAL);
-            supportedCapabilities.add(Capability.BLIND_VOTE);
-            supportedCapabilities.add(Capability.BSQ_BLOCK);
-            supportedCapabilities.add(Capability.DAO_STATE);
+            Capabilities.app.addAll(Capability.PROPOSAL, Capability.BLIND_VOTE, Capability.BSQ_BLOCK, Capability.DAO_STATE);
 
             String isFullDaoNode = bisqEnvironment.getProperty(DaoOptionKeys.FULL_DAO_NODE, String.class, "");
             if (isFullDaoNode != null && !isFullDaoNode.isEmpty())
-                supportedCapabilities.add(Capability.DAO_FULL_NODE);
+                Capabilities.app.addAll(Capability.DAO_FULL_NODE);
         }
-
-        Capabilities.app.resetCapabilities(supportedCapabilities);
     }
 }

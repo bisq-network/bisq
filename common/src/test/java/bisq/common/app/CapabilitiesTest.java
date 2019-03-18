@@ -31,15 +31,15 @@ public class CapabilitiesTest {
     public void testNoCapabilitiesAvailable() {
         Capabilities DUT = new Capabilities();
 
-        assertTrue(DUT.isCapabilitySupported(new HashSet<>()));
-        assertFalse(DUT.isCapabilitySupported(new Capabilities(SEED_NODE)));
+        assertTrue(DUT.containsAll(new HashSet<>()));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
     }
 
     @Test
     public void testO() {
         Capabilities DUT = new Capabilities(TRADE_STATISTICS);
 
-        assertTrue(DUT.isCapabilitySupported(new HashSet<>()));
+        assertTrue(DUT.containsAll(new HashSet<>()));
     }
 
     @Test
@@ -47,17 +47,17 @@ public class CapabilitiesTest {
         Capabilities DUT = new Capabilities(TRADE_STATISTICS);
 
         // single match
-        assertTrue(DUT.isCapabilitySupported(new Capabilities(TRADE_STATISTICS)));
-        assertFalse(DUT.isCapabilitySupported(new Capabilities(SEED_NODE)));
+        assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS)));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
     }
 
     @Test
     public void testMultiMatch() {
         Capabilities DUT = new Capabilities(TRADE_STATISTICS, TRADE_STATISTICS_2);
 
-        assertTrue(DUT.isCapabilitySupported(new Capabilities(TRADE_STATISTICS)));
-        assertFalse(DUT.isCapabilitySupported(new Capabilities(SEED_NODE)));
-        assertTrue(DUT.isCapabilitySupported(new Capabilities(TRADE_STATISTICS, TRADE_STATISTICS_2)));
-        assertFalse(DUT.isCapabilitySupported(new Capabilities(SEED_NODE, TRADE_STATISTICS_2)));
+        assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS)));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
+        assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS, TRADE_STATISTICS_2)));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE, TRADE_STATISTICS_2)));
     }
 }
