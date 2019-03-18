@@ -176,7 +176,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         PeerList persistedPeerList = storage.initAndGetPersistedWithFileName("PeerList", 1000);
         if (persistedPeerList != null) {
             long peersWithNoCapabilitiesSet = persistedPeerList.getList().stream()
-                    .filter(e -> e.getCapabilities().hasCapabilities())
+                    .filter(e -> e.getCapabilities().isEmpty())
                     .mapToInt(e -> 1)
                     .count();
             if (peersWithNoCapabilitiesSet > 100) {
@@ -664,11 +664,11 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                     // If we have a new connection the supportedCapabilities is empty.
                     // We lookup if we have already stored the supportedCapabilities at the persisted or reported peers
                     // and if so we use that.
-                    if (!supportedCapabilities.hasCapabilities()) {
+                    if (supportedCapabilities.isEmpty()) {
                         Set<Peer> allPeers = new HashSet<>(getPersistedPeers());
                         allPeers.addAll(getReportedPeers());
                         Optional<Peer> ourPeer = allPeers.stream().filter(peer -> peer.getNodeAddress().equals(connection.getPeersNodeAddressOptional().get()))
-                                .filter(peer -> !peer.getCapabilities().hasCapabilities())
+                                .filter(peer -> !peer.getCapabilities().isEmpty())
                                 .findAny();
                         if(ourPeer.isPresent())
                             supportedCapabilities = new Capabilities(ourPeer.get().getCapabilities());

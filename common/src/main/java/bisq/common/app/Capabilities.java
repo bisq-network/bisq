@@ -83,8 +83,8 @@ public class Capabilities {
         return containsAll(capabilities.capabilities);
     }
 
-    public boolean hasCapabilities() {
-        return !capabilities.isEmpty();
+    public boolean isEmpty() {
+        return capabilities.isEmpty();
     }
 
 
