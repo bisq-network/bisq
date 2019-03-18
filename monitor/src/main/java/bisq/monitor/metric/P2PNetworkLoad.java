@@ -138,12 +138,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
         history = Collections.synchronizedMap(new FixedSizeHistoryTracker(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
 
-        // add all capabilities
-        List<Integer> capabilityOrdinals = Capabilities.toIntList(Capabilities.app);
-        if(!capabilityOrdinals.contains(Capability.DAO_FULL_NODE.ordinal())) {
-            capabilityOrdinals.add(Capability.DAO_FULL_NODE.ordinal());
-            Capabilities.app.set(Capabilities.fromIntList(capabilityOrdinals));
-        }
+        Capabilities.app.addAll(Capability.DAO_FULL_NODE);
     }
 
     @Override

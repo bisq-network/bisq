@@ -46,10 +46,10 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
 
     @Setter
     transient private int failedConnectionAttempts = 0;
-    private Capabilities capabilities;
+    private Capabilities capabilities = new Capabilities();
 
     public Peer(NodeAddress nodeAddress, @Nullable Capabilities supportedCapabilities) {
-        this(nodeAddress, new Date().getTime(), supportedCapabilities == null ? new Capabilities() : supportedCapabilities);
+        this(nodeAddress, new Date().getTime(), supportedCapabilities);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
         super();
         this.nodeAddress = nodeAddress;
         this.date = date;
-        this.capabilities = supportedCapabilities;
+        this.capabilities.addAll(supportedCapabilities);
     }
 
     @Override

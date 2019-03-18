@@ -66,6 +66,15 @@ public class Capabilities {
         this.capabilities.addAll(capabilities);
     }
 
+    public void addAll(Capability... capabilities) {
+        this.capabilities.addAll(Arrays.asList(capabilities));
+    }
+
+    public void addAll(Capabilities capabilities) {
+        if(capabilities != null)
+            this.capabilities.addAll(capabilities.capabilities);
+    }
+
     public boolean containsAll(final Set<Capability> requiredItems) {
         return capabilities.containsAll(requiredItems);
     }
