@@ -55,7 +55,14 @@ public enum BondedRoleType {
     DOMAIN_NAME_HOLDER(50_000, 60, "https://bisq.network/roles/77", false),
     DNS_ADMIN(50_000, 60, "https://bisq.network/roles/18", false),
     MEDIATOR(10_000, 60, "N/A", true),
-    ARBITRATOR(200_000, 60, "https://bisq.network/roles/13", true);
+    ARBITRATOR(200_000, 60, "https://bisq.network/roles/13", true),
+    BTC_DONATION_ADDRESS_OWNER(20_000, 60, "https://bisq.network/roles/80", true);
+
+    //TODO
+    // Consider to add:
+    // Mobile notification relay operator (ensure the operator is not logging)
+    // Netlayer maintainer (we rely on the that library for Tor)
+    // Bisq-BitcoinJ fork maintainer (we rely on the that library for the wallet)
 
 
     // Satoshi value of BSQ bond

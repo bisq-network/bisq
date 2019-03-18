@@ -87,6 +87,7 @@ public enum Param {
     // E.g. If the result ends up in 65% weighted vote for acceptance and threshold was 50% it is accepted.
     // The result must be larger than the threshold. A 50% vote result for a threshold with 50% is not sufficient,
     // it requires min. 50.01%.
+    // The maxDecrease value is only relevant if the decreased value will not result in a value below 50.01%.
     THRESHOLD_COMP_REQUEST("50.01", ParamType.PERCENT, 1.2, 1.2),
     THRESHOLD_REIMBURSEMENT("50.01", ParamType.PERCENT, 1.2, 1.2),
     THRESHOLD_CHANGE_PARAM("75.01", ParamType.PERCENT, 1.2, 1.2),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
@@ -98,11 +99,10 @@ public enum Param {
     // BTC address as recipient for BTC trade fee once the arbitration system is replaced as well as destination for
     // the time locked payout tx in case the traders do not cooperate. Will be likely a donation address (Bisq, Tor,...)
     // but can be also a burner address if we prefer to burn the BTC
-    RECIPIENT_BTC_ADDRESS(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
-            "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
-            BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ?
-                    "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
-                    "mquz1zFmhs7iy8qJTkhY7C9bhJ5S3g8Xim", // regtest or DAO testnet (regtest)
+    RECIPIENT_BTC_ADDRESS(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
+            BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
+                    BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ? "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
+                            "mquz1zFmhs7iy8qJTkhY7C9bhJ5S3g8Xim", // regtest or DAO testnet (regtest)
             ParamType.ADDRESS),
 
     // Fee for activating an asset or re-listing after deactivation due lack of trade activity. Fee per day of trial period without activity checks.
