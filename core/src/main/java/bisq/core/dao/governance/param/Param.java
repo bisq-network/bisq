@@ -111,7 +111,7 @@ public enum Param {
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
     LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days
-    ARBITRATOR_FEE("0", ParamType.BTC),
+    ARBITRATOR_FEE("0", ParamType.BTC),  // For new trade protocol. Arbitration will become optional and we can apply a fee to it. Initially we start with no fee.
     MAX_TRADE_LIMIT("2", ParamType.BTC), // max trade limit for lowest risk payment method. Others will get derived from that.
 
     // See: https://github.com/bisq-network/proposals/issues/46
