@@ -619,7 +619,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         // it from old versions, so we filter those.
         Optional<Peer> optionalPeer = allPeers.stream()
                 .filter(peer -> peer.getNodeAddress().equals(peersNodeAddress))
-                .filter(peer -> peer.getCapabilities().hasCapabilities())
+                .filter(peer -> !peer.getCapabilities().isEmpty())
                 .findAny();
         if (optionalPeer.isPresent()) {
             boolean result = optionalPeer.get().getCapabilities().containsAll(((CapabilityRequiringPayload) message).getRequiredCapabilities());
