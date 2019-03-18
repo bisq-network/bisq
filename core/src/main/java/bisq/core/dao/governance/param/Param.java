@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public enum Param {
-    UNDEFINED(null, ParamType.UNDEFINED),
+    UNDEFINED("N/A", ParamType.UNDEFINED),
 
     // Fee in BTC satoshi for a 1 BTC trade. 200_000 Satoshi =  0.00200000 BTC = 0.2%.
     // 10 USD at BTC price 5_000 USD for a 1 BTC trade;

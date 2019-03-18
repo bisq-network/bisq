@@ -31,7 +31,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public enum OpReturnType implements ImmutableDaoStateModel {
-    //TODO add undefined ?
+    UNDEFINED((byte) 0x00),
     PROPOSAL((byte) 0x10),
     COMPENSATION_REQUEST((byte) 0x11),
     REIMBURSEMENT_REQUEST((byte) 0x12),

@@ -39,7 +39,7 @@ import javax.annotation.concurrent.Immutable;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public enum ScriptType implements ImmutableDaoStateModel {
-
+    UNDEFINED("undefined"),
     // https://github.com/bitcoin/bitcoin/blob/master/src/script/standard.cpp
     PUB_KEY("pubkey"),
     PUB_KEY_HASH("pubkeyhash"),
