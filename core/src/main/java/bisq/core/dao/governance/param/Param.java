@@ -131,7 +131,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
                             "380",      // testnet or dao testnet (server side regtest); 2.6 days
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BREAK1(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "149" :     // mainnet; 1 day
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -139,7 +139,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BLIND_VOTE(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "451" :     // mainnet; 3 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -147,7 +147,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
                             "300",      // testnet or dao testnet (server side regtest); 2 days
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BREAK2(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -155,7 +155,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_VOTE_REVEAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "451" :     // mainnet; 3 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -163,7 +163,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
                             "300",      // testnet or dao testnet (server side regtest); 2 days
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BREAK3(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -171,7 +171,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_RESULT(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "10" :      // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -179,7 +179,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "2",        // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3);
+            ParamType.BLOCK, 2, 2);
 
     @Getter
     private final String defaultValue;
