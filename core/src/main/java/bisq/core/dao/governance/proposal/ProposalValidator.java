@@ -26,8 +26,6 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
-import javax.inject.Inject;
-
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,13 +33,11 @@ import lombok.extern.slf4j.Slf4j;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
 @Slf4j
-public class ProposalValidator {
-
+public abstract class ProposalValidator {
     protected final DaoStateService daoStateService;
     protected final PeriodService periodService;
 
-    @Inject
-    public ProposalValidator(DaoStateService daoStateService, PeriodService periodService) {
+    protected ProposalValidator(DaoStateService daoStateService, PeriodService periodService) {
         this.daoStateService = daoStateService;
         this.periodService = periodService;
     }
@@ -51,6 +47,7 @@ public class ProposalValidator {
             validateDataFields(proposal);
             return true;
         } catch (ProposalValidationException e) {
+            log.warn("proposal data fields are invalid. proposal={}, error={}", proposal, e.toString());
             return false;
         }
     }
@@ -87,7 +84,6 @@ public class ProposalValidator {
 
     private boolean isValid(Proposal proposal, boolean allowUnconfirmed) {
         if (!areDataFieldsValid(proposal)) {
-            log.warn("proposal data fields are invalid. proposal={}", proposal);
             return false;
         }
 

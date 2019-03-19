@@ -19,10 +19,12 @@ package bisq.core.dao.governance.ballot;
 
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
+import bisq.core.dao.governance.proposal.ProposalValidatorProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.Proposal;
 
 import com.google.inject.Inject;
 
@@ -43,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BallotListPresentation implements BallotListService.BallotListChangeListener, DaoStateListener {
     private final BallotListService ballotListService;
     private final PeriodService periodService;
-    private final ProposalValidator proposalValidator;
+    private final ProposalValidatorProvider proposalValidatorProvider;
 
     @Getter
     private final ObservableList<Ballot> allBallots = FXCollections.observableArrayList();
@@ -59,10 +61,10 @@ public class BallotListPresentation implements BallotListService.BallotListChang
     public BallotListPresentation(BallotListService ballotListService,
                                   PeriodService periodService,
                                   DaoStateService daoStateService,
-                                  ProposalValidator proposalValidator) {
+                                  ProposalValidatorProvider proposalValidatorProvider) {
         this.ballotListService = ballotListService;
         this.periodService = periodService;
-        this.proposalValidator = proposalValidator;
+        this.proposalValidatorProvider = proposalValidatorProvider;
 
         daoStateService.addDaoStateListener(this);
         ballotListService.addListener(this);
@@ -97,8 +99,11 @@ public class BallotListPresentation implements BallotListService.BallotListChang
     // We cannot do a phase and cycle check as we are interested in historical ballots as well
     public List<Ballot> getAllValidBallots() {
         return allBallots.stream()
-                .filter(ballot -> proposalValidator.areDataFieldsValid(ballot.getProposal()))
-                .filter(ballot -> proposalValidator.isTxTypeValid(ballot.getProposal()))
+                .filter(ballot -> {
+                    Proposal proposal = ballot.getProposal();
+                    ProposalValidator validator = proposalValidatorProvider.getValidator(proposal);
+                    return validator.areDataFieldsValid(proposal) && validator.isTxTypeValid(proposal);
+                })
                 .collect(Collectors.toList());
     }
 }

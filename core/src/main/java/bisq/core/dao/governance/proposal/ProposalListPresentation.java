@@ -52,7 +52,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
     private final DaoStateService daoStateService;
     private final MyProposalListService myProposalListService;
     private final BsqWalletService bsqWalletService;
-    private final ProposalValidator proposalValidator;
+    private final ProposalValidatorProvider validatorProvider;
     private final ObservableList<Proposal> allProposals = FXCollections.observableArrayList();
     @Getter
     private final FilteredList<Proposal> activeOrMyUnconfirmedProposals = new FilteredList<>(allProposals);
@@ -67,12 +67,12 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
                                     DaoStateService daoStateService,
                                     MyProposalListService myProposalListService,
                                     BsqWalletService bsqWalletService,
-                                    ProposalValidator proposalValidator) {
+                                    ProposalValidatorProvider validatorProvider) {
         this.proposalService = proposalService;
         this.daoStateService = daoStateService;
         this.myProposalListService = myProposalListService;
         this.bsqWalletService = bsqWalletService;
-        this.proposalValidator = proposalValidator;
+        this.validatorProvider = validatorProvider;
 
         daoStateService.addDaoStateListener(this);
         myProposalListService.addListener(this);
@@ -114,7 +114,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         List<Proposal> tempProposals = proposalService.getTempProposals();
         Set<Proposal> verifiedProposals = proposalService.getProposalPayloads().stream()
                 .map(ProposalPayload::getProposal)
-                .filter(proposalValidator::isValidAndConfirmed)
+                .filter(proposal -> validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
                 .collect(Collectors.toSet());
         Set<Proposal> set = new HashSet<>(tempProposals);
         set.addAll(verifiedProposals);
@@ -138,7 +138,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         allProposals.clear();
         allProposals.addAll(set);
 
-        activeOrMyUnconfirmedProposals.setPredicate(proposal -> proposalValidator.isValidAndConfirmed(proposal) ||
+        activeOrMyUnconfirmedProposals.setPredicate(proposal -> validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal) ||
                 myUnconfirmedProposals.contains(proposal));
     }
 }

@@ -64,7 +64,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     private final P2PService p2PService;
     private final PeriodService periodService;
     private final DaoStateService daoStateService;
-    private final ProposalValidator proposalValidator;
+    private final ProposalValidatorProvider validatorProvider;
 
     // Proposals we receive in the proposal phase. They can be removed in that phase. That list must not be used for
     // consensus critical code.
@@ -90,12 +90,12 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                            AppendOnlyDataStoreService appendOnlyDataStoreService,
                            ProtectedDataStoreService protectedDataStoreService,
                            DaoStateService daoStateService,
-                           ProposalValidator proposalValidator,
+                           ProposalValidatorProvider validatorProvider,
                            @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         this.p2PService = p2PService;
         this.periodService = periodService;
         this.daoStateService = daoStateService;
-        this.proposalValidator = proposalValidator;
+        this.validatorProvider = validatorProvider;
 
         if (daoActivated) {
             // We add our stores to the global stores
@@ -180,7 +180,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     public List<Proposal> getValidatedProposals() {
         return proposalPayloads.stream()
                 .map(ProposalPayload::getProposal)
-                .filter(proposalValidator::isTxTypeValid)
+                .filter(proposal -> validatorProvider.getValidator(proposal).isTxTypeValid(proposal))
                 .collect(Collectors.toList());
     }
 
@@ -199,7 +199,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     private void publishToAppendOnlyDataStore() {
         tempProposals.stream()
-                .filter(proposalValidator::isValidAndConfirmed)
+                .filter(proposal -> validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
                 .map(ProposalPayload::new)
                 .forEach(proposalPayload -> {
                     boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
@@ -218,7 +218,8 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             // We do not validate if we are in current cycle and if tx is confirmed yet as the tx might be not
             // available/confirmed. But we check if we are in the proposal phase.
             if (!tempProposals.contains(proposal)) {
-                if (proposalValidator.isValidOrUnconfirmed(proposal)) {
+                ProposalValidator validator = validatorProvider.getValidator(proposal);
+                if (validator.isValidOrUnconfirmed(proposal)) {
                     if (doLog) {
                         log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
                                 proposal.getTxId());
@@ -263,7 +264,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             ProposalPayload proposalPayload = (ProposalPayload) persistableNetworkPayload;
             if (!proposalPayloads.contains(proposalPayload)) {
                 Proposal proposal = proposalPayload.getProposal();
-                if (proposalValidator.areDataFieldsValid(proposal)) {
+                if (validatorProvider.getValidator(proposal).areDataFieldsValid(proposal)) {
                     if (doLog) {
                         log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
                                 proposal.getTxId());

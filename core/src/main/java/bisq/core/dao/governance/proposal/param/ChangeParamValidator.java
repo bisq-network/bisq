@@ -19,11 +19,12 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
@@ -37,6 +38,7 @@ import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,12 +53,29 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class ChangeParamValidator extends ProposalValidator {
     public enum Result {
         OK,
-        SAME,
-        NO_CHANGE_POSSIBLE,
-        TOO_LOW,
-        TOO_HIGH
-    }
+        SAME("New parameter value must be different to current value."),
+        NO_CHANGE_POSSIBLE("Parameter cannot be changed."),
+        TOO_LOW("New parameter value is too small."),
+        TOO_HIGH("New parameter value is too large.");
 
+        @Getter
+        private final String errorMsg;
+
+        Result(String errorMsg) {
+            this.errorMsg = errorMsg;
+        }
+
+        Result() {
+            this.errorMsg = "";
+        }
+
+        @Override
+        public String toString() {
+            return "Result{" +
+                    "\n     errorMsg='" + errorMsg + '\'' +
+                    "\n} " + super.toString();
+        }
+    }
 
     @Inject
     public ChangeParamValidator(DaoStateService daoStateService, PeriodService periodService) {
@@ -69,8 +88,12 @@ public class ChangeParamValidator extends ProposalValidator {
             super.validateDataFields(proposal);
 
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
-
-            validateParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue());
+            // When we receive a temp proposal the tx is usually not confirmed so we cannot lookup the block height of
+            // the tx. We take the current block height in that case as it would be in the same cycle anyway.
+            int blockHeight = daoStateService.getTx(proposal.getTxId())
+                    .map(BaseTx::getBlockHeight)
+                    .orElseGet(daoStateService::getChainHeight);
+            validateParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue(), blockHeight);
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
@@ -118,6 +141,8 @@ public class ChangeParamValidator extends ProposalValidator {
                 default:
                     log.warn("Param type {} not handled in switch case at validateParamValue", param.getParamType());
             }
+        } catch (ParamValidationException e) {
+            throw e;
         } catch (Throwable t) {
             throw new ParamValidationException(t);
         }
