@@ -9,11 +9,20 @@ public class ParamValidationException extends Exception {
     @Nullable
     private ChangeParamValidator.Result result;
 
-    public ParamValidationException(ChangeParamValidator.Result result) {
+    ParamValidationException(ChangeParamValidator.Result result) {
+        super(result.getErrorMsg());
         this.result = result;
     }
 
-    public ParamValidationException(Throwable throwable) {
-        super(throwable);
+    ParamValidationException(Throwable throwable) {
+        super(throwable.getMessage());
+        initCause(throwable);
+    }
+
+    @Override
+    public String toString() {
+        return "ParamValidationException{" +
+                "\n     result=" + result +
+                "\n} " + super.toString();
     }
 }

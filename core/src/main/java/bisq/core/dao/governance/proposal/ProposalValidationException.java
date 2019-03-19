@@ -45,4 +45,13 @@ public class ProposalValidationException extends Exception {
         super(cause);
         this.tx = tx;
     }
+
+    @Override
+    public String toString() {
+        return "ProposalValidationException{" +
+                "\n     requestedBsq=" + requestedBsq +
+                ",\n     minRequestAmount=" + minRequestAmount +
+                ",\n     tx=" + tx +
+                "\n} " + super.toString();
+    }
 }

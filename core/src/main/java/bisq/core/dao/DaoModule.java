@@ -41,7 +41,7 @@ import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
-import bisq.core.dao.governance.proposal.ProposalValidator;
+import bisq.core.dao.governance.proposal.ProposalValidatorProvider;
 import bisq.core.dao.governance.proposal.compensation.CompensationProposalFactory;
 import bisq.core.dao.governance.proposal.compensation.CompensationValidator;
 import bisq.core.dao.governance.proposal.confiscatebond.ConfiscateBondProposalFactory;
@@ -135,7 +135,8 @@ public class DaoModule extends AppModule {
         bind(ProposalStorageService.class).in(Singleton.class);
         bind(TempProposalStore.class).in(Singleton.class);
         bind(TempProposalStorageService.class).in(Singleton.class);
-        bind(ProposalValidator.class).in(Singleton.class);
+
+        bind(ProposalValidatorProvider.class).in(Singleton.class);
 
         bind(CompensationValidator.class).in(Singleton.class);
         bind(CompensationProposalFactory.class).in(Singleton.class);
@@ -157,7 +158,6 @@ public class DaoModule extends AppModule {
 
         bind(RemoveAssetValidator.class).in(Singleton.class);
         bind(RemoveAssetProposalFactory.class).in(Singleton.class);
-
 
         // Ballot
         bind(BallotListService.class).in(Singleton.class);
