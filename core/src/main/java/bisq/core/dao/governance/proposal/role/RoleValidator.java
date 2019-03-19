@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.proposal.role;
 
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
@@ -40,7 +40,7 @@ public class RoleValidator extends ProposalValidator {
     }
 
     @Override
-    public void validateDataFields(Proposal proposal) throws ValidationException {
+    public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             super.validateDataFields(proposal);
 
@@ -51,7 +51,7 @@ public class RoleValidator extends ProposalValidator {
             notEmpty(role.getName(), "role.name must not be empty");
 
         } catch (Throwable throwable) {
-            throw new ValidationException(throwable);
+            throw new ProposalValidationException(throwable);
         }
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.proposal.removeAsset;
 
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
@@ -37,14 +37,14 @@ public class RemoveAssetValidator extends ProposalValidator {
     }
 
     @Override
-    public void validateDataFields(Proposal proposal) throws ValidationException {
+    public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             super.validateDataFields(proposal);
 
             RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
             //TODO
         } catch (Throwable throwable) {
-            throw new ValidationException(throwable);
+            throw new ProposalValidationException(throwable);
         }
     }
 }

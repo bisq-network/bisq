@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.role;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
@@ -57,7 +57,7 @@ public class RoleProposalFactory extends BaseProposalFactory<RoleProposal> {
     }
 
     public ProposalWithTransaction createProposalWithTransaction(Role role)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.role = role;
 
         return super.createProposalWithTransaction(role.getName(), role.getLink());

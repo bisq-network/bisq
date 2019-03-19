@@ -21,7 +21,6 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -68,7 +67,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
 
     protected ProposalWithTransaction createProposalWithTransaction(String name,
                                                                     String link)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.name = name;
         this.link = link;
         // As we don't know the txId yes we create a temp proposal with txId set to an empty string.

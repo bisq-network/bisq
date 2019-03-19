@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.removeAsset;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
@@ -60,7 +60,7 @@ public class RemoveAssetProposalFactory extends BaseProposalFactory<RemoveAssetP
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
                                                                  Asset asset)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.asset = asset;
 
         return super.createProposalWithTransaction(name, link);

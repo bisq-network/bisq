@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.confiscatebond;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
@@ -58,7 +58,7 @@ public class ConfiscateBondProposalFactory extends BaseProposalFactory<Confiscat
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
                                                                  String lockupTxId)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.lockupTxId = lockupTxId;
 
         return super.createProposalWithTransaction(name, link);

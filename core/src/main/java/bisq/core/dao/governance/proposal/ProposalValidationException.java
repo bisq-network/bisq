@@ -1,4 +1,4 @@
-package bisq.core.dao.exceptions;
+package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.state.model.blockchain.Tx;
 
@@ -9,7 +9,7 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 @Getter
-public class ValidationException extends Exception {
+public class ProposalValidationException extends Exception {
     @Nullable
     private Coin requestedBsq;
     @Nullable
@@ -17,31 +17,31 @@ public class ValidationException extends Exception {
     @Nullable
     private Tx tx;
 
-    public ValidationException(String message, Coin requestedBsq, Coin minRequestAmount) {
+    public ProposalValidationException(String message, Coin requestedBsq, Coin minRequestAmount) {
         super(message);
         this.requestedBsq = requestedBsq;
         this.minRequestAmount = minRequestAmount;
     }
 
-    public ValidationException(Throwable cause) {
+    public ProposalValidationException(Throwable cause) {
         super(cause);
     }
 
-    public ValidationException(String message) {
+    public ProposalValidationException(String message) {
         super(message);
     }
 
-    public ValidationException(String message, Throwable throwable) {
+    public ProposalValidationException(String message, Throwable throwable) {
         super(message, throwable);
 
     }
 
-    public ValidationException(String message, Tx tx) {
+    public ProposalValidationException(String message, Tx tx) {
         super(message);
         this.tx = tx;
     }
 
-    public ValidationException(Throwable cause, Tx tx) {
+    public ProposalValidationException(Throwable cause, Tx tx) {
         super(cause);
         this.tx = tx;
     }

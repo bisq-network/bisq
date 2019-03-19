@@ -33,7 +33,7 @@ import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
@@ -305,7 +305,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         btcFormatter.formatCoinWithCode(e.missing))).show();
             }
 
-        } catch (ValidationException e) {
+        } catch (ProposalValidationException e) {
             String message;
             if (e.getMinRequestAmount() != null) {
                 message = Res.get("validation.bsq.amountBelowMinAmount",
@@ -359,7 +359,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Nullable
     private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
-            throws InsufficientMoneyException, ValidationException, TxException {
+            throws InsufficientMoneyException, ProposalValidationException, TxException {
 
         checkNotNull(proposalDisplay, "proposalDisplay must not be null");
 
@@ -385,10 +385,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         "proposalDisplay.paramValueTextField must no tbe null");
                 Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
                 if (selectedParam == null)
-                    throw new ValidationException("selectedParam is null");
+                    throw new ProposalValidationException("selectedParam is null");
                 String paramValueAsString = proposalDisplay.paramValueTextField.getText();
                 if (paramValueAsString == null || paramValueAsString.isEmpty())
-                    throw new ValidationException("paramValue is null or empty");
+                    throw new ProposalValidationException("paramValue is null or empty");
 
                 try {
                     String paramValue = bsqFormatter.parseParamValueToString(selectedParam, paramValueAsString);
