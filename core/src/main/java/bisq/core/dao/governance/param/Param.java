@@ -110,9 +110,9 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
-    LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days
+    LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days, can be disabled by setting to 0
     ARBITRATOR_FEE("0", ParamType.PERCENT),  // % of trade. For new trade protocol. Arbitration will become optional and we can apply a fee to it. Initially we start with no fee.
-    MAX_TRADE_LIMIT("2", ParamType.BTC), // max trade limit for lowest risk payment method. Others will get derived from that.
+    MAX_TRADE_LIMIT("2", ParamType.BTC, 2, 2), // max trade limit for lowest risk payment method. Others will get derived from that.
 
     // See: https://github.com/bisq-network/proposals/issues/46
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
@@ -199,8 +199,8 @@ public enum Param {
     /**
      * @param defaultValue  Value at the start of the DAO
      * @param paramType     Type of parameter
-     * @param maxDecrease   Decrease of param value limited to current value / maxDecrease
-     * @param maxIncrease   Increase of param value limited to current value * maxIncrease
+     * @param maxDecrease   Decrease of param value limited to current value / maxDecrease. If 0 we don't apply the check and any change is possible
+     * @param maxIncrease   Increase of param value limited to current value * maxIncrease. If 0 we don't apply the check and any change is possible
      */
     Param(String defaultValue, ParamType paramType, double maxDecrease, double maxIncrease) {
         this.defaultValue = defaultValue;

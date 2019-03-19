@@ -27,7 +27,6 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
@@ -36,10 +35,11 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 //TODO Use translation properties in error messages a they are shown to user.
 
@@ -49,13 +49,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class ChangeParamValidator extends ProposalValidator {
+    public enum Result {
+        OK,
+        SAME,
+        NO_CHANGE_POSSIBLE,
+        TOO_LOW,
+        TOO_HIGH
+    }
 
-    private BsqFormatter bsqFormatter;
 
     @Inject
-    public ChangeParamValidator(DaoStateService daoStateService, PeriodService periodService, BsqFormatter bsqFormatter) {
+    public ChangeParamValidator(DaoStateService daoStateService, PeriodService periodService) {
         super(daoStateService, periodService);
-        this.bsqFormatter = bsqFormatter;
     }
 
     @Override
@@ -71,103 +76,78 @@ public class ChangeParamValidator extends ProposalValidator {
         }
     }
 
-    //TODO
-    public void validateParamValue(Param param, String inputValue) throws ValidationException {
-        validateParamValue(param, inputValue, periodService.getChainHeight());
+    public void validateParamValue(Param param, String inputValue) throws ParamValidationException {
+        int blockHeight = periodService.getChainHeight();
+        validateParamValue(param, inputValue, blockHeight);
     }
 
-    private void validateParamValue(Param param, String inputValue, int chainHeight) throws ValidationException {
-        double maxDecrease = param.getMaxDecrease();
-        double maxIncrease = param.getMaxIncrease();
-        Coin newValueAsBsqCoin = Coin.ZERO;
-        Coin newValueAsBtcCoin = Coin.ZERO;
-        Coin currentValueAsCoin;
-        int newValueAsBlock = 0;
-        double newValueAsPercentDouble = 0;
-        boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
-        switch (param.getParamType()) {
-            case UNDEFINED:
-                break;
-            case BSQ:
-                bsqFormatter.validateBsqInput(inputValue);
-                newValueAsBsqCoin = bsqFormatter.parseToCoin(inputValue);
-                checkArgument(newValueAsBsqCoin.isPositive(), "Input must be positive");
-                currentValueAsCoin = daoStateService.getParamValueAsCoin(param, chainHeight);
-                checkArgument(!currentValueAsCoin.equals(newValueAsBsqCoin), "Your input must be different to the current value");
-                validateChangeRange((double) currentValueAsCoin.value, (double) newValueAsBsqCoin.value, maxDecrease, maxIncrease);
-                break;
-            case BTC:
-                bsqFormatter.validateBtcInput(inputValue);
-                newValueAsBtcCoin = bsqFormatter.parseToBTC(inputValue);
-                checkArgument(!newValueAsBtcCoin.isNegative(), "Input must not be negative");
-                // We allow 0 values (arbitration fee)
-                checkArgument(newValueAsBtcCoin.value == 0 || newValueAsBtcCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-                currentValueAsCoin = daoStateService.getParamValueAsCoin(param, chainHeight);
-                checkArgument(!currentValueAsCoin.equals(newValueAsBtcCoin), "Your input must be different to the current value");
-                validateChangeRange((double) currentValueAsCoin.value, (double) newValueAsBtcCoin.value, maxDecrease, maxIncrease);
-                break;
-            case PERCENT:
-                newValueAsPercentDouble = bsqFormatter.parsePercentStringToDouble(inputValue);
-                double currentValueAsPercentDouble = daoStateService.getParamValueAsPercentDouble(param, chainHeight);
-                checkArgument(currentValueAsPercentDouble != newValueAsPercentDouble, "Your input must be different to the current value");
-                validateChangeRange(currentValueAsPercentDouble, newValueAsPercentDouble, maxDecrease, maxIncrease);
-                break;
-            case BLOCK:
-                newValueAsBlock = Integer.parseInt(inputValue);
-                // We allow 0 values (e.g. time lock for trade)
-                checkArgument(newValueAsBlock >= 0, "newValueAsBlock must be >= 0");
-                int currentValueAsBlock = daoStateService.getParamValueAsBlock(param, chainHeight);
-                checkArgument(currentValueAsBlock != newValueAsBlock, "Your input must be different to the current value");
-                validateChangeRange((double) currentValueAsBlock, (double) newValueAsBlock, maxDecrease, maxIncrease);
-                break;
-            case ADDRESS:
-                String currentValue = daoStateService.getParamValue(param, chainHeight);
-                checkArgument(!currentValue.equals(inputValue), "Your input must be different to the current value");
-                InputValidator.ValidationResult validationResult = new BtcAddressValidator().validate(inputValue);
-                if (!validationResult.isValid)
-                    throw new AddressFormatException(validationResult.errorMessage);
+    public void validateParamValue(Param param, String inputValue, int blockHeight) throws ParamValidationException {
+        String currentParamValue = daoStateService.getParamValue(param, blockHeight);
+        validateParamValue(param, currentParamValue, inputValue);
+    }
 
-                break;
-
-            default:
-                log.warn("Param type {} not handled in switch case at validateParamValue", param.getParamType());
+    private void validateParamValue(Param param, String currentParamValue, String inputValue) throws ParamValidationException {
+        try {
+            Coin currentParamValueAsCoin, inputValueAsCoin;
+            switch (param.getParamType()) {
+                case UNDEFINED:
+                    break;
+                case BSQ:
+                    currentParamValueAsCoin = daoStateService.getParamValueAsCoin(param, currentParamValue);
+                    inputValueAsCoin = daoStateService.getParamValueAsCoin(param, inputValue);
+                    validateBsqValue(currentParamValueAsCoin, inputValueAsCoin, param);
+                    break;
+                case BTC:
+                    currentParamValueAsCoin = daoStateService.getParamValueAsCoin(param, currentParamValue);
+                    inputValueAsCoin = daoStateService.getParamValueAsCoin(param, inputValue);
+                    validateBtcValue(currentParamValueAsCoin, inputValueAsCoin, param);
+                    break;
+                case PERCENT:
+                    double currentParamValueAsPercentDouble = daoStateService.getParamValueAsPercentDouble(currentParamValue);
+                    double inputValueAsPercentDouble = daoStateService.getParamValueAsPercentDouble(inputValue);
+                    validatePercentValue(currentParamValueAsPercentDouble, inputValueAsPercentDouble, param);
+                    break;
+                case BLOCK:
+                    int currentParamValueAsBlock = daoStateService.getParamValueAsBlock(currentParamValue);
+                    int inputValueAsBlock = daoStateService.getParamValueAsBlock(inputValue);
+                    validateBlockValue(currentParamValueAsBlock, inputValueAsBlock, param);
+                    break;
+                case ADDRESS:
+                    validateAddressValue(currentParamValue, inputValue);
+                    break;
+                default:
+                    log.warn("Param type {} not handled in switch case at validateParamValue", param.getParamType());
+            }
+        } catch (Throwable t) {
+            throw new ParamValidationException(t);
         }
+    }
 
-        // Add here more fine tuned custom validations...
+    private void validateBsqValue(Coin currentParamValueAsCoin, Coin inputValueAsCoin, Param param) throws ParamValidationException {
+        checkArgument(inputValueAsCoin.isPositive(), "Input must be positive");
+        validationChange((double) currentParamValueAsCoin.value, (double) inputValueAsCoin.value, param);
+
         switch (param) {
-            case UNDEFINED:
-                break;
-
-            case DEFAULT_MAKER_FEE_BTC:
-            case DEFAULT_TAKER_FEE_BTC:
-            case MIN_MAKER_FEE_BTC:
-            case MIN_TAKER_FEE_BTC:
-                checkArgument(newValueAsBtcCoin.value >= Restrictions.getMinNonDustOutput().value,
-                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
-                break;
-
             case DEFAULT_MAKER_FEE_BSQ:
             case DEFAULT_TAKER_FEE_BSQ:
             case MIN_MAKER_FEE_BSQ:
             case MIN_TAKER_FEE_BSQ:
-                // Already checked above that > 0
                 break;
-
             case PROPOSAL_FEE:
             case BLIND_VOTE_FEE:
-                // Already checked above that > 0
                 break;
 
             case COMPENSATION_REQUEST_MIN_AMOUNT:
             case REIMBURSEMENT_MIN_AMOUNT:
+                checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
+                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
             case COMPENSATION_REQUEST_MAX_AMOUNT:
             case REIMBURSEMENT_MAX_AMOUNT:
-                checkNotNull(newValueAsBsqCoin, "newValueAsBsqCoin must not be null");
-                checkArgument(newValueAsBsqCoin.value >= Restrictions.getMinNonDustOutput().value,
+                checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
                         Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                checkArgument(inputValueAsCoin.value <= 200000000,
+                        "Amounts larger than 200 000 BSQ are not permitted");
                 break;
-
             case QUORUM_COMP_REQUEST:
             case QUORUM_REIMBURSEMENT:
             case QUORUM_CHANGE_PARAM:
@@ -175,9 +155,36 @@ public class ChangeParamValidator extends ProposalValidator {
             case QUORUM_CONFISCATION:
             case QUORUM_GENERIC:
             case QUORUM_REMOVE_ASSET:
-                // Already checked above that > 0
+                checkArgument(inputValueAsCoin.value >= 100000,
+                        "Quorum must be at least 1000 BSQ");
                 break;
+            case ASSET_LISTING_FEE_PER_DAY:
+                break;
+        }
+    }
 
+    private void validateBtcValue(Coin currentParamValueAsCoin, Coin inputValueAsCoin, Param param) throws ParamValidationException {
+        validationChange((double) currentParamValueAsCoin.value, (double) inputValueAsCoin.value, param);
+
+        switch (param) {
+            case DEFAULT_MAKER_FEE_BTC:
+            case DEFAULT_TAKER_FEE_BTC:
+            case MIN_MAKER_FEE_BTC:
+            case MIN_TAKER_FEE_BTC:
+                checkArgument(inputValueAsCoin.value >= Restrictions.getMinNonDustOutput().value,
+                        Res.get("validation.amountBelowDust", Restrictions.getMinNonDustOutput().value));
+                break;
+            case ASSET_MIN_VOLUME:
+            case MAX_TRADE_LIMIT:
+                checkArgument(inputValueAsCoin.isPositive(), "Input must be positive");
+                break;
+        }
+    }
+
+    private void validatePercentValue(double currentParamValueAsPercentDouble, double inputValueAsPercentDouble, Param param) throws ParamValidationException {
+        validationChange(currentParamValueAsPercentDouble, inputValueAsPercentDouble, param);
+
+        switch (param) {
             case THRESHOLD_COMP_REQUEST:
             case THRESHOLD_REIMBURSEMENT:
             case THRESHOLD_CHANGE_PARAM:
@@ -185,26 +192,27 @@ public class ChangeParamValidator extends ProposalValidator {
             case THRESHOLD_CONFISCATION:
             case THRESHOLD_GENERIC:
             case THRESHOLD_REMOVE_ASSET:
-                checkArgument(newValueAsPercentDouble >= 0.5001, "Threshold must be larger than 50%."); // We show only 2 decimals in the UI for % value
-                break;
-
-            case RECIPIENT_BTC_ADDRESS:
-                break;
-
-            case ASSET_LISTING_FEE_PER_DAY:
-                break;
-            case ASSET_MIN_VOLUME:
-                break;
-
-            case LOCK_TIME_TRADE_PAYOUT:
+                // We show only 2 decimals in the UI for % value
+                checkArgument(inputValueAsPercentDouble >= 0.5001,
+                        "Threshold must be larger than 50%.");
+                checkArgument(inputValueAsPercentDouble <= 1,
+                        "Threshold cannot be more than 100%.");
                 break;
             case ARBITRATOR_FEE:
-                // Can be 0
+                checkArgument(inputValueAsPercentDouble >= 0, "Input must not be negative");
                 break;
+        }
+    }
 
-            case MAX_TRADE_LIMIT:
+    private void validateBlockValue(int currentParamValueAsBlock, int inputValueAsBlock, Param param) throws ParamValidationException {
+        validationChange((double) currentParamValueAsBlock, (double) inputValueAsBlock, param);
+        // We allow 0 values (e.g. time lock for trade)
+        checkArgument(inputValueAsBlock >= 0, "inputValueAsBlock must be >= 0");
+
+        boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+        switch (param) {
+            case LOCK_TIME_TRADE_PAYOUT:
                 break;
-
             case PHASE_UNDEFINED:
                 break;
             case PHASE_PROPOSAL:
@@ -214,24 +222,64 @@ public class ChangeParamValidator extends ProposalValidator {
             case PHASE_VOTE_REVEAL:
             case PHASE_BREAK3:
                 if (isMainnet)
-                    checkArgument(newValueAsBlock >= 6, "The break must have at least 6 blocks");
+                    checkArgument(inputValueAsBlock >= 6, "The break must have at least 6 blocks");
                 break;
             case PHASE_RESULT:
                 if (isMainnet)
-                    checkArgument(newValueAsBlock >= 1, "The break must have at least 1 block");
+                    checkArgument(inputValueAsBlock >= 1, "The break must have at least 1 block");
                 break;
-
-            default:
-                log.warn("Param {} not handled in switch case at validateParamValue", param);
         }
     }
 
-    private void validateChangeRange(double currentValue, double newValue, double min, double max) throws ValidationException {
-        double change = currentValue != 0 ? newValue / currentValue : 0;
-        if (max > 0 && change > max)
-            throw new ValidationException("Input is larger than " + max + " times the current value.");
+    private void validateAddressValue(String currentParamValue, String inputValue) {
+        checkArgument(!inputValue.equals(currentParamValue), "Your input must be different to the current value");
+        InputValidator.ValidationResult validationResult = new BtcAddressValidator().validate(inputValue);
+        if (!validationResult.isValid)
+            throw new AddressFormatException(validationResult.errorMessage);
+    }
 
-        if (min > 0 && change < (1 / min))
-            throw new ValidationException("Input is smaller than " + 1 / min + " times the current value.");
+    private static void validationChange(double currentParamValue, double inputValue, Param param) throws ParamValidationException {
+        Result result = getChangeValidationResult(currentParamValue,
+                inputValue,
+                param.getMaxDecrease(),
+                param.getMaxIncrease());
+        if (result != Result.OK) {
+            throw new ParamValidationException(result);
+        }
+    }
+
+    /**
+     *
+     * @param currentValue      Current value
+     * @param newValue          New value
+     * @param min               Decrease of param value limited to current value / maxDecrease. If 0 we don't apply the check and any change is possible
+     * @param max               Increase of param value limited to current value * maxIncrease. If 0 we don't apply the check and any change is possible
+     * @return Validation result
+     */
+    @VisibleForTesting
+    static Result getChangeValidationResult(double currentValue, double newValue, double min, double max) {
+        checkArgument(min >= 0, "Min must be >= 0");
+        checkArgument(max >= 0, "Max must be >= 0");
+        if (currentValue == newValue)
+            return Result.SAME;
+
+        if (max == 0)
+            return Result.OK;
+
+        double change = currentValue != 0 ? newValue / currentValue : 0;
+        if (change > max)
+            return Result.TOO_HIGH;
+
+        if (min == 0)
+            return Result.OK;
+
+        // If min/max are > 0 and currentValue or newValue is 0 it cannot be changed. min/max must be 0 in such cases.
+        if (currentValue == 0 || newValue == 0)
+            return Result.NO_CHANGE_POSSIBLE;
+
+        if (change < (1 / min))
+            return Result.TOO_LOW;
+
+        return Result.OK;
     }
 }
