@@ -11,6 +11,7 @@
 //
 // See https://github.com/signalapp/gradle-witness#using-witness for further details.
 
+
 dependencyVerification {
     verify = [
         'org.controlsfx:controlsfx:b98f1c9507c05600f80323674b33d15674926c71b0116f70085b62bdacf1e573',
@@ -37,7 +38,7 @@ dependencyVerification {
         'com.googlecode.json-simple:json-simple:4e69696892b88b41c55d49ab2fdcc21eead92bf54acc588c0050596c3b75199c',
         'org.springframework:spring-core:c451e8417adb2ffb2445636da5e44a2f59307c4100037a1fe387c3fba4f29b52',
         'ch.qos.logback:logback-classic:e66efc674e94837344bc5b748ff510c37a44eeff86cbfdbf9e714ef2eb374013',
-        'com.github.bisq-network.bitcoinj:bitcoinj-core:5c9cc2762b2d51d84dd22a83dd72ae3ee9e862c57f0efd5f2d8b1808e2ca8324',
+        'com.github.bisq-network.bitcoinj:bitcoinj-core:e47a7224dbdf02446d0b471f0148fced607761c0a58f7cd0c5abffab9a5b32b0',
         'org.slf4j:slf4j-api:3a4cd4969015f3beb4b5b4d81dbafc01765fb60b8a439955ca64d8476fef553e',
         'ch.qos.logback:logback-core:4cd46fa17d77057b39160058df2f21ebbc2aded51d0edcc25d2c1cecc042a005',
         'com.google.code.findbugs:jsr305:766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7',
