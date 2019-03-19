@@ -124,7 +124,7 @@ public class WalletConfig extends AbstractIdleService {
     private DeterministicSeed seed;
 
     private volatile BlockChain vChain;
-    private volatile BlockStore vStore;
+    private volatile SPVBlockStore vStore;
     private volatile PeerGroup vPeerGroup;
     private boolean useAutoSave = true;
     private PeerAddress[] peerAddresses;
@@ -326,13 +326,6 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     /**
-     * Override this to use a {@link BlockStore} that isn't the default of {@link SPVBlockStore}.
-     */
-    private BlockStore provideBlockStore(File file) throws BlockStoreException {
-        return new ClearableSPVBlockStore(params, file);
-    }
-
-    /**
      * This method is invoked on a background thread after all objects are initialised, but before the peer group
      * or block chain download is started. You can tweak the objects configuration here.
      */
@@ -402,7 +395,7 @@ public class WalletConfig extends AbstractIdleService {
             vBsqWallet.setRiskAnalyzer(new BisqRiskAnalysis.Analyzer());
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
-            vStore = provideBlockStore(chainFile);
+            vStore = new SPVBlockStore(params, chainFile);
             if (!chainFileExists || seed != null) {
                 if (checkpoints != null) {
                     // Initialize the chain file with a checkpoint to speed up first-run sync.
@@ -413,7 +406,7 @@ public class WalletConfig extends AbstractIdleService {
                         time = seed.getCreationTimeSeconds();
                         if (chainFileExists) {
                             log.info("Clearing the chain file in preparation from restore.");
-                            ((ClearableSPVBlockStore) vStore).clear();
+                            vStore.clear();
                         }
                     } else {
                         time = vBtcWallet.getEarliestKeyCreationTime();
@@ -426,7 +419,7 @@ public class WalletConfig extends AbstractIdleService {
                         log.warn("Creating a new uncheckpointed block store due to a wallet with a creation time of zero: this will result in a very slow chain sync");
                 } else if (chainFileExists) {
                     log.info("Clearing the chain file in preparation from restore.");
-                    ((ClearableSPVBlockStore) vStore).clear();
+                    vStore.clear();
                 }
             }
             vChain = new BlockChain(params, vStore);
