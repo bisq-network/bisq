@@ -141,7 +141,7 @@ public enum Param {
                             "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 3, 3),
     PHASE_BLIND_VOTE(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
-            "601" :     // mainnet; 4 days
+            "451" :     // mainnet; 3 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
@@ -157,7 +157,7 @@ public enum Param {
                             "10",       // testnet or dao testnet (server side regtest)
             ParamType.BLOCK, 3, 3),
     PHASE_VOTE_REVEAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
-            "301" :     // mainnet; 2 days
+            "451" :     // mainnet; 3 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
