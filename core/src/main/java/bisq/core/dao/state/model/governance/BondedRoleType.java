@@ -41,6 +41,8 @@ public enum BondedRoleType {
 
     // maintainers
     BISQ_MAINTAINER(50_000, 60, "https://bisq.network/roles/63", true),
+    BITCOINJ_MAINTAINER(20_000, 60, "https://bisq.network/roles/8", true),
+    NETLAYER_MAINTAINER(20_000, 60, "https://bisq.network/roles/81", true),
 
     // operators
     WEBSITE_OPERATOR(50_000, 60, "https://bisq.network/roles/12", true),
@@ -50,19 +52,14 @@ public enum BondedRoleType {
     BTC_NODE_OPERATOR(5_000, 60, "https://bisq.network/roles/67", true),
     MARKETS_OPERATOR(20_000, 60, "https://bisq.network/roles/9", true),
     BSQ_EXPLORER_OPERATOR(20_000, 60, "https://bisq.network/roles/11", true),
+    MOBILE_NOTIFICATIONS_RELAY_OPERATOR(20_000, 60, "https://bisq.network/roles/82", true),
 
     // other
     DOMAIN_NAME_HOLDER(50_000, 60, "https://bisq.network/roles/77", false),
-    DNS_ADMIN(50_000, 60, "https://bisq.network/roles/18", false),
+    DNS_ADMIN(20_000, 60, "https://bisq.network/roles/18", false),
     MEDIATOR(10_000, 60, "N/A", true),
     ARBITRATOR(200_000, 60, "https://bisq.network/roles/13", true),
     BTC_DONATION_ADDRESS_OWNER(20_000, 60, "https://bisq.network/roles/80", true);
-
-    //TODO
-    // Consider to add:
-    // Mobile notification relay operator (ensure the operator is not logging)
-    // Netlayer maintainer (we rely on the that library for Tor)
-    // Bisq-BitcoinJ fork maintainer (we rely on the that library for the wallet)
 
 
     // Satoshi value of BSQ bond
