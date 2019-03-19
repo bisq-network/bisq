@@ -19,12 +19,12 @@ package bisq.asset.coins;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
-import bisq.asset.CryptonoteAddressValidator;
+import bisq.asset.CryptoNoteAddressValidator;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.qwertycoin.msg")
 public class Qwertycoin extends Coin {
 
     public Qwertycoin() {
-        super("Qwertycoin", "QWC", new CryptonoteAddressValidator("QWC", ""));
+        super("Qwertycoin", "QWC", new CryptoNoteAddressValidator("QWC", ""));
     }
 }
