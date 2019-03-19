@@ -203,7 +203,6 @@ public class BsqFormatter extends BSFormatter {
                 return formatBTC(parseParamValueToCoin(param, inputValue));
             case PERCENT:
                 return formatToPercent(parsePercentStringToDouble(inputValue));
-
             case BLOCK:
                 return Integer.toString(parseParamValueToBlocks(param, inputValue));
             case ADDRESS:

@@ -897,21 +897,6 @@ public class DaoStateService implements DaoSetupService {
                 });
     }
 
-    public Coin getParamValueAsCoin(Param param, int blockHeight) {
-        String paramValue = getParamValue(param, blockHeight);
-        return bsqFormatter.parseParamValueToCoin(param, paramValue);
-    }
-
-    public double getParamValueAsPercentDouble(Param param, int blockHeight) {
-        String paramValue = getParamValue(param, blockHeight);
-        return bsqFormatter.parsePercentStringToDouble(paramValue);
-    }
-
-    public int getParamValueAsBlock(Param param, int blockHeight) {
-        String paramValue = getParamValue(param, blockHeight);
-        return Integer.parseInt(paramValue);
-    }
-
     public String getParamValue(Param param, int blockHeight) {
         List<ParamChange> paramChangeList = new ArrayList<>(daoState.getParamChangeList());
         if (!paramChangeList.isEmpty()) {
@@ -927,6 +912,30 @@ public class DaoStateService implements DaoSetupService {
 
         // If no value found we use default values
         return param.getDefaultValue();
+    }
+
+    public Coin getParamValueAsCoin(Param param, String paramValue) {
+        return bsqFormatter.parseParamValueToCoin(param, paramValue);
+    }
+
+    public double getParamValueAsPercentDouble(String paramValue) {
+        return bsqFormatter.parsePercentStringToDouble(paramValue);
+    }
+
+    public int getParamValueAsBlock(String paramValue) {
+        return Integer.parseInt(paramValue);
+    }
+
+    public Coin getParamValueAsCoin(Param param, int blockHeight) {
+        return getParamValueAsCoin(param, getParamValue(param, blockHeight));
+    }
+
+    public double getParamValueAsPercentDouble(Param param, int blockHeight) {
+        return getParamValueAsPercentDouble(getParamValue(param, blockHeight));
+    }
+
+    public int getParamValueAsBlock(Param param, int blockHeight) {
+        return getParamValueAsBlock(getParamValue(param, blockHeight));
     }
 
 
