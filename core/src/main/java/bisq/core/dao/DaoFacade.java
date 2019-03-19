@@ -19,7 +19,7 @@ package bisq.core.dao;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.ballot.BallotListPresentation;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
@@ -228,7 +228,7 @@ public class DaoFacade implements DaoSetupService {
     public ProposalWithTransaction getCompensationProposalWithTransaction(String name,
                                                                           String link,
                                                                           Coin requestedBsq)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return compensationProposalFactory.createProposalWithTransaction(name,
                 link,
                 requestedBsq);
@@ -237,7 +237,7 @@ public class DaoFacade implements DaoSetupService {
     public ProposalWithTransaction getReimbursementProposalWithTransaction(String name,
                                                                            String link,
                                                                            Coin requestedBsq)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return reimbursementProposalFactory.createProposalWithTransaction(name,
                 link,
                 requestedBsq);
@@ -247,7 +247,7 @@ public class DaoFacade implements DaoSetupService {
                                                                    String link,
                                                                    Param param,
                                                                    String paramValue)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return changeParamProposalFactory.createProposalWithTransaction(name,
                 link,
                 param,
@@ -257,27 +257,27 @@ public class DaoFacade implements DaoSetupService {
     public ProposalWithTransaction getConfiscateBondProposalWithTransaction(String name,
                                                                             String link,
                                                                             String lockupTxId)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return confiscateBondProposalFactory.createProposalWithTransaction(name,
                 link,
                 lockupTxId);
     }
 
     public ProposalWithTransaction getBondedRoleProposalWithTransaction(Role role)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return roleProposalFactory.createProposalWithTransaction(role);
     }
 
     public ProposalWithTransaction getGenericProposalWithTransaction(String name,
                                                                      String link)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return genericProposalFactory.createProposalWithTransaction(name, link);
     }
 
     public ProposalWithTransaction getRemoveAssetProposalWithTransaction(String name,
                                                                          String link,
                                                                          Asset asset)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         return removeAssetProposalFactory.createProposalWithTransaction(name, link, asset);
     }
 

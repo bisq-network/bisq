@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.generic;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
@@ -55,7 +55,7 @@ public class GenericProposalFactory extends BaseProposalFactory<GenericProposal>
     }
 
     public ProposalWithTransaction createProposalWithTransaction(String name, String link)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
 
         return super.createProposalWithTransaction(name, link);
     }

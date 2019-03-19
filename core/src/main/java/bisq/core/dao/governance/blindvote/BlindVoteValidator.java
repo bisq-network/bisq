@@ -17,7 +17,7 @@
 
 package bisq.core.dao.governance.blindvote;
 
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -53,7 +53,7 @@ public class BlindVoteValidator {
         }
     }
 
-    private void validateDataFields(BlindVote blindVote) throws ValidationException {
+    private void validateDataFields(BlindVote blindVote) throws ProposalValidationException {
         try {
             checkNotNull(blindVote.getEncryptedVotes(), "encryptedProposalList must not be null");
             checkArgument(blindVote.getEncryptedVotes().length > 0,
@@ -68,7 +68,7 @@ public class BlindVoteValidator {
             //TODO should we use a min/max for stake, atm its just dust limit as the min. value
         } catch (Throwable e) {
             log.warn(e.toString());
-            throw new ValidationException(e);
+            throw new ProposalValidationException(e);
         }
     }
 

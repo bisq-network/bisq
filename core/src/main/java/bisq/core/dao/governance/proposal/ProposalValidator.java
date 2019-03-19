@@ -17,7 +17,6 @@
 
 package bisq.core.dao.governance.proposal;
 
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -51,17 +50,17 @@ public class ProposalValidator {
         try {
             validateDataFields(proposal);
             return true;
-        } catch (ValidationException e) {
+        } catch (ProposalValidationException e) {
             return false;
         }
     }
 
-    public void validateDataFields(Proposal proposal) throws ValidationException {
+    public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             notEmpty(proposal.getName(), "name must not be empty");
             notEmpty(proposal.getLink(), "link must not be empty");
         } catch (Throwable throwable) {
-            throw new ValidationException(throwable);
+            throw new ProposalValidationException(throwable);
         }
     }
 
