@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal;
 
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -134,5 +135,13 @@ public abstract class ProposalValidator {
         } else {
             return false;
         }
+    }
+
+    protected Integer getBlockHeight(Proposal proposal) {
+        // When we receive a temp proposal the tx is usually not confirmed so we cannot lookup the block height of
+        // the tx. We take the current block height in that case as it would be in the same cycle anyway.
+        return daoStateService.getTx(proposal.getTxId())
+                .map(BaseTx::getBlockHeight)
+                .orElseGet(daoStateService::getChainHeight);
     }
 }

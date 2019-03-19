@@ -51,6 +51,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     protected final String link;
     protected final byte version;
     protected final long creationDate;
+    @Nullable
     protected final String txId;
 
     protected Proposal(String name,

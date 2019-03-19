@@ -17,8 +17,8 @@
 
 package bisq.core.dao.governance.proposal.removeAsset;
 
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -27,6 +27,8 @@ import bisq.core.dao.state.model.governance.RemoveAssetProposal;
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static org.apache.commons.lang3.Validate.notEmpty;
 
 @Slf4j
 public class RemoveAssetValidator extends ProposalValidator {
@@ -42,7 +44,9 @@ public class RemoveAssetValidator extends ProposalValidator {
             super.validateDataFields(proposal);
 
             RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
-            //TODO
+            notEmpty(removeAssetProposal.getTickerSymbol(), "TickerSymbol must not be empty");
+        } catch (ProposalValidationException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }

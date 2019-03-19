@@ -17,19 +17,18 @@
 
 package bisq.core.dao.governance.proposal.role;
 
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Proposal;
-import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static org.apache.commons.lang3.Validate.notEmpty;
+import static org.apache.commons.lang3.Validate.notNull;
 
 @Slf4j
 public class RoleValidator extends ProposalValidator {
@@ -45,11 +44,7 @@ public class RoleValidator extends ProposalValidator {
             super.validateDataFields(proposal);
 
             RoleProposal roleProposal = (RoleProposal) proposal;
-            Role role = roleProposal.getRole();
-
-            //TODO
-            notEmpty(role.getName(), "role.name must not be empty");
-
+            notNull(roleProposal.getRole(), "Bonded role must not be null");
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
