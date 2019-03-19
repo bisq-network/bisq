@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.network;
 
-import java.util.List;
+import bisq.common.app.Capabilities;
 
 public interface SupportedCapabilitiesListener {
-    void onChanged(List<Integer> supportedCapabilities);
+    void onChanged(Capabilities supportedCapabilities);
 }

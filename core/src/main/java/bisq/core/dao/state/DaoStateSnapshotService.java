@@ -18,6 +18,8 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 
@@ -37,16 +39,19 @@ import lombok.extern.slf4j.Slf4j;
  * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
  */
 @Slf4j
-public class DaoStateSnapshotService implements DaoStateListener {
+public class DaoStateSnapshotService {
     private static final int SNAPSHOT_GRID = 20;
 
     private final DaoStateService daoStateService;
     private final GenesisTxInfo genesisTxInfo;
     private final CycleService cycleService;
     private final DaoStateStorageService daoStateStorageService;
+    private final DaoStateMonitoringService daoStateMonitoringService;
 
-    private DaoState snapshotCandidate;
+    private DaoState daoStateSnapshotCandidate;
+    private LinkedList<DaoStateHash> daoStateHashChainSnapshotCandidate = new LinkedList<>();
     private int chainHeightOfLastApplySnapshot;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -56,47 +61,13 @@ public class DaoStateSnapshotService implements DaoStateListener {
     public DaoStateSnapshotService(DaoStateService daoStateService,
                                    GenesisTxInfo genesisTxInfo,
                                    CycleService cycleService,
-                                   DaoStateStorageService daoStateStorageService) {
+                                   DaoStateStorageService daoStateStorageService,
+                                   DaoStateMonitoringService daoStateMonitoringService) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.cycleService = cycleService;
         this.daoStateStorageService = daoStateStorageService;
-
-        this.daoStateService.addBsqStateListener(this);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // We listen to each ParseTxsComplete event even if the batch processing of all blocks at startup is not completed
-    // as we need to write snapshots during that batch processing.
-    @Override
-    public void onParseTxsComplete(Block block) {
-        int chainHeight = block.getHeight();
-
-        // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
-        // different to our current height.
-        boolean noSnapshotCandidateOrDifferentHeight = snapshotCandidate == null || snapshotCandidate.getChainHeight() != chainHeight;
-        if (isSnapshotHeight(chainHeight) &&
-                !daoStateService.getBlocks().isEmpty() &&
-                isValidHeight(daoStateService.getBlocks().getLast().getHeight()) &&
-                noSnapshotCandidateOrDifferentHeight) {
-            // At trigger event we store the latest snapshotCandidate to disc
-            if (snapshotCandidate != null) {
-                // We clone because storage is in a threaded context and we set the snapshotCandidate to our current
-                // state in the next step
-                DaoState cloned = daoStateService.getClone(snapshotCandidate);
-                daoStateStorageService.persist(cloned);
-                log.info("Saved snapshotCandidate with height {} to Disc at height {} ",
-                        snapshotCandidate.getChainHeight(), chainHeight);
-            }
-
-            // Now we clone and keep it in memory for the next trigger event
-            snapshotCandidate = daoStateService.getClone();
-            log.info("Cloned new snapshotCandidate at height " + chainHeight);
-        }
+        this.daoStateMonitoringService = daoStateMonitoringService;
     }
 
 
@@ -104,31 +75,66 @@ public class DaoStateSnapshotService implements DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // We do not use DaoStateListener.onDaoStateChanged but let the DaoEventCoordinator call maybeCreateSnapshot to ensure the
+    // correct order of execution.
+    // We need to process during batch processing as well to write snapshots during that process.
+    public void maybeCreateSnapshot(Block block) {
+        int chainHeight = block.getHeight();
+
+        // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
+        // different to our current height.
+        boolean noSnapshotCandidateOrDifferentHeight = daoStateSnapshotCandidate == null ||
+                daoStateSnapshotCandidate.getChainHeight() != chainHeight;
+        if (isSnapshotHeight(chainHeight) &&
+                !daoStateService.getBlocks().isEmpty() &&
+                isValidHeight(daoStateService.getBlocks().getLast().getHeight()) &&
+                noSnapshotCandidateOrDifferentHeight) {
+            // At trigger event we store the latest snapshotCandidate to disc
+            if (daoStateSnapshotCandidate != null) {
+                // We clone because storage is in a threaded context and we set the snapshotCandidate to our current
+                // state in the next step
+                DaoState clonedDaoState = daoStateService.getClone(daoStateSnapshotCandidate);
+                LinkedList<DaoStateHash> clonedDaoStateHashChain = new LinkedList<>(daoStateHashChainSnapshotCandidate);
+                daoStateStorageService.persist(clonedDaoState, clonedDaoStateHashChain);
+
+                log.info("Saved snapshotCandidate with height {} to Disc at height {} ",
+                        daoStateSnapshotCandidate.getChainHeight(), chainHeight);
+            }
+
+            // Now we clone and keep it in memory for the next trigger event
+            daoStateSnapshotCandidate = daoStateService.getClone();
+            daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
+
+            log.info("Cloned new snapshotCandidate at height " + chainHeight);
+        }
+    }
+
     public void applySnapshot(boolean fromReorg) {
-        DaoState persisted = daoStateStorageService.getPersistedBsqState();
-        if (persisted != null) {
-            LinkedList<Block> blocks = persisted.getBlocks();
-            int chainHeightOfPersisted = persisted.getChainHeight();
+        DaoState persistedBsqState = daoStateStorageService.getPersistedBsqState();
+        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
+        if (persistedBsqState != null) {
+            LinkedList<Block> blocks = persistedBsqState.getBlocks();
+            int chainHeightOfPersisted = persistedBsqState.getChainHeight();
             if (!blocks.isEmpty()) {
                 int heightOfLastBlock = blocks.getLast().getHeight();
-                log.info("applySnapshot from persisted daoState with height of last block {}", heightOfLastBlock);
+                log.info("applySnapshot from persistedBsqState daoState with height of last block {}", heightOfLastBlock);
                 if (isValidHeight(heightOfLastBlock)) {
                     if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {
                         chainHeightOfLastApplySnapshot = chainHeightOfPersisted;
-                        daoStateService.applySnapshot(persisted);
+                        daoStateService.applySnapshot(persistedBsqState);
+                        daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
                     } else {
                         // The reorg might have been caused by the previous parsing which might contains a range of
                         // blocks.
                         log.warn("We applied already a snapshot with chainHeight {}. We will reset the daoState and " +
                                 "start over from the genesis transaction again.", chainHeightOfLastApplySnapshot);
-                        persisted = new DaoState();
-                        applyEmptySnapshot(persisted);
+                        applyEmptySnapshot();
                     }
                 }
             } else if (fromReorg) {
                 log.info("We got a reorg and we want to apply the snapshot but it is empty. That is expected in the first blocks until the " +
                         "first snapshot has been created. We use our applySnapshot method and restart from the genesis tx");
-                applyEmptySnapshot(persisted);
+                applyEmptySnapshot();
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
@@ -144,13 +150,16 @@ public class DaoStateSnapshotService implements DaoStateListener {
         return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
     }
 
-    private void applyEmptySnapshot(DaoState persisted) {
+    private void applyEmptySnapshot() {
+        DaoState emptyDaoState = new DaoState();
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
-        persisted.setChainHeight(genesisBlockHeight);
+        emptyDaoState.setChainHeight(genesisBlockHeight);
         chainHeightOfLastApplySnapshot = genesisBlockHeight;
-        daoStateService.applySnapshot(persisted);
+        daoStateService.applySnapshot(emptyDaoState);
         // In case we apply an empty snapshot we need to trigger the cycleService.addFirstCycle method
         cycleService.addFirstCycle();
+
+        daoStateMonitoringService.applySnapshot(new LinkedList<>());
     }
 
     @VisibleForTesting

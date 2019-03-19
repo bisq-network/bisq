@@ -29,7 +29,6 @@ import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -90,7 +89,6 @@ class GetBlocksRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, final Connection connection) {
-        Log.traceCall(getBlocksRequest + "\n\tconnection=" + connection);
         List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight()));
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
         GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());

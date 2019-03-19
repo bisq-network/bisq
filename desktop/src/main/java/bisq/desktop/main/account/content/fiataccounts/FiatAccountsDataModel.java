@@ -26,9 +26,8 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.CryptoCurrencyAccount;
+import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -85,7 +84,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private void fillAndSortPaymentAccounts() {
         if (user.getPaymentAccounts() != null) {
             List<PaymentAccount> list = user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> !paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                    .filter(paymentAccount -> !paymentAccount.getPaymentMethod().isAsset())
                     .collect(Collectors.toList());
             paymentAccounts.setAll(list);
             paymentAccounts.sort(Comparator.comparing(PaymentAccount::getCreationDate));
@@ -146,7 +145,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
             ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> !(paymentAccount instanceof CryptoCurrencyAccount))
+                    .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
                     .collect(Collectors.toList()));
             GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
         }

@@ -17,9 +17,8 @@
 
 package bisq.network.p2p.storage.payload;
 
+import bisq.common.app.Capabilities;
 import bisq.common.proto.network.NetworkPayload;
-
-import java.util.List;
 
 /**
  * Used for payloads which requires certain capability.
@@ -31,5 +30,5 @@ public interface CapabilityRequiringPayload extends NetworkPayload {
     /**
      * @return Capabilities the other node need to support to receive that message
      */
-    List<Integer> getRequiredCapabilities();
+    Capabilities getRequiredCapabilities();
 }

@@ -22,6 +22,7 @@ import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondRepository;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
@@ -62,7 +63,7 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
         Set<String> myWalletTransactionIds = bsqWalletService.getWalletTransactions().stream()
                 .map(Transaction::getHashAsString)
                 .collect(Collectors.toSet());
-        return getBondedRoleProposalStream()
+        return getAcceptedBondedRoleProposalStream()
                 .filter(roleProposal -> roleProposal.getRole().equals(role))
                 .map(Proposal::getTxId)
                 .anyMatch(myWalletTransactionIds::contains);
@@ -107,6 +108,13 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
     private Stream<RoleProposal> getBondedRoleProposalStream() {
         return daoStateService.getEvaluatedProposalList().stream()
                 .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
+                .map(e -> ((RoleProposal) e.getProposal()));
+    }
+
+    private Stream<RoleProposal> getAcceptedBondedRoleProposalStream() {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(evaluatedProposal -> evaluatedProposal.getProposal() instanceof RoleProposal)
+                .filter(EvaluatedProposal::isAccepted)
                 .map(e -> ((RoleProposal) e.getProposal()));
     }
 }

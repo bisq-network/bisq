@@ -26,6 +26,7 @@ import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
+import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -69,6 +70,7 @@ public class CorePersistedDataHost {
             persistedDataHosts.add(injector.getInstance(MyProposalListService.class));
             persistedDataHosts.add(injector.getInstance(MyReputationListService.class));
             persistedDataHosts.add(injector.getInstance(MyProofOfBurnListService.class));
+            persistedDataHosts.add(injector.getInstance(UnconfirmedBsqChangeOutputListService.class));
         }
         return persistedDataHosts;
     }

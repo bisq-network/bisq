@@ -15,7 +15,6 @@ grant {
   permission "java.util.PropertyPermission" "torDir", "read";
   permission "java.util.PropertyPermission" "maxConnections", "read";
   permission "java.util.PropertyPermission" "networkId", "read";
-  permission "java.util.PropertyPermission" "myAddress", "read";
   permission "java.util.PropertyPermission" "banList", "read";
   permission "java.util.PropertyPermission" "socks5ProxyBtcAddress", "read";
   permission "java.util.PropertyPermission" "socks5ProxyHttpAddress", "read";
@@ -63,7 +62,6 @@ grant {
   permission "java.lang.RuntimePermission" "getenv.dumpStatistics";
   permission "java.lang.RuntimePermission" "getenv.torDir";
   permission "java.lang.RuntimePermission" "getenv.maxConnections";
-  permission "java.lang.RuntimePermission" "getenv.myAddress";
   permission "java.lang.RuntimePermission" "getenv.networkId";
   permission "java.lang.RuntimePermission" "getenv.banList";
   permission "java.lang.RuntimePermission" "getenv.socks5ProxyBtcAddress";

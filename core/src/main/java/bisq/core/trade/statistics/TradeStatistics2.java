@@ -29,6 +29,7 @@ import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.JsonExclude;
@@ -44,10 +45,7 @@ import org.bitcoinj.utils.Fiat;
 
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -215,10 +213,8 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public List<Integer> getRequiredCapabilities() {
-        return new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.TRADE_STATISTICS_2.ordinal()
-        ));
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.TRADE_STATISTICS_2);
     }
 
     @Override

@@ -105,6 +105,14 @@ public class ProposalListItem {
     }
 
     public String getDetails() {
+        return ProposalListItem.getProposalDetails(evaluatedProposal, bsqFormatter);
+    }
+
+    public static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
+        return getProposalDetails(evaluatedProposal, bsqFormatter, true);
+    }
+
+    public static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter, boolean useDisplayString) {
         Proposal proposal = evaluatedProposal.getProposal();
         switch (proposal.getType()) {
             case COMPENSATION_REQUEST:
@@ -117,11 +125,12 @@ public class ProposalListItem {
                 return bsqFormatter.formatCoinWithCode(requestedBsq);
             case CHANGE_PARAM:
                 ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
-                return changeParamProposal.getParam().getDisplayString();
+                return useDisplayString ? changeParamProposal.getParam().getDisplayString() : changeParamProposal.getParam().name();
             case BONDED_ROLE:
                 RoleProposal roleProposal = (RoleProposal) proposal;
                 Role role = roleProposal.getRole();
-                return Res.get("dao.bond.bondedRoleType." + role.getBondedRoleType().name());
+                String name = role.getBondedRoleType().name();
+                return useDisplayString ? Res.get("dao.bond.bondedRoleType." + name) : name;
             case CONFISCATE_BOND:
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
                 // TODO add info to bond

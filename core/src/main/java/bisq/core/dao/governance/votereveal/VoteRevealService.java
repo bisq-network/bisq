@@ -38,6 +38,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
@@ -133,7 +134,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             if (c.wasAdded())
                 c.getAddedSubList().forEach(exception -> log.error(exception.toString()));
         });
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override
@@ -163,7 +164,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         maybeRevealVotes(block.getHeight());
     }
 
@@ -269,7 +270,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     }
 
     private void publishTx(Transaction voteRevealTx) {
-        walletsManager.publishAndCommitBsqTx(voteRevealTx, new TxBroadcaster.Callback() {
+        walletsManager.publishAndCommitBsqTx(voteRevealTx, TxType.VOTE_REVEAL, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("voteRevealTx successfully broadcasted.");

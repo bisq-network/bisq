@@ -17,20 +17,6 @@
 
 package bisq.monitor.metric;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
-
-import org.jetbrains.annotations.NotNull;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.SettableFuture;
-
-import bisq.common.app.Version;
-import bisq.common.proto.network.NetworkEnvelope;
-import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.monitor.AvailableTor;
 import bisq.monitor.Metric;
 import bisq.monitor.Monitor;
@@ -38,6 +24,9 @@ import bisq.monitor.OnionParser;
 import bisq.monitor.Reporter;
 import bisq.monitor.StatisticsHelper;
 import bisq.monitor.ThreadGate;
+
+import bisq.core.proto.network.CoreNetworkProtoResolver;
+
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -48,7 +37,22 @@ import bisq.network.p2p.network.SetupListener;
 import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
 import bisq.network.p2p.peers.keepalive.messages.Pong;
+
+import bisq.common.proto.network.NetworkEnvelope;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
+
+import java.io.File;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class P2PRoundTripTime extends Metric implements MessageListener, SetupListener {
@@ -57,7 +61,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     private NetworkNode networkNode;
-    private final File torHiddenServiceDir = new File("metric_p2pRoundTripTime");
+    private final File torHiddenServiceDir = new File("metric_" + getName());
     private int nonce;
     private long start;
     private List<Long> samples;
@@ -66,13 +70,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
     public P2PRoundTripTime(Reporter reporter) {
         super(reporter);
-
-        Version.setBaseCryptoNetworkId(0); // set to BTC_MAINNET
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
     }
 
     @Override
@@ -90,7 +87,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
             // wait for the gate to be reopened
             hsReady.await();
         }
-
 
         // for each configured host
         for (String current : configuration.getProperty(HOSTS, "").split(",")) {
@@ -117,7 +113,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                         @Override
                         public void onSuccess(Connection connection) {
                             connection.addMessageListener(P2PRoundTripTime.this);
-                            log.debug("Send ping to " + connection + " succeeded.");
                         }
 
                         @Override
@@ -130,11 +125,15 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
 
                     // wait for the gate to open again
                     gate.await();
+
+                    // remove the message listener so we do not get messages we are not interested in anymore
+                    // (especially relevant when gate.await() times out)
+                    future.get().removeMessageListener(this);
                 }
 
                 // report
                 reporter.report(StatisticsHelper.process(samples),
-                        "bisq." + getName() + "." + OnionParser.prettyPrint(target));
+                        getName() + "." + OnionParser.prettyPrint(target));
             } catch (Exception e) {
                 gate.proceed(); // release the gate on error
                 e.printStackTrace();
@@ -153,7 +152,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                                 "We drop that message. nonce={} / requestNonce={}",
                         nonce, pong.getRequestNonce());
             }
-            connection.removeMessageListener(this);
 
             connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
             // open the gate
@@ -162,7 +160,6 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
             gate.unlock();
         } else {
             log.warn("Got a message of type <{}>, expected <Pong>", networkEnvelope.getClass().getSimpleName());
-            connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
         }
     }
 

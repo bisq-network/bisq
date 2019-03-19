@@ -65,7 +65,6 @@ public class DummySeedNode {
     private Level logLevel = Level.WARN;
 
     public DummySeedNode(String defaultUserDataDir) {
-        Log.traceCall("defaultUserDataDir=" + defaultUserDataDir);
         this.defaultUserDataDir = defaultUserDataDir;
     }
 
@@ -74,18 +73,17 @@ public class DummySeedNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // args: myAddress (incl. port) bitcoinNetworkId maxConnections useLocalhostForP2P seedNodes (separated with |)
+    // args: bitcoinNetworkId maxConnections useLocalhostForP2P seedNodes (separated with |)
     // 2. and 3. args are optional
     // eg. lmvdenjkyvx2ovga.onion:8001 0 20 false eo5ay2lyzrfvx2nr.onion:8002|si3uu56adkyqkldl.onion:8003
     // or when using localhost:  localhost:8001 2 20 true localhost:8002|localhost:8003
     // BitcoinNetworkId: The id for the bitcoin network (Mainnet = 0, TestNet = 1, Regtest = 2)
     // localhost:3002 2 50 true
     // localhost:3002 2 50 localhost:4442|localhost:4443 true
-    // Usage: -myAddress=<my onion address> -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
-    // Example usage: -myAddress=lmvdenjkyvx2ovga.onion:8001 -networkId=0 -maxConnections=20 -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Usage: -networkId=<networkId (Mainnet = 0, TestNet = 1, Regtest = 2)> -maxConnections=<No. of max. connections allowed> -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
+    // Example usage: -networkId=0 -maxConnections=20 -useLocalhostForP2P=false -seedNodes=si3uu56adkyqkldl.onion:8002|eo5ay2lyzrfvx2nr.onion:8002 -ignore=4543y2lyzrfvx2nr.onion:8002|876572lyzrfvx2nr.onion:8002
 
     public static final String USAGE = "Usage:\n" +
-            "--myAddress=<my onion address>\n" +
             "--networkId=[0|1|2] (Mainnet = 0, TestNet = 1, Regtest = 2)\n" +
             "--maxConnections=<No. of max. connections allowed>\n" +
             "--useLocalhostForP2P=[true|false]\n" +
@@ -101,12 +99,7 @@ public class DummySeedNode {
                 String arg = arg1;
                 if (arg.startsWith("--"))
                     arg = arg.substring(2);
-                if (arg.startsWith(NetworkOptionKeys.MY_ADDRESS)) {
-                    arg = arg.substring(NetworkOptionKeys.MY_ADDRESS.length() + 1);
-                    checkArgument(arg.contains(":") && arg.split(":").length == 2 && arg.split(":")[1].length() > 3, "Wrong program argument: " + arg);
-                    mySeedNodeAddress = new NodeAddress(arg);
-                    log.debug("From processArgs: mySeedNodeAddress=" + mySeedNodeAddress);
-                } else if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
+                if (arg.startsWith(NetworkOptionKeys.NETWORK_ID)) {
                     arg = arg.substring(NetworkOptionKeys.NETWORK_ID.length() + 1);
                     networkId = Integer.parseInt(arg);
                     log.debug("From processArgs: networkId=" + networkId);

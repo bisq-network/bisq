@@ -140,7 +140,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override
@@ -153,7 +153,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsComplete(Block block) {
+    public void onParseBlockComplete(Block block) {
         maybeCalculateVoteResult(block.getHeight());
     }
 
@@ -235,6 +235,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             }
 
             // Those which did not get accepted will be added to the nonBsq map
+            // FIXME add check for cycle as now we call addNonBsqTxOutput for past rejected comp requests as well
             daoStateService.getIssuanceCandidateTxOutputs().stream()
                     .filter(txOutput -> !daoStateService.isIssuanceTx(txOutput.getTxId()))
                     .forEach(daoStateService::addNonBsqTxOutput);
@@ -304,6 +305,8 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     return getDecryptedBallotsWithMerits(voteRevealTxId, currentCycle, voteRevealOpReturnData,
                             blindVoteTxId, hashOfBlindVoteList, blindVoteStake, optionalBlindVote.get());
                 }
+
+                // We are missing P2P network data
                 return getEmptyDecryptedBallotsWithMerits(voteRevealTxId, blindVoteTxId, hashOfBlindVoteList,
                         blindVoteStake);
             } catch (Throwable e) {

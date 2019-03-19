@@ -64,6 +64,12 @@ import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.voteresult.issuance.IssuanceService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
+import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.ProposalStateMonitoringService;
+import bisq.core.dao.monitoring.network.BlindVoteStateNetworkService;
+import bisq.core.dao.monitoring.network.DaoStateNetworkService;
+import bisq.core.dao.monitoring.network.ProposalStateNetworkService;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.FullNode;
@@ -78,6 +84,7 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 
 import bisq.common.app.AppModule;
 
@@ -98,6 +105,7 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(DaoSetup.class).in(Singleton.class);
         bind(DaoFacade.class).in(Singleton.class);
+        bind(DaoEventCoordinator.class).in(Singleton.class);
         bind(DaoKillSwitch.class).in(Singleton.class);
 
         // Node, parser
@@ -115,6 +123,13 @@ public class DaoModule extends AppModule {
         bind(DaoStateService.class).in(Singleton.class);
         bind(DaoStateSnapshotService.class).in(Singleton.class);
         bind(DaoStateStorageService.class).in(Singleton.class);
+        bind(DaoStateMonitoringService.class).in(Singleton.class);
+        bind(DaoStateNetworkService.class).in(Singleton.class);
+        bind(ProposalStateMonitoringService.class).in(Singleton.class);
+        bind(ProposalStateNetworkService.class).in(Singleton.class);
+        bind(BlindVoteStateMonitoringService.class).in(Singleton.class);
+        bind(BlindVoteStateNetworkService.class).in(Singleton.class);
+        bind(UnconfirmedBsqChangeOutputListService.class).in(Singleton.class);
 
         bind(ExportJsonFilesService.class).in(Singleton.class);
 
@@ -188,6 +203,9 @@ public class DaoModule extends AppModule {
 
         Integer genesisBlockHeight = environment.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT, Integer.class, -1);
         bind(Integer.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_BLOCK_HEIGHT)).toInstance(genesisBlockHeight);
+
+        Long genesisTotalSupply = environment.getProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY, Long.class, -1L);
+        bind(Long.class).annotatedWith(Names.named(DaoOptionKeys.GENESIS_TOTAL_SUPPLY)).toInstance(genesisTotalSupply);
 
         // Bonds
         bind(LockupTxService.class).in(Singleton.class);

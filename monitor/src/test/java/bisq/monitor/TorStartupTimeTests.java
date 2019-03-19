@@ -56,6 +56,11 @@ public class TorStartupTimeTests {
         }
 
         @Override
+        public void report(String key, String value, String timestamp, String prefix) {
+
+        }
+
+        @Override
         public void report(long value, String prefix) {
             report(value);
         }
@@ -78,7 +83,7 @@ public class TorStartupTimeTests {
 
         // give it some time and then stop
         Thread.sleep(15 * 1000);
-        DUT.shutdown();
+        Metric.haltAllMetrics();
 
         // TODO Test fails due timing issue
         // observe results

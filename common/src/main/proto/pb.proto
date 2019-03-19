@@ -57,6 +57,15 @@ message NetworkEnvelope {
         AddPersistableNetworkPayloadMessage add_persistable_network_payload_message = 31;
         AckMessage ack_message = 32;
         RepublishGovernanceDataRequest republish_governance_data_request = 33;
+        NewDaoStateHashMessage new_dao_state_hash_message = 34;
+        GetDaoStateHashesRequest get_dao_state_hashes_request = 35;
+        GetDaoStateHashesResponse get_dao_state_hashes_response = 36;
+        NewProposalStateHashMessage new_proposal_state_hash_message = 37;
+        GetProposalStateHashesRequest get_proposal_state_hashes_request = 38;
+        GetProposalStateHashesResponse get_proposal_state_hashes_response = 39;
+        NewBlindVoteStateHashMessage new_blind_vote_state_hash_message = 40;
+        GetBlindVoteStateHashesRequest get_blind_vote_state_hashes_request = 41;
+        GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
     }
 }
 
@@ -322,6 +331,48 @@ message NewBlockBroadcastMessage {
 }
 
 message RepublishGovernanceDataRequest {
+}
+
+message NewDaoStateHashMessage {
+    DaoStateHash state_hash = 1;
+}
+
+message NewProposalStateHashMessage {
+    ProposalStateHash state_hash = 1;
+}
+
+message NewBlindVoteStateHashMessage {
+    BlindVoteStateHash state_hash = 1;
+}
+
+message GetDaoStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetProposalStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetBlindVoteStateHashesRequest {
+    int32 height = 1;
+    int32 nonce = 2;
+}
+
+message GetDaoStateHashesResponse {
+    repeated DaoStateHash state_hashes = 1;
+    int32 request_nonce = 2;
+}
+
+message GetProposalStateHashesResponse {
+    repeated ProposalStateHash state_hashes = 1;
+    int32 request_nonce = 2;
+}
+
+message GetBlindVoteStateHashesResponse {
+    repeated BlindVoteStateHash state_hashes = 1;
+    int32 request_nonce = 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -725,6 +776,7 @@ message PaymentAccountPayload {
         HalCashAccountPayload hal_cash_account_payload = 24;
         PromptPayAccountPayload prompt_pay_account_payload = 25;
         AdvancedCashAccountPayload advanced_cash_account_payload = 26;
+        InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -836,6 +888,10 @@ message CryptoCurrencyAccountPayload {
     string address = 1;
 }
 
+message InstantCryptoCurrencyAccountPayload {
+    string address = 1;
+}
+
 message FasterPaymentsAccountPayload {
     string sort_code = 1;
     string account_nr = 2;
@@ -910,7 +966,6 @@ message AdvancedCashAccountPayload {
     string account_nr = 1;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 // PersistableEnvelope
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -954,6 +1009,7 @@ message PersistableEnvelope {
         DaoStateStore dao_state_store = 24;
         MyReputationList my_reputation_list = 25;
         MyProofOfBurnList my_proof_of_burn_list = 26;
+        UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
     }
 }
 
@@ -1272,7 +1328,7 @@ message PreferencesPayload {
     string bitcoin_nodes = 27;
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
-    int64 buyer_security_deposit_as_long = 30;
+    int64 buyer_security_deposit_as_long = 30; // Deprectated: Superseded by buyerSecurityDepositAsPercent
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
@@ -1292,6 +1348,7 @@ message PreferencesPayload {
     string rpc_user = 47;
     string rpc_pw = 48;
     string take_offer_selected_payment_account_id = 49;
+    double buyer_security_deposit_as_percent = 50;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1403,6 +1460,12 @@ message BaseTxOutput {
         RawTxOutput raw_tx_output = 8;
         TxOutput tx_output = 9;
     }
+}
+
+message UnconfirmedTxOutput {
+    int32 index = 1;
+    int64 value = 2;
+    string tx_id = 3;
 }
 
 message RawTxOutput {
@@ -1571,6 +1634,10 @@ message MyProofOfBurnList {
     repeated MyProofOfBurn my_proof_of_burn = 1;
 }
 
+message UnconfirmedBsqChangeOutputList {
+    repeated UnconfirmedTxOutput unconfirmed_tx_output = 1;
+}
+
 message TempProposalPayload {
     Proposal proposal = 1;
     bytes owner_pub_key_encoded = 2;
@@ -1696,6 +1763,27 @@ message DecryptedBallotsWithMerits {
 
 message DaoStateStore {
     BsqState bsq_state = 1;
+    repeated DaoStateHash dao_state_hash = 2;
+}
+
+message DaoStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+}
+
+message ProposalStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+    int32 num_proposals = 4;
+}
+
+message BlindVoteStateHash {
+    int32 height = 1;
+    bytes hash = 2;
+    bytes prev_hash = 3;
+    int32 num_blind_votes = 4;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -74,7 +74,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         this.bsqWalletService = bsqWalletService;
         this.proposalValidator = proposalValidator;
 
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
         myProposalListService.addListener(this);
 
         proposalService.getTempProposals().addListener((ListChangeListener<Proposal>) c -> {
@@ -91,7 +91,7 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateLists();
     }
 

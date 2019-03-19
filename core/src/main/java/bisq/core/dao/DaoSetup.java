@@ -31,6 +31,9 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dao.governance.votereveal.VoteRevealService;
+import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
+import bisq.core.dao.monitoring.ProposalStateMonitoringService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
@@ -69,11 +72,20 @@ public class DaoSetup {
                     ProofOfBurnService proofOfBurnService,
                     DaoFacade daoFacade,
                     ExportJsonFilesService exportJsonFilesService,
-                    DaoKillSwitch daoKillSwitch) {
+                    DaoKillSwitch daoKillSwitch,
+                    DaoStateMonitoringService daoStateMonitoringService,
+                    ProposalStateMonitoringService proposalStateMonitoringService,
+                    BlindVoteStateMonitoringService blindVoteStateMonitoringService,
+                    DaoEventCoordinator daoEventCoordinator) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
 
         // We need to take care of order of execution.
+
+        // For order critical event flow we use the daoEventCoordinator to delegate the calls from anonymous listeners
+        // to concrete clients.
+        daoSetupServices.add(daoEventCoordinator);
+
         daoSetupServices.add(daoStateService);
         daoSetupServices.add(cycleService);
         daoSetupServices.add(ballotListService);
@@ -92,6 +104,10 @@ public class DaoSetup {
         daoSetupServices.add(daoFacade);
         daoSetupServices.add(exportJsonFilesService);
         daoSetupServices.add(daoKillSwitch);
+        daoSetupServices.add(daoStateMonitoringService);
+        daoSetupServices.add(proposalStateMonitoringService);
+        daoSetupServices.add(blindVoteStateMonitoringService);
+
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }
 

@@ -111,7 +111,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
         // Listen for tempProposals
         p2PService.addHashSetChangedListener(this);
         // Listen for proposalPayloads
@@ -131,7 +131,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void onAdded(ProtectedStorageEntry entry) {
-        onProtectedDataAdded(entry);
+        onProtectedDataAdded(entry, true);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
 
     @Override
     public void onAdded(PersistableNetworkPayload payload) {
-        onAppendOnlyDataAdded(payload);
+        onAppendOnlyDataAdded(payload, true);
     }
 
 
@@ -155,7 +155,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         int heightForRepublishing = periodService.getFirstBlockOfPhase(daoStateService.getChainHeight(), DaoPhase.Phase.BREAK1);
         if (block.getHeight() == heightForRepublishing) {
             // We only republish if we are completed with parsing old blocks, otherwise we would republish old
@@ -190,11 +190,11 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void fillListFromProtectedStore() {
-        p2PService.getDataMap().values().forEach(this::onProtectedDataAdded);
+        p2PService.getDataMap().values().forEach(e -> onProtectedDataAdded(e, false));
     }
 
     private void fillListFromAppendOnlyDataStore() {
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(this::onAppendOnlyDataAdded);
+        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
     }
 
     private void publishToAppendOnlyDataStore() {
@@ -211,7 +211,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                 });
     }
 
-    private void onProtectedDataAdded(ProtectedStorageEntry entry) {
+    private void onProtectedDataAdded(ProtectedStorageEntry entry, boolean doLog) {
         ProtectedStoragePayload protectedStoragePayload = entry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof TempProposalPayload) {
             Proposal proposal = ((TempProposalPayload) protectedStoragePayload).getProposal();
@@ -219,8 +219,10 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             // available/confirmed. But we check if we are in the proposal phase.
             if (!tempProposals.contains(proposal)) {
                 if (proposalValidator.isValidOrUnconfirmed(proposal)) {
-                    log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
-                            proposal.getTxId());
+                    if (doLog) {
+                        log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
+                                proposal.getTxId());
+                    }
                     tempProposals.add(proposal);
                 } else {
                     log.debug("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
@@ -256,14 +258,16 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         }
     }
 
-    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload) {
+    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload, boolean doLog) {
         if (persistableNetworkPayload instanceof ProposalPayload) {
             ProposalPayload proposalPayload = (ProposalPayload) persistableNetworkPayload;
             if (!proposalPayloads.contains(proposalPayload)) {
                 Proposal proposal = proposalPayload.getProposal();
                 if (proposalValidator.areDataFieldsValid(proposal)) {
-                    log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
-                            proposal.getTxId());
+                    if (doLog) {
+                        log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
+                                proposal.getTxId());
+                    }
                     proposalPayloads.add(proposalPayload);
                 } else {
                     log.warn("We received a invalid append-only proposal from the P2P network. " +

@@ -113,7 +113,7 @@ public class OfferBook {
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 
-            log.debug("offerBookListItems.size " + offerBookListItems.size());
+            log.debug("offerBookListItems.size {}", offerBookListItems.size());
             fillOfferCountMaps();
         } catch (Throwable t) {
             t.printStackTrace();

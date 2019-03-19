@@ -95,7 +95,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishOnceWellConnected();
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
     }
 
 
@@ -130,13 +131,10 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void start() {
-    }
-
     // Broadcast tx and publish proposal to P2P network
     public void publishTxAndPayload(Proposal proposal, Transaction transaction, ResultHandler resultHandler,
                                     ErrorMessageHandler errorMessageHandler) {
-        walletsManager.publishAndCommitBsqTx(transaction, new TxBroadcaster.Callback() {
+        walletsManager.publishAndCommitBsqTx(transaction, proposal.getTxType(), new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("Proposal tx has been published. TxId={}", transaction.getHashAsString());

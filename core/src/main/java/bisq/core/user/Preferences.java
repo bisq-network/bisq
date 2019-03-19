@@ -39,8 +39,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Coin;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -101,7 +99,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
     private static final ArrayList<BlockChainExplorer> BTC_DAO_TEST_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
-            new BlockChainExplorer("Bisq.info", "https://bisq.info/dao_testnet/tx/", "https://bisq.info/dao_testnet/address/")
+            new BlockChainExplorer("BTC DAO-testnet explorer", "https://bisq.network/explorer/btc/dao_testnet/tx/", "https://bisq.network/explorer/btc/dao_testnet/address/")
     ));
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
@@ -487,10 +485,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
-    public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
-        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.getMaxBuyerSecurityDeposit().value,
-                Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
-                        buyerSecurityDepositAsLong)));
+    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent) {
+        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent();
+        double min = Restrictions.getMinBuyerSecurityDepositAsPercent();
+        prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
         persist();
     }
 
@@ -651,6 +649,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 return prefPayload.getBlockChainExplorerTestNet();
             case BTC_DAO_TESTNET:
                 return BTC_DAO_TEST_NET_EXPLORERS.get(0);
+            case BTC_DAO_BETANET:
+                return prefPayload.getBlockChainExplorerMainNet();
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
@@ -666,6 +666,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 return BTC_TEST_NET_EXPLORERS;
             case BTC_DAO_TESTNET:
                 return BTC_DAO_TEST_NET_EXPLORERS;
+            case BTC_DAO_BETANET:
+                return BTC_MAIN_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
@@ -696,8 +698,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return withdrawalTxFeeInBytesProperty;
     }
 
-    public Coin getBuyerSecurityDepositAsCoin() {
-        return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
+    public double getBuyerSecurityDepositAsPercent() {
+        double value = prefPayload.getBuyerSecurityDepositAsPercent();
+        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
     }
 
     //TODO remove and use isPayFeeInBtc instead
@@ -775,8 +778,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
 
-        void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
-
         void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
 
         void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
@@ -832,5 +833,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setRpcPw(String value);
 
         void setTakeOfferSelectedPaymentAccountId(String value);
+
+        void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
+
+        double getBuyerSecurityDepositAsPercent();
     }
 }

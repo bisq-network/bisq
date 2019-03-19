@@ -35,7 +35,6 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 
 import com.google.inject.Inject;
 
@@ -217,7 +216,6 @@ public class NotificationCenter {
     }
 
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
-        Log.traceCall(disputeState.toString());
         String message = null;
         if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
             String disputeOrTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?

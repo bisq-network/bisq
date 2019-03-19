@@ -52,6 +52,7 @@ import javafx.beans.value.ChangeListener;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -253,8 +254,13 @@ public class SeedWordsView extends ActivatableView<GridPane, Void> {
             // If no date was specified, use Bisq 0.5 release date (no current Bisq wallet could have been created before that date).
             value = LocalDate.of(2017, Month.JUNE, 28);
         }
-        //TODO Is ZoneOffset correct?
-        long date = value.atStartOfDay().toEpochSecond(ZoneOffset.UTC);
+
+        // We subtract 1 day to be sure to not have any issues with timezones. Even if we can be sure that the timezone
+        // is handled correctly it could be that the user created the wallet in one timezone and make a restore at
+        // a different timezone which could lead in the worst case that he miss the first day of the wallet transactions.
+        LocalDateTime localDateTime = value.atStartOfDay().minusDays(1);
+        long date = localDateTime.toEpochSecond(ZoneOffset.UTC);
+
         DeterministicSeed seed = new DeterministicSeed(Splitter.on(" ").splitToList(seedWordsTextArea.getText()), null, "", date);
         GUIUtil.restoreSeedWords(seed, walletsManager, storageDir);
     }

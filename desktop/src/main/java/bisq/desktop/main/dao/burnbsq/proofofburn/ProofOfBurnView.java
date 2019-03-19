@@ -187,6 +187,8 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         preImageTextField.setValidator(new InputValidator());
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
         updateButtonState();
     }
 
@@ -211,13 +213,14 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
     }
 
 

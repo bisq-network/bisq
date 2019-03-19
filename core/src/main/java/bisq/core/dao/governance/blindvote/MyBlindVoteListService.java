@@ -35,6 +35,7 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -143,7 +144,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
     }
 
     @Override
@@ -221,6 +223,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             publishTx(resultHandler, exceptionHandler, blindVoteTx);
         } catch (CryptoException | TransactionVerificationException | InsufficientMoneyException |
                 WalletException | IOException exception) {
+            log.error(exception.toString());
+            exception.printStackTrace();
             exceptionHandler.handleException(exception);
         }
     }
@@ -321,7 +325,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private void publishTx(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Transaction blindVoteTx) {
         log.info("blindVoteTx={}", blindVoteTx.toString());
-        walletsManager.publishAndCommitBsqTx(blindVoteTx, new TxBroadcaster.Callback() {
+        walletsManager.publishAndCommitBsqTx(blindVoteTx, TxType.BLIND_VOTE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("BlindVote tx published. txId={}", transaction.getHashAsString());

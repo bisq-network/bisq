@@ -19,7 +19,7 @@ package bisq.desktop.main.account.content.altcoinaccounts;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
+import bisq.desktop.components.paymentmethods.AssetsForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -37,6 +37,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.validation.AltCoinAddressValidator;
+import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -60,6 +61,7 @@ import javafx.collections.ObservableList;
 
 import java.util.Optional;
 
+import static bisq.desktop.components.paymentmethods.AssetsForm.INSTANT_TRADE_NEWS;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
@@ -74,6 +76,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final BSFormatter formatter;
+    private final Preferences preferences;
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
@@ -87,7 +90,8 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                AccountAgeWitnessService accountAgeWitnessService,
                                AssetService assetService,
                                FilterManager filterManager,
-                               BSFormatter formatter) {
+                               BSFormatter formatter,
+                               Preferences preferences) {
         super(model);
 
         this.inputValidator = inputValidator;
@@ -96,6 +100,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.formatter = formatter;
+        this.preferences = preferences;
     }
 
     @Override
@@ -148,11 +153,15 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
             } else {
                 new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
             }
+
+            preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);
         }
     }
 
     private void onCancelNewAccount() {
         removeNewAccountForm();
+
+        preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -221,14 +230,14 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod) {
-        final PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
         paymentAccount.init();
         return getPaymentMethodForm(paymentAccount);
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new CryptoCurrencyForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
-                inputValidator, root, gridRow, formatter, assetService, filterManager);
+        return new AssetsForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
+                inputValidator, root, gridRow, formatter, assetService, filterManager, preferences);
     }
 
     private void removeNewAccountForm() {

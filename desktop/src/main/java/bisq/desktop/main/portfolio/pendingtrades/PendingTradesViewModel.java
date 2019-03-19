@@ -25,7 +25,6 @@ import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -38,7 +37,6 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Clock;
 import bisq.common.app.DevEnv;
-import bisq.common.app.Log;
 
 import org.bitcoinj.core.Coin;
 
@@ -294,8 +292,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getTradeFee() {
-        if (trade != null && dataModel.getOffer() != null) {
-            if (dataModel.getOffer().isCurrencyForMakerFeeBtc() && trade.getTradeAmount() != null) {
+        if (trade != null && dataModel.getOffer() != null && trade.getTradeAmount() != null) {
+            if (dataModel.isMaker() && dataModel.getOffer().isCurrencyForMakerFeeBtc() ||
+                    !dataModel.isMaker() && dataModel.getTrade().isCurrencyForTakerFeeBtc()) {
                 Coin tradeFeeInBTC = dataModel.getTradeFeeInBTC();
                 String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(), btcFormatter);
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
@@ -322,7 +321,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean isBlockChainMethod() {
-        return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS);
+        return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().isAsset();
     }
 
     public int getNumPastTrades(Trade trade) {
@@ -346,7 +345,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTradeStateChanged(Trade.State tradeState) {
-        Log.traceCall(tradeState.toString());
         log.debug("UI tradeState={}, id={}",
                 tradeState,
                 trade != null ? trade.getShortId() : "trade is null");

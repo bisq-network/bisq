@@ -174,7 +174,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateWithBsqBlockChainData();
     }
 

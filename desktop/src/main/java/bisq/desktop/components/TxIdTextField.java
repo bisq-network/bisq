@@ -147,7 +147,7 @@ public class TxIdTextField extends AnchorPane {
             BlockChainExplorer blockChainExplorer = isBsq ?
                     preferences.getBsqBlockChainExplorer() :
                     preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId);
+            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId, false);
         }
     }
 

@@ -201,11 +201,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
-                                 Coin lockupBondsBalance,
+                                 Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
         updateList();
     }
@@ -216,10 +217,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         onUpdateAnyChainHeight();
     }
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +265,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             bsqWalletService,
                             btcWalletService,
                             daoFacade,
-                            transaction.getUpdateTime(),
+                            // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+                            transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
                             bsqFormatter);
                 })
                 .collect(Collectors.toList());
@@ -616,12 +617,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     private void openTxInBlockExplorer(BsqTxListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId(), false);
     }
 
     private void openAddressInBlockExplorer(BsqTxListItem item) {
         if (item.getAddress() != null) {
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress());
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress(), false);
         }
     }
 }

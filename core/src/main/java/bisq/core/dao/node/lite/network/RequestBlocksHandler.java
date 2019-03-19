@@ -29,7 +29,6 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -126,7 +125,7 @@ public class RequestBlocksHandler implements MessageListener {
                         TIMEOUT);
             }
 
-            log.info("We send to peer {} a {}.", nodeAddress, getBlocksRequest);
+            log.info("We request blocks from peer {} from block height {}.", nodeAddress, getBlocksRequest.getFromBlockHeight());
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getBlocksRequest);
             Futures.addCallback(future, new FutureCallback<Connection>() {
@@ -169,7 +168,6 @@ public class RequestBlocksHandler implements MessageListener {
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetBlocksResponse) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(nodeAddress)) {
-                Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetBlocksResponse getBlocksResponse = (GetBlocksResponse) networkEnvelope;
                     if (getBlocksResponse.getRequestNonce() == nonce) {
@@ -192,7 +190,7 @@ public class RequestBlocksHandler implements MessageListener {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
             } else {
-                log.warn("We got a message from another connection and ignore it. That should never happen.");
+                log.warn("We got a message from ourselves. That should never happen.");
             }
         }
     }
@@ -214,7 +212,6 @@ public class RequestBlocksHandler implements MessageListener {
     }
 
     private void cleanup() {
-        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(this);
         stopTimeoutTimer();

@@ -17,55 +17,102 @@
 
 package bisq.common.app;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.EqualsAndHashCode;
 
+/**
+ * hold a set of capabilities and offers appropriate comparison methods.
+ *
+ * @author Florian Reimair
+ */
+@EqualsAndHashCode
 public class Capabilities {
-    // We can define here special features the client is supporting.
-    // Useful for updates to new versions where a new data type would break backwards compatibility or to
-    // limit a node to certain behaviour and roles like the seed nodes.
-    // We don't use the Enum in any serialized data, as changes in the enum would break backwards compatibility. We use the ordinal integer instead.
-    // Sequence in the enum must not be changed (append only).
-    public enum Capability {
-        TRADE_STATISTICS,
-        TRADE_STATISTICS_2,
-        ACCOUNT_AGE_WITNESS,
-        SEED_NODE,
-        DAO_FULL_NODE,
-        PROPOSAL,
-        BLIND_VOTE,
-        ACK_MSG,
-        BSQ_BLOCK
+
+    /**
+     * The global set of capabilities, i.e. the capabilities if the local app.
+     */
+    public static final Capabilities app = new Capabilities();
+
+    protected final Set<Capability> capabilities = new HashSet<>();
+
+    public Capabilities(Capability... capabilities) {
+        this(Arrays.asList(capabilities));
     }
 
-    // Application need to set supported capabilities at startup
-    @Getter
-    @Setter
-    private static List<Integer> supportedCapabilities = new ArrayList<>();
-
-    public static void addCapability(int capability) {
-        supportedCapabilities.add(capability);
+    public Capabilities(Capabilities capabilities) {
+        this(capabilities.capabilities);
     }
 
-    public static boolean isCapabilitySupported(final List<Integer> requiredItems, final List<Integer> supportedItems) {
-        if (requiredItems != null && !requiredItems.isEmpty()) {
-            if (supportedItems != null && !supportedItems.isEmpty()) {
-                List<Integer> matches = new ArrayList<>();
-                for (int requiredItem : requiredItems) {
-                    matches.addAll(supportedItems.stream()
-                            .filter(supportedItem -> requiredItem == supportedItem)
-                            .collect(Collectors.toList()));
-                }
-                return matches.size() == requiredItems.size();
-            } else {
-                return false;
-            }
-        } else {
-            return true;
-        }
+    public Capabilities(Collection<Capability> capabilities) {
+        this.capabilities.addAll(capabilities);
+    }
+
+    public void set(Capability... capabilities) {
+        set(Arrays.asList(capabilities));
+    }
+
+    public void set(Capabilities capabilities) {
+        set(capabilities.capabilities);
+    }
+
+    public void set(Collection<Capability> capabilities) {
+        this.capabilities.clear();
+        this.capabilities.addAll(capabilities);
+    }
+
+    public void addAll(Capability... capabilities) {
+        this.capabilities.addAll(Arrays.asList(capabilities));
+    }
+
+    public void addAll(Capabilities capabilities) {
+        if(capabilities != null)
+            this.capabilities.addAll(capabilities.capabilities);
+    }
+
+    public boolean containsAll(final Set<Capability> requiredItems) {
+        return capabilities.containsAll(requiredItems);
+    }
+
+    public boolean containsAll(final Capabilities capabilities) {
+        return containsAll(capabilities.capabilities);
+    }
+
+    public boolean isEmpty() {
+        return capabilities.isEmpty();
+    }
+
+
+    /**
+     * helper for protobuffer stuff
+     *
+     * @param capabilities
+     * @return int list of Capability ordinals
+     */
+    public static List<Integer> toIntList(Capabilities capabilities) {
+        return capabilities.capabilities.stream().map(capability -> capability.ordinal()).sorted().collect(Collectors.toList());
+    }
+
+    /**
+     * helper for protobuffer stuff
+     *
+     * @param capabilities a list of Capability ordinals
+     * @return a {@link Capabilities} object
+     */
+    public static Capabilities fromIntList(List<Integer> capabilities) {
+        return new Capabilities(capabilities.stream()
+                .filter(integer -> integer < Capability.values().length)
+                .map(integer -> Capability.values()[integer])
+                .collect(Collectors.toSet()));
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(Capabilities.toIntList(this).toArray());
     }
 }

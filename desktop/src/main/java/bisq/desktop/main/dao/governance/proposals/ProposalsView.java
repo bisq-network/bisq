@@ -31,6 +31,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DAOTestingFeedbackWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
@@ -40,6 +41,7 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.state.DaoStateListener;
@@ -47,14 +49,17 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -62,6 +67,7 @@ import bisq.common.util.Tuple4;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
@@ -100,6 +106,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -177,8 +184,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     public void initialize() {
         super.initialize();
 
-        root.getStyleClass().add("vote-root");
-
         gridRow = phasesView.addGroup(root, gridRow);
 
         proposalDisplayGridPane = new GridPane();
@@ -210,14 +215,16 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         stakeInputTextField.textProperty().addListener(stakeListener);
         voteButton.setOnAction(e -> onVote());
 
-        onUpdateBalances(bsqWalletService.getAvailableBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableConfirmedBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
+                bsqWalletService.getUnconfirmedChangeBalance(),
                 bsqWalletService.getLockedForVotingBalance(),
                 bsqWalletService.getLockupBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
 
         updateListItems();
+        GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 2, 6);
         updateViews();
     }
 
@@ -255,16 +262,19 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        if (isBlindVotePhaseButNotLastBlock())
+        Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
+        if (isBlindVotePhaseButNotLastBlock()) {
+            Coin availableForVoting = availableConfirmedBalance.subtract(blindVoteFee);
             stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
-                    bsqFormatter.formatCoinWithCode(confirmedBalance)));
-        else
+                    bsqFormatter.formatCoinWithCode(availableForVoting)));
+        } else
             stakeInputTextField.setPromptText("");
     }
 
@@ -274,7 +284,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateViews();
     }
 
@@ -322,9 +332,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             onSelectProposal(null);
         }
 
-        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 4);
-        tableView.layout();
-        root.layout();
+        GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 2, 6);
     }
 
     private void createAllFieldsOnProposalDisplay(Proposal proposal, @Nullable Ballot ballot,
@@ -523,6 +531,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 }, exception -> {
                     voteButtonBusyAnimation.stop();
                     voteButtonInfoLabel.setText("");
+                    updateViews();
                     new Popup<>().warning(exception.toString()).show();
                 });
 
@@ -677,7 +686,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private void createEmptyProposalDisplay() {
         proposalDisplay = new ProposalDisplay(proposalDisplayGridPane, bsqFormatter, daoFacade,
-                changeParamValidator, navigation);
+                changeParamValidator, navigation, preferences);
         proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, 0, -10));
         GridPane.setRowIndex(proposalDisplayView, ++gridRow);

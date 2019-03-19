@@ -21,29 +21,21 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.DaoOptionKeys;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class CoreNetworkCapabilities {
     public static void setSupportedCapabilities(BisqEnvironment bisqEnvironment) {
-        final ArrayList<Integer> supportedCapabilities = new ArrayList<>(Arrays.asList(
-                Capabilities.Capability.TRADE_STATISTICS.ordinal(),
-                Capabilities.Capability.TRADE_STATISTICS_2.ordinal(),
-                Capabilities.Capability.ACCOUNT_AGE_WITNESS.ordinal(),
-                Capabilities.Capability.ACK_MSG.ordinal()
-        ));
+        Capabilities.app.addAll(Capability.TRADE_STATISTICS, Capability.TRADE_STATISTICS_2, Capability.ACCOUNT_AGE_WITNESS, Capability.ACK_MSG);
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
-            supportedCapabilities.add(Capabilities.Capability.PROPOSAL.ordinal());
-            supportedCapabilities.add(Capabilities.Capability.BLIND_VOTE.ordinal());
-            supportedCapabilities.add(Capabilities.Capability.BSQ_BLOCK.ordinal());
+            Capabilities.app.addAll(Capability.PROPOSAL, Capability.BLIND_VOTE, Capability.BSQ_BLOCK, Capability.DAO_STATE);
 
             String isFullDaoNode = bisqEnvironment.getProperty(DaoOptionKeys.FULL_DAO_NODE, String.class, "");
             if (isFullDaoNode != null && !isFullDaoNode.isEmpty())
-                supportedCapabilities.add(Capabilities.Capability.DAO_FULL_NODE.ordinal());
+                Capabilities.app.addAll(Capability.DAO_FULL_NODE);
         }
-
-        Capabilities.setSupportedCapabilities(supportedCapabilities);
     }
 }

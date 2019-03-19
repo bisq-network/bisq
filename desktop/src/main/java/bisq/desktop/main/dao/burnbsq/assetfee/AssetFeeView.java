@@ -191,6 +191,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         });
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
         updateButtonState();
 
         feeAmountInputTextField.resetValidation();
@@ -216,13 +217,14 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
     }
 
 

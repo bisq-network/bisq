@@ -155,6 +155,21 @@ public class Utilities {
         return executor;
     }
 
+    /**
+     * @return true if <code>defaults read -g AppleInterfaceStyle</code> has an exit status of <code>0</code> (i.e. _not_ returning "key not found").
+     */
+    public static boolean isMacMenuBarDarkMode() {
+        try {
+            // check for exit status only. Once there are more modes than "dark" and "default", we might need to analyze string contents..
+            Process process = Runtime.getRuntime().exec(new String[]{"defaults", "read", "-g", "AppleInterfaceStyle"});
+            process.waitFor(100, TimeUnit.MILLISECONDS);
+            return process.exitValue() == 0;
+        } catch (IOException | InterruptedException | IllegalThreadStateException ex) {
+            // IllegalThreadStateException thrown by proc.exitValue(), if process didn't terminate
+            return false;
+        }
+    }
+
     public static boolean isUnix() {
         return isOSX() || isLinux() || getOSName().contains("freebsd");
     }
@@ -497,15 +512,29 @@ public class Utilities {
             throw new LimitedKeyStrengthException();
     }
 
-    public static String toTruncatedString(Object message, int maxLength) {
-        if (message != null) {
-            return StringUtils.abbreviate(message.toString(), maxLength).replace("\n", "");
-        }
-        return "null";
+    public static String toTruncatedString(Object message) {
+        return toTruncatedString(message, 200, true);
     }
 
-    public static String toTruncatedString(Object message) {
-        return toTruncatedString(message, 200);
+    public static String toTruncatedString(Object message, int maxLength) {
+        return toTruncatedString(message, maxLength, true);
+    }
+
+    public static String toTruncatedString(Object message, boolean removeLinebreaks) {
+        return toTruncatedString(message, 200, removeLinebreaks);
+    }
+
+    public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
+        if (message == null)
+            return "null";
+
+
+        String result = StringUtils.abbreviate(message.toString(), maxLength);
+        if (removeLinebreaks)
+            return result.replace("\n", "");
+
+        return result;
+
     }
 
     public static String getRandomPrefix(int minLength, int maxLength) {

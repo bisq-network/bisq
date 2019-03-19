@@ -530,7 +530,7 @@ bg color of non edit textFields: fafafa
     -fx-pref-width: 30;
 }
 
-.jfx-badge .label {
+.jfx-badge .badge-pane .label {
     -fx-font-weight: bold;
     -fx-font-size: 0.692em;
     -fx-text-fill: -bs-rd-white;
@@ -2047,6 +2047,14 @@ textfield */
 
 .dao-news-link .hyperlink {
     -fx-fill: -fx-accent;
+}
+
+.dao-inSync {
+    -fx-text-fill: -bs-rd-green;
+}
+
+.dao-inConflict {
+    -fx-text-fill: -bs-rd-error-red;
 }
 
 /********************************************************************************************************************

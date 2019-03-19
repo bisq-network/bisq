@@ -48,7 +48,6 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -90,8 +89,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 30;
-    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(30);
-    private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(5);
+    private static final long REPUBLISH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(40);
+    private static final long REFRESH_INTERVAL_MS = TimeUnit.MINUTES.toMillis(6);
 
     private final KeyRing keyRing;
     private final User user;
@@ -678,7 +677,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private void republishOffers() {
         int size = openOffers.size();
         final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
-        Log.traceCall("Number of offer for republish: " + size);
         if (!stopped) {
             stopPeriodicRefreshOffersTimer();
             for (int i = 0; i < size; i++) {
@@ -728,7 +726,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void startPeriodicRepublishOffersTimer() {
-        Log.traceCall();
         stopped = false;
         if (periodicRepublishOffersTimer == null)
             periodicRepublishOffersTimer = UserThread.runPeriodically(() -> {
@@ -745,15 +742,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void startPeriodicRefreshOffersTimer() {
-        Log.traceCall();
         stopped = false;
         // refresh sufficiently before offer would expire
         if (periodicRefreshOffersTimer == null)
             periodicRefreshOffersTimer = UserThread.runPeriodically(() -> {
                         if (!stopped) {
                             int size = openOffers.size();
-                            Log.traceCall("Number of offer for refresh: " + size);
-
                             //we clone our list as openOffers might change during our delayed call
                             final ArrayList<OpenOffer> openOffersList = new ArrayList<>(openOffers.getList());
                             for (int i = 0; i < size; i++) {

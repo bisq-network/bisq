@@ -162,7 +162,7 @@ public class SeedPeersSocks5Dns implements PeerDiscovery {
             InetAddress addrResolved = proxySocket.getInetAddress();
             proxySocket.close();
             if (addrResolved != null) {
-                log.debug("Resolved " + addr.getHostString() + " to " + addrResolved.getHostAddress());
+                //log.debug("Resolved " + addr.getHostString() + " to " + addrResolved.getHostAddress());
                 return new InetSocketAddress(addrResolved, addr.getPort());
             } else {
                 // note: .onion nodes fall in here when proxy is Tor. But they have no IP address.

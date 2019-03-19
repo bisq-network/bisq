@@ -74,7 +74,6 @@ public class RpcService {
     private final String rpcPassword;
     private final String rpcPort;
     private final String rpcBlockPort;
-    private final boolean dumpBlockchainData;
 
     private BtcdClient client;
     private BtcdDaemon daemon;
@@ -92,8 +91,7 @@ public class RpcService {
     @Inject
     public RpcService(Preferences preferences,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
-                      @Named(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) boolean dumpBlockchainData) {
+                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
@@ -102,14 +100,13 @@ public class RpcService {
         boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
         boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
         boolean isDaoTestNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet();
+        boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
         this.rpcPort = isPortSet ? rpcPort :
-                isMainnet ? "8332" :
+                isMainnet || isDaoBetaNet ? "8332" :
                         isTestnet ? "18332" :
                                 isDaoTestNet ? "18443" :
                                         "18443"; // regtest
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
-
-        this.dumpBlockchainData = dumpBlockchainData;
 
         log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
     }
@@ -305,7 +302,7 @@ public class RpcService {
                             // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
                             String address = scriptPubKey.getAddresses() != null &&
                                     scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
-                    PubKeyScript pubKeyScript = dumpBlockchainData ? new PubKeyScript(scriptPubKey) : null;
+                    PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
                     return new RawTxOutput(rawBtcTxOutput.getN(),
                             rawBtcTxOutput.getValue().movePointRight(8).longValue(),
                             rawBtcTx.getTxId(),

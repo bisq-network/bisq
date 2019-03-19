@@ -21,12 +21,15 @@ import bisq.monitor.reporter.ConsoleReporter;
 
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.Assert;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@Disabled
 public class MonitorInfrastructureTests {
 
     /**
@@ -44,7 +47,13 @@ public class MonitorInfrastructureTests {
 
         @Override
         protected void execute() {
-            // do nothing
+            try {
+                Thread.sleep(50000);
+
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 
@@ -78,12 +87,11 @@ public class MonitorInfrastructureTests {
         Assert.assertTrue(DUT.active());
 
         // graceful shutdown
-        DUT.shutdown();
-        DUT.join();
+        Metric.haltAllMetrics();
     }
 
     @Test
-    public void reloadConfig() throws InterruptedException {
+    public void reloadConfig() throws InterruptedException, ExecutionException {
         // our dummy
         Dummy DUT = new Dummy();
 
@@ -119,9 +127,23 @@ public class MonitorInfrastructureTests {
         Assert.assertTrue(DUT2.active());
 
         // graceful shutdown
-        DUT.shutdown();
-        DUT.join();
-        DUT2.shutdown();
-        DUT2.join();
+        Metric.haltAllMetrics();
+    }
+
+    @Test
+    public void shutdown() {
+        Dummy DUT = new Dummy();
+        DUT.setName("Dummy");
+        Properties dummyProperties = new Properties();
+        dummyProperties.put("Dummy.enabled", "true");
+        dummyProperties.put("Dummy.run.interval", "1");
+        DUT.configure(dummyProperties);
+        try {
+            Thread.sleep(2000);
+            Metric.haltAllMetrics();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

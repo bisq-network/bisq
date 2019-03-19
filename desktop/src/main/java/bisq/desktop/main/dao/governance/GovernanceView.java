@@ -51,7 +51,6 @@ import java.util.List;
 
 @FxmlView
 public class GovernanceView extends ActivatableViewAndModel {
-
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final DaoFacade daoFacade;
@@ -102,6 +101,7 @@ public class GovernanceView extends ActivatableViewAndModel {
                 ProposalsView.class, baseNavPath);
         result = new MenuItem(navigation, toggleGroup, Res.get("dao.proposal.menuItem.result"),
                 VoteResultView.class, baseNavPath);
+
         leftVBox.getChildren().addAll(dashboard, make, open, result);
     }
 

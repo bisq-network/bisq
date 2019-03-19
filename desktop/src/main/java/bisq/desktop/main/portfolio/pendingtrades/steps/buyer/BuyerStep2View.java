@@ -22,10 +22,10 @@ import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
+import bisq.desktop.components.paymentmethods.AssetsForm;
 import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
-import bisq.desktop.components.paymentmethods.CryptoCurrencyForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
@@ -56,8 +56,8 @@ import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
-import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
@@ -162,6 +162,7 @@ public class BuyerStep2View extends TradeStepView {
                                 break;
                         }
                     } else {
+                        log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
                         confirmButton.setDisable(true);
                         statusLabel.setText("");
                     }
@@ -206,7 +207,7 @@ public class BuyerStep2View extends TradeStepView {
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE).second;
         field.setCopyWithoutCurrencyPostFix(true);
 
-        if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload) &&
+        if (!(paymentAccountPayload instanceof AssetsAccountPayload) &&
                 !(paymentAccountPayload instanceof F2FAccountPayload))
             addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                     Res.get("shared.reasonForPayment"), model.dataModel.getReference(),
@@ -281,9 +282,10 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = F2FForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.dataModel.getTrade().getOffer(), 0);
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
+            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
                 String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()));
-                gridRow = CryptoCurrencyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
+                gridRow = AssetsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             case PaymentMethod.PROMPT_PAY_ID:
                 gridRow = PromptPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -495,7 +497,7 @@ public class BuyerStep2View extends TradeStepView {
             String id = trade.getShortId();
             String paddedId = " " + id + " ";
             String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
-            if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
+            if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),

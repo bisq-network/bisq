@@ -220,7 +220,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof BroadcastMessage) {
-            Log.traceCall(Utilities.toTruncatedString(networkEnvelope) + "\n\tconnection=" + connection);
             connection.getPeersNodeAddressOptional().ifPresent(peersNodeAddress -> {
                 if (networkEnvelope instanceof AddDataMessage) {
                     addProtectedStorageEntry(((AddDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, null, false);
@@ -338,13 +337,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
-        Log.traceCall("with allowBroadcast=true");
         return addProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner, true);
     }
 
     public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener, boolean isDataOwner, boolean allowBroadcast) {
-        Log.traceCall("with allowBroadcast=" + allowBroadcast);
         final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
@@ -400,8 +397,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
-        Log.traceCall();
-
         byte[] hashOfDataAndSeqNr = refreshTTLMessage.getHashOfDataAndSeqNr();
         byte[] signature = refreshTTLMessage.getSignature();
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
@@ -444,7 +439,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     public boolean remove(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender, boolean isDataOwner) {
-        Log.traceCall();
         final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
@@ -482,7 +476,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @SuppressWarnings("UnusedReturnValue")
     public boolean removeMailboxData(ProtectedMailboxStorageEntry protectedMailboxStorageEntry, @Nullable NodeAddress sender, boolean isDataOwner) {
-        Log.traceCall();
         ByteArray hashOfData = get32ByteHashAsByteArray(protectedMailboxStorageEntry.getProtectedStoragePayload());
         boolean containsKey = map.containsKey(hashOfData);
         if (!containsKey)
@@ -601,7 +594,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 return false;
             }
         } else {
-            log.trace("Sequence number is valid (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber);
             return true;
         }
     }
@@ -631,7 +623,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 return false;
             }
         } else {
-            log.trace("Sequence number has increased (!sequenceNumberMap.containsKey(hashOfData)). sequenceNumber = " + newSequenceNumber + " / hashOfData=" + hashOfData.toString());
             return true;
         }
     }
@@ -775,7 +766,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             });
             sb.append("\n------------------------------------------------------------\n");
             log.debug(sb.toString());
-            log.debug("Data set " + info + " operation: size=" + map.values().size());
+            //log.debug("Data set " + info + " operation: size=" + map.values().size());
         }
     }
 

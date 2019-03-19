@@ -31,6 +31,7 @@ import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.state.DaoStateStore;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.MeritList;
+import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
 import bisq.core.payment.AccountAgeWitnessStore;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
@@ -135,6 +136,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyReputationList.fromProto(proto.getMyReputationList());
                 case MY_PROOF_OF_BURN_LIST:
                     return MyProofOfBurnList.fromProto(proto.getMyProofOfBurnList());
+                case UNCONFIRMED_BSQ_CHANGE_OUTPUT_LIST:
+                    return UnconfirmedBsqChangeOutputList.fromProto(proto.getUnconfirmedBsqChangeOutputList());
 
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +

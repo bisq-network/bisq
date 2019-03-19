@@ -32,7 +32,6 @@ import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
@@ -96,7 +95,6 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
 
     @SuppressWarnings("Duplicates")
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(this);
         peerManager.removeListener(this);
@@ -138,7 +136,6 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetBlocksRequest) {
             // We received a GetBlocksRequest from a liteNode
-            Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 final String uid = connection.getUid();
                 if (!getBlocksRequestHandlers.containsKey(uid)) {
@@ -148,7 +145,6 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                                 @Override
                                 public void onComplete() {
                                     getBlocksRequestHandlers.remove(uid);
-                                    log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
                                 }
 
                                 @Override

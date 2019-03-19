@@ -221,8 +221,8 @@ class TransactionsListItem {
             else if (details.isEmpty())
                 details = Res.get("funds.tx.txFeePaymentForBsqTx");
         }
-
-        date = transaction.getUpdateTime();
+        // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+        date = transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime();
         dateString = formatter.formatDateTime(date);
     }
 

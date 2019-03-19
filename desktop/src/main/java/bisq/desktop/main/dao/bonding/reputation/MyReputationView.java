@@ -189,6 +189,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         setNewRandomSalt();
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     @Override
@@ -215,13 +216,14 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
     }
 
 

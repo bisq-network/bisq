@@ -203,7 +203,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         Optional<Block> blockAtChainHeight = daoFacade.getBlockAtChainHeight();
 
         if (blockAtChainHeight.isPresent())
-            onParseTxsCompleteAfterBatchProcessing(blockAtChainHeight.get());
+            onParseBlockCompleteAfterBatchProcessing(blockAtChainHeight.get());
     }
 
     @Override
@@ -244,7 +244,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         isProposalPhase.set(daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
         if (isProposalPhase.get()) {
             proposalGroupTitle.set(Res.get("dao.proposal.create.selectProposalType"));
@@ -279,7 +279,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
                 long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
-                long availableBalance = bsqWalletService.getAvailableBalance().value;
+                long availableBalance = bsqWalletService.getAvailableConfirmedBalance().value;
 
                 if (requiredBond > availableBalance) {
                     long missing = requiredBond - availableBalance;
@@ -432,7 +432,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void addProposalDisplay() {
         if (selectedProposalType != null) {
-            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation);
+            proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation, null);
 
             proposalDisplay.createAllFields(Res.get("dao.proposal.create.new"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
                     selectedProposalType, true);

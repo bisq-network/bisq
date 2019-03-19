@@ -27,14 +27,19 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DAOTestingFeedbackWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.blindvote.BlindVote;
+import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.MyProposalList;
+import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
@@ -42,18 +47,31 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.ChangeParamProposal;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ReimbursementProposal;
+import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import javax.inject.Inject;
 
@@ -61,6 +79,9 @@ import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
+import javafx.stage.Stage;
+
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
@@ -71,6 +92,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import org.fxmisc.easybind.EasyBind;
@@ -90,6 +112,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -105,6 +128,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final Navigation navigation;
+    private MyProposalListService myProposalListService;
+    private MyBlindVoteListService myBlindVoteListService;
+    private Button exportButton;
 
     private int gridRow = 0;
 
@@ -123,6 +149,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ChangeListener<CycleListItem> selectedVoteResultListItemListener;
     private ResultsOfCycle resultsOfCycle;
     private ProposalListItem selectedProposalListItem;
+    private TableView<VoteListItem> votesTableView;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +167,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                           BsqWalletService bsqWalletService,
                           Preferences preferences,
                           BsqFormatter bsqFormatter,
-                          Navigation navigation) {
+                          Navigation navigation,
+                          MyProposalListService myProposalListService,
+                          MyBlindVoteListService myBlindVoteListService) {
         this.daoFacade = daoFacade;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
@@ -152,14 +181,21 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
         this.navigation = navigation;
+        this.myProposalListService = myProposalListService;
+        this.myBlindVoteListService = myBlindVoteListService;
     }
 
     @Override
     public void initialize() {
         gridRow = phasesView.addGroup(root, gridRow);
+
         selectedVoteResultListItemListener = (observable, oldValue, newValue) -> onResultsListItemSelected(newValue);
 
         createCyclesTable();
+        exportButton = FormBuilder.addButton(root, ++gridRow, Res.get("shared.exportJSON"));
+        GridPane.setMargin(exportButton, new Insets(20, -10, -40, 0));
+        GridPane.setColumnSpan(exportButton, 2);
+        GridPane.setHalignment(exportButton, HPos.RIGHT);
     }
 
     @Override
@@ -172,6 +208,17 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         cyclesTableView.getSelectionModel().selectedItemProperty().addListener(selectedVoteResultListItemListener);
 
         fillCycleList();
+        exportButton.setOnAction(event -> {
+            JsonElement cyclesJsonArray = getVotingHistoryJson();
+            GUIUtil.exportJSON("voteResultsHistory.json", cyclesJsonArray, (Stage) root.getScene().getWindow());
+        });
+        if (proposalsTableView != null) {
+            GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 2, 4);
+        }
+        if (votesTableView != null) {
+            GUIUtil.setFitToRowsForTableView(votesTableView, 25, 28, 2, 4);
+        }
+        GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 2, 4);
     }
 
     @Override
@@ -187,6 +234,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         if (selectedProposalSubscription != null)
             selectedProposalSubscription.unsubscribe();
+        exportButton.setOnAction(null);
     }
 
 
@@ -195,7 +243,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         fillCycleList();
     }
 
@@ -208,8 +256,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (selectedProposalSubscription != null)
             selectedProposalSubscription.unsubscribe();
 
-        GUIUtil.removeChildrenFromGridPaneRows(root, 2, gridRow);
-        gridRow = 1;
+        GUIUtil.removeChildrenFromGridPaneRows(root, 3, gridRow);
+        gridRow = 2;
 
         if (item != null) {
             resultsOfCycle = item.getResultsOfCycle();
@@ -276,8 +324,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private void onSelectProposalResultListItem(ProposalListItem item) {
         selectedProposalListItem = item;
 
-        GUIUtil.removeChildrenFromGridPaneRows(root, 4, gridRow);
-        gridRow = 2;
+        GUIUtil.removeChildrenFromGridPaneRows(root, 5, gridRow);
+        gridRow = 3;
 
 
         if (selectedProposalListItem != null) {
@@ -333,7 +381,24 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         });
         Collections.reverse(cycleListItemList);
 
-        GUIUtil.setFitToRowsForTableView(cyclesTableView, 24, 28, 2, 4);
+        maybeShowDAOTestingFeedbackWindow();
+
+        GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 2, 4);
+    }
+
+    private void maybeShowDAOTestingFeedbackWindow() {
+        String testingPopupKey = "daoTestingFeedbackPopup";
+        if (DontShowAgainLookup.showAgain(testingPopupKey)) {
+            UserThread.runAfter(() -> {
+                if (myProposalListService.getList().stream().map(Proposal::getTxId)
+                        .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())) ||
+                myBlindVoteListService.getMyBlindVoteList().stream().map(BlindVote::getTxId)
+                        .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())))
+                    new DAOTestingFeedbackWindow()
+                            .dontShowAgainId(testingPopupKey)
+                            .show();
+            }, 4, TimeUnit.SECONDS);
+        }
     }
 
 
@@ -409,7 +474,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
                         bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(proposalsTableView, 33, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 2, 4);
     }
 
 
@@ -420,7 +485,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ProposalDisplay createProposalDisplay(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
         ProposalDisplay proposalDisplay = new ProposalDisplay(new GridPane(), bsqFormatter,
-                daoFacade, null, navigation);
+                daoFacade, null, navigation, preferences);
 
         ScrollPane proposalDisplayView = proposalDisplay.getView();
         GridPane.setMargin(proposalDisplayView, new Insets(0, -10, -15, -10));
@@ -456,7 +521,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         GridPane.setColumnSpan(votesTableHeader, 2);
         root.getChildren().add(votesTableHeader);
 
-        TableView<VoteListItem> votesTableView = new TableView<>();
+        votesTableView = new TableView<>();
         votesTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         votesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -480,7 +545,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 });
 
         voteListItemList.sort(Comparator.comparing(VoteListItem::getBlindVoteTxId));
-        GUIUtil.setFitToRowsForTableView(votesTableView, 33, 28, 2, 4);
+        GUIUtil.setFitToRowsForTableView(votesTableView, 25, 28, 2, 4);
     }
 
 
@@ -922,8 +987,115 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         votesTableView.getColumns().add(column);
     }
 
-    private void openTxInBlockExplorer(String txId) {
-        if (txId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId);
+    private JsonElement getVotingHistoryJson() {
+        JsonArray cyclesArray = new JsonArray();
+
+        sortedCycleListItemList.sorted(Comparator.comparing(CycleListItem::getCycleStartTime)).forEach(cycle -> {
+            JsonObject cycleJson = new JsonObject();
+            cycleJson.addProperty("cycleIndex", cycle.getCycleIndex());
+            cycleJson.addProperty("cycleDateTime", cycle.getCycleDateTime(false));
+            cycleJson.addProperty("votesCount", cycle.getNumVotesAsString());
+            cycleJson.addProperty("voteWeight", cycle.getMeritAndStake());
+            cycleJson.addProperty("issuance", cycle.getIssuance());
+            cycleJson.addProperty("startTime", cycle.getCycleStartTime());
+            cycleJson.addProperty("totalAcceptedVotes", cycle.getResultsOfCycle().getNumAcceptedVotes());
+            cycleJson.addProperty("totalRejectedVotes", cycle.getResultsOfCycle().getNumRejectedVotes());
+
+
+            JsonArray proposalsArray = new JsonArray();
+            List<EvaluatedProposal> evaluatedProposals = cycle.getResultsOfCycle().getEvaluatedProposals();
+            evaluatedProposals.sort(Comparator.comparingLong(o -> o.getProposal().getCreationDate().getTime()));
+
+            evaluatedProposals.forEach(proposal -> {
+                JsonObject proposalJson = new JsonObject();
+                proposalJson.addProperty("dateTime", bsqFormatter.formatDateTime(proposal.getProposal().getCreationDate(), false));
+                proposalJson.addProperty("name", proposal.getProposal().getName());
+                proposalJson.addProperty("link", proposal.getProposal().getLink());
+                proposalJson.addProperty("proposalType", proposal.getProposal().getType().name());
+                proposalJson.addProperty("details", ProposalListItem.getProposalDetails(proposal, bsqFormatter, false));
+                proposalJson.addProperty("voteResult", proposal.isAccepted() ? "Accepted" : "Rejected");
+                proposalJson.addProperty("txId", proposal.getProposalTxId());
+                proposalJson.addProperty("requiredQuorum", proposal.getRequiredQuorum());
+                proposalJson.addProperty("requiredThreshold", proposal.getRequiredThreshold());
+                proposalJson.addProperty("creationDate", proposal.getProposal().getCreationDate().getTime());
+                proposalJson.addProperty("version", proposal.getProposal().getVersion());
+                proposalJson.addProperty("activeVotesCount", proposal.getProposalVoteResult().getNumActiveVotes());
+                proposalJson.addProperty("acceptedVotesCount", proposal.getProposalVoteResult().getNumAcceptedVotes());
+                proposalJson.addProperty("rejectedVotesCount", proposal.getProposalVoteResult().getNumRejectedVotes());
+                proposalJson.addProperty("acceptedVotesStake", proposal.getProposalVoteResult().getStakeOfAcceptedVotes());
+                proposalJson.addProperty("rejectedVotesStake", proposal.getProposalVoteResult().getStakeOfRejectedVotes());
+                proposalJson.addProperty("quorum", proposal.getProposalVoteResult().getQuorum());
+                proposalJson.addProperty("threshold", proposal.getProposalVoteResult().getThreshold());
+                switch (proposal.getProposal().getType()) {
+                    case BONDED_ROLE:
+                        RoleProposal roleProposal = (RoleProposal) proposal.getProposal();
+                        proposalJson.addProperty("roleType", roleProposal.getRole().getBondedRoleType().name());
+                        proposalJson.addProperty("requiredBond", roleProposal.getRole().getBondedRoleType().getRequiredBond());
+                        proposalJson.addProperty("allowMultipleHolders", roleProposal.getRole().getBondedRoleType().isAllowMultipleHolders());
+                        proposalJson.addProperty("unlockTimeInBlocks", roleProposal.getRole().getBondedRoleType().getUnlockTimeInBlocks());
+                        proposalJson.addProperty("roleUid", roleProposal.getRole().getUid());
+                        break;
+                    case CHANGE_PARAM:
+                        ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal.getProposal();
+                        proposalJson.addProperty("param", changeParamProposal.getParam().name());
+                        proposalJson.addProperty("paramValue", changeParamProposal.getParamValue());
+                        proposalJson.addProperty("paramDefaultValue", changeParamProposal.getParam().getDefaultValue());
+                        proposalJson.addProperty("paramMaxDecrease", changeParamProposal.getParam().getMaxDecrease());
+                        proposalJson.addProperty("paramMaxIncrease", changeParamProposal.getParam().getMaxIncrease());
+                        break;
+                    case COMPENSATION_REQUEST:
+                        CompensationProposal compensationProposal = (CompensationProposal) proposal.getProposal();
+                        proposalJson.addProperty("bsqAddress", compensationProposal.getBsqAddress());
+                        proposalJson.addProperty("requestedBsq", compensationProposal.getRequestedBsq().getValue());
+                        break;
+                    case CONFISCATE_BOND:
+                        ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal.getProposal();
+                        proposalJson.addProperty("lockupTxId", confiscateBondProposal.getLockupTxId());
+                        break;
+                    case REIMBURSEMENT_REQUEST:
+                        ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal.getProposal();
+                        proposalJson.addProperty("bsqAddress", reimbursementProposal.getBsqAddress());
+                        proposalJson.addProperty("requestedBsq", reimbursementProposal.getRequestedBsq().getValue());
+                        break;
+                    case REMOVE_ASSET:
+                        RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal.getProposal();
+                        proposalJson.addProperty("assetTickerSymbol", removeAssetProposal.getTickerSymbol());
+                        break;
+                }
+
+                JsonArray votesArray = new JsonArray();
+                evaluatedProposals.stream()
+                        .filter(evaluatedProposal -> evaluatedProposal.getProposal().equals(proposal.getProposal()))
+                        .forEach(evaluatedProposal -> {
+                            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = cycle.getResultsOfCycle().getDecryptedVotesForCycle();
+                            // Make sure the votes are sorted so we can easier compare json files from different users
+                            decryptedVotesForCycle.sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
+                            decryptedVotesForCycle.forEach(decryptedBallotsWithMerits -> {
+                                JsonObject voteJson = new JsonObject();
+                                Optional<Vote> vote = decryptedBallotsWithMerits.getVote(proposal.getProposalTxId());
+                                if (vote.isPresent())
+                                    voteJson.addProperty("vote", vote.get().isAccepted() ? "Accepted" : "Rejected");
+                                else
+                                    voteJson.addProperty("vote", "Ignored");
+
+                                voteJson.addProperty("voteWeight", decryptedBallotsWithMerits.getMerit(daoStateService));
+                                voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
+                                voteJson.addProperty("blindTxId", decryptedBallotsWithMerits.getBlindVoteTxId());
+                                voteJson.addProperty("revealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
+
+                                votesArray.add(voteJson);
+                            });
+                        });
+
+                proposalJson.addProperty("numberOfVotes", votesArray.size());
+                proposalJson.add("votes", votesArray);
+
+                proposalsArray.add(proposalJson);
+            });
+            cycleJson.addProperty("numberOfProposals", proposalsArray.size());
+            cycleJson.add("proposals", proposalsArray);
+            cyclesArray.add(cycleJson);
+        });
+        return cyclesArray;
     }
 }

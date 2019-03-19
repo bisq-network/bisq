@@ -78,7 +78,7 @@ public class PhasesView implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onParseTxsCompleteAfterBatchProcessing(Block block) {
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         applyData(block.getHeight());
 
         phaseBarsItems.forEach(item -> {

@@ -46,13 +46,14 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -68,7 +69,9 @@ public class DaoStateService implements DaoSetupService {
     private final GenesisTxInfo genesisTxInfo;
     private final BsqFormatter bsqFormatter;
     private final List<DaoStateListener> daoStateListeners = new CopyOnWriteArrayList<>();
+    @Getter
     private boolean parseBlockChainComplete;
+    private boolean allowDaoStateChange;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +96,8 @@ public class DaoStateService implements DaoSetupService {
 
     @Override
     public void start() {
+        allowDaoStateChange = true;
+        assertDaoStateChange();
         daoState.setChainHeight(genesisTxInfo.getGenesisBlockHeight());
     }
 
@@ -102,6 +107,9 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void applySnapshot(DaoState snapshot) {
+        allowDaoStateChange = true;
+        assertDaoStateChange();
+
         log.info("Apply snapshot with chain height {}", snapshot.getChainHeight());
 
         daoState.setChainHeight(snapshot.getChainHeight());
@@ -115,14 +123,17 @@ public class DaoStateService implements DaoSetupService {
         daoState.getUnspentTxOutputMap().clear();
         daoState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
 
+        daoState.getNonBsqTxOutputMap().clear();
+        daoState.getNonBsqTxOutputMap().putAll(snapshot.getNonBsqTxOutputMap());
+
+        daoState.getSpentInfoMap().clear();
+        daoState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
+
         daoState.getConfiscatedLockupTxList().clear();
         daoState.getConfiscatedLockupTxList().addAll(snapshot.getConfiscatedLockupTxList());
 
         daoState.getIssuanceMap().clear();
         daoState.getIssuanceMap().putAll(snapshot.getIssuanceMap());
-
-        daoState.getSpentInfoMap().clear();
-        daoState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
 
         daoState.getParamChangeList().clear();
         daoState.getParamChangeList().addAll(snapshot.getParamChangeList());
@@ -142,6 +153,10 @@ public class DaoStateService implements DaoSetupService {
         return DaoState.getClone(snapshotCandidate);
     }
 
+    public byte[] getSerializedDaoState() {
+        return daoState.toProtoMessage().toByteArray();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ChainHeight
@@ -158,6 +173,11 @@ public class DaoStateService implements DaoSetupService {
 
     public LinkedList<Cycle> getCycles() {
         return daoState.getCycles();
+    }
+
+    public void addCycle(Cycle cycle) {
+        assertDaoStateChange();
+        getCycles().add(cycle);
     }
 
     @Nullable
@@ -188,12 +208,14 @@ public class DaoStateService implements DaoSetupService {
 
     // First we get the blockHeight set
     public void onNewBlockHeight(int blockHeight) {
+        allowDaoStateChange = true;
         daoState.setChainHeight(blockHeight);
         daoStateListeners.forEach(listener -> listener.onNewBlockHeight(blockHeight));
     }
 
     // Second we get the block added with empty txs
     public void onNewBlockWithEmptyTxs(Block block) {
+        assertDaoStateChange();
         if (daoState.getBlocks().isEmpty() && block.getHeight() != getGenesisBlockHeight()) {
             log.warn("We don't have any blocks yet and we received a block which is not the genesis block. " +
                     "We ignore that block as the first block need to be the genesis block. " +
@@ -208,13 +230,24 @@ public class DaoStateService implements DaoSetupService {
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
         log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
+
+        // Need to be called before onParseTxsCompleteAfterBatchProcessing as we use it in
+        // VoteResult and other listeners like balances usually listen on onParseTxsCompleteAfterBatchProcessing
+        // so we need to make sure that vote result calculation is completed before (e.g. for comp. request to
+        // update balance).
+        daoStateListeners.forEach(l -> l.onParseBlockComplete(block));
+
         // We use 2 different handlers as we don't want to update domain listeners during batch processing of all
         // blocks as that cause performance issues. In earlier versions when we updated at each block it took
         // 50 sec. for 4000 blocks, after that change it was about 4 sec.
+        // Clients
         if (parseBlockChainComplete)
-            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+            daoStateListeners.forEach(l -> l.onParseBlockCompleteAfterBatchProcessing(block));
 
-        daoStateListeners.forEach(l -> l.onParseTxsComplete(block));
+        // Here listeners must not trigger any state change in the DAO as we trigger the validation service to
+        // generate a hash of the state.
+        allowDaoStateChange = false;
+        daoStateListeners.forEach(l -> l.onDaoStateChanged(block));
     }
 
     // Called after parsing of all pending blocks is completed
@@ -223,7 +256,7 @@ public class DaoStateService implements DaoSetupService {
         parseBlockChainComplete = true;
 
         getLastBlock().ifPresent(block -> {
-            daoStateListeners.forEach(l -> l.onParseTxsCompleteAfterBatchProcessing(block));
+            daoStateListeners.forEach(l -> l.onParseBlockCompleteAfterBatchProcessing(block));
         });
 
         daoStateListeners.forEach(DaoStateListener::onParseBlockChainComplete);
@@ -296,7 +329,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public Coin getGenesisTotalSupply() {
-        return GenesisTxInfo.GENESIS_TOTAL_SUPPLY;
+        return Coin.valueOf(genesisTxInfo.getGenesisTotalSupply());
     }
 
     public Optional<Tx> getGenesisTx() {
@@ -313,8 +346,8 @@ public class DaoStateService implements DaoSetupService {
                 .flatMap(block -> block.getTxs().stream());
     }
 
-    public Map<String, Tx> getTxMap() {
-        return getTxStream().collect(Collectors.toMap(Tx::getId, tx -> tx));
+    public TreeMap<String, Tx> getTxMap() {
+        return new TreeMap<>(getTxStream().collect(Collectors.toMap(Tx::getId, tx -> tx)));
     }
 
     public Set<Tx> getTxs() {
@@ -397,15 +430,17 @@ public class DaoStateService implements DaoSetupService {
     // UnspentTxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Map<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
+    public TreeMap<TxOutputKey, TxOutput> getUnspentTxOutputMap() {
         return daoState.getUnspentTxOutputMap();
     }
 
     public void addUnspentTxOutput(TxOutput txOutput) {
+        assertDaoStateChange();
         getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
     public void removeUnspentTxOutput(TxOutput txOutput) {
+        assertDaoStateChange();
         getUnspentTxOutputMap().remove(txOutput.getKey());
     }
 
@@ -539,6 +574,7 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addIssuance(Issuance issuance) {
+        assertDaoStateChange();
         daoState.getIssuanceMap().put(issuance.getTxId(), issuance);
     }
 
@@ -587,16 +623,18 @@ public class DaoStateService implements DaoSetupService {
     // Non-BSQ
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    //TODO we never remove NonBsqTxOutput!
+    //FIXME called at result phase even if there is not a new one (passed txo from prev. cycle which was already added)
     public void addNonBsqTxOutput(TxOutput txOutput) {
+        assertDaoStateChange();
         checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
                 "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
-        log.info("addNonBsqTxOutput: txOutput={}", txOutput);
         daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
     }
 
     public Optional<TxOutput> getBtcTxOutput(TxOutputKey key) {
         // Issuance candidates which did not got accepted in voting are covered here
-        Map<TxOutputKey, TxOutput> nonBsqTxOutputMap = daoState.getNonBsqTxOutputMap();
+        TreeMap<TxOutputKey, TxOutput> nonBsqTxOutputMap = daoState.getNonBsqTxOutputMap();
         if (nonBsqTxOutputMap.containsKey(key))
             return Optional.of(nonBsqTxOutputMap.get(key));
 
@@ -750,6 +788,10 @@ public class DaoStateService implements DaoSetupService {
         return getTx(unlockTxId).flatMap(tx -> getTx(tx.getTxInputs().get(0).getConnectedTxOutputTxId()));
     }
 
+    public Optional<Tx> getUnlockTxFromLockupTxId(String lockupTxId) {
+        return getTx(lockupTxId).flatMap(tx -> getSpentInfo(tx.getTxOutputs().get(0))).flatMap(spentInfo -> getTx(spentInfo.getTxId()));
+    }
+
     // Unlocked
     public Optional<Integer> getUnlockBlockHeight(String txId) {
         return getTx(txId).map(Tx::getUnlockBlockHeight);
@@ -815,11 +857,12 @@ public class DaoStateService implements DaoSetupService {
     }
 
     private void doConfiscateBond(String lockupTxId) {
+        assertDaoStateChange();
         log.warn("TxId {} added to confiscatedLockupTxIdList.", lockupTxId);
         daoState.getConfiscatedLockupTxList().add(lockupTxId);
     }
 
-    public boolean isConfiscated(TxOutputKey txOutputKey) {
+    public boolean isConfiscatedOutput(TxOutputKey txOutputKey) {
         if (isLockupOutput(txOutputKey))
             return isConfiscatedLockupTxOutput(txOutputKey.getTxId());
         else if (isUnspentUnlockOutput(txOutputKey))
@@ -827,17 +870,13 @@ public class DaoStateService implements DaoSetupService {
         return false;
     }
 
-    public boolean isConfiscated(String lockupTxId) {
-        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
-    }
-
     public boolean isConfiscatedLockupTxOutput(String lockupTxId) {
-        return isConfiscated(lockupTxId);
+        return daoState.getConfiscatedLockupTxList().contains(lockupTxId);
     }
 
     public boolean isConfiscatedUnlockTxOutput(String unlockTxId) {
         return getLockupTxFromUnlockTxId(unlockTxId).
-                map(lockupTx -> isConfiscated(lockupTx.getId())).
+                map(lockupTx -> isConfiscatedLockupTxOutput(lockupTx.getId())).
                 orElse(false);
     }
 
@@ -847,6 +886,7 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setNewParam(int blockHeight, Param param, String paramValue) {
+        assertDaoStateChange();
         List<ParamChange> paramChangeList = daoState.getParamChangeList();
         getStartHeightOfNextCycle(blockHeight)
                 .ifPresent(heightOfNewCycle -> {
@@ -895,6 +935,7 @@ public class DaoStateService implements DaoSetupService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setSpentInfo(TxOutputKey txOutputKey, SpentInfo spentInfo) {
+        assertDaoStateChange();
         daoState.getSpentInfoMap().put(txOutputKey, spentInfo);
     }
 
@@ -912,9 +953,14 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public void addEvaluatedProposalSet(Set<EvaluatedProposal> evaluatedProposals) {
+        assertDaoStateChange();
+
         evaluatedProposals.stream()
                 .filter(e -> !daoState.getEvaluatedProposalList().contains(e))
                 .forEach(daoState.getEvaluatedProposalList()::add);
+
+        // We need deterministic order for the hash chain
+        daoState.getEvaluatedProposalList().sort(Comparator.comparing(EvaluatedProposal::getProposalTxId));
     }
 
     public List<DecryptedBallotsWithMerits> getDecryptedBallotsWithMeritsList() {
@@ -922,9 +968,14 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public void addDecryptedBallotsWithMeritsSet(Set<DecryptedBallotsWithMerits> decryptedBallotsWithMeritsSet) {
+        assertDaoStateChange();
+
         decryptedBallotsWithMeritsSet.stream()
                 .filter(e -> !daoState.getDecryptedBallotsWithMeritsList().contains(e))
                 .forEach(daoState.getDecryptedBallotsWithMeritsList()::add);
+
+        // We need deterministic order for the hash chain
+        daoState.getDecryptedBallotsWithMeritsList().sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
     }
 
 
@@ -949,12 +1000,31 @@ public class DaoStateService implements DaoSetupService {
     // Listeners
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBsqStateListener(DaoStateListener listener) {
+    public void addDaoStateListener(DaoStateListener listener) {
         daoStateListeners.add(listener);
     }
 
-    public void removeBsqStateListener(DaoStateListener listener) {
+    public void removeDaoStateListener(DaoStateListener listener) {
         daoStateListeners.remove(listener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public String daoStateToString() {
+        return daoState.toString();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void assertDaoStateChange() {
+        if (!allowDaoStateChange)
+            throw new RuntimeException("We got a call which would change the daoState outside of the allowed event phase");
     }
 }
 

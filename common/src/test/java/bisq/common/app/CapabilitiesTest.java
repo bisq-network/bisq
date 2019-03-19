@@ -17,39 +17,47 @@
 
 package bisq.common.app;
 
-import java.util.Arrays;
+import java.util.HashSet;
 
 import org.junit.Test;
 
+import static bisq.common.app.Capability.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class CapabilitiesTest {
 
     @Test
-    public void testVersionNumber() {
-        // if required are null or empty its true
-        assertTrue(Capabilities.isCapabilitySupported(null, null));
-        assertTrue(Capabilities.isCapabilitySupported(null, Arrays.asList()));
-        assertTrue(Capabilities.isCapabilitySupported(null, Arrays.asList(0)));
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(), null));
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(), Arrays.asList()));
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(), Arrays.asList(0)));
+    public void testNoCapabilitiesAvailable() {
+        Capabilities DUT = new Capabilities();
 
-        // required are not null and not empty but supported is null or empty its false
-        assertFalse(Capabilities.isCapabilitySupported(Arrays.asList(0), null));
-        assertFalse(Capabilities.isCapabilitySupported(Arrays.asList(0), Arrays.asList()));
+        assertTrue(DUT.containsAll(new HashSet<>()));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
+    }
+
+    @Test
+    public void testO() {
+        Capabilities DUT = new Capabilities(TRADE_STATISTICS);
+
+        assertTrue(DUT.containsAll(new HashSet<>()));
+    }
+
+    @Test
+    public void testSingleMatch() {
+        Capabilities DUT = new Capabilities(TRADE_STATISTICS);
 
         // single match
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(0), Arrays.asList(0)));
-        assertFalse(Capabilities.isCapabilitySupported(Arrays.asList(1), Arrays.asList(0)));
-        assertFalse(Capabilities.isCapabilitySupported(Arrays.asList(0), Arrays.asList(1)));
+        assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS)));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
+    }
 
-        // multi match
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(0), Arrays.asList(0, 1)));
-        assertFalse(Capabilities.isCapabilitySupported(Arrays.asList(0), Arrays.asList(1, 2)));
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(0, 1), Arrays.asList(0, 1)));
-        assertTrue(Capabilities.isCapabilitySupported(Arrays.asList(0, 1), Arrays.asList(1, 0)));
-        assertFalse(Capabilities.isCapabilitySupported(Arrays.asList(0, 1), Arrays.asList(0)));
+    @Test
+    public void testMultiMatch() {
+        Capabilities DUT = new Capabilities(TRADE_STATISTICS, TRADE_STATISTICS_2);
+
+        assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS)));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
+        assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS, TRADE_STATISTICS_2)));
+        assertFalse(DUT.containsAll(new Capabilities(SEED_NODE, TRADE_STATISTICS_2)));
     }
 }

@@ -51,6 +51,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static bisq.desktop.main.offer.MutableOfferView.BUYER_SECURITY_DEPOSIT_NEWS;
+
 public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
@@ -271,6 +273,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         offerBookView.enableCreateOfferButton();
 
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
+
+        preferences.dontShowAgain(BUYER_SECURITY_DEPOSIT_NEWS, true);
     }
 
     private void onTakeOfferViewRemoved() {

@@ -21,6 +21,8 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import lombok.Value;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -29,7 +31,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public final class TxOutputKey implements ImmutableDaoStateModel {
+public final class TxOutputKey implements ImmutableDaoStateModel, Comparable {
     private final String txId;
     private final int index;
 
@@ -46,5 +48,10 @@ public final class TxOutputKey implements ImmutableDaoStateModel {
     public static TxOutputKey getKeyFromString(String keyAsString) {
         final String[] tokens = keyAsString.split(":");
         return new TxOutputKey(tokens[0], Integer.valueOf(tokens[1]));
+    }
+
+    @Override
+    public int compareTo(@NotNull Object o) {
+        return toString().compareTo(o.toString());
     }
 }

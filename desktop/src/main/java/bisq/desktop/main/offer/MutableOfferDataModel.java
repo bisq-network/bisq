@@ -46,6 +46,7 @@ import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -62,11 +63,14 @@ import com.google.inject.Inject;
 import com.google.common.collect.Lists;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -105,8 +109,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    private final Coin sellerSecurityDeposit;
-
     protected OfferPayload.Direction direction;
     protected TradeCurrency tradeCurrency;
     protected final StringProperty tradeCurrencyCode = new SimpleStringProperty();
@@ -119,7 +121,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
     protected final ObjectProperty<Price> price = new SimpleObjectProperty<>();
     protected final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
-    protected final ObjectProperty<Coin> buyerSecurityDeposit = new SimpleObjectProperty<>();
+
+    // Percentage value of buyer security deposit. E.g. 0.01 means 1% of trade amount
+    protected final DoubleProperty buyerSecurityDeposit = new SimpleDoubleProperty();
+    protected final DoubleProperty sellerSecurityDeposit = new SimpleDoubleProperty();
 
     protected final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
@@ -174,8 +179,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
-        buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsCoin());
-        sellerSecurityDeposit = Restrictions.getSellerSecurityDeposit();
+        buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent());
+        sellerSecurityDeposit.set(Restrictions.getSellerSecurityDepositAsPercent());
 
         btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -230,12 +235,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         user.getPaymentAccountsAsObservable().addListener(paymentAccountsChangeListener);
     }
 
-
     private void removeListeners() {
         btcWalletService.removeBalanceListener(btcBalanceListener);
         bsqWalletService.removeBsqBalanceListener(this);
         user.getPaymentAccountsAsObservable().removeListener(paymentAccountsChangeListener);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -316,8 +321,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
 
         double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
-        long amount = this.amount.get() != null ? this.amount.get().getValue() : 0L;
-        long minAmount = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
+        long amountAsLong = this.amount.get() != null ? this.amount.get().getValue() : 0L;
+        long minAmountAsLong = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
         List<String> acceptedCountryCodes = PaymentAccountUtil.getAcceptedCountryCodes(paymentAccount);
         List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
@@ -335,7 +340,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-        Coin buyerSecurityDepositAsCoin = buyerSecurityDeposit.get();
+
         Coin makerFeeAsCoin = getMakerFee();
 
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService,
@@ -345,7 +350,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         OfferUtil.validateOfferData(filterManager,
                 p2PService,
-                buyerSecurityDepositAsCoin,
+                buyerSecurityDeposit.get(),
                 paymentAccount,
                 currencyCode,
                 makerFeeAsCoin);
@@ -358,8 +363,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPriceValue,
-                amount,
-                minAmount,
+                amountAsLong,
+                minAmountAsLong,
                 baseCurrencyCode,
                 counterCurrencyCode,
                 Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
@@ -376,8 +381,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 txFeeFromFeeService.value,
                 makerFeeAsCoin.value,
                 isCurrencyForMakerFeeBtc(),
-                buyerSecurityDepositAsCoin.value,
-                sellerSecurityDeposit.value,
+                getBuyerSecurityDepositAsCoin().value,
+                getSellerSecurityDepositAsCoin().value,
                 maxTradeLimit,
                 maxTradePeriod,
                 useAutoClose,
@@ -478,9 +483,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     @Override
-    public void onUpdateBalances(Coin availableBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockedInBondsBalance,
                                  Coin unlockingBondsBalance) {
@@ -641,7 +647,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     Coin getSecurityDeposit() {
-        return isBuyOffer() ? buyerSecurityDeposit.get() : sellerSecurityDeposit;
+        return isBuyOffer() ? getBuyerSecurityDepositAsCoin() : getSellerSecurityDepositAsCoin();
     }
 
     public boolean isBuyOffer() {
@@ -676,9 +682,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.volume.set(volume);
     }
 
-    void setBuyerSecurityDeposit(Coin buyerSecurityDeposit) {
-        this.buyerSecurityDeposit.set(buyerSecurityDeposit);
-        preferences.setBuyerSecurityDepositAsLong(buyerSecurityDeposit.value);
+    void setBuyerSecurityDeposit(double value) {
+        this.buyerSecurityDeposit.set(value);
+        preferences.setBuyerSecurityDepositAsPercent(value);
     }
 
     protected boolean isUseMarketBasedPriceValue() {
@@ -717,12 +723,34 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return useMarketBasedPrice;
     }
 
-    ReadOnlyObjectProperty<Coin> getBuyerSecurityDeposit() {
+    ReadOnlyDoubleProperty getBuyerSecurityDeposit() {
         return buyerSecurityDeposit;
     }
 
-    Coin getSellerSecurityDeposit() {
-        return sellerSecurityDeposit;
+    protected Coin getBuyerSecurityDepositAsCoin() {
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(buyerSecurityDeposit.get(), amount.get());
+        return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
+    }
+
+    Coin getSellerSecurityDepositAsCoin() {
+        Coin amountAsCoin = this.amount.get();
+        if (amountAsCoin == null)
+            amountAsCoin = Coin.ZERO;
+
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(sellerSecurityDeposit.get(), amountAsCoin);
+        return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
+    }
+
+    private Coin getBoundedBuyerSecurityDepositAsCoin(Coin value) {
+        // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
+        // MinBuyerSecurityDepositAsCoin from Restrictions.
+        return Coin.valueOf(Math.max(Restrictions.getMinBuyerSecurityDepositAsCoin().value, value.value));
+    }
+
+    private Coin getBoundedSellerSecurityDepositAsCoin(Coin value) {
+        // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
+        // MinSellerSecurityDepositAsCoin from Restrictions.
+        return Coin.valueOf(Math.max(Restrictions.getMinSellerSecurityDepositAsCoin().value, value.value));
     }
 
     ReadOnlyObjectProperty<Coin> totalToPayAsCoinProperty() {
@@ -730,7 +758,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     public Coin getBsqBalance() {
-        return bsqWalletService.getAvailableBalance();
+        return bsqWalletService.getAvailableConfirmedBalance();
     }
 
     public void setMarketPriceAvailable(boolean marketPriceAvailable) {

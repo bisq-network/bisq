@@ -237,4 +237,8 @@ public class MarketPricePresentation {
     public IntegerProperty getMarketPriceUpdated() {
         return marketPriceUpdated;
     }
+
+    public StringProperty getMarketPrice() {
+        return marketPrice;
+    }
 }

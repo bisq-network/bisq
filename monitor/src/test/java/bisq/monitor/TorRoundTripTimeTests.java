@@ -72,6 +72,11 @@ public class TorRoundTripTimeTests {
         }
 
         @Override
+        public void report(String key, String value, String timestamp, String prefix) {
+
+        }
+
+        @Override
         public void report(long value, String prefix) {
             report(value);
         }
@@ -106,8 +111,7 @@ public class TorRoundTripTimeTests {
         // give it some time to start and then stop
         Thread.sleep(100);
 
-        DUT.shutdown();
-        DUT.join();
+        Metric.haltAllMetrics();
 
         // observe results
         Map<String, String> results = reporter.hasResults();

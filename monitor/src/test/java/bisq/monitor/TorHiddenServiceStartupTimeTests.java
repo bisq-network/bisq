@@ -68,6 +68,11 @@ public class TorHiddenServiceStartupTimeTests {
         }
 
         @Override
+        public void report(String key, String value, String timestamp, String prefix) {
+
+        }
+
+        @Override
         public void report(long value, String prefix) {
             report(value);
         }
@@ -94,7 +99,7 @@ public class TorHiddenServiceStartupTimeTests {
 
         // give it some time and then stop
         Thread.sleep(180 * 1000);
-        DUT.shutdown();
+        Metric.haltAllMetrics();
 
         // observe results
         Assert.assertTrue(reporter.results() > 0);

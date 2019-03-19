@@ -157,25 +157,27 @@ public class InfoInputTextField extends AnchorPane {
 
     private void setActionHandlers(Node node) {
 
-        currentIcon.setManaged(true);
-        currentIcon.setVisible(true);
+        if (node != null) {
+            currentIcon.setManaged(true);
+            currentIcon.setVisible(true);
 
-        // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        currentIcon.setOnMouseEntered(e -> {
-            hidePopover = false;
-            showPopOver(node);
-        });
-        currentIcon.setOnMouseExited(e -> {
-            if (popover != null)
-                popover.hide();
-            hidePopover = true;
-            UserThread.runAfter(() -> {
-                if (hidePopover) {
+            // As we don't use binding here we need to recreate it on mouse over to reflect the current state
+            currentIcon.setOnMouseEntered(e -> {
+                hidePopover = false;
+                showPopOver(node);
+            });
+            currentIcon.setOnMouseExited(e -> {
+                if (popover != null)
                     popover.hide();
-                    hidePopover = false;
-                }
-            }, 250, TimeUnit.MILLISECONDS);
-        });
+                hidePopover = true;
+                UserThread.runAfter(() -> {
+                    if (hidePopover) {
+                        popover.hide();
+                        hidePopover = false;
+                    }
+                }, 250, TimeUnit.MILLISECONDS);
+            });
+        }
     }
 
     private void showPopOver(Node node) {

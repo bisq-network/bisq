@@ -185,7 +185,9 @@ public class FullNode extends BsqNode {
                     } else {
                         log.info("parseBlocksIfNewBlockAvailable did not result in a new block, so we complete.");
                         log.info("parse {} blocks took {} seconds", blocksToParseInBatch, (System.currentTimeMillis() - parseInBatchStartTime) / 1000d);
-                        onParseBlockChainComplete();
+                        if (!parseBlockchainComplete) {
+                            onParseBlockChainComplete();
+                        }
                     }
                 },
                 this::handleError);

@@ -47,7 +47,7 @@ public class MyBlindVoteList extends PersistableList<BlindVote> implements Conse
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private MyBlindVoteList(List<BlindVote> list) {
+    public MyBlindVoteList(List<BlindVote> list) {
         super(list);
     }
 
