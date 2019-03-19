@@ -17,9 +17,10 @@
 
 package bisq.core.dao.governance.proposal.reimbursement;
 
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
+import bisq.core.dao.governance.proposal.compensation.CompensationConsensus;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
@@ -53,12 +54,15 @@ public class ReimbursementValidator extends ProposalValidator {
             reimbursementProposal.getAddress(); // throws AddressFormatException if wrong address
 
             Coin requestedBsq = reimbursementProposal.getRequestedBsq();
-            Coin maxReimbursementRequestAmount = ReimbursementConsensus.getMaxReimbursementRequestAmount(daoStateService, periodService.getChainHeight());
-            checkArgument(requestedBsq.compareTo(maxReimbursementRequestAmount) <= 0,
-                    "Requested BSQ must not exceed " + (maxReimbursementRequestAmount.value / 100L) + " BSQ");
-            Coin minReimbursementRequestAmount = ReimbursementConsensus.getMinReimbursementRequestAmount(daoStateService, periodService.getChainHeight());
-            checkArgument(requestedBsq.compareTo(minReimbursementRequestAmount) >= 0,
-                    "Requested BSQ must not be less than " + (minReimbursementRequestAmount.value / 100L) + " BSQ");
+            int chainHeight = getBlockHeight(proposal);
+            Coin maxCompensationRequestAmount = CompensationConsensus.getMaxCompensationRequestAmount(daoStateService, chainHeight);
+            checkArgument(requestedBsq.compareTo(maxCompensationRequestAmount) <= 0,
+                    "Requested BSQ must not exceed " + (maxCompensationRequestAmount.value / 100L) + " BSQ");
+            Coin minCompensationRequestAmount = CompensationConsensus.getMinCompensationRequestAmount(daoStateService, chainHeight);
+            checkArgument(requestedBsq.compareTo(minCompensationRequestAmount) >= 0,
+                    "Requested BSQ must not be less than " + (minCompensationRequestAmount.value / 100L) + " BSQ");
+        } catch (ProposalValidationException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }

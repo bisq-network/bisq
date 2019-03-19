@@ -33,10 +33,10 @@ import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
@@ -358,14 +358,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     @Nullable
-    private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
+    private ProposalWithTransaction getProposalWithTransaction(ProposalType proposalType)
             throws InsufficientMoneyException, ProposalValidationException, TxException {
 
         checkNotNull(proposalDisplay, "proposalDisplay must not be null");
 
         String link = proposalDisplay.linkInputTextField.getText();
         String name = proposalDisplay.nameTextField.getText();
-        switch (type) {
+        switch (proposalType) {
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");

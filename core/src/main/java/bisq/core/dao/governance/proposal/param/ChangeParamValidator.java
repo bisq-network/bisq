@@ -24,7 +24,6 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
@@ -86,14 +85,10 @@ public class ChangeParamValidator extends ProposalValidator {
     public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             super.validateDataFields(proposal);
-
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
-            // When we receive a temp proposal the tx is usually not confirmed so we cannot lookup the block height of
-            // the tx. We take the current block height in that case as it would be in the same cycle anyway.
-            int blockHeight = daoStateService.getTx(proposal.getTxId())
-                    .map(BaseTx::getBlockHeight)
-                    .orElseGet(daoStateService::getChainHeight);
-            validateParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue(), blockHeight);
+            validateParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue(), getBlockHeight(proposal));
+        } catch (ProposalValidationException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
@@ -104,7 +99,7 @@ public class ChangeParamValidator extends ProposalValidator {
         validateParamValue(param, inputValue, blockHeight);
     }
 
-    public void validateParamValue(Param param, String inputValue, int blockHeight) throws ParamValidationException {
+    private void validateParamValue(Param param, String inputValue, int blockHeight) throws ParamValidationException {
         String currentParamValue = daoStateService.getParamValue(param, blockHeight);
         validateParamValue(param, currentParamValue, inputValue);
     }

@@ -24,14 +24,7 @@ import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementValidator;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetValidator;
 import bisq.core.dao.governance.proposal.role.RoleValidator;
-import bisq.core.dao.state.model.governance.ChangeParamProposal;
-import bisq.core.dao.state.model.governance.CompensationProposal;
-import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
-import bisq.core.dao.state.model.governance.GenericProposal;
 import bisq.core.dao.state.model.governance.Proposal;
-import bisq.core.dao.state.model.governance.ReimbursementProposal;
-import bisq.core.dao.state.model.governance.RemoveAssetProposal;
-import bisq.core.dao.state.model.governance.RoleProposal;
 
 import javax.inject.Inject;
 
@@ -65,21 +58,26 @@ public class ProposalValidatorProvider {
     }
 
     public ProposalValidator getValidator(Proposal proposal) {
-        if (proposal instanceof CompensationProposal)
-            return compensationValidator;
-        else if (proposal instanceof ConfiscateBondProposal)
-            return confiscateBondValidator;
-        else if (proposal instanceof GenericProposal)
-            return genericProposalValidator;
-        else if (proposal instanceof ChangeParamProposal)
-            return changeParamValidator;
-        else if (proposal instanceof ReimbursementProposal)
-            return reimbursementValidator;
-        else if (proposal instanceof RemoveAssetProposal)
-            return removeAssetValidator;
-        else if (proposal instanceof RoleProposal)
-            return roleValidator;
-        else
-            throw new RuntimeException("");
+        return getValidator(proposal.getType());
+    }
+
+    public ProposalValidator getValidator(ProposalType proposalType) {
+        switch (proposalType) {
+            case COMPENSATION_REQUEST:
+                return compensationValidator;
+            case REIMBURSEMENT_REQUEST:
+                return reimbursementValidator;
+            case CHANGE_PARAM:
+                return changeParamValidator;
+            case BONDED_ROLE:
+                return roleValidator;
+            case CONFISCATE_BOND:
+                return confiscateBondValidator;
+            case GENERIC:
+                return genericProposalValidator;
+            case REMOVE_ASSET:
+                return removeAssetValidator;
+        }
+        throw new RuntimeException("Proposal type " + proposalType.name() + " was not covered by switch case.");
     }
 }

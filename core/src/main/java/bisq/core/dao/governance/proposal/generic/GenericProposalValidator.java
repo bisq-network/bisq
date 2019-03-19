@@ -17,11 +17,10 @@
 
 package bisq.core.dao.governance.proposal.generic;
 
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.governance.GenericProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 
 import javax.inject.Inject;
@@ -40,9 +39,8 @@ public class GenericProposalValidator extends ProposalValidator {
     public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             super.validateDataFields(proposal);
-
-            GenericProposal genericProposalProposal = (GenericProposal) proposal;
-            //TODO
+        } catch (ProposalValidationException e) {
+            throw e;
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
