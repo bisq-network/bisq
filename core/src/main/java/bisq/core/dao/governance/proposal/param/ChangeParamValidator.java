@@ -19,6 +19,7 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
@@ -45,11 +46,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 //TODO Use translation properties in error messages a they are shown to user.
 
 /**
+ * Changes here can potentially break consensus!
+ *
  * We do not store the values as domain types (Coin, int, String) but all as Strings. So we need to parse it to the
  * expected data type even if we get the data not from user input.
  */
 @Slf4j
-public class ChangeParamValidator extends ProposalValidator {
+public class ChangeParamValidator extends ProposalValidator implements ConsensusCritical {
     public enum Result {
         OK,
         SAME("New parameter value must be different to current value."),
