@@ -38,6 +38,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Parameters which are only used in proposals and voting are less strict limited as we can require that those users are
  * using the latest software version.
  * The UNDEFINED entry is used as fallback for error cases and will get ignored.
+ *
+ * Name of the params must not change as that is used for serialisation in Protobuffer. The data fields are not part of
+ * the PB serialisation so changes for those would not change the hash for the dao state hash chain.
+ * Though changing the values might break consensus as the validations might return a different result (e.g. a param
+ * change proposal was accepted with older min/max values but then after a change it is not valid anymore and
+ * might break the consequences of that change. So in fact we MUST not change anything here, only way is to add new
+ * entries and don't use the deprecated enum in future releases anymore.
  */
 @Slf4j
 public enum Param {

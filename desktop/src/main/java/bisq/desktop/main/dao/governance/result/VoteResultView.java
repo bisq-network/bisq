@@ -38,7 +38,6 @@ import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
-import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
@@ -67,7 +66,6 @@ import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Transaction;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -392,8 +390,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             UserThread.runAfter(() -> {
                 if (myProposalListService.getList().stream().map(Proposal::getTxId)
                         .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())) ||
-                myBlindVoteListService.getMyBlindVoteList().stream().map(BlindVote::getTxId)
-                        .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())))
+                        myBlindVoteListService.getMyBlindVoteList().stream().map(BlindVote::getTxId)
+                                .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())))
                     new DAOTestingFeedbackWindow()
                             .dontShowAgainId(testingPopupKey)
                             .show();
@@ -1015,8 +1013,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 proposalJson.addProperty("details", ProposalListItem.getProposalDetails(proposal, bsqFormatter, false));
                 proposalJson.addProperty("voteResult", proposal.isAccepted() ? "Accepted" : "Rejected");
                 proposalJson.addProperty("txId", proposal.getProposalTxId());
-                proposalJson.addProperty("requiredQuorum", proposal.getRequiredQuorum());
-                proposalJson.addProperty("requiredThreshold", proposal.getRequiredThreshold());
+                proposalJson.addProperty("requiredQuorum", proposalService.getRequiredQuorum(proposal.getProposal()).value);
+                proposalJson.addProperty("requiredThreshold", proposalService.getRequiredThreshold(proposal.getProposal()));
                 proposalJson.addProperty("creationDate", proposal.getProposal().getCreationDate().getTime());
                 proposalJson.addProperty("version", proposal.getProposal().getVersion());
                 proposalJson.addProperty("activeVotesCount", proposal.getProposalVoteResult().getNumActiveVotes());

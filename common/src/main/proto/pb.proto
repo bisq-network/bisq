@@ -1748,8 +1748,6 @@ message ProposalVoteResult {
 message EvaluatedProposal {
     bool is_accepted = 1;
     ProposalVoteResult proposal_vote_result = 2;
-    int64 required_quorum = 3;
-    int64 required_threshold = 4;
 }
 
 message DecryptedBallotsWithMerits {

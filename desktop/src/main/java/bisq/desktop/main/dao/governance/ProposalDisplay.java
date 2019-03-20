@@ -144,8 +144,12 @@ public class ProposalDisplay {
     private int titledGroupBgRowSpan;
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
 
-    public ProposalDisplay(GridPane gridPane, BsqFormatter bsqFormatter, DaoFacade daoFacade,
-                           @Nullable ChangeParamValidator changeParamValidator, Navigation navigation, @Nullable Preferences preferences) {
+    public ProposalDisplay(GridPane gridPane,
+                           BsqFormatter bsqFormatter,
+                           DaoFacade daoFacade,
+                           @Nullable ChangeParamValidator changeParamValidator,
+                           Navigation navigation,
+                           @Nullable Preferences preferences) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
@@ -434,9 +438,9 @@ public class ProposalDisplay {
                     Res.get("dao.proposal.voteResult.failed");
             ProposalVoteResult proposalVoteResult = evaluatedProposal.getProposalVoteResult();
             String threshold = (proposalVoteResult.getThreshold() / 100D) + "%";
-            String requiredThreshold = (evaluatedProposal.getRequiredThreshold() / 100D) + "%";
+            String requiredThreshold = (daoFacade.getRequiredThreshold(evaluatedProposal.getProposal()) / 100D) + "%";
             String quorum = bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getQuorum()));
-            String requiredQuorum = bsqFormatter.formatCoinWithCode(Coin.valueOf(evaluatedProposal.getRequiredQuorum()));
+            String requiredQuorum = bsqFormatter.formatCoinWithCode(daoFacade.getRequiredQuorum(evaluatedProposal.getProposal()));
             String summary = Res.get("dao.proposal.voteResult.summary", result,
                     threshold, requiredThreshold, quorum, requiredQuorum);
             voteResultTextField.setText(summary);
@@ -526,7 +530,7 @@ public class ProposalDisplay {
                         comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
                         comboBoxValueTextField.setOnMouseClicked(e ->
                                 navigation.navigateToWithData(bond, MainView.class, DaoView.class, BondingView.class,
-                                BondsView.class));
+                                        BondsView.class));
                         comboBoxValueTextField.getStyleClass().addAll("hyperlink", "show-hand");
                     });
         } else if (proposal instanceof GenericProposal) {
@@ -624,10 +628,6 @@ public class ProposalDisplay {
 
     public int incrementAndGetGridRow() {
         return ++gridRow;
-    }
-
-    public int getGridRow() {
-        return gridRow;
     }
 
     @SuppressWarnings("Duplicates")

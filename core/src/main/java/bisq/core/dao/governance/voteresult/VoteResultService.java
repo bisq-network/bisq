@@ -529,17 +529,14 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 // We need to exceed requiredVoteThreshold e.g. 50% is not enough but 50.01%.
                 // Otherwise we could have 50% vs 50%
                 if (reachedThreshold > requiredVoteThreshold) {
-                    evaluatedProposals.add(new EvaluatedProposal(true, proposalVoteResult,
-                            requiredQuorum, requiredVoteThreshold));
+                    evaluatedProposals.add(new EvaluatedProposal(true, proposalVoteResult));
                 } else {
-                    evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult,
-                            requiredQuorum, requiredVoteThreshold));
+                    evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult));
                     log.info("Proposal did not reach the requiredVoteThreshold. reachedThreshold={} %, " +
                             "requiredVoteThreshold={} %", reachedThreshold / 100D, requiredVoteThreshold / 100D);
                 }
             } else {
-                evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult,
-                        requiredQuorum, requiredVoteThreshold));
+                evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult));
                 log.info("Proposal did not reach the requiredQuorum. reachedQuorum={}, requiredQuorum={}",
                         reachedQuorum, requiredQuorum);
             }
@@ -557,10 +554,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
                     ProposalVoteResult proposalVoteResult = new ProposalVoteResult(proposal, 0,
                             0, 0, 0, decryptedBallotsWithMeritsSet.size());
-                    EvaluatedProposal evaluatedProposal = new EvaluatedProposal(false,
-                            proposalVoteResult,
-                            requiredQuorum,
-                            requiredVoteThreshold);
+                    EvaluatedProposal evaluatedProposal = new EvaluatedProposal(false, proposalVoteResult);
                     evaluatedProposals.add(evaluatedProposal);
                     log.info("Proposal ignored by all voters: " + evaluatedProposal);
                 });
