@@ -93,7 +93,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
     @Override
     public void initialize() {
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.allBonds.header"));
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.allBonds.header"), "last");
         tableView.setItems(sortedList);
         addColumns();
 

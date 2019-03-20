@@ -691,6 +691,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void createVoteView() {
         voteTitledGroupBg = addTitledGroupBg(root, ++gridRow, 4,
                 Res.get("dao.proposal.votes.header"), 20);
+        voteTitledGroupBg.getStyleClass().add("last");
         voteFields.add(voteTitledGroupBg);
 
         Tuple3<Label, TextField, VBox> meritTuple = addTopLabelTextField(root, gridRow,

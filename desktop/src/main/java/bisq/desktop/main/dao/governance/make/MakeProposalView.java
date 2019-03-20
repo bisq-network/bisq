@@ -251,8 +251,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         isProposalPhase.set(daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
         if (isProposalPhase.get()) {
             proposalGroupTitle.set(Res.get("dao.proposal.create.selectProposalType"));
+            proposalTitledGroup.getStyleClass().remove("last");
         } else {
             proposalGroupTitle.set(Res.get("dao.proposal.create.phase.inactive"));
+            proposalTitledGroup.getStyleClass().add("last");
             proposalTypeComboBox.getSelectionModel().clearSelection();
             updateTimeUntilNextProposalPhase(block.getHeight());
         }

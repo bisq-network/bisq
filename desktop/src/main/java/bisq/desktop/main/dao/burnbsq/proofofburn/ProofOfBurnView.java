@@ -143,7 +143,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         createColumnsForMyItems();
         myItemsTableView.setItems(myItemsSortedList);
 
-        allTxsTableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.proofOfBurn.allTxs"), 30);
+        allTxsTableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.proofOfBurn.allTxs"), 30, "last");
         createColumnsForAllTxs();
         allTxsTableView.setItems(allItemsSortedList);
 
