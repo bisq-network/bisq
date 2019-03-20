@@ -27,7 +27,7 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.DAOTestingFeedbackWindow;
+import bisq.desktop.main.overlays.windows.DaoTestingFeedbackWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -379,12 +379,12 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         });
         Collections.reverse(cycleListItemList);
 
-        maybeShowDAOTestingFeedbackWindow();
+        maybeShowDaoTestingFeedbackWindow();
 
         GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 2, 4);
     }
 
-    private void maybeShowDAOTestingFeedbackWindow() {
+    private void maybeShowDaoTestingFeedbackWindow() {
         String testingPopupKey = "daoTestingFeedbackPopup";
         if (DontShowAgainLookup.showAgain(testingPopupKey)) {
             UserThread.runAfter(() -> {
@@ -392,7 +392,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())) ||
                         myBlindVoteListService.getMyBlindVoteList().stream().map(BlindVote::getTxId)
                                 .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())))
-                    new DAOTestingFeedbackWindow()
+                    new DaoTestingFeedbackWindow()
                             .dontShowAgainId(testingPopupKey)
                             .show();
             }, 4, TimeUnit.SECONDS);

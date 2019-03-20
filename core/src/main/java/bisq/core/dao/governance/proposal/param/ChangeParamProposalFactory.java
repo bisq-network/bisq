@@ -19,9 +19,9 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.BaseProposalFactory;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
@@ -30,6 +30,8 @@ import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
+
+import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,6 +76,7 @@ public class ChangeParamProposalFactory extends BaseProposalFactory<ChangeParamP
                 name,
                 link,
                 param,
-                paramValue);
+                paramValue,
+                new HashMap<>());
     }
 }

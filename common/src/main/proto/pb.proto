@@ -1577,6 +1577,8 @@ message Proposal {
         GenericProposal generic_proposal = 11;
         RemoveAssetProposal remove_asset_proposal = 12;
     }
+    // We leave some index space here in case we add more subclasses
+    map<string, string> extra_data = 20;
 }
 
 message CompensationProposal {
@@ -1709,6 +1711,7 @@ message BlindVote {
     string tx_id = 2;
     int64 stake = 3;
     bytes encrypted_merit_list = 4;
+    map<string, string> extra_data = 5;
 }
 
 message MyBlindVoteList {
