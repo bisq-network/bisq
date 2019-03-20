@@ -160,6 +160,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         gridRow = phasesView.addGroup(root, gridRow);
 
         proposalTitledGroup = addTitledGroupBg(root, ++gridRow, 2, proposalGroupTitle.get(), Layout.GROUP_DISTANCE);
+        proposalTitledGroup.getStyleClass().add("last");
         final Tuple3<Label, TextField, VBox> nextProposalPhaseTuple = addTopLabelReadOnlyTextField(root, gridRow,
                 Res.get("dao.cycle.proposal.next"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE);
@@ -251,10 +252,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         isProposalPhase.set(daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.PROPOSAL));
         if (isProposalPhase.get()) {
             proposalGroupTitle.set(Res.get("dao.proposal.create.selectProposalType"));
-            proposalTitledGroup.getStyleClass().remove("last");
         } else {
             proposalGroupTitle.set(Res.get("dao.proposal.create.phase.inactive"));
-            proposalTitledGroup.getStyleClass().add("last");
             proposalTypeComboBox.getSelectionModel().clearSelection();
             updateTimeUntilNextProposalPhase(block.getHeight());
         }
@@ -442,7 +441,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         if (selectedProposalType != null) {
             proposalDisplay = new ProposalDisplay(root, bsqFormatter, daoFacade, changeParamValidator, navigation, null);
 
-            proposalDisplay.createAllFields(Res.get("dao.proposal.create.new"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE,
+            proposalDisplay.createAllFields(Res.get("dao.proposal.create.new"), alwaysVisibleGridRowIndex, Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR,
                     selectedProposalType, true);
 
             final Tuple4<Button, BusyAnimation, Label, HBox> makeProposalTuple = addButtonBusyAnimationLabelAfterGroup(root,

@@ -201,11 +201,19 @@ public class ProposalDisplay {
         }
 
         titledGroupBg = addTitledGroupBg(gridPane, gridRow, titledGroupBgRowSpan, title, top);
-        double proposalTypeTop = top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE;
+        double proposalTypeTop;
+
+        if (top == Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR) {
+            proposalTypeTop = Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE_WITHOUT_SEPARATOR;
+        } else if (top == Layout.GROUP_DISTANCE) {
+            proposalTypeTop = Layout.FIRST_ROW_AND_GROUP_DISTANCE;
+        } else {
+            proposalTypeTop = Layout.FIRST_ROW_DISTANCE;
+        }
         proposalTypeTextField = addTopLabelTextField(gridPane, gridRow,
                 Res.get("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
 
-        nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"), Layout.FIRST_ROW_DISTANCE);
+        nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"));
         if (isMakeProposalScreen)
             nameTextField.setValidator(new InputValidator());
         inputControls.add(nameTextField);
