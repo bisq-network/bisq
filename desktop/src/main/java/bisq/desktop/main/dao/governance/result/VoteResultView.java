@@ -1028,9 +1028,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                     case BONDED_ROLE:
                         RoleProposal roleProposal = (RoleProposal) proposal.getProposal();
                         proposalJson.addProperty("roleType", roleProposal.getRole().getBondedRoleType().name());
-                        proposalJson.addProperty("requiredBond", roleProposal.getRole().getBondedRoleType().getRequiredBond());
+                        proposalJson.addProperty("requiredBond", roleProposal.getRequiredBond());
                         proposalJson.addProperty("allowMultipleHolders", roleProposal.getRole().getBondedRoleType().isAllowMultipleHolders());
-                        proposalJson.addProperty("unlockTimeInBlocks", roleProposal.getRole().getBondedRoleType().getUnlockTimeInBlocks());
+                        proposalJson.addProperty("unlockTimeInBlocks", roleProposal.getUnlockTime());
                         proposalJson.addProperty("roleUid", roleProposal.getRole().getUid());
                         break;
                     case CHANGE_PARAM:

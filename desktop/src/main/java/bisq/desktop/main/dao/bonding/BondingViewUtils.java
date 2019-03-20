@@ -31,8 +31,8 @@ import bisq.core.dao.governance.bond.reputation.MyReputation;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
@@ -81,9 +81,10 @@ public class BondingViewUtils {
     }
 
     public void lockupBondForBondedRole(Role role, Consumer<String> resultHandler) {
-        BondedRoleType bondedRoleType = role.getBondedRoleType();
-        Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
-        int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
+        Optional<RoleProposal> roleProposal = getAcceptedBondedRoleProposal(role);
+        checkArgument(roleProposal.isPresent(), "roleProposal must be present");
+        Coin lockupAmount = Coin.valueOf(roleProposal.get().getRequiredBond());
+        int lockupTime = roleProposal.get().getUnlockTime();
         if (!bondedRolesRepository.isBondedAssetAlreadyInBond(role)) {
             lockupBond(role.getHash(), lockupAmount, lockupTime, LockupReason.BONDED_ROLE, resultHandler);
         } else {
@@ -135,6 +136,10 @@ public class BondingViewUtils {
                 },
                 this::handleError
         );
+    }
+
+    public Optional<RoleProposal> getAcceptedBondedRoleProposal(Role role) {
+        return bondedRolesRepository.getAcceptedBondedRoleProposal(role);
     }
 
     public void unLock(String lockupTxId, Consumer<String> resultHandler) {

@@ -21,6 +21,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -28,17 +29,20 @@ import org.bitcoinj.core.Coin;
 
 import javafx.geometry.Insets;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
-//TODO not used atm but keep it as is should be used
 @Slf4j
 class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
     private final BondedRoleType bondedRoleType;
+    private final Optional<RoleProposal> roleProposal;
     private final BsqFormatter bsqFormatter;
 
 
-    public RoleDetailsWindow(BondedRoleType bondedRoleType, BsqFormatter bsqFormatter) {
+    RoleDetailsWindow(BondedRoleType bondedRoleType, Optional<RoleProposal> roleProposal, BsqFormatter bsqFormatter) {
         this.bondedRoleType = bondedRoleType;
+        this.roleProposal = roleProposal;
         this.bsqFormatter = bsqFormatter;
 
         width = 968;
@@ -77,11 +81,13 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.role"),
                 bondedRoleType.getDisplayString());
 
+        long requiredBond = roleProposal.map(RoleProposal::getRequiredBond).orElse(bondedRoleType.getRequiredBond());
+        int unlockTime = roleProposal.map(RoleProposal::getUnlockTime).orElse(bondedRoleType.getUnlockTimeInBlocks());
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.requiredBond"),
-                bsqFormatter.formatCoinWithCode(Coin.valueOf(bondedRoleType.getRequiredBond())));
+                bsqFormatter.formatCoinWithCode(Coin.valueOf(requiredBond)));
 
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.unlockTime"),
-                Res.get("dao.bond.details.blocks", bondedRoleType.getUnlockTimeInBlocks()));
+                Res.get("dao.bond.details.blocks", unlockTime));
 
         FormBuilder.addTopLabelHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("dao.bond.details.link"),
                 bondedRoleType.getLink(), bondedRoleType.getLink(), 0);
