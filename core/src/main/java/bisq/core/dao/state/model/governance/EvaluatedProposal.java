@@ -33,15 +33,9 @@ public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateM
     private final boolean isAccepted;
     private final ProposalVoteResult proposalVoteResult;
 
-    //TODO remove - can be derived from params
-    private final long requiredQuorum;
-    private final long requiredThreshold;
-
-    public EvaluatedProposal(boolean isAccepted, ProposalVoteResult proposalVoteResult, long requiredQuorum, long requiredThreshold) {
+    public EvaluatedProposal(boolean isAccepted, ProposalVoteResult proposalVoteResult) {
         this.isAccepted = isAccepted;
         this.proposalVoteResult = proposalVoteResult;
-        this.requiredQuorum = requiredQuorum;
-        this.requiredThreshold = requiredThreshold;
     }
 
 
@@ -53,17 +47,13 @@ public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateM
     public PB.EvaluatedProposal toProtoMessage() {
         PB.EvaluatedProposal.Builder builder = PB.EvaluatedProposal.newBuilder()
                 .setIsAccepted(isAccepted)
-                .setProposalVoteResult(proposalVoteResult.toProtoMessage())
-                .setRequiredQuorum(requiredQuorum)
-                .setRequiredThreshold(requiredThreshold);
+                .setProposalVoteResult(proposalVoteResult.toProtoMessage());
         return builder.build();
     }
 
     public static EvaluatedProposal fromProto(PB.EvaluatedProposal proto) {
         return new EvaluatedProposal(proto.getIsAccepted(),
-                ProposalVoteResult.fromProto(proto.getProposalVoteResult()),
-                proto.getRequiredQuorum(),
-                proto.getRequiredThreshold());
+                ProposalVoteResult.fromProto(proto.getProposalVoteResult()));
     }
 
 
@@ -84,8 +74,6 @@ public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateM
         return "EvaluatedProposal{" +
                 "\n     isAccepted=" + isAccepted +
                 ",\n     proposalVoteResult=" + proposalVoteResult +
-                ",\n     requiredQuorum=" + requiredQuorum +
-                ",\n     requiredThreshold=" + requiredThreshold +
                 "\n}";
     }
 }

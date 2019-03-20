@@ -26,6 +26,7 @@ import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStorageService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -39,6 +40,8 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+
+import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
@@ -182,6 +185,20 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                 .map(ProposalPayload::getProposal)
                 .filter(proposal -> validatorProvider.getValidator(proposal).isTxTypeValid(proposal))
                 .collect(Collectors.toList());
+    }
+
+    public Coin getRequiredQuorum(Proposal proposal) {
+        int chainHeight = daoStateService.getTx(proposal.getTxId())
+                .map(BaseTx::getBlockHeight).
+                        orElse(daoStateService.getChainHeight());
+        return daoStateService.getParamValueAsCoin(proposal.getQuorumParam(), chainHeight);
+    }
+
+    public double getRequiredThreshold(Proposal proposal) {
+        int chainHeight = daoStateService.getTx(proposal.getTxId())
+                .map(BaseTx::getBlockHeight).
+                        orElse(daoStateService.getChainHeight());
+        return daoStateService.getParamValueAsPercentDouble(proposal.getThresholdParam(), chainHeight);
     }
 
 
