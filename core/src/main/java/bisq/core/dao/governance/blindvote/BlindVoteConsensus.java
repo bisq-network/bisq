@@ -72,7 +72,7 @@ public class BlindVoteConsensus {
         List<BlindVote> list = blindVoteList.stream()
                 .sorted(Comparator.comparing(BlindVote::getTxId))
                 .collect(Collectors.toList());
-        log.info("Sorted blindVote txId list: " + list.stream()
+        log.debug("Sorted blindVote txId list: " + list.stream()
                 .map(BlindVote::getTxId)
                 .collect(Collectors.toList()));
         return list;

@@ -192,7 +192,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     Optional<List<BlindVote>> optionalBlindVoteListMatchingMajorityHash = findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash);
                     if (optionalBlindVoteListMatchingMajorityHash.isPresent()) {
                         List<BlindVote> blindVoteList = optionalBlindVoteListMatchingMajorityHash.get();
-                        log.info("blindVoteListMatchingMajorityHash: " + blindVoteList.stream()
+                        log.debug("blindVoteListMatchingMajorityHash: " + blindVoteList.stream()
                                 .map(e -> "blindVoteTxId=" + e.getTxId() + ", Stake=" + e.getStake())
                                 .collect(Collectors.toList()));
 
@@ -332,7 +332,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // client code need to handle nullable or optional values.
         BallotList emptyBallotList = new BallotList(new ArrayList<>());
         MeritList emptyMeritList = new MeritList(new ArrayList<>());
-        log.info("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, " +
+        log.debug("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, " +
                         "blindVoteStake={}, ballotList={}",
                 blindVoteTxId, voteRevealTxId, blindVoteStake, emptyBallotList);
         return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId,
@@ -352,7 +352,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             // voteWithProposalTxIdList and create a ballot list with the proposal and the vote from
             // the voteWithProposalTxIdList
             BallotList ballotList = createBallotList(voteWithProposalTxIdList);
-            log.info("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, blindVoteStake={}, ballotList={}",
+            log.debug("Add entry to decryptedBallotsWithMeritsSet: blindVoteTxId={}, voteRevealTxId={}, blindVoteStake={}, ballotList={}",
                     blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList);
             return new DecryptedBallotsWithMerits(hashOfBlindVoteList, blindVoteTxId, voteRevealTxId, blindVoteStake, ballotList, meritList);
         } catch (VoteResultException.DecryptionException decryptionException) {
@@ -490,9 +490,9 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list, boolean doLog) {
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(list);
         if (doLog) {
-            log.info("majorityVoteListHash " + Utilities.bytesAsHexString(majorityVoteListHash));
-            log.info("hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
-            log.info("List of blindVoteTxIds " + list.stream().map(BlindVote::getTxId)
+            log.debug("majorityVoteListHash " + Utilities.bytesAsHexString(majorityVoteListHash));
+            log.debug("hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
+            log.debug("List of blindVoteTxIds " + list.stream().map(BlindVote::getTxId)
                     .collect(Collectors.joining(", ")));
         }
         return Arrays.equals(majorityVoteListHash, hashOfBlindVoteList);
@@ -515,7 +515,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             ProposalVoteResult proposalVoteResult = getResultPerProposal(voteWithStakeList, proposal);
             // Quorum is min. required BSQ stake to be considered valid
             long reachedQuorum = proposalVoteResult.getQuorum();
-            log.info("proposalTxId: {}, required requiredQuorum: {}, requiredVoteThreshold: {}",
+            log.debug("proposalTxId: {}, required requiredQuorum: {}, requiredVoteThreshold: {}",
                     proposal.getTxId(), requiredVoteThreshold / 100D, requiredQuorum);
             if (reachedQuorum >= requiredQuorum) {
                 // We multiply by 10000 as we use a long for reachedThreshold and we want precision of 2 with
@@ -523,7 +523,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 // Threshold is percentage of accepted to total stake
                 long reachedThreshold = proposalVoteResult.getThreshold();
 
-                log.info("reached threshold: {} %, required threshold: {} %",
+                log.debug("reached threshold: {} %, required threshold: {} %",
                         reachedThreshold / 100D,
                         requiredVoteThreshold / 100D);
                 // We need to exceed requiredVoteThreshold e.g. 50% is not enough but 50.01%.
@@ -532,12 +532,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     evaluatedProposals.add(new EvaluatedProposal(true, proposalVoteResult));
                 } else {
                     evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult));
-                    log.info("Proposal did not reach the requiredVoteThreshold. reachedThreshold={} %, " +
+                    log.debug("Proposal did not reach the requiredVoteThreshold. reachedThreshold={} %, " +
                             "requiredVoteThreshold={} %", reachedThreshold / 100D, requiredVoteThreshold / 100D);
                 }
             } else {
                 evaluatedProposals.add(new EvaluatedProposal(false, proposalVoteResult));
-                log.info("Proposal did not reach the requiredQuorum. reachedQuorum={}, requiredQuorum={}",
+                log.debug("Proposal did not reach the requiredQuorum. reachedQuorum={}, requiredQuorum={}",
                         reachedQuorum, requiredQuorum);
             }
         });
@@ -579,7 +579,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                             decryptedBallotsWithMerits.getMeritList(), daoStateService);
                     VoteWithStake voteWithStake = new VoteWithStake(ballot.getVote(), decryptedBallotsWithMerits.getStake(), sumOfAllMerits);
                     voteWithStakeList.add(voteWithStake);
-                    log.info("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
+                    log.debug("Add entry to voteWithStakeListByProposalMap: proposalTxId={}, voteWithStake={} ", proposal.getTxId(), voteWithStake);
                 }));
         return voteWithStakeByProposalMap;
     }
@@ -596,7 +596,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             long sumOfAllMerits = voteWithStake.getSumOfAllMerits();
             long stake = voteWithStake.getStake();
             long combinedStake = stake + sumOfAllMerits;
-            log.info("proposalTxId={}, stake={}, sumOfAllMerits={}, combinedStake={}",
+            log.debug("proposalTxId={}, stake={}, sumOfAllMerits={}, combinedStake={}",
                     proposal.getTxId(), stake, sumOfAllMerits, combinedStake);
             Vote vote = voteWithStake.getVote();
             if (vote != null) {

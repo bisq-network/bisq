@@ -17,8 +17,8 @@
 
 package bisq.core.dao.governance.blindvote;
 
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -80,7 +80,7 @@ public class BlindVoteValidator {
 
         // Check if tx is already confirmed and in DaoState
         boolean isConfirmed = daoStateService.getTx(blindVote.getTxId()).isPresent();
-        if (!isConfirmed)
+        if (daoStateService.isParseBlockChainComplete() && !isConfirmed)
             log.warn("blindVoteTx is not confirmed. blindVoteTxId={}", blindVote.getTxId());
 
         return isConfirmed;

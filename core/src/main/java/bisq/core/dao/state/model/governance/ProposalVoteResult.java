@@ -87,7 +87,7 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
 
     public long getQuorum() {
         // Quorum is sum of all votes independent if accepted or rejected.
-        log.info("Quorum: proposalTxId: {}, totalStake: {}, stakeOfAcceptedVotes: {}, stakeOfRejectedVotes: {}",
+        log.debug("Quorum: proposalTxId: {}, totalStake: {}, stakeOfAcceptedVotes: {}, stakeOfRejectedVotes: {}",
                 proposal.getTxId(), getTotalStake(), stakeOfAcceptedVotes, stakeOfRejectedVotes);
         return getTotalStake();
     }

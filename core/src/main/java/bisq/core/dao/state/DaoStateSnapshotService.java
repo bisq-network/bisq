@@ -90,6 +90,7 @@ public class DaoStateSnapshotService {
                 isValidHeight(daoStateService.getBlocks().getLast().getHeight()) &&
                 noSnapshotCandidateOrDifferentHeight) {
             // At trigger event we store the latest snapshotCandidate to disc
+            long ts = System.currentTimeMillis();
             if (daoStateSnapshotCandidate != null) {
                 // We clone because storage is in a threaded context and we set the snapshotCandidate to our current
                 // state in the next step
@@ -97,15 +98,16 @@ public class DaoStateSnapshotService {
                 LinkedList<DaoStateHash> clonedDaoStateHashChain = new LinkedList<>(daoStateHashChainSnapshotCandidate);
                 daoStateStorageService.persist(clonedDaoState, clonedDaoStateHashChain);
 
-                log.info("Saved snapshotCandidate with height {} to Disc at height {} ",
-                        daoStateSnapshotCandidate.getChainHeight(), chainHeight);
+                log.info("Saved snapshotCandidate with height {} to Disc at height {} took {} ms",
+                        daoStateSnapshotCandidate.getChainHeight(), chainHeight, System.currentTimeMillis() - ts);
             }
 
+            ts = System.currentTimeMillis();
             // Now we clone and keep it in memory for the next trigger event
             daoStateSnapshotCandidate = daoStateService.getClone();
             daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
 
-            log.info("Cloned new snapshotCandidate at height " + chainHeight);
+            log.info("Cloned new snapshotCandidate at height {} took {} ms", chainHeight, System.currentTimeMillis() - ts);
         }
     }
 
