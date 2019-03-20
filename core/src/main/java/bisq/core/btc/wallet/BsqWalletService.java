@@ -314,8 +314,9 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     private void updateBsqWalletTransactions() {
         walletTransactions.setAll(getTransactions(false));
-        // walletTransactions.setAll(getBsqWalletTransactions());
-        updateBsqBalance();
+        if (daoStateService.isParseBlockChainComplete()) {
+            updateBsqBalance();
+        }
     }
 
     private Set<Transaction> getBsqWalletTransactions() {
