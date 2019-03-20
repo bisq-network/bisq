@@ -26,7 +26,10 @@ import bisq.common.app.Version;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.springframework.util.CollectionUtils;
+
 import java.util.Date;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -43,13 +46,15 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
 
     public ConfiscateBondProposal(String name,
                                   String link,
-                                  String lockupTxId) {
+                                  String lockupTxId,
+                                  Map<String, String> extraDataMap) {
         this(name,
                 link,
                 lockupTxId,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "");
+                "",
+                extraDataMap);
     }
 
 
@@ -62,12 +67,14 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                                    String lockupTxId,
                                    byte version,
                                    long creationDate,
-                                   String txId) {
+                                   String txId,
+                                   Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
         this.lockupTxId = lockupTxId;
     }
 
@@ -85,7 +92,9 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 proposalProto.getLockupTxId(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -120,7 +129,8 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 getLockupTxId(),
                 getVersion(),
                 getCreationDate().getTime(),
-                txId);
+                txId,
+                extraDataMap);
     }
 
     @Override

@@ -26,7 +26,10 @@ import bisq.common.app.Version;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.springframework.util.CollectionUtils;
+
 import java.util.Date;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -43,7 +46,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private final long requiredBond;
     private final int unlockTime; // in blocks
 
-    public RoleProposal(Role role) {
+    public RoleProposal(Role role, Map<String, String> extraDataMap) {
         this(role.getName(),
                 role.getLink(),
                 role,
@@ -51,7 +54,8 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "");
+                "",
+                extraDataMap);
     }
 
 
@@ -66,12 +70,14 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                          int unlockTime,
                          byte version,
                          long creationDate,
-                         String txId) {
+                         String txId,
+                         Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
 
         this.role = role;
         this.requiredBond = requiredBond;
@@ -96,7 +102,9 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 proposalProto.getUnlockTime(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -133,7 +141,8 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 unlockTime,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
     }
 
     @Override

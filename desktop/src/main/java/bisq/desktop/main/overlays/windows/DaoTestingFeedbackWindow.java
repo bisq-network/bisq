@@ -36,9 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;
 
 @Slf4j
-public class DAOTestingFeedbackWindow extends Overlay<DAOTestingFeedbackWindow> {
+public class DaoTestingFeedbackWindow extends Overlay<DaoTestingFeedbackWindow> {
     @Inject
-    public DAOTestingFeedbackWindow() {
+    public DaoTestingFeedbackWindow() {
         type = Type.Confirmation;
     }
 
@@ -46,8 +46,6 @@ public class DAOTestingFeedbackWindow extends Overlay<DAOTestingFeedbackWindow> 
     public void show() {
         headLine(Res.get("daoTestingFeedbackWindow.title"));
         message(Res.get("daoTestingFeedbackWindow.msg.part1"));
-        hideCloseButton();
-        actionButtonText(Res.get("shared.close"));
         super.show(true);
     }
 
@@ -57,7 +55,7 @@ public class DAOTestingFeedbackWindow extends Overlay<DAOTestingFeedbackWindow> 
 
         HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("daoTestingFeedbackWindow.surveyLinkLabel"),
                 "https://docs.google.com/forms/d/e/1FAIpQLSdS4YRE9Eox3bvuo4oSJJQCm5Yy54ZclKC_ThUt702PeU4rxw/viewform");
-        GridPane.setMargin(survey, new Insets(-6, 0, 10, -4));
+        GridPane.setMargin(survey, new Insets(-6, 0, 10, 0));
 
         AutoTooltipLabel messageLabel2 = new AutoTooltipLabel(Res.get("daoTestingFeedbackWindow.msg.part2"));
         messageLabel2.setMouseTransparent(true);
@@ -71,7 +69,7 @@ public class DAOTestingFeedbackWindow extends Overlay<DAOTestingFeedbackWindow> 
 
         HyperlinkWithIcon forum = addHyperlinkWithIcon(gridPane, ++rowIndex, Res.get("daoTestingFeedbackWindow.forumLinkLabel"),
                 "https://bisq.community", 40);
-        GridPane.setMargin(forum, new Insets(-6, 0, 10, -4));
+        GridPane.setMargin(forum, new Insets(-6, 0, 10, 0));
 
         AutoTooltipLabel messageLabel3 = new AutoTooltipLabel(Res.get("daoTestingFeedbackWindow.msg.part3"));
         messageLabel3.setMouseTransparent(true);
