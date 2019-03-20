@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal.role;
 
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
@@ -30,8 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+/**
+ * Changes here can potentially break consensus!
+ */
 @Slf4j
-public class RoleValidator extends ProposalValidator {
+public class RoleValidator extends ProposalValidator implements ConsensusCritical {
 
     @Inject
     public RoleValidator(DaoStateService daoStateService, PeriodService periodService) {

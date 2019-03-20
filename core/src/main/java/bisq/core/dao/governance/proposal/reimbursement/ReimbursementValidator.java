@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal.reimbursement;
 
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
@@ -34,8 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
+/**
+ * Changes here can potentially break consensus!
+ */
 @Slf4j
-public class ReimbursementValidator extends ProposalValidator {
+public class ReimbursementValidator extends ProposalValidator implements ConsensusCritical {
 
     @Inject
     public ReimbursementValidator(DaoStateService daoStateService, PeriodService periodService) {

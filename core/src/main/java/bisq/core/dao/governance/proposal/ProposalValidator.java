@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal;
 
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
@@ -33,8 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import static org.apache.commons.lang3.Validate.notEmpty;
 
+/**
+ * Changes here can potentially break consensus!
+ */
 @Slf4j
-public abstract class ProposalValidator {
+public abstract class ProposalValidator implements ConsensusCritical {
     protected final DaoStateService daoStateService;
     protected final PeriodService periodService;
 

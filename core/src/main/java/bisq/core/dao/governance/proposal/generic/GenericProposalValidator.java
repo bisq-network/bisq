@@ -17,6 +17,7 @@
 
 package bisq.core.dao.governance.proposal.generic;
 
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
@@ -27,8 +28,11 @@ import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Changes here can potentially break consensus!
+ */
 @Slf4j
-public class GenericProposalValidator extends ProposalValidator {
+public class GenericProposalValidator extends ProposalValidator implements ConsensusCritical {
 
     @Inject
     public GenericProposalValidator(DaoStateService daoStateService, PeriodService periodService) {
