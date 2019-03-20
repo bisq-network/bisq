@@ -87,6 +87,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -184,7 +185,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         };
         alwaysVisibleGridRowIndex = gridRow + 1;
 
-        List<ProposalType> proposalTypes = Arrays.asList(ProposalType.values());
+        List<ProposalType> proposalTypes = Arrays.stream(ProposalType.values())
+                .filter(e -> e != ProposalType.UNDEFINED)
+                .collect(Collectors.toList());
         proposalTypeComboBox.setItems(FXCollections.observableArrayList(proposalTypes));
     }
 

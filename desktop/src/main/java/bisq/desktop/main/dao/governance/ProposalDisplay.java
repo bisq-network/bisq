@@ -301,7 +301,10 @@ public class ProposalDisplay {
                         Res.get("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
-                bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(BondedRoleType.values()));
+                List<BondedRoleType> bondedRoleTypes = Arrays.stream(BondedRoleType.values())
+                        .filter(e -> e != BondedRoleType.UNDEFINED)
+                        .collect(Collectors.toList());
+                bondedRoleTypeComboBox.setItems(FXCollections.observableArrayList(bondedRoleTypes));
                 bondedRoleTypeComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(BondedRoleType bondedRoleType) {
@@ -520,7 +523,8 @@ public class ProposalDisplay {
             Role role = roleProposal.getRole();
             bondedRoleTypeComboBox.getSelectionModel().select(role.getBondedRoleType());
             comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(role.getBondedRoleType()));
-            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(role.getBondedRoleType().getRequiredBond())));
+            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(roleProposal.getRequiredBond())));
+            // TODO maybe show also unlock time?
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
