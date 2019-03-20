@@ -93,7 +93,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         int gridRow = 0;
-        tableView = FormBuilder.addTableViewWithHeader(root, gridRow, Res.get("dao.bond.bondedRoles"));
+        tableView = FormBuilder.addTableViewWithHeader(root, gridRow, Res.get("dao.bond.bondedRoles"), "last");
         createColumns();
         tableView.setItems(sortedList);
 

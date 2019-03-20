@@ -42,7 +42,7 @@ public class BondingDashboardView extends ActivatableView<GridPane, Void> {
 
     public void initialize() {
         gridRow = bsqBalanceUtil.addGroup(root, gridRow);
-        gridRow = bsqBalanceUtil.addBondBalanceGroup(root, gridRow);
+        gridRow = bsqBalanceUtil.addBondBalanceGroup(root, gridRow, "last");
     }
 
     @Override

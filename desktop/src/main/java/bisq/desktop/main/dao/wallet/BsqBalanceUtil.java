@@ -92,9 +92,11 @@ public class BsqBalanceUtil implements BsqBalanceListener {
         return gridRow;
     }
 
-    public int addBondBalanceGroup(GridPane gridPane, int gridRow) {
-        addTitledGroupBg(gridPane, ++gridRow, 2,
+    public int addBondBalanceGroup(GridPane gridPane, int gridRow, String groupStyle) {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2,
                 Res.get("dao.bond.dashboard.bondsHeadline"), Layout.GROUP_DISTANCE);
+
+        if (groupStyle != null) titledGroupBg.getStyleClass().add(groupStyle);
 
         lockupAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(gridPane, gridRow,
                 Res.get("dao.bond.dashboard.lockupAmount"),

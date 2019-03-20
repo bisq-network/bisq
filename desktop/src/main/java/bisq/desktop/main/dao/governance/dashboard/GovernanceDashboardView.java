@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.governance.dashboard;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.util.Layout;
 
@@ -69,7 +70,8 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     public void initialize() {
         gridRow = phasesView.addGroup(root, gridRow);
 
-        addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, ++gridRow, 6, Res.get("dao.cycle.overview.headline"), Layout.GROUP_DISTANCE);
+        titledGroupBg.getStyleClass().add("last");
         currentBlockHeightTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.cycle.currentBlockHeight"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currentPhaseTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.cycle.currentPhase")).second;
