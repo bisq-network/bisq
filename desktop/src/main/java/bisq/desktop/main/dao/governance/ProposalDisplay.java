@@ -410,12 +410,11 @@ public class ProposalDisplay {
         Tuple3<Label, TextField, VBox> tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.myVote"));
 
         myVoteBox = tuple3.third;
-        myVoteBox.setVisible(false);
-        myVoteBox.setManaged(false);
+        setMyVoteBoxVisibility(false);
 
         myVoteTextField = tuple3.second;
 
-        tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.voteResult"));
+        tuple3 = addTopLabelReadOnlyTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.voteResult"));
 
         voteResultBox = tuple3.third;
         voteResultBox.setVisible(false);
@@ -436,8 +435,7 @@ public class ProposalDisplay {
         }
         myVoteTextField.setText(myVote);
 
-        myVoteBox.setVisible(isNotNull);
-        myVoteBox.setManaged(isNotNull);
+        setMyVoteBoxVisibility(isNotNull);
     }
 
     public void applyEvaluatedProposal(@Nullable EvaluatedProposal evaluatedProposal) {
@@ -480,8 +478,7 @@ public class ProposalDisplay {
         }
 
         boolean show = ballotIsNotNull && hasVoted;
-        myVoteBox.setVisible(show);
-        myVoteBox.setManaged(show);
+        setMyVoteBoxVisibility(show);
     }
 
     public void setIsVoteIncludedInResult(boolean isVoteIncludedInResult) {
@@ -666,5 +663,14 @@ public class ProposalDisplay {
         anchorPane.getChildren().add(gridPane);
 
         return scrollPane;
+    }
+
+    private void setMyVoteBoxVisibility(boolean visibility) {
+        myVoteBox.setVisible(visibility);
+        myVoteBox.setManaged(visibility);
+
+        if (visibility) {
+            GridPane.setRowSpan(titledGroupBg, titledGroupBgRowSpan);
+        }
     }
 }
