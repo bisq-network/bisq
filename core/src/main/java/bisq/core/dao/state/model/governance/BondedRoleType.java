@@ -29,37 +29,44 @@ import lombok.Getter;
  * role might get removed.
  *
  * Add entry to translation file "dao.bond.bondedRoleType...."
+ *
+ * Name of the BondedRoleType must not change as that is used for serialisation in Protobuffer. The data fields are not part of
+ * the PB serialisation so changes for those would not change the hash for the dao state hash chain.
+ * As the data is not used in consensus critical code yet changing fields can be tolerated.
+ * For mediators and arbitrators we will use automated verification of the bond so there might be issues when we change
+ * the values.
+ *
  */
 public enum BondedRoleType {
     UNDEFINED(0, 0, "N/A", false),
     // admins
-    GITHUB_ADMIN(50_000, 60, "https://bisq.network/roles/16", true),
-    FORUM_ADMIN(20_000, 60, "https://bisq.network/roles/19", true),
-    TWITTER_ADMIN(20_000, 60, "https://bisq.network/roles/21", true),
-    ROCKET_CHAT_ADMIN(20_000, 60, "https://bisq.network/roles/79", true),
-    YOUTUBE_ADMIN(10_000, 60, "https://bisq.network/roles/56", true),
+    GITHUB_ADMIN(50_000, 75, "https://bisq.network/roles/16", true),
+    FORUM_ADMIN(20_000, 75, "https://bisq.network/roles/19", true),
+    TWITTER_ADMIN(20_000, 75, "https://bisq.network/roles/21", true),
+    ROCKET_CHAT_ADMIN(20_000, 75, "https://bisq.network/roles/79", true),
+    YOUTUBE_ADMIN(10_000, 75, "https://bisq.network/roles/56", true),
 
     // maintainers
-    BISQ_MAINTAINER(50_000, 60, "https://bisq.network/roles/63", true),
-    BITCOINJ_MAINTAINER(20_000, 60, "https://bisq.network/roles/8", true),
-    NETLAYER_MAINTAINER(20_000, 60, "https://bisq.network/roles/81", true),
+    BISQ_MAINTAINER(50_000, 75, "https://bisq.network/roles/63", true),
+    BITCOINJ_MAINTAINER(20_000, 75, "https://bisq.network/roles/8", true),
+    NETLAYER_MAINTAINER(20_000, 75, "https://bisq.network/roles/81", true),
 
     // operators
-    WEBSITE_OPERATOR(50_000, 60, "https://bisq.network/roles/12", true),
-    FORUM_OPERATOR(50_000, 60, "https://bisq.network/roles/19", true),
-    SEED_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/15", true),
-    DATA_RELAY_NODE_OPERATOR(20_000, 60, "https://bisq.network/roles/14", true),
-    BTC_NODE_OPERATOR(5_000, 60, "https://bisq.network/roles/67", true),
-    MARKETS_OPERATOR(20_000, 60, "https://bisq.network/roles/9", true),
-    BSQ_EXPLORER_OPERATOR(20_000, 60, "https://bisq.network/roles/11", true),
-    MOBILE_NOTIFICATIONS_RELAY_OPERATOR(20_000, 60, "https://bisq.network/roles/82", true),
+    WEBSITE_OPERATOR(50_000, 75, "https://bisq.network/roles/12", true),
+    FORUM_OPERATOR(50_000, 75, "https://bisq.network/roles/19", true),
+    SEED_NODE_OPERATOR(20_000, 75, "https://bisq.network/roles/15", true),
+    DATA_RELAY_NODE_OPERATOR(20_000, 75, "https://bisq.network/roles/14", true),
+    BTC_NODE_OPERATOR(5_000, 75, "https://bisq.network/roles/67", true),
+    MARKETS_OPERATOR(20_000, 75, "https://bisq.network/roles/9", true),
+    BSQ_EXPLORER_OPERATOR(20_000, 75, "https://bisq.network/roles/11", true),
+    MOBILE_NOTIFICATIONS_RELAY_OPERATOR(20_000, 75, "https://bisq.network/roles/82", true),
 
     // other
-    DOMAIN_NAME_HOLDER(50_000, 60, "https://bisq.network/roles/77", false),
-    DNS_ADMIN(20_000, 60, "https://bisq.network/roles/18", false),
-    MEDIATOR(10_000, 60, "N/A", true),
-    ARBITRATOR(200_000, 60, "https://bisq.network/roles/13", true),
-    BTC_DONATION_ADDRESS_OWNER(20_000, 60, "https://bisq.network/roles/80", true);
+    DOMAIN_NAME_HOLDER(50_000, 75, "https://bisq.network/roles/77", false),
+    DNS_ADMIN(20_000, 75, "https://bisq.network/roles/18", false),
+    MEDIATOR(10_000, 75, "N/A", true),
+    ARBITRATOR(200_000, 75, "https://bisq.network/roles/13", true),
+    BTC_DONATION_ADDRESS_OWNER(20_000, 75, "https://bisq.network/roles/80", true);
 
 
     // Satoshi value of BSQ bond
