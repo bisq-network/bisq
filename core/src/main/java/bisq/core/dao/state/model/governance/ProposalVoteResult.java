@@ -92,10 +92,6 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
         return getTotalStake();
     }
 
-    private long getTotalStake() {
-        return stakeOfAcceptedVotes + stakeOfRejectedVotes;
-    }
-
     public long getThreshold() {
         checkArgument(stakeOfAcceptedVotes >= 0, "stakeOfAcceptedVotes must not be negative");
         checkArgument(stakeOfRejectedVotes >= 0, "stakeOfRejectedVotes must not be negative");
@@ -115,5 +111,14 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
                 ",\n     numRejectedVotes=" + numRejectedVotes +
                 ",\n     numIgnoredVotes=" + numIgnoredVotes +
                 "\n}";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private long getTotalStake() {
+        return stakeOfAcceptedVotes + stakeOfRejectedVotes;
     }
 }

@@ -235,8 +235,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             // We do not validate if we are in current cycle and if tx is confirmed yet as the tx might be not
             // available/confirmed. But we check if we are in the proposal phase.
             if (!tempProposals.contains(proposal)) {
-                ProposalValidator validator = validatorProvider.getValidator(proposal);
-                if (validator.isValidOrUnconfirmed(proposal)) {
+                if (validatorProvider.getValidator(proposal).isValidOrUnconfirmed(proposal)) {
                     if (doLog) {
                         log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
                                 proposal.getTxId());
@@ -266,12 +265,12 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                     log.info("We received a remove request for a TempProposalPayload and have removed the proposal " +
                                     "from our list. proposal creation date={}, proposalTxId={}, inPhase={}, " +
                                     "txInPastCycle={}, unconfirmedOrNonBsqTx={}",
-                            proposal.getCreationDate(), proposal.getTxId(), inPhase, txInPastCycle, unconfirmedOrNonBsqTx);
+                            proposal.getCreationDateAsDate(), proposal.getTxId(), inPhase, txInPastCycle, unconfirmedOrNonBsqTx);
                 }
             } else {
                 log.warn("We received a remove request outside the PROPOSAL phase. " +
                                 "Proposal creation date={}, proposal.txId={}, current blockHeight={}",
-                        proposal.getCreationDate(), proposal.getTxId(), daoStateService.getChainHeight());
+                        proposal.getCreationDateAsDate(), proposal.getTxId(), daoStateService.getChainHeight());
             }
         }
     }

@@ -64,8 +64,6 @@ public class GenericProposalFactory extends BaseProposalFactory<GenericProposal>
 
     @Override
     protected GenericProposal createProposalWithoutTxId() {
-        return new GenericProposal(name,
-                link,
-                new HashMap<>());
+        return new GenericProposal(name, link, new HashMap<>());
     }
 }

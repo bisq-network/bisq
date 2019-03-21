@@ -119,7 +119,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
         return new GenericProposal(getName(),
                 getLink(),
                 getVersion(),
-                getCreationDate().getTime(),
+                getCreationDate(),
                 txId,
                 extraDataMap);
     }

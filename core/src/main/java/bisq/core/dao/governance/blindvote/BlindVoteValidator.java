@@ -105,25 +105,4 @@ public class BlindVoteValidator {
         }
         return true;
     }
-
-   /* public boolean isAppendOnlyPayloadValid(BlindVotePayload appendOnlyPayload,
-                                            int publishTriggerBlockHeight,
-                                            DaoStateService daoStateService) {
-        final Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(publishTriggerBlockHeight);
-        if (optionalBlock.isPresent()) {
-            final long blockTimeInMs = optionalBlock.get().getTime() * 1000L;
-            final long tolerance = TimeUnit.HOURS.toMillis(5);
-            final boolean isInTolerance = Math.abs(blockTimeInMs - appendOnlyPayload.getDate()) <= tolerance;
-            final String blockHash = Utilities.encodeToHex(appendOnlyPayload.getBlockHash());
-            final boolean isCorrectBlockHash = blockHash.equals(optionalBlock.get().getHash());
-            if (!isInTolerance)
-                log.warn("BlindVotePayload is not in time tolerance");
-            if (!isCorrectBlockHash)
-                log.warn("BlindVotePayload has not correct block hash");
-            return isInTolerance && isCorrectBlockHash;
-        } else {
-            log.debug("block at publishTriggerBlockHeight is not present.");
-            return false;
-        }
-    }*/
 }

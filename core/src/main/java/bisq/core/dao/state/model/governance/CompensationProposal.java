@@ -154,7 +154,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 getBsqAddress(),
                 getRequestedBsq().value,
                 getVersion(),
-                getCreationDate().getTime(),
+                getCreationDate(),
                 txId,
                 extraDataMap);
     }

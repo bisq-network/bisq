@@ -154,7 +154,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 getBsqAddress(),
                 getRequestedBsq().value,
                 getVersion(),
-                getCreationDate().getTime(),
+                getCreationDate(),
                 txId,
                 extraDataMap);
     }

@@ -129,7 +129,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 getLink(),
                 getTickerSymbol(),
                 getVersion(),
-                getCreationDate().getTime(),
+                getCreationDate(),
                 txId,
                 extraDataMap);
     }

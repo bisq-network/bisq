@@ -34,7 +34,7 @@ import lombok.Getter;
  * the PB serialisation so changes for those would not change the hash for the dao state hash chain.
  * As the data is not used in consensus critical code yet changing fields can be tolerated.
  * For mediators and arbitrators we will use automated verification of the bond so there might be issues when we change
- * the values.
+ * the values. So lets avoid changing anything here beside adding new entries.
  *
  */
 public enum BondedRoleType {

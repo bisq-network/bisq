@@ -140,7 +140,9 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
             long ts = System.currentTimeMillis();
             for (int i = genesisBlockHeight; i < blockHeight; i++) {
                 boolean isHashChainUpdated = maybeUpdateHashChain(i);
-                hashChainUpdated = hashChainUpdated || isHashChainUpdated;
+                if (isHashChainUpdated) {
+                    hashChainUpdated = true;
+                }
             }
             if (hashChainUpdated) {
                 log.info("updateHashChain for {} blocks took {} ms",

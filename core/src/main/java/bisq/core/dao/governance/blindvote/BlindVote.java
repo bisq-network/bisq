@@ -82,12 +82,12 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     @NotNull
     public PB.BlindVote.Builder getBuilder() {
         PB.BlindVote.Builder builder = PB.BlindVote.newBuilder();
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return builder
-                .setEncryptedVotes(ByteString.copyFrom(encryptedVotes))
+        builder.setEncryptedVotes(ByteString.copyFrom(encryptedVotes))
                 .setTxId(txId)
                 .setStake(stake)
                 .setEncryptedMeritList(ByteString.copyFrom(encryptedMeritList));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return builder;
     }
 
     public static BlindVote fromProto(PB.BlindVote proto) {

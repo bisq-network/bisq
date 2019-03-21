@@ -136,7 +136,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 getParam(),
                 getParamValue(),
                 getVersion(),
-                getCreationDate().getTime(),
+                getCreationDate(),
                 txId,
                 extraDataMap);
     }

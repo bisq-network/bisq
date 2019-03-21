@@ -128,7 +128,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 getLink(),
                 getLockupTxId(),
                 getVersion(),
-                getCreationDate().getTime(),
+                getCreationDate(),
                 txId,
                 extraDataMap);
     }

@@ -37,10 +37,6 @@ public enum LockupReason {
         this.id = id;
     }
 
-  /*  public String getDisplayString() {
-        return Res.get("dao.bond.lockupType." + name());
-    }*/
-
     public static Optional<LockupReason> getLockupReason(byte id) {
         return Arrays.stream(LockupReason.values())
                 .filter(lockupType -> lockupType.id == id)

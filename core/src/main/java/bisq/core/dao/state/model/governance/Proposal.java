@@ -121,8 +121,8 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Date getCreationDate() {
-        return new Date(creationDate);
+    public Date getCreationDateAsDate() {
+        return new Date(getCreationDate());
     }
 
 

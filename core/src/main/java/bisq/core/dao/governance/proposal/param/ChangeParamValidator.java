@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * Changes here can potentially break consensus!
  *
- * We do not store the values as domain types (Coin, int, String) but all as Strings. So we need to parse it to the
+ * We do not store the values as the actual data type (Coin, int, String) but as Strings. So we need to convert it to the
  * expected data type even if we get the data not from user input.
  */
 @Slf4j
@@ -288,6 +288,8 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
         if (max == 0)
             return Result.OK;
 
+        //TODO some cases with min = 0 and max not 0 or the other way round are not correclty implemented yet.
+        // Not intended to be used that way anyway but should be fixed...
         double change = currentValue != 0 ? newValue / currentValue : 0;
         if (change > max)
             return Result.TOO_HIGH;

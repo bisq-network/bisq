@@ -192,9 +192,10 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                     Optional<List<BlindVote>> optionalBlindVoteListMatchingMajorityHash = findBlindVoteListMatchingMajorityHash(majorityBlindVoteListHash);
                     if (optionalBlindVoteListMatchingMajorityHash.isPresent()) {
                         List<BlindVote> blindVoteList = optionalBlindVoteListMatchingMajorityHash.get();
-                        log.debug("blindVoteListMatchingMajorityHash: " + blindVoteList.stream()
-                                .map(e -> "blindVoteTxId=" + e.getTxId() + ", Stake=" + e.getStake())
-                                .collect(Collectors.toList()));
+                        log.debug("blindVoteListMatchingMajorityHash: {}",
+                                blindVoteList.stream()
+                                        .map(e -> "blindVoteTxId=" + e.getTxId() + ", Stake=" + e.getStake())
+                                        .collect(Collectors.toList()));
 
                         Set<String> blindVoteTxIdSet = blindVoteList.stream().map(BlindVote::getTxId).collect(Collectors.toSet());
                         // We need to filter out result list according to the majority hash list
@@ -490,9 +491,9 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private boolean isListMatchingMajority(byte[] majorityVoteListHash, List<BlindVote> list, boolean doLog) {
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(list);
         if (doLog) {
-            log.debug("majorityVoteListHash " + Utilities.bytesAsHexString(majorityVoteListHash));
-            log.debug("hashOfBlindVoteList " + Utilities.bytesAsHexString(hashOfBlindVoteList));
-            log.debug("List of blindVoteTxIds " + list.stream().map(BlindVote::getTxId)
+            log.debug("majorityVoteListHash {}", Utilities.bytesAsHexString(majorityVoteListHash));
+            log.debug("hashOfBlindVoteList {}", Utilities.bytesAsHexString(hashOfBlindVoteList));
+            log.debug("List of blindVoteTxIds {}", list.stream().map(BlindVote::getTxId)
                     .collect(Collectors.joining(", ")));
         }
         return Arrays.equals(majorityVoteListHash, hashOfBlindVoteList);
@@ -556,7 +557,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                             0, 0, 0, decryptedBallotsWithMeritsSet.size());
                     EvaluatedProposal evaluatedProposal = new EvaluatedProposal(false, proposalVoteResult);
                     evaluatedProposals.add(evaluatedProposal);
-                    log.info("Proposal ignored by all voters: " + evaluatedProposal);
+                    log.info("Proposal ignored by all voters: {}", evaluatedProposal);
                 });
         return evaluatedProposals;
     }

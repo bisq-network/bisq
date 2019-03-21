@@ -753,14 +753,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDate()));
+        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDateAsDate()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getColumns().add(column);
         tableView.getSortOrder().add(column);

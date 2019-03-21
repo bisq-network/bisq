@@ -77,8 +77,7 @@ public class CycleService implements DaoStateListener, DaoSetupService {
 
     @Override
     public void onNewBlockHeight(int blockHeight) {
-        maybeCreateNewCycle(blockHeight, daoStateService.getCycles())
-                .ifPresent(daoStateService::addCycle);
+        maybeCreateNewCycle(blockHeight, daoStateService.getCycles()).ifPresent(daoStateService::addCycle);
     }
 
 
