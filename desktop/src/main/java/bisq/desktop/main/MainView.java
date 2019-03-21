@@ -610,11 +610,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
         Timer showTorNetworkSettingsTimer = UserThread.runAfter(() -> {
             showTorNetworkSettingsButton.setVisible(true);
             showTorNetworkSettingsButton.setManaged(true);
-            if (btcSyncIndicator.progressProperty().getValue() <= 0) {
-                // If no progress has been made, hide the BTC status since tor is not working
-                btcSyncIndicator.setVisible(false);
-                btcSplashInfo.setVisible(false);
-            }
         }, SHOW_TOR_SETTINGS_DELAY_SEC);
 
         splashP2PNetworkIconIdListener = (ov, oldValue, newValue) -> {
