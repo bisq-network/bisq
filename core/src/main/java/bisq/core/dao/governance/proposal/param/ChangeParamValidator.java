@@ -31,7 +31,6 @@ import bisq.core.locale.Res;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
-import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -254,11 +253,11 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
         }
     }
 
-    private void validateAddressValue(String currentParamValue, String inputValue) {
+    private void validateAddressValue(String currentParamValue, String inputValue) throws ParamValidationException {
         checkArgument(!inputValue.equals(currentParamValue), "Your input must be different to the current value");
         InputValidator.ValidationResult validationResult = new BtcAddressValidator().validate(inputValue);
         if (!validationResult.isValid)
-            throw new AddressFormatException(validationResult.errorMessage);
+            throw new ParamValidationException(validationResult.errorMessage);
     }
 
     private static void validationChange(double currentParamValue, double inputValue, Param param) throws ParamValidationException {
