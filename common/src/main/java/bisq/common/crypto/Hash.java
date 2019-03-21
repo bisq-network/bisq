@@ -82,29 +82,5 @@ public class Hash {
         digest.doFinal(out, 0);
         return out;
     }
-
-    /**
-     * @param data Data as byte array
-     * @return Hash of data
-     */
-    public static byte[] getSha3_256Hash(byte[] data) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA3-256");
-            digest.update(data, 0, data.length);
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            log.error("Could not create MessageDigest for hash. " + e.toString());
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Calculates RIPEMD160(SHA3-256(data)).
-     */
-    public static byte[] getSha3_256Ripemd160hash(byte[] data) {
-        byte[] sha3_256Hash = getSha3_256Hash(data);
-        return getRipemd160hash(sha3_256Hash);
-    }
 }
 
