@@ -143,7 +143,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
                 maybeUpdateHashChain(i);
             }
             if (!blindVoteStateBlockChain.isEmpty()) {
-                log.info("updateHashChain for {} items took {} ms",
+                log.info("updateHashChain for {} blocks took {} ms",
                         blockHeight - genesisBlockHeight,
                         System.currentTimeMillis() - ts);
             }

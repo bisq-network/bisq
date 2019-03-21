@@ -143,7 +143,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                 hashChainUpdated = hashChainUpdated || isHashChainUpdated;
             }
             if (hashChainUpdated) {
-                log.info("updateHashChain for {} items took {} ms",
+                log.info("updateHashChain for {} blocks took {} ms",
                         blockHeight - genesisBlockHeight,
                         System.currentTimeMillis() - ts);
             }
