@@ -235,7 +235,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                     height, daoStateBlockChain.getLast().getHeight());
             prevHash = daoStateBlockChain.getLast().getHash();
         }
-        byte[] stateHash = daoStateService.getSerializedDaoState();
+        byte[] stateHash = daoStateService.getSerializedStateForHashChain();
         // We include the prev. hash in our new hash so we can be sure that if one hash is matching all the past would
         // match as well.
         byte[] combined = ArrayUtils.addAll(prevHash, stateHash);

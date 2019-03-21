@@ -153,8 +153,8 @@ public class DaoStateService implements DaoSetupService {
         return DaoState.getClone(snapshotCandidate);
     }
 
-    public byte[] getSerializedDaoState() {
-        return daoState.toProtoMessage().toByteArray();
+    public byte[] getSerializedStateForHashChain() {
+        return daoState.getSerializedStateForHashChain();
     }
 
 
@@ -223,13 +223,15 @@ public class DaoStateService implements DaoSetupService {
         } else {
             daoState.getBlocks().add(block);
 
-            log.info("New Block added at blockHeight {}", block.getHeight());
+            if (parseBlockChainComplete)
+                log.info("New Block added at blockHeight {}", block.getHeight());
         }
     }
 
     // Third we get the onParseBlockComplete called after all rawTxs of blocks have been parsed
     public void onParseBlockComplete(Block block) {
-        log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
+        if (parseBlockChainComplete)
+            log.info("Parse block completed: Block height {}, {} BSQ transactions.", block.getHeight(), block.getTxs().size());
 
         // Need to be called before onParseTxsCompleteAfterBatchProcessing as we use it in
         // VoteResult and other listeners like balances usually listen on onParseTxsCompleteAfterBatchProcessing

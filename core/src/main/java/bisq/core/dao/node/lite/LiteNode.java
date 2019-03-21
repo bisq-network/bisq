@@ -30,6 +30,8 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
 
+import bisq.common.UserThread;
+
 import com.google.inject.Inject;
 
 import java.util.ArrayList;
@@ -142,23 +144,43 @@ public class LiteNode extends BsqNode {
             log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(), chainTipHeight);
         }
 
-        // 4000 blocks take about 3 seconds if DAO UI is not displayed or 7 sec. if it is displayed.
+        // We stream the parsing over each render frame to avoid that the UI get blocked in case we parse a lot of blocks.
+        // Parsing itself is very fast (3 sec. for 7000 blocks) but creating the hash chain slows down batch processing a lot
+        // (30 sec for 7000 blocks).
         // The updates at block height change are not much optimized yet, so that can be for sure improved
         // 144 blocks a day would result in about 4000 in a month, so if a user downloads the app after 1 months latest
         // release it will be a bit of a performance hit. It is a one time event as the snapshots gets created and be
-        // used at next startup.
+        // used at next startup. New users will get the shipped snapshot. Users who have not used Bisq for longer might
+        // experience longer durations for batch processing.
         long ts = System.currentTimeMillis();
-        for (RawBlock block : blockList) {
+
+        if (blockList.isEmpty()) {
+            onParseBlockChainComplete();
+            return;
+        }
+
+        runDelayedBatchProcessing(new ArrayList<>(blockList),
+                () -> {
+                    log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
+                    onParseBlockChainComplete();
+                });
+    }
+
+    private void runDelayedBatchProcessing(List<RawBlock> blocks, Runnable resultHandler) {
+        UserThread.execute(() -> {
+            if (blocks.isEmpty()) {
+                resultHandler.run();
+                return;
+            }
+
+            RawBlock block = blocks.remove(0);
             try {
                 doParseBlock(block);
-            } catch (RequiredReorgFromSnapshotException e1) {
-                // In case we got a reorg we break the iteration
-                break;
+                runDelayedBatchProcessing(blocks, resultHandler);
+            } catch (RequiredReorgFromSnapshotException e) {
+                resultHandler.run();
             }
-        }
-        log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
-
-        onParseBlockChainComplete();
+        });
     }
 
     // We received a new block

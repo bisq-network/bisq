@@ -160,9 +160,14 @@ public class DaoState implements PersistablePayload {
     }
 
     public PB.BsqState.Builder getBsqStateBuilder() {
-        final PB.BsqState.Builder builder = PB.BsqState.newBuilder();
+        return getBsqStateBuilderExcludingBlocks().addAllBlocks(blocks.stream()
+                .map(Block::toProtoMessage)
+                .collect(Collectors.toList()));
+    }
+
+    private PB.BsqState.Builder getBsqStateBuilderExcludingBlocks() {
+        PB.BsqState.Builder builder = PB.BsqState.newBuilder();
         builder.setChainHeight(chainHeight)
-                .addAllBlocks(blocks.stream().map(Block::toProtoMessage).collect(Collectors.toList()))
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
                 .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
@@ -220,6 +225,15 @@ public class DaoState implements PersistablePayload {
 
     public void setChainHeight(int chainHeight) {
         this.chainHeight = chainHeight;
+    }
+
+    public byte[] getSerializedStateForHashChain() {
+        // We only add last block as for the hash chain we include the prev. hash in the new hash so the state of the
+        // earlier blocks is included in the hash. The past blocks cannot be changed anyway when a new block arrives.
+        // Reorgs are handled by rebuilding the hash chain from last snapshot.
+        // Using the full blocks list becomes quite heavy. 7000 blocks are
+        // about 1.4 MB and creating the hash takes 30 sec. With using just the last block we reduce the time to 7 sec.
+        return getBsqStateBuilderExcludingBlocks().addBlocks(getBlocks().getLast().toProtoMessage()).build().toByteArray();
     }
 
     @Override
