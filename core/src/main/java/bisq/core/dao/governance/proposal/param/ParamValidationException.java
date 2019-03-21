@@ -19,6 +19,10 @@ public class ParamValidationException extends Exception {
         initCause(throwable);
     }
 
+    ParamValidationException(String errorMessage) {
+        super(errorMessage);
+    }
+
     @Override
     public String toString() {
         return "ParamValidationException{" +
