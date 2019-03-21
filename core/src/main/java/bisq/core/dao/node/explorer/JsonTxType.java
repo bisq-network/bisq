@@ -21,7 +21,8 @@ import lombok.Getter;
 
 // Need to be in sync with TxOutputType
 enum JsonTxType {
-    UNDEFINED_TX_TYPE("Undefined"),
+    UNDEFINED("Undefined"),
+    UNDEFINED_TX_TYPE("Undefined tx type"),
     UNVERIFIED("Unverified"),
     INVALID("Invalid"),
     GENESIS("Genesis"),
