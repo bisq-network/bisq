@@ -54,7 +54,6 @@ public class FullNode extends BsqNode {
 
     private final RpcService rpcService;
     private final FullNodeNetworkService fullNodeNetworkService;
-    private final ExportJsonFilesService exportJsonFilesService;
     private boolean addBlockHandlerAdded;
     private int blocksToParseInBatch;
     private long parseInBatchStartTime;
@@ -73,10 +72,9 @@ public class FullNode extends BsqNode {
                     RpcService rpcService,
                     ExportJsonFilesService exportJsonFilesService,
                     FullNodeNetworkService fullNodeNetworkService) {
-        super(blockParser, daoStateService, daoStateSnapshotService, p2PService);
+        super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
         this.rpcService = rpcService;
 
-        this.exportJsonFilesService = exportJsonFilesService;
         this.fullNodeNetworkService = fullNodeNetworkService;
     }
 
@@ -97,7 +95,7 @@ public class FullNode extends BsqNode {
     }
 
     public void shutDown() {
-        exportJsonFilesService.shutDown();
+        super.shutDown();
         fullNodeNetworkService.shutDown();
     }
 
@@ -170,11 +168,12 @@ public class FullNode extends BsqNode {
     }
 
     private void onNewBlock(Block block) {
-        exportJsonFilesService.exportToJson();
+        maybeExportToJson();
 
         if (p2pNetworkReady && parseBlockchainComplete)
             fullNodeNetworkService.publishNewBlock(block);
     }
+
 
     private void parseBlocksIfNewBlockAvailable(int chainHeight) {
         rpcService.requestChainHeadHeight(newChainHeight -> {

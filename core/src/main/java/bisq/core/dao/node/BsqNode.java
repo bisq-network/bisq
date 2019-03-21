@@ -18,6 +18,7 @@
 package bisq.core.dao.node;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.parser.BlockParser;
 import bisq.core.dao.node.parser.exceptions.BlockHashNotConnectingException;
@@ -54,6 +55,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected final DaoStateService daoStateService;
     private final String genesisTxId;
     private final int genesisBlockHeight;
+    private final ExportJsonFilesService exportJsonFilesService;
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final P2PServiceListener p2PServiceListener;
     protected boolean parseBlockchainComplete;
@@ -80,11 +82,13 @@ public abstract class BsqNode implements DaoSetupService {
     public BsqNode(BlockParser blockParser,
                    DaoStateService daoStateService,
                    DaoStateSnapshotService daoStateSnapshotService,
-                   P2PService p2PService) {
+                   P2PService p2PService,
+                   ExportJsonFilesService exportJsonFilesService) {
         this.blockParser = blockParser;
         this.daoStateService = daoStateService;
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.p2PService = p2PService;
+        this.exportJsonFilesService = exportJsonFilesService;
 
         genesisTxId = daoStateService.getGenesisTxId();
         genesisBlockHeight = daoStateService.getGenesisBlockHeight();
@@ -151,7 +155,9 @@ public abstract class BsqNode implements DaoSetupService {
         this.warnMessageHandler = warnMessageHandler;
     }
 
-    public abstract void shutDown();
+    public void shutDown() {
+        exportJsonFilesService.shutDown();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -202,6 +208,8 @@ public abstract class BsqNode implements DaoSetupService {
         log.info("onParseBlockChainComplete");
         parseBlockchainComplete = true;
         daoStateService.onParseBlockChainComplete();
+
+        maybeExportToJson();
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -278,8 +286,10 @@ public abstract class BsqNode implements DaoSetupService {
             startReOrgFromLastSnapshot();
             throw new RequiredReorgFromSnapshotException(rawBlock);
         }
-
-
         return Optional.empty();
+    }
+
+    protected void maybeExportToJson() {
+        exportJsonFilesService.maybeExportToJson();
     }
 }

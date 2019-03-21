@@ -18,6 +18,7 @@
 package bisq.core.dao.node.lite;
 
 import bisq.core.dao.node.BsqNode;
+import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.RawBlock;
 import bisq.core.dao.node.lite.network.LiteNodeNetworkService;
 import bisq.core.dao.node.messages.GetBlocksResponse;
@@ -60,8 +61,9 @@ public class LiteNode extends BsqNode {
                     DaoStateService daoStateService,
                     DaoStateSnapshotService daoStateSnapshotService,
                     P2PService p2PService,
-                    LiteNodeNetworkService liteNodeNetworkService) {
-        super(blockParser, daoStateService, daoStateSnapshotService, p2PService);
+                    LiteNodeNetworkService liteNodeNetworkService,
+                    ExportJsonFilesService exportJsonFilesService) {
+        super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
 
         this.liteNodeNetworkService = liteNodeNetworkService;
     }
@@ -80,6 +82,7 @@ public class LiteNode extends BsqNode {
 
     @Override
     public void shutDown() {
+        super.shutDown();
         liteNodeNetworkService.shutDown();
     }
 
@@ -144,7 +147,7 @@ public class LiteNode extends BsqNode {
             log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(), chainTipHeight);
         }
 
-        // We stream the parsing over each render frame to avoid that the UI get blocked in case we parse a lot of blocks.
+        // We delay the parsing to next render frame to avoid that the UI get blocked in case we parse a lot of blocks.
         // Parsing itself is very fast (3 sec. for 7000 blocks) but creating the hash chain slows down batch processing a lot
         // (30 sec for 7000 blocks).
         // The updates at block height change are not much optimized yet, so that can be for sure improved
@@ -196,5 +199,7 @@ public class LiteNode extends BsqNode {
             doParseBlock(block);
         } catch (RequiredReorgFromSnapshotException ignore) {
         }
+
+        maybeExportToJson();
     }
 }
