@@ -36,6 +36,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
@@ -46,6 +47,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
@@ -53,8 +55,10 @@ import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
+import bisq.core.dao.state.model.governance.ProposalVoteResult;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 import bisq.core.dao.state.model.governance.RemoveAssetProposal;
+import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
@@ -64,6 +68,7 @@ import bisq.core.util.BsqFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -696,14 +701,14 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDate()));
+                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
                                 else
                                     setText("");
                             }
                         };
                     }
                 });
-        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDate()));
+        column.setComparator(Comparator.comparing(o3 -> o3.getProposal().getCreationDateAsDate()));
         column.setSortType(TableColumn.SortType.DESCENDING);
         votesTableView.getColumns().add(column);
         votesTableView.getSortOrder().add(column);
@@ -988,99 +993,126 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private JsonElement getVotingHistoryJson() {
         JsonArray cyclesArray = new JsonArray();
 
-        sortedCycleListItemList.sorted(Comparator.comparing(CycleListItem::getCycleStartTime)).forEach(cycle -> {
+        sortedCycleListItemList.sorted(Comparator.comparing(CycleListItem::getCycleStartTime)).forEach(cycleListItem -> {
             JsonObject cycleJson = new JsonObject();
-            cycleJson.addProperty("cycleIndex", cycle.getCycleIndex());
-            cycleJson.addProperty("cycleDateTime", cycle.getCycleDateTime(false));
-            cycleJson.addProperty("votesCount", cycle.getNumVotesAsString());
-            cycleJson.addProperty("voteWeight", cycle.getMeritAndStake());
-            cycleJson.addProperty("issuance", cycle.getIssuance());
-            cycleJson.addProperty("startTime", cycle.getCycleStartTime());
-            cycleJson.addProperty("totalAcceptedVotes", cycle.getResultsOfCycle().getNumAcceptedVotes());
-            cycleJson.addProperty("totalRejectedVotes", cycle.getResultsOfCycle().getNumRejectedVotes());
-
+            // No domain data, taken from UI model
+            // TODO move the data structure needed for UI to core and use as pure domain model and use that here
+            cycleJson.addProperty("cycleIndex", cycleListItem.getCycleIndex());
+            cycleJson.addProperty("cycleDateTime", cycleListItem.getCycleDateTime(false));
+            cycleJson.addProperty("votesCount", cycleListItem.getNumVotesAsString());
+            cycleJson.addProperty("voteWeight", cycleListItem.getMeritAndStake());
+            cycleJson.addProperty("issuance", cycleListItem.getIssuance());
+            cycleJson.addProperty("startTime", cycleListItem.getCycleStartTime());
+            cycleJson.addProperty("totalAcceptedVotes", cycleListItem.getResultsOfCycle().getNumAcceptedVotes());
+            cycleJson.addProperty("totalRejectedVotes", cycleListItem.getResultsOfCycle().getNumRejectedVotes());
 
             JsonArray proposalsArray = new JsonArray();
-            List<EvaluatedProposal> evaluatedProposals = cycle.getResultsOfCycle().getEvaluatedProposals();
-            evaluatedProposals.sort(Comparator.comparingLong(o -> o.getProposal().getCreationDate().getTime()));
+            List<EvaluatedProposal> evaluatedProposals = cycleListItem.getResultsOfCycle().getEvaluatedProposals();
+            evaluatedProposals.sort(Comparator.comparingLong(o -> o.getProposal().getCreationDate()));
 
-            evaluatedProposals.forEach(proposal -> {
+            evaluatedProposals.forEach(evaluatedProp -> {
                 JsonObject proposalJson = new JsonObject();
-                proposalJson.addProperty("dateTime", bsqFormatter.formatDateTime(proposal.getProposal().getCreationDate(), false));
-                proposalJson.addProperty("name", proposal.getProposal().getName());
-                proposalJson.addProperty("link", proposal.getProposal().getLink());
-                proposalJson.addProperty("proposalType", proposal.getProposal().getType().name());
-                proposalJson.addProperty("details", ProposalListItem.getProposalDetails(proposal, bsqFormatter, false));
-                proposalJson.addProperty("voteResult", proposal.isAccepted() ? "Accepted" : "Rejected");
-                proposalJson.addProperty("txId", proposal.getProposalTxId());
-                proposalJson.addProperty("requiredQuorum", proposalService.getRequiredQuorum(proposal.getProposal()).value);
-                proposalJson.addProperty("requiredThreshold", proposalService.getRequiredThreshold(proposal.getProposal()));
-                proposalJson.addProperty("creationDate", proposal.getProposal().getCreationDate().getTime());
-                proposalJson.addProperty("version", proposal.getProposal().getVersion());
-                proposalJson.addProperty("activeVotesCount", proposal.getProposalVoteResult().getNumActiveVotes());
-                proposalJson.addProperty("acceptedVotesCount", proposal.getProposalVoteResult().getNumAcceptedVotes());
-                proposalJson.addProperty("rejectedVotesCount", proposal.getProposalVoteResult().getNumRejectedVotes());
-                proposalJson.addProperty("acceptedVotesStake", proposal.getProposalVoteResult().getStakeOfAcceptedVotes());
-                proposalJson.addProperty("rejectedVotesStake", proposal.getProposalVoteResult().getStakeOfRejectedVotes());
-                proposalJson.addProperty("quorum", proposal.getProposalVoteResult().getQuorum());
-                proposalJson.addProperty("threshold", proposal.getProposalVoteResult().getThreshold());
-                switch (proposal.getProposal().getType()) {
-                    case BONDED_ROLE:
-                        RoleProposal roleProposal = (RoleProposal) proposal.getProposal();
-                        proposalJson.addProperty("roleType", roleProposal.getRole().getBondedRoleType().name());
-                        proposalJson.addProperty("requiredBond", roleProposal.getRequiredBond());
-                        proposalJson.addProperty("allowMultipleHolders", roleProposal.getRole().getBondedRoleType().isAllowMultipleHolders());
-                        proposalJson.addProperty("unlockTimeInBlocks", roleProposal.getUnlockTime());
-                        proposalJson.addProperty("roleUid", roleProposal.getRole().getUid());
-                        break;
-                    case CHANGE_PARAM:
-                        ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal.getProposal();
-                        proposalJson.addProperty("param", changeParamProposal.getParam().name());
-                        proposalJson.addProperty("paramValue", changeParamProposal.getParamValue());
-                        proposalJson.addProperty("paramDefaultValue", changeParamProposal.getParam().getDefaultValue());
-                        proposalJson.addProperty("paramMaxDecrease", changeParamProposal.getParam().getMaxDecrease());
-                        proposalJson.addProperty("paramMaxIncrease", changeParamProposal.getParam().getMaxIncrease());
+                proposalJson.addProperty("isAccepted", evaluatedProp.isAccepted() ? "Accepted" : "Rejected");
+
+                // Proposal
+                Proposal proposal = evaluatedProp.getProposal();
+                proposalJson.addProperty("proposal.name", proposal.getName());
+                proposalJson.addProperty("proposal.link", proposal.getLink());
+                proposalJson.addProperty("proposal.version", proposal.getVersion());
+                proposalJson.addProperty("proposal.creationDate", proposal.getCreationDate());
+                proposalJson.addProperty("proposal.txId", proposal.getTxId());
+                proposalJson.addProperty("proposal.txType", proposal.getTxType().name());
+                proposalJson.addProperty("proposal.quorumParam", proposal.getQuorumParam().name());
+                proposalJson.addProperty("proposal.thresholdParam", proposal.getThresholdParam().name());
+                proposalJson.addProperty("proposal.proposalType", proposal.getType().name());
+
+                if (proposal.getExtraDataMap() != null)
+                    proposalJson.addProperty("proposal.extraDataMap", proposal.getExtraDataMap().toString());
+
+                switch (proposal.getType()) {
+                    case UNDEFINED:
                         break;
                     case COMPENSATION_REQUEST:
-                        CompensationProposal compensationProposal = (CompensationProposal) proposal.getProposal();
-                        proposalJson.addProperty("bsqAddress", compensationProposal.getBsqAddress());
-                        proposalJson.addProperty("requestedBsq", compensationProposal.getRequestedBsq().getValue());
-                        break;
-                    case CONFISCATE_BOND:
-                        ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal.getProposal();
-                        proposalJson.addProperty("lockupTxId", confiscateBondProposal.getLockupTxId());
+                        CompensationProposal compensationProposal = (CompensationProposal) proposal;
+                        proposalJson.addProperty("proposal.requestedBsq", compensationProposal.getRequestedBsq().getValue());
+                        proposalJson.addProperty("proposal.bsqAddress", compensationProposal.getBsqAddress());
                         break;
                     case REIMBURSEMENT_REQUEST:
-                        ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal.getProposal();
-                        proposalJson.addProperty("bsqAddress", reimbursementProposal.getBsqAddress());
-                        proposalJson.addProperty("requestedBsq", reimbursementProposal.getRequestedBsq().getValue());
+                        ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
+                        proposalJson.addProperty("proposal.requestedBsq", reimbursementProposal.getRequestedBsq().getValue());
+                        proposalJson.addProperty("proposal.bsqAddress", reimbursementProposal.getBsqAddress());
+                        break;
+                    case CHANGE_PARAM:
+                        ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
+                        Param param = changeParamProposal.getParam();
+                        proposalJson.addProperty("proposal.param", param.name());
+                        proposalJson.addProperty("proposal.param.defaultValue", param.getDefaultValue());
+                        proposalJson.addProperty("proposal.param.type", param.getParamType().name());
+                        proposalJson.addProperty("proposal.param.maxDecrease", param.getMaxDecrease());
+                        proposalJson.addProperty("proposal.param.maxIncrease", param.getMaxIncrease());
+                        proposalJson.addProperty("proposal.paramValue", changeParamProposal.getParamValue());
+                        break;
+                    case BONDED_ROLE:
+                        RoleProposal roleProposal = (RoleProposal) proposal;
+                        Role role = roleProposal.getRole();
+                        proposalJson.addProperty("proposal.requiredBond", roleProposal.getRequiredBond());
+                        proposalJson.addProperty("proposal.unlockTime", roleProposal.getUnlockTime());
+                        proposalJson.addProperty("proposal.role.uid", role.getUid());
+                        proposalJson.addProperty("proposal.role.name", role.getName());
+                        proposalJson.addProperty("proposal.role.link", role.getLink());
+                        BondedRoleType bondedRoleType = role.getBondedRoleType();
+                        proposalJson.addProperty("proposal.bondedRoleType", bondedRoleType.name());
+                        // bondedRoleType enum must not change anyway so we don't print it
+                        break;
+                    case CONFISCATE_BOND:
+                        ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
+                        proposalJson.addProperty("proposal.lockupTxId", confiscateBondProposal.getLockupTxId());
+                        break;
+                    case GENERIC:
+                        // No extra fields
                         break;
                     case REMOVE_ASSET:
-                        RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal.getProposal();
-                        proposalJson.addProperty("assetTickerSymbol", removeAssetProposal.getTickerSymbol());
+                        RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
+                        proposalJson.addProperty("proposal.tickerSymbol", removeAssetProposal.getTickerSymbol());
                         break;
                 }
 
+                ProposalVoteResult proposalVoteResult = evaluatedProp.getProposalVoteResult();
+                proposalJson.addProperty("stakeOfAcceptedVotes", proposalVoteResult.getStakeOfAcceptedVotes());
+                proposalJson.addProperty("stakeOfRejectedVotes", proposalVoteResult.getStakeOfRejectedVotes());
+                proposalJson.addProperty("numAcceptedVotes", proposalVoteResult.getNumAcceptedVotes());
+                proposalJson.addProperty("numRejectedVotes", proposalVoteResult.getNumRejectedVotes());
+                proposalJson.addProperty("numIgnoredVotes", proposalVoteResult.getNumIgnoredVotes());
+                proposalJson.addProperty("numActiveVotes", proposalVoteResult.getNumActiveVotes());
+                proposalJson.addProperty("quorum", proposalVoteResult.getQuorum());
+                proposalJson.addProperty("threshold", proposalVoteResult.getThreshold());
+
+                // Not part of pure domain data, but useful to add here
+                // required quorum and threshold for cycle for proposal type
+                proposalJson.addProperty("requiredQuorum", proposalService.getRequiredQuorum(proposal).value);
+                proposalJson.addProperty("requiredThreshold", proposalService.getRequiredThreshold(proposal));
+
+                // TODO provide better domain object as now we loop inside the loop. Use lookup map instead....
                 JsonArray votesArray = new JsonArray();
                 evaluatedProposals.stream()
-                        .filter(evaluatedProposal -> evaluatedProposal.getProposal().equals(proposal.getProposal()))
+                        .filter(evaluatedProposal -> evaluatedProposal.getProposal().equals(proposal))
                         .forEach(evaluatedProposal -> {
-                            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = cycle.getResultsOfCycle().getDecryptedVotesForCycle();
+                            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = cycleListItem.getResultsOfCycle().getDecryptedVotesForCycle();
                             // Make sure the votes are sorted so we can easier compare json files from different users
                             decryptedVotesForCycle.sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
                             decryptedVotesForCycle.forEach(decryptedBallotsWithMerits -> {
                                 JsonObject voteJson = new JsonObject();
-                                Optional<Vote> vote = decryptedBallotsWithMerits.getVote(proposal.getProposalTxId());
-                                if (vote.isPresent())
-                                    voteJson.addProperty("vote", vote.get().isAccepted() ? "Accepted" : "Rejected");
-                                else
-                                    voteJson.addProperty("vote", "Ignored");
+                                // Domain data of decryptedBallotsWithMerits
+                                voteJson.addProperty("hashOfBlindVoteList", Utilities.bytesAsHexString(decryptedBallotsWithMerits.getHashOfBlindVoteList()));
+                                voteJson.addProperty("blindVoteTxId", decryptedBallotsWithMerits.getBlindVoteTxId());
+                                voteJson.addProperty("voteRevealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
+                                voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
 
                                 voteJson.addProperty("voteWeight", decryptedBallotsWithMerits.getMerit(daoStateService));
-                                voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
-                                voteJson.addProperty("blindTxId", decryptedBallotsWithMerits.getBlindVoteTxId());
-                                voteJson.addProperty("revealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
-
+                                String voteResult = decryptedBallotsWithMerits.getVote(evaluatedProp.getProposalTxId())
+                                        .map(vote -> vote.isAccepted() ? "Accepted" : "Rejected")
+                                        .orElse("Ignored");
+                                voteJson.addProperty("vote", voteResult);
                                 votesArray.add(voteJson);
                             });
                         });
