@@ -210,7 +210,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                     hyperlink = new Hyperlink(type);
                                     hyperlink.setOnAction(event -> {
                                         Optional<RoleProposal> roleProposal = bondingViewUtils.getAcceptedBondedRoleProposal(item.getRole());
-                                        new RoleDetailsWindow(bondedRoleType, roleProposal, bsqFormatter).show();
+                                        new RoleDetailsWindow(bondedRoleType, roleProposal, daoFacade, bsqFormatter).show();
                                     });
                                     hyperlink.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails", type)));
                                     setGraphic(hyperlink);

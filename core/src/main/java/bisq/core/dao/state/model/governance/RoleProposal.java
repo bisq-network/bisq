@@ -43,14 +43,14 @@ import javax.annotation.concurrent.Immutable;
 @Value
 public final class RoleProposal extends Proposal implements ImmutableDaoStateModel {
     private final Role role;
-    private final long requiredBond;
+    private final long requiredBondUnit;
     private final int unlockTime; // in blocks
 
     public RoleProposal(Role role, Map<String, String> extraDataMap) {
         this(role.getName(),
                 role.getLink(),
                 role,
-                role.getBondedRoleType().getRequiredBond(),
+                role.getBondedRoleType().getRequiredBondUnit(),
                 role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
@@ -66,7 +66,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private RoleProposal(String name,
                          String link,
                          Role role,
-                         long requiredBond,
+                         long requiredBondUnit,
                          int unlockTime,
                          byte version,
                          long creationDate,
@@ -80,7 +80,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 extraDataMap);
 
         this.role = role;
-        this.requiredBond = requiredBond;
+        this.requiredBondUnit = requiredBondUnit;
         this.unlockTime = unlockTime;
     }
 
@@ -88,7 +88,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     public PB.Proposal.Builder getProposalBuilder() {
         final PB.RoleProposal.Builder builder = PB.RoleProposal.newBuilder()
                 .setRole(role.toProtoMessage())
-                .setRequiredBond(requiredBond)
+                .setRequiredBondUnit(requiredBondUnit)
                 .setUnlockTime(unlockTime);
         return super.getProposalBuilder().setRoleProposal(builder);
     }
@@ -98,7 +98,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
         return new RoleProposal(proto.getName(),
                 proto.getLink(),
                 Role.fromProto(proposalProto.getRole()),
-                proposalProto.getRequiredBond(),
+                proposalProto.getRequiredBondUnit(),
                 proposalProto.getUnlockTime(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
@@ -137,7 +137,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
         return new RoleProposal(name,
                 link,
                 role,
-                requiredBond,
+                requiredBondUnit,
                 unlockTime,
                 version,
                 creationDate,
@@ -149,7 +149,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     public String toString() {
         return "RoleProposal{" +
                 "\n     role=" + role +
-                "\n     requiredBond=" + requiredBond +
+                "\n     requiredBondUnit=" + requiredBondUnit +
                 "\n     unlockTime=" + unlockTime +
                 "\n} " + super.toString();
     }

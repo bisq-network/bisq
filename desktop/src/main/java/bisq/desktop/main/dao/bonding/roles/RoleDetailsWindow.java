@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.bonding.roles;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
@@ -37,12 +38,15 @@ import lombok.extern.slf4j.Slf4j;
 class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
     private final BondedRoleType bondedRoleType;
     private final Optional<RoleProposal> roleProposal;
+    private final DaoFacade daoFacade;
     private final BsqFormatter bsqFormatter;
 
 
-    RoleDetailsWindow(BondedRoleType bondedRoleType, Optional<RoleProposal> roleProposal, BsqFormatter bsqFormatter) {
+    RoleDetailsWindow(BondedRoleType bondedRoleType, Optional<RoleProposal> roleProposal, DaoFacade daoFacade,
+                      BsqFormatter bsqFormatter) {
         this.bondedRoleType = bondedRoleType;
         this.roleProposal = roleProposal;
+        this.daoFacade = daoFacade;
         this.bsqFormatter = bsqFormatter;
 
         width = 968;
@@ -81,7 +85,7 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.role"),
                 bondedRoleType.getDisplayString());
 
-        long requiredBond = roleProposal.map(RoleProposal::getRequiredBond).orElse(bondedRoleType.getRequiredBond());
+        long requiredBond = daoFacade.getRequiredBond(roleProposal);
         int unlockTime = roleProposal.map(RoleProposal::getUnlockTime).orElse(bondedRoleType.getUnlockTimeInBlocks());
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.requiredBond"),
                 bsqFormatter.formatCoinWithCode(Coin.valueOf(requiredBond)));

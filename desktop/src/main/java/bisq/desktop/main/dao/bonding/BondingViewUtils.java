@@ -83,7 +83,9 @@ public class BondingViewUtils {
     public void lockupBondForBondedRole(Role role, Consumer<String> resultHandler) {
         Optional<RoleProposal> roleProposal = getAcceptedBondedRoleProposal(role);
         checkArgument(roleProposal.isPresent(), "roleProposal must be present");
-        Coin lockupAmount = Coin.valueOf(roleProposal.get().getRequiredBond());
+
+        long requiredBond = daoFacade.getRequiredBond(roleProposal);
+        Coin lockupAmount = Coin.valueOf(requiredBond);
         int lockupTime = roleProposal.get().getUnlockTime();
         if (!bondedRolesRepository.isBondedAssetAlreadyInBond(role)) {
             lockupBond(role.getHash(), lockupAmount, lockupTime, LockupReason.BONDED_ROLE, resultHandler);

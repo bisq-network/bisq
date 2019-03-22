@@ -1055,7 +1055,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                     case BONDED_ROLE:
                         RoleProposal roleProposal = (RoleProposal) proposal;
                         Role role = roleProposal.getRole();
-                        proposalJson.addProperty("proposal.requiredBond", roleProposal.getRequiredBond());
+                        proposalJson.addProperty("proposal.requiredBondUnit", roleProposal.getRequiredBondUnit());
                         proposalJson.addProperty("proposal.unlockTime", roleProposal.getUnlockTime());
                         proposalJson.addProperty("proposal.role.uid", role.getUid());
                         proposalJson.addProperty("proposal.role.name", role.getName());

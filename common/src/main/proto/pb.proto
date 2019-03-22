@@ -1598,7 +1598,7 @@ message ChangeParamProposal {
 
 message RoleProposal {
     Role role = 1;
-    int64 required_bond = 2;
+    int64 required_bond_unit = 2;
     int32 unlock_time = 3;
 }
 

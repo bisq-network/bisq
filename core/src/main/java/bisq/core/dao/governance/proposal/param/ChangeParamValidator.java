@@ -182,6 +182,10 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
                 break;
             case ASSET_LISTING_FEE_PER_DAY:
                 break;
+            case BONDED_ROLE_FACTOR:
+                checkArgument(inputValueAsCoin.value >= 100,
+                        "BONDED_ROLE_FACTOR must be at least 1 BSQ");
+                break;
         }
     }
 

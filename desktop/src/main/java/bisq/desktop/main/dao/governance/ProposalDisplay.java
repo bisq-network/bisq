@@ -322,7 +322,7 @@ public class ProposalDisplay {
 
                 requiredBondForRoleListener = (observable, oldValue, newValue) -> {
                     if (newValue != null) {
-                        requiredBondForRoleTextField.setText(bsqFormatter.formatCoinWithCode(Coin.valueOf(newValue.getRequiredBond())));
+                        requiredBondForRoleTextField.setText(bsqFormatter.formatCoinWithCode(Coin.valueOf(daoFacade.getRequiredBond(newValue))));
                     }
                 };
                 bondedRoleTypeComboBox.getSelectionModel().selectedItemProperty().addListener(requiredBondForRoleListener);
@@ -523,7 +523,7 @@ public class ProposalDisplay {
             Role role = roleProposal.getRole();
             bondedRoleTypeComboBox.getSelectionModel().select(role.getBondedRoleType());
             comboBoxValueTextField.setText(bondedRoleTypeComboBox.getConverter().toString(role.getBondedRoleType()));
-            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(roleProposal.getRequiredBond())));
+            requiredBondForRoleTextField.setText(bsqFormatter.formatCoin(Coin.valueOf(daoFacade.getRequiredBond(roleProposal))));
             // TODO maybe show also unlock time?
         } else if (proposal instanceof ConfiscateBondProposal) {
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;

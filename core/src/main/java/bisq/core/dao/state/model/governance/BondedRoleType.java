@@ -40,38 +40,41 @@ import lombok.Getter;
 public enum BondedRoleType {
     UNDEFINED(0, 0, "N/A", false),
     // admins
-    GITHUB_ADMIN(50_000, 75, "https://bisq.network/roles/16", true),
-    FORUM_ADMIN(20_000, 75, "https://bisq.network/roles/19", true),
-    TWITTER_ADMIN(20_000, 75, "https://bisq.network/roles/21", true),
-    ROCKET_CHAT_ADMIN(20_000, 75, "https://bisq.network/roles/79", true),
-    YOUTUBE_ADMIN(10_000, 75, "https://bisq.network/roles/56", true),
+    GITHUB_ADMIN(50, 75, "https://bisq.network/roles/16", true),
+    FORUM_ADMIN(20, 75, "https://bisq.network/roles/19", true),
+    TWITTER_ADMIN(20, 75, "https://bisq.network/roles/21", true),
+    ROCKET_CHAT_ADMIN(20, 75, "https://bisq.network/roles/79", true),
+    YOUTUBE_ADMIN(10, 75, "https://bisq.network/roles/56", true),
 
     // maintainers
-    BISQ_MAINTAINER(50_000, 75, "https://bisq.network/roles/63", true),
-    BITCOINJ_MAINTAINER(20_000, 75, "https://bisq.network/roles/8", true),
-    NETLAYER_MAINTAINER(20_000, 75, "https://bisq.network/roles/81", true),
+    BISQ_MAINTAINER(50, 75, "https://bisq.network/roles/63", true),
+    BITCOINJ_MAINTAINER(20, 75, "https://bisq.network/roles/8", true),
+    NETLAYER_MAINTAINER(20, 75, "https://bisq.network/roles/81", true),
 
     // operators
-    WEBSITE_OPERATOR(50_000, 75, "https://bisq.network/roles/12", true),
-    FORUM_OPERATOR(50_000, 75, "https://bisq.network/roles/19", true),
-    SEED_NODE_OPERATOR(20_000, 75, "https://bisq.network/roles/15", true),
-    DATA_RELAY_NODE_OPERATOR(20_000, 75, "https://bisq.network/roles/14", true),
-    BTC_NODE_OPERATOR(5_000, 75, "https://bisq.network/roles/67", true),
-    MARKETS_OPERATOR(20_000, 75, "https://bisq.network/roles/9", true),
-    BSQ_EXPLORER_OPERATOR(20_000, 75, "https://bisq.network/roles/11", true),
-    MOBILE_NOTIFICATIONS_RELAY_OPERATOR(20_000, 75, "https://bisq.network/roles/82", true),
+    WEBSITE_OPERATOR(50, 75, "https://bisq.network/roles/12", true),
+    FORUM_OPERATOR(50, 75, "https://bisq.network/roles/19", true),
+    SEED_NODE_OPERATOR(20, 75, "https://bisq.network/roles/15", true),
+    DATA_RELAY_NODE_OPERATOR(20, 75, "https://bisq.network/roles/14", true),
+    BTC_NODE_OPERATOR(5, 75, "https://bisq.network/roles/67", true),
+    MARKETS_OPERATOR(20, 75, "https://bisq.network/roles/9", true),
+    BSQ_EXPLORER_OPERATOR(20, 75, "https://bisq.network/roles/11", true),
+    MOBILE_NOTIFICATIONS_RELAY_OPERATOR(20, 75, "https://bisq.network/roles/82", true),
 
     // other
-    DOMAIN_NAME_HOLDER(50_000, 75, "https://bisq.network/roles/77", false),
-    DNS_ADMIN(20_000, 75, "https://bisq.network/roles/18", false),
-    MEDIATOR(10_000, 75, "N/A", true),
-    ARBITRATOR(200_000, 75, "https://bisq.network/roles/13", true),
-    BTC_DONATION_ADDRESS_OWNER(20_000, 75, "https://bisq.network/roles/80", true);
+    DOMAIN_NAME_HOLDER(50, 75, "https://bisq.network/roles/77", false),
+    DNS_ADMIN(20, 75, "https://bisq.network/roles/18", false),
+    MEDIATOR(10, 75, "https://bisq.network/roles/83", true),
+    ARBITRATOR(200, 75, "https://bisq.network/roles/13", true),
+    BTC_DONATION_ADDRESS_OWNER(20, 75, "https://bisq.network/roles/80", true);
 
 
-    // Satoshi value of BSQ bond
+    // Will be multiplied with PARAM.BONDED_ROLE_FACTOR to get BSQ amount.
+    // As BSQ is volatile we need to adjust the bonds over time.
+    // To avoid changing the Enum we use the BONDED_ROLE_FACTOR param to react on BSQ price changes.
+    // Required bond = requiredBondUnit * PARAM.BONDED_ROLE_FACTOR.value
     @Getter
-    private final long requiredBond;
+    private final long requiredBondUnit;
 
     // Unlock time in blocks
     @Getter
@@ -82,13 +85,13 @@ public enum BondedRoleType {
     private final boolean allowMultipleHolders;
 
     /**
-     * @param requiredBondInBsq     // requiredBond in BSQ for lockup tx
-     * @param unlockTimeInDays      // unlockTime in days
-     * @param link                  // Link to Github for role description
-     * @param allowMultipleHolders  // If role can be held by multiple persons (e.g. seed nodes vs. domain name)
+     * @param requiredBondUnit          // requiredBondUnit for lockup tx (will be multiplied with PARAM.BONDED_ROLE_FACTOR for BSQ value)
+     * @param unlockTimeInDays          // unlockTime in days
+     * @param link                      // Link to Github for role description
+     * @param allowMultipleHolders      // If role can be held by multiple persons (e.g. seed nodes vs. domain name)
      */
-    BondedRoleType(long requiredBondInBsq, int unlockTimeInDays, String link, boolean allowMultipleHolders) {
-        this.requiredBond = requiredBondInBsq * 100;
+    BondedRoleType(long requiredBondUnit, int unlockTimeInDays, String link, boolean allowMultipleHolders) {
+        this.requiredBondUnit = requiredBondUnit;
         this.unlockTimeInBlocks = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
                 unlockTimeInDays * 144 :    // mainnet (144 blocks per day)
                 BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -105,7 +108,7 @@ public enum BondedRoleType {
     @Override
     public String toString() {
         return "BondedRoleType{" +
-                "\n     requiredBond=" + requiredBond +
+                "\n     requiredBondUnit=" + requiredBondUnit +
                 ",\n     unlockTime=" + unlockTimeInBlocks +
                 ",\n     link='" + link + '\'' +
                 ",\n     allowMultipleHolders=" + allowMultipleHolders +

@@ -43,6 +43,7 @@ import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.presentation.DaoUtil;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -281,7 +282,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
-                long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
+                BondedRoleType bondedRoleType = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem();
+                long requiredBond = daoFacade.getRequiredBond(bondedRoleType);
                 long availableBalance = bsqWalletService.getAvailableConfirmedBalance().value;
 
                 if (requiredBond > availableBalance) {

@@ -55,16 +55,19 @@ import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Ballot;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.asset.Asset;
@@ -95,6 +98,8 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Provides a facade to interact with the Dao domain. Hides complexity and domain details to clients (e.g. UI or APIs)
@@ -679,5 +684,28 @@ public class DaoFacade implements DaoSetupService {
 
     public Coin getRequiredQuorum(Proposal proposal) {
         return proposalService.getRequiredQuorum(proposal);
+    }
+
+    public long getRequiredBond(Optional<RoleProposal> roleProposal) {
+        Optional<BondedRoleType> bondedRoleType = roleProposal.map(e -> e.getRole().getBondedRoleType());
+        checkArgument(bondedRoleType.isPresent(), "bondedRoleType must be present");
+        int height = roleProposal.flatMap(p -> daoStateService.getTx(p.getTxId()))
+                .map(BaseTx::getBlockHeight)
+                .orElse(daoStateService.getChainHeight());
+        long requiredBondUnit = roleProposal.map(RoleProposal::getRequiredBondUnit)
+                .orElse(bondedRoleType.get().getRequiredBondUnit());
+        long baseFactor = daoStateService.getParamValueAsCoin(Param.BONDED_ROLE_FACTOR, height).value;
+        return requiredBondUnit * baseFactor;
+    }
+
+    public long getRequiredBond(RoleProposal roleProposal) {
+        return getRequiredBond(Optional.of(roleProposal));
+    }
+
+    public long getRequiredBond(BondedRoleType bondedRoleType) {
+        int height = daoStateService.getChainHeight();
+        long requiredBondUnit = bondedRoleType.getRequiredBondUnit();
+        long baseFactor = daoStateService.getParamValueAsCoin(Param.BONDED_ROLE_FACTOR, height).value;
+        return requiredBondUnit * baseFactor;
     }
 }

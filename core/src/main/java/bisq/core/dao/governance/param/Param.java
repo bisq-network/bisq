@@ -120,6 +120,11 @@ public enum Param {
     ARBITRATOR_FEE("0", ParamType.PERCENT),  // % of trade. For new trade protocol. Arbitration will become optional and we can apply a fee to it. Initially we start with no fee.
     MAX_TRADE_LIMIT("2", ParamType.BTC, 2, 2), // max trade limit for lowest risk payment method. Others will get derived from that.
 
+    // The base factor to multiply the bonded role amount. E.g. If Twitter admin has 20 as amount and BONDED_ROLE_FACTOR is 1000 we get 20000 BSQ as required bond.
+    // Using BSQ as type is not really the best option but we don't want to introduce a new ParamType just for that one Param.
+    // As the end rules is in fact BSQ it is not completely incorrect as well.
+    BONDED_ROLE_FACTOR("1000", ParamType.BSQ, 2, 2),
+
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
     // confirmed in the next block which would be the following break phase. To hide that complexity we show only the
     // blocks where the user can be active. To have still round numbers for the durations we add 1 block to those
