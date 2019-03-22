@@ -18,7 +18,7 @@
 package bisq.core.dao;
 
 /**
- * All main service classes implements that interface to guaranteee a controlled
+ * All main service classes implements that interface to guarantee a controlled
  * startup sequence.
  */
 public interface DaoSetupService {

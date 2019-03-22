@@ -121,8 +121,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private BusyAnimation busyAnimation;
     private Label busyLabel;
 
-    private BooleanProperty isProposalPhase = new SimpleBooleanProperty(false);
-    private StringProperty proposalGroupTitle = new SimpleStringProperty(Res.get("dao.proposal.create.phase.inactive"));
+    private final BooleanProperty isProposalPhase = new SimpleBooleanProperty(false);
+    private final StringProperty proposalGroupTitle = new SimpleStringProperty(Res.get("dao.proposal.create.phase.inactive"));
 
     @Nullable
     private ProposalType selectedProposalType;
@@ -206,8 +206,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
         Optional<Block> blockAtChainHeight = daoFacade.getBlockAtChainHeight();
 
-        if (blockAtChainHeight.isPresent())
-            onParseBlockCompleteAfterBatchProcessing(blockAtChainHeight.get());
+        blockAtChainHeight.ifPresent(this::onParseBlockCompleteAfterBatchProcessing);
     }
 
     @Override
@@ -282,6 +281,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
+                checkNotNull(proposalDisplay, "proposalDisplay must not be null");
+                checkNotNull(proposalDisplay.bondedRoleTypeComboBox, "proposalDisplay.bondedRoleTypeComboBox must not be null");
                 BondedRoleType bondedRoleType = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem();
                 long requiredBond = daoFacade.getRequiredBond(bondedRoleType);
                 long availableBalance = bsqWalletService.getAvailableConfirmedBalance().value;

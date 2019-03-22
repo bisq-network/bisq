@@ -64,7 +64,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
                        byte version,
                        long creationDate,
                        @Nullable String txId,
-                       Map<String, String> extraDataMap) {
+                       @SuppressWarnings("NullableProblems") Map<String, String> extraDataMap) {
         this.name = name;
         this.link = link;
         this.version = version;

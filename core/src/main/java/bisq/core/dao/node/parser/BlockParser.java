@@ -76,7 +76,7 @@ public class BlockParser {
      * @param rawBlock  Contains all transactions of a bitcoin block without any BSQ specific data
      * @return Block: Gets created from the rawBlock but contains only BSQ specific transactions.
      * @throws BlockHashNotConnectingException If new block does not connect to previous block
-     * @throws BlockHeightNotConnectingException If new block height is not current cahin Height + 1
+     * @throws BlockHeightNotConnectingException If new block height is not current chain Height + 1
      */
     public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
         int blockHeight = rawBlock.getHeight();

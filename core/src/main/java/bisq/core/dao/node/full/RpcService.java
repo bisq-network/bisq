@@ -130,8 +130,6 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
                 nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
                 nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
-                // todo(chirhonul): we are not using the alert or wallet functionality currently, so we may want to
-                // disable this in the com.neemre.btcdcli4j library entirely, if possible.
                 nodeConfig.setProperty("node.bitcoind.notification.alert.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
                 nodeConfig.setProperty("node.bitcoind.notification.wallet.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
 
@@ -159,7 +157,7 @@ public class RpcService {
             return null;
         });
 
-        Futures.addCallback(future, new FutureCallback<Void>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Void ignore) {
                 UserThread.execute(resultHandler::handleResult);
             }
@@ -260,10 +258,10 @@ public class RpcService {
                 .filter(rawInput -> rawInput != null && rawInput.getVOut() != null && rawInput.getTxId() != null)
                 .map(rawInput -> {
                     // We don't support segWit inputs yet as well as no pay to pubkey txs...
-                    String[] split = rawInput.getScriptSig().getAsm().split("\\[ALL\\] ");
+                    String[] split = rawInput.getScriptSig().getAsm().split("\\[ALL] ");
                     String pubKeyAsHex;
                     if (split.length == 2) {
-                        pubKeyAsHex = rawInput.getScriptSig().getAsm().split("\\[ALL\\] ")[1];
+                        pubKeyAsHex = rawInput.getScriptSig().getAsm().split("\\[ALL] ")[1];
                     } else {
                         // If we receive a pay to pubkey tx the pubKey is not included as
                         // it is in the output already.

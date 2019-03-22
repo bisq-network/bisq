@@ -97,7 +97,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "StatementWithEmptyBody"})
 @Slf4j
 public class ProposalDisplay {
     private final GridPane gridPane;
@@ -231,7 +231,7 @@ public class ProposalDisplay {
             Tuple3<Label, HyperlinkWithIcon, VBox> uidTuple = addTopLabelHyperlinkWithIcon(gridPane, ++gridRow,
                     Res.get("dao.proposal.display.txId"), "", "", 0);
             txHyperlinkWithIcon = uidTuple.second;
-            // TODO HyperlinkWithIcon does not scale automatically (button base, -> make anchorpane as base)
+            // TODO HyperlinkWithIcon does not scale automatically (button base, -> make anchorPane as base)
             txHyperlinkWithIcon.prefWidthProperty().bind(nameTextField.widthProperty());
         }
 

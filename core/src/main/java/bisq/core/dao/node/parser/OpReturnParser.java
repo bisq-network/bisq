@@ -44,17 +44,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 class OpReturnParser {
 
-    // We only check partially the rules here as we do not know the BSQ fee at that moment which is always used when
-    // we have OP_RETURN data.
-    static Optional<OpReturnType> getOptionalOpReturnTypeCandidate(TempTxOutput tempTxOutput) {
-        // We do not check for pubKeyScript.scriptType.NULL_DATA because that is only set if dumpBlockchainData is true
-        byte[] opReturnData = tempTxOutput.getOpReturnData();
-        if (tempTxOutput.getValue() == 0 && opReturnData != null && opReturnData.length >= 22)
-            return OpReturnType.getOpReturnType(opReturnData[0]);
-
-        return Optional.empty();
-    }
-
     /**
      * Parse the type of OP_RETURN data and validate it.
      *

@@ -18,22 +18,7 @@
 package bisq.core.dao.node.parser.exceptions;
 
 public class InvalidParsingConditionException extends RuntimeException {
-    public InvalidParsingConditionException() {
-    }
-
     public InvalidParsingConditionException(String message) {
         super(message);
-    }
-
-    public InvalidParsingConditionException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public InvalidParsingConditionException(Throwable cause) {
-        super(cause);
-    }
-
-    public InvalidParsingConditionException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

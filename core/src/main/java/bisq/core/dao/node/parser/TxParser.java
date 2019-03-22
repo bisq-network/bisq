@@ -49,7 +49,6 @@ public class TxParser {
     private final PeriodService periodService;
     private final DaoStateService daoStateService;
     private TxOutputParser txOutputParser;
-    private TxInputParser txInputParser;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +87,7 @@ public class TxParser {
         // Parse Inputs
         //****************************************************************************************
 
-        txInputParser = new TxInputParser(daoStateService);
+        TxInputParser txInputParser = new TxInputParser(daoStateService);
         for (int inputIndex = 0; inputIndex < tempTx.getTxInputs().size(); inputIndex++) {
             TxInput input = tempTx.getTxInputs().get(inputIndex);
             TxOutputKey outputKey = input.getConnectedTxOutputKey();

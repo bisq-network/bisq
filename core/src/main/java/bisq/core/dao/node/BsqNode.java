@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
  */
 @Slf4j
 public abstract class BsqNode implements DaoSetupService {
-    protected final BlockParser blockParser;
+    private final BlockParser blockParser;
     private final P2PService p2PService;
     protected final DaoStateService daoStateService;
     private final String genesisTxId;
@@ -64,7 +64,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected Consumer<String> errorMessageHandler;
     @Nullable
     protected Consumer<String> warnMessageHandler;
-    protected List<RawBlock> pendingBlocks = new ArrayList<>();
+    private final List<RawBlock> pendingBlocks = new ArrayList<>();
 
     // The chain height of the latest Block we either get reported by Bitcoin Core or from the seed node
     // This property should not be used in consensus code but only for retrieving blocks as it is not in sync with the
@@ -147,11 +147,11 @@ public abstract class BsqNode implements DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setErrorMessageHandler(Consumer<String> errorMessageHandler) {
+    public void setErrorMessageHandler(@SuppressWarnings("NullableProblems") Consumer<String> errorMessageHandler) {
         this.errorMessageHandler = errorMessageHandler;
     }
 
-    public void setWarnMessageHandler(Consumer<String> warnMessageHandler) {
+    public void setWarnMessageHandler(@SuppressWarnings("NullableProblems") Consumer<String> warnMessageHandler) {
         this.warnMessageHandler = warnMessageHandler;
     }
 

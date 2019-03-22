@@ -268,7 +268,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 Tx voteRevealTx = optionalVoteRevealTx.get();
 
                 // Here we use only blockchain tx data so far so we don't have risks with missing P2P network data.
-                // We work back from the voteRealTx to the blindVoteTx to caclulate the majority hash. From that we
+                // We work back from the voteRealTx to the blindVoteTx to calculate the majority hash. From that we
                 // will derive the blind vote list we will use for result calculation and as it was based on
                 // blockchain data it will be consistent for all peers independent on their P2P network data state.
                 TxOutput blindVoteStakeOutput = VoteResultConsensus.getConnectedBlindVoteStakeOutput(voteRevealTx, daoStateService);
@@ -604,9 +604,9 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private void applyAcceptedProposals(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
         applyIssuance(acceptedEvaluatedProposals, chainHeight);
         applyParamChange(acceptedEvaluatedProposals, chainHeight);
-        applyBondedRole(acceptedEvaluatedProposals, chainHeight);
-        applyConfiscateBond(acceptedEvaluatedProposals, chainHeight);
-        applyRemoveAsset(acceptedEvaluatedProposals, chainHeight);
+        applyBondedRole(acceptedEvaluatedProposals);
+        applyConfiscateBond(acceptedEvaluatedProposals);
+        applyRemoveAsset(acceptedEvaluatedProposals);
     }
 
     private void applyIssuance(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
@@ -642,6 +642,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     }
 
     private void applyAcceptedChangeParamProposal(ChangeParamProposal changeParamProposal, int chainHeight) {
+        @SuppressWarnings("StringBufferReplaceableByString")
         StringBuilder sb = new StringBuilder();
         sb.append("\n################################################################################\n");
         sb.append("We changed a parameter. ProposalTxId=").append(changeParamProposal.getTxId())
@@ -661,11 +662,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 .orElse(null);
     }
 
-    private void applyBondedRole(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
+    private void applyBondedRole(Set<EvaluatedProposal> acceptedEvaluatedProposals) {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof RoleProposal) {
                 RoleProposal roleProposal = (RoleProposal) evaluatedProposal.getProposal();
                 Role role = roleProposal.getRole();
+                @SuppressWarnings("StringBufferReplaceableByString")
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We added a bonded role. ProposalTxId=").append(roleProposal.getTxId())
@@ -676,12 +678,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         });
     }
 
-    private void applyConfiscateBond(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
+    private void applyConfiscateBond(Set<EvaluatedProposal> acceptedEvaluatedProposals) {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof ConfiscateBondProposal) {
                 ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) evaluatedProposal.getProposal();
                 daoStateService.confiscateBond(confiscateBondProposal.getLockupTxId());
 
+                @SuppressWarnings("StringBufferReplaceableByString")
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We confiscated a bond. ProposalTxId=").append(confiscateBondProposal.getTxId())
@@ -692,11 +695,12 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         });
     }
 
-    private void applyRemoveAsset(Set<EvaluatedProposal> acceptedEvaluatedProposals, int chainHeight) {
+    private void applyRemoveAsset(Set<EvaluatedProposal> acceptedEvaluatedProposals) {
         acceptedEvaluatedProposals.forEach(evaluatedProposal -> {
             if (evaluatedProposal.getProposal() instanceof RemoveAssetProposal) {
                 RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) evaluatedProposal.getProposal();
                 String tickerSymbol = removeAssetProposal.getTickerSymbol();
+                @SuppressWarnings("StringBufferReplaceableByString")
                 StringBuilder sb = new StringBuilder();
                 sb.append("\n################################################################################\n");
                 sb.append("We removed an asset. ProposalTxId=").append(removeAssetProposal.getTxId())
@@ -710,12 +714,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
     private Set<EvaluatedProposal> getAcceptedEvaluatedProposals(Set<EvaluatedProposal> evaluatedProposals) {
         return evaluatedProposals.stream()
                 .filter(EvaluatedProposal::isAccepted)
-                .collect(Collectors.toSet());
-    }
-
-    private Set<EvaluatedProposal> getRejectedEvaluatedProposals(Set<EvaluatedProposal> evaluatedProposals) {
-        return evaluatedProposals.stream()
-                .filter(evaluatedProposal -> !evaluatedProposal.isAccepted())
                 .collect(Collectors.toSet());
     }
 

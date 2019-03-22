@@ -198,9 +198,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         blockHeightBeforeProcessing = daoFacade.getChainHeight();
         missingBlocks = walletChainHeight - blockHeightBeforeProcessing;
         if (!daoStateService.isParseBlockChainComplete()) {
-            updateAnyChainHeightTimer = UserThread.runPeriodically(() -> {
-                onUpdateAnyChainHeight();
-            }, 100, TimeUnit.MILLISECONDS);
+            updateAnyChainHeightTimer = UserThread.runPeriodically(this::onUpdateAnyChainHeight, 100, TimeUnit.MILLISECONDS);
         }
         onUpdateAnyChainHeight();
     }
@@ -315,13 +313,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.getStyleClass().add("first-column");
 
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {
@@ -348,13 +345,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -385,13 +381,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(160);
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
 
                             private AddressWithIconAndDirection field;
 
@@ -523,13 +518,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {

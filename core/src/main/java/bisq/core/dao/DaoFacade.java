@@ -59,10 +59,10 @@ import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -478,7 +478,8 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public int getCurrentCycleDuration() {
-        return periodService.getCurrentCycle().getDuration();
+        Cycle currentCycle = periodService.getCurrentCycle();
+        return currentCycle != null ? currentCycle.getDuration() : 0;
     }
 
     // listeners for phase change
@@ -553,10 +554,6 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getTx(txId);
     }
 
-    public Set<TxOutput> getUnspentBlindVoteStakeTxOutputs() {
-        return daoStateService.getUnspentBlindVoteStakeTxOutputs();
-    }
-
     public int getGenesisBlockHeight() {
         return daoStateService.getGenesisBlockHeight();
     }
@@ -587,10 +584,6 @@ public class DaoFacade implements DaoSetupService {
 
     public Optional<TxOutput> getLockupTxOutput(String txId) {
         return daoStateService.getLockupTxOutput(txId);
-    }
-
-    public Optional<TxOutput> getLockupOpReturnTxOutput(String txId) {
-        return daoStateService.getLockupOpReturnTxOutput(txId);
     }
 
     public long getTotalBurntFee() {
@@ -636,15 +629,6 @@ public class DaoFacade implements DaoSetupService {
     public boolean isTxInCorrectCycle(String txId, int chainHeight) {
         return periodService.isTxInCorrectCycle(txId, chainHeight);
     }
-
-    public boolean isTxInPhaseAndCycle(String txId, DaoPhase.Phase phase, int chainHeight) {
-        return periodService.isTxInPhaseAndCycle(txId, phase, chainHeight);
-    }
-
-    public boolean isUnspent(TxOutputKey key) {
-        return daoStateService.isUnspent(key);
-    }
-
 
     public Coin getMinCompensationRequestAmount() {
         return CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());

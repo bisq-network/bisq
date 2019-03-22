@@ -61,7 +61,7 @@ public class ProposalValidatorProvider {
         return getValidator(proposal.getType());
     }
 
-    public ProposalValidator getValidator(ProposalType proposalType) {
+    private ProposalValidator getValidator(ProposalType proposalType) {
         switch (proposalType) {
             case COMPENSATION_REQUEST:
                 return compensationValidator;

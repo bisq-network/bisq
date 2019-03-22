@@ -244,7 +244,9 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
             List<Proposal> proposals = proposalService.getValidatedProposals().stream()
                     .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.PROPOSAL, blockHeight))
-                    .sorted(Comparator.comparing(Proposal::getTxId)).collect(Collectors.toList());
+                    .filter(e -> e.getTxId() != null)
+                    .sorted(Comparator.comparing(Proposal::getTxId))
+                    .collect(Collectors.toList());
 
             // We use MyProposalList to get the serialized bytes from the proposals list
             byte[] serializedProposals = new MyProposalList(proposals).toProtoMessage().toByteArray();

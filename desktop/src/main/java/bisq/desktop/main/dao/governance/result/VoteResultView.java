@@ -131,8 +131,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final Navigation navigation;
-    private MyProposalListService myProposalListService;
-    private MyBlindVoteListService myBlindVoteListService;
+    private final MyProposalListService myProposalListService;
+    private final MyBlindVoteListService myBlindVoteListService;
     private Button exportButton;
 
     private int gridRow = 0;

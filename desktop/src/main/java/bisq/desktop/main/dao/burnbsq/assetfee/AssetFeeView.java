@@ -85,7 +85,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     private final BsqWalletService bsqWalletService;
     private final BsqValidator bsqValidator;
     private final AssetService assetService;
-    private BSFormatter btcFormatter;
+    private final BSFormatter btcFormatter;
 
     private final ObservableList<AssetListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<AssetListItem> sortedList = new SortedList<>(observableList);
@@ -120,7 +120,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     public void initialize() {
         addTitledGroupBg(root, gridRow, 3, Res.get("dao.burnBsq.header"));
 
-        assetComboBox = FormBuilder.<StatefulAsset>addComboBox(root, gridRow,
+        assetComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("dao.burnBsq.selectAsset"), Layout.FIRST_ROW_DISTANCE);
         assetComboBox.setConverter(new StringConverter<>() {
             @Override

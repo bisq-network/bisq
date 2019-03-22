@@ -143,7 +143,7 @@ public class TxInputParser {
         }
     }
 
-    boolean isVoteRevealInputValid() {
+    private boolean isVoteRevealInputValid() {
         return numVoteRevealInputs == 1;
     }
 }

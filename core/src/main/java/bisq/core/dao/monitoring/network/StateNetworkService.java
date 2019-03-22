@@ -176,10 +176,6 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
         listeners.add(listener);
     }
 
-    public void removeListener(Listener<Msg, Req, StH> listener) {
-        listeners.remove(listener);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

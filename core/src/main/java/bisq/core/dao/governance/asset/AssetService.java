@@ -152,7 +152,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
                 .collect(Collectors.toList()));
     }
 
-    public void updateList() {
+    private void updateList() {
         if (tradeStatsByTickerSymbol == null)
             return;
 
@@ -286,15 +286,6 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean wasAssetRemovedByVoting(String tickerSymbol) {
-        boolean isRemoved = getAcceptedRemoveAssetProposalStream()
-                .anyMatch(proposal -> proposal.getTickerSymbol().equals(tickerSymbol));
-        if (isRemoved)
-            log.info("Asset '{}' was removed", CurrencyUtil.getNameAndCode(tickerSymbol));
-
-        return isRemoved;
-    }
-
     public boolean isActive(String tickerSymbol) {
         return DevEnv.isDaoActivated() ? findAsset(tickerSymbol).map(StatefulAsset::isActive).orElse(false) : true;
     }
@@ -303,9 +294,19 @@ public class AssetService implements DaoSetupService, DaoStateListener {
         return statefulAssets.stream().filter(e -> e.getTickerSymbol().equals(tickerSymbol)).findAny();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean wasAssetRemovedByVoting(String tickerSymbol) {
+        boolean isRemoved = getAcceptedRemoveAssetProposalStream()
+                .anyMatch(proposal -> proposal.getTickerSymbol().equals(tickerSymbol));
+        if (isRemoved)
+            log.info("Asset '{}' was removed", CurrencyUtil.getNameAndCode(tickerSymbol));
+
+        return isRemoved;
+    }
 
     private Stream<RemoveAssetProposal> getAcceptedRemoveAssetProposalStream() {
         return daoStateService.getEvaluatedProposalList().stream()

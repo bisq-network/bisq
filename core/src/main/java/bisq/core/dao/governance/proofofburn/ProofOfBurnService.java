@@ -109,7 +109,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     public void start() {
     }
 
-    public void updateList() {
+    private void updateList() {
         proofOfBurnTxList.clear();
         proofOfBurnTxList.addAll(getAllProofOfBurnTxs());
 

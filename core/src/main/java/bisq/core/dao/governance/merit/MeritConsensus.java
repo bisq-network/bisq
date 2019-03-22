@@ -58,7 +58,7 @@ public class MeritConsensus {
         return getMeritStake(blindVoteTxId, meritList, txChainHeight);
     }
 
-    public static long getMeritStake(String blindVoteTxId, MeritList meritList, int txChainHeight) {
+    private static long getMeritStake(String blindVoteTxId, MeritList meritList, int txChainHeight) {
         // We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even at
         // later blocks (merit decreases with each block).
         if (txChainHeight == 0) {
@@ -86,7 +86,7 @@ public class MeritConsensus {
     }
 
     @VisibleForTesting
-    static boolean isSignatureValid(byte[] signatureFromMerit, String pubKeyAsHex, String blindVoteTxId) {
+    private static boolean isSignatureValid(byte[] signatureFromMerit, String pubKeyAsHex, String blindVoteTxId) {
         // We verify if signature of hash of blindVoteTxId is correct. EC key from first input for blind vote tx is
         // used for signature.
         if (pubKeyAsHex == null) {

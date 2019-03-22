@@ -81,6 +81,7 @@ public class IssuanceService {
                     daoStateService.addIssuance(issuance);
                     daoStateService.addUnspentTxOutput(txOutput);
 
+                    @SuppressWarnings("StringBufferReplaceableByString")
                     StringBuilder sb = new StringBuilder();
                     sb.append("\n################################################################################\n");
                     sb.append("We issued new BSQ to tx with ID ").append(txOutput.getTxId())

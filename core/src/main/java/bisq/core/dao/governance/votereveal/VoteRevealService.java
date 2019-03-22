@@ -138,7 +138,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public byte[] getHashOfBlindVoteList() {
+    private byte[] getHashOfBlindVoteList() {
         List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
         log.info("blindVoteList for creating hash: " + blindVotes);

@@ -565,16 +565,6 @@ public class DaoStateService implements DaoSetupService {
         return getTxOutputsByTxOutputType(TxOutputType.ISSUANCE_CANDIDATE_OUTPUT);
     }
 
-    public Set<TxOutput> getIssuanceCandidateTxOutputsOfCurrentCycle() {
-        Cycle currentCycle = getCurrentCycle();
-        if (currentCycle == null)
-            return new HashSet<>();
-
-        return getIssuanceCandidateTxOutputs().stream()
-                .filter(txOutput -> currentCycle.isInCycle(txOutput.getBlockHeight()))
-                .collect(Collectors.toSet());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Issuance
@@ -816,9 +806,8 @@ public class DaoStateService implements DaoSetupService {
     public long getTotalAmountOfConfiscatedTxOutputs() {
         return daoState.getConfiscatedLockupTxList()
                 .stream()
-                .map(txId -> getTx(txId))
-                .filter(optionalTx -> optionalTx.isPresent())
-                .mapToLong(optionalTx -> optionalTx.get().getLockupOutput().getValue())
+                .flatMap(e -> getTx(e).stream())
+                .mapToLong(tx -> tx.getLockupOutput().getValue())
                 .sum();
     }
 
