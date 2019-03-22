@@ -5,13 +5,22 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 @Getter
-public class ParamValidationException extends Exception {
-    @Nullable
-    private ChangeParamValidator.Result result;
+public class
+ParamValidationException extends Exception {
+    enum ERROR {
+        SAME,
+        NO_CHANGE_POSSIBLE,
+        TOO_LOW,
+        TOO_HIGH
+    }
 
-    ParamValidationException(ChangeParamValidator.Result result) {
-        super(result.getErrorMsg());
-        this.result = result;
+    @Nullable
+    private ParamValidationException.ERROR error;
+
+
+    ParamValidationException(ParamValidationException.ERROR error, String errorMessage) {
+        super(errorMessage);
+        this.error = error;
     }
 
     ParamValidationException(Throwable throwable) {
@@ -26,7 +35,7 @@ public class ParamValidationException extends Exception {
     @Override
     public String toString() {
         return "ParamValidationException{" +
-                "\n     result=" + result +
+                "\n     error=" + error +
                 "\n} " + super.toString();
     }
 }

@@ -18,8 +18,8 @@
 package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
@@ -118,6 +118,14 @@ public class BsqFormatter extends BSFormatter {
         } else {
             return "";
         }
+    }
+
+    public String formatBSQSatoshis(long satoshi) {
+        return super.formatCoin(satoshi, coinFormat);
+    }
+
+    public String formatBTCSatoshis(long satoshi) {
+        return super.formatCoin(satoshi, btcCoinFormat);
     }
 
     public String formatBTCWithCode(long satoshi) {
