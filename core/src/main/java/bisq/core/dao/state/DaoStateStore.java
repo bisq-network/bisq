@@ -60,7 +60,7 @@ public class DaoStateStore implements PersistableEnvelope {
     public Message toProtoMessage() {
         checkNotNull(daoState, "daoState must not be null when toProtoMessage is invoked");
         PB.DaoStateStore.Builder builder = PB.DaoStateStore.newBuilder()
-                .setBsqState(daoState.getBsqStateBuilder())
+                .setDaoState(daoState.getBsqStateBuilder())
                 .addAllDaoStateHash(daoStateHashChain.stream()
                         .map(DaoStateHash::toProtoMessage)
                         .collect(Collectors.toList()));
@@ -75,6 +75,6 @@ public class DaoStateStore implements PersistableEnvelope {
                 new LinkedList<>(proto.getDaoStateHashList().stream()
                         .map(DaoStateHash::fromProto)
                         .collect(Collectors.toList()));
-        return new DaoStateStore(DaoState.fromProto(proto.getBsqState()), daoStateHashList);
+        return new DaoStateStore(DaoState.fromProto(proto.getDaoState()), daoStateHashList);
     }
 }

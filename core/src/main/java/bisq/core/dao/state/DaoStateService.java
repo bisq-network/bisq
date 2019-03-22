@@ -123,9 +123,6 @@ public class DaoStateService implements DaoSetupService {
         daoState.getUnspentTxOutputMap().clear();
         daoState.getUnspentTxOutputMap().putAll(snapshot.getUnspentTxOutputMap());
 
-        daoState.getNonBsqTxOutputMap().clear();
-        daoState.getNonBsqTxOutputMap().putAll(snapshot.getNonBsqTxOutputMap());
-
         daoState.getSpentInfoMap().clear();
         daoState.getSpentInfoMap().putAll(snapshot.getSpentInfoMap());
 
@@ -630,28 +627,17 @@ public class DaoStateService implements DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Non-BSQ
+    // Not accepted issuance candidate outputs of past cycles
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    //TODO we never remove NonBsqTxOutput!
-    //FIXME called at result phase even if there is not a new one (passed txo from prev. cycle which was already added)
-    public void addNonBsqTxOutput(TxOutput txOutput) {
-        assertDaoStateChange();
-        checkArgument(txOutput.getTxOutputType() == TxOutputType.ISSUANCE_CANDIDATE_OUTPUT,
-                "txOutput must be type ISSUANCE_CANDIDATE_OUTPUT");
-        daoState.getNonBsqTxOutputMap().put(txOutput.getKey(), txOutput);
-    }
+    public boolean isRejectedIssuanceOutput(TxOutputKey txOutputKey) {
+        Cycle currentCycle = getCurrentCycle();
+        return currentCycle != null &&
+                getIssuanceCandidateTxOutputs().stream()
+                        .filter(txOutput -> txOutput.getKey().equals(txOutputKey))
+                        .filter(txOutput -> !currentCycle.isInCycle(txOutput.getBlockHeight()))
+                        .anyMatch(txOutput -> !isIssuanceTx(txOutput.getTxId()));
 
-    public Optional<TxOutput> getBtcTxOutput(TxOutputKey key) {
-        // Issuance candidates which did not got accepted in voting are covered here
-        TreeMap<TxOutputKey, TxOutput> nonBsqTxOutputMap = daoState.getNonBsqTxOutputMap();
-        if (nonBsqTxOutputMap.containsKey(key))
-            return Optional.of(nonBsqTxOutputMap.get(key));
-
-        // We might have also outputs of type BTC_OUTPUT
-        return getTxOutputsByTxOutputType(TxOutputType.BTC_OUTPUT).stream()
-                .filter(output -> output.getKey().equals(key))
-                .findAny();
     }
 
 

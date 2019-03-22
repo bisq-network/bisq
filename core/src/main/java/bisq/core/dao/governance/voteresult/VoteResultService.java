@@ -232,12 +232,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             } else {
                 log.info("There have not been any votes in that cycle. chainHeight={}", chainHeight);
             }
-
-            // Those which did not get accepted will be added to the nonBsq map
-            daoStateService.getIssuanceCandidateTxOutputsOfCurrentCycle().stream()
-                    .filter(txOutput -> !daoStateService.isIssuanceTx(txOutput.getTxId()))
-                    .forEach(daoStateService::addNonBsqTxOutput);
-
             log.info("Evaluating vote result took {} ms", System.currentTimeMillis() - startTs);
         }
     }
