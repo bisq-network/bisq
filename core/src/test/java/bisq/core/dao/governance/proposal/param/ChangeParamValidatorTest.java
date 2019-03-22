@@ -56,20 +56,6 @@ public class ChangeParamValidatorTest {
         }
 
         try {
-            changeParamValidator.validationChange(-1, 0, 2, 2, Param.UNDEFINED);
-            Assert.fail();
-        } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.NO_CHANGE_POSSIBLE);
-        }
-
-        try {
-            changeParamValidator.validationChange(1, 0, 2, 2, Param.UNDEFINED);
-            Assert.fail();
-        } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.NO_CHANGE_POSSIBLE);
-        }
-
-        try {
             changeParamValidator.validationChange(2, 4, 2, 1.1, Param.UNDEFINED);
             Assert.fail();
         } catch (ParamValidationException e) {
