@@ -93,7 +93,6 @@ public class BlockParser {
                 rawBlock.getPreviousBlockHash());
 
         if (isBlockAlreadyAdded(rawBlock)) {
-            //TODO check how/if that can happen
             log.warn("Block was already added.");
             DevEnv.logErrorAndThrowIfDevMode("Block was already added. rawBlock=" + rawBlock);
         } else {

@@ -42,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-//TODO Use translation properties in error messages a they are shown to user.
+//TODO Use translation properties in error messages a they are shown to user. show min/max values in errors
 
 /**
  * Changes here can potentially break consensus!
@@ -292,7 +292,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
         if (max == 0)
             return Result.OK;
 
-        //TODO some cases with min = 0 and max not 0 or the other way round are not correclty implemented yet.
+        //TODO some cases with min = 0 and max not 0 or the other way round are not correctly implemented yet.
         // Not intended to be used that way anyway but should be fixed...
         double change = currentValue != 0 ? newValue / currentValue : 0;
         if (change > max)

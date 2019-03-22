@@ -181,7 +181,6 @@ public class TxParser {
      * It verifies also if the fee is correct (if required) and if the phase is correct (if relevant).
      * We set the txType as well as the txOutputType of the relevant outputs.
      */
-    // TODO That method is not testable and still too complex.
     private void applyTxTypeAndTxOutputType(int blockHeight, TempTx tempTx, long bsqFee) {
         OpReturnType opReturnType = null;
         Optional<OpReturnType> optionalOpReturnType = txOutputParser.getOptionalOpReturnType();

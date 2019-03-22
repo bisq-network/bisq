@@ -277,8 +277,6 @@ public class DaoStateService implements DaoSetupService {
      * {@code false}.
      */
     public boolean isBlockHashKnown(String blockHash) {
-        // TODO(chirhonul): If performance of O(n) time in number of blocks becomes an issue,
-        // we should keep a HashMap of block hash -> Block to make this method O(1).
         return getBlocks().stream().anyMatch(block -> block.getHash().equals(blockHash));
     }
 
@@ -568,6 +566,16 @@ public class DaoStateService implements DaoSetupService {
 
     public Set<TxOutput> getIssuanceCandidateTxOutputs() {
         return getTxOutputsByTxOutputType(TxOutputType.ISSUANCE_CANDIDATE_OUTPUT);
+    }
+
+    public Set<TxOutput> getIssuanceCandidateTxOutputsOfCurrentCycle() {
+        Cycle currentCycle = getCurrentCycle();
+        if (currentCycle == null)
+            return new HashSet<>();
+
+        return getIssuanceCandidateTxOutputs().stream()
+                .filter(txOutput -> currentCycle.isInCycle(txOutput.getBlockHeight()))
+                .collect(Collectors.toSet());
     }
 
 

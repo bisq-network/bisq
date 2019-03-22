@@ -339,8 +339,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
             @Override
             public void onFailure(TxBroadcastException exception) {
-                // TODO handle
-                // We need to be sure that in case of a failed tx the locked stake gets unlocked!
                 exceptionHandler.handleException(exception);
             }
         });

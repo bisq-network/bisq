@@ -213,15 +213,13 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                         // it to our state. Otherwise we are not in consensus with the network.
                         daoStateService.addDecryptedBallotsWithMeritsSet(filteredDecryptedBallotsWithMeritsSet);
 
-                        // FIXME we got duplicated items in evaluatedProposals with diff. merit values, find out why...
                         Set<EvaluatedProposal> evaluatedProposals = getEvaluatedProposals(filteredDecryptedBallotsWithMeritsSet, chainHeight);
                         daoStateService.addEvaluatedProposalSet(evaluatedProposals);
                         Set<EvaluatedProposal> acceptedEvaluatedProposals = getAcceptedEvaluatedProposals(evaluatedProposals);
                         applyAcceptedProposals(acceptedEvaluatedProposals, chainHeight);
                         log.info("processAllVoteResults completed");
                     } else {
-                        // TODO make sure we handle it in the UI -> ask user to restart
-                        String msg = "We could not find a list which matches the majority so we cannot calculate the vote result.";
+                        String msg = "We could not find a list which matches the majority so we cannot calculate the vote result. Please restart and resync the DAO state.";
                         log.warn(msg);
                         voteResultExceptions.add(new VoteResultException(currentCycle, new Exception(msg)));
                     }
@@ -236,8 +234,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             }
 
             // Those which did not get accepted will be added to the nonBsq map
-            // FIXME add check for cycle as now we call addNonBsqTxOutput for past rejected comp requests as well
-            daoStateService.getIssuanceCandidateTxOutputs().stream()
+            daoStateService.getIssuanceCandidateTxOutputsOfCurrentCycle().stream()
                     .filter(txOutput -> !daoStateService.isIssuanceTx(txOutput.getTxId()))
                     .forEach(daoStateService::addNonBsqTxOutput);
 
@@ -275,8 +272,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 Optional<Tx> optionalVoteRevealTx = daoStateService.getTx(voteRevealTxId);
                 checkArgument(optionalVoteRevealTx.isPresent(), "optionalVoteRevealTx must be present. voteRevealTxId=" + voteRevealTxId);
                 Tx voteRevealTx = optionalVoteRevealTx.get();
-
-                // TODO maybe verify version in opReturn
 
                 // Here we use only blockchain tx data so far so we don't have risks with missing P2P network data.
                 // We work back from the voteRealTx to the blindVoteTx to caclulate the majority hash. From that we
@@ -454,8 +449,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
             // It still could be that we have additional blind votes so our hash does not match. We can try to permute
             // our list with excluding items to see if we get a matching list. If not last resort is to request the
             // missing items from the network.
-            // TODO we should add some metadata about the published blind vote txId list so it becomes easier to find
-            // the majority list. We could add a new payload for that or add a message to request the list from peers.
             Optional<List<BlindVote>> permutatedList = findPermutatedListMatchingMajority(majorityVoteListHash);
             if (permutatedList.isPresent()) {
                 return permutatedList;
@@ -503,12 +496,10 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // We reorganize the data structure to have a map of proposals with a list of VoteWithStake objects
         Map<Proposal, List<VoteWithStake>> resultListByProposalMap = getVoteWithStakeListByProposalMap(decryptedBallotsWithMeritsSet);
 
-        // TODO breakup
         Set<EvaluatedProposal> evaluatedProposals = new HashSet<>();
         resultListByProposalMap.forEach((proposal, voteWithStakeList) -> {
             long requiredQuorum = daoStateService.getParamValueAsCoin(proposal.getQuorumParam(), chainHeight).value;
             long requiredVoteThreshold = getRequiredVoteThreshold(chainHeight, proposal);
-            //TODO add checks for param change that input for quorum param of <5000 is not allowed
             checkArgument(requiredVoteThreshold >= 5000,
                     "requiredVoteThreshold must be not be less then 50% otherwise we could have conflicting results.");
 
@@ -652,24 +643,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                 log.warn("There have been multiple winning param change proposals with the same item. " +
                         "This is a sign of a social consensus failure. " +
                         "We treat all requests as failed in such a case.");
-
-                // TODO remove code once we are 100% sure we stick with the above solution.
-                // We got multiple proposals for the same parameter. We check which one got the higher stake and that
-                // one will be the winner. If both have same stake none will be the winner.
-                /*list.sort(Comparator.comparing(ev -> ev.getProposalVoteResult().getStakeOfAcceptedVotes()));
-                Collections.reverse(list);
-                EvaluatedProposal first = list.get(0);
-                EvaluatedProposal second = list.get(1);
-                if (first.getProposalVoteResult().getStakeOfAcceptedVotes() >
-                        second.getProposalVoteResult().getStakeOfAcceptedVotes()) {
-                    applyAcceptedChangeParamProposal((ChangeParamProposal) first.getProposal(), chainHeight);
-                } else {
-                    // Rare case that both have the same stake. We don't need to check for a third entry as if 2 have
-                    // the same we are already in the abort case to reject all proposals with that param
-                    log.warn("We got the rare case that multiple changeParamProposals have received the same stake. " +
-                            "None will be accepted in such a case.\n" +
-                            "EvaluatedProposal={}", list);
-                }*/
             }
         });
     }

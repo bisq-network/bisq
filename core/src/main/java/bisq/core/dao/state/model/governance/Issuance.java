@@ -43,9 +43,10 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
     private final int chainHeight; // of issuance (first block of result phase)
     private final long amount;
 
-    //TODO do we need to store that? its in the blockchain anyway
+    // sig key as hex of first input in issuance tx used for signing the merits
+    // Can be null (payToPubKey tx) but in our case it will never be null. Still keep it nullable to be safe.
     @Nullable
-    private final String pubKey; // sig key as hex of first input in issuance tx
+    private final String pubKey;
 
     private final IssuanceType issuanceType;
 
@@ -68,9 +69,7 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
                 .setChainHeight(chainHeight)
                 .setAmount(amount)
                 .setIssuanceType(issuanceType.name());
-
         Optional.ofNullable(pubKey).ifPresent(e -> builder.setPubKey(pubKey));
-
         return builder.build();
     }
 

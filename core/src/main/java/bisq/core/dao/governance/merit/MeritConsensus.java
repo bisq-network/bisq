@@ -94,10 +94,6 @@ public class MeritConsensus {
             return false;
         }
 
-        // TODO Check if a sig key was used multiple times for different voters
-        // At the moment we don't impl. that to not add too much complexity and as we consider that
-        // risk very low.
-
         boolean result = false;
         try {
             ECKey pubKey = ECKey.fromPublicOnly(Utilities.decodeFromHex(pubKeyAsHex));

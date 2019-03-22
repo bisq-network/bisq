@@ -59,13 +59,11 @@ public class BlindVoteValidator {
             checkArgument(blindVote.getEncryptedVotes().length > 0,
                     "encryptedProposalList must not be empty");
             checkNotNull(blindVote.getTxId(), "txId must not be null");
-            checkArgument(blindVote.getTxId().length() > 0, "txId must not be empty");
+            checkArgument(!blindVote.getTxId().isEmpty(), "txId must not be empty");
             checkArgument(blindVote.getStake() > 0, "stake must be positive");
             checkNotNull(blindVote.getEncryptedMeritList(), "getEncryptedMeritList must not be null");
             checkArgument(blindVote.getEncryptedMeritList().length > 0,
                     "getEncryptedMeritList must not be empty");
-
-            //TODO should we use a min/max for stake, atm its just dust limit as the min. value
         } catch (Throwable e) {
             log.warn(e.toString());
             throw new ProposalValidationException(e);

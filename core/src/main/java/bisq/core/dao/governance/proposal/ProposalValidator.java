@@ -141,7 +141,7 @@ public abstract class ProposalValidator implements ConsensusCritical {
         }
     }
 
-    protected Integer getBlockHeight(Proposal proposal) {
+    protected int getBlockHeight(Proposal proposal) {
         // When we receive a temp proposal the tx is usually not confirmed so we cannot lookup the block height of
         // the tx. We take the current block height in that case as it would be in the same cycle anyway.
         return daoStateService.getTx(proposal.getTxId())
