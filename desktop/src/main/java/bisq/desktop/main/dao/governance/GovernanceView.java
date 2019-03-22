@@ -33,6 +33,8 @@ import bisq.desktop.main.dao.governance.proposals.ProposalsView;
 import bisq.desktop.main.dao.governance.result.VoteResultView;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
@@ -50,10 +52,11 @@ import java.util.Arrays;
 import java.util.List;
 
 @FxmlView
-public class GovernanceView extends ActivatableViewAndModel {
+public class GovernanceView extends ActivatableViewAndModel implements DaoStateListener {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final DaoFacade daoFacade;
+    private final DaoStateService daoStateService;
 
     private MenuItem dashboard, make, open, result;
     private Navigation.Listener navigationListener;
@@ -68,10 +71,12 @@ public class GovernanceView extends ActivatableViewAndModel {
     private ToggleGroup toggleGroup;
 
     @Inject
-    private GovernanceView(CachingViewLoader viewLoader, Navigation navigation, DaoFacade daoFacade) {
+    private GovernanceView(CachingViewLoader viewLoader, Navigation navigation, DaoFacade daoFacade,
+                           DaoStateService daoStateService) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.daoFacade = daoFacade;
+        this.daoStateService = daoStateService;
     }
 
     @Override
@@ -107,7 +112,12 @@ public class GovernanceView extends ActivatableViewAndModel {
 
     @Override
     protected void activate() {
-        daoFacade.phaseProperty().addListener(phaseChangeListener);
+        if (daoStateService.isParseBlockChainComplete()) {
+            daoFacade.phaseProperty().addListener(phaseChangeListener);
+        } else {
+            daoStateService.addDaoStateListener(this);
+        }
+
 
         dashboard.activate();
         make.activate();
@@ -133,6 +143,7 @@ public class GovernanceView extends ActivatableViewAndModel {
     @Override
     protected void deactivate() {
         daoFacade.phaseProperty().removeListener(phaseChangeListener);
+        daoStateService.removeDaoStateListener(this);
 
         navigation.removeListener(navigationListener);
 
@@ -141,6 +152,21 @@ public class GovernanceView extends ActivatableViewAndModel {
         open.deactivate();
         result.deactivate();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockChainComplete() {
+        daoFacade.phaseProperty().addListener(phaseChangeListener);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void loadView(Class<? extends View> viewClass) {
         View view = viewLoader.load(viewClass);

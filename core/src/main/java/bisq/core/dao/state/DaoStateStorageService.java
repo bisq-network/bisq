@@ -46,7 +46,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     // new file to be used.
     // We can rename to DaoStateStore before mainnet launch again.
     // Another update due to some data field changes which would cause diff. hashes, so to enforce users to get the new
-    // data we rename it to DaoStateStore3
+    // data we rename it to DaoStateStore
+    //TODO rename to DaoStateStore before mainnet launch
     private static final String FILE_NAME = "DaoStateStore3";
 
     private final DaoState daoState;
