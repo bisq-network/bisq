@@ -40,6 +40,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.user.Preferences;
 
@@ -326,7 +327,14 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     }
 
     private void shutDownByUser() {
-        if (injector.getInstance(OpenOfferManager.class).getObservableList().isEmpty()) {
+        boolean hasOpenOffers = false;
+        for (OpenOffer openOffer : injector.getInstance(OpenOfferManager.class).getObservableList()) {
+            if (openOffer.getState().equals(OpenOffer.State.AVAILABLE)) {
+                hasOpenOffers = true;
+                break;
+            }
+        }
+        if (!hasOpenOffers) {
             // No open offers, so no need to show the popup.
             stop();
             return;
