@@ -38,7 +38,7 @@ public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
 
     @Inject
     public NonBsqCoinSelector(DaoStateService daoStateService) {
-        super(true);
+        super(false);
         this.daoStateService = daoStateService;
     }
 
@@ -49,6 +49,8 @@ public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
         if (parentTransaction == null)
             return false;
 
+        // It is important to not allow pending txs as otherwise unconfirmed BSQ txs would considered nonBSQ as
+        // below outputIsNotInBsqState would be true.
         if (parentTransaction.getConfidence().getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING)
             return false;
 
