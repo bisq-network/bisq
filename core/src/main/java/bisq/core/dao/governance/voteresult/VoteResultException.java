@@ -69,6 +69,10 @@ public class VoteResultException extends Exception {
             super("Validation of vote result failed.", cause);
         }
 
+        public ValidationException(String message) {
+            super(message);
+        }
+
         @Override
         public String toString() {
             return "VoteResultException{" +
