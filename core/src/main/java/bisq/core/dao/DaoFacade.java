@@ -90,6 +90,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.io.IOException;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -509,9 +511,19 @@ public class DaoFacade implements DaoSetupService {
         lockupTxService.publishLockupTx(lockupAmount, lockTime, lockupReason, hash, resultHandler, exceptionHandler);
     }
 
+    public Tuple2<Coin, Integer> getLockupTxMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+            throws InsufficientMoneyException, IOException, TransactionVerificationException, WalletException {
+        return lockupTxService.getMiningFeeAndTxSize(lockupAmount, lockTime, lockupReason, hash);
+    }
+
     public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler,
                                 ExceptionHandler exceptionHandler) {
         unlockTxService.publishUnlockTx(lockupTxId, resultHandler, exceptionHandler);
+    }
+
+    public Tuple2<Coin, Integer> getUnlockTxMiningFeeAndTxSize(String lockupTxId)
+            throws InsufficientMoneyException, TransactionVerificationException, WalletException {
+        return unlockTxService.getMiningFeeAndTxSize(lockupTxId);
     }
 
     public long getTotalLockupAmount() {

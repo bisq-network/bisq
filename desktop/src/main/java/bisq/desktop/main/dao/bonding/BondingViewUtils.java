@@ -24,8 +24,6 @@ import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.lockup.LockupReason;
@@ -109,7 +107,7 @@ public class BondingViewUtils {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
                 try {
-                    Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getMiningFeeAndTxSize(lockupAmount);
+                    Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getLockupTxMiningFeeAndTxSize(lockupAmount, lockupTime, lockupReason, hash);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
                     BSFormatter formatter = new BSFormatter();
@@ -120,26 +118,27 @@ public class BondingViewUtils {
                                     lockupTime,
                                     duration,
                                     formatter.formatCoinWithCode(miningFee),
-                                    CoinUtil.getFeePerByte(miningFee, txSize)
+                                    CoinUtil.getFeePerByte(miningFee, txSize),
+                                    txSize
                             ))
                             .actionButtonText(Res.get("shared.yes"))
-                            .onAction(() -> publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler))
+                            .onAction(() -> publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler))
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
-                } catch (WalletException | InsufficientMoneyException | TransactionVerificationException e) {
+                } catch (Throwable e) {
                     log.error(e.toString());
                     e.printStackTrace();
                     new Popup<>().warning(e.getMessage()).show();
                 }
             } else {
-                publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler);
+                publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler);
             }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
-    private void publishLockupTx(byte[] hash, Coin lockupAmount, int lockupTime, LockupReason lockupReason, Consumer<String> resultHandler) {
+    private void publishLockupTx(Coin lockupAmount, int lockupTime, LockupReason lockupReason, byte[] hash, Consumer<String> resultHandler) {
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
                 lockupReason,
@@ -169,7 +168,7 @@ public class BondingViewUtils {
 
             try {
                 if (!DevEnv.isDevMode()) {
-                    Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getMiningFeeAndTxSize(unlockAmount);
+                    Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getUnlockTxMiningFeeAndTxSize(lockupTxId);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
                     BSFormatter formatter = new BSFormatter();
@@ -180,7 +179,8 @@ public class BondingViewUtils {
                                     lockTime,
                                     duration,
                                     formatter.formatCoinWithCode(miningFee),
-                                    CoinUtil.getFeePerByte(miningFee, txSize)
+                                    CoinUtil.getFeePerByte(miningFee, txSize),
+                                    txSize
                             ))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> publishUnlockTx(lockupTxId, resultHandler))

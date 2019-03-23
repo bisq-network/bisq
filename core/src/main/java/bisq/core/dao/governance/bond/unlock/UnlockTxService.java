@@ -29,7 +29,9 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.handlers.ExceptionHandler;
+import bisq.common.util.Tuple2;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
@@ -70,10 +72,7 @@ public class UnlockTxService {
 
     public void publishUnlockTx(String lockupTxId, Consumer<String> resultHandler, ExceptionHandler exceptionHandler) {
         try {
-            Optional<TxOutput> optionalLockupTxOutput = daoStateService.getLockupTxOutput(lockupTxId);
-            checkArgument(optionalLockupTxOutput.isPresent(), "lockupTxOutput must be present");
-            TxOutput lockupTxOutput = optionalLockupTxOutput.get();
-            Transaction unlockTx = getUnlockTx(lockupTxOutput);
+            Transaction unlockTx = getUnlockTx(lockupTxId);
             walletsManager.publishAndCommitBsqTx(unlockTx, TxType.UNLOCK, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -90,8 +89,19 @@ public class UnlockTxService {
         }
     }
 
-    private Transaction getUnlockTx(TxOutput lockupTxOutput)
+    public Tuple2<Coin, Integer> getMiningFeeAndTxSize(String lockupTxId)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
+        Transaction tx = getUnlockTx(lockupTxId);
+        Coin miningFee = tx.getFee();
+        int txSize = tx.bitcoinSerialize().length;
+        return new Tuple2<>(miningFee, txSize);
+    }
+
+    private Transaction getUnlockTx(String lockupTxId)
+            throws InsufficientMoneyException, WalletException, TransactionVerificationException {
+        Optional<TxOutput> optionalLockupTxOutput = daoStateService.getLockupTxOutput(lockupTxId);
+        checkArgument(optionalLockupTxOutput.isPresent(), "lockupTxOutput must be present");
+        TxOutput lockupTxOutput = optionalLockupTxOutput.get();
         Transaction preparedTx = bsqWalletService.getPreparedUnlockTx(lockupTxOutput);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, null);
         Transaction transaction = bsqWalletService.signTx(txWithBtcFee);

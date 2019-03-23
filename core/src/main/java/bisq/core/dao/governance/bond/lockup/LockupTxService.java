@@ -28,6 +28,7 @@ import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.handlers.ExceptionHandler;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -71,9 +72,7 @@ public class LockupTxService {
         checkArgument(lockTime <= BondConsensus.getMaxLockTime() &&
                 lockTime >= BondConsensus.getMinLockTime(), "lockTime not in range");
         try {
-            byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupReason, hash);
-            Transaction lockupTx = createLockupTx(lockupAmount, opReturnData);
-
+            Transaction lockupTx = getLockupTx(lockupAmount, lockTime, lockupReason, hash);
             walletsManager.publishAndCommitBsqTx(lockupTx, TxType.LOCKUP, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -92,8 +91,17 @@ public class LockupTxService {
         }
     }
 
-    private Transaction createLockupTx(Coin lockupAmount, byte[] opReturnData)
-            throws InsufficientMoneyException, WalletException, TransactionVerificationException {
+    public Tuple2<Coin, Integer> getMiningFeeAndTxSize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+            throws InsufficientMoneyException, WalletException, TransactionVerificationException, IOException {
+        Transaction tx = getLockupTx(lockupAmount, lockTime, lockupReason, hash);
+        Coin miningFee = tx.getFee();
+        int txSize = tx.bitcoinSerialize().length;
+        return new Tuple2<>(miningFee, txSize);
+    }
+
+    private Transaction getLockupTx(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+            throws InsufficientMoneyException, WalletException, TransactionVerificationException, IOException {
+        byte[] opReturnData = BondConsensus.getLockupOpReturnData(lockTime, lockupReason, hash);
         Transaction preparedTx = bsqWalletService.getPreparedLockupTx(lockupAmount);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, true, opReturnData);
         Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
