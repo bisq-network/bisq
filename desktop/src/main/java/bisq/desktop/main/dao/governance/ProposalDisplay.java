@@ -441,7 +441,7 @@ public class ProposalDisplay {
                     Res.get("dao.proposal.voteResult.failed");
             ProposalVoteResult proposalVoteResult = evaluatedProposal.getProposalVoteResult();
             String threshold = (proposalVoteResult.getThreshold() / 100D) + "%";
-            String requiredThreshold = (daoFacade.getRequiredThreshold(evaluatedProposal.getProposal()) / 100D) + "%";
+            String requiredThreshold = (daoFacade.getRequiredThreshold(evaluatedProposal.getProposal()) * 100D) + "%";
             String quorum = bsqFormatter.formatCoinWithCode(Coin.valueOf(proposalVoteResult.getQuorum()));
             String requiredQuorum = bsqFormatter.formatCoinWithCode(daoFacade.getRequiredQuorum(evaluatedProposal.getProposal()));
             String summary = Res.get("dao.proposal.voteResult.summary", result,
