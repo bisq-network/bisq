@@ -40,6 +40,7 @@ import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
+import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.presentation.DaoUtil;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -310,7 +311,6 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 new Popup<>().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
                         btcFormatter.formatCoinWithCode(e.missing))).show();
             }
-
         } catch (ProposalValidationException e) {
             String message;
             if (e.getMinRequestAmount() != null) {
@@ -320,7 +320,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 message = e.getMessage();
             }
             new Popup<>().warning(message).show();
-        } catch (TxException e) {
+        } catch (Throwable e) {
             log.error(e.toString());
             e.printStackTrace();
             new Popup<>().warning(e.toString()).show();
@@ -365,7 +365,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     @Nullable
     private ProposalWithTransaction getProposalWithTransaction(ProposalType proposalType)
-            throws InsufficientMoneyException, ProposalValidationException, TxException {
+            throws InsufficientMoneyException, ProposalValidationException, TxException, VoteResultException.ValidationException {
 
         checkNotNull(proposalDisplay, "proposalDisplay must not be null");
 
@@ -423,7 +423,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 Bond bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
 
                 if (!bond.isActive())
-                    throw new ValidationException("Bond is not locked and can't be confiscated");
+                    throw new VoteResultException.ValidationException("Bond is not locked and can't be confiscated");
 
                 return daoFacade.getConfiscateBondProposalWithTransaction(name, link, bond.getLockupTxId());
             case GENERIC:

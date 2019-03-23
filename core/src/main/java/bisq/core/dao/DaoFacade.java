@@ -554,6 +554,12 @@ public class DaoFacade implements DaoSetupService {
         return bonds;
     }
 
+    public List<Bond> getAllActiveBonds() {
+        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getActiveBonds());
+        bonds.addAll(bondedRolesRepository.getActiveBonds());
+        return bonds;
+    }
+
     public ObservableList<MyBondedReputation> getMyBondedReputations() {
         return myBondedReputationRepository.getMyBondedReputations();
     }
