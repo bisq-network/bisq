@@ -18,22 +18,7 @@
 package bisq.core.dao.exceptions;
 
 public class DaoDisabledException extends RuntimeException {
-    public DaoDisabledException() {
-    }
-
     public DaoDisabledException(String message) {
         super(message);
-    }
-
-    public DaoDisabledException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public DaoDisabledException(Throwable cause) {
-        super(cause);
-    }
-
-    public DaoDisabledException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

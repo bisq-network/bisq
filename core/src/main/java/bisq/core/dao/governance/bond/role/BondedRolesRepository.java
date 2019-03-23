@@ -69,6 +69,10 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
                 .anyMatch(myWalletTransactionIds::contains);
     }
 
+    public Optional<RoleProposal> getAcceptedBondedRoleProposal(Role role) {
+        return getAcceptedBondedRoleProposalStream().filter(e -> e.getRole().getUid().equals(role.getUid())).findAny();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected

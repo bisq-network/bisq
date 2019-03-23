@@ -26,6 +26,7 @@ import lombok.Getter;
  * Reason for locking up a bond.
  */
 public enum LockupReason {
+    UNDEFINED((byte) 0x00),
     BONDED_ROLE((byte) 0x01),
     REPUTATION((byte) 0x02);
 
@@ -35,10 +36,6 @@ public enum LockupReason {
     LockupReason(byte id) {
         this.id = id;
     }
-
-  /*  public String getDisplayString() {
-        return Res.get("dao.bond.lockupType." + name());
-    }*/
 
     public static Optional<LockupReason> getLockupReason(byte id) {
         return Arrays.stream(LockupReason.values())

@@ -26,7 +26,10 @@ import bisq.common.app.Version;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.springframework.util.CollectionUtils;
+
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 import lombok.Value;
@@ -44,14 +47,16 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
     public ChangeParamProposal(String name,
                                String link,
                                Param param,
-                               String paramValue) {
+                               String paramValue,
+                               Map<String, String> extraDataMap) {
         this(name,
                 link,
                 param,
                 paramValue,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "");
+                "",
+                extraDataMap);
     }
 
 
@@ -65,12 +70,14 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                                 String paramValue,
                                 byte version,
                                 long creationDate,
-                                String txId) {
+                                String txId,
+                                Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
 
         this.param = param;
         this.paramValue = paramValue;
@@ -92,7 +99,9 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 proposalProto.getParamValue(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -127,8 +136,9 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 getParam(),
                 getParamValue(),
                 getVersion(),
-                getCreationDate().getTime(),
-                txId);
+                getCreationDate(),
+                txId,
+                extraDataMap);
     }
 
     @Override

@@ -27,6 +27,11 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
+import org.springframework.util.CollectionUtils;
+
+import java.util.Map;
+import java.util.Optional;
+
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,14 +53,19 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
     private final long stake;
     private byte[] encryptedMeritList;
 
+    // This hash map allows addition of data in future versions without breaking consensus
+    private final Map<String, String> extraDataMap;
+
     public BlindVote(byte[] encryptedVotes,
                      String txId,
                      long stake,
-                     byte[] encryptedMeritList) {
+                     byte[] encryptedMeritList,
+                     Map<String, String> extraDataMap) {
         this.encryptedVotes = encryptedVotes;
         this.txId = txId;
         this.stake = stake;
         this.encryptedMeritList = encryptedMeritList;
+        this.extraDataMap = extraDataMap;
     }
 
 
@@ -71,18 +81,22 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
 
     @NotNull
     public PB.BlindVote.Builder getBuilder() {
-        return PB.BlindVote.newBuilder()
-                .setEncryptedVotes(ByteString.copyFrom(encryptedVotes))
+        PB.BlindVote.Builder builder = PB.BlindVote.newBuilder();
+        builder.setEncryptedVotes(ByteString.copyFrom(encryptedVotes))
                 .setTxId(txId)
                 .setStake(stake)
                 .setEncryptedMeritList(ByteString.copyFrom(encryptedMeritList));
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        return builder;
     }
 
     public static BlindVote fromProto(PB.BlindVote proto) {
         return new BlindVote(proto.getEncryptedVotes().toByteArray(),
                 proto.getTxId(),
                 proto.getStake(),
-                proto.getEncryptedMeritList().toByteArray());
+                proto.getEncryptedMeritList().toByteArray(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -96,6 +110,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 ",\n     txId='" + txId + '\'' +
                 ",\n     stake=" + stake +
                 ",\n     encryptedMeritList=" + Utilities.bytesAsHexString(encryptedMeritList) +
+                ",\n     extraDataMap=" + extraDataMap +
                 "\n}";
     }
 }

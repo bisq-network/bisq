@@ -21,7 +21,6 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -44,8 +43,8 @@ import javax.annotation.Nullable;
 public abstract class BaseProposalFactory<R extends Proposal> {
     protected final BsqWalletService bsqWalletService;
     protected final BtcWalletService btcWalletService;
-    protected final DaoStateService daoStateService;
-    protected final ProposalValidator proposalValidator;
+    private final DaoStateService daoStateService;
+    private final ProposalValidator proposalValidator;
     @Nullable
     protected String name;
     @Nullable
@@ -56,10 +55,10 @@ public abstract class BaseProposalFactory<R extends Proposal> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BaseProposalFactory(BsqWalletService bsqWalletService,
-                               BtcWalletService btcWalletService,
-                               DaoStateService daoStateService,
-                               ProposalValidator proposalValidator) {
+    protected BaseProposalFactory(BsqWalletService bsqWalletService,
+                                  BtcWalletService btcWalletService,
+                                  DaoStateService daoStateService,
+                                  ProposalValidator proposalValidator) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
         this.daoStateService = daoStateService;
@@ -68,7 +67,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
 
     protected ProposalWithTransaction createProposalWithTransaction(String name,
                                                                     String link)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.name = name;
         this.link = link;
         // As we don't know the txId yes we create a temp proposal with txId set to an empty string.
@@ -84,7 +83,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
     // We have txId set to null in proposal as we cannot know it before the tx is created.
     // Once the tx is known we will create a new object including the txId.
     // The hashOfPayload used in the opReturnData is created with the txId set to null.
-    protected Transaction createTransaction(R proposal) throws InsufficientMoneyException, TxException {
+    private Transaction createTransaction(R proposal) throws InsufficientMoneyException, TxException {
         try {
             final Coin fee = ProposalConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             // We create a prepared Bsq Tx for the proposal fee.

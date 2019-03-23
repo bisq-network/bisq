@@ -21,7 +21,8 @@ import lombok.Getter;
 
 // Need to be in sync with TxOutputType
 enum JsonTxOutputType {
-    UNDEFINED_OUTPUT("Undefined"),
+    UNDEFINED("Undefined"),
+    UNDEFINED_OUTPUT("Undefined output"),
     GENESIS_OUTPUT("Genesis"),
     BSQ_OUTPUT("BSQ"),
     BTC_OUTPUT("BTC"),

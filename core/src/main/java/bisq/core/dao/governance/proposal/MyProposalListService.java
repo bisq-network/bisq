@@ -25,7 +25,6 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 
@@ -245,10 +244,5 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
         return isMine(proposal) && inPhase;
 
-    }
-
-    private boolean isTxInProposalPhaseAndCycle(Tx tx, PeriodService periodService, DaoStateService daoStateService) {
-        return periodService.isInPhase(tx.getBlockHeight(), DaoPhase.Phase.PROPOSAL) &&
-                periodService.isTxInCorrectCycle(tx.getBlockHeight(), daoStateService.getChainHeight());
     }
 }

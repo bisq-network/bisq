@@ -69,7 +69,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             utxoTextField, compensationIssuanceTxTextField,
             reimbursementIssuanceTxTextField, priceTextField, marketCapTextField;
     private ChangeListener<Number> priceChangeListener;
-    private HyperlinkWithIcon hyperlinkWithIcon;
     private Coin availableAmount;
 
 
@@ -127,7 +126,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         // TODO use addTopLabelTxIdTextField
         Tuple3<Label, HyperlinkWithIcon, VBox> tuple = FormBuilder.addTopLabelHyperlinkWithIcon(root, ++gridRow, columnIndex,
                 Res.get("dao.wallet.dashboard.genesisTxId"), genesisTxId, url, 0);
-        hyperlinkWithIcon = tuple.second;
+        HyperlinkWithIcon hyperlinkWithIcon = tuple.second;
         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", genesisTxId)));
 
         startRow = gridRow;

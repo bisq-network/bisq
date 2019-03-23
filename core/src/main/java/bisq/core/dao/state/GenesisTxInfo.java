@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * Using a static final field in DaoState would not work well as we want to support that the data can be overwritten by
  * program arguments for development testing and therefore it is set in the constructor via Guice.
  */
+@SuppressWarnings("SpellCheckingInspection")
 @Slf4j
 public class GenesisTxInfo {
 

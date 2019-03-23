@@ -82,8 +82,6 @@ public class DaoState implements PersistablePayload {
     @Getter
     private final TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap;
     @Getter
-    private final TreeMap<TxOutputKey, TxOutput> nonBsqTxOutputMap;
-    @Getter
     private final TreeMap<TxOutputKey, SpentInfo> spentInfoMap;
 
     // These maps are related to state change triggered by voting
@@ -114,7 +112,6 @@ public class DaoState implements PersistablePayload {
                 new LinkedList<>(),
                 new TreeMap<>(),
                 new TreeMap<>(),
-                new TreeMap<>(),
                 new ArrayList<>(),
                 new TreeMap<>(),
                 new ArrayList<>(),
@@ -132,7 +129,6 @@ public class DaoState implements PersistablePayload {
                      LinkedList<Block> blocks,
                      LinkedList<Cycle> cycles,
                      TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap,
-                     TreeMap<TxOutputKey, TxOutput> nonBsqTxOutputMap,
                      TreeMap<TxOutputKey, SpentInfo> spentInfoMap,
                      List<String> confiscatedLockupTxList,
                      TreeMap<String, Issuance> issuanceMap,
@@ -144,7 +140,6 @@ public class DaoState implements PersistablePayload {
         this.cycles = cycles;
 
         this.unspentTxOutputMap = unspentTxOutputMap;
-        this.nonBsqTxOutputMap = nonBsqTxOutputMap;
         this.spentInfoMap = spentInfoMap;
 
         this.confiscatedLockupTxList = confiscatedLockupTxList;
@@ -159,14 +154,17 @@ public class DaoState implements PersistablePayload {
         return getBsqStateBuilder().build();
     }
 
-    public PB.BsqState.Builder getBsqStateBuilder() {
-        final PB.BsqState.Builder builder = PB.BsqState.newBuilder();
+    public PB.DaoState.Builder getBsqStateBuilder() {
+        return getBsqStateBuilderExcludingBlocks().addAllBlocks(blocks.stream()
+                .map(Block::toProtoMessage)
+                .collect(Collectors.toList()));
+    }
+
+    private PB.DaoState.Builder getBsqStateBuilderExcludingBlocks() {
+        PB.DaoState.Builder builder = PB.DaoState.newBuilder();
         builder.setChainHeight(chainHeight)
-                .addAllBlocks(blocks.stream().map(Block::toProtoMessage).collect(Collectors.toList()))
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
                 .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
-                .putAllNonBsqTxOutputMap(nonBsqTxOutputMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
                 .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
                         .collect(Collectors.toMap(e -> e.getKey().toString(), entry -> entry.getValue().toProtoMessage())))
@@ -179,15 +177,13 @@ public class DaoState implements PersistablePayload {
         return builder;
     }
 
-    public static DaoState fromProto(PB.BsqState proto) {
+    public static DaoState fromProto(PB.DaoState proto) {
         LinkedList<Block> blocks = proto.getBlocksList().stream()
                 .map(Block::fromProto)
                 .collect(Collectors.toCollection(LinkedList::new));
         LinkedList<Cycle> cycles = proto.getCyclesList().stream()
                 .map(Cycle::fromProto).collect(Collectors.toCollection(LinkedList::new));
         TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap = new TreeMap<>(proto.getUnspentTxOutputMapMap().entrySet().stream()
-                .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue()))));
-        TreeMap<TxOutputKey, TxOutput> nonBsqTxOutputMap = new TreeMap<>(proto.getNonBsqTxOutputMapMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue()))));
         TreeMap<TxOutputKey, SpentInfo> spentInfoMap = new TreeMap<>(proto.getSpentInfoMapMap().entrySet().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> SpentInfo.fromProto(e.getValue()))));
@@ -204,7 +200,6 @@ public class DaoState implements PersistablePayload {
                 blocks,
                 cycles,
                 unspentTxOutputMap,
-                nonBsqTxOutputMap,
                 spentInfoMap,
                 confiscatedLockupTxList,
                 issuanceMap,
@@ -222,6 +217,15 @@ public class DaoState implements PersistablePayload {
         this.chainHeight = chainHeight;
     }
 
+    public byte[] getSerializedStateForHashChain() {
+        // We only add last block as for the hash chain we include the prev. hash in the new hash so the state of the
+        // earlier blocks is included in the hash. The past blocks cannot be changed anyway when a new block arrives.
+        // Reorgs are handled by rebuilding the hash chain from last snapshot.
+        // Using the full blocks list becomes quite heavy. 7000 blocks are
+        // about 1.4 MB and creating the hash takes 30 sec. With using just the last block we reduce the time to 7 sec.
+        return getBsqStateBuilderExcludingBlocks().addBlocks(getBlocks().getLast().toProtoMessage()).build().toByteArray();
+    }
+
     @Override
     public String toString() {
         return "DaoState{" +
@@ -229,7 +233,6 @@ public class DaoState implements PersistablePayload {
                 ",\n     blocks=" + blocks +
                 ",\n     cycles=" + cycles +
                 ",\n     unspentTxOutputMap=" + unspentTxOutputMap +
-                ",\n     nonBsqTxOutputMap=" + nonBsqTxOutputMap +
                 ",\n     spentInfoMap=" + spentInfoMap +
                 ",\n     confiscatedLockupTxList=" + confiscatedLockupTxList +
                 ",\n     issuanceMap=" + issuanceMap +

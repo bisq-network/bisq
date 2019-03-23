@@ -78,7 +78,7 @@ public class VoteResultException extends Exception {
     }
 
     @EqualsAndHashCode(callSuper = true)
-    public static abstract class MissingDataException extends Exception {
+    static abstract class MissingDataException extends Exception {
         private MissingDataException(String message) {
             super(message);
         }

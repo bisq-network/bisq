@@ -30,6 +30,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.state.model.governance.BondedRoleType;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
@@ -56,6 +57,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -207,7 +209,8 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                     String type = bondedRoleType.getDisplayString();
                                     hyperlink = new Hyperlink(type);
                                     hyperlink.setOnAction(event -> {
-                                        new RoleDetailsWindow(bondedRoleType, bsqFormatter).show();
+                                        Optional<RoleProposal> roleProposal = bondingViewUtils.getAcceptedBondedRoleProposal(item.getRole());
+                                        new RoleDetailsWindow(bondedRoleType, roleProposal, daoFacade, bsqFormatter).show();
                                     });
                                     hyperlink.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails", type)));
                                     setGraphic(hyperlink);

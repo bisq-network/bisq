@@ -143,7 +143,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
                 maybeUpdateHashChain(i);
             }
             if (!blindVoteStateBlockChain.isEmpty()) {
-                log.info("updateHashChain for {} items took {} ms",
+                log.info("updateHashChain for {} blocks took {} ms",
                         blockHeight - genesisBlockHeight,
                         System.currentTimeMillis() - ts);
             }
@@ -255,7 +255,6 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
             }
             byte[] combined = ArrayUtils.addAll(prevHash, serializedBlindVotes);
             byte[] hash = Hash.getSha256Ripemd160hash(combined);
-
 
             BlindVoteStateHash myBlindVoteStateHash = new BlindVoteStateHash(blockHeight, hash, prevHash, blindVotes.size());
             BlindVoteStateBlock blindVoteStateBlock = new BlindVoteStateBlock(myBlindVoteStateHash);

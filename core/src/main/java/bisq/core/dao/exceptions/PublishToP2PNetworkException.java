@@ -18,22 +18,7 @@
 package bisq.core.dao.exceptions;
 
 public class PublishToP2PNetworkException extends RuntimeException {
-    public PublishToP2PNetworkException() {
-    }
-
     public PublishToP2PNetworkException(String message) {
         super(message);
-    }
-
-    public PublishToP2PNetworkException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public PublishToP2PNetworkException(Throwable cause) {
-        super(cause);
-    }
-
-    public PublishToP2PNetworkException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }

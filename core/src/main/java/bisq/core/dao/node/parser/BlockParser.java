@@ -76,7 +76,7 @@ public class BlockParser {
      * @param rawBlock  Contains all transactions of a bitcoin block without any BSQ specific data
      * @return Block: Gets created from the rawBlock but contains only BSQ specific transactions.
      * @throws BlockHashNotConnectingException If new block does not connect to previous block
-     * @throws BlockHeightNotConnectingException If new block height is not current cahin Height + 1
+     * @throws BlockHeightNotConnectingException If new block height is not current chain Height + 1
      */
     public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
         int blockHeight = rawBlock.getHeight();
@@ -93,7 +93,6 @@ public class BlockParser {
                 rawBlock.getPreviousBlockHash());
 
         if (isBlockAlreadyAdded(rawBlock)) {
-            //TODO check how/if that can happen
             log.warn("Block was already added.");
             DevEnv.logErrorAndThrowIfDevMode("Block was already added. rawBlock=" + rawBlock);
         } else {
@@ -117,7 +116,8 @@ public class BlockParser {
                         .ifPresent(txList::add));
 
         if (System.currentTimeMillis() - startTs > 0)
-            log.info("Parsing {} transactions took {} ms", rawBlock.getRawTxs().size(), System.currentTimeMillis() - startTs);
+            log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
+                    blockHeight, System.currentTimeMillis() - startTs);
 
         daoStateService.onParseBlockComplete(block);
         return block;

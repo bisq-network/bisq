@@ -33,16 +33,17 @@ import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalType;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.presentation.DaoUtil;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -87,6 +88,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -119,8 +121,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     private BusyAnimation busyAnimation;
     private Label busyLabel;
 
-    private BooleanProperty isProposalPhase = new SimpleBooleanProperty(false);
-    private StringProperty proposalGroupTitle = new SimpleStringProperty(Res.get("dao.proposal.create.phase.inactive"));
+    private final BooleanProperty isProposalPhase = new SimpleBooleanProperty(false);
+    private final StringProperty proposalGroupTitle = new SimpleStringProperty(Res.get("dao.proposal.create.phase.inactive"));
 
     @Nullable
     private ProposalType selectedProposalType;
@@ -184,7 +186,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         };
         alwaysVisibleGridRowIndex = gridRow + 1;
 
-        List<ProposalType> proposalTypes = Arrays.asList(ProposalType.values());
+        List<ProposalType> proposalTypes = Arrays.stream(ProposalType.values())
+                .filter(e -> e != ProposalType.UNDEFINED)
+                .collect(Collectors.toList());
         proposalTypeComboBox.setItems(FXCollections.observableArrayList(proposalTypes));
     }
 
@@ -202,8 +206,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
         Optional<Block> blockAtChainHeight = daoFacade.getBlockAtChainHeight();
 
-        if (blockAtChainHeight.isPresent())
-            onParseBlockCompleteAfterBatchProcessing(blockAtChainHeight.get());
+        blockAtChainHeight.ifPresent(this::onParseBlockCompleteAfterBatchProcessing);
     }
 
     @Override
@@ -278,7 +281,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             Coin fee = daoFacade.getProposalFee(daoFacade.getChainHeight());
 
             if (type.equals(ProposalType.BONDED_ROLE)) {
-                long requiredBond = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem().getRequiredBond();
+                checkNotNull(proposalDisplay, "proposalDisplay must not be null");
+                checkNotNull(proposalDisplay.bondedRoleTypeComboBox, "proposalDisplay.bondedRoleTypeComboBox must not be null");
+                BondedRoleType bondedRoleType = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem();
+                long requiredBond = daoFacade.getRequiredBond(bondedRoleType);
                 long availableBalance = bsqWalletService.getAvailableConfirmedBalance().value;
 
                 if (requiredBond > availableBalance) {
@@ -305,7 +311,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         btcFormatter.formatCoinWithCode(e.missing))).show();
             }
 
-        } catch (ValidationException e) {
+        } catch (ProposalValidationException e) {
             String message;
             if (e.getMinRequestAmount() != null) {
                 message = Res.get("validation.bsq.amountBelowMinAmount",
@@ -358,14 +364,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     @Nullable
-    private ProposalWithTransaction getProposalWithTransaction(ProposalType type)
-            throws InsufficientMoneyException, ValidationException, TxException {
+    private ProposalWithTransaction getProposalWithTransaction(ProposalType proposalType)
+            throws InsufficientMoneyException, ProposalValidationException, TxException {
 
         checkNotNull(proposalDisplay, "proposalDisplay must not be null");
 
         String link = proposalDisplay.linkInputTextField.getText();
         String name = proposalDisplay.nameTextField.getText();
-        switch (type) {
+        switch (proposalType) {
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
@@ -385,10 +391,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         "proposalDisplay.paramValueTextField must no tbe null");
                 Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
                 if (selectedParam == null)
-                    throw new ValidationException("selectedParam is null");
+                    throw new ProposalValidationException("selectedParam is null");
                 String paramValueAsString = proposalDisplay.paramValueTextField.getText();
                 if (paramValueAsString == null || paramValueAsString.isEmpty())
-                    throw new ValidationException("paramValue is null or empty");
+                    throw new ProposalValidationException("paramValue is null or empty");
 
                 try {
                     String paramValue = bsqFormatter.parseParamValueToString(selectedParam, paramValueAsString);

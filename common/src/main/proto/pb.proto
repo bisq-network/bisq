@@ -1538,20 +1538,19 @@ message Cycle {
     repeated DaoPhase dao_phase = 2;
 }
 
-message BsqState {
+message DaoState {
     int32 chain_height = 1;
     // Because of the way how PB implements inheritence we need to use the super class as type
     repeated BaseBlock blocks = 2;
     repeated Cycle cycles = 3;
     // Because of the way how PB implements inheritence we need to use the super class as type
     map<string, BaseTxOutput> unspent_tx_output_map = 4;
-    map<string, BaseTxOutput> non_bsq_tx_output_map = 5;
-    map<string, Issuance> issuance_map = 6;
-    repeated string confiscated_lockup_tx_list = 7;
-    map<string, SpentInfo> spent_info_map = 8;
-    repeated ParamChange param_change_list = 9;
-    repeated EvaluatedProposal evaluated_proposal_list = 10;
-    repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits_list = 11;
+    map<string, Issuance> issuance_map = 5;
+    repeated string confiscated_lockup_tx_list = 6;
+    map<string, SpentInfo> spent_info_map = 7;
+    repeated ParamChange param_change_list = 8;
+    repeated EvaluatedProposal evaluated_proposal_list = 9;
+    repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits_list = 10;
 }
 
 message Issuance {
@@ -1577,6 +1576,8 @@ message Proposal {
         GenericProposal generic_proposal = 11;
         RemoveAssetProposal remove_asset_proposal = 12;
     }
+    // We leave some index space here in case we add more subclasses
+    map<string, string> extra_data = 20;
 }
 
 message CompensationProposal {
@@ -1596,6 +1597,8 @@ message ChangeParamProposal {
 
 message RoleProposal {
     Role role = 1;
+    int64 required_bond_unit = 2;
+    int32 unlock_time = 3;
 }
 
 message ConfiscateBondProposal {
@@ -1707,6 +1710,7 @@ message BlindVote {
     string tx_id = 2;
     int64 stake = 3;
     bytes encrypted_merit_list = 4;
+    map<string, string> extra_data = 5;
 }
 
 message MyBlindVoteList {
@@ -1748,8 +1752,6 @@ message ProposalVoteResult {
 message EvaluatedProposal {
     bool is_accepted = 1;
     ProposalVoteResult proposal_vote_result = 2;
-    int64 required_quorum = 3;
-    int64 required_threshold = 4;
 }
 
 message DecryptedBallotsWithMerits {
@@ -1762,7 +1764,7 @@ message DecryptedBallotsWithMerits {
 }
 
 message DaoStateStore {
-    BsqState bsq_state = 1;
+    DaoState dao_state = 1;
     repeated DaoStateHash dao_state_hash = 2;
 }
 

@@ -50,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
  * unconfirmed txs.
  */
 @Slf4j
-//TODO maybe extend BondRepository as well?
 public class MyBondedReputationRepository implements DaoSetupService {
     private final DaoStateService daoStateService;
     private final BsqWalletService bsqWalletService;

@@ -134,15 +134,21 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         int blockHeight = block.getHeight();
         int genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
 
+        boolean hashChainUpdated = false;
         if (proposalStateBlockChain.isEmpty() && blockHeight > genesisBlockHeight) {
             // Takes about 150 ms for dao testnet data
             long ts = System.currentTimeMillis();
             for (int i = genesisBlockHeight; i < blockHeight; i++) {
-                maybeUpdateHashChain(i);
+                boolean isHashChainUpdated = maybeUpdateHashChain(i);
+                if (isHashChainUpdated) {
+                    hashChainUpdated = true;
+                }
             }
-            log.info("updateHashChain for {} items took {} ms",
-                    blockHeight - genesisBlockHeight,
-                    System.currentTimeMillis() - ts);
+            if (hashChainUpdated) {
+                log.info("updateHashChain for {} blocks took {} ms",
+                        blockHeight - genesisBlockHeight,
+                        System.currentTimeMillis() - ts);
+            }
         }
         maybeUpdateHashChain(blockHeight);
     }
@@ -228,17 +234,19 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void maybeUpdateHashChain(int blockHeight) {
+    private boolean maybeUpdateHashChain(int blockHeight) {
         // We use first block in blind vote phase to create the hash of our proposals. We prefer to wait as long as
         // possible to increase the chance that we have received all proposals.
         if (!isFirstBlockOfBlindVotePhase(blockHeight)) {
-            return;
+            return false;
         }
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
             List<Proposal> proposals = proposalService.getValidatedProposals().stream()
                     .filter(e -> periodService.isTxInPhaseAndCycle(e.getTxId(), DaoPhase.Phase.PROPOSAL, blockHeight))
-                    .sorted(Comparator.comparing(Proposal::getTxId)).collect(Collectors.toList());
+                    .filter(e -> e.getTxId() != null)
+                    .sorted(Comparator.comparing(Proposal::getTxId))
+                    .collect(Collectors.toList());
 
             // We use MyProposalList to get the serialized bytes from the proposals list
             byte[] serializedProposals = new MyProposalList(proposals).toProtoMessage().toByteArray();
@@ -267,6 +275,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                 UserThread.runAfter(() -> proposalStateNetworkService.broadcastMyStateHash(myProposalStateHash), delayInSec);
             }
         });
+        return true;
     }
 
     private boolean processPeersProposalStateHash(ProposalStateHash proposalStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {

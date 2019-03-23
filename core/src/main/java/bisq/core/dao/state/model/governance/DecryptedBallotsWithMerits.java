@@ -71,7 +71,7 @@ public class DecryptedBallotsWithMerits implements PersistablePayload, Immutable
         return getBuilder().build();
     }
 
-    public PB.DecryptedBallotsWithMerits.Builder getBuilder() {
+    private PB.DecryptedBallotsWithMerits.Builder getBuilder() {
         return PB.DecryptedBallotsWithMerits.newBuilder()
                 .setHashOfBlindVoteList(ByteString.copyFrom(hashOfBlindVoteList))
                 .setBlindVoteTxId(blindVoteTxId)

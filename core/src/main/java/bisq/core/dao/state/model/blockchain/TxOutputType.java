@@ -27,6 +27,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public enum TxOutputType implements ImmutableDaoStateModel {
+    UNDEFINED, // only fallback for backward compatibility in case we add a new value and old clients fall back to UNDEFINED
     UNDEFINED_OUTPUT,
     GENESIS_OUTPUT,
     BSQ_OUTPUT,

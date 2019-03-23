@@ -32,7 +32,6 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.PeriodService;
-import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -62,10 +61,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-//TODO case that user misses reveal phase not impl. yet
-
-
-// TODO We could also broadcast the winning list at the moment the reveal period is over and have the break
+// TODO Broadcast the winning list at the moment the reveal period is over and have the break
 // interval as time buffer for all nodes to receive that winning list. All nodes which are in sync with the
 // majority data view can broadcast. That way it will become a very unlikely case that a node is missing
 // data.
@@ -90,10 +86,8 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     private final P2PService p2PService;
     private final WalletsManager walletsManager;
 
-    //TODO UI should listen to that
     @Getter
     private final ObservableList<VoteRevealException> voteRevealExceptions = FXCollections.observableArrayList();
-    private final BsqNode bsqNode;
     private final List<VoteRevealTxPublishedListener> voteRevealTxPublishedListeners = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +112,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
         this.walletsManager = walletsManager;
-
-        bsqNode = bsqNodeProvider.getBsqNode();
     }
 
 
@@ -146,7 +138,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public byte[] getHashOfBlindVoteList() {
+    private byte[] getHashOfBlindVoteList() {
         List<BlindVote> blindVotes = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
         byte[] hashOfBlindVoteList = VoteRevealConsensus.getHashOfBlindVoteList(blindVotes);
         log.info("blindVoteList for creating hash: " + blindVotes);
@@ -224,7 +216,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                 });
     }
 
-    private void revealVote(MyVote myVote, boolean inBlindVotePhase) {
+    private void revealVote(MyVote myVote, boolean isInVoteRevealPhase) {
         try {
             // We collect all valid blind vote items we received via the p2p network.
             // It might be that different nodes have a different collection of those items.
@@ -234,7 +226,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
             // If we are not in the right phase we just add an empty hash (still need to have the hash as otherwise we
             // would not recognize the tx as vote reveal tx)
-            byte[] hashOfBlindVoteList = inBlindVotePhase ? getHashOfBlindVoteList() : new byte[20];
+            byte[] hashOfBlindVoteList = isInVoteRevealPhase ? getHashOfBlindVoteList() : new byte[20];
             byte[] opReturnData = VoteRevealConsensus.getOpReturnData(hashOfBlindVoteList, myVote.getSecretKey());
 
             // We search for my unspent stake output.
@@ -245,8 +237,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                     .findFirst()
                     .orElseThrow(() -> new VoteRevealException("stakeTxOutput is not found for myVote.", myVote));
 
-            // TxOutput has to be in the current cycle. Phase is checked in the parser anyway.
-            // TODO is phase check needed and done in parser still?
             Transaction voteRevealTx = getVoteRevealTx(stakeTxOutput, opReturnData);
             log.info("voteRevealTx={}", voteRevealTx);
             publishTx(voteRevealTx);
@@ -255,7 +245,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // next startup but the tx was actually broadcasted.
             myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
 
-            if (inBlindVotePhase) {
+            if (isInVoteRevealPhase) {
                 // Just for additional resilience we republish our blind votes
                 List<BlindVote> sortedBlindVoteListOfCycle = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
                 rePublishBlindVotePayloadList(sortedBlindVoteListOfCycle);
@@ -280,7 +270,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             @Override
             public void onFailure(TxBroadcastException exception) {
                 log.error(exception.toString());
-                // TODO handle
                 voteRevealExceptions.add(new VoteRevealException("Publishing of voteRevealTx failed.",
                         exception, voteRevealTx));
             }

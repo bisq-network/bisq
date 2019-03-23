@@ -38,20 +38,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Parameters which are only used in proposals and voting are less strict limited as we can require that those users are
  * using the latest software version.
  * The UNDEFINED entry is used as fallback for error cases and will get ignored.
+ *
+ * Name of the params must not change as that is used for serialisation in Protobuffer. The data fields are not part of
+ * the PB serialisation so changes for those would not change the hash for the dao state hash chain.
+ * Though changing the values might break consensus as the validations might return a different result (e.g. a param
+ * change proposal was accepted with older min/max values but then after a change it is not valid anymore and
+ * might break the consequences of that change. So in fact we MUST not change anything here, only way is to add new
+ * entries and don't use the deprecated enum in future releases anymore.
  */
 @Slf4j
 public enum Param {
-    UNDEFINED(null, ParamType.UNDEFINED),
+    UNDEFINED("N/A", ParamType.UNDEFINED),
 
-    // Fee in BTC satoshi for a 1 BTC trade. 200_000 Satoshi =  0.00200000 BTC = 0.2%.
-    // 10 USD at BTC price 5_000 USD for a 1 BTC trade;
+    // Fee in BTC for a 1 BTC trade. 0.001 is 0.1%. @5000 USD/BTC price 0.1% fee is 5 USD.
     DEFAULT_MAKER_FEE_BTC("0.001", ParamType.BTC, 5, 5),
     DEFAULT_TAKER_FEE_BTC("0.003", ParamType.BTC, 5, 5),       // 0.2% of trade amount
     MIN_MAKER_FEE_BTC("0.00005", ParamType.BTC, 5, 5),         // 0.005% of trade amount
     MIN_TAKER_FEE_BTC("0.00005", ParamType.BTC, 5, 5),
 
-    // Fee in BSQ satoshi for a 1 BTC trade. 100 Satoshi = 1 BSQ => about 0.02%.
-    // About 1 USD if 1 BSQ = 1 USD for a 1 BTC trade which is about 10% of the BTC fee.,
+    // Fee in BSQ satoshi for a 1 BTC trade. 100 Satoshi = 1 BSQ
+    // If 1 BTS is 1 USD the fee @5000 USD/BTC is 0.5 USD which is 10% of the BTC fee of 5 USD.
     // Might need adjustment if BSQ/BTC rate changes.
     DEFAULT_MAKER_FEE_BSQ("0.50", ParamType.BSQ, 5, 5),     // ~ 0.01% of trade amount
     DEFAULT_TAKER_FEE_BSQ("1.5", ParamType.BSQ, 5, 5),
@@ -87,22 +93,23 @@ public enum Param {
     // E.g. If the result ends up in 65% weighted vote for acceptance and threshold was 50% it is accepted.
     // The result must be larger than the threshold. A 50% vote result for a threshold with 50% is not sufficient,
     // it requires min. 50.01%.
+    // The maxDecrease value is only relevant if the decreased value will not result in a value below 50.01%.
     THRESHOLD_COMP_REQUEST("50.01", ParamType.PERCENT, 1.2, 1.2),
     THRESHOLD_REIMBURSEMENT("50.01", ParamType.PERCENT, 1.2, 1.2),
-    THRESHOLD_CHANGE_PARAM("75", ParamType.PERCENT, 1.2, 1.2),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
+    THRESHOLD_CHANGE_PARAM("75.01", ParamType.PERCENT, 1.2, 1.2),      // That might change the THRESHOLD_CHANGE_PARAM and QUORUM_CHANGE_PARAM as well. So we have to be careful here!
     THRESHOLD_ROLE("50.01", ParamType.PERCENT, 1.2, 1.2),
-    THRESHOLD_CONFISCATION("85", ParamType.PERCENT, 1.2, 1.2),      // Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
+    THRESHOLD_CONFISCATION("85.01", ParamType.PERCENT, 1.2, 1.2),      // Confiscation is considered an exceptional case and need very high consensus among the stakeholders.
     THRESHOLD_GENERIC("50.01", ParamType.PERCENT, 1.2, 1.2),
     THRESHOLD_REMOVE_ASSET("50.01", ParamType.PERCENT, 1.2, 1.2),
 
     // BTC address as recipient for BTC trade fee once the arbitration system is replaced as well as destination for
     // the time locked payout tx in case the traders do not cooperate. Will be likely a donation address (Bisq, Tor,...)
     // but can be also a burner address if we prefer to burn the BTC
-    RECIPIENT_BTC_ADDRESS(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
-            "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
-            BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ?
-                    "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
-                    "mquz1zFmhs7iy8qJTkhY7C9bhJ5S3g8Xim", // regtest or DAO testnet (regtest)
+    @SuppressWarnings("SpellCheckingInspection")
+    RECIPIENT_BTC_ADDRESS(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
+            BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ? "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7" :  // mainnet
+                    BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ? "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" : // testnet
+                            "mquz1zFmhs7iy8qJTkhY7C9bhJ5S3g8Xim", // regtest or DAO testnet (regtest)
             ParamType.ADDRESS),
 
     // Fee for activating an asset or re-listing after deactivation due lack of trade activity. Fee per day of trial period without activity checks.
@@ -110,11 +117,15 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
-    LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days
-    ARBITRATOR_FEE("0", ParamType.BTC),
-    MAX_TRADE_LIMIT("2", ParamType.BTC), // max trade limit for lowest risk payment method. Others will get derived from that.
+    LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days, can be disabled by setting to 0
+    ARBITRATOR_FEE("0", ParamType.PERCENT),  // % of trade. For new trade protocol. Arbitration will become optional and we can apply a fee to it. Initially we start with no fee.
+    MAX_TRADE_LIMIT("2", ParamType.BTC, 2, 2), // max trade limit for lowest risk payment method. Others will get derived from that.
 
-    // See: https://github.com/bisq-network/proposals/issues/46
+    // The base factor to multiply the bonded role amount. E.g. If Twitter admin has 20 as amount and BONDED_ROLE_FACTOR is 1000 we get 20000 BSQ as required bond.
+    // Using BSQ as type is not really the best option but we don't want to introduce a new ParamType just for that one Param.
+    // As the end rules is in fact BSQ it is not completely incorrect as well.
+    BONDED_ROLE_FACTOR("1000", ParamType.BSQ, 2, 2),
+
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
     // confirmed in the next block which would be the following break phase. To hide that complexity we show only the
     // blocks where the user can be active. To have still round numbers for the durations we add 1 block to those
@@ -131,7 +142,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
                             "380",      // testnet or dao testnet (server side regtest); 2.6 days
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BREAK1(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "149" :     // mainnet; 1 day
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -139,15 +150,15 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BLIND_VOTE(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
-            "601" :     // mainnet; 4 days
+            "451" :     // mainnet; 3 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
                             "300",      // testnet or dao testnet (server side regtest); 2 days
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BREAK2(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -155,15 +166,15 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 23),
+            ParamType.BLOCK, 2, 2),
     PHASE_VOTE_REVEAL(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
-            "301" :     // mainnet; 2 days
+            "451" :     // mainnet; 3 days
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
                     "2" :       // regtest
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
                             "300",      // testnet or dao testnet (server side regtest); 2 days
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_BREAK3(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "9" :       // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -171,7 +182,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "10",       // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3),
+            ParamType.BLOCK, 2, 2),
     PHASE_RESULT(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "10" :      // mainnet
             BisqEnvironment.getBaseCurrencyNetwork().isRegtest() ?
@@ -179,7 +190,7 @@ public enum Param {
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "10" :       // daoBetaNet
                             "2",        // testnet or dao testnet (server side regtest)
-            ParamType.BLOCK, 3, 3);
+            ParamType.BLOCK, 2, 2);
 
     @Getter
     private final String defaultValue;
@@ -199,8 +210,8 @@ public enum Param {
     /**
      * @param defaultValue  Value at the start of the DAO
      * @param paramType     Type of parameter
-     * @param maxDecrease   Decrease of param value limited to current value / maxDecrease
-     * @param maxIncrease   Increase of param value limited to current value * maxIncrease
+     * @param maxDecrease   Decrease of param value limited to current value / maxDecrease. If 0 we don't apply the check and any change is possible
+     * @param maxIncrease   Increase of param value limited to current value * maxIncrease. If 0 we don't apply the check and any change is possible
      */
     Param(String defaultValue, ParamType paramType, double maxDecrease, double maxIncrease) {
         this.defaultValue = defaultValue;

@@ -26,7 +26,10 @@ import bisq.common.app.Version;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.springframework.util.CollectionUtils;
+
 import java.util.Date;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -40,14 +43,19 @@ import javax.annotation.concurrent.Immutable;
 @Value
 public final class RoleProposal extends Proposal implements ImmutableDaoStateModel {
     private final Role role;
+    private final long requiredBondUnit;
+    private final int unlockTime; // in blocks
 
-    public RoleProposal(Role role) {
+    public RoleProposal(Role role, Map<String, String> extraDataMap) {
         this(role.getName(),
                 role.getLink(),
                 role,
+                role.getBondedRoleType().getRequiredBondUnit(),
+                role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "");
+                "",
+                extraDataMap);
     }
 
 
@@ -58,22 +66,30 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
     private RoleProposal(String name,
                          String link,
                          Role role,
+                         long requiredBondUnit,
+                         int unlockTime,
                          byte version,
                          long creationDate,
-                         String txId) {
+                         String txId,
+                         Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
 
         this.role = role;
+        this.requiredBondUnit = requiredBondUnit;
+        this.unlockTime = unlockTime;
     }
 
     @Override
     public PB.Proposal.Builder getProposalBuilder() {
         final PB.RoleProposal.Builder builder = PB.RoleProposal.newBuilder()
-                .setRole(role.toProtoMessage());
+                .setRole(role.toProtoMessage())
+                .setRequiredBondUnit(requiredBondUnit)
+                .setUnlockTime(unlockTime);
         return super.getProposalBuilder().setRoleProposal(builder);
     }
 
@@ -82,9 +98,13 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
         return new RoleProposal(proto.getName(),
                 proto.getLink(),
                 Role.fromProto(proposalProto.getRole()),
+                proposalProto.getRequiredBondUnit(),
+                proposalProto.getUnlockTime(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -114,18 +134,23 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
 
     @Override
     public Proposal cloneProposalAndAddTxId(String txId) {
-        return new RoleProposal(getName(),
-                getLink(),
-                this.getRole(),
-                getVersion(),
-                getCreationDate().getTime(),
-                txId);
+        return new RoleProposal(name,
+                link,
+                role,
+                requiredBondUnit,
+                unlockTime,
+                version,
+                creationDate,
+                txId,
+                extraDataMap);
     }
 
     @Override
     public String toString() {
         return "RoleProposal{" +
                 "\n     role=" + role +
+                "\n     requiredBondUnit=" + requiredBondUnit +
+                "\n     unlockTime=" + unlockTime +
                 "\n} " + super.toString();
     }
 }

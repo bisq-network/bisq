@@ -89,7 +89,7 @@ public class StatefulAsset {
         return assetState == AssetState.REMOVED_BY_VOTING;
     }
 
-    public boolean isDeListed() {
+    private boolean isDeListed() {
         return assetState == AssetState.DE_LISTED;
     }
 

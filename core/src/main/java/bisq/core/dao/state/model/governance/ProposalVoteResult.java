@@ -87,13 +87,9 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
 
     public long getQuorum() {
         // Quorum is sum of all votes independent if accepted or rejected.
-        log.info("Quorum: proposalTxId: {}, totalStake: {}, stakeOfAcceptedVotes: {}, stakeOfRejectedVotes: {}",
+        log.debug("Quorum: proposalTxId: {}, totalStake: {}, stakeOfAcceptedVotes: {}, stakeOfRejectedVotes: {}",
                 proposal.getTxId(), getTotalStake(), stakeOfAcceptedVotes, stakeOfRejectedVotes);
         return getTotalStake();
-    }
-
-    private long getTotalStake() {
-        return stakeOfAcceptedVotes + stakeOfRejectedVotes;
     }
 
     public long getThreshold() {
@@ -115,5 +111,14 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
                 ",\n     numRejectedVotes=" + numRejectedVotes +
                 ",\n     numIgnoredVotes=" + numIgnoredVotes +
                 "\n}";
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private long getTotalStake() {
+        return stakeOfAcceptedVotes + stakeOfRejectedVotes;
     }
 }

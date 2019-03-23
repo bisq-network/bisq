@@ -108,11 +108,11 @@ public class ProposalListItem {
         return ProposalListItem.getProposalDetails(evaluatedProposal, bsqFormatter);
     }
 
-    public static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
+    private static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter) {
         return getProposalDetails(evaluatedProposal, bsqFormatter, true);
     }
 
-    public static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter, boolean useDisplayString) {
+    private static String getProposalDetails(EvaluatedProposal evaluatedProposal, BsqFormatter bsqFormatter, boolean useDisplayString) {
         Proposal proposal = evaluatedProposal.getProposal();
         switch (proposal.getType()) {
             case COMPENSATION_REQUEST:

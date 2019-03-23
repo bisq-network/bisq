@@ -73,6 +73,7 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -209,7 +210,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             // blind vote stored and broadcasted to the p2p network. The tx might get re-broadcasted at a restart and
             // in worst case if it does not succeed the blind vote will be ignored anyway.
             // Inconsistently propagated blind votes in the p2p network could have potentially worse effects.
-            BlindVote blindVote = new BlindVote(encryptedVotes, blindVoteTxId, stake.value, encryptedMeritList);
+            BlindVote blindVote = new BlindVote(encryptedVotes,
+                    blindVoteTxId,
+                    stake.value,
+                    encryptedMeritList,
+                    new HashMap<>());
             addBlindVoteToList(blindVote);
 
             addToP2PNetwork(blindVote, errorMessage -> {
@@ -334,8 +339,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
             @Override
             public void onFailure(TxBroadcastException exception) {
-                // TODO handle
-                // We need to be sure that in case of a failed tx the locked stake gets unlocked!
                 exceptionHandler.handleException(exception);
             }
         });

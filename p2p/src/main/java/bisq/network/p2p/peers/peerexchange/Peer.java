@@ -29,6 +29,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import java.util.Date;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Getter
+@EqualsAndHashCode(exclude = {"date"}) // failedConnectionAttempts is transient and therefore excluded anyway
 @Slf4j
 public final class Peer implements HasCapabilities, NetworkPayload, PersistablePayload, SupportedCapabilitiesListener {
     private static final int MAX_FAILED_CONNECTION_ATTEMPTS = 5;

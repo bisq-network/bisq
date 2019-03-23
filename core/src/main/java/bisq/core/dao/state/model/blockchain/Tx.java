@@ -136,7 +136,6 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
 
 
     public int getLockTime() {
-        // TODO MK: Still get confused that we have the lock time stored at a non opReturn output
         return getLockupOutput().getLockTime();
     }
 

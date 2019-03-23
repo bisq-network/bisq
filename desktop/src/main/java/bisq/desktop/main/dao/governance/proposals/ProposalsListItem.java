@@ -170,11 +170,13 @@ public class ProposalsListItem {
     }
 
     private String getNext(IconButtonTypes iconButtonTypes) {
-        if (iconButtonTypes == IconButtonTypes.ACCEPT)
-            return IconButtonTypes.REJECT.getTitle();
-        else if (iconButtonTypes == IconButtonTypes.REJECT)
-            return IconButtonTypes.IGNORE.getTitle();
-        else
-            return IconButtonTypes.ACCEPT.getTitle();
+        switch (iconButtonTypes) {
+            case ACCEPT:
+                return IconButtonTypes.REJECT.getTitle();
+            case REJECT:
+                return IconButtonTypes.IGNORE.getTitle();
+            default:
+                return IconButtonTypes.ACCEPT.getTitle();
+        }
     }
 }

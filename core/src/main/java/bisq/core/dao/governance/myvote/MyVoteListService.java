@@ -82,9 +82,6 @@ public class MyVoteListService implements PersistedDataHost {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void start() {
-    }
-
     public void createAndAddMyVote(BallotList sortedBallotListForCycle, SecretKey secretKey, BlindVote blindVote) {
         final byte[] secretKeyBytes = Encryption.getSecretKeyBytes(secretKey);
         MyVote myVote = new MyVote(daoStateService.getChainHeight(), sortedBallotListForCycle, secretKeyBytes, blindVote);

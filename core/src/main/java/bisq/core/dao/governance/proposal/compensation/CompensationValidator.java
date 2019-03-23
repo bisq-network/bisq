@@ -17,8 +17,9 @@
 
 package bisq.core.dao.governance.proposal.compensation;
 
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalValidator;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -33,8 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
+/**
+ * Changes here can potentially break consensus!
+ */
 @Slf4j
-public class CompensationValidator extends ProposalValidator {
+public class CompensationValidator extends ProposalValidator implements ConsensusCritical {
 
     @Inject
     public CompensationValidator(DaoStateService daoStateService, PeriodService periodService) {
@@ -42,7 +46,7 @@ public class CompensationValidator extends ProposalValidator {
     }
 
     @Override
-    public void validateDataFields(Proposal proposal) throws ValidationException {
+    public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             super.validateDataFields(proposal);
 
@@ -53,15 +57,17 @@ public class CompensationValidator extends ProposalValidator {
             compensationProposal.getAddress(); // throws AddressFormatException if wrong address
 
             Coin requestedBsq = compensationProposal.getRequestedBsq();
-            Coin maxCompensationRequestAmount = CompensationConsensus.getMaxCompensationRequestAmount(daoStateService, periodService.getChainHeight());
+            int chainHeight = getBlockHeight(proposal);
+            Coin maxCompensationRequestAmount = CompensationConsensus.getMaxCompensationRequestAmount(daoStateService, chainHeight);
             checkArgument(requestedBsq.compareTo(maxCompensationRequestAmount) <= 0,
                     "Requested BSQ must not exceed " + (maxCompensationRequestAmount.value / 100L) + " BSQ");
-            Coin minCompensationRequestAmount = CompensationConsensus.getMinCompensationRequestAmount(daoStateService, periodService.getChainHeight());
+            Coin minCompensationRequestAmount = CompensationConsensus.getMinCompensationRequestAmount(daoStateService, chainHeight);
             checkArgument(requestedBsq.compareTo(minCompensationRequestAmount) >= 0,
                     "Requested BSQ must not be less than " + (minCompensationRequestAmount.value / 100L) + " BSQ");
-
+        } catch (ProposalValidationException e) {
+            throw e;
         } catch (Throwable throwable) {
-            throw new ValidationException(throwable);
+            throw new ProposalValidationException(throwable);
         }
     }
 }

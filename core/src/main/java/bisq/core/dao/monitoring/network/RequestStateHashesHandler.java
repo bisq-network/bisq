@@ -157,10 +157,6 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
         }
     }
 
-    public void cancel() {
-        cleanup();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
@@ -194,10 +190,6 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                         this.getClass().getSimpleName());
             }
         }
-    }
-
-    public void stop() {
-        cleanup();
     }
 
 

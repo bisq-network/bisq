@@ -32,8 +32,6 @@ import io.bisq.generated.protobuffer.PB;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-// TODO CapabilityRequiringPayload does only cover add data messages. We need a tool to avoid disconnections to old
-// nodes when they receive the NewBlockBroadcastMessage!
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class NewBlockBroadcastMessage extends BroadcastMessage implements CapabilityRequiringPayload {

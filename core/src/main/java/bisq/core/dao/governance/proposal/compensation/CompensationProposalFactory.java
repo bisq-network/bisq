@@ -21,9 +21,9 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.proposal.BaseProposalFactory;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateService;
@@ -38,6 +38,8 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+
+import java.util.HashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,7 +66,7 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
                                                                  Coin requestedBsq)
-            throws ValidationException, InsufficientMoneyException, TxException {
+            throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.requestedBsq = requestedBsq;
         this.bsqAddress = bsqWalletService.getUnusedBsqAddressAsString();
 
@@ -77,7 +79,8 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
                 name,
                 link,
                 requestedBsq,
-                bsqAddress);
+                bsqAddress,
+                new HashMap<>());
     }
 
     @Override

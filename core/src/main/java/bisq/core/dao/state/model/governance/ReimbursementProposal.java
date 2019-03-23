@@ -32,7 +32,10 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
+import org.springframework.util.CollectionUtils;
+
 import java.util.Date;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -51,14 +54,16 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
     public ReimbursementProposal(String name,
                                  String link,
                                  Coin requestedBsq,
-                                 String bsqAddress) {
+                                 String bsqAddress,
+                                 Map<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
                 requestedBsq.value,
                 Version.REIMBURSEMENT_REQUEST,
                 new Date().getTime(),
-                "");
+                "",
+                extraDataMap);
     }
 
 
@@ -72,12 +77,14 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                                   long requestedBsq,
                                   byte version,
                                   long creationDate,
-                                  String txId) {
+                                  String txId,
+                                  Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
 
         this.requestedBsq = requestedBsq;
         this.bsqAddress = bsqAddress;
@@ -99,7 +106,9 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 proposalProto.getRequestedBsq(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -145,8 +154,9 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 getBsqAddress(),
                 getRequestedBsq().value,
                 getVersion(),
-                getCreationDate().getTime(),
-                txId);
+                getCreationDate(),
+                txId,
+                extraDataMap);
     }
 
     @Override

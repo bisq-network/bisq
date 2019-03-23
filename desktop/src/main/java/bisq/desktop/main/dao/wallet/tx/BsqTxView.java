@@ -32,6 +32,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.IssuanceType;
@@ -39,6 +40,8 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.Timer;
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
@@ -78,6 +81,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -86,6 +90,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private TableView<BsqTxListItem> tableView;
 
     private final DaoFacade daoFacade;
+    private final DaoStateService daoStateService;
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
@@ -100,6 +105,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private Label chainHeightLabel;
     private ProgressBar chainSyncIndicator;
     private ChangeListener<Number> walletChainHeightListener;
+    private Timer updateAnyChainHeightTimer;
+    private int walletChainHeight;
+    private int blockHeightBeforeProcessing;
+    private int missingBlocks;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -108,12 +117,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     @Inject
     private BsqTxView(DaoFacade daoFacade,
+                      DaoStateService daoStateService,
                       BsqWalletService bsqWalletService,
                       Preferences preferences,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil,
                       BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
+        this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
@@ -163,8 +174,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         root.getChildren().add(vBox);
 
         walletBsqTransactionsListener = change -> updateList();
-        //TODO do we want to get notified from wallet side?
-        walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
+        walletChainHeightListener = (observable, oldValue, newValue) -> {
+            walletChainHeight = bsqWalletService.getBestChainHeight();
+            onUpdateAnyChainHeight();
+        };
     }
 
     @Override
@@ -180,6 +193,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         daoFacade.addBsqStateListener(this);
 
         updateList();
+
+        walletChainHeight = bsqWalletService.getBestChainHeight();
+        blockHeightBeforeProcessing = daoFacade.getChainHeight();
+        missingBlocks = walletChainHeight - blockHeightBeforeProcessing;
+        if (!daoStateService.isParseBlockChainComplete()) {
+            updateAnyChainHeightTimer = UserThread.runPeriodically(this::onUpdateAnyChainHeight, 100, TimeUnit.MILLISECONDS);
+        }
         onUpdateAnyChainHeight();
     }
 
@@ -193,6 +213,11 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         daoFacade.removeBsqStateListener(this);
 
         observableList.forEach(BsqTxListItem::cleanup);
+
+        if (updateAnyChainHeightTimer != null) {
+            updateAnyChainHeightTimer.stop();
+            updateAnyChainHeightTimer = null;
+        }
     }
 
 
@@ -221,6 +246,14 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         onUpdateAnyChainHeight();
     }
 
+    @Override
+    public void onParseBlockChainComplete() {
+        if (updateAnyChainHeightTimer != null) {
+            updateAnyChainHeightTimer.stop();
+            updateAnyChainHeightTimer = null;
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -228,28 +261,27 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
     // If chain height from wallet of from the BSQ blockchain parsing changed we update our state.
     private void onUpdateAnyChainHeight() {
-        final int bsqBlockChainHeight = daoFacade.getChainHeight();
-        final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
-        if (bsqWalletChainHeight > 0) {
-            final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
+        int currentBlockHeight = daoFacade.getChainHeight();
+        if (walletChainHeight > 0) {
+            int processedBlocks = currentBlockHeight - blockHeightBeforeProcessing;
+            double progress = (double) processedBlocks / (double) missingBlocks;
+            boolean synced = walletChainHeight == currentBlockHeight;
             chainSyncIndicator.setVisible(!synced);
             chainSyncIndicator.setManaged(!synced);
-            if (bsqBlockChainHeight != bsqWalletChainHeight)
-                chainSyncIndicator.setProgress(-1);
-
             if (synced) {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                        bsqBlockChainHeight,
-                        bsqWalletChainHeight));
+                        currentBlockHeight,
+                        walletChainHeight));
             } else {
+                chainSyncIndicator.setProgress(progress);
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                        bsqBlockChainHeight,
-                        bsqWalletChainHeight));
+                        currentBlockHeight,
+                        walletChainHeight));
             }
         } else {
             chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                    bsqBlockChainHeight,
-                    bsqWalletChainHeight));
+                    currentBlockHeight,
+                    walletChainHeight));
         }
         updateList();
     }
@@ -281,13 +313,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.getStyleClass().add("first-column");
 
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {
@@ -314,13 +345,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(60);
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
                             private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
@@ -351,13 +381,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(160);
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
 
                             private AddressWithIconAndDirection field;
 
@@ -489,13 +518,12 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellFactory(
-                new Callback<TableColumn<BsqTxListItem, BsqTxListItem>, TableCell<BsqTxListItem,
-                        BsqTxListItem>>() {
+                new Callback<>() {
 
                     @Override
                     public TableCell<BsqTxListItem, BsqTxListItem> call(TableColumn<BsqTxListItem,
                             BsqTxListItem> column) {
-                        return new TableCell<BsqTxListItem, BsqTxListItem>() {
+                        return new TableCell<>() {
 
                             @Override
                             public void updateItem(final BsqTxListItem item, boolean empty) {

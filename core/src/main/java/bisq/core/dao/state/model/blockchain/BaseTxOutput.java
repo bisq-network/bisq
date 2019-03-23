@@ -56,13 +56,13 @@ public abstract class BaseTxOutput implements ImmutableDaoStateModel {
     protected final byte[] opReturnData;
     protected final int blockHeight;
 
-    public BaseTxOutput(int index,
-                        long value,
-                        String txId,
-                        @Nullable PubKeyScript pubKeyScript,
-                        @Nullable String address,
-                        @Nullable byte[] opReturnData,
-                        int blockHeight) {
+    protected BaseTxOutput(int index,
+                           long value,
+                           String txId,
+                           @Nullable PubKeyScript pubKeyScript,
+                           @Nullable String address,
+                           @Nullable byte[] opReturnData,
+                           int blockHeight) {
         this.index = index;
         this.value = value;
         this.txId = txId;
@@ -77,7 +77,7 @@ public abstract class BaseTxOutput implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.BaseTxOutput.Builder getRawTxOutputBuilder() {
+    protected PB.BaseTxOutput.Builder getRawTxOutputBuilder() {
         final PB.BaseTxOutput.Builder builder = PB.BaseTxOutput.newBuilder()
                 .setIndex(index)
                 .setValue(value)

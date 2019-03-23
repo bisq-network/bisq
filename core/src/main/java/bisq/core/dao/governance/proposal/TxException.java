@@ -18,22 +18,7 @@
 package bisq.core.dao.governance.proposal;
 
 public class TxException extends Exception {
-    public TxException() {
-    }
-
-    public TxException(String message) {
-        super(message);
-    }
-
-    public TxException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
     public TxException(Throwable cause) {
         super(cause);
-    }
-
-    public TxException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
     }
 }
