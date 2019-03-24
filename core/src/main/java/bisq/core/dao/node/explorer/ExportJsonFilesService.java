@@ -126,7 +126,7 @@ public class ExportJsonFilesService implements DaoSetupService {
     }
 
     public void shutDown() {
-        if (dumpBlockchainData) {
+        if (dumpBlockchainData && txFileManager != null) {
             txFileManager.shutDown();
             txOutputFileManager.shutDown();
             bsqStateFileManager.shutDown();
