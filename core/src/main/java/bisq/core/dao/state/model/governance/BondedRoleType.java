@@ -66,7 +66,7 @@ public enum BondedRoleType {
     DNS_ADMIN(20, 75, "https://bisq.network/roles/18", false),
     MEDIATOR(10, 75, "https://bisq.network/roles/83", true),
     ARBITRATOR(200, 75, "https://bisq.network/roles/13", true),
-    BTC_DONATION_ADDRESS_OWNER(20, 75, "https://bisq.network/roles/80", true);
+    BTC_DONATION_ADDRESS_OWNER(50, 75, "https://bisq.network/roles/80", true);
 
 
     // Will be multiplied with PARAM.BONDED_ROLE_FACTOR to get BSQ amount.
