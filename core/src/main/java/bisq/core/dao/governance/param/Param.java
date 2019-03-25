@@ -125,6 +125,7 @@ public enum Param {
     // Using BSQ as type is not really the best option but we don't want to introduce a new ParamType just for that one Param.
     // As the end rules is in fact BSQ it is not completely incorrect as well.
     BONDED_ROLE_FACTOR("1000", ParamType.BSQ, 2, 2),
+    ISSUANCE_LIMIT("200000", ParamType.BSQ, 2, 2), // Max. issuance+reimbursement per cycle.
 
     // The last block in the proposal and vote phases are not shown to the user as he cannot make a tx there as it would be
     // confirmed in the next block which would be the following break phase. To hide that complexity we show only the
