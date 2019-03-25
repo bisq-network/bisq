@@ -59,7 +59,7 @@ public class Restrictions {
     }
 
     public static double getMaxBuyerSecurityDepositAsPercent() {
-        return 0.1; // 10% of trade amount. For a 1 BTC trade it is about 400 USD @ 4000 USD/BTC
+        return 0.2; // 20% of trade amount. For a 1 BTC trade it is about 800 USD @ 4000 USD/BTC
     }
 
     // We use MIN_BUYER_SECURITY_DEPOSIT as well as lower bound in case of small trade amounts.
