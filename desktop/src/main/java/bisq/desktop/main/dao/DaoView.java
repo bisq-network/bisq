@@ -54,7 +54,7 @@ import javafx.beans.value.ChangeListener;
 public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    private Tab bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, daoNewsTab, monitor, economyTab;
+    private Tab bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, daoNewsTab, monitorTab, factsAndFiguresTab;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
@@ -78,33 +78,33 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        economyTab = new Tab(Res.get("dao.tab.economy").toUpperCase());
+        factsAndFiguresTab = new Tab(Res.get("dao.tab.factsAndFigures").toUpperCase());
         bsqWalletTab = new Tab(Res.get("dao.tab.bsqWallet").toUpperCase());
         proposalsTab = new Tab(Res.get("dao.tab.proposals").toUpperCase());
         bondingTab = new Tab(Res.get("dao.tab.bonding").toUpperCase());
         burnBsqTab = new Tab(Res.get("dao.tab.proofOfBurn").toUpperCase());
-        monitor = new Tab(Res.get("dao.tab.monitor").toUpperCase());
+        monitorTab = new Tab(Res.get("dao.tab.monitor").toUpperCase());
 
-        economyTab.setClosable(false);
+        factsAndFiguresTab.setClosable(false);
         bsqWalletTab.setClosable(false);
         proposalsTab.setClosable(false);
         bondingTab.setClosable(false);
         burnBsqTab.setClosable(false);
-        monitor.setClosable(false);
+        monitorTab.setClosable(false);
 
         if (!DevEnv.isDaoActivated()) {
-            economyTab.setDisable(true);
+            factsAndFiguresTab.setDisable(true);
             bsqWalletTab.setDisable(true);
             proposalsTab.setDisable(true);
             bondingTab.setDisable(true);
             burnBsqTab.setDisable(true);
-            monitor.setDisable(true);
+            monitorTab.setDisable(true);
 
             daoNewsTab = new Tab(Res.get("dao.tab.news").toUpperCase());
 
             root.getTabs().add(daoNewsTab);
         } else {
-            root.getTabs().addAll(economyTab, bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitor);
+            root.getTabs().addAll(factsAndFiguresTab, bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitorTab);
         }
 
         navigationListener = viewPath -> {
@@ -129,9 +129,9 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
             } else if (newValue == burnBsqTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
-            } else if (newValue == economyTab) {
+            } else if (newValue == factsAndFiguresTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, EconomyView.class);
-            } else if (newValue == monitor) {
+            } else if (newValue == monitorTab) {
                 navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
             }
         };
@@ -153,9 +153,9 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                     navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
                 else if (selectedItem == burnBsqTab)
                     navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
-                else if (selectedItem == economyTab)
+                else if (selectedItem == factsAndFiguresTab)
                     navigation.navigateTo(MainView.class, DaoView.class, EconomyView.class);
-                else if (selectedItem == monitor)
+                else if (selectedItem == monitorTab)
                     navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
             }
         } else {
@@ -190,11 +190,11 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
         } else if (view instanceof BurnBsqView) {
             selectedTab = burnBsqTab;
         } else if (view instanceof MonitorView) {
-            selectedTab = monitor;
+            selectedTab = monitorTab;
         } else if (view instanceof NewsView) {
             selectedTab = daoNewsTab;
         } else if (view instanceof EconomyView) {
-            selectedTab = economyTab;
+            selectedTab = factsAndFiguresTab;
         }
 
         selectedTab.setContent(view.getRoot());

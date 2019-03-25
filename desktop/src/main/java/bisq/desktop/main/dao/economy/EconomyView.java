@@ -28,6 +28,7 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.economy.dashboard.BsqDashboardView;
+import bisq.desktop.main.dao.economy.details.DetailsView;
 
 import bisq.core.locale.Res;
 
@@ -50,7 +51,7 @@ public class EconomyView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard;
+    private MenuItem dashboard, details;
     private Navigation.Listener listener;
 
     @FXML
@@ -80,17 +81,20 @@ public class EconomyView extends ActivatableViewAndModel {
         toggleGroup = new ToggleGroup();
         List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, EconomyView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard);
+        details = new MenuItem(navigation, toggleGroup, Res.get("shared.details"), DetailsView.class, baseNavPath);
+        leftVBox.getChildren().addAll(dashboard, details);
 
         // TODO just until DAO is enabled
         if (!DevEnv.isDaoActivated()) {
             dashboard.setDisable(true);
+            details.setDisable(true);
         }
     }
 
     @Override
     protected void activate() {
         dashboard.activate();
+        details.activate();
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -119,9 +123,6 @@ public class EconomyView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof BsqDashboardView) toggleGroup.selectToggle(dashboard);
-    }
-
-    public Class<? extends View> getSelectedViewClass() {
-        return selectedViewClass;
+        else if (view instanceof DetailsView) toggleGroup.selectToggle(details);
     }
 }
