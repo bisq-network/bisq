@@ -25,6 +25,7 @@ import bisq.core.dao.governance.blindvote.BlindVoteListService;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxId;
 import bisq.core.dao.governance.blindvote.VoteWithProposalTxIdList;
 import bisq.core.dao.governance.merit.MeritConsensus;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
@@ -535,15 +536,35 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         proposalListPresentation.getActiveOrMyUnconfirmedProposals().stream()
                 .filter(proposal -> !evaluatedProposalsByTxIdMap.containsKey(proposal.getTxId()))
                 .forEach(proposal -> {
-                    long requiredQuorum = daoStateService.getParamValueAsCoin(proposal.getQuorumParam(), chainHeight).value;
-                    long requiredVoteThreshold = getRequiredVoteThreshold(chainHeight, proposal);
-
                     ProposalVoteResult proposalVoteResult = new ProposalVoteResult(proposal, 0,
                             0, 0, 0, decryptedBallotsWithMeritsSet.size());
                     EvaluatedProposal evaluatedProposal = new EvaluatedProposal(false, proposalVoteResult);
                     evaluatedProposals.add(evaluatedProposal);
                     log.info("Proposal ignored by all voters: {}", evaluatedProposal);
                 });
+
+        // Check if our issuance sum is not exceeding the limit
+        long sumIssuance = evaluatedProposals.stream()
+                .filter(EvaluatedProposal::isAccepted)
+                .map(EvaluatedProposal::getProposal)
+                .filter(proposal -> proposal instanceof IssuanceProposal)
+                .map(proposal -> (IssuanceProposal) proposal)
+                .mapToLong(proposal -> proposal.getRequestedBsq().value)
+                .sum();
+        long limit = daoStateService.getParamValueAsCoin(Param.ISSUANCE_LIMIT, chainHeight).value;
+        if (sumIssuance > limit) {
+            Set<EvaluatedProposal> evaluatedProposals2 = new HashSet<>();
+            evaluatedProposals.stream().filter(EvaluatedProposal::isAccepted)
+                    .forEach(e -> evaluatedProposals2.add(new EvaluatedProposal(false, e.getProposalVoteResult())));
+            String msg = "We have a total issuance amount of " + sumIssuance / 100 + " BSQ but our limit for a cycle is " + limit / 100 + " BSQ. " +
+                    "We consider that cycle as invalid and have set all proposals as rejected.";
+            log.warn(msg);
+
+            checkNotNull(daoStateService.getCurrentCycle(), "daoStateService.getCurrentCycle() must not be null");
+            voteResultExceptions.add(new VoteResultException(daoStateService.getCurrentCycle(), new VoteResultException.ConsensusException(msg)));
+            return evaluatedProposals2;
+        }
+
         return evaluatedProposals;
     }
 
