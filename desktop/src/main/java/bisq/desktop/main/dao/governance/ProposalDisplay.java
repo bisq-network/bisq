@@ -334,7 +334,7 @@ public class ProposalDisplay {
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
 
-                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getAllBonds()));
+                confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getAllActiveBonds()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(Bond bond) {
@@ -347,7 +347,6 @@ public class ProposalDisplay {
                             bondType = Res.get("dao.bond.bondedReputation");
                             bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
                         }
-
                         return bondType + ": " + bondDetails;
                     }
 

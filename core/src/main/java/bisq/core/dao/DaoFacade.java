@@ -92,6 +92,7 @@ import javafx.collections.transformation.FilteredList;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -548,7 +549,13 @@ public class DaoFacade implements DaoSetupService {
 
 
     public List<Bond> getAllBonds() {
-        List<Bond> bonds = bondedReputationRepository.getActiveBonds();
+        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
+        bonds.addAll(bondedRolesRepository.getBonds());
+        return bonds;
+    }
+
+    public List<Bond> getAllActiveBonds() {
+        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getActiveBonds());
         bonds.addAll(bondedRolesRepository.getActiveBonds());
         return bonds;
     }
