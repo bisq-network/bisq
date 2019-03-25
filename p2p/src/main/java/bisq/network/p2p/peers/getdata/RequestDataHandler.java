@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final long TIMEOUT = 60;
+    private static final long TIMEOUT = 90;
     private NodeAddress peersNodeAddress;
 
 
