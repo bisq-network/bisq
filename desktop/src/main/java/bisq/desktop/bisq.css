@@ -320,6 +320,20 @@ bg color of non edit textFields: fafafa
     -fx-padding: 0 10 0 10;
 }
 
+.text-button {
+    -fx-background-color: transparent;
+    -fx-underline: true;
+    -fx-padding: 0 10 0 10;
+    -fx-pref-height: 28;
+    -fx-min-height: -fx-pref-height;
+}
+
+.text-button:hover {
+    -fx-text-fill: -bs-rd-black;
+    -fx-background-color: transparent;
+    -fx-underline: false;
+}
+
 .jfx-checkbox {
     -jfx-checked-color: -bs-rd-green;
     -fx-font-size: 0.692em;
