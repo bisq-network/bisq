@@ -288,7 +288,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
         if (change < (1 / min)) {
             double val = currentValue / min;
             String value = getFormattedValue(param, val);
-            throw new ParamValidationException(ParamValidationException.ERROR.TOO_LOW, Res.get("validation.inputTooToBeAtLeast", value));
+            throw new ParamValidationException(ParamValidationException.ERROR.TOO_LOW, Res.get("validation.inputToBeAtLeast", value));
         }
     }
 
