@@ -18,7 +18,7 @@
 package bisq.common;
 
 /**
- * Interface for the outside envelope object sent over the network or persisted to disc.
+ * Interface for the outside envelope object sent over the network or persisted to disk.
  */
 public interface Envelope extends Proto {
 }
