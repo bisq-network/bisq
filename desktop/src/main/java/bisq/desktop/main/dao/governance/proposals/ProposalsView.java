@@ -424,18 +424,29 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         daoFacade.setVote(getBallotListItem().getBallot(), new Vote(true));
         updateStateAfterVote();
         tableView.getSelectionModel().clearSelection();
+
+        showHowToSetStakeForVotingPopup();
+    }
+
+    private void showHowToSetStakeForVotingPopup() {
+        String id = "explainHowToSetStakeForVoting";
+        if (preferences.showAgain(id))
+            new Popup<>().information(Res.get("dao.proposal.myVote.setStake.description"))
+                    .dontShowAgainId(id).show();
     }
 
     private void onReject() {
         daoFacade.setVote(getBallotListItem().getBallot(), new Vote(false));
         updateStateAfterVote();
         tableView.getSelectionModel().clearSelection();
+        showHowToSetStakeForVotingPopup();
     }
 
     private void onIgnore() {
         daoFacade.setVote(getBallotListItem().getBallot(), null);
         updateStateAfterVote();
         tableView.getSelectionModel().clearSelection();
+        showHowToSetStakeForVotingPopup();
     }
 
     private void onVote() {
