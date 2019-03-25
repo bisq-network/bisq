@@ -394,8 +394,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                     .findAny()
                     .orElse(null);
 
-            showVoteOnProposalWindow(selectedItem.getProposal(), selectedItem.getBallot(), evaluatedProposal);
             applyMerit();
+            showVoteOnProposalWindow(selectedItem.getProposal(), selectedItem.getBallot(), evaluatedProposal);
         }
 
         onPhaseChanged(daoFacade.phaseProperty().get());

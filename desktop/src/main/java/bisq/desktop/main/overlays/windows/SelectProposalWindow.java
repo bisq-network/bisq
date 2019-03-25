@@ -3,6 +3,7 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.Navigation;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.myvote.MyVote;
@@ -127,8 +128,8 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
     private void addContent(Proposal proposal, EvaluatedProposal evaluatedProposal, Ballot ballot) {
         ProposalDisplay proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, daoFacade, changeParamValidator,
                 navigation, preferences);
-        proposalDisplay.createAllFields("", rowIndex, 0, proposal.getType(),
-                false);
+        proposalDisplay.createAllFields("", rowIndex, -Layout.FIRST_ROW_DISTANCE, proposal.getType(),
+                false, "last");
         proposalDisplay.setEditable(false);
         proposalDisplay.applyProposalPayload(proposal);
         proposalDisplay.applyEvaluatedProposal(evaluatedProposal);
@@ -142,7 +143,9 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
         List<MyVote> myVoteListForCycle = daoFacade.getMyVoteListForCycle();
         boolean hasAlreadyVoted = !myVoteListForCycle.isEmpty();
 
-        if (daoFacade.phaseProperty().get() == DaoPhase.Phase.PROPOSAL) {
+        DaoPhase.Phase currentPhase = daoFacade.phaseProperty().get();
+
+        if (currentPhase == DaoPhase.Phase.PROPOSAL) {
 
             Tuple2<Button, Button> proposalPhaseButtonsTuple = add2ButtonsAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("shared.remove"), Res.get("shared.close"));
             Button removeProposalButton = proposalPhaseButtonsTuple.first;
@@ -158,9 +161,12 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
 
             proposalPhaseButtonsTuple.second.setOnAction(event -> doClose());
 
-        } else if (daoFacade.phaseProperty().get() == DaoPhase.Phase.BLIND_VOTE && !hasAlreadyVoted) {
+        } else if (currentPhase == DaoPhase.Phase.BLIND_VOTE &&
+                !hasAlreadyVoted &&
+                daoFacade.isInPhaseButNotLastBlock(currentPhase)) {
+            int rowIndexForVoting = proposalDisplay.incrementAndGetGridRow();
             Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(gridPane,
-                    proposalDisplay.incrementAndGetGridRow(),
+                    rowIndexForVoting,
                     Res.get("dao.proposal.myVote.accept"),
                     Res.get("dao.proposal.myVote.reject"),
                     Res.get("dao.proposal.myVote.removeMyVote"));
@@ -191,6 +197,10 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
                 ignoreHandlerOptional.ifPresent(Runnable::run);
                 doClose();
             });
+
+            Button closeButton = addButtonAfterGroup(gridPane, ++rowIndexForVoting, Res.get("shared.close"));
+            closeButton.setOnAction(event -> doClose());
+
         } else {
             Button closeButton = addButtonAfterGroup(gridPane, proposalDisplay.incrementAndGetGridRow(), Res.get("shared.close"));
             closeButton.setOnAction(event -> doClose());
