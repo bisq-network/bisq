@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.wallet.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -96,24 +97,24 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         int startRow = gridRow;
         addTitledGroupBg(root, ++gridRow, 5, Res.get("dao.wallet.dashboard.distribution"), Layout.GROUP_DISTANCE);
-        genesisIssueAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        compRequestIssueAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
-        reimbursementAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
-        burntAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
-        availableAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
+        genesisIssueAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.genesisIssueAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        compRequestIssueAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.compRequestIssueAmount")).second;
+        reimbursementAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.reimbursementAmount")).second;
+        burntAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.burntAmount")).second;
+        availableAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.availableAmount")).second;
 
         gridRow = startRow;
         addTitledGroupBg(root, ++gridRow, columnIndex, 5, Res.get("dao.wallet.dashboard.locked"), Layout.GROUP_DISTANCE);
-        totalLockedUpAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalLockedUpAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        totalUnlockingAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalUnlockingAmount")).second;
-        totalUnlockedAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalUnlockedAmount")).second;
-        totalConfiscatedAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalConfiscatedAmount")).second;
+        totalLockedUpAmountTextField = addTopLabelReadOnlyTextField(root, gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalLockedUpAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        totalUnlockingAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalUnlockingAmount")).second;
+        totalUnlockedAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalUnlockedAmount")).second;
+        totalConfiscatedAmountTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalConfiscatedAmount")).second;
         gridRow++;
 
         startRow = gridRow;
         addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.dashboard.market"), Layout.GROUP_DISTANCE);
-        priceTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.price"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        marketCapTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.marketCap")).second;
+        priceTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.price"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.marketCap")).second;
 
         gridRow = startRow;
         addTitledGroupBg(root, ++gridRow, columnIndex, 2, Res.get("dao.wallet.dashboard.genesis"), Layout.GROUP_DISTANCE);
@@ -130,19 +131,21 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", genesisTxId)));
 
         startRow = gridRow;
-        addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.dashboard.txDetails"), Layout.GROUP_DISTANCE);
-        allTxTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.allTx"),
+        TitledGroupBg titledGroupBgTxDetails = addTitledGroupBg(root, ++gridRow, 3, Res.get("dao.wallet.dashboard.txDetails"), Layout.GROUP_DISTANCE);
+        titledGroupBgTxDetails.getStyleClass().add("last");
+        allTxTextField = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.wallet.dashboard.allTx"),
                 genTxHeight, Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        utxoTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
-        compensationIssuanceTxTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow,
+        utxoTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.wallet.dashboard.utxo")).second;
+        compensationIssuanceTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.wallet.dashboard.compensationIssuanceTx")).second;
 
         gridRow = startRow;
-        addTitledGroupBg(root, ++gridRow, columnIndex, 3, "", Layout.GROUP_DISTANCE);
-        reimbursementIssuanceTxTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, columnIndex,
+        TitledGroupBg titledGroupBgReImbursement = addTitledGroupBg(root, ++gridRow, columnIndex, 3, "", Layout.GROUP_DISTANCE);
+        titledGroupBgReImbursement.getStyleClass().add("last");
+        reimbursementIssuanceTxTextField = addTopLabelReadOnlyTextField(root, gridRow, columnIndex,
                 Res.get("dao.wallet.dashboard.reimbursementIssuanceTx"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        burntTxTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
+        burntTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
                 Res.get("dao.wallet.dashboard.burntTx")).second;
         ++gridRow;
 
