@@ -179,8 +179,11 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                 .filter(myVote -> myVote.getRevealTxId() == null) // we have not already revealed
                 .forEach(myVote -> {
                     boolean isInVoteRevealPhase = periodService.getPhaseForHeight(chainHeight) == DaoPhase.Phase.VOTE_REVEAL;
+                    // If we would create the tx in the last block it would be confirmed in the best case in th next
+                    // block which would be already the break and would invalidate the vote reveal.
+                    boolean isNotLastBlockInPhase = chainHeight != periodService.getLastBlockOfPhase(chainHeight, DaoPhase.Phase.VOTE_REVEAL);
                     boolean isBlindVoteTxInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(myVote.getTxId(), DaoPhase.Phase.BLIND_VOTE, chainHeight);
-                    if (isInVoteRevealPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
+                    if (isInVoteRevealPhase && isNotLastBlockInPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
                         log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, myVote.getTxId());
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote, true);
