@@ -1440,6 +1440,7 @@ enum TxType {
     UNLOCK = 13;
     ASSET_LISTING_FEE = 14;
     PROOF_OF_BURN = 15;
+    IRREGULAR = 16;
 }
 
 message TxInput {

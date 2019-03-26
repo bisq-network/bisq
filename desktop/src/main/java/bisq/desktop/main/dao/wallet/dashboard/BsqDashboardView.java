@@ -65,7 +65,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private int gridRow = 0;
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField, availableAmountTextField,
             burntAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
-            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, allTxTextField, burntTxTextField,
+            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalInvalidatedAmountTextField, allTxTextField, burntTxTextField,
             utxoTextField, compensationIssuanceTxTextField,
             reimbursementIssuanceTxTextField, priceTextField, marketCapTextField;
     private ChangeListener<Number> priceChangeListener;
@@ -108,7 +108,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         totalUnlockingAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalUnlockingAmount")).second;
         totalUnlockedAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalUnlockedAmount")).second;
         totalConfiscatedAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalConfiscatedAmount")).second;
-        gridRow++;
+        totalInvalidatedAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex, Res.get("dao.wallet.dashboard.totalInvalidatedAmount")).second;
 
         startRow = gridRow;
         addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.wallet.dashboard.market"), Layout.GROUP_DISTANCE);
@@ -196,11 +196,17 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
         Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
-        availableAmount = issuedAmountFromGenesis
+        Coin totalUtxoAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnspentTxOutputs());
+
+        daoFacade.getTotalAmountOfConfiscatedTxOutputs();
+        availableAmount = totalUtxoAmount.subtract(totalConfiscatedAmount);
+
+        Coin totalAmount = issuedAmountFromGenesis
                 .add(issuedAmountFromCompRequests)
                 .add(issuedAmountFromReimbursementRequests)
                 .subtract(burntFee)
                 .subtract(totalConfiscatedAmount);
+        Coin totalInvalidatedAmount = totalAmount.subtract(availableAmount);
 
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
         burntAmountTextField.setText("-" + bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
@@ -208,6 +214,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         totalUnlockingAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockingAmount));
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         totalConfiscatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalConfiscatedAmount));
+        totalInvalidatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalInvalidatedAmount));
         allTxTextField.setText(String.valueOf(daoFacade.getTxs().size()));
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
         compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));

@@ -109,10 +109,15 @@ public class VoteResultConsensus {
             Optional<TxOutput> optionalBlindVoteStakeOutput = daoStateService.getConnectedTxOutput(stakeTxInput);
             checkArgument(optionalBlindVoteStakeOutput.isPresent(), "blindVoteStakeOutput must be present");
             TxOutput blindVoteStakeOutput = optionalBlindVoteStakeOutput.get();
-            checkArgument(blindVoteStakeOutput.getTxOutputType() == TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT,
-                    "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT but is " +
-                            blindVoteStakeOutput.getTxOutputType() + ". VoteRevealTx=" + voteRevealTx);
+            if (blindVoteStakeOutput.getTxOutputType() != TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT) {
+                String message = "blindVoteStakeOutput must be of type BLIND_VOTE_LOCK_STAKE_OUTPUT but is " +
+                        blindVoteStakeOutput.getTxOutputType();
+                log.warn(message + ". VoteRevealTx=" + voteRevealTx);
+                throw new VoteResultException.ValidationException(message + ". VoteRevealTxId=" + voteRevealTx.getId());
+            }
             return blindVoteStakeOutput;
+        } catch (VoteResultException.ValidationException t) {
+            throw t;
         } catch (Throwable t) {
             throw new VoteResultException.ValidationException(t);
         }

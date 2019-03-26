@@ -115,6 +115,8 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
             case PROOF_OF_BURN:
                 changeOutputIndex = 0;
                 break;
+            case IRREGULAR:
+                return;
             default:
                 return;
         }

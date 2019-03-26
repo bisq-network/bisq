@@ -56,6 +56,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
@@ -541,6 +542,11 @@ public class DaoFacade implements DaoSetupService {
 
     public long getTotalAmountOfConfiscatedTxOutputs() {
         return daoStateService.getTotalAmountOfConfiscatedTxOutputs();
+    }
+
+    public long getTotalAmountOfUnspentTxOutputs() {
+        // Does not consider confiscated outputs (they stay as utxo)
+        return daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
     }
 
     public Optional<Integer> getLockTime(String txId) {

@@ -26,7 +26,9 @@ import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -132,6 +134,22 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // We wait for processing messages until we have completed batch processing
         int fromHeight = daoStateService.getChainHeight() - 10;
         daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
+    }
+
+    @Override
+    public void onDaoStateChanged(Block block) {
+        long genesisTotalSupply = daoStateService.getGenesisTotalSupply().value;
+        long totalBurntFee = daoStateService.getTotalBurntFee();
+        long compensationIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.COMPENSATION);
+        long reimbursementIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT);
+        long totalConfiscatedAmount = daoStateService.getTotalAmountOfConfiscatedTxOutputs();
+        // confiscated funds are still in the utxo set
+        long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
+        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalBurntFee;
+
+        if (sumBsq != sumUtxo) {
+            throw new RuntimeException("There is a mismatch between the UTXO set and the DAO state. Please contact the Bisq devlopers.");
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

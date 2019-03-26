@@ -150,9 +150,13 @@ public class TxParser {
         //****************************************************************************************
 
         applyTxTypeAndTxOutputType(blockHeight, tempTx, remainingInputValue);
-
-        TxType txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
-        tempTx.setTxType(txType);
+        TxType txType;
+        if (tempTx.getTxType() != TxType.IRREGULAR && tempTx.getTxType() != TxType.INVALID) {
+            txType = evaluateTxType(tempTx, optionalOpReturnType, hasBurntBsq, unLockInputValid);
+            tempTx.setTxType(txType);
+        } else {
+            txType = tempTx.getTxType();
+        }
 
         if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
@@ -162,6 +166,9 @@ public class TxParser {
                 log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
                         burntBsq / 100D, tempTx);
             }
+        } else if (txType == TxType.IRREGULAR) {
+            log.warn("We have an irregular tx {}", tempTx);
+            txOutputParser.commitUTXOCandidates();
         } else {
             txOutputParser.commitUTXOCandidates();
         }
@@ -231,8 +238,8 @@ public class TxParser {
     private void processProposal(int blockHeight, TempTx tempTx, long bsqFee) {
         boolean isFeeAndPhaseValid = isFeeAndPhaseValid(tempTx.getId(), blockHeight, bsqFee, DaoPhase.Phase.PROPOSAL, Param.PROPOSAL_FEE);
         if (!isFeeAndPhaseValid) {
-            // TODO don't burn in such cases
-            tempTx.setTxType(TxType.INVALID);
+            // We tolerate such an incorrect tx and do not burn the BSQ
+            tempTx.setTxType(TxType.IRREGULAR);
         }
     }
 
@@ -249,17 +256,17 @@ public class TxParser {
                         "As the BSQ fee is set it must be either a buggy tx or an manually crafted invalid tx.");
                 // Even though the request part if invalid the BSQ transfer and change output should still be valid
                 // as long as the BSQ change <= BSQ inputs.
-                // TODO do we want to burn in such a case?
-                tempTx.setTxType(TxType.INVALID);
+                // We tolerate such an incorrect tx and do not burn the BSQ
+                tempTx.setTxType(TxType.IRREGULAR);
             }
         } else {
             // This could be a valid compensation request that failed to be included in a block during the
             // correct phase due to no fault of the user. Better not burn the change as long as the BSQ inputs
             // cover the value of the outputs.
-            // TODO don't burn in such cases
-            tempTx.setTxType(TxType.INVALID);
+            // We tolerate such an incorrect tx and do not burn the BSQ
+            tempTx.setTxType(TxType.IRREGULAR);
 
-            // TODO don't burn in such cases
+            // Make sure the optionalIssuanceCandidate is set the BTC
             optionalIssuanceCandidate.ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
             // valid BSQ tx.
@@ -269,11 +276,11 @@ public class TxParser {
     private void processBlindVote(int blockHeight, TempTx tempTx, long bsqFee) {
         boolean isFeeAndPhaseValid = isFeeAndPhaseValid(tempTx.getId(), blockHeight, bsqFee, DaoPhase.Phase.BLIND_VOTE, Param.BLIND_VOTE_FEE);
         if (!isFeeAndPhaseValid) {
-            // TODO don't burn in such cases
-            tempTx.setTxType(TxType.INVALID);
+            // We tolerate such an incorrect tx and do not burn the BSQ
+            tempTx.setTxType(TxType.IRREGULAR);
 
-            // TODO don't burn in such cases
-            txOutputParser.getOptionalBlindVoteLockStakeOutput().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
+            // Set the stake output from BLIND_VOTE_LOCK_STAKE_OUTPUT to BSQ
+            txOutputParser.getOptionalBlindVoteLockStakeOutput().ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BSQ_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
             // valid BSQ tx.
         }
@@ -374,7 +381,6 @@ public class TxParser {
             if (!isUnLockInputValid)
                 return TxType.INVALID;
 
-            // UNLOCK tx has no fee, no OpReturn
             return TxType.UNLOCK;
         }
 
@@ -393,9 +399,9 @@ public class TxParser {
                 boolean hasCorrectNumOutputs = tempTx.getTempTxOutputs().size() >= 3;
                 if (!hasCorrectNumOutputs) {
                     log.warn("Compensation/reimbursement request tx need to have at least 3 outputs");
-                    // This is not an issuance request but it should still not burn the BSQ change
-                    // TODO do we want to burn in such a case?
-                    return TxType.INVALID;
+                    // This is not a valid issuance tx
+                    // We tolerate such an incorrect tx and do not burn the BSQ
+                    return TxType.IRREGULAR;
                 }
 
                 TempTxOutput issuanceTxOutput = tempTx.getTempTxOutputs().get(1);
@@ -403,9 +409,9 @@ public class TxParser {
                 if (!hasIssuanceOutput) {
                     log.warn("Compensation/reimbursement request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
                             "TxOutputType={}", issuanceTxOutput.getTxOutputType());
-                    // This is not an issuance request but it should still not burn the BSQ change
-                    // TODO do we want to burn in such a case?
-                    return TxType.INVALID;
+                    // This is not a valid issuance tx
+                    // We tolerate such an incorrect tx and do not burn the BSQ
+                    return TxType.IRREGULAR;
                 }
 
                 return opReturnType == OpReturnType.COMPENSATION_REQUEST ?
@@ -423,8 +429,8 @@ public class TxParser {
                 return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
-                // TODO do we want to burn in such a case?
-                return TxType.INVALID;
+                // We tolerate such an incorrect tx and do not burn the BSQ
+                return TxType.IRREGULAR;
         }
     }
 }

@@ -45,7 +45,8 @@ public enum TxType implements ImmutableDaoStateModel {
     LOCKUP(true, false),
     UNLOCK(true, false),
     ASSET_LISTING_FEE(true, true),
-    PROOF_OF_BURN(true, true);
+    PROOF_OF_BURN(true, true),
+    IRREGULAR(true, true); // the params are here irrelevant as we can have any tx which violated the rules set to irregular
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
