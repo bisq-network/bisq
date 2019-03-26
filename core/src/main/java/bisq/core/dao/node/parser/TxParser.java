@@ -266,7 +266,7 @@ public class TxParser {
             // We tolerate such an incorrect tx and do not burn the BSQ
             tempTx.setTxType(TxType.IRREGULAR);
 
-            // Make sure the optionalIssuanceCandidate is set the BTC
+            // Make sure the optionalIssuanceCandidate is set to BTC
             optionalIssuanceCandidate.ifPresent(tempTxOutput -> tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT));
             // Empty Optional case is a possible valid case where a random tx matches our opReturn rules but it is not a
             // valid BSQ tx.
