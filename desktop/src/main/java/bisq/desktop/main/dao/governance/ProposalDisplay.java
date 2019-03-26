@@ -140,9 +140,10 @@ public class ProposalDisplay {
     private final ChangeListener<Object> inputListener;
     private ChangeListener<Param> paramChangeListener;
     private ChangeListener<BondedRoleType> requiredBondForRoleListener;
-    private TitledGroupBg titledGroupBg;
+    private TitledGroupBg myVoteTitledGroup;
     private int titledGroupBgRowSpan;
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
+    private int votingBoxRowSpan;
 
     public ProposalDisplay(GridPane gridPane,
                            BsqFormatter bsqFormatter,
@@ -176,6 +177,11 @@ public class ProposalDisplay {
 
     public void createAllFields(String title, int gridRowStartIndex, double top, ProposalType proposalType,
                                 boolean isMakeProposalScreen) {
+        createAllFields(title, gridRowStartIndex, top, proposalType, isMakeProposalScreen, null);
+    }
+    
+    public void createAllFields(String title, int gridRowStartIndex, double top, ProposalType proposalType,
+                                boolean isMakeProposalScreen, String titledGroupStyle) {
         removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
@@ -200,12 +206,26 @@ public class ProposalDisplay {
                 break;
         }
 
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, titledGroupBgRowSpan, title, top);
-        double proposalTypeTop = top == Layout.GROUP_DISTANCE ? Layout.FIRST_ROW_AND_GROUP_DISTANCE : Layout.FIRST_ROW_DISTANCE;
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, gridRow, titledGroupBgRowSpan, title, top);
+
+        if (titledGroupStyle != null) titledGroupBg.getStyleClass().add(titledGroupStyle);
+
+        double proposalTypeTop;
+
+        if (top == Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR) {
+            proposalTypeTop = Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE_WITHOUT_SEPARATOR;
+        } else if (top == Layout.GROUP_DISTANCE) {
+            proposalTypeTop = Layout.FIRST_ROW_AND_GROUP_DISTANCE;
+        } else if (top == 0) {
+            proposalTypeTop = Layout.FIRST_ROW_DISTANCE;
+        } else {
+            proposalTypeTop = Layout.FIRST_ROW_DISTANCE + top;
+        }
+
         proposalTypeTextField = addTopLabelTextField(gridPane, gridRow,
                 Res.get("dao.proposal.display.type"), proposalType.getDisplayName(), proposalTypeTop).second;
 
-        nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"), Layout.FIRST_ROW_DISTANCE);
+        nameTextField = addInputTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.name"));
         if (isMakeProposalScreen)
             nameTextField.setValidator(new InputValidator());
         inputControls.add(nameTextField);
@@ -317,7 +337,7 @@ public class ProposalDisplay {
                     }
                 });
                 comboBoxes.add(bondedRoleTypeComboBox);
-                requiredBondForRoleTextField = addTopLabelTextField(gridPane, ++gridRow,
+                requiredBondForRoleTextField = addTopLabelReadOnlyTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.requiredBondForRole.label")).second;
 
                 requiredBondForRoleListener = (observable, oldValue, newValue) -> {
@@ -398,15 +418,18 @@ public class ProposalDisplay {
             proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(daoFacade.getChainHeight())));
         }
 
-        Tuple3<Label, TextField, VBox> tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.myVote"));
+        votingBoxRowSpan = 4;
+
+        myVoteTitledGroup = addTitledGroupBg(gridPane, ++gridRow, 4, Res.get("dao.proposal.myVote.title"), Layout.COMPACT_FIRST_ROW_DISTANCE);
+
+        Tuple3<Label, TextField, VBox> tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.myVote"), Layout.COMPACT_FIRST_ROW_DISTANCE);
 
         myVoteBox = tuple3.third;
-        myVoteBox.setVisible(false);
-        myVoteBox.setManaged(false);
+        setMyVoteBoxVisibility(false);
 
         myVoteTextField = tuple3.second;
 
-        tuple3 = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.voteResult"));
+        tuple3 = addTopLabelReadOnlyTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.voteResult"));
 
         voteResultBox = tuple3.third;
         voteResultBox.setVisible(false);
@@ -427,12 +450,10 @@ public class ProposalDisplay {
         }
         myVoteTextField.setText(myVote);
 
-        myVoteBox.setVisible(isNotNull);
-        myVoteBox.setManaged(isNotNull);
+        setMyVoteBoxVisibility(isNotNull);
     }
 
     public void applyEvaluatedProposal(@Nullable EvaluatedProposal evaluatedProposal) {
-        GridPane.setRowSpan(titledGroupBg, titledGroupBgRowSpan + 1);
 
         boolean isEvaluatedProposalNotNull = evaluatedProposal != null;
         if (isEvaluatedProposalNotNull) {
@@ -468,11 +489,12 @@ public class ProposalDisplay {
             String myVoteSummary = Res.get("dao.proposal.myVote.summary", myVote,
                     weight, meritString, stakeString);
             myVoteTextField.setText(myVoteSummary);
+
+            GridPane.setRowSpan(myVoteTitledGroup, votingBoxRowSpan - 1);
         }
 
         boolean show = ballotIsNotNull && hasVoted;
-        myVoteBox.setVisible(show);
-        myVoteBox.setManaged(show);
+        setMyVoteBoxVisibility(show);
     }
 
     public void setIsVoteIncludedInResult(boolean isVoteIncludedInResult) {
@@ -657,5 +679,12 @@ public class ProposalDisplay {
         anchorPane.getChildren().add(gridPane);
 
         return scrollPane;
+    }
+
+    private void setMyVoteBoxVisibility(boolean visibility) {
+        myVoteTitledGroup.setVisible(visibility);
+        myVoteTitledGroup.setManaged(visibility);
+        myVoteBox.setVisible(visibility);
+        myVoteBox.setManaged(visibility);
     }
 }

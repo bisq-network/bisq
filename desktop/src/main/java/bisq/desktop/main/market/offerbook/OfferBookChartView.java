@@ -125,6 +125,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerOfferTableRow);
         return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + ((extraRows + 1) * pixelsPerOfferTableRow));
     };
+    private ChangeListener<Number> bisqWindowVerticalSizeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -141,12 +142,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @Override
     public void initialize() {
-        changeListener = c -> updateChartData();
-
-        currencyListItemsListener = c -> {
-            if (model.getSelectedCurrencyListItem().isPresent())
-                currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
-        };
+        createListener();
 
         final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
                 Res.get("list.currency.select"), 0);
@@ -268,6 +264,23 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         buyOfferTableView.setItems(model.getTopBuyOfferList());
         sellOfferTableView.setItems(model.getTopSellOfferList());
+
+        buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
+        sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
+
+        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
+
+        updateChartData();
+    }
+
+    private void createListener() {
+        changeListener = c -> updateChartData();
+
+        currencyListItemsListener = c -> {
+            if (model.getSelectedCurrencyListItem().isPresent())
+                currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+        };
+
         buyTableRowSelectionListener = (observable, oldValue, newValue) -> {
             model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
             navigation.navigateTo(MainView.class, SellOfferView.class);
@@ -276,19 +289,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
             navigation.navigateTo(MainView.class, BuyOfferView.class);
         };
-        buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
-        sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
 
-        ChangeListener<Number> bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
+        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
             double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
             if (buyOfferTableView.getHeight() != newTableViewHeight) {
                 buyOfferTableView.setMinHeight(newTableViewHeight);
                 sellOfferTableView.setMinHeight(newTableViewHeight);
             }
         };
-        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
-
-        updateChartData();
     }
 
     @Override

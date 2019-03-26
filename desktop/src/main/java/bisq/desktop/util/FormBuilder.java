@@ -1743,11 +1743,21 @@ public class FormBuilder {
     }
 
     public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText) {
-        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0);
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0, null);
+    }
+
+    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, String groupStyle) {
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0, groupStyle);
     }
 
     public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, int top) {
-        addTitledGroupBg(gridPane, rowIndex, 1, headerText, top);
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, top, null);
+    }
+
+    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, int top, String groupStyle) {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 1, headerText, top);
+
+        if (groupStyle != null) titledGroupBg.getStyleClass().add(groupStyle);
 
         TableView<T> tableView = new TableView<>();
         GridPane.setRowIndex(tableView, rowIndex);
