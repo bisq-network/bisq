@@ -183,7 +183,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                     // block which would be already the break and would invalidate the vote reveal.
                     boolean isLastBlockInPhase = chainHeight == periodService.getLastBlockOfPhase(chainHeight, DaoPhase.Phase.VOTE_REVEAL);
                     boolean isBlindVoteTxInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(myVote.getTxId(), DaoPhase.Phase.BLIND_VOTE, chainHeight);
-                    if (isInVoteRevealPhase && isNotLastBlockInPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
+                    if (isInVoteRevealPhase && !isLastBlockInPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
                         log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, myVote.getTxId());
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote, true);
