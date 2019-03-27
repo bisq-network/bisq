@@ -236,8 +236,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         bsqPriceChart.setLegendVisible(false);
         bsqPriceChart.setAnimated(false);
         bsqPriceChart.setId("charts-dao");
-        bsqPriceChart.setMinHeight(250);
-        bsqPriceChart.setPrefHeight(250);
+        bsqPriceChart.setMinHeight(385);
+        bsqPriceChart.setPrefHeight(385);
         bsqPriceChart.setCreateSymbols(true);
         bsqPriceChart.setPadding(new Insets(0));
         bsqPriceChart.getData().addAll(seriesBSQPrice);
