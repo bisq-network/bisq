@@ -29,6 +29,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
 
@@ -43,6 +44,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
@@ -57,7 +59,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
@@ -205,7 +206,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
             public String toString(Number timestamp) {
                 LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(timestamp.longValue(),
                         0, OffsetDateTime.now(ZoneId.systemDefault()).getOffset());
-                return localDateTime.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM));
+                return localDateTime.format(DateTimeFormatter.ofPattern("MMM uu", GlobalSettings.getLocale()));
             }
 
             @Override
@@ -236,19 +237,29 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         series.setName(seriesLabel);
 
         AreaChart<Number, Number> chart = new AreaChart<>(xAxis, yAxis);
-        chart.setLegendVisible(true);
+        chart.setLegendVisible(false);
         chart.setAnimated(false);
-        chart.setId("charts");
+        chart.setId("charts-dao");
         chart.setMinHeight(250);
         chart.setPrefHeight(250);
         chart.setCreateSymbols(true);
         chart.setPadding(new Insets(0));
         chart.getData().addAll(series);
 
-        GridPane.setColumnSpan(chart, 2);
-        GridPane.setRowIndex(chart, ++gridRow);
+        AnchorPane chartPane = new AnchorPane();
+        chartPane.getStyleClass().add("chart-pane");
 
-        root.getChildren().add(chart);
+        AnchorPane.setTopAnchor(chart, 15d);
+        AnchorPane.setBottomAnchor(chart, 10d);
+        AnchorPane.setLeftAnchor(chart, 25d);
+        AnchorPane.setRightAnchor(chart, 10d);
+
+        chartPane.getChildren().add(chart);
+
+        GridPane.setColumnSpan(chartPane, 2);
+        GridPane.setRowIndex(chartPane, ++gridRow);
+
+        root.getChildren().add(chartPane);
     }
 
     private void updateWithBsqBlockChainData() {

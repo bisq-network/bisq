@@ -47,6 +47,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
@@ -236,19 +237,29 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         seriesBSQPrice.setName("Price in BTC for 1 BSQ");
 
         bsqPriceChart = new AreaChart<>(xAxis, yAxis);
-        bsqPriceChart.setLegendVisible(true);
+        bsqPriceChart.setLegendVisible(false);
         bsqPriceChart.setAnimated(false);
-        bsqPriceChart.setId("charts");
+        bsqPriceChart.setId("charts-dao");
         bsqPriceChart.setMinHeight(250);
         bsqPriceChart.setPrefHeight(250);
         bsqPriceChart.setCreateSymbols(true);
         bsqPriceChart.setPadding(new Insets(0));
         bsqPriceChart.getData().addAll(seriesBSQPrice);
 
-        GridPane.setRowIndex(bsqPriceChart, ++gridRow);
-        GridPane.setColumnSpan(bsqPriceChart, 2);
+        AnchorPane chartPane = new AnchorPane();
+        chartPane.getStyleClass().add("chart-pane");
 
-        root.getChildren().addAll(bsqPriceChart);
+        AnchorPane.setTopAnchor(bsqPriceChart, 15d);
+        AnchorPane.setBottomAnchor(bsqPriceChart, 10d);
+        AnchorPane.setLeftAnchor(bsqPriceChart, 25d);
+        AnchorPane.setRightAnchor(bsqPriceChart, 10d);
+
+        chartPane.getChildren().add(bsqPriceChart);
+
+        GridPane.setRowIndex(chartPane, ++gridRow);
+        GridPane.setColumnSpan(chartPane, 2);
+
+        root.getChildren().addAll(chartPane);
     }
 
     private void updateChartData() {
