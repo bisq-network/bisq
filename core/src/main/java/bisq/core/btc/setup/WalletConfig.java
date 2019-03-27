@@ -437,6 +437,7 @@ public class WalletConfig extends AbstractIdleService {
                 int maxConnections = Math.min(numConnectionForBtc, peerAddresses.length);
                 log.info("We try to connect to {} btc nodes", maxConnections);
                 vPeerGroup.setMaxConnections(maxConnections);
+                vPeerGroup.setAddPeersFromAddressMessage(false);
                 peerAddresses = null;
             } else if (!params.equals(RegTestParams.get())) {
                 vPeerGroup.addPeerDiscovery(discovery != null ? discovery : new DnsDiscovery(params));
