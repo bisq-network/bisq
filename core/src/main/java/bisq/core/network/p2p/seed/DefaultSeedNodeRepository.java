@@ -78,7 +78,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
 
             // refill the cache
             seedNodeFile.lines().forEach(line -> {
-                final Matcher matcher = pattern.matcher(line);
+                Matcher matcher = pattern.matcher(line);
                 if (matcher.find())
                     cache.add(new NodeAddress(matcher.group(1)));
 
@@ -89,6 +89,8 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
 
             // filter
             cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
+
+            log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {
             log.error(t.toString());
             t.printStackTrace();
