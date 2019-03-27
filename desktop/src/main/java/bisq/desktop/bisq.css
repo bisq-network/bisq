@@ -2075,6 +2075,17 @@ textfield */
     -fx-text-fill: -bs-rd-error-red;
 }
 
+.dao-kpi-big {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-kpi-subtext {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-font-size: 0.923em;
+}
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                              *

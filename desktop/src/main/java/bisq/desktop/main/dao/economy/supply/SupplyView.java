@@ -122,7 +122,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         daoFacade.addBsqStateListener(this);
 
         updateWithBsqBlockChainData();
-        updateBSQTokenData();
     }
 
     @Override
@@ -258,6 +257,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
         GridPane.setColumnSpan(chartPane, 2);
         GridPane.setRowIndex(chartPane, ++gridRow);
+        GridPane.setMargin(chartPane, new Insets(10, 0, 0, 0));
 
         root.getChildren().add(chartPane);
     }
@@ -282,9 +282,11 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         totalUnlockingAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockingAmount));
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         totalConfiscatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalConfiscatedAmount));
+
+        updateCharts();
     }
 
-    private void updateBSQTokenData() {
+    private void updateCharts() {
         seriesBSQIssued.getData().clear();
         seriesBSQBurnt.getData().clear();
 

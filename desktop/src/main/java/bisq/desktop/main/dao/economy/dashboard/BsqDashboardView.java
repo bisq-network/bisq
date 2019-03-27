@@ -19,7 +19,6 @@ package bisq.desktop.main.dao.economy.dashboard;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
@@ -75,9 +74,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addLabelWithSubText;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
-import static bisq.desktop.util.Layout.FIRST_ROW_DISTANCE;
 
 
 
@@ -103,7 +101,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private XYChart.Series<Number, Number> seriesBSQAdded, seriesBSQBurnt;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
-    private TextField marketCapTextField, priceTextField, availableAmountTextField;
+    private TextField marketCapTextField, availableAmountTextField;
+    private Label marketPriceLabel;
 
     private Coin availableAmount;
 
@@ -143,14 +142,11 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private void createKPIs() {
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 5, Res.get("dao.factsAndFigures.dashboard.marketPrice"));
-        titledGroupBg.getStyleClass().add("last");
+        Tuple3<Label, Label, VBox> marketPriceBox = addLabelWithSubText(root, gridRow++, "0.004000 BSQ/BTC", "Latest BSQ/BTC trade price (in Bisq)");
+        marketPriceLabel = marketPriceBox.first;
+        marketPriceLabel.getStyleClass().add("dao-kpi-big");
 
-        Tuple3<Label, TextField, VBox> marketPriceTuple = addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.factsAndFigures.dashboard.price"),
-                FIRST_ROW_DISTANCE);
-        priceTextField = marketPriceTuple.second;
-
-        GridPane.setColumnSpan(marketPriceTuple.third, 2);
+        marketPriceBox.second.getStyleClass().add("dao-kpi-subtext");
 
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
@@ -258,6 +254,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         GridPane.setRowIndex(chartPane, ++gridRow);
         GridPane.setColumnSpan(chartPane, 2);
+        GridPane.setMargin(chartPane, new Insets(10, 0, 0, 0));
 
         root.getChildren().addAll(chartPane);
     }
@@ -310,13 +307,16 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
         if (optionalBsqPrice.isPresent()) {
             Price bsqPrice = optionalBsqPrice.get();
-            priceTextField.setText(bsqFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
+            marketPriceLabel.setText(bsqFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
 
             marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
                     priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),
                     availableAmount));
+
+            updateChartData();
+
         } else {
-            priceTextField.setText(Res.get("shared.na"));
+            marketPriceLabel.setText(Res.get("shared.na"));
             marketCapTextField.setText(Res.get("shared.na"));
         }
     }
