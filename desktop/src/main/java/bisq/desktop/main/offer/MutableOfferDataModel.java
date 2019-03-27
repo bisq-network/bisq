@@ -121,6 +121,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
     protected final ObjectProperty<Price> price = new SimpleObjectProperty<>();
     protected final ObjectProperty<Volume> volume = new SimpleObjectProperty<>();
+    protected final ObjectProperty<Volume> minVolume = new SimpleObjectProperty<>();
 
     // Percentage value of buyer security deposit. E.g. 0.01 means 1% of trade amount
     protected final DoubleProperty buyerSecurityDeposit = new SimpleDoubleProperty();
@@ -427,6 +428,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
             volume.set(null);
+            minVolume.set(null);
             price.set(null);
             marketPriceMargin = 0;
             preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
@@ -458,6 +460,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         if (tradeCurrency != null) {
             if (!this.tradeCurrency.equals(tradeCurrency)) {
                 volume.set(null);
+                minVolume.set(null);
                 price.set(null);
                 marketPriceMargin = 0;
             }
@@ -591,21 +594,44 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !amount.get().isZero() &&
                 !price.get().isZero()) {
             try {
-                Volume volumeByAmount = price.get().getVolumeByAmount(amount.get());
-
-                // For HalCash we want multiple of 10 EUR
-                if (isHalCashAccount())
-                    volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
-                else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
-                    volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+                Volume volumeByAmount = calculateVolumeForAmount(amount);
 
                 volume.set(volumeByAmount);
+
+                calculateMinVolume();
             } catch (Throwable t) {
                 log.error(t.toString());
             }
         }
 
         updateBalance();
+    }
+
+    void calculateMinVolume() {
+        if (price.get() != null &&
+                minAmount.get() != null &&
+                !minAmount.get().isZero() &&
+                !price.get().isZero()) {
+            try {
+                Volume volumeByAmount = calculateVolumeForAmount(minAmount);
+
+                minVolume.set(volumeByAmount);
+
+            } catch (Throwable t) {
+                log.error(t.toString());
+            }
+        }
+    }
+
+    private Volume calculateVolumeForAmount(ObjectProperty<Coin> minAmount) {
+        Volume volumeByAmount = price.get().getVolumeByAmount(minAmount.get());
+
+        // For HalCash we want multiple of 10 EUR
+        if (isHalCashAccount())
+            volumeByAmount = OfferUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+        else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
+            volumeByAmount = OfferUtil.getRoundedFiatVolume(volumeByAmount);
+        return volumeByAmount;
     }
 
     void calculateAmount() {
@@ -709,6 +735,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     ReadOnlyObjectProperty<Volume> getVolume() {
         return volume;
+    }
+
+    ReadOnlyObjectProperty<Volume> getMinVolume() {
+        return minVolume;
     }
 
     protected void setMinAmount(Coin minAmount) {

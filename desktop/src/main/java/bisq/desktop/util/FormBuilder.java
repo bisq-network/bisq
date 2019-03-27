@@ -141,6 +141,28 @@ public class FormBuilder {
         return label;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + Subtext
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, Label, VBox> addLabelWithSubText(GridPane gridPane, int rowIndex, String title, String description) {
+        return addLabelWithSubText(gridPane, rowIndex, title, description, 0);
+    }
+
+    public static Tuple3<Label, Label, VBox> addLabelWithSubText(GridPane gridPane, int rowIndex, String title, String description, double top) {
+        Label label = new AutoTooltipLabel(title);
+        Label subText = new AutoTooltipLabel(description);
+
+        VBox vBox = new VBox();
+        vBox.getChildren().setAll(label, subText);
+
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(vBox);
+
+        return new Tuple3<>(label, subText, vBox);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Multiline Label

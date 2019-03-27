@@ -61,6 +61,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -106,6 +107,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private TableView<OfferListItem> buyOfferTableView;
     private TableView<OfferListItem> sellOfferTableView;
     private AreaChart<Number, Number> areaChart;
+    private AnchorPane chartPane;
     private ComboBox<CurrencyListItem> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
@@ -154,6 +156,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         createChart();
 
+        VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
+
         Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferPayload.Direction.BUY);
         Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferPayload.Direction.SELL);
         buyOfferTableView = tupleBuy.first;
@@ -175,7 +179,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        root.getChildren().addAll(currencyComboBoxTuple.first, areaChart, bottomHBox);
+
+        root.getChildren().addAll(currencyComboBoxTuple.first, chartPane, bottomHBox);
     }
 
     @Override
@@ -334,11 +339,21 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setLegendVisible(false);
         areaChart.setAnimated(false);
         areaChart.setId("charts");
-        areaChart.setMinHeight(300);
-        areaChart.setPrefHeight(300);
-        areaChart.setCreateSymbols(false);
+        areaChart.setMinHeight(270);
+        areaChart.setPrefHeight(270);
+        areaChart.setCreateSymbols(true);
         areaChart.setPadding(new Insets(0, 10, 0, 10));
         areaChart.getData().addAll(seriesBuy, seriesSell);
+
+        chartPane = new AnchorPane();
+        chartPane.getStyleClass().add("chart-pane");
+
+        AnchorPane.setTopAnchor(areaChart, 15d);
+        AnchorPane.setBottomAnchor(areaChart, 10d);
+        AnchorPane.setLeftAnchor(areaChart, 10d);
+        AnchorPane.setRightAnchor(areaChart, 0d);
+
+        chartPane.getChildren().add(areaChart);
     }
 
     private void updateChartData() {

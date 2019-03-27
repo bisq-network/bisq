@@ -408,11 +408,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         createOfferButton.setDisable(true);
                         offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
                     })
-                    .closeButtonText(Res.get("offerbook.setupNewAccount"))
-                    .onClose(() -> {
+                    .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
+                    .onSecondaryAction(() -> {
                         navigation.setReturnPath(navigation.getCurrentPath());
                         navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
                     })
+                    .width(725)
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
             new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
