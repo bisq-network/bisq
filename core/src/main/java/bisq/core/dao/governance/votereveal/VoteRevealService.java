@@ -32,7 +32,6 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.PeriodService;
-import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -102,8 +101,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                              BsqWalletService bsqWalletService,
                              BtcWalletService btcWalletService,
                              P2PService p2PService,
-                             WalletsManager walletsManager,
-                             BsqNodeProvider bsqNodeProvider) {
+                             WalletsManager walletsManager) {
         this.daoStateService = daoStateService;
         this.blindVoteListService = blindVoteListService;
         this.periodService = periodService;
