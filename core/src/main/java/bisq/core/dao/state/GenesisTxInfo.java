@@ -52,9 +52,9 @@ public class GenesisTxInfo {
     private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1446300; // 2018-12-02
     private static final Coin TESTNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
-    private static final String DAO_TESTNET_GENESIS_TX_ID = "cb316a186b9e88d1b8e1ce8dc79cc6a2080cc7bbc6df94f2be325d8253417af1";
-    private static final int DAO_TESTNET_GENESIS_BLOCK_HEIGHT = 104; // 2019-02-19
-    private static final Coin DAO_TESTNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
+    private static final String DAO_REGTEST_GENESIS_TX_ID = "d594ad0c5de53e261b5784e5eb2acec8b807c45b74450401f488d36b8acf2e14";
+    private static final int DAO_REGTEST_GENESIS_BLOCK_HEIGHT = 104; // 2019-03-26
+    private static final Coin DAO_REGTEST_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
     private static final String DAO_BETANET_GENESIS_TX_ID = "0bd66d8ff26476b55dfaf2a5db0c659a5d8635566488244df25606db63a08bd9";
     private static final int DAO_BETANET_GENESIS_BLOCK_HEIGHT = 567405; // 2019-03-16
@@ -116,7 +116,7 @@ public class GenesisTxInfo {
         } else if (isTestnet) {
             this.genesisTxId = TESTNET_GENESIS_TX_ID;
         } else if (isDaoRegTest) {
-            this.genesisTxId = DAO_TESTNET_GENESIS_TX_ID;
+            this.genesisTxId = DAO_REGTEST_GENESIS_TX_ID;
         } else if (isDaoBetaNet) {
             this.genesisTxId = DAO_BETANET_GENESIS_TX_ID;
         } else if (isRegtest) {
@@ -132,7 +132,7 @@ public class GenesisTxInfo {
         } else if (isTestnet) {
             this.genesisBlockHeight = TESTNET_GENESIS_BLOCK_HEIGHT;
         } else if (isDaoRegTest) {
-            this.genesisBlockHeight = DAO_TESTNET_GENESIS_BLOCK_HEIGHT;
+            this.genesisBlockHeight = DAO_REGTEST_GENESIS_BLOCK_HEIGHT;
         } else if (isDaoBetaNet) {
             this.genesisBlockHeight = DAO_BETANET_GENESIS_BLOCK_HEIGHT;
         } else if (isRegtest) {
@@ -148,7 +148,7 @@ public class GenesisTxInfo {
         } else if (isTestnet) {
             this.genesisTotalSupply = TESTNET_GENESIS_TOTAL_SUPPLY.value;
         } else if (isDaoRegTest) {
-            this.genesisTotalSupply = DAO_TESTNET_GENESIS_TOTAL_SUPPLY.value;
+            this.genesisTotalSupply = DAO_REGTEST_GENESIS_TOTAL_SUPPLY.value;
         } else if (isDaoBetaNet) {
             this.genesisTotalSupply = DAO_BETANET_GENESIS_TOTAL_SUPPLY.value;
         } else if (isRegtest) {
