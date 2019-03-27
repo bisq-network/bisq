@@ -336,7 +336,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setId("charts");
         areaChart.setMinHeight(300);
         areaChart.setPrefHeight(300);
-        areaChart.setCreateSymbols(false);
+        areaChart.setCreateSymbols(true);
         areaChart.setPadding(new Insets(0, 10, 0, 10));
         areaChart.getData().addAll(seriesBuy, seriesSell);
     }

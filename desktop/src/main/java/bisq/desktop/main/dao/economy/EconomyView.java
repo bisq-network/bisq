@@ -9,7 +9,7 @@
  * Bisq is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details.
+ * License for more supply.
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
@@ -28,7 +28,8 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.economy.dashboard.BsqDashboardView;
-import bisq.desktop.main.dao.economy.details.DetailsView;
+import bisq.desktop.main.dao.economy.supply.SupplyView;
+import bisq.desktop.main.dao.economy.transactions.BSQTransactionsView;
 
 import bisq.core.locale.Res;
 
@@ -51,7 +52,7 @@ public class EconomyView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard, details;
+    private MenuItem dashboard, supply, transactions;
     private Navigation.Listener listener;
 
     @FXML
@@ -81,20 +82,24 @@ public class EconomyView extends ActivatableViewAndModel {
         toggleGroup = new ToggleGroup();
         List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, EconomyView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, baseNavPath);
-        details = new MenuItem(navigation, toggleGroup, Res.get("shared.details"), DetailsView.class, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard, details);
+        supply = new MenuItem(navigation, toggleGroup, Res.get("dao.factsAndFigures.menuItem.supply"), SupplyView.class, baseNavPath);
+        transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.factsAndFigures.menuItem.transactions"), BSQTransactionsView.class, baseNavPath);
+
+        leftVBox.getChildren().addAll(dashboard, supply, transactions);
 
         // TODO just until DAO is enabled
         if (!DevEnv.isDaoActivated()) {
             dashboard.setDisable(true);
-            details.setDisable(true);
+            supply.setDisable(true);
+            transactions.setDisable(true);
         }
     }
 
     @Override
     protected void activate() {
         dashboard.activate();
-        details.activate();
+        supply.activate();
+        transactions.activate();
 
         navigation.addListener(listener);
         ViewPath viewPath = navigation.getCurrentPath();
@@ -116,6 +121,8 @@ public class EconomyView extends ActivatableViewAndModel {
         navigation.removeListener(listener);
 
         dashboard.deactivate();
+        supply.deactivate();
+        transactions.deactivate();
     }
 
     private void loadView(Class<? extends View> viewClass) {
@@ -123,6 +130,7 @@ public class EconomyView extends ActivatableViewAndModel {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof BsqDashboardView) toggleGroup.selectToggle(dashboard);
-        else if (view instanceof DetailsView) toggleGroup.selectToggle(details);
+        else if (view instanceof SupplyView) toggleGroup.selectToggle(supply);
+        else if (view instanceof BSQTransactionsView) toggleGroup.selectToggle(transactions);
     }
 }

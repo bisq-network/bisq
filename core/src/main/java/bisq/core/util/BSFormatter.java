@@ -421,6 +421,10 @@ public class BSFormatter {
         }
     }
 
+    public String formatPrice(Price price, boolean appendCurrencyCode) {
+        return formatPrice(price, fiatPriceFormat, true);
+    }
+
     public String formatPrice(Price price) {
         return formatPrice(price, fiatPriceFormat, false);
     }
