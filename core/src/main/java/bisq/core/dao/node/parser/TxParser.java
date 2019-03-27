@@ -399,9 +399,8 @@ public class TxParser {
                 boolean hasCorrectNumOutputs = tempTx.getTempTxOutputs().size() >= 3;
                 if (!hasCorrectNumOutputs) {
                     log.warn("Compensation/reimbursement request tx need to have at least 3 outputs");
-                    // This is not a valid issuance tx
-                    // We tolerate such an incorrect tx and do not burn the BSQ
-                    return TxType.IRREGULAR;
+                    // Such a transaction cannot be created by the Bisq client and is considered invalid.
+                    return TxType.INVALID;
                 }
 
                 TempTxOutput issuanceTxOutput = tempTx.getTempTxOutputs().get(1);
@@ -409,9 +408,8 @@ public class TxParser {
                 if (!hasIssuanceOutput) {
                     log.warn("Compensation/reimbursement request txOutput type of output at index 1 need to be ISSUANCE_CANDIDATE_OUTPUT. " +
                             "TxOutputType={}", issuanceTxOutput.getTxOutputType());
-                    // This is not a valid issuance tx
-                    // We tolerate such an incorrect tx and do not burn the BSQ
-                    return TxType.IRREGULAR;
+                    // Such a transaction cannot be created by the Bisq client and is considered invalid.
+                    return TxType.INVALID;
                 }
 
                 return opReturnType == OpReturnType.COMPENSATION_REQUEST ?
