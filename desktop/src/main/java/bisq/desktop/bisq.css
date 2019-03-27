@@ -1682,17 +1682,21 @@ textfield */
  *                                                                                                                  *
  ********************************************************************************************************************/
 
-#charts .chart-legend {
+.chart-pane {
+    -fx-background-color: -bs-rd-white;
+}
+
+#charts .chart-legend, #charts-dao .chart-legend {
     -fx-font-size: 1.077em;
     -fx-alignment: center;
 }
 
-#charts .axis, #price-chart .axis, #volume-chart .axis {
+#charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
     -fx-tick-label-fill: -bs-rd-font-lighter;
     -fx-tick-label-font-size: 0.769em;
 }
 
-#charts .chart-plot-background {
+#charts .chart-plot-background, #charts-dao .chart-plot-background {
     -fx-background-color: -bs-rd-white;
 }
 
@@ -1700,7 +1704,7 @@ textfield */
     -fx-background-color: -bs-sell, -bs-rd-white;
 }
 
-#charts .default-color1.chart-area-symbol {
+#charts .default-color1.chart-area-symbol, #charts-dao .default-color0.chart-area-symbol {
     -fx-background-color: -bs-buy, -bs-rd-white;
 }
 
@@ -1708,7 +1712,7 @@ textfield */
     -fx-stroke: -bs-sell;
 }
 
-#charts .default-color1.chart-series-area-line {
+#charts .default-color1.chart-series-area-line, #charts-dao .default-color0.chart-series-area-line {
     -fx-stroke: -bs-buy;
 }
 
@@ -1716,7 +1720,7 @@ textfield */
     -fx-fill: -bs-sell-transparent;
 }
 
-#charts .default-color1.chart-series-area-fill {
+#charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
     -fx-fill: -bs-buy-transparent;
 }
 
@@ -2069,6 +2073,17 @@ textfield */
 
 .dao-inConflict {
     -fx-text-fill: -bs-rd-error-red;
+}
+
+.dao-kpi-big {
+    -fx-font-size: 1.923em;
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-kpi-subtext {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-font-size: 0.923em;
 }
 
 /********************************************************************************************************************
