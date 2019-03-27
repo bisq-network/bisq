@@ -99,7 +99,7 @@ public class RpcService {
         boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
         boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
         boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
-        boolean isDaoTestNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet();
+        boolean isDaoTestNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest();
         boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? "8332" :

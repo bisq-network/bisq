@@ -106,7 +106,7 @@ public class GenesisTxInfo {
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         boolean isMainnet = baseCurrencyNetwork.isMainnet();
         boolean isTestnet = baseCurrencyNetwork.isTestnet();
-        boolean isDaoTestNet = baseCurrencyNetwork.isDaoTestNet();
+        boolean isDaoRegTest = baseCurrencyNetwork.isDaoRegTest();
         boolean isDaoBetaNet = baseCurrencyNetwork.isDaoBetaNet();
         boolean isRegtest = baseCurrencyNetwork.isRegtest();
         if (!genesisTxId.isEmpty()) {
@@ -115,7 +115,7 @@ public class GenesisTxInfo {
             this.genesisTxId = MAINNET_GENESIS_TX_ID;
         } else if (isTestnet) {
             this.genesisTxId = TESTNET_GENESIS_TX_ID;
-        } else if (isDaoTestNet) {
+        } else if (isDaoRegTest) {
             this.genesisTxId = DAO_TESTNET_GENESIS_TX_ID;
         } else if (isDaoBetaNet) {
             this.genesisTxId = DAO_BETANET_GENESIS_TX_ID;
@@ -131,7 +131,7 @@ public class GenesisTxInfo {
             this.genesisBlockHeight = MAINNET_GENESIS_BLOCK_HEIGHT;
         } else if (isTestnet) {
             this.genesisBlockHeight = TESTNET_GENESIS_BLOCK_HEIGHT;
-        } else if (isDaoTestNet) {
+        } else if (isDaoRegTest) {
             this.genesisBlockHeight = DAO_TESTNET_GENESIS_BLOCK_HEIGHT;
         } else if (isDaoBetaNet) {
             this.genesisBlockHeight = DAO_BETANET_GENESIS_BLOCK_HEIGHT;
@@ -147,7 +147,7 @@ public class GenesisTxInfo {
             this.genesisTotalSupply = MAINNET_GENESIS_TOTAL_SUPPLY.value;
         } else if (isTestnet) {
             this.genesisTotalSupply = TESTNET_GENESIS_TOTAL_SUPPLY.value;
-        } else if (isDaoTestNet) {
+        } else if (isDaoRegTest) {
             this.genesisTotalSupply = DAO_TESTNET_GENESIS_TOTAL_SUPPLY.value;
         } else if (isDaoBetaNet) {
             this.genesisTotalSupply = DAO_BETANET_GENESIS_TOTAL_SUPPLY.value;
