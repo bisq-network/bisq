@@ -142,7 +142,7 @@ public enum Param {
                     "4" :       // regtest
                     BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet() ?
                             "144" :       // daoBetaNet; 1 day
-                            "134",      // testnet or dao regtest (server side regtest); 2.6 days
+                            "134",      // testnet or dao regtest (server side regtest); 0.93 days
             ParamType.BLOCK, 2, 2),
     PHASE_BREAK1(BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ?
             "149" :     // mainnet; 1 day
