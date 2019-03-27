@@ -227,7 +227,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 minAmount.set(amount.get());
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();
-                updateButtonDisableState();
                 setAmountToModel();
                 setMinAmountToModel();
                 setPriceToModel();
@@ -743,6 +742,18 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 Coin minAmountAsCoin = dataModel.getMinAmount().get();
                 syncMinAmountWithAmount = minAmountAsCoin != null && minAmountAsCoin.equals(dataModel.getAmount().get());
                 setMinAmountToModel();
+
+                dataModel.calculateMinVolume();
+
+                if (dataModel.getMinVolume().get() != null) {
+                    InputValidator.ValidationResult minVolumeResult = isVolumeInputValid(
+                            btcFormatter.formatVolume(dataModel.getMinVolume().get()));
+
+                    volumeValidationResult.set(minVolumeResult);
+
+                    updateButtonDisableState();
+                }
+
                 this.minAmount.set(btcFormatter.formatCoin(minAmountAsCoin));
 
                 if (!dataModel.isMinAmountLessOrEqualAmount()) {
@@ -1167,6 +1178,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 dataModel.getPrice().get() != null &&
                 dataModel.getPrice().get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&
+                isVolumeInputValid(btcFormatter.formatVolume(dataModel.getMinVolume().get())).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
 
         isNextButtonDisabled.set(!inputDataValid);
