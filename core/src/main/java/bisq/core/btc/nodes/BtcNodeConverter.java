@@ -23,7 +23,7 @@ import bisq.network.DnsLookupException;
 import bisq.network.DnsLookupTor;
 
 import org.bitcoinj.core.PeerAddress;
-import org.bitcoinj.net.OnionCat;
+import org.bitcoinj.net.OnionCatConverter;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -56,7 +56,7 @@ class BtcNodeConverter {
         // no DNS lookup for onion addresses
         String onionAddress = Objects.requireNonNull(node.getOnionAddress());
         try {
-            // OnionCat.onionHostToInetAddress converts onion to ipv6 representation
+            // OnionCatConverter.onionHostToInetAddress converts onion to ipv6 representation
             // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
             InetAddress inetAddress = facade.onionHostToInetAddress(onionAddress);
             PeerAddress result = new PeerAddress(onionAddress, node.getPort());
@@ -127,7 +127,7 @@ class BtcNodeConverter {
 
     static class Facade {
         InetAddress onionHostToInetAddress(String onionAddress) throws UnknownHostException {
-            return OnionCat.onionHostToInetAddress(onionAddress);
+            return OnionCatConverter.onionHostToInetAddress(onionAddress);
         }
 
         InetAddress torLookup(Socks5Proxy proxy, String host) throws DnsLookupException {
