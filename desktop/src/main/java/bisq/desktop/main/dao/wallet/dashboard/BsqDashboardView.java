@@ -202,7 +202,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
         Coin totalUtxoAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnspentTxOutputs());
 
-        daoFacade.getTotalAmountOfConfiscatedTxOutputs();
         availableAmount = totalUtxoAmount.subtract(totalConfiscatedAmount);
 
         Coin totalAmount = issuedAmountFromGenesis
