@@ -651,7 +651,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             case BTC_TESTNET:
             case BTC_REGTEST:
                 return prefPayload.getBlockChainExplorerTestNet();
-            case BTC_DAO_TESTNET:
+            case BTC_DAO_TESTNET2:
                 return BTC_DAO_TEST_NET_EXPLORERS.get(0);
             case BTC_DAO_BETANET:
                 return prefPayload.getBlockChainExplorerMainNet();
@@ -668,7 +668,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             case BTC_TESTNET:
             case BTC_REGTEST:
                 return BTC_TEST_NET_EXPLORERS;
-            case BTC_DAO_TESTNET:
+            case BTC_DAO_TESTNET2:
                 return BTC_DAO_TEST_NET_EXPLORERS;
             case BTC_DAO_BETANET:
                 return BTC_MAIN_NET_EXPLORERS;

@@ -28,7 +28,7 @@ public enum BaseCurrencyNetwork {
     BTC_MAINNET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"),
     BTC_TESTNET(TestNet3Params.get(), "BTC", "TESTNET", "Bitcoin"),
     BTC_REGTEST(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"),
-    BTC_DAO_TESTNET(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"), // server side regtest
+    BTC_DAO_TESTNET2(RegTestParams.get(), "BTC", "REGTEST", "Bitcoin"), // server side regtest
     BTC_DAO_BETANET(MainNetParams.get(), "BTC", "MAINNET", "Bitcoin"); // mainnet test genesis
 
     @Getter
@@ -56,7 +56,7 @@ public enum BaseCurrencyNetwork {
     }
 
     public boolean isDaoTestNet() {
-        return "BTC_DAO_TESTNET".equals(name());
+        return "BTC_DAO_TESTNET2".equals(name());
     }
 
     public boolean isDaoBetaNet() {
