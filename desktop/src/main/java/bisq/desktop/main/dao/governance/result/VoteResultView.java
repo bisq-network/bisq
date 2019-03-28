@@ -270,7 +270,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             item.getResultsOfCycle().getCycle().getHeightOfFirstBlock()))
                     .forEach(e -> {
                         sb.append("\n")
-                                .append(Res.getWithCol("dao.proposal.myVote.blindVoteTxId")).append(" ")
+                                .append(Res.getWithCol("shared.blindVoteTxId")).append(" ")
                                 .append(e.getBlindVoteTxId()).append("\n")
                                 .append(Res.getWithCol("dao.results.votes.table.header.stake")).append(" ")
                                 .append(bsqFormatter.formatCoinWithCode(Coin.valueOf(e.getStake()))).append("\n");

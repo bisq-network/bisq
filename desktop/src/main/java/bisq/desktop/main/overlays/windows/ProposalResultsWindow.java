@@ -3,14 +3,15 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.dao.governance.result.VoteListItem;
 import bisq.desktop.main.overlays.TabbedOverlay;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.proposal.param.ChangeParamValidator;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -24,6 +25,7 @@ import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -32,6 +34,7 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -47,8 +50,6 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.util.Optional;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
@@ -58,15 +59,8 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
 
     private final BsqFormatter bsqFormatter;
     private final DaoFacade daoFacade;
-    private final ChangeParamValidator changeParamValidator;
     private final Navigation navigation;
     private final Preferences preferences;
-    private Optional<Runnable> acceptHandlerOptional;
-    private Optional<Runnable> rejectHandlerOptional;
-    private Optional<Runnable> ignoreHandlerOptional;
-    private Optional<Runnable> removeHandlerOptional;
-    private EvaluatedProposal evaluatedProposal;
-    private Ballot ballot;
     private boolean isVoteIncludedInResult;
     private SortedList<VoteListItem> sortedVotes;
     private Tab proposalTab, votesTab;
@@ -76,12 +70,12 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProposalResultsWindow(BsqFormatter bsqFormatter, DaoFacade daoFacade,
-                                 ChangeParamValidator changeParamValidator, Navigation navigation,
+    public ProposalResultsWindow(BsqFormatter bsqFormatter,
+                                 DaoFacade daoFacade,
+                                 Navigation navigation,
                                  Preferences preferences) {
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
-        this.changeParamValidator = changeParamValidator;
         this.navigation = navigation;
         this.preferences = preferences;
     }
@@ -89,8 +83,6 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
     public void show(EvaluatedProposal evaluatedProposal, Ballot ballot,
                      boolean isVoteIncludedInResult, SortedList<VoteListItem> sortedVotes) {
 
-        this.evaluatedProposal = evaluatedProposal;
-        this.ballot = ballot;
         this.isVoteIncludedInResult = isVoteIncludedInResult;
         this.sortedVotes = sortedVotes;
 
@@ -166,10 +158,9 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
         votesTab.setContent(createVotesTable());
     }
 
-    private Button addCloseButton(GridPane gridPane, int rowIndex) {
+    private void addCloseButton(GridPane gridPane, int rowIndex) {
         Button closeButton = addButtonAfterGroup(gridPane, rowIndex, Res.get("shared.close"));
         closeButton.setOnAction(event -> doClose());
-        return closeButton;
     }
 
     private GridPane createVotesTable() {
@@ -191,7 +182,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
         GridPane.setColumnSpan(votesTableHeader, 2);
         votesGridPane.getChildren().add(votesTableHeader);
 
-        TableView votesTableView = new TableView<>();
+        TableView<VoteListItem> votesTableView = new TableView<>();
         votesTableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         votesTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -212,11 +203,12 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
     private void createColumns(TableView<VoteListItem> votesTableView) {
         TableColumn<VoteListItem, VoteListItem> column;
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.vote"));
-        column.setSortable(false);
-        column.setMinWidth(50);
-        column.setMaxWidth(column.getMinWidth());
+        column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.getStyleClass().add("first-column");
+        column.setSortable(false);
+        column.setMinWidth(180);
+        column.setMaxWidth(column.getMinWidth() + 20);
+
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -224,20 +216,49 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                     public TableCell<VoteListItem, VoteListItem> call(
                             TableColumn<VoteListItem, VoteListItem> column) {
                         return new TableCell<>() {
-                            private Label icon;
 
                             @Override
                             public void updateItem(final VoteListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    Tuple2<AwesomeIcon, String> iconStyleTuple = item.getIconStyleTuple();
-                                    icon = new Label();
-                                    AwesomeDude.setIcon(icon, iconStyleTuple.first);
-                                    icon.getStyleClass().add(iconStyleTuple.second);
-                                    setGraphic(icon);
+                                    setText(bsqFormatter.formatDateTime(item.getBlindVoteDate()));
+                                } else {
+                                    setText("");
+                                }
+                            }
+                        };
+                    }
+                });
+        votesTableView.getColumns().add(column);
+
+        column = new AutoTooltipTableColumn<>(Res.get("shared.blindVoteTxId"));
+        column.setSortable(false);
+        column.setMinWidth(100);
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<VoteListItem, VoteListItem> call(
+                            TableColumn<VoteListItem, VoteListItem> column) {
+                        return new TableCell<>() {
+
+                            private HyperlinkWithIcon hyperlinkWithIcon;
+
+                            @Override
+                            public void updateItem(final VoteListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    String transactionId = item.getBlindVoteTxId();
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
+                                    setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);
+                                    if (hyperlinkWithIcon != null)
+                                        hyperlinkWithIcon.setOnAction(null);
                                 }
                             }
                         };
@@ -267,6 +288,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                     }
                 });
         votesTableView.getColumns().add(column);
+
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.merit"));
         column.setSortable(false);
         column.setMinWidth(100);
@@ -293,7 +315,6 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
         column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.stake"));
         column.setSortable(false);
         column.setMinWidth(100);
-        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -313,6 +334,39 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                     }
                 });
         votesTableView.getColumns().add(column);
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.results.votes.table.header.vote"));
+        column.setSortable(false);
+        column.setMinWidth(50);
+        column.getStyleClass().add("last-column");
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<VoteListItem, VoteListItem> call(
+                            TableColumn<VoteListItem, VoteListItem> column) {
+                        return new TableCell<>() {
+                            private Label icon;
+
+                            @Override
+                            public void updateItem(final VoteListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    Tuple2<AwesomeIcon, String> iconStyleTuple = item.getIconStyleTuple();
+                                    icon = new Label();
+                                    AwesomeDude.setIcon(icon, iconStyleTuple.first);
+                                    icon.getStyleClass().add(iconStyleTuple.second);
+                                    setGraphic(icon);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        votesTableView.getColumns().add(column);
     }
 
     private void setupCloseKeyHandler(Scene scene) {
@@ -322,5 +376,10 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                 doClose();
             }
         });
+    }
+
+    private void openTxInBlockExplorer(VoteListItem item) {
+        if (item.getBlindVoteTxId() != null)
+            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getBlindVoteTxId(), false);
     }
 }

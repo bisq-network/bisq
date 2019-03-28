@@ -637,7 +637,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         voteFields.add(stakeInputTextField);
 
         Tuple3<Label, TxIdTextField, VBox> tuple = addTopLabelTxIdTextField(root, ++gridRow,
-                Res.get("dao.proposal.myVote.blindVoteTxId"), 0);
+                Res.get("shared.blindVoteTxId"), 0);
         blindVoteTxIdTextField = tuple.second;
         blindVoteTxIdContainer = tuple.third;
         blindVoteTxIdTextField.setBsq(true);
