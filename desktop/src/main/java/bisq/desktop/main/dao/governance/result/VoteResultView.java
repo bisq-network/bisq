@@ -272,10 +272,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 .append(Res.getWithCol("dao.results.votes.table.header.stake")).append(" ")
                                 .append(bsqFormatter.formatCoinWithCode(Coin.valueOf(e.getStake()))).append("\n");
                         e.getBallotList().stream().forEach(ballot -> {
-                            sb.append(Res.getWithCol("shared.name")).append(" ")
-                                    .append(ballot.getProposal().getName()).append("\n");
+                            sb.append(Res.getWithCol("dao.results.invalidVotes.proposal")).append("\n\t")
+                                    .append(Res.getWithCol("shared.name")).append(" ")
+                                    .append(ballot.getProposal().getName()).append("\n\t");
                             sb.append(Res.getWithCol("dao.bond.table.column.link")).append(" ")
-                                    .append(ballot.getProposal().getLink()).append("\n");
+                                    .append(ballot.getProposal().getLink()).append("\n\t");
                             Vote vote = ballot.getVote();
                             String voteString = vote == null ? Res.get("dao.proposal.display.myVote.ignored") :
                                     vote.isAccepted() ?
