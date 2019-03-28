@@ -358,29 +358,46 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
     private BallotList createBallotList(VoteWithProposalTxIdList voteWithProposalTxIdList)
             throws VoteResultException.MissingBallotException {
-        // We convert the list to a map with proposalTxId as key and the vote as value
-        Map<String, Vote> voteByTxIdMap = voteWithProposalTxIdList.stream()
-                .filter(voteWithProposalTxId -> voteWithProposalTxId.getVote() != null)
-                .collect(Collectors.toMap(VoteWithProposalTxId::getProposalTxId, VoteWithProposalTxId::getVote));
+        // voteWithProposalTxIdList is the list of ProposalTxId + vote from the blind vote (decrypted vote data)
 
-        // We make a map with proposalTxId as key and the ballot as value out of our stored ballot list
-        Map<String, Ballot> ballotByTxIdMap = ballotListService.getValidatedBallotList().stream()
+        // We convert the list to a map with proposalTxId as key and the vote as value. As the vote can be null we
+        // wrap it into an optional.
+        Map<String, Optional<Vote>> voteByTxIdMap = voteWithProposalTxIdList.stream()
+                .collect(Collectors.toMap(VoteWithProposalTxId::getProposalTxId, e -> Optional.ofNullable(e.getVote())));
+
+        // We make a map with proposalTxId as key and the ballot as value out of our stored ballot list.
+        // This can contain ballots which have been added later and have a null value for the vote.
+        Map<String, Ballot> ballotByTxIdMap = ballotListService.getValidBallotsOfCycle().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
 
+        // It could be that we missed some proposalPayloads.
+        // If we have votes with proposals which are not found in our ballots we add it to missingBallots.
         List<String> missingBallots = new ArrayList<>();
+
         List<Ballot> ballots = voteByTxIdMap.entrySet().stream()
                 .map(entry -> {
                     String txId = entry.getKey();
                     if (ballotByTxIdMap.containsKey(txId)) {
-                        // why not use proposalList?
                         Ballot ballot = ballotByTxIdMap.get(txId);
                         // We create a new Ballot with the proposal from the ballot list and the vote from our decrypted votes
-                        Vote vote = entry.getValue();
                         // We clone the ballot instead applying the vote to the existing ballot from ballotListService
                         // The items from ballotListService.getBallotList() contains my votes.
-                        // Maybe we should cross verify if the vote we had in our local list matches my own vote we
-                        // received from the network?
-                        return new Ballot(ballot.getProposal(), vote);
+
+                        if (ballot.getVote() != null) {
+                            // If we had set a vote it was an own active vote
+                            if (!entry.getValue().isPresent()) {
+                                log.warn("We found a local vote but don't have that vote in the data from the " +
+                                        "blind vote. ballot={}", ballot);
+                            }
+                            if (ballot.getVote() != entry.getValue().get()) {
+                                log.warn("We found a local vote but the vote from the " +
+                                                "blind vote does not match. ballot={}, vote from blindVote data={}",
+                                        ballot, entry.getValue().get());
+                            }
+                        }
+
+                        // We only return accpeted or rejected votes
+                        return entry.getValue().map(vote -> new Ballot(ballot.getProposal(), vote)).orElse(null);
                     } else {
                         // We got a vote but we don't have the ballot (which includes the proposal)
                         // We add it to the missing list to handle it as exception later. We want all missing data so we
@@ -395,6 +412,17 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
 
         if (!missingBallots.isEmpty())
             throw new VoteResultException.MissingBallotException(ballots, missingBallots);
+
+        // If we received a proposal after we had already voted we consider it as an proposla withhold attack and
+        // treat the proposal as it was voted with a rejected vote.
+        ballotByTxIdMap.entrySet().stream()
+                .filter(e -> !voteByTxIdMap.keySet().contains(e.getKey()))
+                .map(Map.Entry::getValue)
+                .forEach(ballot -> {
+                    log.warn("We have a proposal which was not part of our blind vote and reject it. " +
+                            "Proposal ={}" + ballot.getProposal());
+                    ballots.add(new Ballot(ballot.getProposal(), new Vote(false)));
+                });
 
         // Let's keep the data more deterministic by sorting it by txId. Though we are not using the sorting.
         ballots.sort(Comparator.comparing(Ballot::getTxId));
