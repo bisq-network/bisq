@@ -396,7 +396,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                             }
                         }
 
-                        // We only return accpeted or rejected votes
+                        // We only return accepted or rejected votes
                         return entry.getValue().map(vote -> new Ballot(ballot.getProposal(), vote)).orElse(null);
                     } else {
                         // We got a vote but we don't have the ballot (which includes the proposal)
