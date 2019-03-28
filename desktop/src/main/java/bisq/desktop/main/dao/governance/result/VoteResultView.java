@@ -127,7 +127,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final BsqFormatter bsqFormatter;
     private final MyProposalListService myProposalListService;
     private final MyBlindVoteListService myBlindVoteListService;
-    private ProposalResultsWindow proposalResultsWindow;
+    private final ProposalResultsWindow proposalResultsWindow;
+
     private Button exportButton;
 
     private int gridRow = 0;
@@ -192,6 +193,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         GridPane.setMargin(exportButton, new Insets(10, -10, -50, 0));
         GridPane.setColumnSpan(exportButton, 2);
         GridPane.setHalignment(exportButton, HPos.RIGHT);
+
+        proposalResultsWindow.onClose(() -> proposalsTableView.getSelectionModel().clearSelection());
     }
 
     @Override
