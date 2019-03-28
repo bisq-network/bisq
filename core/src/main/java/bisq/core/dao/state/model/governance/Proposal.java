@@ -143,7 +143,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     @Override
     public String toString() {
         return "Proposal{" +
-                "\n     uid='" + txId + '\'' +
+                "\n     txId='" + txId + '\'' +
                 ",\n     name='" + name + '\'' +
                 ",\n     link='" + link + '\'' +
                 ",\n     txId='" + txId + '\'' +
