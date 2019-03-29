@@ -128,6 +128,9 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
     private void addContent(Proposal proposal, EvaluatedProposal evaluatedProposal, Ballot ballot) {
         ProposalDisplay proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, daoFacade, changeParamValidator,
                 navigation, preferences);
+
+        proposalDisplay.onNavigate(this::doClose);
+
         proposalDisplay.createAllFields("", rowIndex, -Layout.FIRST_ROW_DISTANCE, proposal.getType(),
                 false, "last");
         proposalDisplay.setEditable(false);

@@ -952,6 +952,7 @@ textfield */
 }
 
 .hyperlink,
+.hyperlink.force-underline .text,
 .hyperlink:hover,
 .hyperlink:visited,
 .hyperlink:hover:visited,

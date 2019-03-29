@@ -127,7 +127,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private final BsqFormatter bsqFormatter;
     private final MyProposalListService myProposalListService;
     private final MyBlindVoteListService myBlindVoteListService;
-    private ProposalResultsWindow proposalResultsWindow;
+    private final ProposalResultsWindow proposalResultsWindow;
+
     private Button exportButton;
 
     private int gridRow = 0;
@@ -192,6 +193,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         GridPane.setMargin(exportButton, new Insets(10, -10, -50, 0));
         GridPane.setColumnSpan(exportButton, 2);
         GridPane.setHalignment(exportButton, HPos.RIGHT);
+
+        proposalResultsWindow.onClose(() -> proposalsTableView.getSelectionModel().clearSelection());
     }
 
     @Override
@@ -267,7 +270,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             item.getResultsOfCycle().getCycle().getHeightOfFirstBlock()))
                     .forEach(e -> {
                         sb.append("\n")
-                                .append(Res.getWithCol("dao.proposal.myVote.blindVoteTxId")).append(" ")
+                                .append(Res.getWithCol("shared.blindVoteTxId")).append(" ")
                                 .append(e.getBlindVoteTxId()).append("\n")
                                 .append(Res.getWithCol("dao.results.votes.table.header.stake")).append(" ")
                                 .append(bsqFormatter.formatCoinWithCode(Coin.valueOf(e.getStake()))).append("\n");

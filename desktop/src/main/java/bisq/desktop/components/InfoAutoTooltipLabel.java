@@ -19,12 +19,14 @@ package bisq.desktop.components;
 
 import bisq.common.UserThread;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.GlyphIcons;
+
 import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 
@@ -32,13 +34,9 @@ import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.getIcon;
 
-
-
-import de.jensd.fx.glyphs.GlyphIcons;
-
 public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
-    private Text textIcon;
+    private Node textIcon;
     private Boolean hidePopover;
     private PopOver infoPopover;
 
@@ -46,12 +44,23 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
         super(text);
 
         textIcon = getIcon(icon);
+        addIcon(contentDisplay, info, 300);
+    }
+
+    public InfoAutoTooltipLabel(String text, AwesomeIcon icon, ContentDisplay contentDisplay, String info, double width) {
+        super(text);
+
+        textIcon = getIcon(icon);
+        addIcon(contentDisplay, info, width);
+    }
+
+    private void addIcon(ContentDisplay contentDisplay, String info, double width) {
         textIcon.setOpacity(0.4);
 
         textIcon.setOnMouseEntered(e -> {
             hidePopover = false;
             final Label helpLabel = new Label(info);
-            helpLabel.setMaxWidth(300);
+            helpLabel.setMaxWidth(width);
             helpLabel.setWrapText(true);
             helpLabel.setPadding(new Insets(10));
             showInfoPopOver(helpLabel);
@@ -72,6 +81,7 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
         setGraphic(textIcon);
         setContentDisplay(contentDisplay);
     }
+
 
     private void showInfoPopOver(Node node) {
         node.getStyleClass().add("default-text");
