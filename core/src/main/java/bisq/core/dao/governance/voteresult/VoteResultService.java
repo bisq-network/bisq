@@ -395,7 +395,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                             }
                         }
 
-                        // We only return accpeted or rejected votes
+                        // We only return accepted or rejected votes
                         return entry.getValue().map(vote -> new Ballot(ballot.getProposal(), vote)).orElse(null);
                     } else {
                         // We got a vote but we don't have the ballot (which includes the proposal)
@@ -412,7 +412,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         if (!missingBallots.isEmpty())
             throw new VoteResultException.MissingBallotException(ballots, missingBallots);
 
-        // If we received a proposal after we had already voted we consider it as an proposla withhold attack and
+        // If we received a proposal after we had already voted we consider it as an proposal withhold attack and
         // treat the proposal as it was voted with a rejected vote.
         ballotByTxIdMap.entrySet().stream()
                 .filter(e -> !voteByTxIdMap.keySet().contains(e.getKey()))
