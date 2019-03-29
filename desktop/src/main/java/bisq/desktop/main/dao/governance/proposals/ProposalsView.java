@@ -54,6 +54,7 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -148,7 +149,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerProposalTableRow);
         return extraRows == 0 ? initialProposalTableViewHeight : Math.ceil(initialProposalTableViewHeight + (extraRows * pixelsPerProposalTableRow));
     };
-    private ChangeListener<Number> bisqWindowVerticalSizeListener;
+    private ChangeListener<Number> sceneHeightListener;
     private TableGroupHeadline proposalsHeadline;
 
 
@@ -187,14 +188,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         ballotListChangeListener = c -> updateListItems();
         proposalListChangeListener = c -> updateListItems();
 
-        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
-            double newTableViewHeight = proposalTableViewHeight.apply(newValue.doubleValue());
-            if (tableView.getHeight() != newTableViewHeight) {
-                tableView.setMinHeight(newTableViewHeight);
-                double diff = newTableViewHeight - tableView.getHeight();
-                proposalsHeadline.setMaxHeight(proposalsHeadline.getHeight() + diff);
-            }
-        };
+        sceneHeightListener = (observable, oldValue, newValue) -> updateTableHeight(newValue.doubleValue());
 
         stakeListener = (observable, oldValue, newValue) -> updateViews();
     }
@@ -225,10 +219,14 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 bsqWalletService.getUnlockingBondsBalance());
 
         updateListItems();
-        GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 4, 4);
+        tableView.setPrefHeight(100);
         updateViews();
 
-        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
+        updateListItems();
+        applyMerit();
+
+        root.getScene().heightProperty().addListener(sceneHeightListener);
+        UserThread.execute(() -> updateTableHeight(root.getScene().getHeight()));
     }
 
     @Override
@@ -589,6 +587,15 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private boolean isBlindVotePhaseButNotLastBlock() {
         return daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.BLIND_VOTE);
+    }
+
+    private void updateTableHeight(double height) {
+        double newTableViewHeight = proposalTableViewHeight.apply(height);
+        if (tableView.getHeight() != newTableViewHeight) {
+            tableView.setMinHeight(newTableViewHeight);
+            double diff = newTableViewHeight - tableView.getHeight();
+            proposalsHeadline.setMaxHeight(proposalsHeadline.getHeight() + diff);
+        }
     }
 
 
