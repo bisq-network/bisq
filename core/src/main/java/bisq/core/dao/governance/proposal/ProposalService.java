@@ -41,6 +41,8 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
@@ -52,6 +54,7 @@ import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -219,12 +222,14 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                 .filter(proposal -> validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
                 .map(ProposalPayload::new)
                 .forEach(proposalPayload -> {
-                    boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
-                    if (success)
-                        log.info("We published a ProposalPayload to the P2P network as append-only data. proposalTxId={}",
-                                proposalPayload.getProposal().getTxId());
-                    else
-                        log.warn("publishToAppendOnlyDataStore failed for proposal " + proposalPayload.getProposal());
+                    UserThread.runAfterRandomDelay(() -> {
+                        boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
+                        if (success)
+                            log.info("We published a ProposalPayload to the P2P network as append-only data. proposalTxId={}",
+                                    proposalPayload.getProposal().getTxId());
+                        else
+                            log.warn("publishToAppendOnlyDataStore failed for proposal " + proposalPayload.getProposal());
+                    }, 100, 5000, TimeUnit.MILLISECONDS);
                 });
     }
 
