@@ -355,13 +355,12 @@ public class ProposalDisplay {
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(Bond bond) {
-                        String bondDetails;
+                        String details = " (" + Res.get("dao.bond.table.column.lockupTxId") + ": " + bond.getLockupTxId() + ")";
                         if (bond instanceof BondedRole) {
-                            bondDetails = bond.getBondedAsset().getDisplayString();
+                            return bond.getBondedAsset().getDisplayString() + details;
                         } else {
-                            bondDetails = Res.get("dao.bond.bondedReputation");
+                            return Res.get("dao.bond.bondedReputation") + details;
                         }
-                        return bondDetails + " (" + Res.get("shared.id") + ": " + bond.getBondedAsset().getUid() + ")";
                     }
 
                     @Override
