@@ -63,7 +63,6 @@ import bisq.core.util.validation.UrlInputValidator;
 import bisq.asset.Asset;
 
 import bisq.common.util.Tuple3;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -87,6 +86,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -141,9 +141,10 @@ public class ProposalDisplay {
     private ChangeListener<Param> paramChangeListener;
     private ChangeListener<BondedRoleType> requiredBondForRoleListener;
     private TitledGroupBg myVoteTitledGroup;
-    private int titledGroupBgRowSpan;
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
     private int votingBoxRowSpan;
+
+    private Optional<Runnable> navigateHandlerOptional;
 
     public ProposalDisplay(GridPane gridPane,
                            BsqFormatter bsqFormatter,
@@ -179,30 +180,26 @@ public class ProposalDisplay {
                                 boolean isMakeProposalScreen) {
         createAllFields(title, gridRowStartIndex, top, proposalType, isMakeProposalScreen, null);
     }
-    
+
     public void createAllFields(String title, int gridRowStartIndex, double top, ProposalType proposalType,
                                 boolean isMakeProposalScreen, String titledGroupStyle) {
         removeAllFields();
         this.gridRowStartIndex = gridRowStartIndex;
         this.gridRow = gridRowStartIndex;
-        titledGroupBgRowSpan = 5;
+        int titledGroupBgRowSpan = 5;
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
             case REIMBURSEMENT_REQUEST:
+            case CONFISCATE_BOND:
+            case REMOVE_ASSET:
                 break;
             case CHANGE_PARAM:
-                titledGroupBgRowSpan = 6;
-                break;
             case BONDED_ROLE:
                 titledGroupBgRowSpan = 6;
                 break;
-            case CONFISCATE_BOND:
-                break;
             case GENERIC:
                 titledGroupBgRowSpan = 4;
-                break;
-            case REMOVE_ASSET:
                 break;
         }
 
@@ -358,16 +355,13 @@ public class ProposalDisplay {
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
                     public String toString(Bond bond) {
-                        String bondType;
                         String bondDetails;
                         if (bond instanceof BondedRole) {
-                            bondType = Res.get("dao.bond.bondedRoles");
                             bondDetails = bond.getBondedAsset().getDisplayString();
                         } else {
-                            bondType = Res.get("dao.bond.bondedReputation");
-                            bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
+                            bondDetails = Res.get("dao.bond.bondedReputation");
                         }
-                        return bondType + ": " + bondDetails;
+                        return bondDetails + " (" + Res.get("shared.id") + ": " + bond.getBondedAsset().getUid() + ")";
                     }
 
                     @Override
@@ -414,7 +408,6 @@ public class ProposalDisplay {
 
         if (isMakeProposalScreen) {
             proposalFeeTextField = addTopLabelTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.proposalFee")).second;
-            //noinspection ConstantConditions
             proposalFeeTextField.setText(bsqFormatter.formatCoinWithCode(daoFacade.getProposalFee(daoFacade.getChainHeight())));
         }
 
@@ -553,10 +546,13 @@ public class ProposalDisplay {
                     .ifPresent(bond -> {
                         confiscateBondComboBox.getSelectionModel().select(bond);
                         comboBoxValueTextField.setText(confiscateBondComboBox.getConverter().toString(bond));
-                        comboBoxValueTextField.setOnMouseClicked(e ->
-                                navigation.navigateToWithData(bond, MainView.class, DaoView.class, BondingView.class,
-                                        BondsView.class));
-                        comboBoxValueTextField.getStyleClass().addAll("hyperlink", "show-hand");
+                        comboBoxValueTextField.setOnMouseClicked(e -> {
+                            navigateHandlerOptional.ifPresent(Runnable::run);
+                            navigation.navigateToWithData(bond, MainView.class, DaoView.class, BondingView.class,
+                                    BondsView.class);
+                        });
+
+                        comboBoxValueTextField.getStyleClass().addAll("hyperlink", "force-underline", "show-hand");
                     });
         } else if (proposal instanceof GenericProposal) {
             // do nothing
@@ -649,6 +645,10 @@ public class ProposalDisplay {
 
         inputControls.clear();
         comboBoxes.clear();
+    }
+
+    public void onNavigate(Runnable navigateHandler) {
+        this.navigateHandlerOptional = Optional.of(navigateHandler);
     }
 
     public int incrementAndGetGridRow() {

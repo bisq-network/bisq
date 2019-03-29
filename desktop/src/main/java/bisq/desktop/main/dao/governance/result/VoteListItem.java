@@ -29,6 +29,7 @@ import org.bitcoinj.core.Coin;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import java.util.Date;
 import java.util.Optional;
 
 import lombok.Getter;
@@ -48,6 +49,8 @@ public class VoteListItem {
     private String blindVoteTxId = "";
     @Getter
     private String voteRevealTxId = "";
+    @Getter
+    private Date blindVoteDate;
 
     VoteListItem(Proposal proposal,
                  DecryptedBallotsWithMerits decryptedBallotsWithMerits,
@@ -62,6 +65,7 @@ public class VoteListItem {
             merit = decryptedBallotsWithMerits.getMerit(daoStateService);
             stake = decryptedBallotsWithMerits.getStake();
             blindVoteTxId = decryptedBallotsWithMerits.getBlindVoteTxId();
+            daoStateService.getTx(blindVoteTxId).ifPresent(tx -> blindVoteDate = new Date(tx.getTime()));
             voteRevealTxId = decryptedBallotsWithMerits.getVoteRevealTxId();
         }
     }

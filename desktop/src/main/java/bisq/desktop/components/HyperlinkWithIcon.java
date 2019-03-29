@@ -62,6 +62,10 @@ public class HyperlinkWithIcon extends Hyperlink {
         setIcon(textIcon);
     }
 
+    public void hideIcon() {
+        setGraphic(null);
+    }
+
     private void setIcon(Node icon) {
         setGraphic(icon);
 
