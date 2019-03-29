@@ -92,7 +92,8 @@ public final class RepublishGovernanceDataHandler {
     private void sendRepublishRequest(NodeAddress nodeAddress) {
         RepublishGovernanceDataRequest republishGovernanceDataRequest = new RepublishGovernanceDataRequest();
         if (timeoutTimer == null) {
-            timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
+            timeoutTimer = UserThread.runAfter(() -> {
+                        // setup before sending to avoid race conditions
                         if (!stopped) {
                             String errorMessage = "A timeout occurred at sending republishGovernanceDataRequest:" +
                                     " to nodeAddress:" + nodeAddress;
