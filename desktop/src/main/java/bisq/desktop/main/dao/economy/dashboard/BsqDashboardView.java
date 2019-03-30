@@ -293,12 +293,14 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
         Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
+        Coin burnedBsqOfAllInvalidTxs = Coin.valueOf(daoFacade.getBurnedBsqOfAllInvalidTxs());
 
         availableAmount = issuedAmountFromGenesis
                 .add(issuedAmountFromCompRequests)
                 .add(issuedAmountFromReimbursementRequests)
                 .subtract(burntFee)
-                .subtract(totalConfiscatedAmount);
+                .subtract(totalConfiscatedAmount)
+                .subtract(burnedBsqOfAllInvalidTxs);
 
         availableAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(availableAmount));
     }

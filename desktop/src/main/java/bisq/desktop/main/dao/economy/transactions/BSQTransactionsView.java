@@ -53,7 +53,8 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
     private int gridRow = 0;
     private TextField allTxTextField, burntTxTextField,
             utxoTextField, compensationIssuanceTxTextField,
-            reimbursementIssuanceTxTextField;
+            reimbursementIssuanceTxTextField,
+            invalidTxTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -108,7 +109,8 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         burntTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
                 Res.get("dao.factsAndFigures.transactions.burntTx")).second;
-
+        invalidTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
+                Res.get("dao.factsAndFigures.transactions.invalidTx")).second;
     }
 
     @Override
@@ -144,6 +146,7 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));
         reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));
         burntTxTextField.setText(String.valueOf(daoFacade.getFeeTxs().size()));
+        invalidTxTextField.setText(String.valueOf(daoFacade.getInvalidTxs().size()));
     }
 }
 

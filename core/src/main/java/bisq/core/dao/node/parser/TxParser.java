@@ -160,12 +160,12 @@ public class TxParser {
 
         if (isTxInvalid(tempTx, bsqOutputFound, hasBurntBond)) {
             tempTx.setTxType(TxType.INVALID);
+            // We consider all BSQ inputs as burned if the tx is invalid.
+            // It might be that the invalid tx had a BSQ fee. To avoid that we count the burned BSQ twice we set the
+            // burnedFee to 0.
+            tempTx.setBurntFee(0);
             txOutputParser.invalidateUTXOCandidates();
-
-            if (hasBurntBsq) {
-                log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}",
-                        burntBsq / 100D, tempTx);
-            }
+            log.warn("We have destroyed BSQ because of an invalid tx. Burned BSQ={}. tx={}", accumulatedInputValue / 100D, tempTx);
         } else if (txType == TxType.IRREGULAR) {
             log.warn("We have an irregular tx {}", tempTx);
             txOutputParser.commitUTXOCandidates();

@@ -544,6 +544,14 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getTotalAmountOfConfiscatedTxOutputs();
     }
 
+    public long getBurnedBsqOfAllInvalidTxs() {
+        return daoStateService.getBurnedBsqOfAllInvalidTxs();
+    }
+
+    public List<Tx> getInvalidTxs() {
+        return daoStateService.getInvalidTxs();
+    }
+
     public long getTotalAmountOfUnspentTxOutputs() {
         // Does not consider confiscated outputs (they stay as utxo)
         return daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
