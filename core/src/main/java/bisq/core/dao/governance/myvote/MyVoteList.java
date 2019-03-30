@@ -64,7 +64,7 @@ public class MyVoteList extends PersistableList<MyVote> {
     @Override
     public String toString() {
         return "List of TxId's in MyVoteList: " + getList().stream()
-                .map(MyVote::getTxId)
+                .map(MyVote::getBlindVoteTxId)
                 .collect(Collectors.toList());
     }
 }

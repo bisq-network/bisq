@@ -126,7 +126,7 @@ public class MyVote implements PersistablePayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getTxId() {
+    public String getBlindVoteTxId() {
         return blindVote.getTxId();
     }
 
