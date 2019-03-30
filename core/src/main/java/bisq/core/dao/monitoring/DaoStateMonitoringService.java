@@ -20,6 +20,7 @@ package bisq.core.dao.monitoring;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
+import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
@@ -39,6 +40,9 @@ import bisq.common.crypto.Hash;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.ArrayUtils;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -88,6 +92,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private boolean parseBlockChainComplete;
     @Getter
     private boolean isInConflict;
+    @Getter
+    private ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,13 +148,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         long totalBurntFee = daoStateService.getTotalBurntFee();
         long compensationIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.COMPENSATION);
         long reimbursementIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT);
-        long totalConfiscatedAmount = daoStateService.getTotalAmountOfConfiscatedTxOutputs();
+        long totalInvalidAmount = daoStateService.getBurnedBsqOfAllInvalidTxs();
         // confiscated funds are still in the utxo set
         long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
-        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalBurntFee;
+        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalBurntFee - totalInvalidAmount;
 
         if (sumBsq != sumUtxo) {
-            throw new RuntimeException("There is a mismatch between the UTXO set and the DAO state. Please contact the Bisq devlopers.");
+            utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
         }
     }
 

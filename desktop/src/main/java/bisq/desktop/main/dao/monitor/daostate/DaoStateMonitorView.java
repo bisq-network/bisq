@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.monitor.daostate;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.dao.monitor.StateMonitorView;
+import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
@@ -28,10 +29,15 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
+import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
+import bisq.common.util.Utilities;
+
 import javax.inject.Inject;
+
+import javafx.collections.ListChangeListener;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,6 +46,9 @@ import java.util.stream.Collectors;
 public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoStateBlock, DaoStateBlockListItem, DaoStateInConflictListItem>
         implements DaoStateMonitoringService.Listener {
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private ListChangeListener<UtxoMismatch> utxoMismatchListChangeListener;
+    private Overlay warningPopup;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -59,6 +68,8 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
     @Override
     public void initialize() {
+        utxoMismatchListChangeListener = c -> updateUtxoMismatches();
+
         FormBuilder.addTitledGroupBg(root, gridRow, 3, Res.get("dao.monitor.daoState.headline"));
 
         statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
@@ -71,7 +82,11 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     @Override
     protected void activate() {
         super.activate();
+
         daoStateMonitoringService.addListener(this);
+        daoStateMonitoringService.getUtxoMismatches().addListener(utxoMismatchListChangeListener);
+
+        updateUtxoMismatches();
 
         resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
                 new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
@@ -84,7 +99,9 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     @Override
     protected void deactivate() {
         super.deactivate();
+
         daoStateMonitoringService.removeListener(this);
+        daoStateMonitoringService.getUtxoMismatches().removeListener(utxoMismatchListChangeListener);
     }
 
 
@@ -184,5 +201,29 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     @Override
     protected void requestHashesFromGenesisBlockHeight(String peerAddress) {
         daoStateMonitoringService.requestHashesFromGenesisBlockHeight(peerAddress);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateUtxoMismatches() {
+        if (!daoStateMonitoringService.getUtxoMismatches().isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            daoStateMonitoringService.getUtxoMismatches().forEach(e -> {
+                sb.append("\n").append(Res.get("dao.monitor.daoState.utxoConflicts.blockHeight", e.getHeight())).append("\n")
+                        .append(Res.get("dao.monitor.daoState.utxoConflicts.sumUtxo", e.getSumUtxo() / 100)).append("\n")
+                        .append(Res.get("dao.monitor.daoState.utxoConflicts.sumBsq", e.getSumBsq() / 100));
+            });
+
+            if (warningPopup == null) {
+                warningPopup = new Popup<>().headLine(Res.get("dao.monitor.daoState.utxoConflicts"))
+                        .warning(Utilities.toTruncatedString(sb.toString(), 500, false)).onClose(() -> {
+                            warningPopup = null;
+                        });
+                warningPopup.show();
+            }
+        }
     }
 }
