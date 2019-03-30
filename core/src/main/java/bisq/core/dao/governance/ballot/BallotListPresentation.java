@@ -45,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BallotListPresentation implements BallotListService.BallotListChangeListener, DaoStateListener {
     private final BallotListService ballotListService;
     private final PeriodService periodService;
-    private final DaoStateService daoStateService;
     private final ProposalValidatorProvider proposalValidatorProvider;
 
     @Getter
@@ -65,31 +64,20 @@ public class BallotListPresentation implements BallotListService.BallotListChang
                                   ProposalValidatorProvider proposalValidatorProvider) {
         this.ballotListService = ballotListService;
         this.periodService = periodService;
-        this.daoStateService = daoStateService;
         this.proposalValidatorProvider = proposalValidatorProvider;
 
         daoStateService.addDaoStateListener(this);
         ballotListService.addListener(this);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onNewBlockHeight(int blockHeight) {
-        if (daoStateService.isParseBlockChainComplete()) {
-            ballotsOfCycle.setPredicate(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), blockHeight));
-        }
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
-        ballotsOfCycle.setPredicate(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), daoStateService.getChainHeight()));
-    }
-
-    @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        ballotsOfCycle.setPredicate(ballot -> periodService.isTxInCorrectCycle(ballot.getTxId(), block.getHeight()));
         onListChanged(ballotListService.getValidatedBallotList());
     }
 
