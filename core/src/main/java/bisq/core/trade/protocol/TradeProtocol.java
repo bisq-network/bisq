@@ -49,7 +49,7 @@ import static bisq.core.util.Validator.nonEmptyStringOf;
 
 @Slf4j
 public abstract class TradeProtocol {
-    private static final long TIMEOUT = 120;
+    private static final long TIMEOUT = 90;
 
     protected final ProcessModel processModel;
     private final DecryptedDirectMessageListener decryptedDirectMessageListener;
@@ -67,7 +67,7 @@ public abstract class TradeProtocol {
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-                log.trace("handleNewMessage: message = " + networkEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
+                log.trace("handleNewMessage: message = {} from {}", networkEnvelope.getClass().getSimpleName(), peersNodeAddress);
                 if (networkEnvelope instanceof TradeMessage) {
                     TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
                     nonEmptyStringOf(tradeMessage.getTradeId());
@@ -111,7 +111,6 @@ public abstract class TradeProtocol {
     }
 
     private void cleanup() {
-        log.debug("cleanup " + this);
         stopTimeout();
         trade.stateProperty().removeListener(stateChangeListener);
         // We removed that from here earlier as it broke the trade process in some non critical error cases.
@@ -120,7 +119,7 @@ public abstract class TradeProtocol {
     }
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
-        log.debug("applyMailboxMessage " + decryptedMessageWithPubKey.getNetworkEnvelope());
+        log.debug("applyMailboxMessage {}", decryptedMessageWithPubKey.getNetworkEnvelope());
         if (processModel.getTradingPeer().getPubKeyRing() != null &&
                 decryptedMessageWithPubKey.getSignaturePubKey().equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
             processModel.setDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
@@ -157,7 +156,7 @@ public abstract class TradeProtocol {
     }
 
     protected void handleTaskRunnerSuccess(@Nullable TradeMessage tradeMessage, String info) {
-        log.debug("handleTaskRunnerSuccess " + info);
+        log.debug("handleTaskRunnerSuccess {}", info);
 
         sendAckMessage(tradeMessage, true, null);
     }
@@ -231,7 +230,7 @@ public abstract class TradeProtocol {
 
     private void cleanupTradableOnFault() {
         final Trade.State state = trade.getState();
-        log.warn("cleanupTradableOnFault tradeState=" + state);
+        log.warn("cleanupTradableOnFault tradeState={}", state);
         TradeManager tradeManager = processModel.getTradeManager();
         if (trade.isInPreparation()) {
             // no funds left. we just clean up the trade list

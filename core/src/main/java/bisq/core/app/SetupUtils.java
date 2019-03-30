@@ -54,7 +54,6 @@ public class SetupUtils {
             public void run() {
                 try {
                     Thread.currentThread().setName("checkCryptoThread");
-                    log.trace("Run crypto test");
                     // just use any simple dummy msg
                     Ping payload = new Ping(1, 1);
                     SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
@@ -86,8 +85,7 @@ public class SetupUtils {
             Thread.currentThread().setName("readFromResourcesThread");
             // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
             final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
-            final String postFix = "_" + baseCurrencyNetwork.getCurrencyCode() + "_"
-                    + baseCurrencyNetwork.getNetwork();
+            final String postFix = "_" + baseCurrencyNetwork.name();
             long ts = new Date().getTime();
             p2PDataStorage.readFromResources(postFix);
             log.info("readFromResources took {} ms", (new Date().getTime() - ts));

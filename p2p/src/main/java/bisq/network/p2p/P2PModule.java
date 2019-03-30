@@ -19,6 +19,8 @@ package bisq.network.p2p;
 
 import bisq.network.NetworkOptionKeys;
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.ConnectionConfig;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BanList;
 import bisq.network.p2p.peers.Broadcaster;
@@ -64,9 +66,11 @@ public class P2PModule extends AppModule {
         bind(KeepAliveManager.class).in(Singleton.class);
         bind(Broadcaster.class).in(Singleton.class);
         bind(BanList.class).in(Singleton.class);
+        bind(ConnectionConfig.class).in(Singleton.class);
         bind(NetworkNode.class).toProvider(NetworkNodeProvider.class).in(Singleton.class);
-
         bind(Socks5ProxyProvider.class).in(Singleton.class);
+
+        requestStaticInjection(Connection.class);
 
         Boolean useLocalhostForP2P = environment.getProperty(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P, boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(NetworkOptionKeys.USE_LOCALHOST_FOR_P2P)).toInstance(useLocalhostForP2P);
@@ -84,7 +88,6 @@ public class P2PModule extends AppModule {
         Integer networkId = environment.getProperty(NetworkOptionKeys.NETWORK_ID, int.class, 1);
         bind(int.class).annotatedWith(Names.named(NetworkOptionKeys.NETWORK_ID)).toInstance(networkId);
         bindConstant().annotatedWith(named(NetworkOptionKeys.SEED_NODES_KEY)).to(environment.getRequiredProperty(NetworkOptionKeys.SEED_NODES_KEY));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.MY_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.MY_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.BAN_LIST)).to(environment.getRequiredProperty(NetworkOptionKeys.BAN_LIST));
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS));
         bindConstant().annotatedWith(named(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS)).to(environment.getRequiredProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS));
@@ -93,7 +96,11 @@ public class P2PModule extends AppModule {
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT));
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD));
         bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE)).to(environment.getRequiredProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE));
-        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)).to(environment.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE) ? true : false);
-        bindConstant().annotatedWith(named(NetworkOptionKeys.TOR_STREAM_ISOLATION)).to(environment.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION) ? true : false);
+        bindConstant().annotatedWith(named(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE)).to(environment.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.TOR_STREAM_ISOLATION)).to(environment.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC)).to(environment.getRequiredProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER)).to(environment.getRequiredProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER));
+        bindConstant().annotatedWith(named(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP)).to(environment.getRequiredProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP));
     }
 }

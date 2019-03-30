@@ -41,7 +41,7 @@ public abstract class BaseBlock implements ImmutableDaoStateModel {
     @Nullable // in case of first block in the blockchain
     protected final String previousBlockHash;
 
-    public BaseBlock(int height, long time, String hash, String previousBlockHash) {
+    protected BaseBlock(int height, long time, String hash, @SuppressWarnings("NullableProblems") String previousBlockHash) {
         this.height = height;
         this.time = time;
         this.hash = hash;
@@ -53,7 +53,7 @@ public abstract class BaseBlock implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.BaseBlock.Builder getBaseBlockBuilder() {
+    protected PB.BaseBlock.Builder getBaseBlockBuilder() {
         PB.BaseBlock.Builder builder = PB.BaseBlock.newBuilder()
                 .setHeight(height)
                 .setTime(time)

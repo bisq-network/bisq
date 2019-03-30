@@ -85,7 +85,7 @@ public class BtcNodes {
     }
 
     public boolean useProvidedBtcNodes() {
-        return BisqEnvironment.getBaseCurrencyNetwork().isBitcoin() && BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
+        return BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
     }
 
     public static List<BtcNodes.BtcNode> toBtcNodesList(Collection<String> nodes) {

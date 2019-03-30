@@ -61,6 +61,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -106,6 +107,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private TableView<OfferListItem> buyOfferTableView;
     private TableView<OfferListItem> sellOfferTableView;
     private AreaChart<Number, Number> areaChart;
+    private AnchorPane chartPane;
     private ComboBox<CurrencyListItem> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
@@ -125,6 +127,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerOfferTableRow);
         return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + ((extraRows + 1) * pixelsPerOfferTableRow));
     };
+    private ChangeListener<Number> bisqWindowVerticalSizeListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -141,12 +144,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @Override
     public void initialize() {
-        changeListener = c -> updateChartData();
-
-        currencyListItemsListener = c -> {
-            if (model.getSelectedCurrencyListItem().isPresent())
-                currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
-        };
+        createListener();
 
         final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
                 Res.get("list.currency.select"), 0);
@@ -157,6 +155,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 Res.get("shared.multipleOffers"), model.preferences));
 
         createChart();
+
+        VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
 
         Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferPayload.Direction.BUY);
         Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferPayload.Direction.SELL);
@@ -179,7 +179,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        root.getChildren().addAll(currencyComboBoxTuple.first, areaChart, bottomHBox);
+
+        root.getChildren().addAll(currencyComboBoxTuple.first, chartPane, bottomHBox);
     }
 
     @Override
@@ -268,6 +269,23 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         buyOfferTableView.setItems(model.getTopBuyOfferList());
         sellOfferTableView.setItems(model.getTopSellOfferList());
+
+        buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
+        sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
+
+        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
+
+        updateChartData();
+    }
+
+    private void createListener() {
+        changeListener = c -> updateChartData();
+
+        currencyListItemsListener = c -> {
+            if (model.getSelectedCurrencyListItem().isPresent())
+                currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+        };
+
         buyTableRowSelectionListener = (observable, oldValue, newValue) -> {
             model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
             navigation.navigateTo(MainView.class, SellOfferView.class);
@@ -276,19 +294,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
             navigation.navigateTo(MainView.class, BuyOfferView.class);
         };
-        buyOfferTableView.getSelectionModel().selectedItemProperty().addListener(buyTableRowSelectionListener);
-        sellOfferTableView.getSelectionModel().selectedItemProperty().addListener(sellTableRowSelectionListener);
 
-        ChangeListener<Number> bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
+        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
             double newTableViewHeight = offerTableViewHeight.apply(newValue.doubleValue());
             if (buyOfferTableView.getHeight() != newTableViewHeight) {
                 buyOfferTableView.setMinHeight(newTableViewHeight);
                 sellOfferTableView.setMinHeight(newTableViewHeight);
             }
         };
-        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
-
-        updateChartData();
     }
 
     @Override
@@ -326,11 +339,21 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setLegendVisible(false);
         areaChart.setAnimated(false);
         areaChart.setId("charts");
-        areaChart.setMinHeight(300);
-        areaChart.setPrefHeight(300);
-        areaChart.setCreateSymbols(false);
+        areaChart.setMinHeight(270);
+        areaChart.setPrefHeight(270);
+        areaChart.setCreateSymbols(true);
         areaChart.setPadding(new Insets(0, 10, 0, 10));
         areaChart.getData().addAll(seriesBuy, seriesSell);
+
+        chartPane = new AnchorPane();
+        chartPane.getStyleClass().add("chart-pane");
+
+        AnchorPane.setTopAnchor(areaChart, 15d);
+        AnchorPane.setBottomAnchor(areaChart, 10d);
+        AnchorPane.setLeftAnchor(areaChart, 10d);
+        AnchorPane.setRightAnchor(areaChart, 0d);
+
+        chartPane.getChildren().add(areaChart);
     }
 
     private void updateChartData() {

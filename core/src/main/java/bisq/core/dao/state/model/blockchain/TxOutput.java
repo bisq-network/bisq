@@ -61,16 +61,16 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload, Immuta
     // The unlockBlockHeight is stored in the first output of the UNLOCK tx.
     private final int unlockBlockHeight;
 
-    public TxOutput(int index,
-                    long value,
-                    String txId,
-                    @Nullable PubKeyScript pubKeyScript,
-                    @Nullable String address,
-                    @Nullable byte[] opReturnData,
-                    int blockHeight,
-                    TxOutputType txOutputType,
-                    int lockTime,
-                    int unlockBlockHeight) {
+    private TxOutput(int index,
+                     long value,
+                     String txId,
+                     @Nullable PubKeyScript pubKeyScript,
+                     @Nullable String address,
+                     @Nullable byte[] opReturnData,
+                     int blockHeight,
+                     TxOutputType txOutputType,
+                     int lockTime,
+                     int unlockBlockHeight) {
         super(index,
                 value,
                 txId,

@@ -24,10 +24,11 @@ import org.bitcoinj.core.Coin;
 public class CoinUtil {
 
     public static Coin getFeePerBtc(Coin feePerBtc, Coin amount) {
-        double feePerBtcAsDouble = (double) feePerBtc.value;
-        double amountAsDouble = (double) amount.value;
+        double feePerBtcAsDouble = feePerBtc != null ? (double) feePerBtc.value : 0;
+        double amountAsDouble = amount != null ? (double) amount.value : 0;
         double btcAsDouble = (double) Coin.COIN.value;
-        return Coin.valueOf(Math.round(feePerBtcAsDouble * (amountAsDouble / btcAsDouble)));
+        double fact = amountAsDouble / btcAsDouble;
+        return Coin.valueOf(Math.round(feePerBtcAsDouble * fact));
     }
 
     public static Coin minCoin(Coin a, Coin b) {
@@ -39,6 +40,27 @@ public class CoinUtil {
     }
 
     public static double getFeePerByte(Coin miningFee, int txSize) {
-        return MathUtils.roundDouble(((double) miningFee.value / (double) txSize), 2);
+        double value = miningFee != null ? miningFee.value : 0;
+        return MathUtils.roundDouble((value / (double) txSize), 2);
+    }
+
+    /**
+     * @param value Btc amount to be converted to percent value. E.g. 0.01 BTC is 1% (of 1 BTC)
+     * @return The percentage value as double (e.g. 1% is 0.01)
+     */
+    public static double getAsPercentPerBtc(Coin value) {
+        double asDouble = value != null ? (double) value.value : 0;
+        double btcAsDouble = (double) Coin.COIN.value;
+        return MathUtils.roundDouble(asDouble / btcAsDouble, 4);
+    }
+
+    /**
+     * @param percent       The percentage value as double (e.g. 1% is 0.01)
+     * @param amount        The amount as Coin for the percentage calculation
+     * @return The percentage as Coin (e.g. 1% of 1 BTC is 0.01 BTC)
+     */
+    public static Coin getPercentOfAmountAsCoin(double percent, Coin amount) {
+        double amountAsDouble = amount != null ? (double) amount.value : 0;
+        return Coin.valueOf(Math.round(percent * amountAsDouble));
     }
 }

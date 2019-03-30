@@ -81,7 +81,7 @@ public class TorRoundTripTime extends Metric {
                 }
 
                 // report
-                reporter.report(StatisticsHelper.process(samples), "bisq." + getName());
+                reporter.report(StatisticsHelper.process(samples), getName());
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block

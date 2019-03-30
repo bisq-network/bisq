@@ -23,20 +23,15 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import io.bisq.generated.protobuffer.PB;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-// TODO CapabilityRequiringPayload does only cover add data messages. We need a tool to avoid disconnections to old
-// nodes when they receive the NewBlockBroadcastMessage!
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class NewBlockBroadcastMessage extends BroadcastMessage implements CapabilityRequiringPayload {
@@ -70,9 +65,7 @@ public final class NewBlockBroadcastMessage extends BroadcastMessage implements 
     }
 
     @Override
-    public List<Integer> getRequiredCapabilities() {
-        return new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.BSQ_BLOCK.ordinal()
-        ));
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.BSQ_BLOCK);
     }
 }

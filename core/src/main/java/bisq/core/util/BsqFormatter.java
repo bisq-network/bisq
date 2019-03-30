@@ -18,8 +18,8 @@
 package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
@@ -120,6 +120,18 @@ public class BsqFormatter extends BSFormatter {
         }
     }
 
+    public String formatBSQSatoshis(long satoshi) {
+        return super.formatCoin(satoshi, coinFormat);
+    }
+
+    public String formatBSQSatoshisWithCode(long satoshi) {
+        return super.formatCoinWithCode(satoshi, coinFormat);
+    }
+
+    public String formatBTCSatoshis(long satoshi) {
+        return super.formatCoin(satoshi, btcCoinFormat);
+    }
+
     public String formatBTCWithCode(long satoshi) {
         return super.formatCoinWithCode(satoshi, btcCoinFormat);
     }
@@ -136,19 +148,19 @@ public class BsqFormatter extends BSFormatter {
         return super.parseToCoin(input, btcCoinFormat);
     }
 
-    public void validateBtcInput(String input) throws ValidationException {
+    public void validateBtcInput(String input) throws ProposalValidationException {
         validateCoinInput(input, btcCoinFormat);
     }
 
-    public void validateBsqInput(String input) throws ValidationException {
+    public void validateBsqInput(String input) throws ProposalValidationException {
         validateCoinInput(input, this.coinFormat);
     }
 
-    private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ValidationException {
+    private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ProposalValidationException {
         try {
             coinFormat.parse(cleanDoubleInput(input));
         } catch (Throwable t) {
-            throw new ValidationException("Invalid format for a " + coinFormat.code() + " value");
+            throw new ProposalValidationException("Invalid format for a " + coinFormat.code() + " value");
         }
     }
 
@@ -156,7 +168,7 @@ public class BsqFormatter extends BSFormatter {
         switch (param.getParamType()) {
             case UNDEFINED:
                 // In case we add a new param old clients will not know that enum and fall back to UNDEFINED.
-                return "";
+                return Res.get("shared.na");
             case BSQ:
                 return formatCoinWithCode(parseToCoin(value));
             case BTC:
@@ -168,7 +180,8 @@ public class BsqFormatter extends BSFormatter {
             case ADDRESS:
                 return value;
             default:
-                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+                log.warn("Param type {} not handled in switch case at formatParamValue", param.getParamType());
+                return Res.get("shared.na");
         }
     }
 
@@ -192,17 +205,16 @@ public class BsqFormatter extends BSFormatter {
         }
     }
 
-    public String parseParamValueToString(Param param, String inputValue) throws ValidationException {
+    public String parseParamValueToString(Param param, String inputValue) throws ProposalValidationException {
         switch (param.getParamType()) {
             case UNDEFINED:
-                throw new IllegalArgumentException("ParamType UNDEFINED. param: " + param);
+                return Res.get("shared.na");
             case BSQ:
                 return formatCoin(parseParamValueToCoin(param, inputValue));
             case BTC:
                 return formatBTC(parseParamValueToCoin(param, inputValue));
             case PERCENT:
                 return formatToPercent(parsePercentStringToDouble(inputValue));
-
             case BLOCK:
                 return Integer.toString(parseParamValueToBlocks(param, inputValue));
             case ADDRESS:
@@ -210,9 +222,10 @@ public class BsqFormatter extends BSFormatter {
                 if (validationResult.isValid)
                     return inputValue;
                 else
-                    throw new ValidationException(validationResult.errorMessage);
+                    throw new ProposalValidationException(validationResult.errorMessage);
             default:
-                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+                log.warn("Param type {} not handled in switch case at parseParamValueToString", param.getParamType());
+                return Res.get("shared.na");
         }
     }
 }

@@ -17,59 +17,85 @@
 
 package bisq.core.network.p2p.seed;
 
+import bisq.core.app.BisqEnvironment;
+
+import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
-import java.util.Set;
-import java.util.stream.Stream;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 public class DefaultSeedNodeRepository implements SeedNodeRepository {
-
-    private final Set<NodeAddress> seedNodeAddresses;
-    private final Set<NodeAddress> torSeedNodeAddresses;
-    private final Set<NodeAddress> localhostSeedNodeAddresses;
+    //TODO add support for localhost addresses
+    private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
+    private static final String ENDING = ".seednodes";
+    private static final Collection<NodeAddress> cache = new HashSet<>();
+    private final BisqEnvironment bisqEnvironment;
+    private final String seedNodes;
 
     @Inject
-    public DefaultSeedNodeRepository(SeedNodeAddressLookup lookup) {
-        this.seedNodeAddresses = lookup.resolveNodeAddresses();
-        this.torSeedNodeAddresses = DefaultSeedNodeAddresses.DEFAULT_TOR_SEED_NODE_ADDRESSES;
-        this.localhostSeedNodeAddresses = DefaultSeedNodeAddresses.DEFAULT_LOCALHOST_SEED_NODE_ADDRESSES;
+    public DefaultSeedNodeRepository(BisqEnvironment environment,
+                                     @Nullable @Named(NetworkOptionKeys.SEED_NODES_KEY) String seedNodes) {
+        bisqEnvironment = environment;
+        this.seedNodes = seedNodes;
     }
 
-    @Override
-    public Set<NodeAddress> getSeedNodeAddresses() {
-        return seedNodeAddresses;
-    }
+    private void reload() {
 
-    @Override
-    public String getOperator(NodeAddress nodeAddress) {
-        switch (nodeAddress.getFullAddress()) {
-            case "5quyxpxheyvzmb2d.onion:8000":
-                return "@miker";
-            case "ef5qnzx6znifo3df.onion:8000":
-                return "@manfredkarrer";
-            case "s67qglwhkgkyvr74.onion:8000":
-                return "@emzy";
-            case "jhgcy2won7xnslrb.onion:8000":
-                return "@manfredkarrer";
-            case "3f3cu2yw7u457ztq.onion:8000":
-                return "@manfredkarrer";
-            case "723ljisnynbtdohi.onion:8000":
-                return "@manfredkarrer";
-            case "rm7b56wbrcczpjvl.onion:8000":
-                return "@manfredkarrer";
-            case "fl3mmribyxgrv63c.onion:8000":
-                return "@manfredkarrer";
-            default:
-                return "Undefined";
+        // see if there are any seed nodes configured manually
+        if (seedNodes != null && !seedNodes.isEmpty()) {
+            cache.clear();
+            Arrays.stream(seedNodes.split(",")).forEach(s -> cache.add(new NodeAddress(s)));
+
+            return;
         }
+
+        // else, we fetch the seed nodes from our resources
+        final InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
+        final BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
+
+        // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
+        cache.clear();
+
+        // refill the cache
+        seedNodeFile.lines().forEach(line -> {
+            final Matcher matcher = pattern.matcher(line);
+            if (matcher.find())
+                cache.add(new NodeAddress(matcher.group(1)));
+
+            // Maybe better include in regex...
+            if (line.startsWith("localhost"))
+                cache.add(new NodeAddress(line));
+        });
+
+        // filter
+        cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
     }
 
-    @Override
+    public Collection<NodeAddress> getSeedNodeAddresses() {
+        if (cache.isEmpty())
+            reload();
+
+        return cache;
+    }
+
     public boolean isSeedNode(NodeAddress nodeAddress) {
-        return Stream.concat(localhostSeedNodeAddresses.stream(), torSeedNodeAddresses.stream())
-                .anyMatch(e -> e.equals(nodeAddress));
+        if (cache.isEmpty())
+            reload();
+        return cache.contains(nodeAddress);
     }
 }

@@ -52,6 +52,8 @@ public class SystemTray {
 
     private static final String ICON_HI_RES = "/images/system_tray_icon@2x.png";
     private static final String ICON_LO_RES = "/images/system_tray_icon.png";
+    private static final String ICON_HI_RES_WHITE = "/images/system_tray_icon@2x_white.png";
+    private static final String ICON_LO_RES_WHITE = "/images/system_tray_icon_white.png";
     private static final String ICON_WINDOWS_LO_RES = "/images/system_tray_icon_windows.png";
     private static final String ICON_WINDOWS_HI_RES = "/images/system_tray_icon_windows@2x.png";
     private static final String ICON_LINUX = "/images/system_tray_icon_linux.png";
@@ -97,7 +99,11 @@ public class SystemTray {
 
         String path;
         if (Utilities.isOSX())
-            path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
+            if (Utilities.isMacMenuBarDarkMode())
+                path = ImageUtil.isRetina() ? ICON_HI_RES_WHITE : ICON_LO_RES_WHITE;
+            else
+                path = ImageUtil.isRetina() ? ICON_HI_RES : ICON_LO_RES;
+
         else if (Utilities.isWindows())
             path = ImageUtil.isRetina() ? ICON_WINDOWS_HI_RES : ICON_WINDOWS_LO_RES;
         else
@@ -106,11 +112,16 @@ public class SystemTray {
         try {
             BufferedImage trayIconImage = ImageIO.read(getClass().getResource(path));
             TrayIcon trayIcon = new TrayIcon(trayIconImage);
-            // On Windows and Linux the icon needs to be scaled
+            // On Windows and Linux the icon needs to be resized
             // On macOS we get the correct size from the provided image
             if (!Utilities.isOSX()) {
-                int trayIconWidth = trayIcon.getSize().width;
-                trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
+                if (ImageUtil.isRetina()) {
+                    // Using auto sizing provides better results with high resolution
+                    trayIcon.setImageAutoSize(true);
+                } else {
+                    // Using scaling provides better results with low resolution
+                    trayIcon = new TrayIcon(trayIconImage.getScaledInstance(trayIcon.getSize().width, -1, Image.SCALE_SMOOTH));
+                }
             }
 
             trayIcon.setPopupMenu(popupMenu);

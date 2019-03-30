@@ -26,7 +26,10 @@ import bisq.common.app.Version;
 
 import io.bisq.generated.protobuffer.PB;
 
+import org.springframework.util.CollectionUtils;
+
 import java.util.Date;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -43,13 +46,15 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
 
     public RemoveAssetProposal(String name,
                                String link,
-                               String tickerSymbol) {
+                               String tickerSymbol,
+                               Map<String, String> extraDataMap) {
         this(name,
                 link,
                 tickerSymbol,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "");
+                "",
+                extraDataMap);
     }
 
 
@@ -62,12 +67,14 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                                 String tickerSymbol,
                                 byte version,
                                 long creationDate,
-                                String txId) {
+                                String txId,
+                                Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
                 creationDate,
-                txId);
+                txId,
+                extraDataMap);
 
         this.tickerSymbol = tickerSymbol;
     }
@@ -86,7 +93,9 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 proposalProto.getTickerSymbol(),
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
-                proto.getTxId());
+                proto.getTxId(),
+                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
+                        null : proto.getExtraDataMap());
     }
 
 
@@ -120,8 +129,9 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 getLink(),
                 getTickerSymbol(),
                 getVersion(),
-                getCreationDate().getTime(),
-                txId);
+                getCreationDate(),
+                txId,
+                extraDataMap);
     }
 
     @Override

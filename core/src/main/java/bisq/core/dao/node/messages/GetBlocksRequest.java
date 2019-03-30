@@ -21,14 +21,11 @@ import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import io.bisq.generated.protobuffer.PB;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -68,10 +65,8 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
     }
 
     @Override
-    public List<Integer> getRequiredCapabilities() {
-        return new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.DAO_FULL_NODE.ordinal()
-        ));
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.DAO_FULL_NODE);
     }
 
 

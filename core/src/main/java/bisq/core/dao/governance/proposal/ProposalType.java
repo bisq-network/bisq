@@ -20,6 +20,7 @@ package bisq.core.dao.governance.proposal;
 import bisq.core.locale.Res;
 
 public enum ProposalType {
+    UNDEFINED,
     COMPENSATION_REQUEST,
     REIMBURSEMENT_REQUEST,
     CHANGE_PARAM,

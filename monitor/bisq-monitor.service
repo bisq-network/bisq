@@ -1,0 +1,16 @@
+[Unit]
+Description=Bisq network monitor
+After=network.target
+
+[Service]
+WorkingDirectory=~
+Environment="JAVA_OPTS='-Xmx500M'"
+ExecStart=/home/bisq/bisq/bisq-monitor /home/bisq/monitor.properties
+ExecReload=/bin/kill -USR1 $MAINPID
+Restart=on-failure
+
+User=bisq
+Group=bisq
+
+[Install]
+WantedBy=multi-user.target

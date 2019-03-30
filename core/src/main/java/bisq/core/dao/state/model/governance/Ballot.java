@@ -18,7 +18,6 @@
 package bisq.core.dao.state.model.governance;
 
 import bisq.core.dao.governance.ConsensusCritical;
-import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
@@ -91,10 +90,6 @@ public final class Ballot implements PersistablePayload, ConsensusCritical, Immu
 
     public void setVote(@Nullable Vote vote) {
         this.vote = vote;
-    }
-
-    public ProposalType getType() {
-        return getProposal().getType();
     }
 
     public String getTxId() {

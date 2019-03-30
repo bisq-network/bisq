@@ -25,6 +25,7 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.wallet.Wallet;
 
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -110,16 +112,45 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             list = new ArrayList<>();
             add(new AddressEntry(wallet.freshReceiveKey(), AddressEntry.Context.ARBITRATOR));
 
-            // In case we restore from seed words and have balance we need to add the relevant addresses to our list:
+            // In case we restore from seed words and have balance we need to add the relevant addresses to our list.
+            // IssuedReceiveAddresses does not contain all addressed where we expect balance so we need to listen to
+            // incoming txs at blockchain sync to add the rest.
             if (wallet.getBalance().isPositive()) {
                 wallet.getIssuedReceiveAddresses().forEach(address -> {
-                    log.info("Create AddressEntry for address={}", address);
+                    log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
                     add(new AddressEntry((DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()), AddressEntry.Context.AVAILABLE));
                 });
             }
-
             persist();
         }
+
+        // We add those listeners to get notified about potential new transactions and
+        // add an address entry list in case it does not exist yet. This is mainly needed for restore from seed words
+        // but can help as well in case the addressEntry list would miss an address where the wallet was received
+        // funds (e.g. if the user sends funds to an address which has not been provided in the main UI - like from the
+        // wallet details window).
+        wallet.addCoinsReceivedEventListener((w, tx, prevBalance, newBalance) -> {
+            updateList(tx);
+        });
+        wallet.addCoinsSentEventListener((w, tx, prevBalance, newBalance) -> {
+            updateList(tx);
+        });
+    }
+
+    private void updateList(Transaction tx) {
+        tx.getOutputs().stream()
+                .filter(output -> output.isMine(wallet))
+                .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
+                .filter(Objects::nonNull)
+                .filter(address -> !listContainsEntryWithAddress(address.toBase58()))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
+                .filter(Objects::nonNull)
+                .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
+                .forEach(addressEntry -> list.add(addressEntry));
+    }
+
+    private boolean listContainsEntryWithAddress(String addressString) {
+        return list.stream().anyMatch(addressEntry -> Objects.equals(addressEntry.getAddressString(), addressString));
     }
 
     private boolean add(AddressEntry addressEntry) {

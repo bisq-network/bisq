@@ -17,8 +17,8 @@
 
 package bisq.core.dao.governance.blindvote;
 
-import bisq.core.dao.exceptions.ValidationException;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -53,22 +53,20 @@ public class BlindVoteValidator {
         }
     }
 
-    private void validateDataFields(BlindVote blindVote) throws ValidationException {
+    private void validateDataFields(BlindVote blindVote) throws ProposalValidationException {
         try {
             checkNotNull(blindVote.getEncryptedVotes(), "encryptedProposalList must not be null");
             checkArgument(blindVote.getEncryptedVotes().length > 0,
                     "encryptedProposalList must not be empty");
             checkNotNull(blindVote.getTxId(), "txId must not be null");
-            checkArgument(blindVote.getTxId().length() > 0, "txId must not be empty");
+            checkArgument(!blindVote.getTxId().isEmpty(), "txId must not be empty");
             checkArgument(blindVote.getStake() > 0, "stake must be positive");
             checkNotNull(blindVote.getEncryptedMeritList(), "getEncryptedMeritList must not be null");
             checkArgument(blindVote.getEncryptedMeritList().length > 0,
                     "getEncryptedMeritList must not be empty");
-
-            //TODO should we use a min/max for stake, atm its just dust limit as the min. value
         } catch (Throwable e) {
             log.warn(e.toString());
-            throw new ValidationException(e);
+            throw new ProposalValidationException(e);
         }
     }
 
@@ -80,7 +78,7 @@ public class BlindVoteValidator {
 
         // Check if tx is already confirmed and in DaoState
         boolean isConfirmed = daoStateService.getTx(blindVote.getTxId()).isPresent();
-        if (!isConfirmed)
+        if (daoStateService.isParseBlockChainComplete() && !isConfirmed)
             log.warn("blindVoteTx is not confirmed. blindVoteTxId={}", blindVote.getTxId());
 
         return isConfirmed;
@@ -105,25 +103,4 @@ public class BlindVoteValidator {
         }
         return true;
     }
-
-   /* public boolean isAppendOnlyPayloadValid(BlindVotePayload appendOnlyPayload,
-                                            int publishTriggerBlockHeight,
-                                            DaoStateService daoStateService) {
-        final Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(publishTriggerBlockHeight);
-        if (optionalBlock.isPresent()) {
-            final long blockTimeInMs = optionalBlock.get().getTime() * 1000L;
-            final long tolerance = TimeUnit.HOURS.toMillis(5);
-            final boolean isInTolerance = Math.abs(blockTimeInMs - appendOnlyPayload.getDate()) <= tolerance;
-            final String blockHash = Utilities.encodeToHex(appendOnlyPayload.getBlockHash());
-            final boolean isCorrectBlockHash = blockHash.equals(optionalBlock.get().getHash());
-            if (!isInTolerance)
-                log.warn("BlindVotePayload is not in time tolerance");
-            if (!isCorrectBlockHash)
-                log.warn("BlindVotePayload has not correct block hash");
-            return isInTolerance && isCorrectBlockHash;
-        } else {
-            log.debug("block at publishTriggerBlockHeight is not present.");
-            return false;
-        }
-    }*/
 }

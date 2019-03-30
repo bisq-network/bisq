@@ -132,7 +132,6 @@ public class CurrencyUtil {
         result.add(new CryptoCurrency("DASH", "Dash"));
         result.add(new CryptoCurrency("DCR", "Decred"));
         result.add(new CryptoCurrency("ETH", "Ether"));
-        result.add(new CryptoCurrency("GRC", "Gridcoin"));
         result.add(new CryptoCurrency("GRIN", "Grin"));
         result.add(new CryptoCurrency("LTC", "Litecoin"));
         result.add(new CryptoCurrency("XMR", "Monero"));
@@ -152,6 +151,9 @@ public class CurrencyUtil {
         currencies.add(new CryptoCurrency("SC", "SpaceCash"));
         currencies.add(new CryptoCurrency("PPI", "PiedPiper Coin"));
         currencies.add(new CryptoCurrency("PEPECASH", "Pepe Cash"));
+        currencies.add(new CryptoCurrency("GRC", "Gridcoin"));
+        currencies.add(new CryptoCurrency("LTZ", "LitecoinZ"));
+        currencies.add(new CryptoCurrency("ZOC", "01coin"));
         return currencies;
     }
 
@@ -381,7 +383,7 @@ public class CurrencyUtil {
         try {
             return Currency.getInstance(currencyCode).getDisplayName();
         } catch (Throwable t) {
-            log.debug("No currency name available " + t.getMessage());
+            log.debug("No currency name available {}", t.getMessage());
             return currencyCode;
         }
     }
@@ -420,8 +422,7 @@ public class CurrencyUtil {
     // We want all coins available also in testnet or regtest for testing purpose
     public static boolean coinMatchesNetworkIfMainnet(Coin coin, BaseCurrencyNetwork baseCurrencyNetwork) {
         boolean matchesNetwork = assetMatchesNetwork(coin, baseCurrencyNetwork);
-        return !baseCurrencyNetwork.isMainnet() ||
-                matchesNetwork;
+        return !baseCurrencyNetwork.isMainnet() || matchesNetwork;
     }
 
     private static CryptoCurrency assetToCryptoCurrency(Asset asset) {

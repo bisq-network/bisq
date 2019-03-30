@@ -49,7 +49,6 @@ public class TxParser {
     private final PeriodService periodService;
     private final DaoStateService daoStateService;
     private TxOutputParser txOutputParser;
-    private TxInputParser txInputParser;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +87,7 @@ public class TxParser {
         // Parse Inputs
         //****************************************************************************************
 
-        txInputParser = new TxInputParser(daoStateService);
+        TxInputParser txInputParser = new TxInputParser(daoStateService);
         for (int inputIndex = 0; inputIndex < tempTx.getTxInputs().size(); inputIndex++) {
             TxInput input = tempTx.getTxInputs().get(inputIndex);
             TxOutputKey outputKey = input.getConnectedTxOutputKey();
@@ -181,7 +180,6 @@ public class TxParser {
      * It verifies also if the fee is correct (if required) and if the phase is correct (if relevant).
      * We set the txType as well as the txOutputType of the relevant outputs.
      */
-    // TODO That method is not testable and still too complex.
     private void applyTxTypeAndTxOutputType(int blockHeight, TempTx tempTx, long bsqFee) {
         OpReturnType opReturnType = null;
         Optional<OpReturnType> optionalOpReturnType = txOutputParser.getOptionalOpReturnType();
@@ -300,7 +298,7 @@ public class TxParser {
         long paramValue = daoStateService.getParamValueAsCoin(param, blockHeight).value;
         boolean isFeeCorrect = bsqFee == paramValue;
         if (!isFeeCorrect) {
-            log.warn("Invalid fee. used fee={}, required fee={}", bsqFee, paramValue);
+            log.warn("Invalid fee. used fee={}, required fee={}, txId={}", bsqFee, paramValue, txId);
         }
         return isFeeCorrect;
     }

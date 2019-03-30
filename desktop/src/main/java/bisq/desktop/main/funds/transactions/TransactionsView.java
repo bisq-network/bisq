@@ -281,12 +281,12 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void openTxInBlockExplorer(TransactionsListItem item) {
         if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().txUrl + item.getTxId(), false);
     }
 
     private void openAddressInBlockExplorer(TransactionsListItem item) {
         if (item.getAddressString() != null) {
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString());
+            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
         }
     }
 

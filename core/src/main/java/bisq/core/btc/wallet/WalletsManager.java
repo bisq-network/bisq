@@ -19,6 +19,7 @@ package bisq.core.btc.wallet;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.crypto.ScryptUtil;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 
 import bisq.common.handlers.ExceptionHandler;
@@ -54,7 +55,10 @@ public class WalletsManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public WalletsManager(BtcWalletService btcWalletService, TradeWalletService tradeWalletService, BsqWalletService bsqWalletService, WalletsSetup walletsSetup) {
+    public WalletsManager(BtcWalletService btcWalletService,
+                          TradeWalletService tradeWalletService,
+                          BsqWalletService bsqWalletService,
+                          WalletsSetup walletsSetup) {
         this.btcWalletService = btcWalletService;
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -146,13 +150,13 @@ public class WalletsManager {
     }
 
     // A bsq tx has miner fees in btc included. Thus we need to handle it at both wallets.
-    public void publishAndCommitBsqTx(Transaction tx, TxBroadcaster.Callback callback) {
+    public void publishAndCommitBsqTx(Transaction tx, TxType txType, TxBroadcaster.Callback callback) {
         // We need to create another instance, otherwise the tx would trigger an invalid state exception
         // if it gets committed 2 times
         // We clone before commit to avoid unwanted side effects
         final Transaction clonedTx = btcWalletService.getClonedTransaction(tx);
         btcWalletService.commitTx(clonedTx);
-        bsqWalletService.commitTx(tx);
+        bsqWalletService.commitTx(tx, txType);
         bsqWalletService.broadcastTx(tx, callback);
     }
 }

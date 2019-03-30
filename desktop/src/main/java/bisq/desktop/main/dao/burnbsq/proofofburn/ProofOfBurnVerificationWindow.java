@@ -39,7 +39,7 @@ import java.security.SignatureException;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
-public class ProofOfBurnVerificationWindow extends Overlay<ProofOfBurnVerificationWindow> {
+class ProofOfBurnVerificationWindow extends Overlay<ProofOfBurnVerificationWindow> {
     private final ProofOfBurnService proofOfBurnService;
     private final String pubKey;
 
@@ -52,6 +52,7 @@ public class ProofOfBurnVerificationWindow extends Overlay<ProofOfBurnVerificati
         type = Type.Attention;
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void createGridPane() {
         gridPane = new GridPane();

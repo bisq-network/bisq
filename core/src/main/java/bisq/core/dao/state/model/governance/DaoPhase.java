@@ -26,6 +26,7 @@ import io.bisq.generated.protobuffer.PB;
 import java.util.Objects;
 
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
 
@@ -35,6 +36,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
+@Slf4j
 public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
 
     /**
@@ -77,7 +79,14 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
     }
 
     public static DaoPhase fromProto(PB.DaoPhase proto) {
-        return new DaoPhase(Phase.values()[proto.getPhaseOrdinal()], proto.getDuration());
+        int ordinal = proto.getPhaseOrdinal();
+        if (ordinal >= Phase.values().length) {
+            log.warn("We tried to access a ordinal outside of the DaoPhase.Phase enum bounds and set it to " +
+                    "UNDEFINED. ordinal={}", ordinal);
+            return new DaoPhase(Phase.UNDEFINED, 0);
+        }
+
+        return new DaoPhase(Phase.values()[ordinal], proto.getDuration());
     }
 
 

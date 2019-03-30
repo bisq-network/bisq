@@ -70,10 +70,10 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Role(String uid,
-                String name,
-                String link,
-                BondedRoleType bondedRoleType) {
+    private Role(String uid,
+                 String name,
+                 String link,
+                 BondedRoleType bondedRoleType) {
         this.uid = uid;
         this.name = name;
         this.link = link;

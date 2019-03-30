@@ -65,12 +65,15 @@ public class TakerSendPayDepositRequest extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            checkArgument(!walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
-                    "addressEntry must not be set here.");
+            checkArgument(walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG).isPresent(),
+                    "MULTI_SIG addressEntry must have been already set here.");
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
+
+            checkArgument(walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).isPresent(),
+                    "TRADE_PAYOUT addressEntry must have been already set here.");
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
 

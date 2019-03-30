@@ -25,7 +25,6 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 
@@ -95,7 +94,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishOnceWellConnected();
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
     }
 
 
@@ -130,13 +130,10 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void start() {
-    }
-
     // Broadcast tx and publish proposal to P2P network
     public void publishTxAndPayload(Proposal proposal, Transaction transaction, ResultHandler resultHandler,
                                     ErrorMessageHandler errorMessageHandler) {
-        walletsManager.publishAndCommitBsqTx(transaction, new TxBroadcaster.Callback() {
+        walletsManager.publishAndCommitBsqTx(transaction, proposal.getTxType(), new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("Proposal tx has been published. TxId={}", transaction.getHashAsString());
@@ -247,10 +244,5 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
         boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
         return isMine(proposal) && inPhase;
 
-    }
-
-    private boolean isTxInProposalPhaseAndCycle(Tx tx, PeriodService periodService, DaoStateService daoStateService) {
-        return periodService.isInPhase(tx.getBlockHeight(), DaoPhase.Phase.PROPOSAL) &&
-                periodService.isTxInCorrectCycle(tx.getBlockHeight(), daoStateService.getChainHeight());
     }
 }

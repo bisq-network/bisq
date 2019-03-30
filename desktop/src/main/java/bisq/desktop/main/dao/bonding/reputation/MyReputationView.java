@@ -144,7 +144,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bond.reputation.lockupButton"));
 
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.reputation.table.header"), 20);
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.reputation.table.header"), 20, "last");
         createColumns();
         tableView.setItems(sortedList);
 
@@ -189,6 +189,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         setNewRandomSalt();
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     @Override
@@ -215,13 +216,14 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
     }
 
 

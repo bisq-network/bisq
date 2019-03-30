@@ -41,6 +41,9 @@ import lombok.Value;
  * updated during parsing. If we would set then after the parsing the immutable block we might have inconsistent data.
  * There might be a way to do it but it comes with high complexity and risks so for now we prefer to have that known
  * issue with not being fully immutable at that level.
+ *
+ * An empty block (no BSQ txs) has 146 bytes in Protobuffer serialized form.
+ *
  */
 @EqualsAndHashCode(callSuper = true)
 @Value

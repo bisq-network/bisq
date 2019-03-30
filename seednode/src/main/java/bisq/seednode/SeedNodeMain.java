@@ -25,15 +25,18 @@ import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.setup.CommonSetup;
 
 import joptsimple.OptionSet;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "0.9.3";
+    private static final String VERSION = "0.9.5";
     private SeedNode seedNode;
 
     public SeedNodeMain() {
@@ -60,7 +63,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void addCapabilities() {
-        Capabilities.addCapability(Capabilities.Capability.SEED_NODE.ordinal());
+        Capabilities.app.addAll(Capability.SEED_NODE);
     }
 
     @Override

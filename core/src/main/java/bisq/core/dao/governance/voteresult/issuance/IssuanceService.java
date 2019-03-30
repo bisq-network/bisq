@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-//TODO case that user misses reveal phase not impl. yet
 
 @Slf4j
 public class IssuanceService {
@@ -72,27 +71,24 @@ public class IssuanceService {
                     // bsqWallet would show that spent state). We would need to support a spent status for the outputs
                     // which are interpreted as BTC (as a not yet accepted comp. request).
                     Optional<Tx> optionalTx = daoStateService.getTx(issuanceProposal.getTxId());
-                    if (optionalTx.isPresent()) {
-                        long amount = issuanceProposal.getRequestedBsq().value;
-                        Tx tx = optionalTx.get();
-                        // We use key from first input
-                        TxInput txInput = tx.getTxInputs().get(0);
-                        String pubKey = txInput.getPubKey();
-                        Issuance issuance = new Issuance(tx.getId(), chainHeight, amount, pubKey, issuanceType);
-                        daoStateService.addIssuance(issuance);
-                        daoStateService.addUnspentTxOutput(txOutput);
+                    checkArgument(optionalTx.isPresent(), "optionalTx must be present");
+                    long amount = issuanceProposal.getRequestedBsq().value;
+                    Tx tx = optionalTx.get();
+                    // We use key from first input
+                    TxInput txInput = tx.getTxInputs().get(0);
+                    String pubKey = txInput.getPubKey();
+                    Issuance issuance = new Issuance(tx.getId(), chainHeight, amount, pubKey, issuanceType);
+                    daoStateService.addIssuance(issuance);
+                    daoStateService.addUnspentTxOutput(txOutput);
 
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("\n################################################################################\n");
-                        sb.append("We issued new BSQ to tx with ID ").append(txOutput.getTxId())
-                                .append("\nIssued BSQ: ").append(issuanceProposal.getRequestedBsq())
-                                .append("\nIssuance type: ").append(issuanceType.name())
-                                .append("\n################################################################################\n");
-                        log.info(sb.toString());
-                    } else {
-                        //TODO throw exception
-                        log.error("Tx for compensation request not found. txId={}", issuanceProposal.getTxId());
-                    }
+                    @SuppressWarnings("StringBufferReplaceableByString")
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("\n################################################################################\n");
+                    sb.append("We issued new BSQ to tx with ID ").append(txOutput.getTxId())
+                            .append("\nIssued BSQ: ").append(issuanceProposal.getRequestedBsq())
+                            .append("\nIssuance type: ").append(issuanceType.name())
+                            .append("\n################################################################################\n");
+                    log.info(sb.toString());
                 });
     }
 

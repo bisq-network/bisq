@@ -141,6 +141,28 @@ public class FormBuilder {
         return label;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + Subtext
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Tuple3<Label, Label, VBox> addLabelWithSubText(GridPane gridPane, int rowIndex, String title, String description) {
+        return addLabelWithSubText(gridPane, rowIndex, title, description, 0);
+    }
+
+    public static Tuple3<Label, Label, VBox> addLabelWithSubText(GridPane gridPane, int rowIndex, String title, String description, double top) {
+        Label label = new AutoTooltipLabel(title);
+        Label subText = new AutoTooltipLabel(description);
+
+        VBox vBox = new VBox();
+        vBox.getChildren().setAll(label, subText);
+
+        GridPane.setRowIndex(vBox, rowIndex);
+        GridPane.setMargin(vBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(vBox);
+
+        return new Tuple3<>(label, subText, vBox);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Multiline Label
@@ -1618,7 +1640,7 @@ public class FormBuilder {
     public static Tuple2<Label, VBox> getTradeInputBox(Pane amountValueBox, String descriptionText) {
         Label descriptionLabel = new AutoTooltipLabel(descriptionText);
         descriptionLabel.setId("input-description-label");
-        descriptionLabel.setPrefWidth(170);
+        descriptionLabel.setPrefWidth(190);
 
         VBox box = new VBox();
         box.setPadding(new Insets(10, 0, 0, 0));
@@ -1743,11 +1765,21 @@ public class FormBuilder {
     }
 
     public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText) {
-        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0);
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0, null);
+    }
+
+    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, String groupStyle) {
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, 0, groupStyle);
     }
 
     public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, int top) {
-        addTitledGroupBg(gridPane, rowIndex, 1, headerText, top);
+        return addTableViewWithHeader(gridPane, rowIndex, headerText, top, null);
+    }
+
+    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, int top, String groupStyle) {
+        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 1, headerText, top);
+
+        if (groupStyle != null) titledGroupBg.getStyleClass().add(groupStyle);
 
         TableView<T> tableView = new TableView<>();
         GridPane.setRowIndex(tableView, rowIndex);

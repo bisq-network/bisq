@@ -35,6 +35,7 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.DaoPhase;
@@ -72,6 +73,7 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -143,7 +145,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void addListeners() {
-        daoStateService.addBsqStateListener(this);
+        daoStateService.addDaoStateListener(this);
+        p2PService.getNumConnectedPeers().addListener(numConnectedPeersListener);
     }
 
     @Override
@@ -207,7 +210,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             // blind vote stored and broadcasted to the p2p network. The tx might get re-broadcasted at a restart and
             // in worst case if it does not succeed the blind vote will be ignored anyway.
             // Inconsistently propagated blind votes in the p2p network could have potentially worse effects.
-            BlindVote blindVote = new BlindVote(encryptedVotes, blindVoteTxId, stake.value, encryptedMeritList);
+            BlindVote blindVote = new BlindVote(encryptedVotes,
+                    blindVoteTxId,
+                    stake.value,
+                    encryptedMeritList,
+                    new HashMap<>());
             addBlindVoteToList(blindVote);
 
             addToP2PNetwork(blindVote, errorMessage -> {
@@ -221,6 +228,8 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             publishTx(resultHandler, exceptionHandler, blindVoteTx);
         } catch (CryptoException | TransactionVerificationException | InsufficientMoneyException |
                 WalletException | IOException exception) {
+            log.error(exception.toString());
+            exception.printStackTrace();
             exceptionHandler.handleException(exception);
         }
     }
@@ -321,7 +330,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private void publishTx(ResultHandler resultHandler, ExceptionHandler exceptionHandler, Transaction blindVoteTx) {
         log.info("blindVoteTx={}", blindVoteTx.toString());
-        walletsManager.publishAndCommitBsqTx(blindVoteTx, new TxBroadcaster.Callback() {
+        walletsManager.publishAndCommitBsqTx(blindVoteTx, TxType.BLIND_VOTE, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("BlindVote tx published. txId={}", transaction.getHashAsString());
@@ -330,8 +339,6 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
             @Override
             public void onFailure(TxBroadcastException exception) {
-                // TODO handle
-                // We need to be sure that in case of a failed tx the locked stake gets unlocked!
                 exceptionHandler.handleException(exception);
             }
         });

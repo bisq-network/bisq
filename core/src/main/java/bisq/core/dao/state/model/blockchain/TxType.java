@@ -30,6 +30,7 @@ import javax.annotation.concurrent.Immutable;
 
 @Immutable
 public enum TxType implements ImmutableDaoStateModel {
+    UNDEFINED(false, false), // only fallback for backward compatibility in case we add a new value and old clients fall back to UNDEFINED
     UNDEFINED_TX_TYPE(false, false),
     UNVERIFIED(false, false),
     INVALID(false, false),

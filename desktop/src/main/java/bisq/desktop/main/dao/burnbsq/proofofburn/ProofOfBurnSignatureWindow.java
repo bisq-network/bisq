@@ -40,7 +40,7 @@ import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
-public class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWindow> {
+class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWindow> {
     private final ProofOfBurnService proofOfBurnService;
     private final String proofOfBurnTxId;
     private final String pubKey;
@@ -68,6 +68,7 @@ public class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWind
         display();
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void createGridPane() {
         gridPane = new GridPane();

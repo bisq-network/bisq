@@ -49,6 +49,7 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
@@ -337,8 +338,8 @@ public class DisputeManager implements PersistedDataHost {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
             if (!storedDisputeOptional.isPresent() || reOpen) {
                 String sysMsg = dispute.isSupportTicket() ?
-                        Res.get("support.youOpenedTicket", disputeInfo)
-                        : Res.get("support.youOpenedDispute", disputeInfo);
+                        Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
+                        : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                         dispute.getTradeId(),
@@ -450,7 +451,7 @@ public class DisputeManager implements PersistedDataHost {
         final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
         if (!storedDisputeOptional.isPresent()) {
             String sysMsg = dispute.isSupportTicket() ?
-                    Res.get("support.peerOpenedTicket")
+                    Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                     dispute.getTradeId(),

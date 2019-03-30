@@ -24,7 +24,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class CryptoCurrencyAccount extends PaymentAccount {
+public final class CryptoCurrencyAccount extends AssetAccount {
 
     public CryptoCurrencyAccount() {
         super(PaymentMethod.BLOCK_CHAINS);
@@ -33,13 +33,5 @@ public final class CryptoCurrencyAccount extends PaymentAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new CryptoCurrencyAccountPayload(paymentMethod.getId(), id);
-    }
-
-    public void setAddress(String address) {
-        ((CryptoCurrencyAccountPayload) paymentAccountPayload).setAddress(address);
-    }
-
-    public String getAddress() {
-        return ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
     }
 }

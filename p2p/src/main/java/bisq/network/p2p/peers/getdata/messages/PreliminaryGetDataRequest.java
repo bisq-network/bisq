@@ -28,7 +28,6 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,11 +44,11 @@ import javax.annotation.Nullable;
 public final class PreliminaryGetDataRequest extends GetDataRequest implements AnonymousMessage, SupportedCapabilitiesMessage {
     // ordinals of enum
     @Nullable
-    private final List<Integer> supportedCapabilities;
+    private final Capabilities supportedCapabilities;
 
     public PreliminaryGetDataRequest(int nonce,
                                      Set<byte[]> excludedKeys) {
-        this(nonce, excludedKeys, Capabilities.getSupportedCapabilities(), Version.getP2PMessageVersion());
+        this(nonce, excludedKeys, Capabilities.app, Version.getP2PMessageVersion());
     }
 
 
@@ -59,7 +58,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
 
     private PreliminaryGetDataRequest(int nonce,
                                       Set<byte[]> excludedKeys,
-                                      @Nullable List<Integer> supportedCapabilities,
+                                      @Nullable Capabilities supportedCapabilities,
                                       int messageVersion) {
         super(messageVersion, nonce, excludedKeys);
 
@@ -74,7 +73,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
 
-        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(supportedCapabilities));
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
 
         return getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
@@ -84,7 +83,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     public static PreliminaryGetDataRequest fromProto(PB.PreliminaryGetDataRequest proto, int messageVersion) {
         return new PreliminaryGetDataRequest(proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
-                proto.getSupportedCapabilitiesList().isEmpty() ? null : proto.getSupportedCapabilitiesList(),
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion);
     }
 }

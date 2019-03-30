@@ -24,7 +24,6 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
@@ -117,8 +116,6 @@ public class BroadcastHandler implements PeerManager.Listener {
         this.resultHandler = resultHandler;
         this.listener = listener;
 
-        Log.traceCall("Sender=" + sender + "\n\t" +
-                "Message=" + Utilities.toTruncatedString(message));
         Set<Connection> connectedPeersSet = networkNode.getConfirmedConnections()
                 .stream()
                 .filter(connection -> !connection.getPeersNodeAddressOptional().get().equals(sender))
@@ -170,15 +167,12 @@ public class BroadcastHandler implements PeerManager.Listener {
             if (!connection.isStopped()) {
                 if (connection.noCapabilityRequiredOrCapabilityIsSupported(message)) {
                     NodeAddress nodeAddress = connection.getPeersNodeAddressOptional().get();
-                    log.trace("Broadcast message to " + nodeAddress + ".");
                     SettableFuture<Connection> future = networkNode.sendMessage(connection, message);
                     Futures.addCallback(future, new FutureCallback<Connection>() {
                         @Override
                         public void onSuccess(Connection connection) {
                             numOfCompletedBroadcasts++;
                             if (!stopped) {
-                                log.trace("Broadcast to " + nodeAddress + " succeeded.");
-
                                 if (listener != null)
                                     listener.onBroadcasted(message, numOfCompletedBroadcasts);
 
@@ -211,8 +205,6 @@ public class BroadcastHandler implements PeerManager.Listener {
                             }
                         }
                     });
-                } else {
-                    log.debug("We did not send the message because the peer does not support our required capabilities. message={}, peers supportedCapabilities={}", Utilities.toTruncatedString(message, 200), connection.getSupportedCapabilities());
                 }
             } else {
                 onFault("Connection stopped already", false);

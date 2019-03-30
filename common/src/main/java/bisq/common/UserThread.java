@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * For JavaFX it is usually the Platform::RunLater executor, for a headless application it is any single threaded
  * executor.
  * Additionally sets a timer class so JavaFX and headless applications can set different timers (UITimer for JavaFX
- * otherwise we use teh default FrameRateTimer).
+ * otherwise we use the default FrameRateTimer).
  * <p>
  * Provides also methods for delayed and periodic executions.
  */

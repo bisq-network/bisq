@@ -24,6 +24,7 @@ import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
@@ -31,10 +32,6 @@ import bisq.common.util.Utilities;
 import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -111,10 +108,8 @@ public class ProposalPayload implements PersistableNetworkPayload, PersistableEn
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public List<Integer> getRequiredCapabilities() {
-        return new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.PROPOSAL.ordinal()
-        ));
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.PROPOSAL);
     }
 
     @Override

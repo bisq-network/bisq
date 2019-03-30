@@ -41,13 +41,6 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode
 @Slf4j
 public final class TxInput implements PersistablePayload, ImmutableDaoStateModel {
-
-    public static TxInput clone(TxInput txInput) {
-        return new TxInput(txInput.getConnectedTxOutputTxId(),
-                txInput.getConnectedTxOutputIndex(),
-                txInput.getPubKey());
-    }
-
     private final String connectedTxOutputTxId;
     private final int connectedTxOutputIndex;
     @Nullable

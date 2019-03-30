@@ -69,6 +69,10 @@ public class VoteResultException extends Exception {
             super("Validation of vote result failed.", cause);
         }
 
+        public ValidationException(String message) {
+            super(message);
+        }
+
         @Override
         public String toString() {
             return "VoteResultException{" +
@@ -78,7 +82,7 @@ public class VoteResultException extends Exception {
     }
 
     @EqualsAndHashCode(callSuper = true)
-    public static abstract class MissingDataException extends Exception {
+    static abstract class MissingDataException extends Exception {
         private MissingDataException(String message) {
             super(message);
         }

@@ -197,7 +197,6 @@ public abstract class WalletService {
 
     public static void checkWalletConsistency(Wallet wallet) throws WalletException {
         try {
-            log.trace("Check if wallet is consistent before commit.");
             checkNotNull(wallet);
             checkState(wallet.isConsistent());
         } catch (Throwable t) {
@@ -209,7 +208,6 @@ public abstract class WalletService {
 
     public static void verifyTransaction(Transaction transaction) throws TransactionVerificationException {
         try {
-            log.trace("Verify transaction " + transaction);
             transaction.verify();
         } catch (Throwable t) {
             t.printStackTrace();
@@ -226,7 +224,6 @@ public abstract class WalletService {
 
     public static void checkScriptSig(Transaction transaction, TransactionInput input, int inputIndex) throws TransactionVerificationException {
         try {
-            log.trace("Verifies that this script (interpreted as a scriptSig) correctly spends the given scriptPubKey. Check input at index: " + inputIndex);
             checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
             input.getScriptSig().correctlySpends(transaction, inputIndex, input.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
         } catch (Throwable t) {
@@ -411,8 +408,7 @@ public abstract class WalletService {
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // BalanceType.AVAILABLE
-    public Coin getAvailableBalance() {
+    public Coin getAvailableConfirmedBalance() {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
@@ -583,15 +579,12 @@ public abstract class WalletService {
         return wallet.getActiveKeyChain().findKeyFromPubKey(pubKey);
     }
 
-    public Address freshReceiveAddress() {
-        return wallet.freshReceiveAddress();
-    }
-
     public boolean isEncrypted() {
         return wallet.isEncrypted();
     }
 
     public List<Transaction> getRecentTransactions(int numTransactions, boolean includeDead) {
+        // Returns a list ordered by tx.getUpdateTime() desc
         return wallet.getRecentTransactions(numTransactions, includeDead);
     }
 
@@ -722,7 +715,7 @@ public abstract class WalletService {
                 if (balanceListener.getAddress() != null)
                     balance = getBalanceForAddress(balanceListener.getAddress());
                 else
-                    balance = getAvailableBalance();
+                    balance = getAvailableConfirmedBalance();
 
                 balanceListener.onBalanceChanged(balance, tx);
             }

@@ -80,6 +80,7 @@ import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.RevolutAccount;
+import bisq.core.payment.USPostalMoneyOrderAccount;
 import bisq.core.payment.WesternUnionAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
@@ -276,6 +277,13 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
+                        } else if (paymentAccount instanceof USPostalMoneyOrderAccount) {
+                            new Popup<>().information(Res.get("payment.usPostalMoneyOrder.info"))
+                                    .width(700)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .actionButtonText(Res.get("shared.iUnderstand"))
+                                    .onAction(() -> doSaveNewAccount(paymentAccount))
+                                    .show();
                         } else {
                             doSaveNewAccount(paymentAccount);
                         }
@@ -334,7 +342,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
-                .filter(paymentMethod -> !paymentMethod.getId().equals(PaymentMethod.BLOCK_CHAINS_ID))
+                .filter(paymentMethod -> !paymentMethod.isAsset())
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setConverter(new StringConverter<>() {

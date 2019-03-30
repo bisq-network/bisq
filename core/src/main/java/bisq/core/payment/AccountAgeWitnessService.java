@@ -126,7 +126,7 @@ public class AccountAgeWitnessService {
     private void republishAllFiatAccounts() {
         if (user.getPaymentAccounts() != null)
             user.getPaymentAccounts().stream()
-                    .filter(e -> !(e instanceof CryptoCurrencyAccount))
+                    .filter(e -> !(e instanceof AssetAccount))
                     .forEach(e -> {
                         // We delay with a random interval of 20-60 sec to ensure to be better connected and don't stress the
                         // P2P network with publishing all at once at startup time.
@@ -329,7 +329,7 @@ public class AccountAgeWitnessService {
 
         // Check if the peers trade limit is not less than the trade amount
         if (!verifyPeersTradeLimit(trade, peersWitness, peersCurrentDate, errorMessageHandler)) {
-            log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload " + peersPaymentAccountPayload);
+            log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload {}", peersPaymentAccountPayload);
             return false;
         }
         // Check if the signature is correct

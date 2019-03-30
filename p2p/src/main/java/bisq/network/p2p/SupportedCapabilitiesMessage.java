@@ -17,11 +17,11 @@
 
 package bisq.network.p2p;
 
-import java.util.List;
+import bisq.common.app.Capabilities;
 
 import javax.annotation.Nullable;
 
 public interface SupportedCapabilitiesMessage {
     @Nullable
-    List<Integer> getSupportedCapabilities();
+    Capabilities getSupportedCapabilities();
 }

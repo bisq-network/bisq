@@ -39,8 +39,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import org.bitcoinj.core.Coin;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -56,6 +54,7 @@ import javafx.collections.ObservableMap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -89,8 +88,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTC/", "https://chain.so/address/BTC/"),
             new BlockChainExplorer("Blockchain.info", "https://blockchain.info/tx/", "https://blockchain.info/address/"),
             new BlockChainExplorer("Insight", "https://insight.bitpay.com/tx/", "https://insight.bitpay.com/address/")
-    )
-    );
+    ));
     private static final ArrayList<BlockChainExplorer> BTC_TEST_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/testnet/tx/", "https://blockstream.info/testnet/address/"),
             new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/testnet/address/"),
@@ -100,11 +98,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("Smartbit", "https://testnet.smartbit.com.au/tx/", "https://testnet.smartbit.com.au/address/"),
             new BlockChainExplorer("SoChain. Wow.", "https://chain.so/tx/BTCTEST/", "https://chain.so/address/BTCTEST/")
     ));
+    private static final ArrayList<BlockChainExplorer> BTC_DAO_TEST_NET_EXPLORERS = new ArrayList<>(Collections.singletonList(
+            new BlockChainExplorer("BTC DAO-testnet explorer", "https://bisq.network/explorer/btc/dao_testnet/tx/", "https://bisq.network/explorer/btc/dao_testnet/address/")
+    ));
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
             "https://explorer.bisq.network/Address.html?addr=");
-    public static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/testnet/tx.html?tx=",
-            "https://explorer.bisq.network/testnet/Address.html?addr=");
+    private static final BlockChainExplorer BSQ_BETA_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.betanet.bisq.network/tx.html?tx=",
+            "https://explorer.betanet.bisq.network/Address.html?addr=");
+    private static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.testnet.bisq.network/tx.html?tx=",
+            "https://explorer.testnet.bisq.network/Address.html?addr=");
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -237,7 +240,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             prefPayload.setSellScreenCurrencyCode(preferredTradeCurrency.getCode());
         }
 
-        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER : BSQ_TEST_NET_EXPLORER);
+        prefPayload.setBsqBlockChainExplorer(baseCurrencyNetwork.isMainnet() ? BSQ_MAIN_NET_EXPLORER :
+                baseCurrencyNetwork.isDaoBetaNet() ? BSQ_BETA_NET_EXPLORER :
+                        BSQ_TEST_NET_EXPLORER);
 
         // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
@@ -484,10 +489,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
-    public void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong) {
-        prefPayload.setBuyerSecurityDepositAsLong(Math.min(Restrictions.getMaxBuyerSecurityDeposit().value,
-                Math.max(Restrictions.getMinBuyerSecurityDeposit().value,
-                        buyerSecurityDepositAsLong)));
+    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent) {
+        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent();
+        double min = Restrictions.getMinBuyerSecurityDepositAsPercent();
+        prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
         persist();
     }
 
@@ -639,20 +644,34 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public BlockChainExplorer getBlockChainExplorer() {
-        if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
-            return prefPayload.getBlockChainExplorerMainNet();
-        else
-            return prefPayload.getBlockChainExplorerTestNet();
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        switch (baseCurrencyNetwork) {
+            case BTC_MAINNET:
+                return prefPayload.getBlockChainExplorerMainNet();
+            case BTC_TESTNET:
+            case BTC_REGTEST:
+                return prefPayload.getBlockChainExplorerTestNet();
+            case BTC_DAO_TESTNET:
+                return BTC_DAO_TEST_NET_EXPLORERS.get(0);
+            case BTC_DAO_BETANET:
+                return prefPayload.getBlockChainExplorerMainNet();
+            default:
+                throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
+        }
     }
 
     public ArrayList<BlockChainExplorer> getBlockChainExplorers() {
-        final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
+        BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         switch (baseCurrencyNetwork) {
             case BTC_MAINNET:
                 return BTC_MAIN_NET_EXPLORERS;
             case BTC_TESTNET:
             case BTC_REGTEST:
                 return BTC_TEST_NET_EXPLORERS;
+            case BTC_DAO_TESTNET:
+                return BTC_DAO_TEST_NET_EXPLORERS;
+            case BTC_DAO_BETANET:
+                return BTC_MAIN_NET_EXPLORERS;
             default:
                 throw new RuntimeException("BaseCurrencyNetwork not defined. BaseCurrencyNetwork=" + baseCurrencyNetwork);
         }
@@ -683,8 +702,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return withdrawalTxFeeInBytesProperty;
     }
 
-    public Coin getBuyerSecurityDepositAsCoin() {
-        return Coin.valueOf(prefPayload.getBuyerSecurityDepositAsLong());
+    public double getBuyerSecurityDepositAsPercent() {
+        double value = prefPayload.getBuyerSecurityDepositAsPercent();
+        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
     }
 
     //TODO remove and use isPayFeeInBtc instead
@@ -762,8 +782,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setWithdrawalTxFeeInBytes(long withdrawalTxFeeInBytes);
 
-        void setBuyerSecurityDepositAsLong(long buyerSecurityDepositAsLong);
-
         void setSelectedPaymentAccountForCreateOffer(@Nullable PaymentAccount paymentAccount);
 
         void setBsqBlockChainExplorer(BlockChainExplorer bsqBlockChainExplorer);
@@ -819,5 +837,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setRpcPw(String value);
 
         void setTakeOfferSelectedPaymentAccountId(String value);
+
+        void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
+
+        double getBuyerSecurityDepositAsPercent();
     }
 }

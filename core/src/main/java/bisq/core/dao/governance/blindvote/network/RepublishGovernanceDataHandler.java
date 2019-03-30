@@ -29,6 +29,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 
 import javax.inject.Inject;
 
@@ -164,22 +165,20 @@ public final class RepublishGovernanceDataHandler {
     }
 
     private void connectToAnyFullNode() {
-        List<Integer> required = new ArrayList<>(Collections.singletonList(
-                Capabilities.Capability.DAO_FULL_NODE.ordinal()
-        ));
+        Capabilities required = new Capabilities(Capability.DAO_FULL_NODE);
 
         List<Peer> list = peerManager.getLivePeers(null).stream()
-                .filter(peer -> Capabilities.isCapabilitySupported(required, peer.getSupportedCapabilities()))
+                .filter(peer -> peer.getCapabilities().containsAll(required))
                 .collect(Collectors.toList());
 
         if (list.isEmpty())
             list = peerManager.getReportedPeers().stream()
-                    .filter(peer -> Capabilities.isCapabilitySupported(required, peer.getSupportedCapabilities()))
+                    .filter(peer -> peer.getCapabilities().containsAll(required))
                     .collect(Collectors.toList());
 
         if (list.isEmpty())
             list = peerManager.getPersistedPeers().stream()
-                    .filter(peer -> Capabilities.isCapabilitySupported(required, peer.getSupportedCapabilities()))
+                    .filter(peer -> peer.getCapabilities().containsAll(required))
                     .collect(Collectors.toList());
 
         if (!list.isEmpty()) {

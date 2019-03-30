@@ -35,7 +35,6 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 
@@ -61,7 +60,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final long TIMEOUT = 60;
+    private static final long TIMEOUT = 90;
     private NodeAddress peersNodeAddress;
 
 
@@ -114,7 +113,6 @@ class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
-        Log.traceCall("nodeAddress=" + nodeAddress);
         peersNodeAddress = nodeAddress;
         if (!stopped) {
             GetDataRequest getDataRequest;
@@ -196,7 +194,6 @@ class RequestDataHandler implements MessageListener {
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataResponse) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
-                Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
                     Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
@@ -327,7 +324,6 @@ class RequestDataHandler implements MessageListener {
     }
 
     private void cleanup() {
-        Log.traceCall();
         stopped = true;
         networkNode.removeMessageListener(this);
         stopTimeoutTimer();

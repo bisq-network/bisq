@@ -74,6 +74,17 @@ public class PaymentAccountFactory {
                 return new PromptPayAccount();
             case PaymentMethod.ADVANCED_CASH_ID:
                 return new AdvancedCashAccount();
+            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
+                return new InstantCryptoCurrencyAccount();
+
+            // Cannot be deleted as it would break old trade history entries
+            case PaymentMethod.OK_PAY_ID:
+                return new OKPayAccount();
+            case PaymentMethod.CASH_APP_ID:
+                return new CashAppAccount();
+            case PaymentMethod.VENMO_ID:
+                return new VenmoAccount();
+
             default:
                 throw new RuntimeException("Not supported PaymentMethod: " + paymentMethod);
         }

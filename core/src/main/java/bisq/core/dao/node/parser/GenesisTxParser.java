@@ -64,6 +64,7 @@ public class GenesisTxParser {
         tempTx.setTxType(TxType.GENESIS);
         long remainingInputValue = genesisTotalSupply.getValue();
         List<TempTxOutput> tempTxOutputs = tempTx.getTempTxOutputs();
+        //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < tempTxOutputs.size(); ++i) {
             TempTxOutput txOutput = tempTxOutputs.get(i);
             long value = txOutput.getValue();

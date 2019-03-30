@@ -31,14 +31,17 @@ import bisq.core.dao.governance.bond.reputation.MyReputation;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.state.model.blockchain.TxOutput;
-import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
+import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -80,9 +83,12 @@ public class BondingViewUtils {
     }
 
     public void lockupBondForBondedRole(Role role, Consumer<String> resultHandler) {
-        BondedRoleType bondedRoleType = role.getBondedRoleType();
-        Coin lockupAmount = Coin.valueOf(bondedRoleType.getRequiredBond());
-        int lockupTime = bondedRoleType.getUnlockTimeInBlocks();
+        Optional<RoleProposal> roleProposal = getAcceptedBondedRoleProposal(role);
+        checkArgument(roleProposal.isPresent(), "roleProposal must be present");
+
+        long requiredBond = daoFacade.getRequiredBond(roleProposal);
+        Coin lockupAmount = Coin.valueOf(requiredBond);
+        int lockupTime = roleProposal.get().getUnlockTime();
         if (!bondedRolesRepository.isBondedAssetAlreadyInBond(role)) {
             lockupBond(role.getHash(), lockupAmount, lockupTime, LockupReason.BONDED_ROLE, resultHandler);
         } else {
@@ -100,24 +106,39 @@ public class BondingViewUtils {
                             Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             if (!DevEnv.isDevMode()) {
-                new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
-                        .confirmation(Res.get("dao.bond.reputation.lockup.details",
-                                bsqFormatter.formatCoinWithCode(lockupAmount),
-                                lockupTime
-                        ))
-                        .actionButtonText(Res.get("shared.yes"))
-                        .onAction(() -> publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler))
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
+                try {
+                    Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getLockupTxMiningFeeAndTxSize(lockupAmount, lockupTime, lockupReason, hash);
+                    Coin miningFee = miningFeeAndTxSize.first;
+                    int txSize = miningFeeAndTxSize.second;
+                    BSFormatter formatter = new BSFormatter();
+                    String duration = formatter.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
+                    new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
+                            .confirmation(Res.get("dao.bond.reputation.lockup.details",
+                                    bsqFormatter.formatCoinWithCode(lockupAmount),
+                                    lockupTime,
+                                    duration,
+                                    formatter.formatCoinWithCode(miningFee),
+                                    CoinUtil.getFeePerByte(miningFee, txSize),
+                                    txSize
+                            ))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler))
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .show();
+                } catch (Throwable e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    new Popup<>().warning(e.getMessage()).show();
+                }
             } else {
-                publishLockupTx(hash, lockupAmount, lockupTime, lockupReason, resultHandler);
+                publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler);
             }
         } else {
             GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
-    private void publishLockupTx(byte[] hash, Coin lockupAmount, int lockupTime, LockupReason lockupReason, Consumer<String> resultHandler) {
+    private void publishLockupTx(Coin lockupAmount, int lockupTime, LockupReason lockupReason, byte[] hash, Consumer<String> resultHandler) {
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
                 lockupReason,
@@ -133,6 +154,10 @@ public class BondingViewUtils {
         );
     }
 
+    public Optional<RoleProposal> getAcceptedBondedRoleProposal(Role role) {
+        return bondedRolesRepository.getAcceptedBondedRoleProposal(role);
+    }
+
     public void unLock(String lockupTxId, Consumer<String> resultHandler) {
         if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
             Optional<TxOutput> lockupTxOutput = daoFacade.getLockupTxOutput(lockupTxId);
@@ -143,10 +168,19 @@ public class BondingViewUtils {
 
             try {
                 if (!DevEnv.isDevMode()) {
+                    Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getUnlockTxMiningFeeAndTxSize(lockupTxId);
+                    Coin miningFee = miningFeeAndTxSize.first;
+                    int txSize = miningFeeAndTxSize.second;
+                    BSFormatter formatter = new BSFormatter();
+                    String duration = formatter.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),
-                                    lockTime
+                                    lockTime,
+                                    duration,
+                                    formatter.formatCoinWithCode(miningFee),
+                                    CoinUtil.getFeePerByte(miningFee, txSize),
+                                    txSize
                             ))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> publishUnlockTx(lockupTxId, resultHandler))

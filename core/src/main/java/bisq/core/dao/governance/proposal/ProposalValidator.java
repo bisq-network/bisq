@@ -17,9 +17,10 @@
 
 package bisq.core.dao.governance.proposal;
 
-import bisq.core.dao.exceptions.ValidationException;
+import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.CompensationProposal;
@@ -27,22 +28,21 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
-import javax.inject.Inject;
-
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static org.apache.commons.lang3.Validate.notEmpty;
 
+/**
+ * Changes here can potentially break consensus!
+ */
 @Slf4j
-public class ProposalValidator {
-
+public abstract class ProposalValidator implements ConsensusCritical {
     protected final DaoStateService daoStateService;
     protected final PeriodService periodService;
 
-    @Inject
-    public ProposalValidator(DaoStateService daoStateService, PeriodService periodService) {
+    protected ProposalValidator(DaoStateService daoStateService, PeriodService periodService) {
         this.daoStateService = daoStateService;
         this.periodService = periodService;
     }
@@ -51,17 +51,18 @@ public class ProposalValidator {
         try {
             validateDataFields(proposal);
             return true;
-        } catch (ValidationException e) {
+        } catch (ProposalValidationException e) {
+            log.warn("proposal data fields are invalid. proposal={}, error={}", proposal, e.toString());
             return false;
         }
     }
 
-    public void validateDataFields(Proposal proposal) throws ValidationException {
+    public void validateDataFields(Proposal proposal) throws ProposalValidationException {
         try {
             notEmpty(proposal.getName(), "name must not be empty");
             notEmpty(proposal.getLink(), "link must not be empty");
         } catch (Throwable throwable) {
-            throw new ValidationException(throwable);
+            throw new ProposalValidationException(throwable);
         }
     }
 
@@ -88,7 +89,6 @@ public class ProposalValidator {
 
     private boolean isValid(Proposal proposal, boolean allowUnconfirmed) {
         if (!areDataFieldsValid(proposal)) {
-            log.warn("proposal data fields are invalid. proposal={}", proposal);
             return false;
         }
 
@@ -139,5 +139,13 @@ public class ProposalValidator {
         } else {
             return false;
         }
+    }
+
+    protected int getBlockHeight(Proposal proposal) {
+        // When we receive a temp proposal the tx is usually not confirmed so we cannot lookup the block height of
+        // the tx. We take the current block height in that case as it would be in the same cycle anyway.
+        return daoStateService.getTx(proposal.getTxId())
+                .map(BaseTx::getBlockHeight)
+                .orElseGet(daoStateService::getChainHeight);
     }
 }

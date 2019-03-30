@@ -55,12 +55,12 @@ public abstract class BaseTx implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BaseTx(String txVersion,
-                  String id,
-                  int blockHeight,
-                  String blockHash,
-                  long time,
-                  ImmutableList<TxInput> txInputs) {
+    protected BaseTx(String txVersion,
+                     String id,
+                     int blockHeight,
+                     String blockHash,
+                     long time,
+                     ImmutableList<TxInput> txInputs) {
         this.txVersion = txVersion;
         this.id = id;
         this.blockHeight = blockHeight;
@@ -69,7 +69,7 @@ public abstract class BaseTx implements ImmutableDaoStateModel {
         this.txInputs = txInputs;
     }
 
-    public PB.BaseTx.Builder getBaseTxBuilder() {
+    protected PB.BaseTx.Builder getBaseTxBuilder() {
         return PB.BaseTx.newBuilder()
                 .setTxVersion(txVersion)
                 .setId(id)

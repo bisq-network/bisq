@@ -151,7 +151,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         if (isBtc)
             addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 0);
 
-        Coin totalBalance = getWalletService().getAvailableBalance();
+        Coin totalBalance = getWalletService().getAvailableConfirmedBalance();
         balanceTextField = addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
                 getFormatter().formatCoinWithCode(totalBalance), 10).second;
 
@@ -228,7 +228,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                         aesKey,
                         () -> {
                             closeButton.updateText(Res.get("shared.close"));
-                            balanceTextField.setText(getFormatter().formatCoinWithCode(getWalletService().getAvailableBalance()));
+                            balanceTextField.setText(getFormatter().formatCoinWithCode(getWalletService().getAvailableConfirmedBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
                             onClose(() -> UserThread.runAfter(() -> new Popup<>()
@@ -238,7 +238,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                         },
                         (errorMessage) -> {
                             emptyWalletButton.setDisable(false);
-                            log.debug("wallet empty failed " + errorMessage);
+                            log.error("wallet empty failed {}", errorMessage);
                         });
             } catch (InsufficientMoneyException | AddressFormatException e1) {
                 e1.printStackTrace();

@@ -33,6 +33,7 @@ import bisq.core.trade.TradeManager;
 
 import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.ConnectionConfig;
 
 import bisq.common.CommonOptionKeys;
 import bisq.common.UserThread;
@@ -68,9 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.app.BisqEnvironment.DEFAULT_APP_NAME;
 import static bisq.core.app.BisqEnvironment.DEFAULT_USER_DATA_DIR;
-import static bisq.core.btc.BaseCurrencyNetwork.BTC_MAINNET;
-import static bisq.core.btc.BaseCurrencyNetwork.BTC_REGTEST;
-import static bisq.core.btc.BaseCurrencyNetwork.BTC_TESTNET;
+import static bisq.core.btc.BaseCurrencyNetwork.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
@@ -256,7 +255,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // We need to delay it as the stage is not created yet and so popups would not be shown.
             if (DevEnv.isDevMode())
                 UserThread.runAfter(() -> {
-                    log.error("Error at PersistedDataHost.apply: " + t.toString());
+                    log.error("Error at PersistedDataHost.apply: {}", t.toString());
                     throw t;
                 }, 2);
         }
@@ -339,11 +338,6 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .describedAs("host:port[,...]");
 
-        parser.accepts(NetworkOptionKeys.MY_ADDRESS,
-                "My own onion address (used for bootstrap nodes to exclude itself)")
-                .withRequiredArg()
-                .describedAs("host:port");
-
         parser.accepts(NetworkOptionKeys.BAN_LIST,
                 "Nodes to exclude from network connections.")
                 .withRequiredArg()
@@ -415,6 +409,27 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         parser.accepts(NetworkOptionKeys.TOR_STREAM_ISOLATION,
                 "Use stream isolation for Tor [experimental!].");
 
+        parser.accepts(NetworkOptionKeys.MSG_THROTTLE_PER_SEC,
+                format("Message throttle per sec for connection class (default: %s)",
+                        String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC)))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC,
+                format("Message throttle per 10 sec for connection class (default: %s)",
+                        String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_10_SEC)))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER,
+                format("Time in ms when we trigger a sleep if 2 messages are sent (default: %s)",
+                        String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER)))
+                .withRequiredArg()
+                .ofType(int.class);
+        parser.accepts(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP,
+                format("Pause in ms to sleep if we get too many messages to send (default: %s)",
+                        String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_SLEEP)))
+                .withRequiredArg()
+                .ofType(int.class);
+
         //AppOptionKeys
         parser.accepts(AppOptionKeys.USER_DATA_DIR_KEY,
                 format("User data directory (default: %s)", BisqEnvironment.DEFAULT_USER_DATA_DIR))
@@ -479,7 +494,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 format("Base currency network (default: %s)", BisqEnvironment.getDefaultBaseCurrencyNetwork().name()))
                 .withRequiredArg()
                 .ofType(String.class)
-                .describedAs(format("%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST));
+                .describedAs(format("%s|%s|%s|%s", BTC_MAINNET, BTC_TESTNET, BTC_REGTEST, BTC_DAO_TESTNET, BTC_DAO_BETANET));
 
         parser.accepts(BtcOptionKeys.REG_TEST_HOST,
                 format("Bitcoin regtest host when using BTC_REGTEST network (default: %s)", RegTestHost.DEFAULT_HOST))
@@ -548,6 +563,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         parser.accepts(DaoOptionKeys.GENESIS_BLOCK_HEIGHT,
                 format("Genesis transaction block height when not using the hard coded one (default: %s)", "-1"))
+                .withRequiredArg();
+
+        parser.accepts(DaoOptionKeys.GENESIS_TOTAL_SUPPLY,
+                format("Genesis total supply when not using the hard coded one (default: %s)", "-1"))
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,

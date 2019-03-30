@@ -17,11 +17,9 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
-@AltCoinAccountDisclaimer("account.altcoin.popup.LTZ.msg")
 public class LitecoinZ extends Coin {
 
     public LitecoinZ() {

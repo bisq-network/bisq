@@ -71,7 +71,6 @@ public class OfferAvailabilityProtocol {
                 Validator.nonEmptyStringOf(offerMessage.offerId);
                 if (networkEnvelope instanceof OfferAvailabilityResponse
                         && model.getOffer().getId().equals(offerMessage.offerId)) {
-                    log.trace("handle OfferAvailabilityResponse = " + networkEnvelope.getClass().getSimpleName() + " from " + peersNodeAddress);
                     handleOfferAvailabilityResponse((OfferAvailabilityResponse) networkEnvelope, peersNodeAddress);
                 }
             }

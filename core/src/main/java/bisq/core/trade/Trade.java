@@ -44,7 +44,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -504,7 +503,6 @@ public abstract class Trade implements Tradable, Model {
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
-        Log.traceCall();
         processModel.onAllServicesInitialized(offer,
                 tradeManager,
                 openOfferManager,
@@ -619,9 +617,9 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
+        log.debug("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
-            final String message = "We got a state change to a previous phase.\n" +
+            String message = "We got a state change to a previous phase.\n" +
                     "Old state is: " + this.state + ". New state is: " + state;
             log.warn(message);
         }
@@ -639,7 +637,6 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setDisputeState(DisputeState disputeState) {
-        Log.traceCall("disputeState=" + disputeState + "\n\ttrade=" + this);
         boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
@@ -752,7 +749,8 @@ public abstract class Trade implements Tradable, Model {
         if (depositTx != null && getTakeOfferDate() != null) {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
                 final long tradeTime = getTakeOfferDate().getTime();
-                long blockTime = depositTx.getUpdateTime().getTime();
+                // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+                long blockTime = depositTx.getIncludedInBestChainAt() != null ? depositTx.getIncludedInBestChainAt().getTime() : depositTx.getUpdateTime().getTime();
                 // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
                 // If block date is earlier than our trade date we use our trade date.
                 if (blockTime > now)

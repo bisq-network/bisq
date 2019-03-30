@@ -20,7 +20,6 @@ package bisq.network.p2p.network;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
@@ -114,6 +113,11 @@ public abstract class NetworkNode implements MessageListener {
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
             ListenableFuture<Connection> future = executorService.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress);
+
+                if(peersNodeAddress.equals(getNodeAddress())){
+                    throw new ConnectException("We do not send a message to ourselves");
+                }
+
                 OutboundConnection outboundConnection = null;
                 try {
                     // can take a while when using tor
@@ -220,7 +224,7 @@ public abstract class NetworkNode implements MessageListener {
         Optional<InboundConnection> inboundConnectionOptional = lookupInBoundConnection(peersNodeAddress);
         if (inboundConnectionOptional.isPresent()) {
             InboundConnection connection = inboundConnectionOptional.get();
-            log.trace("We have found a connection in inBoundConnections. Connection.uid=" + connection.getUid());
+            log.trace("We have found a connection in inBoundConnections. Connection.uid={}", connection.getUid());
             if (connection.isStopped()) {
                 log.warn("We have a connection which is already stopped in inBoundConnections. Connection.uid=" + connection.getUid());
                 inBoundConnections.remove(connection);
@@ -238,7 +242,7 @@ public abstract class NetworkNode implements MessageListener {
         Optional<OutboundConnection> outboundConnectionOptional = lookupOutBoundConnection(peersNodeAddress);
         if (outboundConnectionOptional.isPresent()) {
             OutboundConnection connection = outboundConnectionOptional.get();
-            log.trace("We have found a connection in outBoundConnections. Connection.uid=" + connection.getUid());
+            log.trace("We have found a connection in outBoundConnections. Connection.uid={}", connection.getUid());
             if (connection.isStopped()) {
                 log.warn("We have a connection which is already stopped in outBoundConnections. Connection.uid=" + connection.getUid());
                 outBoundConnections.remove(connection);
@@ -258,7 +262,6 @@ public abstract class NetworkNode implements MessageListener {
 
 
     public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope networkEnvelope) {
-        Log.traceCall("\n\tmessage=" + Utilities.toTruncatedString(networkEnvelope) + "\n\tconnection=" + connection);
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
@@ -307,7 +310,6 @@ public abstract class NetworkNode implements MessageListener {
 
 
     public void shutDown(Runnable shutDownCompleteHandler) {
-        Log.traceCall();
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             if (server != null) {
@@ -397,7 +399,7 @@ public abstract class NetworkNode implements MessageListener {
 
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-                log.trace("onDisconnect at server socket connectionListener\n\tconnection={}" + connection);
+                log.trace("onDisconnect at server socket connectionListener\n\tconnection={}", connection);
                 //noinspection SuspiciousMethodCalls
                 inBoundConnections.remove(connection);
                 printInboundConnections();
@@ -452,5 +454,10 @@ public abstract class NetworkNode implements MessageListener {
     @Nullable
     public NodeAddress getNodeAddress() {
         return nodeAddressProperty.get();
+    }
+
+    @Nullable
+    public ObjectProperty<NodeAddress> getNodeAddressProperty() {
+        return nodeAddressProperty;
     }
 }

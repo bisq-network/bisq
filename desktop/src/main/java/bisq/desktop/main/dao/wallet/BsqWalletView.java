@@ -27,7 +27,6 @@ import bisq.desktop.common.view.ViewPath;
 import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.dao.wallet.dashboard.BsqDashboardView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.dao.wallet.tx.BsqTxView;
@@ -53,7 +52,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem dashboard, send, receive, transactions;
+    private MenuItem send, receive, transactions;
     private Navigation.Listener listener;
 
     @FXML
@@ -82,15 +81,13 @@ public class BsqWalletView extends ActivatableViewAndModel {
 
         toggleGroup = new ToggleGroup();
         List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, BsqWalletView.class);
-        dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"), BsqDashboardView.class, baseNavPath);
         send = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.send"), BsqSendView.class, baseNavPath);
         receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, baseNavPath);
         transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, baseNavPath);
-        leftVBox.getChildren().addAll(dashboard, send, receive, transactions);
+        leftVBox.getChildren().addAll(send, receive, transactions);
 
         // TODO just until DAO is enabled
         if (!DevEnv.isDaoActivated()) {
-            dashboard.setDisable(true);
             send.setDisable(true);
             transactions.setDisable(true);
         }
@@ -98,7 +95,6 @@ public class BsqWalletView extends ActivatableViewAndModel {
 
     @Override
     protected void activate() {
-        dashboard.activate();
         send.activate();
         receive.activate();
         transactions.activate();
@@ -108,7 +104,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         if (viewPath.size() == 3 && viewPath.indexOf(BsqWalletView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = BsqDashboardView.class;
+                selectedViewClass = BsqSendView.class;
 
             // TODO just until DAO is enabled
             if (!DevEnv.isDaoActivated())
@@ -126,7 +122,6 @@ public class BsqWalletView extends ActivatableViewAndModel {
     protected void deactivate() {
         navigation.removeListener(listener);
 
-        dashboard.deactivate();
         send.deactivate();
         receive.deactivate();
         transactions.deactivate();
@@ -136,8 +131,7 @@ public class BsqWalletView extends ActivatableViewAndModel {
         View view = viewLoader.load(viewClass);
         content.getChildren().setAll(view.getRoot());
 
-        if (view instanceof BsqDashboardView) toggleGroup.selectToggle(dashboard);
-        else if (view instanceof BsqSendView) toggleGroup.selectToggle(send);
+        if (view instanceof BsqSendView) toggleGroup.selectToggle(send);
         else if (view instanceof BsqReceiveView) toggleGroup.selectToggle(receive);
         else if (view instanceof BsqTxView) toggleGroup.selectToggle(transactions);
     }

@@ -60,6 +60,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 
@@ -172,7 +173,7 @@ public abstract class Overlay<T extends Overlay> {
     public Overlay() {
     }
 
-    public void show() {
+    public void show(boolean showAgainChecked) {
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
             addHeadLine();
@@ -185,10 +186,14 @@ public abstract class Overlay<T extends Overlay> {
                 addReportErrorButtons();
 
             addButtons();
-            addDontShowAgainCheckBox();
+            addDontShowAgainCheckBox(showAgainChecked);
             applyStyles();
             onShow();
         }
+    }
+
+    public void show() {
+        this.show(false);
     }
 
     protected void onShow() {
@@ -374,7 +379,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useReportBugButton() {
         this.closeButtonText = Res.get("shared.reportBug");
-        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://github.com/bisq-network/bisq-desktop/issues"));
+        this.closeHandlerOptional = Optional.of(() -> GUIUtil.openWebPage("https://bisq.network/source/bisq/issues"));
         //noinspection unchecked
         return (T) this;
     }
@@ -495,7 +500,7 @@ public abstract class Overlay<T extends Overlay> {
         if (owner != null) {
             Scene rootScene = owner.getScene();
             if (rootScene != null) {
-                Scene scene = new Scene(gridPane);
+                Scene scene = new Scene(getRootContainer());
                 scene.getStylesheets().setAll(rootScene.getStylesheets());
                 scene.setFill(Color.TRANSPARENT);
 
@@ -540,6 +545,11 @@ public abstract class Overlay<T extends Overlay> {
         }
     }
 
+    protected Region getRootContainer() {
+        return gridPane;
+    }
+
+
     protected void setupKeyHandler(Scene scene) {
         if (!hideCloseButton) {
             scene.setOnKeyPressed(e -> {
@@ -552,66 +562,68 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void animateDisplay() {
-        gridPane.setOpacity(0);
+        Region rootContainer = this.getRootContainer();
+
+        rootContainer.setOpacity(0);
         Interpolator interpolator = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
         double duration = getDuration(400);
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
         if (type.animationType == AnimationType.SlideDownFromCenterTop) {
-            double startY = -gridPane.getHeight();
+            double startY = -rootContainer.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.translateYProperty(), startY, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.translateYProperty(), startY, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.translateYProperty(), -50, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.translateYProperty(), -50, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleFromCenter) {
             double startScale = 0.25;
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), startScale, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), startScale, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), startScale, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), startScale, interpolator)
 
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleYFromCenter) {
             double startYScale = 0.25;
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), startYScale, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), startYScale, interpolator)
 
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleDownToCenter) {
             double startScale = 1.1;
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), startScale, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), startScale, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), startScale, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), startScale, interpolator)
 
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
         } else if (type.animationType == AnimationType.FadeInAtCenter) {
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
 
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
         }
 
@@ -624,15 +636,16 @@ public abstract class Overlay<T extends Overlay> {
         Timeline timeline = new Timeline();
         ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
 
+        Region rootContainer = getRootContainer();
         if (type.animationType == AnimationType.SlideDownFromCenterTop) {
-            double endY = -gridPane.getHeight();
+            double endY = -rootContainer.getHeight();
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.translateYProperty(), -10, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.translateYProperty(), -10, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.translateYProperty(), endY, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.translateYProperty(), endY, interpolator)
             ));
 
             timeline.setOnFinished(e -> onFinishedHandler.run());
@@ -640,44 +653,44 @@ public abstract class Overlay<T extends Overlay> {
         } else if (type.animationType == AnimationType.ScaleFromCenter) {
             double endScale = 0.25;
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), endScale, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), endScale, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleYFromCenter) {
-            gridPane.setRotationAxis(Rotate.X_AXIS);
-            gridPane.getScene().setCamera(new PerspectiveCamera());
+            rootContainer.setRotationAxis(Rotate.X_AXIS);
+            rootContainer.getScene().setCamera(new PerspectiveCamera());
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.rotateProperty(), 0, interpolator),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.rotateProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.rotateProperty(), -90, interpolator),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator)
+                    new KeyValue(rootContainer.rotateProperty(), -90, interpolator),
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
         } else if (type.animationType == AnimationType.ScaleDownToCenter) {
             double endScale = 0.1;
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), 1, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), 1, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), 1, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator),
-                    new KeyValue(gridPane.scaleXProperty(), endScale, interpolator),
-                    new KeyValue(gridPane.scaleYProperty(), endScale, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator),
+                    new KeyValue(rootContainer.scaleXProperty(), endScale, interpolator),
+                    new KeyValue(rootContainer.scaleYProperty(), endScale, interpolator)
             ));
         } else if (type.animationType == AnimationType.FadeInAtCenter) {
             keyFrames.add(new KeyFrame(Duration.millis(0),
-                    new KeyValue(gridPane.opacityProperty(), 1, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 1, interpolator)
             ));
             keyFrames.add(new KeyFrame(Duration.millis(duration),
-                    new KeyValue(gridPane.opacityProperty(), 0, interpolator)
+                    new KeyValue(rootContainer.opacityProperty(), 0, interpolator)
             ));
         }
 
@@ -714,10 +727,11 @@ public abstract class Overlay<T extends Overlay> {
 
 
     protected void applyStyles() {
+        Region rootContainer = getRootContainer();
         if (type.animationType == AnimationType.SlideDownFromCenterTop) {
-            gridPane.getStyleClass().add("popup-bg-top");
+            rootContainer.getStyleClass().add("popup-bg-top");
         } else {
-            gridPane.getStyleClass().add("popup-bg");
+            rootContainer.getStyleClass().add("popup-bg");
         }
 
 
@@ -826,7 +840,7 @@ public abstract class Overlay<T extends Overlay> {
         gitHubButton.setOnAction(event -> {
             if (message != null)
                 Utilities.copyToClipboard(message);
-            GUIUtil.openWebPage("https://github.com/bisq-network/bisq-desktop/issues");
+            GUIUtil.openWebPage("https://bisq.network/source/bisq/issues");
             hide();
         });
     }
@@ -839,17 +853,23 @@ public abstract class Overlay<T extends Overlay> {
         gridPane.getChildren().add(busyAnimation);
     }
 
-    protected void addDontShowAgainCheckBox() {
+    protected void addDontShowAgainCheckBox(boolean isChecked) {
         if (dontShowAgainId != null) {
             // We might have set it and overridden the default, so we check if it is not set
             if (dontShowAgainText == null)
                 dontShowAgainText = Res.get("popup.doNotShowAgain");
 
             CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
+            dontShowAgainCheckBox.setSelected(isChecked);
+            DontShowAgainLookup.dontShowAgain(dontShowAgainId, isChecked);
             GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
             GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
             dontShowAgainCheckBox.setOnAction(e -> DontShowAgainLookup.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
+    }
+
+    protected void addDontShowAgainCheckBox() {
+        this.addDontShowAgainCheckBox(false);
     }
 
     protected void addButtons() {

@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.peers.getdata;
 
-import bisq.network.NetworkOptionKeys;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
@@ -32,12 +31,11 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import com.google.inject.name.Named;
-
 import javax.inject.Inject;
+
+import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -110,8 +108,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public RequestDataManager(NetworkNode networkNode,
                               SeedNodeRepository seedNodeRepository,
                               P2PDataStorage dataStorage,
-                              PeerManager peerManager,
-                              @javax.annotation.Nullable @Named(NetworkOptionKeys.MY_ADDRESS) String myAddress) {
+                              PeerManager peerManager) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
@@ -122,18 +119,20 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
 
-        // If we are a seed node we use more redundancy at startup to be sure we get all data.
-        // We cannot use networkNode.getNodeAddress() as nodeAddress as that is null at this point, so we use
-        // new NodeAddress(myAddress) for checking if we are a seed node.
-        // seedNodeAddresses do not contain my own address as that gets filtered out
-        if (myAddress != null && !myAddress.isEmpty() && seedNodeRepository.isSeedNode(new NodeAddress(myAddress))) {
-            NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
-            NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
-        }
+        this.networkNode.getNodeAddressProperty().addListener(observable -> {
+
+            NodeAddress myAddress = (NodeAddress) ((SimpleObjectProperty) observable).get();
+
+            seedNodeAddresses.remove(myAddress);
+
+            if (myAddress != null && seedNodeRepository.isSeedNode(myAddress)) {
+                NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
+                NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
+            }
+        });
     }
 
     public void shutDown() {
-        Log.traceCall();
         stopped = true;
         stopRetryTimer();
         networkNode.removeMessageListener(this);
@@ -152,7 +151,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     public boolean requestPreliminaryData() {
-        Log.traceCall();
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
             Collections.shuffle(nodeAddresses);
@@ -174,7 +172,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     }
 
     public void requestUpdateData() {
-        Log.traceCall();
         checkArgument(nodeAddressOfPreliminaryDataRequest.isPresent(), "nodeAddressOfPreliminaryDataRequest must be present");
         dataUpdateRequested = true;
         isPreliminaryDataRequest = false;
@@ -214,12 +211,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onConnection(Connection connection) {
-        Log.traceCall();
     }
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        Log.traceCall();
         closeHandler(connection);
 
         if (peerManager.isNodeBanned(closeConnectionReason, connection) && connection.getPeersNodeAddressOptional().isPresent()) {
@@ -240,7 +235,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopRetryTimer();
         stopped = true;
@@ -249,7 +243,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         restart();
@@ -257,7 +250,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
     @Override
     public void onAwakeFromStandby() {
-        Log.traceCall();
         closeAllHandlers();
         stopped = false;
         if (!networkNode.getAllConnections().isEmpty())
@@ -272,7 +264,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof GetDataRequest) {
-            Log.traceCall(networkEnvelope.toString() + "\n\tconnection=" + connection);
             if (!stopped) {
                 if (peerManager.isSeedNode(connection))
                     connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -324,7 +315,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
-        Log.traceCall("nodeAddress=" + nodeAddress + " /  remainingNodeAddresses=" + remainingNodeAddresses);
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager,
@@ -417,10 +407,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void restart() {
-        Log.traceCall();
         if (retryTimer == null) {
             retryTimer = UserThread.runAfter(() -> {
-                        log.trace("retryTimer called");
                         stopped = false;
 
                         stopRetryTimer();
@@ -485,7 +473,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 handlerMap.remove(nodeAddress);
             }
         } else {
-            log.trace("closeRequestDataHandler: nodeAddress not set in connection " + connection);
+            log.trace("closeRequestDataHandler: nodeAddress not set in connection {}", connection);
         }
     }
 

@@ -85,7 +85,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     private final BsqWalletService bsqWalletService;
     private final BsqValidator bsqValidator;
     private final AssetService assetService;
-    private BSFormatter btcFormatter;
+    private final BSFormatter btcFormatter;
 
     private final ObservableList<AssetListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<AssetListItem> sortedList = new SortedList<>(observableList);
@@ -120,7 +120,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     public void initialize() {
         addTitledGroupBg(root, gridRow, 3, Res.get("dao.burnBsq.header"));
 
-        assetComboBox = FormBuilder.<StatefulAsset>addComboBox(root, gridRow,
+        assetComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("dao.burnBsq.selectAsset"), Layout.FIRST_ROW_DISTANCE);
         assetComboBox.setConverter(new StringConverter<>() {
             @Override
@@ -141,7 +141,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         payFeeButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.burnBsq.payFee"));
 
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.burnBsq.allAssets"), 20);
+        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.burnBsq.allAssets"), 20, "last");
         createColumns();
         tableView.setItems(sortedList);
 
@@ -191,6 +191,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         });
 
         updateList();
+        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 10);
         updateButtonState();
 
         feeAmountInputTextField.resetValidation();
@@ -216,13 +217,14 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin confirmedBalance,
+    public void onUpdateBalances(Coin availableConfirmedBalance,
                                  Coin availableNonBsqBalance,
-                                 Coin pendingBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(confirmedBalance);
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
     }
 
 

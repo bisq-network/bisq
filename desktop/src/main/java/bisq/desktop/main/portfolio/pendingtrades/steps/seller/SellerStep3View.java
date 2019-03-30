@@ -27,9 +27,9 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
-import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
@@ -132,6 +132,7 @@ public class SellerStep3View extends TradeStepView {
                             break;
                     }
                 } else {
+                    log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
                     confirmButton.setDisable(true);
                     statusLabel.setText("");
                 }
@@ -183,9 +184,9 @@ public class SellerStep3View extends TradeStepView {
         if (contract != null) {
             PaymentAccountPayload myPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
             PaymentAccountPayload peersPaymentAccountPayload = contract.getBuyerPaymentAccountPayload();
-            if (myPaymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
-                myPaymentDetails = ((CryptoCurrencyAccountPayload) myPaymentAccountPayload).getAddress();
-                peersPaymentDetails = ((CryptoCurrencyAccountPayload) peersPaymentAccountPayload).getAddress();
+            if (myPaymentAccountPayload instanceof AssetsAccountPayload) {
+                myPaymentDetails = ((AssetsAccountPayload) myPaymentAccountPayload).getAddress();
+                peersPaymentDetails = ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress();
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", nameByCode);
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAddress", nameByCode);
                 isBlockChain = true;
@@ -284,7 +285,7 @@ public class SellerStep3View extends TradeStepView {
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
-                if (!(paymentAccountPayload instanceof CryptoCurrencyAccountPayload)) {
+                if (!(paymentAccountPayload instanceof AssetsAccountPayload)) {
                     if (!(paymentAccountPayload instanceof WesternUnionAccountPayload) &&
                             !(paymentAccountPayload instanceof HalCashAccountPayload) &&
                             !(paymentAccountPayload instanceof F2FAccountPayload)) {
@@ -323,8 +324,8 @@ public class SellerStep3View extends TradeStepView {
         String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();
-        if (paymentAccountPayload instanceof CryptoCurrencyAccountPayload) {
-            String address = ((CryptoCurrencyAccountPayload) paymentAccountPayload).getAddress();
+        if (paymentAccountPayload instanceof AssetsAccountPayload) {
+            String address = ((AssetsAccountPayload) paymentAccountPayload).getAddress();
             String explorerOrWalletString = trade.getOffer().getCurrencyCode().equals("XMR") ?
                     Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
                     Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);

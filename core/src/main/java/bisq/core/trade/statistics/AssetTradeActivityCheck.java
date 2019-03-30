@@ -194,6 +194,29 @@ public class AssetTradeActivityCheck {
         newlyAdded.add("WEB");
         newlyAdded.add("WRKZ");
 
+        // v0.9.3 - nothing added, was hotfix
+
+        // v0.9.4 (Feb 18 2019)
+        newlyAdded.add("ADE");
+        newlyAdded.add("ASK");
+        newlyAdded.add("AEUR");
+        newlyAdded.add("AUS");
+        newlyAdded.add("CASH2");
+        newlyAdded.add("DARX");
+        newlyAdded.add("CRDS");
+        newlyAdded.add("CRCL");
+        newlyAdded.add("DAI");
+        newlyAdded.add("ONION");
+        newlyAdded.add("FJC");
+        newlyAdded.add("LYTX");
+        newlyAdded.add("LTZ");
+        newlyAdded.add("MILE");
+        newlyAdded.add("PRSN");
+        newlyAdded.add("TUSD");
+        newlyAdded.add("USDC");
+        newlyAdded.add("VXV");
+        newlyAdded.add("ZEL");
+
         return newlyAdded.contains(code);
     }
 }
