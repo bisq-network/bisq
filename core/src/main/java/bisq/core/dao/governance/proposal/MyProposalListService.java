@@ -30,6 +30,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -217,23 +218,20 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private void rePublishMyProposalsOnceWellConnected() {
+        // We republish at each startup at any block during the cycle. We filter anyway for valid blind votes
+        // of that cycle so it is 1 blind vote getting rebroadcast at each startup to my neighbors.
         int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
         if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
                 BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
-            p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener);
-            rePublishMyProposals();
-        }
-    }
+            myProposalList.stream()
+                    .filter(proposal -> periodService.isTxInPhaseAndCycle(proposal.getTxId(),
+                            DaoPhase.Phase.PROPOSAL,
+                            periodService.getChainHeight()))
+                    .forEach(this::addToP2PNetworkAsProtectedData);
 
-    private void rePublishMyProposals() {
-        myProposalList.forEach(proposal -> {
-            String txId = proposal.getTxId();
-            if (periodService.isTxInPhaseAndCycle(txId, DaoPhase.Phase.PROPOSAL, periodService.getChainHeight())) {
-                boolean result = addToP2PNetworkAsProtectedData(proposal);
-                if (!result)
-                    log.warn("Adding of proposal to P2P network failed.\nproposal=" + proposal);
-            }
-        });
+            // We delay removal of listener as we call that inside listener itself.
+            UserThread.execute(() -> p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener));
+        }
     }
 
     private void persist() {

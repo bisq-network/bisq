@@ -135,7 +135,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
 
-        numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishOnceWellConnected();
+        numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishMyBlindVoteOnceWellConnected();
     }
 
 
@@ -176,7 +176,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void onParseBlockChainComplete() {
-        rePublishOnceWellConnected();
+        rePublishMyBlindVoteOnceWellConnected();
     }
 
 
@@ -351,15 +351,16 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         return bsqWalletService.signTx(txWithBtcFee);
     }
 
-    private void rePublishOnceWellConnected() {
+    private void rePublishMyBlindVoteOnceWellConnected() {
+        // We republish at each startup at any block during the cycle. We filter anyway for valid blind votes
+        // of that cycle so it is 1 blind vote getting rebroadcast at each startup to my neighbors.
         int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
         if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
                 BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
-            int chainHeight = periodService.getChainHeight();
             myBlindVoteList.stream()
                     .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),
                             DaoPhase.Phase.BLIND_VOTE,
-                            chainHeight))
+                            periodService.getChainHeight()))
                     .forEach(blindVote -> addToP2PNetwork(blindVote, null));
 
             // We delay removal of listener as we call that inside listener itself.
@@ -369,13 +370,15 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     private void addToP2PNetwork(BlindVote blindVote, @Nullable ErrorMessageHandler errorMessageHandler) {
         BlindVotePayload blindVotePayload = new BlindVotePayload(blindVote);
+        // We use reBroadcast flag here as we only broadcast our own blindVote and want to be sure it gets distributed
+        // well.
         boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
 
         if (success) {
             log.info("We added a blindVotePayload to the P2P network as append only data. blindVoteTxId={}",
                     blindVote.getTxId());
         } else {
-            final String msg = "Adding of blindVotePayload to P2P network failed. blindVoteTxId=" + blindVote.getTxId();
+            String msg = "Adding of blindVotePayload to P2P network failed. blindVoteTxId=" + blindVote.getTxId();
             log.error(msg);
             if (errorMessageHandler != null)
                 errorMessageHandler.handleErrorMessage(msg);
