@@ -56,6 +56,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateStorageService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
@@ -543,6 +544,28 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getTotalAmountOfConfiscatedTxOutputs();
     }
 
+    public long getTotalAmountOfInvalidatedBsq() {
+        return daoStateService.getTotalAmountOfInvalidatedBsq();
+    }
+
+    // Contains burned fee and invalidated bsq due invalid txs
+    public long getTotalAmountOfBurntBsq() {
+        return daoStateService.getTotalAmountOfBurntBsq();
+    }
+
+    public List<Tx> getInvalidTxs() {
+        return daoStateService.getInvalidTxs();
+    }
+
+    public List<Tx> getIrregularTxs() {
+        return daoStateService.getIrregularTxs();
+    }
+
+    public long getTotalAmountOfUnspentTxOutputs() {
+        // Does not consider confiscated outputs (they stay as utxo)
+        return daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
+    }
+
     public Optional<Integer> getLockTime(String txId) {
         return daoStateService.getLockTime(txId);
     }
@@ -589,7 +612,7 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getIssuanceSet(issuanceType).size();
     }
 
-    public Set<Tx> getFeeTxs() {
+    public Set<Tx> getBurntFeeTxs() {
         return daoStateService.getBurntFeeTxs();
     }
 

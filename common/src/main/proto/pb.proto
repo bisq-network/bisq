@@ -1420,7 +1420,7 @@ message Tx {
     // Because of the way how PB implements inheritence we need to use the super class as type
     repeated BaseTxOutput tx_outputs = 1;
     TxType txType = 2;
-    int64 burnt_fee = 3;
+    int64 burnt_bsq = 3;
 }
 
 enum TxType {
@@ -1440,6 +1440,7 @@ enum TxType {
     UNLOCK = 13;
     ASSET_LISTING_FEE = 14;
     PROOF_OF_BURN = 15;
+    IRREGULAR = 16;
 }
 
 message TxInput {

@@ -37,14 +37,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Nullable;
 
+// If a new BaseCurrencyNetwork type gets added we need to add the resource file for it as well!
+@Slf4j
 public class DefaultSeedNodeRepository implements SeedNodeRepository {
     //TODO add support for localhost addresses
     private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
     private static final String ENDING = ".seednodes";
     private static final Collection<NodeAddress> cache = new HashSet<>();
     private final BisqEnvironment bisqEnvironment;
+    @Nullable
     private final String seedNodes;
 
     @Inject
@@ -55,35 +60,42 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     }
 
     private void reload() {
+        try {
+            // see if there are any seed nodes configured manually
+            if (seedNodes != null && !seedNodes.isEmpty()) {
+                cache.clear();
+                Arrays.stream(seedNodes.split(",")).forEach(s -> cache.add(new NodeAddress(s)));
 
-        // see if there are any seed nodes configured manually
-        if (seedNodes != null && !seedNodes.isEmpty()) {
+                return;
+            }
+
+            // else, we fetch the seed nodes from our resources
+            InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
+            BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
+
+            // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
             cache.clear();
-            Arrays.stream(seedNodes.split(",")).forEach(s -> cache.add(new NodeAddress(s)));
 
-            return;
+            // refill the cache
+            seedNodeFile.lines().forEach(line -> {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find())
+                    cache.add(new NodeAddress(matcher.group(1)));
+
+                // Maybe better include in regex...
+                if (line.startsWith("localhost"))
+                    cache.add(new NodeAddress(line));
+            });
+
+            // filter
+            cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
+
+            log.info("Seed nodes: {}", cache);
+        } catch (Throwable t) {
+            log.error(t.toString());
+            t.printStackTrace();
+            throw t;
         }
-
-        // else, we fetch the seed nodes from our resources
-        final InputStream fileInputStream = DefaultSeedNodeRepository.class.getClassLoader().getResourceAsStream(BisqEnvironment.getBaseCurrencyNetwork().name().toLowerCase() + ENDING);
-        final BufferedReader seedNodeFile = new BufferedReader(new InputStreamReader(fileInputStream));
-
-        // only clear if we have a fresh data source (otherwise, an exception would prevent us from getting here)
-        cache.clear();
-
-        // refill the cache
-        seedNodeFile.lines().forEach(line -> {
-            final Matcher matcher = pattern.matcher(line);
-            if (matcher.find())
-                cache.add(new NodeAddress(matcher.group(1)));
-
-            // Maybe better include in regex...
-            if (line.startsWith("localhost"))
-                cache.add(new NodeAddress(line));
-        });
-
-        // filter
-        cache.removeAll(bisqEnvironment.getBannedSeedNodes().stream().map(NodeAddress::new).collect(Collectors.toSet()));
     }
 
     public Collection<NodeAddress> getSeedNodeAddresses() {

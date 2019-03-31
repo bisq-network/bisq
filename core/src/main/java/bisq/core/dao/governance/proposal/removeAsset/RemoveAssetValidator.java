@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
 /**
@@ -49,6 +50,10 @@ public class RemoveAssetValidator extends ProposalValidator implements Consensus
 
             RemoveAssetProposal removeAssetProposal = (RemoveAssetProposal) proposal;
             notEmpty(removeAssetProposal.getTickerSymbol(), "TickerSymbol must not be empty");
+
+            // We want to avoid that someone cause damage by inserting a super long string. Real ticker symbols
+            // are usually very short but we don't want to add additional restrictions here.
+            checkArgument(removeAssetProposal.getTickerSymbol().length() <= 100, "TickerSymbol must not exceed 100 chars");
         } catch (ProposalValidationException e) {
             throw e;
         } catch (Throwable throwable) {

@@ -305,6 +305,33 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         observableList.setAll(items);
     }
 
+    private boolean isValidType(TxType txType) {
+        switch (txType) {
+            case UNDEFINED:
+            case UNDEFINED_TX_TYPE:
+            case UNVERIFIED:
+            case INVALID:
+                return false;
+            case GENESIS:
+            case TRANSFER_BSQ:
+            case PAY_TRADE_FEE:
+            case PROPOSAL:
+            case COMPENSATION_REQUEST:
+            case REIMBURSEMENT_REQUEST:
+            case BLIND_VOTE:
+            case VOTE_REVEAL:
+            case LOCKUP:
+            case UNLOCK:
+            case ASSET_LISTING_FEE:
+            case PROOF_OF_BURN:
+                return true;
+            case IRREGULAR:
+                return false;
+            default:
+                return false;
+        }
+    }
+
     private void addDateColumn() {
         TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.dateTime"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -397,7 +424,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     final TxType txType = item.getTxType();
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
-                                    if (item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal()) {
+                                    if (item.getConfirmations() > 0 && isValidType(txType)) {
                                         if (txType == TxType.COMPENSATION_REQUEST &&
                                                 daoFacade.isIssuanceTx(item.getTxId(), IssuanceType.COMPENSATION)) {
                                             if (field != null)
@@ -470,7 +497,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             TxType txType = item.getTxType();
-                            setText(item.getConfirmations() > 0 && txType.ordinal() > TxType.INVALID.ordinal() ?
+                            setText(item.getConfirmations() > 0 && isValidType(txType) ?
                                     bsqFormatter.formatCoin(item.getAmount()) :
                                     Res.get("shared.na"));
                         } else
@@ -620,6 +647,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                         case PROOF_OF_BURN:
                                             awesomeIcon = AwesomeIcon.FILE_TEXT;
                                             style = "dao-tx-type-proposal-fee-icon";
+                                            break;
+                                        case IRREGULAR:
+                                            awesomeIcon = AwesomeIcon.WARNING_SIGN;
+                                            style = "dao-tx-type-invalid-icon";
                                             break;
                                         default:
                                             awesomeIcon = AwesomeIcon.QUESTION_SIGN;

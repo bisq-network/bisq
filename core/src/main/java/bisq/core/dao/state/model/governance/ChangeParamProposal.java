@@ -55,7 +55,7 @@ public final class ChangeParamProposal extends Proposal implements ImmutableDaoS
                 paramValue,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 

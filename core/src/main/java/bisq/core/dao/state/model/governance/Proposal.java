@@ -26,6 +26,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.ExtraDataMapValidator;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -64,13 +65,13 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
                        byte version,
                        long creationDate,
                        @Nullable String txId,
-                       @SuppressWarnings("NullableProblems") Map<String, String> extraDataMap) {
+                       @Nullable Map<String, String> extraDataMap) {
         this.name = name;
         this.link = link;
         this.version = version;
         this.creationDate = creationDate;
         this.txId = txId;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
     }
 
 
@@ -143,7 +144,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     @Override
     public String toString() {
         return "Proposal{" +
-                "\n     uid='" + txId + '\'' +
+                "\n     txId='" + txId + '\'' +
                 ",\n     name='" + name + '\'' +
                 ",\n     link='" + link + '\'' +
                 ",\n     txId='" + txId + '\'' +

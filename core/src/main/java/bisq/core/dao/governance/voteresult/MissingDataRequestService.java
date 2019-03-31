@@ -43,6 +43,7 @@ public class MissingDataRequestService implements DaoSetupService {
     private final BlindVoteListService blindVoteListService;
     private final ProposalService proposalService;
     private final P2PService p2PService;
+    private boolean reRepublishAllGovernanceDataDone;
 
     @Inject
     public MissingDataRequestService(RepublishGovernanceDataHandler republishGovernanceDataHandler,
@@ -77,38 +78,44 @@ public class MissingDataRequestService implements DaoSetupService {
         republishGovernanceDataHandler.sendRepublishRequest();
     }
 
+    // Can be triggered with shortcut ctrl+UP or alt+UP
     public void reRepublishAllGovernanceData() {
-        ObservableList<ProposalPayload> proposalPayloads = proposalService.getProposalPayloads();
-        proposalPayloads.forEach(proposalPayload -> {
-            // We want a random delay between 0.1 and 30 sec. depending on the number of items
-            int delay = Math.max(100, Math.min(30_000, new Random().nextInt(proposalPayloads.size() * 500)));
-            UserThread.runAfter(() -> {
-                boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
-                String txId = proposalPayload.getProposal().getTxId();
-                if (success) {
-                    log.debug("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
-                            "the P2P network as append only data. proposalTxId={}", txId);
-                } else {
-                    log.error("Adding of proposalPayload to P2P network failed. proposalTxId={}", txId);
-                }
-            }, delay, TimeUnit.MILLISECONDS);
-        });
+        // We only want to do it once in case we would get flooded with requests.
+        if (!reRepublishAllGovernanceDataDone) {
+            reRepublishAllGovernanceDataDone = true;
+            ObservableList<ProposalPayload> proposalPayloads = proposalService.getProposalPayloads();
+            proposalPayloads.forEach(proposalPayload -> {
+                // We want a random delay between 0.1 and 300 sec. depending on the number of items.
+                // We send all proposals including those from old cycles.
+                int delay = Math.max(100, Math.min(300_000, new Random().nextInt(proposalPayloads.size() * 1000)));
+                UserThread.runAfter(() -> {
+                    boolean success = p2PService.addPersistableNetworkPayload(proposalPayload, true);
+                    String txId = proposalPayload.getProposal().getTxId();
+                    if (success) {
+                        log.debug("We received a RepublishGovernanceDataRequest and re-published a proposalPayload to " +
+                                "the P2P network as append only data. proposalTxId={}", txId);
+                    } else {
+                        log.error("Adding of proposalPayload to P2P network failed. proposalTxId={}", txId);
+                    }
+                }, delay, TimeUnit.MILLISECONDS);
+            });
 
-        ObservableList<BlindVotePayload> blindVotePayloads = blindVoteListService.getBlindVotePayloads();
-        blindVotePayloads
-                .forEach(blindVotePayload -> {
-                    // We want a random delay between 0.1 and 30 sec. depending on the number of items
-                    int delay = Math.max(100, Math.min(30_000, new Random().nextInt(blindVotePayloads.size() * 500)));
-                    UserThread.runAfter(() -> {
-                        boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
-                        String txId = blindVotePayload.getBlindVote().getTxId();
-                        if (success) {
-                            log.debug("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
-                                    "the P2P network as append only data. blindVoteTxId={}", txId);
-                        } else {
-                            log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId={}", txId);
-                        }
-                    }, delay, TimeUnit.MILLISECONDS);
-                });
+            ObservableList<BlindVotePayload> blindVotePayloads = blindVoteListService.getBlindVotePayloads();
+            blindVotePayloads.forEach(blindVotePayload -> {
+                // We want a random delay between 0.1 and 300 sec. depending on the number of items.
+                // We send all blindVotes including those from old cycles.
+                int delay = Math.max(100, Math.min(300_000, new Random().nextInt(blindVotePayloads.size() * 1000)));
+                UserThread.runAfter(() -> {
+                    boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
+                    String txId = blindVotePayload.getBlindVote().getTxId();
+                    if (success) {
+                        log.debug("We received a RepublishGovernanceDataRequest and re-published a blindVotePayload to " +
+                                "the P2P network as append only data. blindVoteTxId={}", txId);
+                    } else {
+                        log.error("Adding of blindVotePayload to P2P network failed. blindVoteTxId={}", txId);
+                    }
+                }, delay, TimeUnit.MILLISECONDS);
+            });
+        }
     }
 }

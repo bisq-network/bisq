@@ -355,6 +355,14 @@ public class DaoStateService implements DaoSetupService {
         return getTxStream().filter(tx -> tx.getId().equals(txId)).findAny();
     }
 
+    public List<Tx> getInvalidTxs() {
+        return getTxStream().filter(tx -> tx.getTxType() == TxType.INVALID).collect(Collectors.toList());
+    }
+
+    public List<Tx> getIrregularTxs() {
+        return getTxStream().filter(tx -> tx.getTxType() == TxType.IRREGULAR).collect(Collectors.toList());
+    }
+
     public boolean containsTx(String txId) {
         return getTx(txId).isPresent();
     }
@@ -382,9 +390,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalBurntFee() {
-        return getTxStream()
-                .mapToLong(Tx::getBurntFee)
-                .sum();
+        return getTxStream().mapToLong(Tx::getBurntFee).sum();
     }
 
     public Set<Tx> getBurntFeeTxs() {
@@ -809,6 +815,15 @@ public class DaoStateService implements DaoSetupService {
                 .flatMap(e -> getTx(e).stream())
                 .mapToLong(tx -> tx.getLockupOutput().getValue())
                 .sum();
+    }
+
+    public long getTotalAmountOfInvalidatedBsq() {
+        return getTxStream().mapToLong(Tx::getInvalidatedBsq).sum();
+    }
+
+    // Contains burnt fee and invalidated bsq due invalid txs
+    public long getTotalAmountOfBurntBsq() {
+        return getTxStream().mapToLong(Tx::getBurntBsq).sum();
     }
 
     // Confiscate bond

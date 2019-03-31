@@ -23,6 +23,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
@@ -91,7 +92,7 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
         this.registrationSignature = registrationSignature;
         this.emailAddress = emailAddress;
         this.info = info;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

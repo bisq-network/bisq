@@ -36,7 +36,8 @@ enum JsonTxType {
     LOCKUP("Lockup"),
     UNLOCK("Unlock"),
     ASSET_LISTING_FEE("Asset listing fee"),
-    PROOF_OF_BURN("Proof of burn");
+    PROOF_OF_BURN("Proof of burn"),
+    IRREGULAR("Irregular");
 
     @Getter
     private String displayString;

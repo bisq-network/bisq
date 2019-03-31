@@ -29,6 +29,7 @@ import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
 /**
@@ -48,6 +49,7 @@ public class ConfiscateBondValidator extends ProposalValidator implements Consen
             super.validateDataFields(proposal);
             ConfiscateBondProposal confiscateBondProposal = (ConfiscateBondProposal) proposal;
             notEmpty(confiscateBondProposal.getLockupTxId(), "LockupTxId must not be empty");
+            checkArgument(confiscateBondProposal.getLockupTxId().length() == 64, "LockupTxId must be 64 chars");
         } catch (ProposalValidationException e) {
             throw e;
         } catch (Throwable throwable) {

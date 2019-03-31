@@ -29,6 +29,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
 import io.bisq.generated.protobuffer.PB;
@@ -147,7 +148,7 @@ public final class TradeStatistics implements LazyProcessedPayload, ProtectedSto
         this.tradeDate = tradeDate;
         this.depositTxId = depositTxId;
         this.signaturePubKeyBytes = signaturePubKeyBytes;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         signaturePubKey = Sig.getPublicKeyFromBytes(signaturePubKeyBytes);
     }

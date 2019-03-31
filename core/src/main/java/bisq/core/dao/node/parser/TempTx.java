@@ -55,12 +55,7 @@ public class TempTx extends BaseTx {
     // Mutable data
     @Nullable
     private TxType txType;
-    private long burntFee;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    private long burntBsq;
 
     private TempTx(String txVersion,
                    String id,
@@ -70,7 +65,7 @@ public class TempTx extends BaseTx {
                    ImmutableList<TxInput> txInputs,
                    ImmutableList<TempTxOutput> tempTxOutputs,
                    @Nullable TxType txType,
-                   long burntFee) {
+                   long burntBsq) {
         super(txVersion,
                 id,
                 blockHeight,
@@ -79,7 +74,7 @@ public class TempTx extends BaseTx {
                 txInputs);
         this.tempTxOutputs = tempTxOutputs;
         this.txType = txType;
-        this.burntFee = burntFee;
+        this.burntBsq = burntBsq;
     }
 
     @Override
@@ -87,7 +82,7 @@ public class TempTx extends BaseTx {
         return "TempTx{" +
                 "\n     txOutputs=" + tempTxOutputs +
                 ",\n     txType=" + txType +
-                ",\n     burntFee=" + burntFee +
+                ",\n     burntBsq=" + burntBsq +
                 "\n} " + super.toString();
     }
 
@@ -103,13 +98,13 @@ public class TempTx extends BaseTx {
         String name = txType != null ? txType.name() : "";
         String name1 = tempTx.txType != null ? tempTx.txType.name() : "";
         boolean isTxTypeEquals = name.equals(name1);
-        return burntFee == tempTx.burntFee &&
+        return burntBsq == tempTx.burntBsq &&
                 Objects.equals(tempTxOutputs, tempTx.tempTxOutputs) &&
                 isTxTypeEquals;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), tempTxOutputs, txType, burntFee);
+        return Objects.hash(super.hashCode(), tempTxOutputs, txType, burntBsq);
     }
 }

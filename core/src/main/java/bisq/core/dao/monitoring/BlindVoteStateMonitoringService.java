@@ -159,7 +159,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
 
         // We wait for processing messages until we have completed batch processing
 
-        // We request data from last 5 cycles. We ignore possible duration changes done by voting as that request
+        // We request data from last 5 cycles. We ignore possible duration changes done by voting.
         // period is arbitrary anyway...
         Cycle currentCycle = periodService.getCurrentCycle();
         checkNotNull(currentCycle, "currentCycle must not be null");

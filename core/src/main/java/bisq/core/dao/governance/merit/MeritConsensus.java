@@ -54,20 +54,19 @@ public class MeritConsensus {
     }
 
     public static long getMeritStake(String blindVoteTxId, MeritList meritList, DaoStateService daoStateService) {
-        int txChainHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
-        return getMeritStake(blindVoteTxId, meritList, txChainHeight);
-    }
-
-    private static long getMeritStake(String blindVoteTxId, MeritList meritList, int txChainHeight) {
         // We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even at
         // later blocks (merit decreases with each block).
-        if (txChainHeight == 0) {
+        int blindVoteTxHeight = daoStateService.getTx(blindVoteTxId).map(Tx::getBlockHeight).orElse(0);
+        if (blindVoteTxHeight == 0) {
             log.error("Error at getMeritStake: blindVoteTx not found in daoStateService. blindVoteTxId=" + blindVoteTxId);
             return 0;
         }
 
+        // We only use past issuance. In case we would calculate the merit after the vote result phase we have the
+        // issuance from the same cycle but we must not add that to the merit.
         return meritList.getList().stream()
                 .filter(merit -> isSignatureValid(merit.getSignature(), merit.getIssuance().getPubKey(), blindVoteTxId))
+                .filter(merit -> merit.getIssuance().getChainHeight() <= blindVoteTxHeight)
                 .mapToLong(merit -> {
                     try {
                         Issuance issuance = merit.getIssuance();
@@ -75,7 +74,7 @@ public class MeritConsensus {
                                 "issuance must be of type COMPENSATION");
                         return getWeightedMeritAmount(issuance.getAmount(),
                                 issuance.getChainHeight(),
-                                txChainHeight,
+                                blindVoteTxHeight,
                                 BLOCKS_PER_YEAR);
                     } catch (Throwable t) {
                         log.error("Error at getMeritStake: error={}, merit={}", t.toString(), merit);
@@ -145,17 +144,20 @@ public class MeritConsensus {
     public static long getCurrentlyAvailableMerit(MeritList meritList, int currentChainHeight) {
         // We need to take the chain height when the blindVoteTx got published so we get the same merit for the vote even at
         // later blocks (merit decreases with each block).
+        // We add 1 block to currentChainHeight so that the displayed merit would match the merit in case we get the
+        // blind vote tx into the next block.
+        int height = currentChainHeight + 1;
         return meritList.getList().stream()
                 .mapToLong(merit -> {
                     try {
                         Issuance issuance = merit.getIssuance();
                         checkArgument(issuance.getIssuanceType() == IssuanceType.COMPENSATION, "issuance must be of type COMPENSATION");
                         int issuanceHeight = issuance.getChainHeight();
-                        checkArgument(issuanceHeight <= currentChainHeight,
+                        checkArgument(issuanceHeight <= height,
                                 "issuanceHeight must not be larger as currentChainHeight");
                         return getWeightedMeritAmount(issuance.getAmount(),
                                 issuanceHeight,
-                                currentChainHeight,
+                                height,
                                 BLOCKS_PER_YEAR);
                     } catch (Throwable t) {
                         log.error("Error at getCurrentlyAvailableMerit: " + t.toString());

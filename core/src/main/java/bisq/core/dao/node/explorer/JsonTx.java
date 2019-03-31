@@ -36,8 +36,25 @@ class JsonTx {
     private final JsonTxType txType;
     private final String txTypeDisplayString;
     private final long burntFee;
+    private final long invalidatedBsq;
     // If not set it is -1. LockTime of 0 is a valid value.
     private final int unlockBlockHeight;
+
+    JsonTx(String id, int blockHeight, String blockHash, long time, List<JsonTxInput> inputs,
+           List<JsonTxOutput> outputs, JsonTxType txType, String txTypeDisplayString, long burntFee,
+           long invalidatedBsq, int unlockBlockHeight) {
+        this.id = id;
+        this.blockHeight = blockHeight;
+        this.blockHash = blockHash;
+        this.time = time;
+        this.inputs = inputs;
+        this.outputs = outputs;
+        this.txType = txType;
+        this.txTypeDisplayString = txTypeDisplayString;
+        this.burntFee = burntFee;
+        this.invalidatedBsq = invalidatedBsq;
+        this.unlockBlockHeight = unlockBlockHeight;
+    }
 
     // Enums must not be used directly for hashCode or equals as it delivers the Object.hashCode (internal address)!
     // The equals and hashCode methods cannot be overwritten in Enums.
@@ -50,6 +67,7 @@ class JsonTx {
         return blockHeight == jsonTx.blockHeight &&
                 time == jsonTx.time &&
                 burntFee == jsonTx.burntFee &&
+                invalidatedBsq == jsonTx.invalidatedBsq &&
                 unlockBlockHeight == jsonTx.unlockBlockHeight &&
                 Objects.equals(txVersion, jsonTx.txVersion) &&
                 Objects.equals(id, jsonTx.id) &&
@@ -62,7 +80,7 @@ class JsonTx {
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(super.hashCode(), txVersion, id, blockHeight, blockHash, time, inputs, outputs, txType.name(), txTypeDisplayString, burntFee, unlockBlockHeight);
+        return Objects.hash(super.hashCode(), txVersion, id, blockHeight, blockHash, time, inputs, outputs,
+                txType.name(), txTypeDisplayString, burntFee, invalidatedBsq, unlockBlockHeight);
     }
 }

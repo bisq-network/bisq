@@ -62,7 +62,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 requestedBsq.value,
                 Version.REIMBURSEMENT_REQUEST,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 

@@ -40,6 +40,7 @@ import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
+import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -54,6 +55,7 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -112,6 +114,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private final BsqWalletService bsqWalletService;
     private final PhasesView phasesView;
     private final DaoStateService daoStateService;
+    private final MyBlindVoteListService myBlindVoteListService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
     private final BSFormatter btcFormatter;
@@ -148,7 +151,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerProposalTableRow);
         return extraRows == 0 ? initialProposalTableViewHeight : Math.ceil(initialProposalTableViewHeight + (extraRows * pixelsPerProposalTableRow));
     };
-    private ChangeListener<Number> bisqWindowVerticalSizeListener;
+    private ChangeListener<Number> sceneHeightListener;
     private TableGroupHeadline proposalsHeadline;
 
 
@@ -161,6 +164,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           BsqWalletService bsqWalletService,
                           PhasesView phasesView,
                           DaoStateService daoStateService,
+                          MyBlindVoteListService myBlindVoteListService,
                           Preferences preferences,
                           BsqFormatter bsqFormatter,
                           BSFormatter btcFormatter,
@@ -169,6 +173,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         this.bsqWalletService = bsqWalletService;
         this.phasesView = phasesView;
         this.daoStateService = daoStateService;
+        this.myBlindVoteListService = myBlindVoteListService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -187,14 +192,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         ballotListChangeListener = c -> updateListItems();
         proposalListChangeListener = c -> updateListItems();
 
-        bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> {
-            double newTableViewHeight = proposalTableViewHeight.apply(newValue.doubleValue());
-            if (tableView.getHeight() != newTableViewHeight) {
-                tableView.setMinHeight(newTableViewHeight);
-                double diff = newTableViewHeight - tableView.getHeight();
-                proposalsHeadline.setMaxHeight(proposalsHeadline.getHeight() + diff);
-            }
-        };
+        sceneHeightListener = (observable, oldValue, newValue) -> updateTableHeight(newValue.doubleValue());
 
         stakeListener = (observable, oldValue, newValue) -> updateViews();
     }
@@ -203,15 +201,12 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     protected void activate() {
         phasesView.activate();
 
-        phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
         selectedProposalSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
-
-        daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
-        daoFacade.getAllBallots().addListener(ballotListChangeListener);
-        daoFacade.addBsqStateListener(this);
-        bsqWalletService.addBsqBalanceListener(this);
+        tableView.setPrefHeight(100);
+        root.getScene().heightProperty().addListener(sceneHeightListener);
+        UserThread.execute(() -> updateTableHeight(root.getScene().getHeight()));
 
         stakeInputTextField.textProperty().addListener(stakeListener);
         voteButton.setOnAction(e -> onVote());
@@ -224,18 +219,21 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 bsqWalletService.getLockupBondsBalance(),
                 bsqWalletService.getUnlockingBondsBalance());
 
-        updateListItems();
-        GUIUtil.setFitToRowsForTableView(tableView, 38, 28, 4, 4);
-        updateViews();
+        if (daoStateService.isParseBlockChainComplete()) {
+            addListenersAfterParseBlockChainComplete();
 
-        root.getScene().heightProperty().addListener(bisqWindowVerticalSizeListener);
+            updateListItems();
+            applyMerit();
+            updateViews();
+        }
     }
 
     @Override
     protected void deactivate() {
         phasesView.deactivate();
 
-        phaseSubscription.unsubscribe();
+        if (phaseSubscription != null)
+            phaseSubscription.unsubscribe();
         selectedProposalSubscription.unsubscribe();
 
         sortedList.comparatorProperty().unbind();
@@ -286,19 +284,35 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        updateViews();
-    }
-
-    @Override
-    public void onParseBlockChainComplete() {
         updateListItems();
         applyMerit();
     }
 
+    @Override
+    public void onParseBlockChainComplete() {
+        addListenersAfterParseBlockChainComplete();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
+    // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void addListenersAfterParseBlockChainComplete() {
+        daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
+        daoFacade.getAllBallots().addListener(ballotListChangeListener);
+        daoFacade.addBsqStateListener(this);
+        bsqWalletService.addBsqBalanceListener(this);
+
+        phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
+    }
+
+    private void updateListItems() {
+        listItems.forEach(ProposalsListItem::cleanup);
+        listItems.clear();
+
+        fillListItems();
+    }
 
     private void fillListItems() {
         if (daoFacade.phaseProperty().get().ordinal() < DaoPhase.Phase.BLIND_VOTE.ordinal()) {
@@ -318,16 +332,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         updateViews();
     }
 
-    private void updateListItems() {
-        listItems.forEach(ProposalsListItem::cleanup);
-        listItems.clear();
-
-        fillListItems();
-    }
-
     private void showVoteOnProposalWindow(Proposal proposal, @Nullable Ballot ballot,
                                           @Nullable EvaluatedProposal evaluatedProposal) {
-
         if (!shownVoteOnProposalWindowForTxId.equals(proposal.getTxId())) {
             shownVoteOnProposalWindowForTxId = proposal.getTxId();
 
@@ -406,13 +412,15 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         // use the merit based on all past issuance with the time decay applied.
         // The merit from the vote stays the same over blocks, the merit from daoFacade.getMeritAndStake()
         // decreases with every block a bit (over 2 years it goes to zero).
-        boolean hasConfirmedVoteTxInCycle = daoFacade.getMyVoteListForCycle().stream()
-                .map(myVote -> daoFacade.getTx(myVote.getTxId()))
-                .findAny()
-                .isPresent();
+        Optional<MyVote> optionalMyVote = daoFacade.getMyVoteListForCycle().stream()
+                .filter(myVote -> daoFacade.getTx(myVote.getBlindVoteTxId()).isPresent())
+                .findAny();
+        boolean hasConfirmedMyVoteInCycle = optionalMyVote.isPresent();
         long merit;
-        if (selectedItem != null && hasConfirmedVoteTxInCycle) {
+        if (selectedItem != null && hasConfirmedMyVoteInCycle) {
             merit = daoFacade.getMeritAndStakeForProposal(selectedItem.getProposal().getTxId()).first;
+        } else if (selectedItem == null && hasConfirmedMyVoteInCycle) {
+            merit = optionalMyVote.get().getMerit(myBlindVoteListService, daoStateService);
         } else {
             merit = daoFacade.getAvailableMerit();
         }
@@ -542,8 +550,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                     Coin stake = Coin.valueOf(myVote.getBlindVote().getStake());
                     stakeInputTextField.setText(bsqFormatter.formatCoinWithCode(stake));
 
-                    if (myVote.getTxId() != null) {
-                        blindVoteTxIdTextField.setup(myVote.getTxId());
+                    if (myVote.getBlindVoteTxId() != null) {
+                        blindVoteTxIdTextField.setup(myVote.getBlindVoteTxId());
                         blindVoteTxIdContainer.setVisible(true);
                         blindVoteTxIdContainer.setManaged(true);
                     }
@@ -589,6 +597,15 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
     private boolean isBlindVotePhaseButNotLastBlock() {
         return daoFacade.isInPhaseButNotLastBlock(DaoPhase.Phase.BLIND_VOTE);
+    }
+
+    private void updateTableHeight(double height) {
+        double newTableViewHeight = proposalTableViewHeight.apply(height);
+        if (tableView.getHeight() != newTableViewHeight) {
+            tableView.setMinHeight(newTableViewHeight);
+            double diff = newTableViewHeight - tableView.getHeight();
+            proposalsHeadline.setMaxHeight(proposalsHeadline.getHeight() + diff);
+        }
     }
 
 

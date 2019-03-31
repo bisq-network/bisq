@@ -64,8 +64,7 @@ public final class Ballot implements PersistablePayload, ConsensusCritical, Immu
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Ballot(Proposal proposal,
-                  @Nullable Vote vote) {
+    public Ballot(Proposal proposal, @Nullable Vote vote) {
         this.proposal = proposal;
         this.vote = vote;
     }

@@ -20,13 +20,16 @@ package bisq.core.dao.monitoring;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
+import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.GenesisTxInfo;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -37,6 +40,9 @@ import bisq.common.crypto.Hash;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.ArrayUtils;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -86,6 +92,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private boolean parseBlockChainComplete;
     @Getter
     private boolean isInConflict;
+    @Getter
+    private ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +140,21 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // We wait for processing messages until we have completed batch processing
         int fromHeight = daoStateService.getChainHeight() - 10;
         daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
+    }
+
+    @Override
+    public void onDaoStateChanged(Block block) {
+        long genesisTotalSupply = daoStateService.getGenesisTotalSupply().value;
+        long compensationIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.COMPENSATION);
+        long reimbursementIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT);
+        long totalAmountOfBurntBsq = daoStateService.getTotalAmountOfBurntBsq();
+        // confiscated funds are still in the utxo set
+        long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
+        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
+
+        if (sumBsq != sumUtxo) {
+            utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

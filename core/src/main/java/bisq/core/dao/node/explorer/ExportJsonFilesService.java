@@ -193,7 +193,8 @@ public class ExportJsonFilesService implements DaoSetupService {
                 getJsonTxOutputs(tx),
                 jsonTxType,
                 jsonTxTypeDisplayString,
-                daoStateService.getBurntFee(tx.getId()),
+                tx.getBurntFee(),
+                tx.getInvalidatedBsq(),
                 tx.getUnlockBlockHeight());
     }
 
@@ -239,7 +240,8 @@ public class ExportJsonFilesService implements DaoSetupService {
                             btcAmount,
                             tx.getBlockHeight(),
                             isBsqTxOutputType,
-                            daoStateService.getBurntFee(tx.getId()),
+                            tx.getBurntFee(),
+                            tx.getInvalidatedBsq(),
                             txOutput.getAddress(),
                             scriptPubKey,
                             spentInfo,

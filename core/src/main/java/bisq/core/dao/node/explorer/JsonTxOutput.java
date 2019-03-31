@@ -35,6 +35,7 @@ class JsonTxOutput {
     private final int height;
     private final boolean isVerified; // isBsqTxOutputType
     private final long burntFee;
+    private final long invalidatedBsq;
     private final String address;
     @Nullable
     private final JsonScriptPubKey scriptPubKey;
@@ -49,6 +50,31 @@ class JsonTxOutput {
     private final String opReturn;
     private final int lockTime;
     private final boolean isUnspent;
+
+    JsonTxOutput(String txId, int index, long bsqAmount, long btcAmount, int height, boolean isVerified, long burntFee,
+                 long invalidatedBsq, String address, JsonScriptPubKey scriptPubKey, JsonSpentInfo spentInfo,
+                 long time, JsonTxType txType, String txTypeDisplayString, JsonTxOutputType txOutputType,
+                 String txOutputTypeDisplayString, String opReturn, int lockTime, boolean isUnspent) {
+        this.txId = txId;
+        this.index = index;
+        this.bsqAmount = bsqAmount;
+        this.btcAmount = btcAmount;
+        this.height = height;
+        this.isVerified = isVerified;
+        this.burntFee = burntFee;
+        this.invalidatedBsq = invalidatedBsq;
+        this.address = address;
+        this.scriptPubKey = scriptPubKey;
+        this.spentInfo = spentInfo;
+        this.time = time;
+        this.txType = txType;
+        this.txTypeDisplayString = txTypeDisplayString;
+        this.txOutputType = txOutputType;
+        this.txOutputTypeDisplayString = txOutputTypeDisplayString;
+        this.opReturn = opReturn;
+        this.lockTime = lockTime;
+        this.isUnspent = isUnspent;
+    }
 
     String getId() {
         return txId + ":" + index;
@@ -68,6 +94,7 @@ class JsonTxOutput {
                 height == that.height &&
                 isVerified == that.isVerified &&
                 burntFee == that.burntFee &&
+                invalidatedBsq == that.invalidatedBsq &&
                 time == that.time &&
                 lockTime == that.lockTime &&
                 isUnspent == that.isUnspent &&
@@ -85,7 +112,8 @@ class JsonTxOutput {
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(super.hashCode(), txVersion, txId, index, bsqAmount, btcAmount, height, isVerified, burntFee, address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString, txOutputType, txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
+        return Objects.hash(super.hashCode(), txVersion, txId, index, bsqAmount, btcAmount, height, isVerified,
+                burntFee, invalidatedBsq, address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString,
+                txOutputType, txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
     }
 }

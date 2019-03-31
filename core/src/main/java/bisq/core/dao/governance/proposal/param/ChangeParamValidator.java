@@ -65,6 +65,7 @@ public class ChangeParamValidator extends ProposalValidator implements Consensus
             super.validateDataFields(proposal);
             ChangeParamProposal changeParamProposal = (ChangeParamProposal) proposal;
             validateParamValue(changeParamProposal.getParam(), changeParamProposal.getParamValue(), getBlockHeight(proposal));
+            checkArgument(changeParamProposal.getParamValue().length() <= 200, "ParamValue must not exceed 200 chars");
         } catch (ProposalValidationException e) {
             throw e;
         } catch (Throwable throwable) {

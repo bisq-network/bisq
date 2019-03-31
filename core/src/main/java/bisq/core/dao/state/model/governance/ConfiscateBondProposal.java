@@ -53,7 +53,7 @@ public final class ConfiscateBondProposal extends Proposal implements ImmutableD
                 lockupTxId,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 

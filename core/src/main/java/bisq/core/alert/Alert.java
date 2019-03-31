@@ -22,6 +22,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
+import bisq.common.util.ExtraDataMapValidator;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -91,7 +92,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         this.version = version;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.signatureAsBase64 = signatureAsBase64;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }

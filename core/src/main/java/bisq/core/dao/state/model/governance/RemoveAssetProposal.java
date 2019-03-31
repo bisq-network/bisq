@@ -53,7 +53,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
                 tickerSymbol,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 

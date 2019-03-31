@@ -32,7 +32,6 @@ import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.PeriodService;
-import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -42,6 +41,7 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -102,8 +102,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                              BsqWalletService bsqWalletService,
                              BtcWalletService btcWalletService,
                              P2PService p2PService,
-                             WalletsManager walletsManager,
-                             BsqNodeProvider bsqNodeProvider) {
+                             WalletsManager walletsManager) {
         this.daoStateService = daoStateService;
         this.blindVoteListService = blindVoteListService;
         this.periodService = periodService;
@@ -179,9 +178,13 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                 .filter(myVote -> myVote.getRevealTxId() == null) // we have not already revealed
                 .forEach(myVote -> {
                     boolean isInVoteRevealPhase = periodService.getPhaseForHeight(chainHeight) == DaoPhase.Phase.VOTE_REVEAL;
-                    boolean isBlindVoteTxInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(myVote.getTxId(), DaoPhase.Phase.BLIND_VOTE, chainHeight);
-                    if (isInVoteRevealPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
-                        log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, myVote.getTxId());
+                    // If we would create the tx in the last block it would be confirmed in the best case in th next
+                    // block which would be already the break and would invalidate the vote reveal.
+                    boolean isLastBlockInPhase = chainHeight == periodService.getLastBlockOfPhase(chainHeight, DaoPhase.Phase.VOTE_REVEAL);
+                    String blindVoteTxId = myVote.getBlindVoteTxId();
+                    boolean isBlindVoteTxInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(blindVoteTxId, DaoPhase.Phase.BLIND_VOTE, chainHeight);
+                    if (isInVoteRevealPhase && !isLastBlockInPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
+                        log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, blindVoteTxId);
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote, true);
                     } else {
@@ -192,7 +195,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         boolean missedPhaseSameCycle = isAfterVoteRevealPhase && isBlindVoteTxInCorrectPhaseAndCycle;
 
                         // If we missed the cycle we don't care about the phase anymore.
-                        boolean isBlindVoteTxInPastCycle = periodService.isTxInPastCycle(myVote.getTxId(), chainHeight);
+                        boolean isBlindVoteTxInPastCycle = periodService.isTxInPastCycle(blindVoteTxId, chainHeight);
 
                         if (missedPhaseSameCycle || isBlindVoteTxInPastCycle) {
                             // Exceptional case that the user missed the vote reveal phase. We still publish the vote
@@ -205,7 +208,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                             // publish the vote reveal tx but are aware that is is invalid.
                             log.warn("We missed the vote reveal phase but publish now the tx to unlock our locked " +
                                             "BSQ from the blind vote tx. BlindVoteTxId={}, blockHeight={}",
-                                    myVote.getTxId(), chainHeight);
+                                    blindVoteTxId, chainHeight);
 
                             // We handle the exception here inside the stream iteration as we have not get triggered from an
                             // outside user intent anyway. We keep errors in a observable list so clients can observe that to
@@ -233,7 +236,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // myVote is already tested if it is in current cycle at maybeRevealVotes
             // We expect that the blind vote tx and stake output is available. If not we throw an exception.
             TxOutput stakeTxOutput = daoStateService.getUnspentBlindVoteStakeTxOutputs().stream()
-                    .filter(txOutput -> txOutput.getTxId().equals(myVote.getTxId()))
+                    .filter(txOutput -> txOutput.getTxId().equals(myVote.getBlindVoteTxId()))
                     .findFirst()
                     .orElseThrow(() -> new VoteRevealException("stakeTxOutput is not found for myVote.", myVote));
 
@@ -253,7 +256,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         } catch (IOException | WalletException | TransactionVerificationException
                 | InsufficientMoneyException e) {
             voteRevealExceptions.add(new VoteRevealException("Exception at calling revealVote.",
-                    e, myVote.getTxId()));
+                    e, myVote.getBlindVoteTxId()));
         } catch (VoteRevealException e) {
             voteRevealExceptions.add(e);
         }
@@ -284,12 +287,18 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     }
 
     private void rePublishBlindVotePayloadList(List<BlindVote> blindVoteList) {
+        // If we have 20 blind votes from 20 voters we would have 400 messages sent to their 10 neighbor peers.
+        // Most of the neighbors will already have the data so they will not continue broadcast.
+        // To not flood the network too much we use a long random delay to spread the load over 5 minutes.
+        // As this is only for extra resilience we don't care so much for the case that the user might shut down the
+        // app before we are finished with our delayed broadcast.
+        // We cannot set reBroadcast to false as otherwise it would not have any effect as we have the data already and
+        // broadcast would only be triggered at new data.
         blindVoteList.stream()
                 .map(BlindVotePayload::new)
                 .forEach(blindVotePayload -> {
-                    boolean success = p2PService.addPersistableNetworkPayload(blindVotePayload, true);
-                    if (!success)
-                        log.warn("publishToAppendOnlyDataStore failed for blindVote " + blindVotePayload.getBlindVote());
+                    UserThread.runAfterRandomDelay(() -> p2PService.addPersistableNetworkPayload(blindVotePayload, true),
+                            1, 300);
                 });
     }
 }

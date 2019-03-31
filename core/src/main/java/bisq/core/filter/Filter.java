@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.util.ExtraDataMapValidator;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -146,7 +147,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 disableDao);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
     }
