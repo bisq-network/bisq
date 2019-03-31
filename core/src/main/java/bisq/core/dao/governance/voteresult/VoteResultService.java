@@ -373,7 +373,6 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         // It could be that we missed some proposalPayloads.
         // If we have votes with proposals which are not found in our ballots we add it to missingBallots.
         List<String> missingBallots = new ArrayList<>();
-
         List<Ballot> ballots = voteByTxIdMap.entrySet().stream()
                 .map(entry -> {
                     String txId = entry.getKey();

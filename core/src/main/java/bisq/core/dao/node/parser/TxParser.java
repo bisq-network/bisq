@@ -425,7 +425,8 @@ public class TxParser {
                 return TxType.PROOF_OF_BURN;
             default:
                 log.warn("We got a BSQ tx with an unknown OP_RETURN. tx={}, opReturnType={}", tempTx, opReturnType);
-                // We tolerate such an incorrect tx and do not burn the BSQ
+                // We tolerate such an incorrect tx and do not burn the BSQ. We might need that in case we add new
+                // opReturn types in future.
                 return TxType.IRREGULAR;
         }
     }

@@ -112,7 +112,6 @@ class JsonTxOutput {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(super.hashCode(), txVersion, txId, index, bsqAmount, btcAmount, height, isVerified,
                 burntFee, invalidatedBsq, address, scriptPubKey, spentInfo, time, txType.name(), txTypeDisplayString,
                 txOutputType, txOutputTypeDisplayString, opReturn, lockTime, isUnspent);
