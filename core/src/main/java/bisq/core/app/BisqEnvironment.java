@@ -361,14 +361,9 @@ public class BisqEnvironment extends StandardEnvironment {
             final String bannedBtcNodesAsString = getProperty(FilterManager.BANNED_BTC_NODES, "");
             bannedBtcNodes = !bannedBtcNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedBtcNodesAsString).split(",")) : null;
 
-            try {
-                // We replaced DAO_TESTNET with DAO_REGTEST. If user had DAO_TESTNET in his property file we
-                // get an exception and set the baseCurrencyNetwork to BTC_DAO_REGTEST
-                baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
-                        getDefaultBaseCurrencyNetwork().name()).toUpperCase());
-            } catch (Throwable t) {
-                baseCurrencyNetwork = BaseCurrencyNetwork.BTC_DAO_REGTEST;
-            }
+            baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
+                    getDefaultBaseCurrencyNetwork().name()).toUpperCase());
+
             btcNetworkDir = Paths.get(appDataDir, baseCurrencyNetwork.name().toLowerCase()).toString();
             File btcNetworkDirFile = new File(btcNetworkDir);
             if (!btcNetworkDirFile.exists())

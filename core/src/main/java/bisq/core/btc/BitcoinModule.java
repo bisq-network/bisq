@@ -58,9 +58,11 @@ public class BitcoinModule extends AppModule {
         // (localhost)
         String regTestHost = environment.getProperty(BtcOptionKeys.REG_TEST_HOST, String.class, "");
         if (regTestHost.isEmpty()) {
-            regTestHost = BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ?
-                    "134.209.242.206" :
-                    RegTestHost.DEFAULT_HOST;
+            regTestHost = BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ?
+                    "104.248.31.39" :
+                    BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ?
+                            "134.209.242.206" :
+                            RegTestHost.DEFAULT_HOST;
         }
 
         RegTestHost.HOST = regTestHost;
