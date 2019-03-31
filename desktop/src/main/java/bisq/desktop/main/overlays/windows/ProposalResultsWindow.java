@@ -134,6 +134,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
         proposalDisplay.createAllFields("", rowIndex, -Layout.FIRST_ROW_DISTANCE, proposal.getType(),
                 false, "last");
         proposalDisplay.setEditable(false);
+        proposalDisplay.onNavigate(this::doClose);
 
         proposalDisplay.applyProposalPayload(proposal);
         proposalDisplay.applyEvaluatedProposal(evaluatedProposal);

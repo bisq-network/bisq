@@ -144,7 +144,7 @@ public class ProposalDisplay {
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
     private int votingBoxRowSpan;
 
-    private Optional<Runnable> navigateHandlerOptional;
+    private Optional<Runnable> navigateHandlerOptional = Optional.empty();
 
     public ProposalDisplay(GridPane gridPane,
                            BsqFormatter bsqFormatter,
@@ -647,7 +647,7 @@ public class ProposalDisplay {
     }
 
     public void onNavigate(Runnable navigateHandler) {
-        this.navigateHandlerOptional = Optional.of(navigateHandler);
+        navigateHandlerOptional = Optional.of(navigateHandler);
     }
 
     public int incrementAndGetGridRow() {
