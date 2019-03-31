@@ -17,11 +17,14 @@
 
 package bisq.core.dao.governance.blindvote;
 
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.DaoPhase;
+
+import bisq.common.util.ExtraDataMapValidator;
 
 import javax.inject.Inject;
 
@@ -58,12 +61,20 @@ public class BlindVoteValidator {
             checkNotNull(blindVote.getEncryptedVotes(), "encryptedProposalList must not be null");
             checkArgument(blindVote.getEncryptedVotes().length > 0,
                     "encryptedProposalList must not be empty");
-            checkNotNull(blindVote.getTxId(), "txId must not be null");
-            checkArgument(!blindVote.getTxId().isEmpty(), "txId must not be empty");
-            checkArgument(blindVote.getStake() > 0, "stake must be positive");
+            checkArgument(blindVote.getEncryptedVotes().length <= 100000,
+                    "encryptedProposalList must not exceed 100kb");
+
+            checkNotNull(blindVote.getTxId(), "Tx ID must not be null");
+            checkArgument(blindVote.getTxId().length() == 64, "Tx ID must be 64 chars");
+            checkArgument(blindVote.getStake() >= Restrictions.getMinNonDustOutput().value, "Stake must be at least MinNonDustOutput");
+
             checkNotNull(blindVote.getEncryptedMeritList(), "getEncryptedMeritList must not be null");
             checkArgument(blindVote.getEncryptedMeritList().length > 0,
                     "getEncryptedMeritList must not be empty");
+            checkArgument(blindVote.getEncryptedMeritList().length <= 100000,
+                    "getEncryptedMeritList must not exceed 100kb");
+
+            ExtraDataMapValidator.validate(blindVote.getExtraDataMap());
         } catch (Throwable e) {
             log.warn(e.toString());
             throw new ProposalValidationException(e);

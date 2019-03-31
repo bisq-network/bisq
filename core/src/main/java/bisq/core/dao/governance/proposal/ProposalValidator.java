@@ -28,6 +28,8 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
+import bisq.common.util.ExtraDataMapValidator;
+
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +68,8 @@ public abstract class ProposalValidator implements ConsensusCritical {
             checkArgument(proposal.getLink().length() <= 200, "Link must not exceed 200 chars");
             if (proposal.getTxId() != null)
                 checkArgument(proposal.getTxId().length() == 64, "Tx ID must be 64 chars");
+
+            ExtraDataMapValidator.validate(proposal.getExtraDataMap());
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
