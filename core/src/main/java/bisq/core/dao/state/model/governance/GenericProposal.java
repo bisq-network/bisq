@@ -50,7 +50,7 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
                 link,
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 

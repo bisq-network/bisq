@@ -54,7 +54,7 @@ public final class RoleProposal extends Proposal implements ImmutableDaoStateMod
                 role.getBondedRoleType().getUnlockTimeInBlocks(),
                 Version.PROPOSAL,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 

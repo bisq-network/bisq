@@ -62,7 +62,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                 requestedBsq.value,
                 Version.COMPENSATION_REQUEST,
                 new Date().getTime(),
-                "",
+                null,
                 extraDataMap);
     }
 
