@@ -181,9 +181,10 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                     // If we would create the tx in the last block it would be confirmed in the best case in th next
                     // block which would be already the break and would invalidate the vote reveal.
                     boolean isLastBlockInPhase = chainHeight == periodService.getLastBlockOfPhase(chainHeight, DaoPhase.Phase.VOTE_REVEAL);
-                    boolean isBlindVoteTxInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(myVote.getBlindVoteTxId(), DaoPhase.Phase.BLIND_VOTE, chainHeight);
+                    String blindVoteTxId = myVote.getBlindVoteTxId();
+                    boolean isBlindVoteTxInCorrectPhaseAndCycle = periodService.isTxInPhaseAndCycle(blindVoteTxId, DaoPhase.Phase.BLIND_VOTE, chainHeight);
                     if (isInVoteRevealPhase && !isLastBlockInPhase && isBlindVoteTxInCorrectPhaseAndCycle) {
-                        log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, myVote.getBlindVoteTxId());
+                        log.info("We call revealVote at blockHeight {} for blindVoteTxId {}", chainHeight, blindVoteTxId);
                         // Standard case that we are in the correct phase and cycle and create the reveal tx.
                         revealVote(myVote, true);
                     } else {
@@ -194,7 +195,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                         boolean missedPhaseSameCycle = isAfterVoteRevealPhase && isBlindVoteTxInCorrectPhaseAndCycle;
 
                         // If we missed the cycle we don't care about the phase anymore.
-                        boolean isBlindVoteTxInPastCycle = periodService.isTxInPastCycle(myVote.getBlindVoteTxId(), chainHeight);
+                        boolean isBlindVoteTxInPastCycle = periodService.isTxInPastCycle(blindVoteTxId, chainHeight);
 
                         if (missedPhaseSameCycle || isBlindVoteTxInPastCycle) {
                             // Exceptional case that the user missed the vote reveal phase. We still publish the vote
@@ -207,7 +208,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
                             // publish the vote reveal tx but are aware that is is invalid.
                             log.warn("We missed the vote reveal phase but publish now the tx to unlock our locked " +
                                             "BSQ from the blind vote tx. BlindVoteTxId={}, blockHeight={}",
-                                    myVote.getBlindVoteTxId(), chainHeight);
+                                    blindVoteTxId, chainHeight);
 
                             // We handle the exception here inside the stream iteration as we have not get triggered from an
                             // outside user intent anyway. We keep errors in a observable list so clients can observe that to
