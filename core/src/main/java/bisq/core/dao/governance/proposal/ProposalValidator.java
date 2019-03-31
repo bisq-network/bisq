@@ -32,6 +32,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.commons.lang3.Validate.notEmpty;
 
 /**
@@ -61,6 +62,10 @@ public abstract class ProposalValidator implements ConsensusCritical {
         try {
             notEmpty(proposal.getName(), "name must not be empty");
             notEmpty(proposal.getLink(), "link must not be empty");
+            checkArgument(proposal.getName().length() <= 200, "Name must not exceed 200 chars");
+            checkArgument(proposal.getLink().length() <= 200, "Link must not exceed 200 chars");
+            if (proposal.getTxId() != null)
+                checkArgument(proposal.getTxId().length() == 64, "Tx ID must be 64 chars");
         } catch (Throwable throwable) {
             throw new ProposalValidationException(throwable);
         }
