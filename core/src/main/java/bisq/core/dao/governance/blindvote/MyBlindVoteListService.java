@@ -354,6 +354,9 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private void rePublishMyBlindVoteOnceWellConnected() {
         // We republish at each startup at any block during the cycle. We filter anyway for valid blind votes
         // of that cycle so it is 1 blind vote getting rebroadcast at each startup to my neighbors.
+        // Republishing only will have effect if the payload creation date is < 5 hours as other nodes would not
+        // accept payloads which are too old or are in future.
+        // Only payloads received from seed nodes would ignore that date check.
         int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
         if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
                 BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
