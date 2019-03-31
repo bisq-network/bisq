@@ -53,8 +53,7 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
     private int gridRow = 0;
     private TextField allTxTextField, burntFeeTxsTextField,
             utxoTextField, compensationIssuanceTxTextField,
-            reimbursementIssuanceTxTextField,
-            invalidTxsTextField;
+            reimbursementIssuanceTxTextField, invalidTxsTextField, irregularTxsTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -96,21 +95,24 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         utxoTextField = addTopLabelReadOnlyTextField(root, ++gridRow, Res.get("dao.factsAndFigures.transactions.utxo")).second;
         compensationIssuanceTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.transactions.compensationIssuanceTx")).second;
+        reimbursementIssuanceTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+                Res.get("dao.factsAndFigures.transactions.reimbursementIssuanceTx")).second;
 
         int columnIndex = 1;
-
         gridRow = startRow;
 
         titledGroupBg = addTitledGroupBg(root, startRow, columnIndex, 3, "", Layout.GROUP_DISTANCE);
         titledGroupBg.getStyleClass().add("last");
 
-        reimbursementIssuanceTxTextField = addTopLabelReadOnlyTextField(root, gridRow, columnIndex,
-                Res.get("dao.factsAndFigures.transactions.reimbursementIssuanceTx"),
+        burntFeeTxsTextField = addTopLabelReadOnlyTextField(root, gridRow, columnIndex,
+                Res.get("dao.factsAndFigures.transactions.burntTx"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        burntFeeTxsTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
-                Res.get("dao.factsAndFigures.transactions.burntTx")).second;
         invalidTxsTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
                 Res.get("dao.factsAndFigures.transactions.invalidTx")).second;
+        irregularTxsTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
+                Res.get("dao.factsAndFigures.transactions.irregularTx")).second;
+        gridRow++;
+
     }
 
     @Override
@@ -147,6 +149,7 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));
         burntFeeTxsTextField.setText(String.valueOf(daoFacade.getBurntFeeTxs().size()));
         invalidTxsTextField.setText(String.valueOf(daoFacade.getInvalidTxs().size()));
+        irregularTxsTextField.setText(String.valueOf(daoFacade.getIrregularTxs().size()));
     }
 }
 

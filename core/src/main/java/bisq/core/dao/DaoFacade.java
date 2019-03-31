@@ -557,6 +557,10 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getInvalidTxs();
     }
 
+    public List<Tx> getIrregularTxs() {
+        return daoStateService.getIrregularTxs();
+    }
+
     public long getTotalAmountOfUnspentTxOutputs() {
         // Does not consider confiscated outputs (they stay as utxo)
         return daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();

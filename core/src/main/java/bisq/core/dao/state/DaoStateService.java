@@ -359,6 +359,10 @@ public class DaoStateService implements DaoSetupService {
         return getTxStream().filter(tx -> tx.getTxType() == TxType.INVALID).collect(Collectors.toList());
     }
 
+    public List<Tx> getIrregularTxs() {
+        return getTxStream().filter(tx -> tx.getTxType() == TxType.IRREGULAR).collect(Collectors.toList());
+    }
+
     public boolean containsTx(String txId) {
         return getTx(txId).isPresent();
     }
