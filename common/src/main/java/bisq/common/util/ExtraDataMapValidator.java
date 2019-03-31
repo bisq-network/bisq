@@ -42,15 +42,19 @@ public class ExtraDataMapValidator {
         return getValidatedExtraDataMap(extraDataMap, MAX_SIZE, MAX_KEY_LENGTH, MAX_VALUE_LENGTH);
     }
 
-    public static Map<String, String> getValidatedExtraDataMap(@Nullable Map<String, String> extraDataMap, int maxSize, int maxKeyLength, int maxValueLength) {
+    public static Map<String, String> getValidatedExtraDataMap(@Nullable Map<String, String> extraDataMap, int maxSize,
+                                                               int maxKeyLength, int maxValueLength) {
         if (extraDataMap == null)
             return null;
 
         try {
-            checkArgument(extraDataMap.entrySet().size() <= maxSize, "Size of map must not exceed " + maxSize);
+            checkArgument(extraDataMap.entrySet().size() <= maxSize,
+                    "Size of map must not exceed " + maxSize);
             extraDataMap.forEach((key, value) -> {
-                checkArgument(key.length() <= maxKeyLength, "Length of key must not exceed " + maxKeyLength);
-                checkArgument(value.length() <= maxValueLength, "Length of value must not exceed " + maxValueLength);
+                checkArgument(key.length() <= maxKeyLength,
+                        "Length of key must not exceed " + maxKeyLength);
+                checkArgument(value.length() <= maxValueLength,
+                        "Length of value must not exceed " + maxValueLength);
             });
             return extraDataMap;
         } catch (Throwable t) {
@@ -62,14 +66,18 @@ public class ExtraDataMapValidator {
         validate(extraDataMap, MAX_SIZE, MAX_KEY_LENGTH, MAX_VALUE_LENGTH);
     }
 
-    public static void validate(@Nullable Map<String, String> extraDataMap, int maxSize, int maxKeyLength, int maxValueLength) {
+    public static void validate(@Nullable Map<String, String> extraDataMap, int maxSize, int maxKeyLength,
+                                int maxValueLength) {
         if (extraDataMap == null)
             return;
 
-        checkArgument(extraDataMap.entrySet().size() <= maxSize, "Size of map must not exceed " + maxSize);
+        checkArgument(extraDataMap.entrySet().size() <= maxSize,
+                "Size of map must not exceed " + maxSize);
         extraDataMap.forEach((key, value) -> {
-            checkArgument(key.length() <= maxKeyLength, "Length of key must not exceed " + maxKeyLength);
-            checkArgument(value.length() <= maxValueLength, "Length of value must not exceed " + maxValueLength);
+            checkArgument(key.length() <= maxKeyLength,
+                    "Length of key must not exceed " + maxKeyLength);
+            checkArgument(value.length() <= maxValueLength,
+                    "Length of value must not exceed " + maxValueLength);
         });
     }
 }
