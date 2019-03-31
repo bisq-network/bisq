@@ -21,7 +21,6 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.DaoState;
-import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -387,9 +386,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public long getTotalBurntFee() {
-        return getTxStream()
-                .mapToLong(Tx::getBurntFee)
-                .sum();
+        return getTxStream().mapToLong(Tx::getBurntFee).sum();
     }
 
     public Set<Tx> getBurntFeeTxs() {
@@ -816,25 +813,13 @@ public class DaoStateService implements DaoSetupService {
                 .sum();
     }
 
-    public long getBurnedBsqOfAllInvalidTxs() {
-        return getTxStream()
-                .filter(e -> e.getTxType() == TxType.INVALID)
-                .mapToLong(this::getBurnedBsqOfInvalidTx)
-                .sum();
+    public long getTotalAmountOfInvalidatedBsq() {
+        return getTxStream().mapToLong(Tx::getInvalidatedBsq).sum();
     }
 
-    public long getBurnedBsqOfInvalidTx(Tx tx) {
-        return tx.getTxInputs().stream()
-                .map(TxInput::getConnectedTxOutputKey)
-                .flatMap(txOutputKey -> getTxOutput(txOutputKey).stream())
-                .filter(txOutput -> txOutput.getTxOutputType() == TxOutputType.GENESIS_OUTPUT ||
-                        txOutput.getTxOutputType() == TxOutputType.BSQ_OUTPUT ||
-                        txOutput.getTxOutputType() == TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT ||
-                        txOutput.getTxOutputType() == TxOutputType.VOTE_REVEAL_UNLOCK_STAKE_OUTPUT ||
-                        txOutput.getTxOutputType() == TxOutputType.LOCKUP_OUTPUT ||
-                        txOutput.getTxOutputType() == TxOutputType.UNLOCK_OUTPUT)
-                .mapToLong(BaseTxOutput::getValue)
-                .sum();
+    // Contains burnt fee and invalidated bsq due invalid txs
+    public long getTotalAmountOfBurntBsq() {
+        return getTxStream().mapToLong(Tx::getBurntBsq).sum();
     }
 
     // Confiscate bond

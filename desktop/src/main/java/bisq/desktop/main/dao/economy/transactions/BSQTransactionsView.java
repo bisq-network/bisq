@@ -51,10 +51,10 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
     private final Preferences preferences;
 
     private int gridRow = 0;
-    private TextField allTxTextField, burntTxTextField,
+    private TextField allTxTextField, burntFeeTxsTextField,
             utxoTextField, compensationIssuanceTxTextField,
             reimbursementIssuanceTxTextField,
-            invalidTxTextField;
+            invalidTxsTextField;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -107,9 +107,9 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         reimbursementIssuanceTxTextField = addTopLabelReadOnlyTextField(root, gridRow, columnIndex,
                 Res.get("dao.factsAndFigures.transactions.reimbursementIssuanceTx"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        burntTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
+        burntFeeTxsTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
                 Res.get("dao.factsAndFigures.transactions.burntTx")).second;
-        invalidTxTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
+        invalidTxsTextField = addTopLabelReadOnlyTextField(root, ++gridRow, columnIndex,
                 Res.get("dao.factsAndFigures.transactions.invalidTx")).second;
     }
 
@@ -145,8 +145,8 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         utxoTextField.setText(String.valueOf(daoFacade.getUnspentTxOutputs().size()));
         compensationIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.COMPENSATION)));
         reimbursementIssuanceTxTextField.setText(String.valueOf(daoFacade.getNumIssuanceTransactions(IssuanceType.REIMBURSEMENT)));
-        burntTxTextField.setText(String.valueOf(daoFacade.getFeeTxs().size()));
-        invalidTxTextField.setText(String.valueOf(daoFacade.getInvalidTxs().size()));
+        burntFeeTxsTextField.setText(String.valueOf(daoFacade.getBurntFeeTxs().size()));
+        invalidTxsTextField.setText(String.valueOf(daoFacade.getInvalidTxs().size()));
     }
 }
 

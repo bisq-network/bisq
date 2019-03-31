@@ -145,13 +145,12 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Override
     public void onDaoStateChanged(Block block) {
         long genesisTotalSupply = daoStateService.getGenesisTotalSupply().value;
-        long totalBurntFee = daoStateService.getTotalBurntFee();
         long compensationIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.COMPENSATION);
         long reimbursementIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT);
-        long totalInvalidAmount = daoStateService.getBurnedBsqOfAllInvalidTxs();
+        long totalAmountOfBurntBsq = daoStateService.getTotalAmountOfBurntBsq();
         // confiscated funds are still in the utxo set
         long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
-        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalBurntFee - totalInvalidAmount;
+        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
 
         if (sumBsq != sumUtxo) {
             utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));

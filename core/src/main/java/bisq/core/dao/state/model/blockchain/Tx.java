@@ -57,13 +57,14 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
                 tempTx.getTxInputs(),
                 txOutputs,
                 tempTx.getTxType(),
-                tempTx.getBurntFee());
+                tempTx.getBurntBsq());
     }
 
     private final ImmutableList<TxOutput> txOutputs;
     @Nullable
     private final TxType txType;
-    private final long burntFee;
+    // Can be burned fee or in case of an invalid tx the burned BSQ from all BSQ inputs
+    private final long burntBsq;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +79,7 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
                ImmutableList<TxInput> txInputs,
                ImmutableList<TxOutput> txOutputs,
                @Nullable TxType txType,
-               long burntFee) {
+               long burntBsq) {
         super(txVersion,
                 id,
                 blockHeight,
@@ -87,7 +88,7 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
                 txInputs);
         this.txOutputs = txOutputs;
         this.txType = txType;
-        this.burntFee = burntFee;
+        this.burntBsq = burntBsq;
 
     }
 
@@ -97,7 +98,7 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
                 .addAllTxOutputs(txOutputs.stream()
                         .map(TxOutput::toProtoMessage)
                         .collect(Collectors.toList()))
-                .setBurntFee(burntFee);
+                .setBurntBsq(burntBsq);
         Optional.ofNullable(txType).ifPresent(txType -> builder.setTxType(txType.toProtoMessage()));
         return getBaseTxBuilder().setTx(builder).build();
     }
@@ -122,7 +123,7 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
                 txInputs,
                 outputs,
                 TxType.fromProto(protoTx.getTxType()),
-                protoTx.getBurntFee());
+                protoTx.getBurntBsq());
     }
 
 
@@ -134,6 +135,18 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
         return txOutputs.get(txOutputs.size() - 1);
     }
 
+
+    public long getBurntBsq() {
+        return burntBsq;
+    }
+
+    public long getBurntFee() {
+        return txType == TxType.INVALID ? 0 : burntBsq;
+    }
+
+    public long getInvalidatedBsq() {
+        return txType == TxType.INVALID ? burntBsq : 0;
+    }
 
     public int getLockTime() {
         return getLockupOutput().getLockTime();
@@ -158,7 +171,7 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
         return "Tx{" +
                 "\n     txOutputs=" + txOutputs +
                 ",\n     txType=" + txType +
-                ",\n     burntFee=" + burntFee +
+                ",\n     burntBsq=" + burntBsq +
                 "\n} " + super.toString();
     }
 
@@ -175,13 +188,13 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
         String name1 = tx.txType != null ? tx.txType.name() : "";
         boolean isTxTypeEquals = name.equals(name1);
 
-        return burntFee == tx.burntFee &&
+        return burntBsq == tx.burntBsq &&
                 Objects.equals(txOutputs, tx.txOutputs) &&
                 isTxTypeEquals;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), txOutputs, txType, burntFee);
+        return Objects.hash(super.hashCode(), txOutputs, txType, burntBsq);
     }
 }

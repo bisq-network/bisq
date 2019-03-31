@@ -544,8 +544,13 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getTotalAmountOfConfiscatedTxOutputs();
     }
 
-    public long getBurnedBsqOfAllInvalidTxs() {
-        return daoStateService.getBurnedBsqOfAllInvalidTxs();
+    public long getTotalAmountOfInvalidatedBsq() {
+        return daoStateService.getTotalAmountOfInvalidatedBsq();
+    }
+
+    // Contains burned fee and invalidated bsq due invalid txs
+    public long getTotalAmountOfBurntBsq() {
+        return daoStateService.getTotalAmountOfBurntBsq();
     }
 
     public List<Tx> getInvalidTxs() {
@@ -603,7 +608,7 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getIssuanceSet(issuanceType).size();
     }
 
-    public Set<Tx> getFeeTxs() {
+    public Set<Tx> getBurntFeeTxs() {
         return daoStateService.getBurntFeeTxs();
     }
 

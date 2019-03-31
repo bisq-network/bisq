@@ -27,7 +27,6 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
-import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.GlobalSettings;
@@ -90,8 +89,8 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
 
     private int gridRow = 0;
     private TextField genesisIssueAmountTextField, compRequestIssueAmountTextField, reimbursementAmountTextField,
-            burntAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
-            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, burnedBsqOfAllInvalidTxsTextField;
+            totalBurntFeeAmountTextField, totalLockedUpAmountTextField, totalUnlockingAmountTextField,
+            totalUnlockedAmountTextField, totalConfiscatedAmountTextField, totalAmountOfInvalidatedBsqTextField;
     private XYChart.Series<Number, Number> seriesBSQIssued, seriesBSQBurnt;
 
     private static final Map<String, TemporalAdjuster> ADJUSTERS = new HashMap<>();
@@ -168,9 +167,9 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
     private void createSupplyReducedInformation() {
         addTitledGroupBg(root, ++gridRow, 2, Res.get("dao.factsAndFigures.supply.burnt"), Layout.GROUP_DISTANCE);
 
-        burntAmountTextField = addTopLabelReadOnlyTextField(root, gridRow,
+        totalBurntFeeAmountTextField = addTopLabelReadOnlyTextField(root, gridRow,
                 Res.get("dao.factsAndFigures.supply.burntAmount"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        burnedBsqOfAllInvalidTxsTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+        totalAmountOfInvalidatedBsqTextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.supply.invalidTxs"), Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
 
         seriesBSQBurnt = new XYChart.Series<>();
@@ -272,20 +271,20 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         Coin issuedAmountFromReimbursementRequests = Coin.valueOf(daoFacade.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT));
         reimbursementAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(issuedAmountFromReimbursementRequests));
 
-        Coin burntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
+        Coin totalBurntFee = Coin.valueOf(daoFacade.getTotalBurntFee());
         Coin totalLockedUpAmount = Coin.valueOf(daoFacade.getTotalLockupAmount());
         Coin totalUnlockingAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockingTxOutputs());
         Coin totalUnlockedAmount = Coin.valueOf(daoFacade.getTotalAmountOfUnLockedTxOutputs());
         Coin totalConfiscatedAmount = Coin.valueOf(daoFacade.getTotalAmountOfConfiscatedTxOutputs());
-        Coin burnedBsqOfAllInvalidTxs = Coin.valueOf(daoFacade.getBurnedBsqOfAllInvalidTxs());
+        Coin totalAmountOfInvalidatedBsq = Coin.valueOf(daoFacade.getTotalAmountOfInvalidatedBsq());
 
-        burntAmountTextField.setText("-" + bsqFormatter.formatAmountWithGroupSeparatorAndCode(burntFee));
+        totalBurntFeeAmountTextField.setText("-" + bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalBurntFee));
         totalLockedUpAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalLockedUpAmount));
         totalUnlockingAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockingAmount));
         totalUnlockedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalUnlockedAmount));
         totalConfiscatedAmountTextField.setText(bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalConfiscatedAmount));
-        String minusSign = burnedBsqOfAllInvalidTxs.isPositive() ? "-" : "";
-        burnedBsqOfAllInvalidTxsTextField.setText(minusSign + bsqFormatter.formatAmountWithGroupSeparatorAndCode(burnedBsqOfAllInvalidTxs));
+        String minusSign = totalAmountOfInvalidatedBsq.isPositive() ? "-" : "";
+        totalAmountOfInvalidatedBsqTextField.setText(minusSign + bsqFormatter.formatAmountWithGroupSeparatorAndCode(totalAmountOfInvalidatedBsq));
 
         updateCharts();
     }
@@ -307,13 +306,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                     ZonedDateTime zonedDateTime = date.atStartOfDay(ZoneId.systemDefault());
                     return new XYChart.Data<Number, Number>(zonedDateTime.toInstant().getEpochSecond(), burntBsqByMonth.get(date)
                             .stream()
-                            .mapToDouble(tx -> {
-                                if (tx.getTxType() == TxType.INVALID) {
-                                    return daoStateService.getBurnedBsqOfInvalidTx(tx);
-                                } else {
-                                    return tx.getBurntFee();
-                                }
-                            })
+                            .mapToDouble(Tx::getBurntBsq)
                             .sum()
                     );
                 })
