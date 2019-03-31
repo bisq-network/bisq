@@ -20,6 +20,7 @@ package bisq.network.p2p.storage.payload;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 
 import bisq.common.crypto.Sig;
+import bisq.common.util.ExtraDataMapValidator;
 
 import io.bisq.generated.protobuffer.PB;
 
@@ -85,7 +86,7 @@ public final class MailboxStoragePayload implements ProtectedStoragePayload, Exp
         this.prefixedSealedAndSignedMessage = prefixedSealedAndSignedMessage;
         this.senderPubKeyForAddOperationBytes = senderPubKeyForAddOperationBytes;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
         senderPubKeyForAddOperation = Sig.getPublicKeyFromBytes(senderPubKeyForAddOperationBytes);
         ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);

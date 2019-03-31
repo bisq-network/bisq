@@ -24,6 +24,7 @@ import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
 import io.bisq.generated.protobuffer.PB;
@@ -235,7 +236,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         this.upperClosePrice = upperClosePrice;
         this.isPrivateOffer = isPrivateOffer;
         this.hashOfChallenge = hashOfChallenge;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
         this.protocolVersion = protocolVersion;
     }
 

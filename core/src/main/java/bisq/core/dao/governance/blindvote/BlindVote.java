@@ -21,6 +21,7 @@ import bisq.core.dao.governance.ConsensusCritical;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
@@ -65,7 +66,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
         this.txId = txId;
         this.stake = stake;
         this.encryptedMeritList = encryptedMeritList;
-        this.extraDataMap = extraDataMap;
+        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
     }
 
 
