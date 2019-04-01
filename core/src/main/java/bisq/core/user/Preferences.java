@@ -104,9 +104,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public static final BlockChainExplorer BSQ_MAIN_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.bisq.network/tx.html?tx=",
             "https://explorer.bisq.network/Address.html?addr=");
-    private static final BlockChainExplorer BSQ_BETA_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.betanet.bisq.network/tx.html?tx=",
+    private static final BlockChainExplorer BSQ_BETA_NET_EXPLORER = new BlockChainExplorer("BSQ", "http://explorer.betanet.bisq.network/tx.html?tx=",
             "http://explorer.betanet.bisq.network/Address.html?addr=");
-    private static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "https://explorer.testnet.bisq.network/tx.html?tx=",
+    private static final BlockChainExplorer BSQ_TEST_NET_EXPLORER = new BlockChainExplorer("BSQ", "http://explorer.testnet.bisq.network/tx.html?tx=",
             "http://explorer.testnet.bisq.network/Address.html?addr=");
 
     // payload is initialized so the default values are available for Property initialization.
