@@ -87,7 +87,9 @@ import static com.google.common.base.Preconditions.checkState;
 // Does the basic wiring
 @Slf4j
 public class WalletConfig extends AbstractIdleService {
-    private static final int TIMEOUT = 120 * 1000;  // connectTimeoutMillis. 60 sec used in bitcoinj, but for Tor we allow more.
+    private static final int TOR_SOCKET_TIMEOUT = 120 * 1000;  // 1 sec used in bitcoinj, but since bisq uses Tor we allow more.
+    private static final int TOR_VERSION_EXCHANGE_TIMEOUT = 125 * 1000;  // 5 sec used in bitcoinj, but since bisq uses Tor we allow more.
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // WalletFactory
@@ -229,8 +231,8 @@ public class WalletConfig extends AbstractIdleService {
 
             peerGroup = new PeerGroup(params, vChain, blockingClientManager);
 
-            blockingClientManager.setConnectTimeoutMillis(TIMEOUT);
-            peerGroup.setConnectTimeoutMillis(TIMEOUT);
+            blockingClientManager.setConnectTimeoutMillis(TOR_SOCKET_TIMEOUT);
+            peerGroup.setConnectTimeoutMillis(TOR_VERSION_EXCHANGE_TIMEOUT);
         }
 
         // For dao testnet (server side regtest) we prevent to connect to a localhost node to avoid confusion
