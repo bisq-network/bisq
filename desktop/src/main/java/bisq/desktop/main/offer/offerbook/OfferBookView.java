@@ -367,18 +367,28 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
             OfferPayload.Direction direction = model.getDirection();
-            String directionText = direction == OfferPayload.Direction.BUY ? Res.get("shared.buy") : Res.get("shared.sell");
-            String mirroredDirectionText = direction == OfferPayload.Direction.SELL ? Res.get("shared.buy") : Res.get("shared.sell");
+            String offerButtonText;
             String code = selectedTradeCurrency.getCode();
-            if (model.showAllTradeCurrenciesProperty.get())
-                createOfferButton.updateText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()));
-            else if (selectedTradeCurrency instanceof FiatCurrency)
-                createOfferButton.updateText(Res.get("offerbook.createOfferTo", directionText, Res.getBaseCurrencyCode()) + " " +
-                        (direction == OfferPayload.Direction.BUY ?
-                                Res.get("offerbook.buyWithOtherCurrency", code) :
-                                Res.get("offerbook.sellForOtherCurrency", code)));
-            else
-                createOfferButton.updateText(Res.get("offerbook.createOfferTo", mirroredDirectionText, code) + " (" + directionText + " " + Res.getBaseCurrencyCode() + ")");
+
+            if (model.showAllTradeCurrenciesProperty.get()) {
+                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                        Res.get("offerbook.createOfferToBuy",
+                                Res.getBaseCurrencyCode()) :
+                        Res.get("offerbook.createOfferToSell",
+                                Res.getBaseCurrencyCode());
+            } else if (selectedTradeCurrency instanceof FiatCurrency) {
+                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                        Res.get("offerbook.createOfferToBuy.withFiat",
+                                Res.getBaseCurrencyCode(), code) :
+                        Res.get("offerbook.createOfferToSell.forFiat", Res.getBaseCurrencyCode(), code);
+
+            } else {
+                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                        Res.get("offerbook.createOfferToBuy.withCrypto",
+                                code, Res.getBaseCurrencyCode()) :
+                        Res.get("offerbook.createOfferToSell.forCrypto", code, Res.getBaseCurrencyCode());
+            }
+            createOfferButton.updateText(offerButtonText);
         }
     }
 
