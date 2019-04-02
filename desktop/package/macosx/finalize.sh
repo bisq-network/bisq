@@ -2,12 +2,12 @@
 
 cd ../../
 
-version="0.9.5-SNAPSHOT"
+version="0.9.6"
 
 target_dir="releases/$version"
 
-#vmPath=/Users/christoph/Documents/Workspaces/Java
-vmPath=/Volumes
+vmPath=/Users/christoph/Documents/Workspaces/Java
+#vmPath=/Volumes
 linux64=$vmPath/vm_shared_ubuntu/desktop/package/linux
 win64=$vmPath/vm_shared_windows/desktop/package/windows
 
