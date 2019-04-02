@@ -524,8 +524,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     // We create a tx with Bsq inputs for the fee and optional BSQ change output.
     // As the fee amount will be missing in the output those BSQ fees are burned.
-    public Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnFeeTx(fee, true);
+    public Transaction getPreparedProposalTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
+        return getPreparedBurnFeeTx(fee, requireChangeOutput);
     }
 
     public Transaction getPreparedBurnFeeTx(Coin fee) throws InsufficientBsqException {

@@ -85,16 +85,17 @@ public abstract class BaseProposalFactory<R extends Proposal> {
     // The hashOfPayload used in the opReturnData is created with the txId set to null.
     private Transaction createTransaction(R proposal) throws InsufficientMoneyException, TxException {
         try {
-            final Coin fee = ProposalConsensus.getFee(daoStateService, daoStateService.getChainHeight());
+            Coin fee = ProposalConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             // We create a prepared Bsq Tx for the proposal fee.
-            final Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProposalTx(fee);
+            boolean requireChangeOutput = proposal instanceof IssuanceProposal;
+            Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProposalTx(fee, requireChangeOutput);
 
             // payload does not have txId at that moment
             byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal);
             byte[] opReturnData = getOpReturnData(hashOfPayload);
 
             // We add the BTC inputs for the miner fee.
-            final Transaction txWithBtcFee = completeTx(preparedBurnFeeTx, opReturnData, proposal);
+            Transaction txWithBtcFee = completeTx(preparedBurnFeeTx, opReturnData, proposal);
 
             // We sign the BSQ inputs of the final tx.
             Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
