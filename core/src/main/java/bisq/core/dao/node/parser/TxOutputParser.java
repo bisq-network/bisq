@@ -194,15 +194,15 @@ public class TxOutputParser {
         if (optionalOpReturnType.isPresent())
             opReturnTypeCandidate = optionalOpReturnType.get();
 
-        TxOutputType bsqOutput;
+        TxOutputType txOutputType;
         if (isFirstOutput && opReturnTypeCandidate == OpReturnType.BLIND_VOTE) {
-            bsqOutput = TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT;
+            txOutputType = TxOutputType.BLIND_VOTE_LOCK_STAKE_OUTPUT;
             optionalBlindVoteLockStakeOutput = Optional.of(txOutput);
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.VOTE_REVEAL) {
-            bsqOutput = TxOutputType.VOTE_REVEAL_UNLOCK_STAKE_OUTPUT;
+            txOutputType = TxOutputType.VOTE_REVEAL_UNLOCK_STAKE_OUTPUT;
             optionalVoteRevealUnlockStakeOutput = Optional.of(txOutput);
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.LOCKUP) {
-            bsqOutput = TxOutputType.LOCKUP_OUTPUT;
+            txOutputType = TxOutputType.LOCKUP_OUTPUT;
 
             // We store the lockTime in the output which will be used as input for a unlock tx.
             // That makes parsing of that data easier as if we would need to access it from the opReturn output of
@@ -210,9 +210,9 @@ public class TxOutputParser {
             txOutput.setLockTime(lockTime);
             optionalLockupOutput = Optional.of(txOutput);
         } else {
-            bsqOutput = TxOutputType.BSQ_OUTPUT;
+            txOutputType = TxOutputType.BSQ_OUTPUT;
         }
-        txOutput.setTxOutputType(bsqOutput);
+        txOutput.setTxOutputType(txOutputType);
         utxoCandidates.add(txOutput);
 
         bsqOutputFound = true;
