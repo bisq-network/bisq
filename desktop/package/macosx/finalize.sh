@@ -2,7 +2,7 @@
 
 cd ../../
 
-version="0.9.6-SNAPSHOT"
+version="0.9.7"
 
 target_dir="releases/$version"
 
@@ -59,6 +59,7 @@ gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpm64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 
+mkdir $win64/$version
 cp -r . $win64/$version
 
 open "."
