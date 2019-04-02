@@ -560,7 +560,7 @@ public class BSFormatter {
         String input = percentString.replace("%", "");
         input = cleanDoubleInput(input);
         double value = Double.parseDouble(input);
-        return MathUtils.roundDouble(value / 100d, 2);
+        return MathUtils.roundDouble(value / 100d, 4);
     }
 
     public long parsePriceStringToLong(String currencyCode, String amount, int precision) {
