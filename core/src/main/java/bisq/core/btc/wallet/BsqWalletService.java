@@ -549,9 +549,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         coinSelection.gathered.forEach(tx::addInput);
         try {
             // TODO why is fee passed to getChange ???
-            Coin change = this.bsqCoinSelector.getChange(fee, coinSelection);
+            Coin change = bsqCoinSelector.getChange(fee, coinSelection);
             if (change.isPositive()) {
-                checkArgument(Restrictions.isAboveDust(change), "We must not get dust output here.");
+                checkArgument(Restrictions.isAboveDust(change),
+                        "The change output of " + change.value / 100d + " BSQ is below the min. dust value of "
+                                + Restrictions.getMinNonDustOutput().value / 100d + " BSQ.");
                 tx.addOutput(change, getChangeAddress());
             }
         } catch (InsufficientMoneyException e) {
