@@ -525,18 +525,22 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // We create a tx with Bsq inputs for the fee and optional BSQ change output.
     // As the fee amount will be missing in the output those BSQ fees are burned.
     public Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnFeeTx(fee);
+        return getPreparedBurnFeeTx(fee, true);
     }
 
     public Transaction getPreparedBurnFeeTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedBurnFeeTx(fee, false);
+    }
+
+    private Transaction getPreparedBurnFeeTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
         DaoKillSwitch.assertDaoIsNotDisabled();
         final Transaction tx = new Transaction(params);
-        addInputsAndChangeOutputForTx(tx, fee, bsqCoinSelector);
+        addInputsAndChangeOutputForTx(tx, fee, bsqCoinSelector, requireChangeOutput);
         // printTx("getPreparedFeeTx", tx);
         return tx;
     }
 
-    private void addInputsAndChangeOutputForTx(Transaction tx, Coin fee, BsqCoinSelector bsqCoinSelector)
+    private void addInputsAndChangeOutputForTx(Transaction tx, Coin fee, BsqCoinSelector bsqCoinSelector, boolean requireChangeOutput)
             throws InsufficientBsqException {
         Coin requiredInput;
         // If our fee is less then dust limit we increase it so we are sure to not get any dust output.
@@ -550,10 +554,19 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         try {
             // TODO why is fee passed to getChange ???
             Coin change = bsqCoinSelector.getChange(fee, coinSelection);
+            if (requireChangeOutput) {
+                checkArgument(change.isPositive(),
+                        "This transaction requires a mandatory BSQ change output. " +
+                                "You are missing " + Restrictions.getMinNonDustOutput().value / 100d +
+                                " BSQ for a non dust change output.");
+            }
+
             if (change.isPositive()) {
                 checkArgument(Restrictions.isAboveDust(change),
                         "The change output of " + change.value / 100d + " BSQ is below the min. dust value of "
-                                + Restrictions.getMinNonDustOutput().value / 100d + " BSQ.");
+                                + Restrictions.getMinNonDustOutput().value / 100d +
+                                " BSQ. You are missing " + (Restrictions.getMinNonDustOutput().value - change.value) / 100d +
+                                " BSQ for a non dust change output.");
                 tx.addOutput(change, getChangeAddress());
             }
         } catch (InsufficientMoneyException e) {
@@ -572,7 +585,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         tx.addOutput(new TransactionOutput(params, tx, stake, getUnusedAddress()));
-        addInputsAndChangeOutputForTx(tx, fee.add(stake), bsqCoinSelector);
+        addInputsAndChangeOutputForTx(tx, fee.add(stake), bsqCoinSelector, false);
         //printTx("getPreparedBlindVoteTx", tx);
         return tx;
     }
@@ -606,7 +619,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(lockupAmount), "The amount is too low (dust limit).");
         tx.addOutput(new TransactionOutput(params, tx, lockupAmount, getUnusedAddress()));
-        addInputsAndChangeOutputForTx(tx, lockupAmount, bsqCoinSelector);
+        addInputsAndChangeOutputForTx(tx, lockupAmount, bsqCoinSelector, false);
         printTx("prepareLockupTx", tx);
         return tx;
     }

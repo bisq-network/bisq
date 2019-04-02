@@ -330,8 +330,10 @@ public class TxParser {
             return true;
         }
 
-        if (!bsqOutputFound) {
-            log.warn("Invalid Tx: No BSQ output found. tx=" + tempTx);
+        if ((tempTx.getTxType() == TxType.COMPENSATION_REQUEST ||
+                tempTx.getTxType() == TxType.REIMBURSEMENT_REQUEST)
+                && !bsqOutputFound) {
+            log.warn("Invalid Tx: A compensation or reimbursement tx requires 1 BSQ output. Tx=" + tempTx);
             return true;
         }
 
