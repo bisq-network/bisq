@@ -113,14 +113,14 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (isNewStateHashMessage(networkEnvelope)) {
             Msg newStateHashMessage = castToNewStateHashMessage(networkEnvelope);
-            log.info("We received a {} from peer {} with stateHash={} ",
+            log.debug("We received a {} from peer {} with stateHash={} ",
                     newStateHashMessage.getClass().getSimpleName(),
                     connection.getPeersNodeAddressOptional(),
                     newStateHashMessage.getStateHash());
             listeners.forEach(e -> e.onNewStateHashMessage(newStateHashMessage, connection));
         } else if (isGetStateHashesRequest(networkEnvelope)) {
             Req getStateHashRequest = castToGetStateHashRequest(networkEnvelope);
-            log.info("We received a {} from peer {} for height={} ",
+            log.debug("We received a {} from peer {} for height={} ",
                     getStateHashRequest.getClass().getSimpleName(),
                     connection.getPeersNodeAddressOptional(),
                     getStateHashRequest.getHeight());
