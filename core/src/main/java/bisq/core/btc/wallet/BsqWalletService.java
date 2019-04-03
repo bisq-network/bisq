@@ -557,16 +557,16 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             if (requireChangeOutput) {
                 checkArgument(change.isPositive(),
                         "This transaction requires a mandatory BSQ change output. " +
-                                "You are missing " + Restrictions.getMinNonDustOutput().value / 100d +
-                                " BSQ for a non dust change output.");
+                                "At least " + Restrictions.getMinNonDustOutput().add(fee) + " " +
+                                "BSQ is needed for this transaction");
             }
 
             if (change.isPositive()) {
                 checkArgument(Restrictions.isAboveDust(change),
                         "The change output of " + change.value / 100d + " BSQ is below the min. dust value of "
                                 + Restrictions.getMinNonDustOutput().value / 100d +
-                                " BSQ. You are missing " + (Restrictions.getMinNonDustOutput().value - change.value) / 100d +
-                                " BSQ for a non dust change output.");
+                                ". At least " + Restrictions.getMinNonDustOutput().add(fee) + " " +
+                                "BSQ is needed for this transaction");
                 tx.addOutput(change, getChangeAddress());
             }
         } catch (InsufficientMoneyException e) {

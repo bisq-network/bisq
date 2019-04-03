@@ -321,6 +321,10 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 message = e.getMessage();
             }
             new Popup<>().warning(message).show();
+        } catch (IllegalArgumentException e) {
+            log.error(e.toString());
+            e.printStackTrace();
+            new Popup<>().warning(e.getMessage()).show();
         } catch (Throwable e) {
             log.error(e.toString());
             e.printStackTrace();
