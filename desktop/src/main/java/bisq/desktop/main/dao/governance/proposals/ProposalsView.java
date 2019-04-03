@@ -271,6 +271,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
         if (isBlindVotePhaseButNotLastBlock()) {
             Coin availableForVoting = availableConfirmedBalance.subtract(blindVoteFee);
+            if (availableForVoting.isNegative())
+                availableForVoting = Coin.valueOf(0);
             stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
                     bsqFormatter.formatCoinWithCode(availableForVoting)));
         } else
