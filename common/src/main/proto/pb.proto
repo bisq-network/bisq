@@ -1351,6 +1351,7 @@ message PreferencesPayload {
     string rpc_pw = 48;
     string take_offer_selected_payment_account_id = 49;
     double buyer_security_deposit_as_percent = 50;
+    int32 ignore_dust_threshold = 51;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

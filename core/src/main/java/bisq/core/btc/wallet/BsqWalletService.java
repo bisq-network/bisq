@@ -669,4 +669,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     public String getUnusedBsqAddressAsString() {
         return "B" + getUnusedAddress().toBase58();
     }
+
+    // For BSQ we do not check for dust attack utxos as they are 5.46 BSQ and a considerable value.
+    // The default 546 sat dust limit is handled in the BitcoinJ side anyway.
+    @Override
+    protected boolean isDustAttackUtxo(TransactionOutput output) {
+        return false;
+    }
 }

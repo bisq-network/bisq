@@ -288,6 +288,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         if (rpcPasswordFromOptions != null && !rpcPasswordFromOptions.isEmpty())
             setRpcPw(rpcPasswordFromOptions);
 
+        if (prefPayload.getIgnoreDustThreshold() < Restrictions.getMinNonDustOutput().value) {
+            setIgnoreDustThreshold(600);
+        }
+
         // For users from old versions the 4 flags a false but we want to have it true by default
         // PhoneKeyAndToken is also null so we can use that to enable the flags
         if (prefPayload.getPhoneKeyAndToken() == null) {
@@ -618,6 +622,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setIgnoreDustThreshold(int value) {
+        prefPayload.setIgnoreDustThreshold(value);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -847,6 +856,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setRpcPw(String value);
 
         void setTakeOfferSelectedPaymentAccountId(String value);
+
+        void setIgnoreDustThreshold(int value);
 
         void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
 

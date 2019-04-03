@@ -43,6 +43,7 @@ import javafx.scene.control.Tooltip;
 import java.util.Date;
 import java.util.Optional;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -66,6 +67,8 @@ class TransactionsListItem {
     private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
     private int confirmations = 0;
+    @Getter
+    private final boolean isDustAttackTx;
 
     // used at exportCSV
     TransactionsListItem() {
@@ -75,6 +78,7 @@ class TransactionsListItem {
         tooltip = null;
         txId = null;
         formatter = null;
+        isDustAttackTx = false;
     }
 
     TransactionsListItem(Transaction transaction,
@@ -82,7 +86,8 @@ class TransactionsListItem {
                          BsqWalletService bsqWalletService,
                          Optional<Tradable> tradableOptional,
                          DaoFacade daoFacade,
-                         BSFormatter formatter) {
+                         BSFormatter formatter,
+                         long ignoreDustThreshold) {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
 
@@ -235,6 +240,11 @@ class TransactionsListItem {
         // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
         date = transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime();
         dateString = formatter.formatDateTime(date);
+
+        isDustAttackTx = received && valueSentToMe.value < ignoreDustThreshold;
+        if (isDustAttackTx) {
+            details = Res.get("funds.tx.dustAttackTx");
+        }
     }
 
     public void cleanup() {
