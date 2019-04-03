@@ -42,7 +42,6 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
@@ -103,7 +102,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
             useCustomFee;
     private int gridRow = 0;
-    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField, rpcUserTextField;
+    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, /*referralIdInputTextField,*/
+            rpcUserTextField;
     private ToggleButton isDaoFullNodeToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
@@ -111,7 +111,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private final FeeService feeService;
-    private final ReferralIdService referralIdService;
+    //private final ReferralIdService referralIdService;
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
@@ -144,12 +144,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
-                           ReferralIdService referralIdService, AssetService assetService,
-                           FilterManager filterManager, DaoFacade daoFacade, BSFormatter formatter) {
+                           AssetService assetService, FilterManager filterManager, DaoFacade daoFacade, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
-        this.referralIdService = referralIdService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
@@ -320,11 +318,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue).split(",")));
 
         // referralId
-        referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
+       /* referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
         referralIdListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue))
                 referralIdService.setReferralId(newValue);
-        };
+        };*/
 
         // AvoidStandbyModeService
         avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
@@ -608,8 +606,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
         ignoreTradersListInputTextField.setText(String.join(", ", preferences.getIgnoreTradersList()));
-        referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
-        referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));
+        /* referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
+        referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));*/
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
         userLanguageComboBox.setConverter(new StringConverter<>() {
@@ -694,7 +692,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
         useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
-        referralIdInputTextField.textProperty().addListener(referralIdListener);
+        //referralIdInputTextField.textProperty().addListener(referralIdListener);
     }
 
     private Coin getTxFeeForWithdrawalPerByte() {
@@ -858,7 +856,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
         useCustomFee.selectedProperty().removeListener(useCustomFeeCheckboxListener);
-        referralIdInputTextField.textProperty().removeListener(referralIdListener);
+        //referralIdInputTextField.textProperty().removeListener(referralIdListener);
     }
 
     private void deactivateDisplayCurrencies() {
