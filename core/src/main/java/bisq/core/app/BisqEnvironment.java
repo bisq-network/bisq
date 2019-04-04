@@ -166,7 +166,7 @@ public class BisqEnvironment extends StandardEnvironment {
     // Util to set isDaoActivated to true if either set as program argument or we run testnet or regtest.
     // Can be removed once DAO is live.
     public static boolean isDaoActivated(Environment environment) {
-        Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, false);
+        Boolean daoActivatedFromOptions = environment.getProperty(DaoOptionKeys.DAO_ACTIVATED, Boolean.class, true);
         BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
         return daoActivatedFromOptions || !baseCurrencyNetwork.isMainnet();
     }
@@ -328,7 +328,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 "-1";
         daoActivated = commandLineProperties.containsProperty(DaoOptionKeys.DAO_ACTIVATED) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.DAO_ACTIVATED) :
-                "";
+                "true";
 
         btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
                 (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
