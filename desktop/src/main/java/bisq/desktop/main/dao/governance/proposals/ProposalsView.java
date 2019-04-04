@@ -146,9 +146,9 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private TableColumn<ProposalsListItem, ProposalsListItem> lastColumn;
     private String shownVoteOnProposalWindowForTxId = "";
 
-    private final double initialProposalTableViewHeight = 180;
-    private final double pixelsPerProposalTableRow = (initialProposalTableViewHeight - 28) / 4.0;
     private final Function<Double, Double> proposalTableViewHeight = (screenSize) -> {
+        double initialProposalTableViewHeight = 180;
+        double pixelsPerProposalTableRow = (initialProposalTableViewHeight - 28) / 4.0;
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerProposalTableRow);
         return extraRows == 0 ? initialProposalTableViewHeight : Math.ceil(initialProposalTableViewHeight + (extraRows * pixelsPerProposalTableRow));
     };
@@ -506,10 +506,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         tableView.refresh();
     }
 
-    private ProposalsListItem getBallotListItem() {
-        return selectedItem;
-    }
-
     private void updateViews() {
         boolean isBlindVotePhaseButNotLastBlock = isBlindVotePhaseButNotLastBlock();
         boolean hasVotedOnProposal = hasVotedOnProposal();
@@ -588,6 +584,20 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             default:
                 lastColumn.setText("");
                 break;
+        }
+
+        if (selectedItem == null && listItems.size() > 0 && selectProposalWindow.isDisplayed()) {
+            Proposal proposal = selectProposalWindow.getProposal();
+
+            Optional<ProposalsListItem> proposalsListItem = listItems.stream()
+                    .filter(item -> item.getProposal().equals(proposal))
+                    .findAny();
+
+            selectProposalWindow.onHide(() -> proposalsListItem.ifPresent(
+                    listItem -> tableView.getSelectionModel().select(listItem)));
+
+            shownVoteOnProposalWindowForTxId = "";
+            selectProposalWindow.hide();
         }
     }
 

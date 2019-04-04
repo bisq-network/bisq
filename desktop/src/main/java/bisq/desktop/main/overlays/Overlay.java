@@ -942,6 +942,10 @@ public abstract class Overlay<T extends Overlay> {
         return useAnimation && GlobalSettings.getUseAnimations() ? duration : 1;
     }
 
+    public boolean isDisplayed() {
+        return isDisplayed;
+    }
+
     @Override
     public String toString() {
         return "Popup{" +
