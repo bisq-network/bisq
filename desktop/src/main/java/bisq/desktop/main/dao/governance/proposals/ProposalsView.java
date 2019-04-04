@@ -135,6 +135,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private BusyAnimation voteButtonBusyAnimation;
 
     private int gridRow = 0;
+    @Nullable
     private ProposalsListItem selectedItem;
     private DaoPhase.Phase currentPhase;
     private ListChangeListener<Proposal> proposalListChangeListener;
@@ -431,11 +432,25 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onAccept() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(true));
-        updateStateAfterVote();
-        tableView.getSelectionModel().clearSelection();
+        onVoteOnSingleProposal(new Vote(true));
+    }
 
-        showHowToSetStakeForVotingPopup();
+    private void onReject() {
+        onVoteOnSingleProposal(new Vote(false));
+    }
+
+    private void onIgnore() {
+        onVoteOnSingleProposal(null);
+    }
+
+    private void onVoteOnSingleProposal(Vote vote) {
+        if (selectedItem != null) {
+            daoFacade.setVote(selectedItem.getBallot(), vote);
+            updateStateAfterVote();
+            showHowToSetStakeForVotingPopup();
+        }
+
+        tableView.getSelectionModel().clearSelection();
     }
 
     private void showHowToSetStakeForVotingPopup() {
@@ -443,20 +458,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         if (preferences.showAgain(id))
             new Popup<>().information(Res.get("dao.proposal.myVote.setStake.description"))
                     .dontShowAgainId(id).show();
-    }
-
-    private void onReject() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(false));
-        updateStateAfterVote();
-        tableView.getSelectionModel().clearSelection();
-        showHowToSetStakeForVotingPopup();
-    }
-
-    private void onIgnore() {
-        daoFacade.setVote(getBallotListItem().getBallot(), null);
-        updateStateAfterVote();
-        tableView.getSelectionModel().clearSelection();
-        showHowToSetStakeForVotingPopup();
     }
 
     private void onVote() {
