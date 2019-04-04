@@ -35,6 +35,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.dao.governance.proposal.ProposalWithTransaction;
@@ -334,7 +335,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void showFeeInfoAndPublishMyProposal(Proposal proposal, Transaction transaction, Coin miningFee, int txSize, Coin fee) {
         if (!DevEnv.isDevMode()) {
-            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, txSize, bsqFormatter, btcFormatter,
+            Coin btcForIssuance = null;
+
+            if (proposal instanceof IssuanceProposal) btcForIssuance = ((IssuanceProposal) proposal).getRequestedBsq();
+
+            GUIUtil.showBsqFeeInfoPopup(fee, miningFee, btcForIssuance, txSize, bsqFormatter, btcFormatter,
                     Res.get("dao.proposal"), () -> doPublishMyProposal(proposal, transaction));
         } else {
             doPublishMyProposal(proposal, transaction);
