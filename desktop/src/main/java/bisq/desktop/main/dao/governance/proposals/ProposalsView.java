@@ -135,6 +135,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private BusyAnimation voteButtonBusyAnimation;
 
     private int gridRow = 0;
+    @Nullable
     private ProposalsListItem selectedItem;
     private DaoPhase.Phase currentPhase;
     private ListChangeListener<Proposal> proposalListChangeListener;
@@ -145,9 +146,9 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private TableColumn<ProposalsListItem, ProposalsListItem> lastColumn;
     private String shownVoteOnProposalWindowForTxId = "";
 
-    private final double initialProposalTableViewHeight = 180;
-    private final double pixelsPerProposalTableRow = (initialProposalTableViewHeight - 28) / 4.0;
     private final Function<Double, Double> proposalTableViewHeight = (screenSize) -> {
+        double initialProposalTableViewHeight = 180;
+        double pixelsPerProposalTableRow = (initialProposalTableViewHeight - 28) / 4.0;
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerProposalTableRow);
         return extraRows == 0 ? initialProposalTableViewHeight : Math.ceil(initialProposalTableViewHeight + (extraRows * pixelsPerProposalTableRow));
     };
@@ -202,6 +203,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         phasesView.activate();
 
         selectedProposalSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
+
+        daoFacade.addBsqStateListener(this);
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setPrefHeight(100);
@@ -303,7 +306,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void addListenersAfterParseBlockChainComplete() {
         daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
         daoFacade.getAllBallots().addListener(ballotListChangeListener);
-        daoFacade.addBsqStateListener(this);
+
         bsqWalletService.addBsqBalanceListener(this);
 
         phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
@@ -313,10 +316,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         listItems.forEach(ProposalsListItem::cleanup);
         listItems.clear();
 
-        fillListItems();
-    }
-
-    private void fillListItems() {
         if (daoFacade.phaseProperty().get().ordinal() < DaoPhase.Phase.BLIND_VOTE.ordinal()) {
             // proposal phase
             List<Proposal> list = daoFacade.getActiveOrMyUnconfirmedProposals();
@@ -431,11 +430,25 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onAccept() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(true));
-        updateStateAfterVote();
-        tableView.getSelectionModel().clearSelection();
+        onVoteOnSingleProposal(new Vote(true));
+    }
 
-        showHowToSetStakeForVotingPopup();
+    private void onReject() {
+        onVoteOnSingleProposal(new Vote(false));
+    }
+
+    private void onIgnore() {
+        onVoteOnSingleProposal(null);
+    }
+
+    private void onVoteOnSingleProposal(Vote vote) {
+        if (selectedItem != null) {
+            daoFacade.setVote(selectedItem.getBallot(), vote);
+            updateStateAfterVote();
+            showHowToSetStakeForVotingPopup();
+        }
+
+        tableView.getSelectionModel().clearSelection();
     }
 
     private void showHowToSetStakeForVotingPopup() {
@@ -443,20 +456,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         if (preferences.showAgain(id))
             new Popup<>().information(Res.get("dao.proposal.myVote.setStake.description"))
                     .dontShowAgainId(id).show();
-    }
-
-    private void onReject() {
-        daoFacade.setVote(getBallotListItem().getBallot(), new Vote(false));
-        updateStateAfterVote();
-        tableView.getSelectionModel().clearSelection();
-        showHowToSetStakeForVotingPopup();
-    }
-
-    private void onIgnore() {
-        daoFacade.setVote(getBallotListItem().getBallot(), null);
-        updateStateAfterVote();
-        tableView.getSelectionModel().clearSelection();
-        showHowToSetStakeForVotingPopup();
     }
 
     private void onVote() {
@@ -503,10 +502,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void updateStateAfterVote() {
         updateViews();
         tableView.refresh();
-    }
-
-    private ProposalsListItem getBallotListItem() {
-        return selectedItem;
     }
 
     private void updateViews() {
@@ -587,6 +582,20 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
             default:
                 lastColumn.setText("");
                 break;
+        }
+
+        if (selectedItem == null && listItems.size() > 0 && selectProposalWindow.isDisplayed()) {
+            Proposal proposal = selectProposalWindow.getProposal();
+
+            Optional<ProposalsListItem> proposalsListItem = listItems.stream()
+                    .filter(item -> item.getProposal().equals(proposal))
+                    .findAny();
+
+            selectProposalWindow.onHide(() -> proposalsListItem.ifPresent(
+                    listItem -> tableView.getSelectionModel().select(listItem)));
+
+            shownVoteOnProposalWindowForTxId = "";
+            selectProposalWindow.hide();
         }
     }
 

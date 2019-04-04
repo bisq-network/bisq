@@ -49,6 +49,7 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
     private Optional<Runnable> rejectHandlerOptional;
     private Optional<Runnable> ignoreHandlerOptional;
     private Optional<Runnable> removeHandlerOptional;
+    private Optional<Runnable> hideHandlerOptional;
     private Proposal proposal;
     private EvaluatedProposal evaluatedProposal;
     private Ballot ballot;
@@ -99,6 +100,10 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
         this.removeHandlerOptional = Optional.of(removeHandler);
     }
 
+    public void onHide(Runnable hideHandler) {
+        this.hideHandlerOptional = Optional.of(hideHandler);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +128,14 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
         super.addMessage();
 
         addContent(proposal, evaluatedProposal, ballot);
+    }
+
+    @Override
+    protected void onHidden() {
+        if (hideHandlerOptional != null) {
+            hideHandlerOptional.ifPresent(Runnable::run);
+            hideHandlerOptional = null;
+        }
     }
 
     private void addContent(Proposal proposal, EvaluatedProposal evaluatedProposal, Ballot ballot) {
@@ -224,5 +237,9 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
             return Optional.empty();
         else
             return ballot.getVoteAsOptional();
+    }
+
+    public Proposal getProposal() {
+        return proposal;
     }
 }
