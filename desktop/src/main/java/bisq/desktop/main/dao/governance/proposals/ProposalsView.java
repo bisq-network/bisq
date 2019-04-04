@@ -204,6 +204,8 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
 
         selectedProposalSubscription = EasyBind.subscribe(tableView.getSelectionModel().selectedItemProperty(), this::onSelectProposal);
 
+        daoFacade.addBsqStateListener(this);
+
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setPrefHeight(100);
         root.getScene().heightProperty().addListener(sceneHeightListener);
@@ -304,7 +306,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     private void addListenersAfterParseBlockChainComplete() {
         daoFacade.getActiveOrMyUnconfirmedProposals().addListener(proposalListChangeListener);
         daoFacade.getAllBallots().addListener(ballotListChangeListener);
-        daoFacade.addBsqStateListener(this);
+
         bsqWalletService.addBsqBalanceListener(this);
 
         phaseSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::onPhaseChanged);
@@ -314,10 +316,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         listItems.forEach(ProposalsListItem::cleanup);
         listItems.clear();
 
-        fillListItems();
-    }
-
-    private void fillListItems() {
         if (daoFacade.phaseProperty().get().ordinal() < DaoPhase.Phase.BLIND_VOTE.ordinal()) {
             // proposal phase
             List<Proposal> list = daoFacade.getActiveOrMyUnconfirmedProposals();
