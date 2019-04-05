@@ -47,6 +47,7 @@ class BsqTxListItem extends TxConfidenceListItem {
     private final BsqFormatter bsqFormatter;
     private final Date date;
     private final boolean isBurnedBsqTx;
+    private final boolean withdrawalToBTCWallet;
 
     private final String address;
     private final String direction;
@@ -73,6 +74,11 @@ class BsqTxListItem extends TxConfidenceListItem {
 
         Coin valueSentToMe = bsqWalletService.getValueSentToMeForTransaction(transaction);
         Coin valueSentFromMe = bsqWalletService.getValueSentFromMeForTransaction(transaction);
+        Coin valueSentToMyBTCWallet = btcWalletService.getValueSentToMeForTransaction(transaction);
+        Coin valueSentFromMyBTCWallet = btcWalletService.getValueSentFromMeForTransaction(transaction);
+
+        withdrawalToBTCWallet = valueSentToMyBTCWallet.getValue() > valueSentFromMyBTCWallet.getValue();
+
         amount = valueSentToMe.subtract(valueSentFromMe);
         if (amount.isPositive()) {
             if (txId.equals(daoFacade.getGenesisTxId()))
@@ -123,6 +129,10 @@ class BsqTxListItem extends TxConfidenceListItem {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
                 .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
+    }
+
+    public boolean isWithdrawalToBTCWallet() {
+        return withdrawalToBTCWallet;
     }
 }
 

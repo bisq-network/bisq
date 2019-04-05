@@ -93,6 +93,7 @@ class TransactionsListItem {
 
         // TODO check and refactor
         boolean txFeeForBsqPayment = false;
+        boolean withdrawalFromBSQWallet = false;
         if (valueSentToMe.isZero()) {
             amountAsCoin = valueSentFromMe.multiply(-1);
             for (TransactionOutput output : transaction.getOutputs()) {
@@ -144,6 +145,14 @@ class TransactionsListItem {
                             outgoing = true;
                         }
                         break;
+                    }
+                } else {
+                    addressString = WalletService.getAddressStringFromOutput(output);
+                    outgoing = (valueSentToMe.getValue() < valueSentFromMe.getValue());
+                    if (!outgoing) {
+                        direction = Res.get("funds.tx.direction.receivedWith");
+                        received = true;
+                        withdrawalFromBSQWallet = true;
                     }
                 }
             }
@@ -216,6 +225,8 @@ class TransactionsListItem {
         } else {
             if (amountAsCoin.isZero())
                 details = Res.get("funds.tx.noFundsFromDispute");
+            else if (withdrawalFromBSQWallet)
+                details = Res.get("funds.tx.withdrawnFromBSQWallet");
             else if (!txFeeForBsqPayment)
                 details = received ? Res.get("funds.tx.receivedFunds") : Res.get("funds.tx.withdrawnFromWallet");
             else if (details.isEmpty())

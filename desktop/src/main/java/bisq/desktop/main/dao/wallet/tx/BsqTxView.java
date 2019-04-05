@@ -463,6 +463,10 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             setGraphic(field);
                                         }
                                     } else {
+
+                                        if (item.isWithdrawalToBTCWallet())
+                                            labelString = Res.get("dao.tx.withdrawnFromWallet");
+
                                         label = new AutoTooltipLabel(labelString);
                                         setGraphic(label);
                                     }
