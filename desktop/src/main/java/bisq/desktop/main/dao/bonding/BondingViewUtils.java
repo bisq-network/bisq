@@ -119,7 +119,7 @@ public class BondingViewUtils {
                                     duration,
                                     formatter.formatCoinWithCode(miningFee),
                                     CoinUtil.getFeePerByte(miningFee, txSize),
-                                    txSize
+                                    txSize / 1000d
                             ))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> publishLockupTx(lockupAmount, lockupTime, lockupReason, hash, resultHandler))
@@ -180,7 +180,7 @@ public class BondingViewUtils {
                                     duration,
                                     formatter.formatCoinWithCode(miningFee),
                                     CoinUtil.getFeePerByte(miningFee, txSize),
-                                    txSize
+                                    txSize / 1000d
                             ))
                             .actionButtonText(Res.get("shared.yes"))
                             .onAction(() -> publishUnlockTx(lockupTxId, resultHandler))
