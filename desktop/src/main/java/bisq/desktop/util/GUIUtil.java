@@ -751,6 +751,11 @@ public class GUIUtil {
             log.warn("showNotReadyForTxBroadcastPopups called but no case matched. This should never happen if isReadyForTxBroadcast was called before.");
     }
 
+    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, BSFormatter btcFormatter) {
+        new Popup<>().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
+                btcFormatter.formatCoinWithCode(amount))).show();
+    }
+
     public static void requestFocus(Node node) {
         UserThread.execute(node::requestFocus);
     }
