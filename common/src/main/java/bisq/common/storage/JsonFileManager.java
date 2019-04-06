@@ -78,6 +78,7 @@ public class JsonFileManager {
 
                 printWriter = new PrintWriter(tempFile);
                 printWriter.println(json);
+                printWriter.close();
 
                 FileUtil.renameFile(tempFile, jsonFile);
             } catch (Throwable t) {
