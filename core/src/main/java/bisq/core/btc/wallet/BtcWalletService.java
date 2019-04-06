@@ -150,7 +150,7 @@ public class BtcWalletService extends WalletService {
 
     public Transaction completePreparedBurnBsqTx(Transaction preparedBurnFeeTx, byte[] opReturnData)
             throws WalletException, InsufficientMoneyException, TransactionVerificationException {
-        return completePreparedProposalTx(preparedBurnFeeTx, opReturnData, null, null);
+        return completePreparedBsqTx(preparedBurnFeeTx, false, opReturnData);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
