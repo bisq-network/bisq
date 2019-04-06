@@ -261,7 +261,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
     private byte[] getOpReturnData(byte[] encryptedVotes) throws IOException {
         // We cannot use hash of whole blindVote data because we create the merit signature with the blindVoteTxId
         // So we use the encryptedVotes for the hash only.
-        final byte[] hash = BlindVoteConsensus.getHashOfEncryptedProposalList(encryptedVotes);
+        final byte[] hash = BlindVoteConsensus.getHashOfEncryptedVotes(encryptedVotes);
         log.info("Sha256Ripemd160 hash of encryptedVotes: " + Utilities.bytesAsHexString(hash));
         return BlindVoteConsensus.getOpReturnData(hash);
     }
