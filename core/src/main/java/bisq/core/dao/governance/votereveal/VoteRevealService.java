@@ -28,7 +28,6 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.BlindVoteConsensus;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
-import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.period.PeriodService;
@@ -41,7 +40,6 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -247,12 +245,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             // We don't want to wait for a successful broadcast to avoid issues if the broadcast succeeds delayed or at
             // next startup but the tx was actually broadcasted.
             myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
-
-            if (isInVoteRevealPhase) {
-                // Just for additional resilience we republish our blind votes
-                List<BlindVote> sortedBlindVoteListOfCycle = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
-                rePublishBlindVotePayloadList(sortedBlindVoteListOfCycle);
-            }
         } catch (IOException | WalletException | TransactionVerificationException
                 | InsufficientMoneyException e) {
             voteRevealExceptions.add(new VoteRevealException("Exception at calling revealVote.",
@@ -284,21 +276,5 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         Transaction preparedTx = bsqWalletService.getPreparedVoteRevealTx(stakeTxOutput);
         Transaction txWithBtcFee = btcWalletService.completePreparedVoteRevealTx(preparedTx, opReturnData);
         return bsqWalletService.signTx(txWithBtcFee);
-    }
-
-    private void rePublishBlindVotePayloadList(List<BlindVote> blindVoteList) {
-        // If we have 20 blind votes from 20 voters we would have 400 messages sent to their 10 neighbor peers.
-        // Most of the neighbors will already have the data so they will not continue broadcast.
-        // To not flood the network too much we use a long random delay to spread the load over 5 minutes.
-        // As this is only for extra resilience we don't care so much for the case that the user might shut down the
-        // app before we are finished with our delayed broadcast.
-        // We cannot set reBroadcast to false as otherwise it would not have any effect as we have the data already and
-        // broadcast would only be triggered at new data.
-        blindVoteList.stream()
-                .map(BlindVotePayload::new)
-                .forEach(blindVotePayload -> {
-                    UserThread.runAfterRandomDelay(() -> p2PService.addPersistableNetworkPayload(blindVotePayload, true),
-                            1, 300);
-                });
     }
 }
