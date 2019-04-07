@@ -72,7 +72,12 @@ public class TxBroadcaster {
         void onFailure(TxBroadcastException exception);
     }
 
-    private static final int DEFAULT_BROADCAST_TIMEOUT = 30;
+    // Currently there is a bug in BitcoinJ causing the timeout at all BSQ transactions.
+    // It is because BitcoinJ does not handle confidence object correctly in case as tx got altered after the
+    // Wallet.complete() method is called which is the case for all BSQ txs. We will work on a fix for that but that
+    // will take more time. In the meantime we reduce the timeout to 5 seconds to avoid that the trade protocol runs
+    // into a timeout when using BSQ for trade fee.
+    private static final int DEFAULT_BROADCAST_TIMEOUT = 5;
     private static Map<String, Timer> broadcastTimerMap = new HashMap<>();
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction localTx, Callback callback) {
