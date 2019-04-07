@@ -87,7 +87,6 @@ public class EconomyView extends ActivatableViewAndModel {
 
         leftVBox.getChildren().addAll(dashboard, supply, transactions);
 
-        // TODO just until DAO is enabled
         if (!DevEnv.isDaoActivated()) {
             dashboard.setDisable(true);
             supply.setDisable(true);

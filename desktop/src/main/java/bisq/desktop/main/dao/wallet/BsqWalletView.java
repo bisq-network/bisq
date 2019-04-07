@@ -86,7 +86,6 @@ public class BsqWalletView extends ActivatableViewAndModel {
         transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, baseNavPath);
         leftVBox.getChildren().addAll(send, receive, transactions);
 
-        // TODO just until DAO is enabled
         if (!DevEnv.isDaoActivated()) {
             send.setDisable(true);
             transactions.setDisable(true);
@@ -106,7 +105,6 @@ public class BsqWalletView extends ActivatableViewAndModel {
             if (selectedViewClass == null)
                 selectedViewClass = BsqSendView.class;
 
-            // TODO just until DAO is enabled
             if (!DevEnv.isDaoActivated())
                 selectedViewClass = BsqReceiveView.class;
 

@@ -358,7 +358,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
                         @Override
                         public void onFailure(TxBroadcastException exception) {
-                            //TODO handle
                             new Popup<>().warning(exception.toString());
                         }
                     });
