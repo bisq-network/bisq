@@ -1724,7 +1724,7 @@ message BlindVoteStore {
 
 message BlindVotePayload {
     BlindVote blind_vote = 1;
-    int64 date = 2;
+    int64 date = 2; // TODO remove for mainnet launch!
     bytes hash = 3;
 }
 

@@ -54,7 +54,10 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Persis
         CapabilityRequiringPayload, ConsensusCritical {
 
     private final BlindVote blindVote;
+
+    // TODO remove for mainnet launch!
     private final long date;            // 8 byte
+
     protected final byte[] hash;        // 20 byte
 
     public BlindVotePayload(BlindVote blindVote) {
