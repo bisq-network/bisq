@@ -73,6 +73,7 @@ import javax.crypto.SecretKey;
 import java.io.IOException;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -214,6 +215,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                     blindVoteTxId,
                     stake.value,
                     encryptedMeritList,
+                    new Date().getTime(),
                     new HashMap<>());
             addBlindVoteToList(blindVote);
 

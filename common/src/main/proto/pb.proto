@@ -1711,7 +1711,8 @@ message BlindVote {
     string tx_id = 2;
     int64 stake = 3;
     bytes encrypted_merit_list = 4;
-    map<string, string> extra_data = 5;
+    int64 date = 5;
+    map<string, string> extra_data = 6;
 }
 
 message MyBlindVoteList {
