@@ -21,7 +21,6 @@ import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.blindvote.BlindVote;
 
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
-import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
@@ -35,7 +34,6 @@ import io.bisq.generated.protobuffer.PB;
 import com.google.protobuf.ByteString;
 
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -52,9 +50,8 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class BlindVotePayload implements PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload,
+public final class BlindVotePayload implements PersistableNetworkPayload, PersistableEnvelope,
         CapabilityRequiringPayload, ConsensusCritical {
-    private static final long TOLERANCE = TimeUnit.HOURS.toMillis(5); // +/- 5 hours
 
     private final BlindVote blindVote;
     private final long date;            // 8 byte
@@ -112,18 +109,6 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Persis
     @Override
     public byte[] getHash() {
         return hash;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DateTolerantPayload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public boolean isDateInTolerance() {
-        // We don't allow entries older or newer then 5 hours.
-        // Preventing forward dating is also important to protect against a sophisticated attack
-        return Math.abs(new Date().getTime() - date) <= TOLERANCE;
     }
 
 
