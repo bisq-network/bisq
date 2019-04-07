@@ -41,7 +41,7 @@ public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, Per
     // At startup it is true, so the data we receive from the seed node are not checked against the phase as we have
     // not started up the DAO domain at that moment.
     @Setter
-    private boolean isInCorrectPhase = true;
+    private boolean notInVoteRevealPhase = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +70,7 @@ public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, Per
 
     @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
-        return payload instanceof BlindVotePayload && isInCorrectPhase;
+        return payload instanceof BlindVotePayload && notInVoteRevealPhase;
     }
 
 

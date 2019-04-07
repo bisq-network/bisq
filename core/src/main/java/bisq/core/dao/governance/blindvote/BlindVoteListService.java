@@ -102,7 +102,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     @Override
     public void onNewBlockHeight(int blockHeight) {
         // We only add blindVotes to blindVoteStorageService if we are not in the vote reveal phase.
-        blindVoteStorageService.setInCorrectPhase(isInCorrectPhase(blockHeight));
+        blindVoteStorageService.setNotInVoteRevealPhase(notInVoteRevealPhase(blockHeight));
     }
 
     @Override
@@ -160,7 +160,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
 
                 if (blindVoteValidator.areDataFieldsValid(blindVote)) {
                     if (fromBroadcastMessage) {
-                        if (isInCorrectPhase(daoStateService.getChainHeight())) {
+                        if (notInVoteRevealPhase(daoStateService.getChainHeight())) {
                             // We received the payload outside the vote reveal phase and add the payload.
                             // If we would accept it during the vote reveal phase we would be vulnerable to a late
                             // publishing attack where the attacker tries to pollute the data view of the voters and
@@ -180,7 +180,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
         }
     }
 
-    private boolean isInCorrectPhase(int blockHeight) {
+    private boolean notInVoteRevealPhase(int blockHeight) {
         return !periodService.isInPhase(blockHeight, DaoPhase.Phase.VOTE_REVEAL);
     }
 }
