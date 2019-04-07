@@ -25,7 +25,6 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.DaoTestingFeedbackWindow;
 import bisq.desktop.main.overlays.windows.ProposalResultsWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -33,7 +32,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.blindvote.BlindVote;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.CycleService;
@@ -61,10 +59,8 @@ import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.UserThread;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -109,7 +105,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addButton;
@@ -391,24 +386,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         });
         Collections.reverse(cycleListItemList);
 
-        maybeShowDaoTestingFeedbackWindow();
-
         GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 6, 6);
-    }
-
-    private void maybeShowDaoTestingFeedbackWindow() {
-        String testingPopupKey = "daoTestingFeedbackPopup";
-        if (DontShowAgainLookup.showAgain(testingPopupKey)) {
-            UserThread.runAfter(() -> {
-                if (myProposalListService.getList().stream().map(Proposal::getTxId)
-                        .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())) ||
-                        myBlindVoteListService.getMyBlindVoteList().stream().map(BlindVote::getTxId)
-                                .anyMatch(txId -> periodService.isTxInCorrectCycle(txId, daoStateService.getChainHeight())))
-                    new DaoTestingFeedbackWindow()
-                            .dontShowAgainId(testingPopupKey)
-                            .show();
-            }, 4, TimeUnit.SECONDS);
-        }
     }
 
 
