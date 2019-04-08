@@ -29,6 +29,8 @@ import com.google.protobuf.ByteString;
 
 import org.springframework.util.CollectionUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.security.PublicKey;
 
 import java.util.ArrayList;
@@ -123,6 +125,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @VisibleForTesting
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
                   List<PaymentAccountFilter> bannedPaymentAccounts,
