@@ -541,7 +541,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column.setComparator(Comparator.comparing(CycleListItem::getNumProposals));
         votesTableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.numVotes"));
+        column = new AutoTooltipTableColumn<>(Res.get("shared.votes"));
         column.setMinWidth(70);
         column.setMaxWidth(70);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
