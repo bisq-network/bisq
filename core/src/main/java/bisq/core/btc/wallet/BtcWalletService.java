@@ -134,7 +134,7 @@ public class BtcWalletService extends WalletService {
         return "Address entry list:\n" +
                 sb.toString() +
                 "\n\n" +
-                wallet.toString(includePrivKeys, true, true, walletsSetup.getChain()) + "\n\n" +
+                wallet.toString(true, includePrivKeys, null, true, true, walletsSetup.getChain()) + "\n\n" +
                 "All pubKeys as hex:\n" +
                 wallet.printAllPubKeysAsHex();
     }
