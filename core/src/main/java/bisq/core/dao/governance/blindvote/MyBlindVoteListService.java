@@ -135,7 +135,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         this.myVoteListService = myVoteListService;
         this.myProposalListService = myProposalListService;
 
-        numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishMyBlindVoteOnceWellConnected();
+        numConnectedPeersListener = (observable, oldValue, newValue) -> maybeRePublishMyBlindVote();
     }
 
 
@@ -176,7 +176,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void onParseBlockChainComplete() {
-        rePublishMyBlindVoteOnceWellConnected();
+        maybeRePublishMyBlindVote();
     }
 
 
@@ -351,23 +351,31 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
         return bsqWalletService.signTx(txWithBtcFee);
     }
 
-    private void rePublishMyBlindVoteOnceWellConnected() {
-        // We republish at each startup at any block during the cycle. We filter anyway for valid blind votes
-        // of that cycle so it is 1 blind vote getting rebroadcast at each startup to my neighbors.
-        // Republishing only will have effect if the payload creation date is < 5 hours as other nodes would not
-        // accept payloads which are too old or are in future.
-        // Only payloads received from seed nodes would ignore that date check.
-        int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
-        if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
-                BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
-            myBlindVoteList.stream()
-                    .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),
-                            DaoPhase.Phase.BLIND_VOTE,
-                            periodService.getChainHeight()))
-                    .forEach(blindVote -> addToP2PNetwork(blindVote, null));
+    private void maybeRePublishMyBlindVote() {
+        // We do not republish during vote reveal phase as peer would reject blindVote data to protect against
+        // late publishing attacks.
+        // This attack is only relevant during the vote reveal phase as there it could cause damage by disturbing the
+        // data view of the blind votes of the voter for creating the majority hash.
+        // To republish after the vote reveal phase still makes sense to reduce risk that some nodes have not received
+        // it and would need to request the data then in the vote result phase.
+        if (!periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.VOTE_REVEAL)) {
+            // We republish at each startup at any block during the cycle. We filter anyway for valid blind votes
+            // of that cycle so it is 1 blind vote getting rebroadcast at each startup to my neighbors.
+            // Republishing only will have effect if the payload creation date is < 5 hours as other nodes would not
+            // accept payloads which are too old or are in future.
+            // Only payloads received from seed nodes would ignore that date check.
+            int minPeers = BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? 4 : 1;
+            if ((p2PService.getNumConnectedPeers().get() >= minPeers && p2PService.isBootstrapped()) ||
+                    BisqEnvironment.getBaseCurrencyNetwork().isRegtest()) {
+                myBlindVoteList.stream()
+                        .filter(blindVote -> periodService.isTxInPhaseAndCycle(blindVote.getTxId(),
+                                DaoPhase.Phase.BLIND_VOTE,
+                                periodService.getChainHeight()))
+                        .forEach(blindVote -> addToP2PNetwork(blindVote, null));
 
-            // We delay removal of listener as we call that inside listener itself.
-            UserThread.execute(() -> p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener));
+                // We delay removal of listener as we call that inside listener itself.
+                UserThread.execute(() -> p2PService.getNumConnectedPeers().removeListener(numConnectedPeersListener));
+            }
         }
     }
 
