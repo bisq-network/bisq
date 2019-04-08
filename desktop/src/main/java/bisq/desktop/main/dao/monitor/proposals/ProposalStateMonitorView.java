@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.monitor.proposals;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.main.dao.monitor.StateMonitorView;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
@@ -32,7 +31,12 @@ import bisq.core.dao.monitoring.model.ProposalStateHash;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
+import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.storage.Storage;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -40,6 +44,8 @@ import javafx.scene.control.TableColumn;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
+
+import java.io.File;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -60,8 +66,10 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
                                      DaoFacade daoFacade,
                                      ProposalStateMonitoringService proposalStateMonitoringService,
                                      CycleService cycleService,
-                                     PeriodService periodService) {
-        super(daoStateService, daoFacade, cycleService, periodService);
+                                     PeriodService periodService,
+                                     SeedNodeRepository seedNodeRepository,
+                                     @Named(Storage.STORAGE_DIR) File storageDir) {
+        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
 
         this.proposalStateMonitoringService = proposalStateMonitoringService;
     }
@@ -81,13 +89,6 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
     protected void activate() {
         super.activate();
         proposalStateMonitoringService.addListener(this);
-
-        resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                        .useShutDownButton()
-                        .hideCloseButton()
-                        .show())
-        );
     }
 
     @Override
@@ -123,7 +124,7 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
     protected ProposalStateInConflictListItem getStateInConflictListItem(Map.Entry<String, ProposalStateHash> mapEntry) {
         ProposalStateHash proposalStateHash = mapEntry.getValue();
         int cycleIndex = periodService.getCycle(proposalStateHash.getHeight()).map(cycleService::getCycleIndex).orElse(0);
-        return new ProposalStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue(), cycleIndex);
+        return new ProposalStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue(), cycleIndex, seedNodeAddresses);
     }
 
     @Override
@@ -173,15 +174,8 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
 
     @Override
     protected void onDataUpdate() {
-        isInConflict.set(proposalStateMonitoringService.isInConflict());
-
-        if (isInConflict.get()) {
-            statusTextField.setText(Res.get("dao.monitor.proposal.daoStateNotInSync"));
-            statusTextField.getStyleClass().add("dao-inConflict");
-        } else {
-            statusTextField.setText(Res.get("dao.monitor.proposal.daoStateInSync"));
-            statusTextField.getStyleClass().remove("dao-inConflict");
-        }
+        isInConflictWithSeedNode.set(proposalStateMonitoringService.isInConflictWithSeedNode());
+        isInConflictWithNonSeedNode.set(proposalStateMonitoringService.isInConflictWithNonSeedNode());
 
         listItems.setAll(proposalStateMonitoringService.getProposalStateBlockChain().stream()
                 .map(this::getStateBlockListItem)

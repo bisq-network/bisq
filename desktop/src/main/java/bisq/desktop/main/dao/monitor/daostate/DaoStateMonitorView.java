@@ -33,11 +33,17 @@ import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
+import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.collections.ListChangeListener;
+
+import java.io.File;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -60,8 +66,10 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
                                 DaoFacade daoFacade,
                                 DaoStateMonitoringService daoStateMonitoringService,
                                 CycleService cycleService,
-                                PeriodService periodService) {
-        super(daoStateService, daoFacade, cycleService, periodService);
+                                PeriodService periodService,
+                                SeedNodeRepository seedNodeRepository,
+                                @Named(Storage.STORAGE_DIR) File storageDir) {
+        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
 
         this.daoStateMonitoringService = daoStateMonitoringService;
     }
@@ -87,13 +95,6 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
         daoStateMonitoringService.getUtxoMismatches().addListener(utxoMismatchListChangeListener);
 
         updateUtxoMismatches();
-
-        resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                        .useShutDownButton()
-                        .hideCloseButton()
-                        .show())
-        );
     }
 
     @Override
@@ -131,7 +132,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     protected DaoStateInConflictListItem getStateInConflictListItem(Map.Entry<String, DaoStateHash> mapEntry) {
         DaoStateHash daoStateHash = mapEntry.getValue();
         int cycleIndex = periodService.getCycle(daoStateHash.getHeight()).map(cycleService::getCycleIndex).orElse(0);
-        return new DaoStateInConflictListItem(mapEntry.getKey(), daoStateHash, cycleIndex);
+        return new DaoStateInConflictListItem(mapEntry.getKey(), daoStateHash, cycleIndex, seedNodeAddresses);
     }
 
     @Override
@@ -181,15 +182,8 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
     @Override
     protected void onDataUpdate() {
-        isInConflict.set(daoStateMonitoringService.isInConflict());
-
-        if (isInConflict.get()) {
-            statusTextField.setText(Res.get("dao.monitor.daoState.daoStateNotInSync"));
-            statusTextField.getStyleClass().add("dao-inConflict");
-        } else {
-            statusTextField.setText(Res.get("dao.monitor.daoState.daoStateInSync"));
-            statusTextField.getStyleClass().remove("dao-inConflict");
-        }
+        isInConflictWithSeedNode.set(daoStateMonitoringService.isInConflictWithSeedNode());
+        isInConflictWithNonSeedNode.set(daoStateMonitoringService.isInConflictWithNonSeedNode());
 
         listItems.setAll(daoStateMonitoringService.getDaoStateBlockChain().stream()
                 .map(this::getStateBlockListItem)
