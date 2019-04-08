@@ -1,0 +1,10 @@
+FROM ubuntu:bionic
+
+RUN apt-get update && apt-get install -y \
+  collectd-core \
+  openjdk-11-jre
+COPY collectd.conf /etc/collectd/collectd.conf
+COPY openjdk.conf /etc/ld.so.conf.d/openjdk.conf
+RUN ldconfig
+CMD /bin/bash -c "/usr/sbin/collectd && trap : TERM INT; sleep infinity & wait"
+

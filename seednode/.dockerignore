@@ -5,7 +5,7 @@ docs/
 .travis.yml
 docker-compose.yml
 docker/development/
-docker/prod/
+#docker/prod/
 docker/README.md
 
 # Gradle
