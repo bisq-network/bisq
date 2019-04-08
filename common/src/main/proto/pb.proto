@@ -528,6 +528,7 @@ message Filter {
     bool prevent_public_btc_network = 12;
     repeated string btc_nodes = 13;
     bool disable_dao = 14;
+    string disable_dao_below_version = 15;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older

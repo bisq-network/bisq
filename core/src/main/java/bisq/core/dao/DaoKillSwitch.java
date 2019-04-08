@@ -21,10 +21,16 @@ import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 
+import bisq.common.app.Version;
+
 import javax.inject.Inject;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+@Slf4j
 public class DaoKillSwitch implements DaoSetupService {
     private static DaoKillSwitch INSTANCE;
     private final FilterManager filterManager;
@@ -49,8 +55,19 @@ public class DaoKillSwitch implements DaoSetupService {
         applyFilter(filterManager.getFilter());
     }
 
-    private void applyFilter(Filter filter) {
-        daoDisabled = filter != null && filter.isDisableDao();
+    private void applyFilter(@Nullable Filter filter) {
+        if (filter == null) {
+            daoDisabled = false;
+            return;
+        }
+
+        boolean requireUpdateToNewVersion = false;
+        String disableDaoBelowVersion = filter.getDisableDaoBelowVersion();
+        if (disableDaoBelowVersion != null && !disableDaoBelowVersion.isEmpty()) {
+            requireUpdateToNewVersion = Version.isNewVersion(disableDaoBelowVersion);
+        }
+
+        daoDisabled = requireUpdateToNewVersion || filter.isDisableDao();
     }
 
     public static void assertDaoIsNotDisabled() {
