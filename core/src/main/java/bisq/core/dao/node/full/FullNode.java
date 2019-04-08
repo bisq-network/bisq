@@ -74,8 +74,8 @@ public class FullNode extends BsqNode {
                     FullNodeNetworkService fullNodeNetworkService) {
         super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
         this.rpcService = rpcService;
-
         this.fullNodeNetworkService = fullNodeNetworkService;
+        log.info("Started FullNode");
     }
 
 
@@ -169,7 +169,7 @@ public class FullNode extends BsqNode {
 
     private void onNewBlock(Block block) {
         maybeExportToJson();
-
+        log.info("Fullnode: on new block");
         if (p2pNetworkReady && parseBlockchainComplete)
             fullNodeNetworkService.publishNewBlock(block);
     }

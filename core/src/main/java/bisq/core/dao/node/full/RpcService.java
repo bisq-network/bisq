@@ -111,6 +111,7 @@ public class RpcService {
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
+        log.info("Starting RPCService with options: {} {} {}", this.rpcHost, this.rpcPort, this.rpcUser);
     }
 
 
