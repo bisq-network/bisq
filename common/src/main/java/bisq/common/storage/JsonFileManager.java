@@ -79,6 +79,13 @@ public class JsonFileManager {
                 printWriter = new PrintWriter(tempFile);
                 printWriter.println(json);
 
+                // This close call and comment is borrowed from FileManager. Not 100% sure it that is really needed but
+                // seems that had fixed in the past and we got reported issues on Windows so that fix might be still
+                // required.
+                // Close resources before replacing file with temp file because otherwise it causes problems on windows
+                // when rename temp file
+                printWriter.close();
+
                 FileUtil.renameFile(tempFile, jsonFile);
             } catch (Throwable t) {
                 log.error("storageFile " + jsonFile.toString());
