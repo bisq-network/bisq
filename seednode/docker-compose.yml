@@ -3,7 +3,7 @@ version: '2.1'
 services:
     seednode:
         container_name: seednode
-        restart: unless-stopped
+        restart: on-failure
         env_file:
             - .env
         build:
@@ -30,6 +30,7 @@ services:
             - NODE_PORT=8000
             - DAO_ACTIVATED=true
             - FULL_DAO_NODE=true
+            - RPC_PORT=172.28.1.4
             - RPC_PORT=8332
             - RPC_USER=${RPC_USER}
             - RPC_PASSWORD=${RPC_PASSWORD}
@@ -57,6 +58,7 @@ services:
             dockerfile: docker/prod/Dockerfile-btc
         image: bisq/bitcoin-core
         container_name: btcd
+        restart: on-failure
         command:
             -printtoconsole
             -rpcport=8332

@@ -2,7 +2,7 @@ FROM gradle:jdk11
 
 #RUN apt update && apt install gradle
 
-RUN git clone https://github.com/bisq-network/bisq.git
+RUN git clone https://github.com/bisq-network/bisq.git && git checkout rc_v1.0.0
 WORKDIR /home/gradle/bisq/seednode
 
 ENV APP_NAME=seednode

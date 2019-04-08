@@ -72,6 +72,7 @@ import org.jetbrains.annotations.NotNull;
 public class RpcService {
     private final String rpcUser;
     private final String rpcPassword;
+    private final String rpcHost;
     private final String rpcPort;
     private final String rpcBlockPort;
 
@@ -90,16 +91,19 @@ public class RpcService {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public RpcService(Preferences preferences,
+                      @Named(DaoOptionKeys.RPC_HOST) String rpcHost,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
         // mainnet is 8332, testnet 18332, regtest 18443
+        boolean isHostSet = rpcHost != null && !rpcHost.isEmpty();
         boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
         boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
         boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
         boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
+        this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? "8332" :
                         isTestnet ? "18332" :
@@ -122,7 +126,7 @@ public class RpcService {
                 CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
                 Properties nodeConfig = new Properties();
                 nodeConfig.setProperty("node.bitcoind.rpc.protocol", "http");
-                nodeConfig.setProperty("node.bitcoind.rpc.host", "127.0.0.1");
+                nodeConfig.setProperty("node.bitcoind.rpc.host", rpcHost);
                 nodeConfig.setProperty("node.bitcoind.rpc.auth_scheme", "Basic");
                 nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
