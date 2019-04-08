@@ -10,7 +10,7 @@ docker/README.md
 
 # Gradle
 .gradle
-build
+#build
 
 # IDEA
 .idea

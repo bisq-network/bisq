@@ -1,16 +1,15 @@
-FROM openjdk:8-jdk
+FROM gradle:jdk11
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    openjfx && rm -rf /var/lib/apt/lists/*
+#RUN apt update && apt install gradle
 
-WORKDIR /bisq-seednode
-CMD ./docker/startSeedNode.sh
+RUN git clone https://github.com/bisq-network/bisq.git
+WORKDIR /home/gradle/bisq/seednode
 
 ENV APP_NAME=seednode
 ENV NODE_PORT=8000
 
 EXPOSE 8000
-
-COPY . .
-RUN ./docker/setup.sh
-ENV SKIP_BUILD=true
+RUN gradle build
+RUN chmod +x ./build/app/bin/bisq-seednode
+CMD ./docker/startSeedNode.sh
+#CMD sleep 10000

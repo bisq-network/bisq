@@ -1,0 +1,7 @@
+FROM ruimarinho/bitcoin-core:0.17.1
+
+RUN apt-get update && apt-get install -y netcat
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["bitcoind"]

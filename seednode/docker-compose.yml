@@ -2,21 +2,87 @@ version: '2.1'
 
 services:
     seednode:
+        container_name: seednode
+        restart: unless-stopped
+        env_file:
+            - .env
         build:
             context: .
-            dockerfile: docker/development/Dockerfile
+            dockerfile: docker/prod/Dockerfile
         image: bisq-seednode
         ports:
             - 8000:8000
-        environment:
-            - NODE_PORT=8000
-            - BASE_CURRENCY_NETWORK=BTC_REGTEST
-            - SEED_NODES=seednode:8000
-            - MY_ADDRESS=seednode:8000
-            - USE_LOCALHOST_FOR_P2P=true
+            - 9010:9010
+            - 9011:9011
+            - 5120
+        networks:
+          bisq_net:
+            ipv4_address: 172.28.1.3
         volumes:
-          - m2:/root/.m2
+            - ./hiddenservice:${TOR_HIDDEN_SERVICE_DIR}
+        environment:
+            - GRADLE_USER_HOME=/home/gradle
+            - ONION_ADDRESS=${ONION_ADDRESS}
+            - MAX_MEMORY=1200
+            - MAX_CONNECTIONS=30
+            - BASE_CURRENCY_NETWORK=BTC_MAINNET
+            - APP_NAME=seed
+            - NODE_PORT=8000
+            - DAO_ACTIVATED=true
+            - FULL_DAO_NODE=true
+            - RPC_PORT=8332
+            - RPC_USER=${RPC_USER}
+            - RPC_PASSWORD=${RPC_PASSWORD}
+            - RPC_BLOCKNOTIFY_PORT=5120
 
-volumes:
-  m2:
-    name: m2
+    # fullnode:
+    #     container_name: btcd
+    #     restart: unless-stopped
+    #     image: kylemanna/bitcoind
+    #     ports:
+    #         - 8333:8333
+    #         # - 127.0.0.1:8332:8332
+    #         - 18443:18443
+    #     networks:
+    #       bisq_net:
+    #         ipv4_address: 172.28.1.4
+    #     volumes:
+    #         - ./mybitcoin.conf:/bitcoin/.bitcoin/bitcoin.conf
+    #         - ./docker/prod/blocknotify:/bitcoin/.bitcoin/blocknotify
+    #         - ${BTC_DATA_DIR}:/bitcoin
+
+    bitcoin-core:
+        build:
+            context: .
+            dockerfile: docker/prod/Dockerfile-btc
+        image: bisq/bitcoin-core
+        container_name: btcd
+        command:
+            -printtoconsole
+            -rpcport=8332
+            -server=1
+            -txindex=1
+            -rpcuser=${RPC_USER}
+            -rpcallowip=172.28.1.3
+            -rpcpassword=${RPC_PASSWORD}
+            -blocknotify="bash ~/.bitcoin/blocknotify %s"
+        ports:
+            - 8333:8333
+            - 18443:18443
+        networks:
+          bisq_net:
+            ipv4_address: 172.28.1.4
+        # environment:
+        #     - BITCOIN_DATA=${BTC_DATA_DIR}
+        volumes:
+            - ./docker/prod/mybitcoin.conf:/bitcoin/.bitcoin/bitcoin.conf
+            - ./docker/prod/blocknotify:/home/bitcoin/.bitcoin/blocknotify
+            - ${BTC_DATA_DIR}:/home/bitcoin/.bitcoin/
+
+networks:
+  bisq_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+

@@ -1,5 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 if [ "$SKIP_BUILD" != "true" ]; then
-    ./gradlew build
+    gradle build
 fi
