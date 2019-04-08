@@ -185,7 +185,6 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         amountInputTextField.resetValidation();
         timeInputTextField.resetValidation();
 
-        //TODO maybe show generate salt button instead
         setNewRandomSalt();
 
         updateList();

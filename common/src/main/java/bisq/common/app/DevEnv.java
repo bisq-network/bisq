@@ -52,10 +52,7 @@ public class DevEnv {
         DevEnv.devMode = devMode;
     }
 
-    private static final boolean DAO_PHASE2_ACTIVATED = false;
-    private static final boolean DAO_TRADING_ACTIVATED = false;
-
-    private static boolean daoActivated = false;
+    private static boolean daoActivated = true;
 
     public static boolean isDaoActivated() {
         return daoActivated;
@@ -71,11 +68,7 @@ public class DevEnv {
             throw new RuntimeException(msg);
     }
 
-    public static boolean isDaoPhase2Activated() {
-        return DAO_PHASE2_ACTIVATED || daoActivated;
-    }
-
     public static boolean isDaoTradingActivated() {
-        return DAO_TRADING_ACTIVATED || daoActivated;
+        return true;
     }
 }

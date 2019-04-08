@@ -459,7 +459,6 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void onVote() {
-        // TODO verify stake
         Coin stake = bsqFormatter.parseToCoin(stakeInputTextField.getText());
         try {
             // We create a dummy tx to get the miningFee for displaying it at the confirmation popup

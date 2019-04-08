@@ -574,7 +574,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.DAO_ACTIVATED,
-                format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "false"))
+                format("Developer flag. If true it enables dao phase 2 features. (default: %s)", "true"))
                 .withRequiredArg()
                 .ofType(boolean.class);
     }

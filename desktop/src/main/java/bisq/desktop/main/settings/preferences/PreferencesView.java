@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.settings.preferences;
 
-import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -32,7 +31,6 @@ import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
@@ -88,7 +86,6 @@ import javafx.util.StringConverter;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -103,7 +100,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
-    private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
+    //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
             useCustomFee;
@@ -117,7 +114,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final Preferences preferences;
     private final FeeService feeService;
     private final ReferralIdService referralIdService;
-    private final BisqEnvironment bisqEnvironment;
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
@@ -150,13 +146,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Inject
     public PreferencesView(PreferencesViewModel model, Preferences preferences, FeeService feeService,
-                           ReferralIdService referralIdService, BisqEnvironment bisqEnvironment,
-                           AssetService assetService, FilterManager filterManager, DaoFacade daoFacade, BSFormatter formatter) {
+                           ReferralIdService referralIdService, AssetService assetService,
+                           FilterManager filterManager, DaoFacade daoFacade, BSFormatter formatter) {
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
         this.referralIdService = referralIdService;
-        this.bisqEnvironment = bisqEnvironment;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
@@ -216,7 +211,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         // selectBaseCurrencyNetwork
-        selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
+      /*  selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
                 Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
 
         selectBaseCurrencyNetworkComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("settings.preferences.selectCurrencyNetwork"),
@@ -233,10 +228,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             public BaseCurrencyNetwork fromString(String string) {
                 return null;
             }
-        });
+        });*/
 
-        userLanguageComboBox = FormBuilder.addComboBox(root, ++gridRow,
-                Res.get("shared.language"));
+        userLanguageComboBox = FormBuilder.addComboBox(root, gridRow,
+                Res.get("shared.language"), Layout.FIRST_ROW_DISTANCE);
         userCountryComboBox = FormBuilder.addComboBox(root, ++gridRow,
                 Res.get("shared.country"));
         userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
@@ -587,7 +582,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void activateGeneralOptions() {
-        List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
+       /* List<BaseCurrencyNetwork> baseCurrencyNetworks = Arrays.asList(BaseCurrencyNetwork.values());
 
         // We allow switching to testnet to make it easier for users to test the testnet DAO version
         // We only show mainnet and dao testnet. Testnet is rather un-usable for application testing when asics
@@ -597,7 +592,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 .collect(Collectors.toList());
         selectBaseCurrencyNetworkComboBox.setItems(FXCollections.observableArrayList(baseCurrencyNetworks));
         selectBaseCurrencyNetworkComboBox.setOnAction(e -> onSelectNetwork());
-        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());
+        selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork());*/
 
         boolean useCustomWithdrawalTxFee = preferences.isUseCustomWithdrawalTxFee();
         useCustomFee.setSelected(useCustomWithdrawalTxFee);
@@ -827,7 +822,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         }
     }
 
-    private void onSelectNetwork() {
+   /* private void onSelectNetwork() {
         if (selectBaseCurrencyNetworkComboBox.getSelectionModel().getSelectedItem() != BisqEnvironment.getBaseCurrencyNetwork())
             selectNetwork();
     }
@@ -842,14 +837,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 .closeButtonText(Res.get("shared.cancel"))
                 .onClose(() -> selectBaseCurrencyNetworkComboBox.getSelectionModel().select(BisqEnvironment.getBaseCurrencyNetwork()))
                 .show();
-    }
+    }*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Deactivate
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void deactivateGeneralOptions() {
-        selectBaseCurrencyNetworkComboBox.setOnAction(null);
+        //selectBaseCurrencyNetworkComboBox.setOnAction(null);
         userLanguageComboBox.setOnAction(null);
         userCountryComboBox.setOnAction(null);
         blockChainExplorerComboBox.setOnAction(null);
