@@ -137,6 +137,7 @@ configure(project(':assets')) {
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
         }
         compile 'com.google.guava:guava:27.0.1-jre'
         compile "org.slf4j:slf4j-api:$slf4jVersion"
@@ -180,6 +181,7 @@ configure(project(':common')) {
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
         }
         compile 'org.jetbrains:annotations:13.0'
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
