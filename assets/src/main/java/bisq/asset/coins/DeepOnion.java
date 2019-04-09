@@ -48,7 +48,6 @@ public class DeepOnion extends Coin {
             super();
             addressHeader = 31;
             p2shHeader = 78;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

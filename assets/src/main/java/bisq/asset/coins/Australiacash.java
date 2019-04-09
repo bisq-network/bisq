@@ -30,7 +30,6 @@ public class Australiacash extends Coin {
         public AustraliacashParams() {
             addressHeader = 23;
             p2shHeader = 5;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

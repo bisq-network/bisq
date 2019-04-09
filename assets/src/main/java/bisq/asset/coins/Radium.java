@@ -34,7 +34,6 @@ public class Radium extends Coin {
             super();
             addressHeader = 76;
             p2shHeader = 58;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }
