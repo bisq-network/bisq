@@ -70,6 +70,7 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.utils.Fiat;
@@ -718,7 +719,7 @@ public class GUIUtil {
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
         return address != null ?
-                BitcoinURI.convertToBitcoinURI(Address.fromBase58(Config.baseCurrencyNetworkParameters(),
+                BitcoinURI.convertToBitcoinURI(LegacyAddress.fromBase58(Config.baseCurrencyNetworkParameters(),
                         address), amount, label, null) :
                 "";
     }

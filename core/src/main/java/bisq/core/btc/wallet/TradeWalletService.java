@@ -36,6 +36,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -151,7 +152,7 @@ public class TradeWalletService {
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
-            tradingFeeTx.addOutput(tradingFee, Address.fromBase58(params, feeReceiverAddress));
+            tradingFeeTx.addOutput(tradingFee, LegacyAddress.fromBase58(params, feeReceiverAddress));
             // the reserved amount we need for the trade we send to our trade reservedForTradeAddress
             tradingFeeTx.addOutput(reservedFundsForOffer, reservedForTradeAddress);
 
@@ -515,7 +516,7 @@ public class TradeWalletService {
         TransactionOutput takerTransactionOutput = null;
         if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
-                    Address.fromBase58(params, takerChangeAddressString));
+                    LegacyAddress.fromBase58(params, takerChangeAddressString));
         }
 
         if (makerIsBuyer) {
@@ -685,7 +686,7 @@ public class TradeWalletService {
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
         Coin outputAmount = p2SHMultiSigOutput.getValue().subtract(minerFee);
-        delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
+        delayedPayoutTx.addOutput(outputAmount, LegacyAddress.fromBase58(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return delayedPayoutTx;
@@ -937,10 +938,10 @@ public class TradeWalletService {
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1000,10 +1001,10 @@ public class TradeWalletService {
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
         if (buyerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+            payoutTx.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+            payoutTx.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
 
         // take care of sorting!
@@ -1145,10 +1146,10 @@ public class TradeWalletService {
         Transaction transaction = new Transaction(params);
         transaction.addInput(p2SHMultiSigOutput);
         if (buyerPayoutAmount.isPositive()) {
-            transaction.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+            transaction.addOutput(buyerPayoutAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         if (sellerPayoutAmount.isPositive()) {
-            transaction.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+            transaction.addOutput(sellerPayoutAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
         checkArgument(transaction.getOutputs().size() >= 1, "We need at least one output.");
         return transaction;

@@ -37,6 +37,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.script.ScriptException;
@@ -499,7 +500,7 @@ public abstract class WalletService {
                             ResultHandler resultHandler,
                             ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
-        SendRequest sendRequest = SendRequest.emptyWallet(Address.fromBase58(params, toAddress));
+        SendRequest sendRequest = SendRequest.emptyWallet(LegacyAddress.fromBase58(params, toAddress));
         sendRequest.fee = Coin.ZERO;
         sendRequest.feePerKb = getTxFeeForWithdrawalPerByte().multiply(1000);
         sendRequest.aesKey = aesKey;
