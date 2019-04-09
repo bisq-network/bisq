@@ -43,6 +43,7 @@ import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.script.ScriptException;
@@ -538,7 +539,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, Address.fromBase58(params, receiverAddress));
+        tx.addOutput(receiverAmount, LegacyAddress.fromBase58(params, receiverAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = Coin.ZERO;

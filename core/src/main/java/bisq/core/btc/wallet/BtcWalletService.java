@@ -33,6 +33,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -1052,7 +1053,7 @@ public class BtcWalletService extends WalletService {
         final Coin receiverAmount = amount.subtract(fee);
         Preconditions.checkArgument(Restrictions.isAboveDust(receiverAmount),
                 "The amount is too low (dust limit).");
-        tx.addOutput(receiverAmount, Address.fromBase58(params, toAddress));
+        tx.addOutput(receiverAmount, LegacyAddress.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1083,7 +1084,7 @@ public class BtcWalletService extends WalletService {
         checkArgument(Restrictions.isAboveDust(netValue),
                 "The amount is too low (dust limit).");
 
-        tx.addOutput(netValue, Address.fromBase58(params, toAddress));
+        tx.addOutput(netValue, LegacyAddress.fromBase58(params, toAddress));
 
         SendRequest sendRequest = SendRequest.forTx(tx);
         sendRequest.fee = fee;
@@ -1148,14 +1149,14 @@ public class BtcWalletService extends WalletService {
             Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
                     "The buyerAmount is too low (dust limit).");
 
-            tx.addOutput(buyerAmount, Address.fromBase58(params, buyerAddressString));
+            tx.addOutput(buyerAmount, LegacyAddress.fromBase58(params, buyerAddressString));
         }
         // sellerAmount can be 0
         if (sellerAmount.isPositive()) {
             Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
                     "The sellerAmount is too low (dust limit).");
 
-            tx.addOutput(sellerAmount, Address.fromBase58(params, sellerAddressString));
+            tx.addOutput(sellerAmount, LegacyAddress.fromBase58(params, sellerAddressString));
         }
 
         SendRequest sendRequest = SendRequest.forTx(tx);
