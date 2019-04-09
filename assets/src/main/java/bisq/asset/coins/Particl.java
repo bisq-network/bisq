@@ -32,7 +32,6 @@ public class Particl extends Coin {
         public ParticlMainNetParams() {
             this.addressHeader = 56;
             this.p2shHeader = 60;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
    public static class ParticlMainNetAddressValidator extends Base58BitcoinAddressValidator {
@@ -49,5 +48,5 @@ public class Particl extends Coin {
             return super.validate(address);
         }
     }
-    
+
 }

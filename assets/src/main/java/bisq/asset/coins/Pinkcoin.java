@@ -33,7 +33,6 @@ public class Pinkcoin extends Coin {
         public PinkcoinParams() {
             addressHeader = 3;
             p2shHeader = 28;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

@@ -30,7 +30,6 @@ public class CTSCoin extends Coin {
         public CtscMainNetParams() {
             this.addressHeader = 66;
             this.p2shHeader = 16;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

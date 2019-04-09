@@ -30,7 +30,6 @@ public class Galilel extends Coin {
         public GalilelMainNetParams() {
             this.addressHeader = 68;
             this.p2shHeader = 16;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

@@ -33,7 +33,6 @@ public class Lytix extends Coin {
         public LytixParams() {
             addressHeader = 19;
             p2shHeader = 11;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

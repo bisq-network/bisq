@@ -33,7 +33,6 @@ public class Actinium extends Coin {
         public ActiniumParams() {
             addressHeader = 53;
             p2shHeader = 55;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

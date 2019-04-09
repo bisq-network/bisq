@@ -30,7 +30,6 @@ public class Animecoin extends Coin {
         public AnimecoinMainNetParams() {
             this.addressHeader = 23;
             this.p2shHeader = 9;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

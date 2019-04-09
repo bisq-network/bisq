@@ -17,6 +17,7 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
@@ -24,13 +25,27 @@ import bisq.asset.NetworkParametersAdapter;
 public class SixEleven extends Coin {
 
     public SixEleven() {
-        super("SixEleven", "SIL", new Base58BitcoinAddressValidator(new SixElevenChainParams()));
+        super("SixEleven", "SIL", new SixElevenAddressValidator());
+    }
+
+    public static class SixElevenAddressValidator extends Base58BitcoinAddressValidator {
+
+        public SixElevenAddressValidator() {
+            super(new SixEleven.SixElevenChainParams());
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (!address.matches("^[MN][123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz]{33}$"))
+                return AddressValidationResult.invalidStructure();
+
+            return super.validate(address);
+        }
     }
 
     public static class SixElevenChainParams extends NetworkParametersAdapter {
         public SixElevenChainParams() {
             addressHeader = 52;
-            acceptableAddressCodes = new int[]{addressHeader};
         }
     }
 }

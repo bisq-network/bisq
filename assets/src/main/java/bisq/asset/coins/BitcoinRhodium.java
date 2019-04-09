@@ -32,7 +32,6 @@ public class BitcoinRhodium extends Coin {
         public BitcoinRhodiumParams() {
             addressHeader = 61;
             p2shHeader = 123;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

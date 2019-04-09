@@ -50,7 +50,6 @@ public class SUB1X extends Coin {
         public SUB1XParams() {
             addressHeader = 80;
             p2shHeader = 13;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

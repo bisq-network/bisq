@@ -51,7 +51,6 @@ public class Genesis extends Coin {
         public GenesisParams() {
             addressHeader = 28;
             p2shHeader = 63;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

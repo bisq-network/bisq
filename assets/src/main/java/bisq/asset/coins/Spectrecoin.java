@@ -33,7 +33,6 @@ public class Spectrecoin extends Coin {
         public SpectrecoinParams() {
             addressHeader = 63;
             p2shHeader = 136;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

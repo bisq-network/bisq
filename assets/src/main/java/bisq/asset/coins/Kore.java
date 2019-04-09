@@ -30,7 +30,6 @@ public class Kore extends Coin {
         public KoreMainNetParams() {
             this.addressHeader = 45;
             this.p2shHeader = 85;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

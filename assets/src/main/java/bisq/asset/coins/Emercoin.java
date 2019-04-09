@@ -31,7 +31,6 @@ public class Emercoin extends Coin {
         public EmercoinMainNetParams() {
             this.addressHeader = 33;
             this.p2shHeader = 92;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

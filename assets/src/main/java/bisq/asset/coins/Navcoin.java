@@ -30,7 +30,6 @@ public class Navcoin extends Coin {
         public NavcoinParams() {
             this.addressHeader = 53;
             this.p2shHeader = 85;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

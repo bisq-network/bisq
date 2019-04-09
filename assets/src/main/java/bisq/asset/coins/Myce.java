@@ -26,12 +26,11 @@ public class Myce extends Coin {
     public Myce() {
         super("Myce", "YCE", new Base58BitcoinAddressValidator(new MyceParams()));
     }
-        
+
     public static class MyceParams extends NetworkParametersAdapter {
         public MyceParams() {
             addressHeader = 50;
             p2shHeader = 85;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

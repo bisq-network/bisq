@@ -30,7 +30,6 @@ public class DarkPay extends Coin {
         public DarkPayMainNetParams() {
             this.addressHeader = 31;
             this.p2shHeader = 60;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }
