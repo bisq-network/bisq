@@ -154,6 +154,8 @@ public class CurrencyUtil {
         currencies.add(new CryptoCurrency("GRC", "Gridcoin"));
         currencies.add(new CryptoCurrency("LTZ", "LitecoinZ"));
         currencies.add(new CryptoCurrency("ZOC", "01coin"));
+        currencies.add(new CryptoCurrency("BURST", "Burstcoin"));
+        currencies.add(new CryptoCurrency("STEEM", "Steem"));
         return currencies;
     }
 
