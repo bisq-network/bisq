@@ -216,6 +216,7 @@ configure(project(':assets')) {
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
         }
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
@@ -246,6 +247,7 @@ configure(project(':common')) {
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
         }
         runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
