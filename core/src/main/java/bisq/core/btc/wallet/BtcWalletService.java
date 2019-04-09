@@ -92,7 +92,10 @@ public class BtcWalletService extends WalletService {
 
         walletsSetup.addSetupCompletedHandler(() -> {
             wallet = walletsSetup.getBtcWallet();
-            wallet.addEventListener(walletEventListener);
+            wallet.addCoinsReceivedEventListener(walletEventListener);
+            wallet.addCoinsSentEventListener(walletEventListener);
+            wallet.addReorganizeEventListener(walletEventListener);
+            wallet.addTransactionConfidenceEventListener(walletEventListener);
 
             walletsSetup.getChain().addNewBestBlockListener(block -> chainHeightProperty.set(block.getHeight()));
             chainHeightProperty.set(walletsSetup.getChain().getBestChainHeight());

@@ -45,9 +45,16 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.script.Script;
+import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.WalletEventListener;
+import org.bitcoinj.wallet.listeners.KeyChainEventListener;
+import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
+import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -102,8 +109,15 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
-    @SuppressWarnings("deprecation")
-    private WalletEventListener walletEventListener;
+
+    private WalletCoinsReceivedEventListener walletCoinsReceivedEventListener;
+    private WalletCoinsSentEventListener walletCoinsSentEventListener;
+    private WalletReorganizeEventListener walletReorganizeEventListener;
+    private TransactionConfidenceEventListener transactionConfidenceEventListener;
+    private KeyChainEventListener keyChainEventListener;
+    private ScriptsChangeEventListener scriptsChangeEventListener;
+    private WalletChangeEventListener walletChangeEventListener;
+
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
 
@@ -166,41 +180,25 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        //noinspection deprecation
-        walletEventListener = new WalletEventListener() {
-            @Override
-            public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onCoinsSent(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onReorganize(Wallet wallet) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-            }
-
-            @Override
-            public void onWalletChanged(Wallet wallet) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onScriptsChanged(Wallet wallet, List<Script> scripts, boolean isAddingScripts) {
-                displayedTransactions.update();
-            }
-
-            @Override
-            public void onKeysAdded(List<ECKey> keys) {
-                displayedTransactions.update();
-            }
+        walletCoinsReceivedEventListener = (wallet, tx, prevBalance, newBalance) -> {
+            displayedTransactions.update();
+        };
+        walletCoinsSentEventListener =  (wallet, tx, prevBalance, newBalance) -> {
+            displayedTransactions.update();
+        };
+        walletReorganizeEventListener = wallet -> {
+            displayedTransactions.update();
+        };
+        transactionConfidenceEventListener = (wallet, tx) -> {
+        };
+        keyChainEventListener = keys -> {
+            displayedTransactions.update();
+        };
+        scriptsChangeEventListener = (wallet, scripts, isAddingScripts) -> {
+            displayedTransactions.update();
+        };
+        walletChangeEventListener = wallet -> {
+            displayedTransactions.update();
         };
 
         keyEventEventHandler = event -> {
@@ -224,7 +222,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.setItems(sortedDisplayedTransactions);
         displayedTransactions.update();
 
-        btcWalletService.addEventListener(walletEventListener);
+        btcWalletService.addCoinsReceivedEventListener(walletCoinsReceivedEventListener);
+        btcWalletService.addCoinsSentEventListener(walletCoinsSentEventListener);
+        btcWalletService.addReorganizeEventListener(walletReorganizeEventListener);
+        btcWalletService.addTransactionConfidenceEventListener(transactionConfidenceEventListener);
+        btcWalletService.addKeyChainEventListener(keyChainEventListener);
+        btcWalletService.addScriptChangeEventListener(scriptsChangeEventListener);
+        btcWalletService.addChangeEventListener(walletChangeEventListener);
 
         scene = root.getScene();
         if (scene != null)
@@ -260,7 +264,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         sortedDisplayedTransactions.comparatorProperty().unbind();
         displayedTransactions.forEach(TransactionsListItem::cleanup);
-        btcWalletService.removeEventListener(walletEventListener);
+        btcWalletService.removeCoinsReceivedEventListener(walletCoinsReceivedEventListener);
+        btcWalletService.removeCoinsSentEventListener(walletCoinsSentEventListener);
+        btcWalletService.removeReorganizeEventListener(walletReorganizeEventListener);
+        btcWalletService.removeTransactionConfidenceEventListener(transactionConfidenceEventListener);
+        btcWalletService.removeKeyChainEventListener(keyChainEventListener);
+        btcWalletService.removeScriptChangeEventListener(scriptsChangeEventListener);
+        btcWalletService.removeChangeEventListener(walletChangeEventListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
