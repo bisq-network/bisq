@@ -38,6 +38,7 @@ import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
@@ -61,8 +62,12 @@ import org.bitcoinj.wallet.KeyChain;
 import org.bitcoinj.wallet.RedeemData;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
-import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
-import org.bitcoinj.wallet.listeners.WalletEventListener;
+import org.bitcoinj.wallet.listeners.KeyChainEventListener;
+import org.bitcoinj.wallet.listeners.ScriptsChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
+import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
+import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import javax.inject.Inject;
 
@@ -101,7 +106,7 @@ public abstract class WalletService {
     protected final FeeService feeService;
     protected final NetworkParameters params;
     @SuppressWarnings("deprecation")
-    protected final WalletEventListener walletEventListener = new BisqWalletListener();
+    protected final BisqWalletListener walletEventListener = new BisqWalletListener();
     protected final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
@@ -134,9 +139,13 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
-        if (wallet != null)
+        if (wallet != null) {
             //noinspection deprecation
-            wallet.removeEventListener(walletEventListener);
+            wallet.removeCoinsReceivedEventListener(walletEventListener);
+            wallet.removeCoinsSentEventListener(walletEventListener);
+            wallet.removeReorganizeEventListener(walletEventListener);
+            wallet.removeTransactionConfidenceEventListener(walletEventListener);
+        }
     }
 
 
@@ -538,16 +547,60 @@ public abstract class WalletService {
     // Wallet delegates to avoid direct access to wallet outside the service class
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("deprecation")
-    public void addEventListener(WalletEventListener listener) {
-        //noinspection deprecation
-        wallet.addEventListener(listener, Threading.USER_THREAD);
+    public void addCoinsReceivedEventListener(WalletCoinsReceivedEventListener listener) {
+        wallet.addCoinsReceivedEventListener(Threading.USER_THREAD, listener);
     }
 
-    @SuppressWarnings("deprecation")
-    public boolean removeEventListener(WalletEventListener listener) {
-        //noinspection deprecation
-        return wallet.removeEventListener(listener);
+    public void addCoinsSentEventListener(WalletCoinsSentEventListener listener) {
+        wallet.addCoinsSentEventListener(Threading.USER_THREAD, listener);
+    }
+
+    public void addReorganizeEventListener(WalletReorganizeEventListener listener) {
+        wallet.addReorganizeEventListener(Threading.USER_THREAD, listener);
+    }
+
+    public void addTransactionConfidenceEventListener(TransactionConfidenceEventListener listener) {
+        wallet.addTransactionConfidenceEventListener(Threading.USER_THREAD, listener);
+    }
+
+    public void addKeyChainEventListener(KeyChainEventListener listener) {
+        wallet.addKeyChainEventListener(Threading.USER_THREAD, listener);
+    }
+
+    public void addScriptChangeEventListener(ScriptsChangeEventListener listener) {
+        wallet.addScriptChangeEventListener(Threading.USER_THREAD, listener);
+    }
+
+    public void addChangeEventListener(WalletChangeEventListener listener) {
+        wallet.addChangeEventListener(Threading.USER_THREAD, listener);
+    }
+
+    public void removeCoinsReceivedEventListener(WalletCoinsReceivedEventListener listener) {
+        wallet.removeCoinsReceivedEventListener(listener);
+    }
+
+    public void removeCoinsSentEventListener(WalletCoinsSentEventListener listener) {
+        wallet.removeCoinsSentEventListener(listener);
+    }
+
+    public void removeReorganizeEventListener(WalletReorganizeEventListener listener) {
+        wallet.removeReorganizeEventListener(listener);
+    }
+
+    public void removeTransactionConfidenceEventListener(TransactionConfidenceEventListener listener) {
+        wallet.removeTransactionConfidenceEventListener(listener);
+    }
+
+    public void removeKeyChainEventListener(KeyChainEventListener listener) {
+        wallet.removeKeyChainEventListener(listener);
+    }
+
+    public void removeScriptChangeEventListener(ScriptsChangeEventListener listener) {
+        wallet.removeScriptChangeEventListener(listener);
+    }
+
+    public void removeChangeEventListener(WalletChangeEventListener listener) {
+        wallet.removeChangeEventListener(listener);
     }
 
     @SuppressWarnings("deprecation")
@@ -741,7 +794,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("deprecation")
-    public class BisqWalletListener extends AbstractWalletEventListener {
+    public class BisqWalletListener implements WalletCoinsReceivedEventListener, WalletCoinsSentEventListener, WalletReorganizeEventListener, TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);
