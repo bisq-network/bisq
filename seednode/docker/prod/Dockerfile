@@ -3,8 +3,9 @@ FROM gradle:jdk11
 #RUN apt update && apt install gradle
 
 # RUN git clone https://github.com/bisq-network/bisq.git
-RUN https://github.com/mrosseel/bisq.git && git checkout dao-seednode
+RUN git clone https://github.com/mrosseel/bisq.git
 WORKDIR /home/gradle/bisq/seednode
+RUN git checkout dao-seednode
 
 ENV APP_NAME=seednode
 ENV NODE_PORT=8000
