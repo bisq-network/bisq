@@ -42,8 +42,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.storage.FileManager;
 
-import javax.inject.Inject;
-
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Button;
@@ -111,13 +109,12 @@ public abstract class StateMonitorView<StH extends StateHash,
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
-    public StateMonitorView(DaoStateService daoStateService,
-                            DaoFacade daoFacade,
-                            CycleService cycleService,
-                            PeriodService periodService,
-                            SeedNodeRepository seedNodeRepository,
-                            File storageDir) {
+    protected StateMonitorView(DaoStateService daoStateService,
+                               DaoFacade daoFacade,
+                               CycleService cycleService,
+                               PeriodService periodService,
+                               SeedNodeRepository seedNodeRepository,
+                               File storageDir) {
         this.daoStateService = daoStateService;
         this.daoFacade = daoFacade;
         this.cycleService = cycleService;
