@@ -174,7 +174,7 @@ public class FileManager<T extends PersistableEnvelope> {
     }
 
     public synchronized void removeAndBackupFile(String fileName) throws IOException {
-        removeAndBackupFile(storageFile, dir, fileName, "backup_of_corrupted_data");
+        removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
     }
 
     public synchronized void backupFile(String fileName, int numMaxBackupFiles) {
