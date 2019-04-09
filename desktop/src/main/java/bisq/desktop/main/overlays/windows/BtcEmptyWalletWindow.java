@@ -36,7 +36,7 @@ import javafx.scene.layout.HBox;
 
 import javafx.geometry.Insets;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.concurrent.TimeUnit;
 

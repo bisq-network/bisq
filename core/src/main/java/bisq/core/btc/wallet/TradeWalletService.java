@@ -54,7 +54,7 @@ import javax.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
