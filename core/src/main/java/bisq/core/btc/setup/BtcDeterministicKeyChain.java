@@ -25,7 +25,7 @@ import org.bitcoinj.wallet.DeterministicSeed;
 
 import com.google.common.collect.ImmutableList;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.security.SecureRandom;
 

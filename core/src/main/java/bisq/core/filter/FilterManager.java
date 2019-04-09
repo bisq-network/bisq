@@ -45,7 +45,7 @@ import javax.inject.Named;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import org.spongycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Base64;
 
 import java.security.PublicKey;
 

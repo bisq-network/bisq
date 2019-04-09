@@ -96,7 +96,7 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Comparator;
