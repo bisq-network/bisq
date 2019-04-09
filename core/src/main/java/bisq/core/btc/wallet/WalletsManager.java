@@ -34,7 +34,7 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
 
-import org.spongycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.KeyParameter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
