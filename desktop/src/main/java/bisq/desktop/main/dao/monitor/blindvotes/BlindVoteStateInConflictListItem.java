@@ -21,6 +21,10 @@ import bisq.desktop.main.dao.monitor.StateInConflictListItem;
 
 import bisq.core.dao.monitoring.model.BlindVoteStateHash;
 
+import bisq.network.p2p.NodeAddress;
+
+import java.util.Set;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 class BlindVoteStateInConflictListItem extends StateInConflictListItem<BlindVoteStateHash> {
     private final String numBlindVotes;
 
-    BlindVoteStateInConflictListItem(String peerAddress, BlindVoteStateHash stateHash, int cycleIndex) {
-        super(peerAddress, stateHash, cycleIndex);
+    BlindVoteStateInConflictListItem(String peerAddress, BlindVoteStateHash stateHash, int cycleIndex,
+                                     Set<NodeAddress> seedNodeAddresses) {
+        super(peerAddress, stateHash, cycleIndex, seedNodeAddresses);
 
         numBlindVotes = String.valueOf(stateHash.getNumBlindVotes());
     }

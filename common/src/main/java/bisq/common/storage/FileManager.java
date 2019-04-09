@@ -162,14 +162,19 @@ public class FileManager<T extends PersistableEnvelope> {
         }
     }
 
-    public synchronized void removeAndBackupFile(String fileName) throws IOException {
-        File corruptedBackupDir = new File(Paths.get(dir.getAbsolutePath(), "backup_of_corrupted_data").toString());
+    public static void removeAndBackupFile(File dbDir, File storageFile, String fileName, String backupFolderName)
+            throws IOException {
+        File corruptedBackupDir = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName).toString());
         if (!corruptedBackupDir.exists())
             if (!corruptedBackupDir.mkdir())
                 log.warn("make dir failed");
 
-        File corruptedFile = new File(Paths.get(dir.getAbsolutePath(), "backup_of_corrupted_data", fileName).toString());
+        File corruptedFile = new File(Paths.get(dbDir.getAbsolutePath(), backupFolderName, fileName).toString());
         FileUtil.renameFile(storageFile, corruptedFile);
+    }
+
+    public synchronized void removeAndBackupFile(String fileName) throws IOException {
+        removeAndBackupFile(dir, storageFile, fileName, "backup_of_corrupted_data");
     }
 
     public synchronized void backupFile(String fileName, int numMaxBackupFiles) {

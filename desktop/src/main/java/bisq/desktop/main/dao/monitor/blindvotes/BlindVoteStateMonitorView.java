@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.monitor.blindvotes;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.main.dao.monitor.StateMonitorView;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
@@ -32,7 +31,12 @@ import bisq.core.dao.monitoring.model.BlindVoteStateHash;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
+import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.storage.Storage;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -40,6 +44,8 @@ import javafx.scene.control.TableColumn;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
+
+import java.io.File;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -49,6 +55,7 @@ import java.util.stream.Collectors;
 public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHash, BlindVoteStateBlock, BlindVoteStateBlockListItem, BlindVoteStateInConflictListItem>
         implements BlindVoteStateMonitoringService.Listener {
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -60,8 +67,10 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
                                       DaoFacade daoFacade,
                                       BlindVoteStateMonitoringService blindVoteStateMonitoringService,
                                       CycleService cycleService,
-                                      PeriodService periodService) {
-        super(daoStateService, daoFacade, cycleService, periodService);
+                                      PeriodService periodService,
+                                      SeedNodeRepository seedNodeRepository,
+                                      @Named(Storage.STORAGE_DIR) File storageDir) {
+        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
 
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
     }
@@ -80,14 +89,8 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
     @Override
     protected void activate() {
         super.activate();
-        blindVoteStateMonitoringService.addListener(this);
 
-        resyncButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
-                        .useShutDownButton()
-                        .hideCloseButton()
-                        .show())
-        );
+        blindVoteStateMonitoringService.addListener(this);
     }
 
     @Override
@@ -123,7 +126,7 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
     protected BlindVoteStateInConflictListItem getStateInConflictListItem(Map.Entry<String, BlindVoteStateHash> mapEntry) {
         BlindVoteStateHash blindVoteStateHash = mapEntry.getValue();
         int cycleIndex = periodService.getCycle(blindVoteStateHash.getHeight()).map(cycleService::getCycleIndex).orElse(0);
-        return new BlindVoteStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue(), cycleIndex);
+        return new BlindVoteStateInConflictListItem(mapEntry.getKey(), mapEntry.getValue(), cycleIndex, seedNodeAddresses);
     }
 
     @Override
@@ -173,15 +176,8 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
 
     @Override
     protected void onDataUpdate() {
-        isInConflict.set(blindVoteStateMonitoringService.isInConflict());
-
-        if (isInConflict.get()) {
-            statusTextField.setText(Res.get("dao.monitor.blindVote.daoStateNotInSync"));
-            statusTextField.getStyleClass().add("dao-inConflict");
-        } else {
-            statusTextField.setText(Res.get("dao.monitor.blindVote.daoStateInSync"));
-            statusTextField.getStyleClass().remove("dao-inConflict");
-        }
+        isInConflictWithSeedNode.set(blindVoteStateMonitoringService.isInConflictWithSeedNode());
+        isInConflictWithNonSeedNode.set(blindVoteStateMonitoringService.isInConflictWithNonSeedNode());
 
         listItems.setAll(blindVoteStateMonitoringService.getBlindVoteStateBlockChain().stream()
                 .map(this::getStateBlockListItem)
@@ -202,7 +198,7 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
         TableColumn<BlindVoteStateBlockListItem, BlindVoteStateBlockListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.blindVote.table.numBlindVotes"));
-        column.setMinWidth(110);
+        column.setMinWidth(90);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -232,7 +228,7 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
         TableColumn<BlindVoteStateInConflictListItem, BlindVoteStateInConflictListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.blindVote.table.numBlindVotes"));
-        column.setMinWidth(110);
+        column.setMinWidth(90);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
