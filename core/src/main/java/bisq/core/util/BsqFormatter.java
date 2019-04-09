@@ -32,6 +32,7 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
@@ -101,7 +102,7 @@ public class BsqFormatter extends BSFormatter {
             encoded = encoded.substring(prefix.length(), encoded.length());
 
         try {
-            return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
+            return LegacyAddress.fromBase58(BisqEnvironment.getParameters(), encoded);
         } catch (AddressFormatException e) {
             throw new RuntimeException(e);
         }

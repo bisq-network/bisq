@@ -31,6 +31,7 @@ import io.bisq.generated.protobuffer.PB;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 
 import org.springframework.util.CollectionUtils;
 
@@ -123,7 +124,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     public Address getAddress() throws AddressFormatException {
         // Remove leading 'B'
         String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
-        return Address.fromBase58(BisqEnvironment.getParameters(), underlyingBtcAddress);
+        return LegacyAddress.fromBase58(BisqEnvironment.getParameters(), underlyingBtcAddress);
     }
 
 
