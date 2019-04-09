@@ -51,7 +51,6 @@ public class Dextro extends Coin {
             super();
             addressHeader = 30;
             p2shHeader = 90;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

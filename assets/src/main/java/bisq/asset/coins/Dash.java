@@ -30,7 +30,6 @@ public class Dash extends Coin {
         public DashMainNetParams() {
             this.addressHeader = 76;
             this.p2shHeader = 16;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

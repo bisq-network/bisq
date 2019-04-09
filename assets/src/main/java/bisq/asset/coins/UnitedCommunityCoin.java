@@ -51,7 +51,6 @@ public class UnitedCommunityCoin extends Coin {
             super();
             addressHeader = 68;
             p2shHeader = 18;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

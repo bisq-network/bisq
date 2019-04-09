@@ -31,7 +31,6 @@ public class Doichain extends Coin {
         public DoichainParams() {
             addressHeader = 52;
             p2shHeader = 13;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

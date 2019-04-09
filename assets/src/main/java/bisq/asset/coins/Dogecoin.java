@@ -31,7 +31,6 @@ public class Dogecoin extends Coin {
         public DogecoinMainNetParams() {
             this.addressHeader = 30;
             this.p2shHeader = 22;
-            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }

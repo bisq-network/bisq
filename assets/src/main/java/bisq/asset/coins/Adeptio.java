@@ -50,7 +50,6 @@ public class Adeptio extends Coin {
         public AdeptioParams() {
             addressHeader = 23;
             p2shHeader = 16;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

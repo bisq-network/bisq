@@ -50,7 +50,6 @@ public class QMCoin extends Coin {
         public QMCoinParams() {
             addressHeader = 58;
             p2shHeader = 120;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

@@ -50,7 +50,6 @@ public class DSTRA extends Coin {
         public DSTRAParams() {
             addressHeader = 30;
             p2shHeader = 33;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

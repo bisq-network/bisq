@@ -51,7 +51,6 @@ public class GambleCoin extends Coin {
             super();
             addressHeader = 28;
             p2shHeader = 18;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }
