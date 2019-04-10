@@ -23,8 +23,6 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 
-import bisq.common.app.Version;
-
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.animation.Animation;
@@ -93,7 +91,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
     @Override
     protected void addHeadLine() {
-        Label versionNumber = addLabel(gridPane, ++rowIndex, BisqEnvironment.DEFAULT_APP_NAME + " v" + Version.VERSION);
+        Label versionNumber = addLabel(gridPane, ++rowIndex, BisqEnvironment.DEFAULT_APP_NAME + " v1.0");
         versionNumber.getStyleClass().add("dao-launch-version");
         GridPane.setColumnSpan(versionNumber, 2);
         Label headlineLabel = addLabel(gridPane, ++rowIndex, headLine);
@@ -212,7 +210,8 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
             goToNextSection();
         });
         VBox slidingContent = new VBox();
-        slidingContent.setSpacing(36);
+        slidingContent.setMinWidth(616);
+        slidingContent.setSpacing(20);
         sectionDescriptionLabel = new Label();
         sectionDescriptionLabel.setTextAlignment(TextAlignment.CENTER);
         sectionDescriptionLabel.getStyleClass().add("dao-launch-description");
@@ -224,7 +223,6 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
         slidingContent.setAlignment(Pos.CENTER);
         slidingContent.getChildren().addAll(sectionDescriptionLabel, sectionScreenshot);
-        HBox.setHgrow(slidingContent, Priority.ALWAYS);
         slidingContentWithPagingBox.getChildren().addAll(prevButton, slidingContent, nextButton);
 
         GridPane.setRowIndex(slidingContentWithPagingBox, ++rowIndex);
