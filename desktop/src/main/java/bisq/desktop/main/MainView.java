@@ -408,7 +408,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
                                     .closeButtonText(Res.get("shared.dismiss"))
                                     .actionButtonText(Res.get("shared.learnMore"))
                                     .onAction(() -> {
-                                        GUIUtil.openWebPage("https://bisq.network/dao/");
+                                        GUIUtil.openWebPage("https://docs.bisq.network/dao.html");
                                     })
                                     .buttonAlignment(HPos.CENTER)
                                     .show();
