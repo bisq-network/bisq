@@ -122,12 +122,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blurLight() {
-        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.3, false, 5);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.8, false, 5);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
     public static void blurUltraLight() {
-        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.1, false, 2);
+        transitions.blur(MainView.rootContainer, Transitions.DEFAULT_DURATION, -0.8, false, 2);
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
