@@ -340,7 +340,7 @@ public class FormBuilder {
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
-        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
+        GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, 0));
         GridPane.setHalignment(hyperlinkWithIcon, HPos.LEFT);
         gridPane.getChildren().add(hyperlinkWithIcon);
         return hyperlinkWithIcon;
