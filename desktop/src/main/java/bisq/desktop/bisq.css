@@ -2054,7 +2054,7 @@ textfield */
     -fx-text-fill: -bs-rd-black;
 }
 
-.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink {
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink, .dao-launch-version {
     -fx-text-fill: -bs-rd-font-light;
     -fx-fill: -bs-rd-font-light;
 }
@@ -2085,6 +2085,56 @@ textfield */
 .dao-kpi-subtext {
     -fx-text-fill: -bs-rd-font-light;
     -fx-font-size: 0.923em;
+}
+
+.dao-launch-version {
+    -fx-font-size: 1.077em;
+}
+
+.dao-launch-headline {
+    -fx-font-size: 2.154em;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-launch-description {
+    -fx-font-size: 1.538em;
+    -fx-text-fill: -bs-rd-font-dark-grey;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.dao-launch-paging-button {
+    -fx-text-fill: -bs-rd-font-light;
+    -fx-fill: -bs-rd-font-light;
+}
+
+.dao-launch-tab-box {
+    -fx-border-style: solid;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: -bs-rd-tab-border;
+}
+
+.slider-section-button {
+    -fx-cursor: hand;
+    -fx-background-color: transparent;
+    -fx-translate-y: -1;
+    -fx-padding: 11;
+}
+
+.slider-section-button .text {
+    -fx-font-size: 0.923em;
+    -fx-fill: -bs-rd-font-dark-grey;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.slider-section-button:selected {
+    -fx-border-style: solid;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-color: -bs-rd-green;
+}
+
+.slider-section-button:selected .text {
+    -fx-fill: -bs-rd-green;
 }
 
 /********************************************************************************************************************
