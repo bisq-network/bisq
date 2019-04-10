@@ -66,6 +66,7 @@ import javafx.scene.transform.Rotate;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
@@ -156,6 +157,8 @@ public abstract class Overlay<T extends Overlay> {
     private String headlineStyle;
     protected Button actionButton, secondaryActionButton;
     protected AutoTooltipButton closeButton;
+
+    private HPos buttonAlignment = HPos.RIGHT;
 
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
@@ -424,6 +427,11 @@ public abstract class Overlay<T extends Overlay> {
         this.actionButtonText = Res.get("shared.shutDown");
         this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler());
         //noinspection unchecked
+        return (T) this;
+    }
+
+    public T buttonAlignment(HPos pos) {
+        this.buttonAlignment = pos;
         return (T) this;
     }
 
@@ -890,10 +898,16 @@ public abstract class Overlay<T extends Overlay> {
             });
 
             Pane spacer = new Pane();
+
             HBox hBox = new HBox();
             hBox.setSpacing(10);
 
-            hBox.getChildren().addAll(spacer, actionButton);
+            hBox.setAlignment(Pos.CENTER);
+
+            if (buttonAlignment == HPos.RIGHT)
+                hBox.getChildren().add(spacer);
+
+            hBox.getChildren().addAll(actionButton);
 
             if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
                 secondaryActionButton = new AutoTooltipButton(secondaryActionButtonText);
@@ -908,17 +922,20 @@ public abstract class Overlay<T extends Overlay> {
             if (!hideCloseButton)
                 hBox.getChildren().add(closeButton);
 
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-            spacer.setMaxWidth(Double.MAX_VALUE);
 
-            GridPane.setHalignment(hBox, HPos.RIGHT);
+            if (buttonAlignment == HPos.RIGHT) {
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+                spacer.setMaxWidth(Double.MAX_VALUE);
+            }
+
+            GridPane.setHalignment(hBox, buttonAlignment);
             GridPane.setRowIndex(hBox, ++rowIndex);
             GridPane.setColumnSpan(hBox, 2);
             GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
             gridPane.getChildren().add(hBox);
         } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
-            GridPane.setHalignment(closeButton, HPos.RIGHT);
+            GridPane.setHalignment(closeButton, buttonAlignment);
             GridPane.setColumnSpan(closeButton, 2);
             if (!showReportErrorButtons)
                 GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));

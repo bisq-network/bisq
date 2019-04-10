@@ -35,17 +35,21 @@ import bisq.desktop.main.market.MarketView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DaoLaunchWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -77,6 +81,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -388,9 +393,30 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
         model.getShowAppScreen().addListener((ov, oldValue, newValue) -> {
             if (newValue) {
+
                 navigation.navigateToPreviousVisitedView();
 
-                transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> disposeSplashScreen());
+                transitions.fadeOutAndRemove(splashScreen, 1500, actionEvent -> {
+                    disposeSplashScreen();
+
+                    if (DevEnv.isDaoActivated()) {
+                        String daoLaunchPopupKey = "daoLaunchPopup";
+
+                        if (DontShowAgainLookup.showAgain(daoLaunchPopupKey)) {
+                            new DaoLaunchWindow()
+                                    .headLine(Res.get("popup.dao.launch.headline"))
+                                    .closeButtonText(Res.get("shared.dismiss"))
+                                    .actionButtonText(Res.get("shared.learnMore"))
+                                    .onAction(() -> {
+                                        GUIUtil.openWebPage("https://bisq.network/dao/");
+                                    })
+                                    .buttonAlignment(HPos.CENTER)
+                                    .show();
+
+                            DontShowAgainLookup.dontShowAgain(daoLaunchPopupKey, true);
+                        }
+                    }
+                });
             }
         });
 

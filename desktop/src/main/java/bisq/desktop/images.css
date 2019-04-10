@@ -295,5 +295,15 @@
     -fx-image: url("../../images/rejected.png");
 }
 
+#dao-screenshot-governance {
+    -fx-image: url("../../images/dao-screenshot-governance.png");
+}
 
+#dao-screenshot-trading {
+    -fx-image: url("../../images/dao-screenshot-trading.png");
+}
+
+#dao-screenshot-cheaper-fees {
+    -fx-image: url("../../images/dao-screenshot-cheaper-fees.png");
+}
 
