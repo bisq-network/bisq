@@ -90,8 +90,9 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     public void show() {
         width = 968;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
-        headLine = Res.get("displayUpdateDownloadWindow.headline");
         createGridPane();
+        information(""); // to set regular information styling
+        headLine = Res.get("displayUpdateDownloadWindow.headline");
         addHeadLine();
         addContent();
         addButtons();
@@ -104,9 +105,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addContent() {
-        headLine = "Important update information!";
-        headLineLabel.getStyleClass().addAll("headline-label", "highlight");
-
         checkNotNull(alert, "alertMessage must not be null");
         addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
 
