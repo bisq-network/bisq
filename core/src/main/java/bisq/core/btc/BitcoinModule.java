@@ -68,6 +68,8 @@ public class BitcoinModule extends AppModule {
         RegTestHost.HOST = regTestHost;
         if (Arrays.asList("localhost", "127.0.0.1").contains(regTestHost)) {
             bind(RegTestHost.class).toInstance(RegTestHost.LOCALHOST);
+        } else if ("none".equals(regTestHost)) {
+            bind(RegTestHost.class).toInstance(RegTestHost.NONE);
         } else {
             bind(RegTestHost.class).toInstance(RegTestHost.REMOTE_HOST);
         }

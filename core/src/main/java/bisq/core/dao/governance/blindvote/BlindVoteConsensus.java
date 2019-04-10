@@ -95,8 +95,8 @@ public class BlindVoteConsensus {
         return Encryption.encrypt(bytes, secretKey);
     }
 
-    public static byte[] getHashOfEncryptedProposalList(byte[] encryptedProposalList) {
-        return Hash.getSha256Ripemd160hash(encryptedProposalList);
+    public static byte[] getHashOfEncryptedVotes(byte[] encryptedVotes) {
+        return Hash.getSha256Ripemd160hash(encryptedVotes);
     }
 
     public static byte[] getOpReturnData(byte[] hash) throws IOException {

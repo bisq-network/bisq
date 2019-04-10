@@ -41,7 +41,7 @@ public class TxBroadcastTimeoutException extends TxBroadcastException {
      */
     public TxBroadcastTimeoutException(Transaction localTx, int delay, Wallet wallet) {
         super("The transaction was not broadcasted in " + delay +
-                "seconds. txId=" + localTx.getHashAsString());
+                " seconds. txId=" + localTx.getHashAsString());
         this.localTx = localTx;
         this.delay = delay;
         this.wallet = wallet;

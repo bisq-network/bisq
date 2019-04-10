@@ -310,8 +310,14 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 new Popup<>().warning(Res.get("dao.proposal.create.missingBsqFunds",
                         bsqFormatter.formatCoinWithCode(e.missing))).show();
             } else {
-                new Popup<>().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
-                        btcFormatter.formatCoinWithCode(e.missing))).show();
+                if (type.equals(ProposalType.COMPENSATION_REQUEST) || type.equals(ProposalType.REIMBURSEMENT_REQUEST)) {
+                    new Popup<>().warning(Res.get("dao.proposal.create.missingIssuanceFunds",
+                            100,
+                            btcFormatter.formatCoinWithCode(e.missing))).show();
+                } else {
+                    new Popup<>().warning(Res.get("dao.proposal.create.missingMinerFeeFunds",
+                            btcFormatter.formatCoinWithCode(e.missing))).show();
+                }
             }
         } catch (ProposalValidationException e) {
             String message;
