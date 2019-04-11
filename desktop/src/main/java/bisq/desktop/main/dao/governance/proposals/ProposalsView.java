@@ -587,7 +587,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 break;
         }
 
-        if (selectedItem == null && listItems.size() > 0 && selectProposalWindow.isDisplayed()) {
+        if (selectedItem == null &&
+                listItems.size() > 0 &&
+                selectProposalWindow.isDisplayed() &&
+                !shownVoteOnProposalWindowForTxId.equals("")) {
             Proposal proposal = selectProposalWindow.getProposal();
 
             Optional<ProposalsListItem> proposalsListItem = listItems.stream()
