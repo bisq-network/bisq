@@ -21,12 +21,15 @@ import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.main.overlays.Overlay;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.animation.Animation;
+import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 
 import javafx.scene.control.Button;
@@ -53,16 +56,21 @@ import javafx.util.Duration;
 
 import java.util.ArrayList;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static bisq.desktop.util.FormBuilder.addLabel;
 import static bisq.desktop.util.FormBuilder.getIconButton;
 
+@Slf4j
 public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     private ImageView sectionScreenshot;
     private ToggleGroup sectionButtonsGroup;
     private ArrayList<Section> sections = new ArrayList<>();
     private IntegerProperty currentSectionIndex = new SimpleIntegerProperty(0);
     private Label sectionDescriptionLabel;
-    private Timeline timeline;
+    private Timeline autoPlayTimeline;
+    private Timeline slideTimeline;
+    private Section selectedSection;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -115,12 +123,20 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
         addListeners();
 
+        createSlideAnimation();
         startAutoSectionChange();
     }
 
     @Override
     protected void onShow() {
         display();
+
+        Timeline timeline = new Timeline(new KeyFrame(
+                Duration.millis(500),
+                ae -> slideTimeline.playFromStart()
+        ));
+
+        timeline.play();
     }
 
     @Override
@@ -148,9 +164,9 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         sectionButtonsGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue)) {
                 int index = ((SectionButton) newValue).index;
-                Section selectedSection = sections.get(index);
-                sectionDescriptionLabel.setText(selectedSection.description);
-                sectionScreenshot.setId(selectedSection.imageId);
+                selectedSection = sections.get(index);
+
+                slideTimeline.playFromStart();
 
                 currentSectionIndex.set(index);
             }
@@ -158,13 +174,13 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     }
 
     private void startAutoSectionChange() {
-        timeline = new Timeline(new KeyFrame(
+        autoPlayTimeline = new Timeline(new KeyFrame(
                 Duration.seconds(10),
                 ae -> goToNextSection()
         ));
-        timeline.setCycleCount(Animation.INDEFINITE);
+        autoPlayTimeline.setCycleCount(Animation.INDEFINITE);
 
-        timeline.play();
+        autoPlayTimeline.play();
     }
 
     private void createSlideControls() {
@@ -197,8 +213,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         slidingContentWithPagingBox.setAlignment(Pos.CENTER);
         Button prevButton = getIconButton(MaterialDesignIcon.ARROW_LEFT, "dao-launch-paging-button");
         prevButton.setOnAction(event -> {
-            timeline.stop();
-
+            autoPlayTimeline.stop();
             if (currentSectionIndex.get() == 0)
                 currentSectionIndex.set(sections.size() - 1);
             else
@@ -206,7 +221,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         });
         Button nextButton = getIconButton(MaterialDesignIcon.ARROW_RIGHT, "dao-launch-paging-button");
         nextButton.setOnAction(event -> {
-            timeline.stop();
+            autoPlayTimeline.stop();
             goToNextSection();
         });
         VBox slidingContent = new VBox();
@@ -217,9 +232,14 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         sectionDescriptionLabel.getStyleClass().add("dao-launch-description");
         sectionDescriptionLabel.setMaxWidth(562);
         sectionDescriptionLabel.setWrapText(true);
-        sectionDescriptionLabel.setText(sections.get(currentSectionIndex.get()).description);
+
+
+        selectedSection = sections.get(currentSectionIndex.get());
+
+        sectionDescriptionLabel.setText(selectedSection.description);
         sectionScreenshot = new ImageView();
-        sectionScreenshot.setId(sections.get(currentSectionIndex.get()).imageId);
+        sectionScreenshot.setOpacity(0);
+        sectionScreenshot.setId(selectedSection.imageId);
 
         slidingContent.setAlignment(Pos.CENTER);
         slidingContent.getChildren().addAll(sectionDescriptionLabel, sectionScreenshot);
@@ -235,6 +255,43 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         currentSectionIndex.set(currentSectionIndex.get() + 1);
     }
 
+    private void createSlideAnimation() {
+        slideTimeline = new Timeline();
+
+        double duration = 400;
+
+        Interpolator interpolator = Interpolator.EASE_OUT;
+        ObservableList<KeyFrame> keyFrames = slideTimeline.getKeyFrames();
+
+        double imageWidth = 534;
+        double endX = -imageWidth;
+        keyFrames.add(new KeyFrame(Duration.millis(0),
+                new KeyValue(sectionScreenshot.opacityProperty(), 1, interpolator),
+                new KeyValue(sectionScreenshot.translateXProperty(), 0, interpolator)));
+        keyFrames.add(new KeyFrame(Duration.millis(duration),
+                event -> {
+                    sectionDescriptionLabel.setText(selectedSection.description);
+                    sectionScreenshot.setId(selectedSection.imageId);
+                },
+                new KeyValue(sectionScreenshot.opacityProperty(), 0, interpolator),
+                new KeyValue(sectionScreenshot.translateXProperty(), endX, interpolator)));
+
+        double startX = imageWidth;
+
+        keyFrames.add(new KeyFrame(Duration.millis(duration),
+                new KeyValue(sectionScreenshot.opacityProperty(), 0, interpolator),
+                new KeyValue(sectionScreenshot.translateXProperty(), startX, interpolator)));
+        duration += 400;
+        keyFrames.add(new KeyFrame(Duration.millis(duration),
+                new KeyValue(sectionScreenshot.opacityProperty(), 1, interpolator),
+                new KeyValue(sectionScreenshot.translateXProperty(), 0, interpolator)));
+
+    }
+
+    protected double getDuration(double duration) {
+        return useAnimation && GlobalSettings.getUseAnimations() ? duration : 1;
+    }
+
     private class SectionButton extends AutoTooltipToggleButton {
 
         int index;
@@ -248,7 +305,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> this.setMouseTransparent(newValue));
 
-            this.setOnAction(event -> timeline.stop());
+            this.setOnAction(event -> autoPlayTimeline.stop());
         }
 
     }
