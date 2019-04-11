@@ -61,6 +61,7 @@ import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -1012,7 +1013,7 @@ public class DisputeManager implements PersistedDataHost {
             dispute.setIsClosed(true);
 
             throw new RuntimeException(errorMessage);
-        } catch (AddressFormatException | WalletException e) {
+        } catch (AddressFormatException | WalletException | SignatureDecodeException e) {
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
             log.error(errorMessage, e);
             success = false;

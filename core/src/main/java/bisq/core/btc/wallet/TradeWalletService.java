@@ -39,6 +39,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
@@ -743,7 +744,7 @@ public class TradeWalletService {
                                                        byte[] buyerPubKey,
                                                        byte[] sellerPubKey,
                                                        byte[] arbitratorPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         log.trace("buyerSignsAndFinalizesPayoutTx called");
         log.trace("depositTx {}", depositTx.toString());
         log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
@@ -888,7 +889,7 @@ public class TradeWalletService {
                                                              byte[] buyerPubKey,
                                                              byte[] sellerPubKey,
                                                              byte[] arbitratorPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
 
         log.trace("signAndFinalizeDisputedPayoutTx called");
