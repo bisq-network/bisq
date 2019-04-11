@@ -118,7 +118,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             if (wallet.getBalance().isPositive()) {
                 wallet.getIssuedReceiveAddresses().forEach(address -> {
                     log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
-                    add(new AddressEntry((DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()), AddressEntry.Context.AVAILABLE));
+                    add(new AddressEntry((DeterministicKey) wallet.findKeyFromAddress(address), AddressEntry.Context.AVAILABLE));
                 });
             }
             persist();
