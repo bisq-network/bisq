@@ -63,6 +63,8 @@ import static bisq.desktop.util.FormBuilder.getIconButton;
 
 @Slf4j
 public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
+    private static final double DURATION = 400;
+
     private ImageView sectionScreenshot;
     private ToggleGroup sectionButtonsGroup;
     private ArrayList<Section> sections = new ArrayList<>();
@@ -72,10 +74,10 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     private Timeline slideTimeline;
     private Section selectedSection;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @Override
     public void show() {
@@ -83,10 +85,10 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         super.show();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @Override
     protected void createGridPane() {
@@ -110,7 +112,6 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
     @Override
     protected void addMessage() {
-
         sections.add(new Section(Res.get("popup.dao.launch.governance.title"), Res.get("popup.dao.launch.governance"),
                 "dao-screenshot-governance"));
         sections.add(new Section(Res.get("popup.dao.launch.trading.title"), Res.get("popup.dao.launch.trading"),
@@ -131,12 +132,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     protected void onShow() {
         display();
 
-        Timeline timeline = new Timeline(new KeyFrame(
-                Duration.millis(500),
-                ae -> slideTimeline.playFromStart()
-        ));
-
-        timeline.play();
+        slideTimeline.playFrom(Duration.millis(2 * DURATION));
     }
 
     @Override
@@ -183,7 +179,6 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     }
 
     private void createSlideControls() {
-
         sectionButtonsGroup = new ToggleGroup();
 
         HBox slideButtons = new HBox();
@@ -257,8 +252,6 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     private void createSlideAnimation() {
         slideTimeline = new Timeline();
 
-        double duration = 400;
-
         Interpolator interpolator = Interpolator.EASE_OUT;
         ObservableList<KeyFrame> keyFrames = slideTimeline.getKeyFrames();
 
@@ -267,7 +260,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         keyFrames.add(new KeyFrame(Duration.millis(0),
                 new KeyValue(sectionScreenshot.opacityProperty(), 1, interpolator),
                 new KeyValue(sectionScreenshot.translateXProperty(), 0, interpolator)));
-        keyFrames.add(new KeyFrame(Duration.millis(duration),
+        keyFrames.add(new KeyFrame(Duration.millis(DURATION),
                 event -> {
                     sectionDescriptionLabel.setText(selectedSection.description);
                     sectionScreenshot.setId(selectedSection.imageId);
@@ -277,14 +270,12 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
         double startX = imageWidth;
 
-        keyFrames.add(new KeyFrame(Duration.millis(duration),
+        keyFrames.add(new KeyFrame(Duration.millis(DURATION),
                 new KeyValue(sectionScreenshot.opacityProperty(), 0, interpolator),
                 new KeyValue(sectionScreenshot.translateXProperty(), startX, interpolator)));
-        duration += 400;
-        keyFrames.add(new KeyFrame(Duration.millis(duration),
+        keyFrames.add(new KeyFrame(Duration.millis(DURATION * 2),
                 new KeyValue(sectionScreenshot.opacityProperty(), 1, interpolator),
                 new KeyValue(sectionScreenshot.translateXProperty(), 0, interpolator)));
-
     }
 
     protected double getDuration(double duration) {
@@ -292,9 +283,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     }
 
     private class SectionButton extends AutoTooltipToggleButton {
-
         int index;
-
         SectionButton(String title, int index) {
             super(title);
             this.index = index;
@@ -306,7 +295,6 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
             this.setOnAction(event -> autoPlayTimeline.stop());
         }
-
     }
 
     private class Section {
