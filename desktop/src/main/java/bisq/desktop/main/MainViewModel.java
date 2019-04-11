@@ -618,7 +618,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     private void maybeAddDaoLaunchWindowToQueue() {
         if (DevEnv.isDaoActivated()) {
-            String daoLaunchPopupKey = "daoLaunchPopup" + new Random().nextInt(1111);
+            String daoLaunchPopupKey = "daoLaunchPopup";
             if (DontShowAgainLookup.showAgain(daoLaunchPopupKey)) {
                 DaoLaunchWindow daoLaunchWindow = new DaoLaunchWindow()
                         .headLine(Res.get("popup.dao.launch.headline"))
