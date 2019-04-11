@@ -28,6 +28,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
@@ -106,7 +107,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
         if (!entrySet.isEmpty()) {
             Set<AddressEntry> toBeRemoved = new HashSet<>();
             entrySet.forEach(addressEntry -> {
-                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
+                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(addressEntry.getPubKeyHash(), Script.ScriptType.P2PKH);
                 if (keyFromPubHash != null) {
                     Address addressFromKey = LegacyAddress.fromKey(Config.baseCurrencyNetworkParameters(), keyFromPubHash);
                     // We want to ensure key and address matches in case we have address in entry available already
@@ -141,7 +142,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                     .filter(this::isAddressNotInEntries)
                     .forEach(address -> {
                         log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
-                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160());
+                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
                         if (key != null) {
                             // Address will be derived from key in getAddress method
                             entrySet.add(new AddressEntry(key, AddressEntry.Context.AVAILABLE));
@@ -209,7 +210,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                 .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(this::isAddressNotInEntries)
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(), Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(this::addAddressEntry);

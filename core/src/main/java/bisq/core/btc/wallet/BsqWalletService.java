@@ -780,7 +780,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     protected Set<Address> getAllAddressesFromActiveKeys() {
         return wallet.getActiveKeyChain().getLeafKeys().stream().
-                map(key -> Address.fromP2SHHash(params, key.getPubKeyHash())).
+                map(key -> LegacyAddress.fromScriptHash(params, key.getPubKeyHash())).
                 collect(Collectors.toSet());
     }
 
@@ -796,7 +796,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public String getUnusedBsqAddressAsString() {
-        return "B" + getUnusedAddress().toBase58();
+        return "B" + getUnusedAddress().toString();
     }
 
     // For BSQ we do not check for dust attack utxos as they are 5.46 BSQ and a considerable value.
