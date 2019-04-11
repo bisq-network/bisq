@@ -363,7 +363,7 @@ public class WalletsSetup {
             if (RegTestHost.HOST.endsWith(".onion")) {
                 walletConfig.setPeerNodes(new PeerAddress(RegTestHost.HOST, params.getPort()));
             } else {
-                walletConfig.setPeerNodes(new PeerAddress(InetAddress.getByName(RegTestHost.HOST), params.getPort()));
+                walletConfig.setPeerNodes(new PeerAddress(params, InetAddress.getByName(RegTestHost.HOST), params.getPort()));
             }
         } catch (UnknownHostException e) {
             log.error(e.toString());

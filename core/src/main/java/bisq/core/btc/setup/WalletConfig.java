@@ -482,7 +482,7 @@ public class WalletConfig extends AbstractIdleService {
     }
 
     void setPeerNodesForLocalHost() {
-        setPeerNodes(new PeerAddress(InetAddress.getLoopbackAddress(), params.getPort()));
+        setPeerNodes(params, new PeerAddress(InetAddress.getLoopbackAddress(), params.getPort()));
     }
 
     private Wallet createOrLoadWallet(File walletFile,
