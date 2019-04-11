@@ -19,6 +19,7 @@ package bisq.desktop.main.overlays;
 
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
@@ -66,6 +67,7 @@ import javafx.scene.transform.Rotate;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import javafx.beans.value.ChangeListener;
 
@@ -83,8 +85,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static bisq.desktop.util.FormBuilder.addCheckBox;
 
 @Slf4j
 public abstract class Overlay<T extends Overlay> {
@@ -155,7 +155,10 @@ public abstract class Overlay<T extends Overlay> {
             truncatedMessage;
     private String headlineStyle;
     protected Button actionButton, secondaryActionButton;
+    private HBox buttonBox;
     protected AutoTooltipButton closeButton;
+
+    private HPos buttonAlignment = HPos.RIGHT;
 
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
@@ -424,6 +427,11 @@ public abstract class Overlay<T extends Overlay> {
         this.actionButtonText = Res.get("shared.shutDown");
         this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler());
         //noinspection unchecked
+        return (T) this;
+    }
+
+    public T buttonAlignment(HPos pos) {
+        this.buttonAlignment = pos;
         return (T) this;
     }
 
@@ -859,11 +867,12 @@ public abstract class Overlay<T extends Overlay> {
             if (dontShowAgainText == null)
                 dontShowAgainText = Res.get("popup.doNotShowAgain");
 
-            CheckBox dontShowAgainCheckBox = addCheckBox(gridPane, rowIndex, dontShowAgainText, buttonDistance - 1);
+            CheckBox dontShowAgainCheckBox = new AutoTooltipCheckBox(dontShowAgainText);
+            HBox.setHgrow(dontShowAgainCheckBox, Priority.NEVER);
+            buttonBox.getChildren().add(0, dontShowAgainCheckBox);
+
             dontShowAgainCheckBox.setSelected(isChecked);
             DontShowAgainLookup.dontShowAgain(dontShowAgainId, isChecked);
-            GridPane.setColumnIndex(dontShowAgainCheckBox, 0);
-            GridPane.setHalignment(dontShowAgainCheckBox, HPos.LEFT);
             dontShowAgainCheckBox.setOnAction(e -> DontShowAgainLookup.dontShowAgain(dontShowAgainId, dontShowAgainCheckBox.isSelected()));
         }
     }
@@ -877,10 +886,30 @@ public abstract class Overlay<T extends Overlay> {
             closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
             closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
+            closeButton.setMinWidth(120);
+            HBox.setHgrow(closeButton, Priority.SOMETIMES);
         }
+
+        Pane spacer = new Pane();
+
+        if (buttonAlignment == HPos.RIGHT) {
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            spacer.setMaxWidth(Double.MAX_VALUE);
+        }
+
+        buttonBox = new HBox();
+
+        GridPane.setHalignment(buttonBox, buttonAlignment);
+        GridPane.setRowIndex(buttonBox, ++rowIndex);
+        GridPane.setColumnSpan(buttonBox, 2);
+        GridPane.setMargin(buttonBox, new Insets(buttonDistance, 0, 0, 0));
+        gridPane.getChildren().add(buttonBox);
+
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
             actionButton.setDefaultButton(true);
+            HBox.setHgrow(actionButton, Priority.SOMETIMES);
+
             actionButton.getStyleClass().add("action-button");
             //TODO app wide focus
             //actionButton.requestFocus();
@@ -889,11 +918,14 @@ public abstract class Overlay<T extends Overlay> {
                 actionHandlerOptional.ifPresent(Runnable::run);
             });
 
-            Pane spacer = new Pane();
-            HBox hBox = new HBox();
-            hBox.setSpacing(10);
+            buttonBox.setSpacing(10);
 
-            hBox.getChildren().addAll(spacer, actionButton);
+            buttonBox.setAlignment(Pos.CENTER);
+
+            if (buttonAlignment == HPos.RIGHT)
+                buttonBox.getChildren().add(spacer);
+
+            buttonBox.getChildren().addAll(actionButton);
 
             if (secondaryActionButtonText != null && secondaryActionHandlerOptional.isPresent()) {
                 secondaryActionButton = new AutoTooltipButton(secondaryActionButtonText);
@@ -902,28 +934,14 @@ public abstract class Overlay<T extends Overlay> {
                     secondaryActionHandlerOptional.ifPresent(Runnable::run);
                 });
 
-                hBox.getChildren().add(secondaryActionButton);
+                buttonBox.getChildren().add(secondaryActionButton);
             }
 
             if (!hideCloseButton)
-                hBox.getChildren().add(closeButton);
-
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-            spacer.setMaxWidth(Double.MAX_VALUE);
-
-            GridPane.setHalignment(hBox, HPos.RIGHT);
-            GridPane.setRowIndex(hBox, ++rowIndex);
-            GridPane.setColumnSpan(hBox, 2);
-            GridPane.setMargin(hBox, new Insets(buttonDistance, 0, 0, 0));
-            gridPane.getChildren().add(hBox);
+                buttonBox.getChildren().add(closeButton);
         } else if (!hideCloseButton) {
             closeButton.setDefaultButton(true);
-            GridPane.setHalignment(closeButton, HPos.RIGHT);
-            GridPane.setColumnSpan(closeButton, 2);
-            if (!showReportErrorButtons)
-                GridPane.setMargin(closeButton, new Insets(buttonDistance, 0, 0, 0));
-            GridPane.setRowIndex(closeButton, ++rowIndex);
-            gridPane.getChildren().add(closeButton);
+            buttonBox.getChildren().addAll(spacer, closeButton);
         }
     }
 

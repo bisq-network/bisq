@@ -353,9 +353,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
     }
 
     private void doPublishMyProposal(Proposal proposal, Transaction transaction) {
+        //TODO it still happens that the user can click twice. Not clear why that can happen. Maybe we get updateButtonState
+        // called in between which re-enables the button?
+        makeProposalButton.setDisable(true);
         busyLabel.setVisible(true);
         busyAnimation.play();
-        makeProposalButton.setDisable(true);
 
         daoFacade.publishMyProposal(proposal,
                 transaction,
