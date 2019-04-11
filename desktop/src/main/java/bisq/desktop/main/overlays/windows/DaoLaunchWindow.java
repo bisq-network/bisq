@@ -127,8 +127,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     protected void addButtons() {
         super.addButtons();
 
-        closeButton.setPrefWidth(162);
-        actionButton.setPrefWidth(162);
+        closeButton.prefWidthProperty().bind(actionButton.widthProperty());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
