@@ -25,6 +25,7 @@ import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
@@ -99,7 +100,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
 
         if (list != null) {
             list.forEach(addressEntry -> {
-                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubHash(addressEntry.getPubKeyHash());
+                DeterministicKey keyFromPubHash = (DeterministicKey) wallet.findKeyFromPubKeyHash(addressEntry.getPubKeyHash(), Script.ScriptType.P2PKH);
                 if (keyFromPubHash != null) {
                     addressEntry.setDeterministicKey(keyFromPubHash);
                 } else {
@@ -116,7 +117,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
             if (wallet.getBalance().isPositive()) {
                 wallet.getIssuedReceiveAddresses().forEach(address -> {
                     log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
-                    add(new AddressEntry((DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()), AddressEntry.Context.AVAILABLE));
+                    add(new AddressEntry((DeterministicKey) wallet.findKeyFromAddress(address), AddressEntry.Context.AVAILABLE));
                 });
             }
             persist();
@@ -141,7 +142,7 @@ public final class AddressEntryList implements UserThreadMappedPersistableEnvelo
                 .map(output -> output.getAddressFromP2PKHScript(wallet.getNetworkParameters()))
                 .filter(Objects::nonNull)
                 .filter(address -> !listContainsEntryWithAddress(address.toBase58()))
-                .map(address -> (DeterministicKey) wallet.findKeyFromPubHash(address.getHash160()))
+                .map(address -> (DeterministicKey) wallet.findKeyFromPubKeyHash(address.getHash(), Script.ScriptType.P2PKH))
                 .filter(Objects::nonNull)
                 .map(deterministicKey -> new AddressEntry(deterministicKey, AddressEntry.Context.AVAILABLE))
                 .forEach(addressEntry -> list.add(addressEntry));

@@ -55,7 +55,7 @@ class LockedListItem {
 
         if (trade.getDepositTx() != null && !trade.getDepositTx().getOutputs().isEmpty()) {
             address = WalletService.getAddressFromOutput(trade.getDepositTx().getOutput(0));
-            addressString = address.toBase58();
+            addressString = address.toString();
         } else {
             address = null;
             addressString = "";
