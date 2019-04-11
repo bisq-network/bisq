@@ -479,6 +479,9 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     }
 
     private void publishBlindVote(Coin stake) {
+        //TODO Starting voteButtonBusyAnimation here does not make sense if we stop it immediately below.
+        // Check if voteButtonBusyAnimation should stay running until we hear back from publishing and only disable
+        // button so that the user cannot click twice.
         voteButtonBusyAnimation.play();
         voteButtonInfoLabel.setText(Res.get("dao.blindVote.startPublishing"));
         daoFacade.publishBlindVote(stake,
