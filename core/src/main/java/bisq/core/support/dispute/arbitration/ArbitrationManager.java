@@ -55,6 +55,7 @@ import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
@@ -314,7 +315,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             updateTradeOrOpenOfferManager(tradeId);
 
             throw new RuntimeException(errorMessage);
-        } catch (AddressFormatException | WalletException e) {
+        } catch (AddressFormatException | WalletException | SignatureDecodeException e) {
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
             log.error(errorMessage, e);
             success = false;

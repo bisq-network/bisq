@@ -39,6 +39,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
@@ -707,7 +708,7 @@ public class TradeWalletService {
                                                byte[] sellerPubKey,
                                                byte[] buyerSignature,
                                                byte[] sellerSignature)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
         ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
@@ -797,7 +798,7 @@ public class TradeWalletService {
                                                        DeterministicKey multiSigKeyPair,
                                                        byte[] buyerPubKey,
                                                        byte[] sellerPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
@@ -864,7 +865,7 @@ public class TradeWalletService {
                                                 DeterministicKey multiSigKeyPair,
                                                 byte[] buyerPubKey,
                                                 byte[] sellerPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
@@ -923,7 +924,7 @@ public class TradeWalletService {
                                                              byte[] buyerPubKey,
                                                              byte[] sellerPubKey,
                                                              byte[] arbitratorPubKey)
-            throws AddressFormatException, TransactionVerificationException, WalletException {
+            throws AddressFormatException, TransactionVerificationException, WalletException, SignatureDecodeException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction payoutTx = new Transaction(params);
