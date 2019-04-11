@@ -44,6 +44,7 @@ import bisq.desktop.util.Transitions;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.Timer;
