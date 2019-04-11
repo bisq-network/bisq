@@ -114,7 +114,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
 
     private void createTabs() {
         proposalTab = new Tab(Res.get("shared.proposal").toUpperCase());
-        votesTab = new Tab(Res.get("shared.votes".toUpperCase()));
+        votesTab = new Tab(Res.get("shared.votes").toUpperCase());
 
         tabPane.getTabs().addAll(proposalTab, votesTab);
 
