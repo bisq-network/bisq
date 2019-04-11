@@ -53,6 +53,7 @@ import org.bitcoinj.wallet.WalletProtobufSerializer;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -282,7 +283,7 @@ public class WalletConfig extends AbstractIdleService {
      */
     private void setCheckpoints(InputStream checkpoints) {
         if (this.checkpoints != null)
-            Utils.closeUnchecked(this.checkpoints);
+            Closeables.closeQuietly(checkpoints);
         this.checkpoints = checkNotNull(checkpoints);
     }
 
