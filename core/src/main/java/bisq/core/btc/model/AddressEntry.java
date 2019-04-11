@@ -29,6 +29,7 @@ import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.Optional;
@@ -177,7 +178,7 @@ public final class AddressEntry implements PersistablePayload {
     @Nullable
     public Address getAddress() {
         if (address == null && keyPair != null)
-            address = keyPair.toAddress(BisqEnvironment.getParameters());
+            address = LegacyAddress.fromKey(BisqEnvironment.getParameters(), keyPair);
         return address;
     }
 
