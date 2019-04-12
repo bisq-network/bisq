@@ -133,7 +133,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         display();
 
         new Timeline(new KeyFrame(
-                Duration.millis(2000),
+                Duration.millis(300),
                 ae -> slideInTimeline.playFrom(Duration.millis(DURATION))
         )).play();
     }
