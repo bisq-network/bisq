@@ -9,7 +9,7 @@ services:
         build:
             context: .
             dockerfile: docker/prod/Dockerfile
-        image: bisq-seednode
+        image: seednode
         ports:
             - 8000:8000
             - 9010:9010

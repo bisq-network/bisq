@@ -94,7 +94,6 @@ public class RpcService {
                       @Named(DaoOptionKeys.RPC_HOST) String rpcHost,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
-        log.info(rpcHost);
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
@@ -113,7 +112,7 @@ public class RpcService {
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
-        log.info("Starting RPCService with options: {} {} {} {}", this.rpcHost, rpcHost,
+        log.info("Starting RPCService with options: {} {} {}", this.rpcHost,
                 this.rpcPort, this.rpcUser);
     }
 
