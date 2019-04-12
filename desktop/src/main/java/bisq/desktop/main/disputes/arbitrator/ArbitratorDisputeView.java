@@ -62,16 +62,21 @@ public class ArbitratorDisputeView extends TraderDisputeView {
     @Override
     protected void applyFilteredListPredicate(String filterString) {
         // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
-        filteredList.setPredicate(dispute ->
-                dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()) &&
-                        (filterString.isEmpty() ||
-                                (dispute.getId().contains(filterString) ||
-                                        (!dispute.isClosed() && filterString.toLowerCase().equals("open")) ||
-                                        formatter.formatDate(dispute.getOpeningDate()).contains(filterString)) ||
-                                getBuyerOnionAddressColumnLabel(dispute).contains(filterString) ||
-                                getSellerOnionAddressColumnLabel(dispute).contains(filterString)
+        filteredList.setPredicate(dispute -> {
+            boolean matchesTradeId = dispute.getTradeId().contains(filterString);
+            boolean matchesDate = formatter.formatDate(dispute.getOpeningDate()).contains(filterString);
+            boolean isBuyerOnion = getBuyerOnionAddressColumnLabel(dispute).contains(filterString);
+            boolean isSellerOnion = getSellerOnionAddressColumnLabel(dispute).contains(filterString);
+            boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+            boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
 
-                        ));
+            boolean anyMatch = matchesTradeId || matchesDate || isBuyerOnion || isSellerOnion ||
+                    matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+
+            boolean open = !dispute.isClosed() && filterString.toLowerCase().equals("open");
+            boolean isMyCase = dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing());
+            return isMyCase && (open || filterString.isEmpty() || anyMatch);
+        });
     }
 
 }
