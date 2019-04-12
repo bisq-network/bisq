@@ -69,6 +69,8 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ObservableList;
@@ -84,6 +86,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -134,7 +138,6 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected final static double DEFAULT_WIDTH = 668;
-
     protected Stage stage;
     protected GridPane gridPane;
     protected Pane owner;
@@ -147,6 +150,15 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showBusyAnimation;
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
+
+    @Getter
+    protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
+
+    // Used when a priority queue is used for displaying order of popups. Higher numbers mean lower priority
+    @Setter
+    @Getter
+    protected Integer displayOrderPriority = Integer.MAX_VALUE;
+
     protected boolean useAnimation = true;
 
     protected Label headlineIcon, headLineLabel, messageLabel;
@@ -207,6 +219,7 @@ public abstract class Overlay<T extends Overlay> {
             animateHide();
         }
         isDisplayed = false;
+        isHiddenProperty.set(true);
     }
 
     protected void animateHide() {

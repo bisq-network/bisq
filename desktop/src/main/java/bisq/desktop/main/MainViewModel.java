@@ -21,8 +21,10 @@ import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.DaoLaunchWindow;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
@@ -64,6 +66,8 @@ import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
 
+import javafx.geometry.HPos;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
@@ -79,7 +83,10 @@ import javafx.beans.property.StringProperty;
 
 import javafx.collections.ObservableList;
 
+import java.util.Comparator;
 import java.util.Date;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Random;
 
 import lombok.Getter;
@@ -120,6 +127,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private Timer checkNumberOfP2pNetworkPeersTimer;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> tradesAndUIReady;
+    private Queue<Overlay> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +263,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         // Delay that as we want to know what is the current path of the navigation which is set
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
+
+        maybeAddDaoLaunchWindowToQueue();
+        maybeShowPopupsFromQueue();
     }
 
     void onOpenDownloadWindow() {
@@ -342,9 +353,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                         .show());
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isDevMode()) {
-                new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
-                        .dontShowAgainId(key)
-                        .show();
+                Overlay popup = new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
+                        .dontShowAgainId(key);
+                popup.setDisplayOrderPriority(5);
+                popupQueue.add(popup);
             }
         });
 
@@ -602,5 +614,35 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     public BooleanProperty getShowDaoUpdatesNotification() {
         return daoPresentation.getShowDaoUpdatesNotification();
+    }
+
+    private void maybeAddDaoLaunchWindowToQueue() {
+        if (DevEnv.isDaoActivated()) {
+            String daoLaunchPopupKey = "daoLaunchPopup";
+            if (DontShowAgainLookup.showAgain(daoLaunchPopupKey)) {
+                DaoLaunchWindow daoLaunchWindow = new DaoLaunchWindow()
+                        .headLine(Res.get("popup.dao.launch.headline"))
+                        .closeButtonText(Res.get("shared.dismiss"))
+                        .actionButtonText(Res.get("shared.learnMore"))
+                        .onAction(() -> GUIUtil.openWebPage("https://docs.bisq.network/dao.html"))
+                        .buttonAlignment(HPos.CENTER);
+                daoLaunchWindow.setDisplayOrderPriority(1);
+                popupQueue.add(daoLaunchWindow);
+
+                DontShowAgainLookup.dontShowAgain(daoLaunchPopupKey, true);
+            }
+        }
+    }
+
+    private void maybeShowPopupsFromQueue() {
+        if (!popupQueue.isEmpty()) {
+            Overlay overlay = popupQueue.poll();
+            overlay.getIsHiddenProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue) {
+                    UserThread.runAfter(this::maybeShowPopupsFromQueue, 2);
+                }
+            });
+            overlay.show();
+        }
     }
 }
