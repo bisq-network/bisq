@@ -270,7 +270,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 .append(Res.getWithCol("dao.results.votes.table.header.stake")).append(" ")
                                 .append(bsqFormatter.formatCoinWithCode(Coin.valueOf(e.getStake()))).append("\n");
                         e.getBallotList().stream().forEach(ballot -> {
-                            sb.append(Res.getWithCol("dao.results.invalidVotes.proposal")).append("\n\t")
+                            sb.append(Res.getWithCol("shared.proposal")).append("\n\t")
                                     .append(Res.getWithCol("shared.name")).append(" ")
                                     .append(ballot.getProposal().getName()).append("\n\t");
                             sb.append(Res.getWithCol("dao.bond.table.column.link")).append(" ")
@@ -519,7 +519,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         column.setComparator(Comparator.comparing(CycleListItem::getNumProposals));
         votesTableView.getColumns().add(column);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.results.cycles.table.header.numVotes"));
+        column = new AutoTooltipTableColumn<>(Res.get("shared.votes"));
         column.setMinWidth(70);
         column.setMaxWidth(70);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));

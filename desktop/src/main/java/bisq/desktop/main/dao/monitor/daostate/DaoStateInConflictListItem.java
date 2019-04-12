@@ -21,6 +21,10 @@ import bisq.desktop.main.dao.monitor.StateInConflictListItem;
 
 import bisq.core.dao.monitoring.model.DaoStateHash;
 
+import bisq.network.p2p.NodeAddress;
+
+import java.util.Set;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @EqualsAndHashCode(callSuper = true)
 class DaoStateInConflictListItem extends StateInConflictListItem<DaoStateHash> {
-    DaoStateInConflictListItem(String peerAddress, DaoStateHash stateHash, int cycleIndex) {
-        super(peerAddress, stateHash, cycleIndex);
+    DaoStateInConflictListItem(String peerAddress, DaoStateHash stateHash, int cycleIndex,
+                               Set<NodeAddress> seedNodeAddresses) {
+        super(peerAddress, stateHash, cycleIndex, seedNodeAddresses);
     }
 }

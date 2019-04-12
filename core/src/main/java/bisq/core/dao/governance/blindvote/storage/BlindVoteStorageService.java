@@ -31,11 +31,17 @@ import java.io.File;
 
 import java.util.Map;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, PersistableNetworkPayload> {
     private static final String FILE_NAME = "BlindVoteStore";
+
+    // At startup it is true, so the data we receive from the seed node are not checked against the phase as we have
+    // not started up the DAO domain at that moment.
+    @Setter
+    private boolean notInVoteRevealPhase = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +70,7 @@ public class BlindVoteStorageService extends MapStoreService<BlindVoteStore, Per
 
     @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
-        return payload instanceof BlindVotePayload;
+        return payload instanceof BlindVotePayload && notInVoteRevealPhase;
     }
 
 

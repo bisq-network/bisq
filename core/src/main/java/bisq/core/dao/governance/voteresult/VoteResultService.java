@@ -387,7 +387,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
                             if (!entry.getValue().isPresent()) {
                                 log.warn("We found a local vote but don't have that vote in the data from the " +
                                         "blind vote. ballot={}", ballot);
-                            } else if (ballot.getVote() != entry.getValue().get()) {
+                            } else if (!ballot.getVote().equals(entry.getValue().get())) {
                                 log.warn("We found a local vote but the vote from the " +
                                                 "blind vote does not match. ballot={}, vote from blindVote data={}",
                                         ballot, entry.getValue().get());

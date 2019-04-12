@@ -33,6 +33,7 @@ import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.Hash;
@@ -48,6 +49,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -83,6 +85,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private final DaoStateService daoStateService;
     private final DaoStateNetworkService daoStateNetworkService;
     private final GenesisTxInfo genesisTxInfo;
+    private final Set<String> seedNodeAddresses;
+
 
     @Getter
     private final LinkedList<DaoStateBlock> daoStateBlockChain = new LinkedList<>();
@@ -91,7 +95,9 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private boolean parseBlockChainComplete;
     @Getter
-    private boolean isInConflict;
+    private boolean isInConflictWithNonSeedNode;
+    @Getter
+    private boolean isInConflictWithSeedNode;
     @Getter
     private ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
@@ -103,10 +109,14 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Inject
     public DaoStateMonitoringService(DaoStateService daoStateService,
                                      DaoStateNetworkService daoStateNetworkService,
-                                     GenesisTxInfo genesisTxInfo) {
+                                     GenesisTxInfo genesisTxInfo,
+                                     SeedNodeRepository seedNodeRepository) {
         this.daoStateService = daoStateService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
+        seedNodeAddresses = seedNodeRepository.getSeedNodeAddresses().stream()
+                .map(NodeAddress::getFullAddress)
+                .collect(Collectors.toSet());
     }
 
 
@@ -283,7 +293,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
         AtomicBoolean changed = new AtomicBoolean(false);
-        AtomicBoolean isInConflict = new AtomicBoolean(this.isInConflict);
+        AtomicBoolean inConflictWithNonSeedNode = new AtomicBoolean(this.isInConflictWithNonSeedNode);
+        AtomicBoolean inConflictWithSeedNode = new AtomicBoolean(this.isInConflictWithSeedNode);
         StringBuilder sb = new StringBuilder();
         daoStateBlockChain.stream()
                 .filter(e -> e.getHeight() == daoStateHash.getHeight()).findAny()
@@ -293,7 +304,11 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                     daoStateBlock.putInPeersMap(peersNodeAddressAsString, daoStateHash);
                     if (!daoStateBlock.getMyStateHash().hasEqualHash(daoStateHash)) {
                         daoStateBlock.putInConflictMap(peersNodeAddressAsString, daoStateHash);
-                        isInConflict.set(true);
+                        if (seedNodeAddresses.contains(peersNodeAddressAsString)) {
+                            inConflictWithSeedNode.set(true);
+                        } else {
+                            inConflictWithNonSeedNode.set(true);
+                        }
                         sb.append("We received a block hash from peer ")
                                 .append(peersNodeAddressAsString)
                                 .append(" which conflicts with our block hash.\n")
@@ -305,12 +320,17 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                     changed.set(true);
                 });
 
-        this.isInConflict = isInConflict.get();
+        this.isInConflictWithNonSeedNode = inConflictWithNonSeedNode.get();
+        this.isInConflictWithSeedNode = inConflictWithSeedNode.get();
 
         String conflictMsg = sb.toString();
-        if (this.isInConflict && !conflictMsg.isEmpty()) {
-            log.warn(conflictMsg);
+        if (!conflictMsg.isEmpty()) {
+            if (this.isInConflictWithSeedNode)
+                log.warn("Conflict with seed nodes: {}", conflictMsg);
+            else if (this.isInConflictWithNonSeedNode)
+                log.info("Conflict with non-seed nodes: {}", conflictMsg);
         }
+
 
         if (notifyListeners && changed.get()) {
             listeners.forEach(Listener::onChangeAfterBatchProcessing);

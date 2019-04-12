@@ -21,8 +21,10 @@ import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStorageService;
+import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -48,6 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoStateListener, DaoSetupService {
     private final DaoStateService daoStateService;
     private final P2PService p2PService;
+    private final PeriodService periodService;
+    private final BlindVoteStorageService blindVoteStorageService;
     private final BlindVoteValidator blindVoteValidator;
     @Getter
     private final ObservableList<BlindVotePayload> blindVotePayloads = FXCollections.observableArrayList();
@@ -60,12 +64,15 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     @Inject
     public BlindVoteListService(DaoStateService daoStateService,
                                 P2PService p2PService,
+                                PeriodService periodService,
                                 BlindVoteStorageService blindVoteStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
                                 BlindVoteValidator blindVoteValidator,
                                 @Named(DaoOptionKeys.DAO_ACTIVATED) boolean daoActivated) {
         this.daoStateService = daoStateService;
         this.p2PService = p2PService;
+        this.periodService = periodService;
+        this.blindVoteStorageService = blindVoteStorageService;
         this.blindVoteValidator = blindVoteValidator;
 
         if (daoActivated)
@@ -80,7 +87,6 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     @Override
     public void addListeners() {
         daoStateService.addDaoStateListener(this);
-        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(this);
     }
 
     @Override
@@ -94,8 +100,17 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    public void onNewBlockHeight(int blockHeight) {
+        // We only add blindVotes to blindVoteStorageService if we are not in the vote reveal phase.
+        blindVoteStorageService.setNotInVoteRevealPhase(notInVoteRevealPhase(blockHeight));
+    }
+
+    @Override
     public void onParseBlockChainComplete() {
         fillListFromAppendOnlyDataStore();
+
+        // We set the listener after parsing is complete to be sure we have a consistent state for the phase check.
+        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(this);
     }
 
 
@@ -133,7 +148,7 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void fillListFromAppendOnlyDataStore() {
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
+        blindVoteStorageService.getMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
     }
 
     private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload, boolean fromBroadcastMessage) {
@@ -142,18 +157,30 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
             if (!blindVotePayloads.contains(blindVotePayload)) {
                 BlindVote blindVote = blindVotePayload.getBlindVote();
                 String txId = blindVote.getTxId();
-                // We don't validate as we might receive blindVotes from other cycles or phases at startup.
-                // Beside that we might receive payloads we requested at the vote result phase in case we missed some
-                // payloads. We prefer here resilience over protection against late publishing attacks.
+
                 if (blindVoteValidator.areDataFieldsValid(blindVote)) {
                     if (fromBroadcastMessage) {
-                        log.info("We received a blindVotePayload. blindVoteTxId={}", txId);
+                        if (notInVoteRevealPhase(daoStateService.getChainHeight())) {
+                            // We received the payload outside the vote reveal phase and add the payload.
+                            // If we would accept it during the vote reveal phase we would be vulnerable to a late
+                            // publishing attack where the attacker tries to pollute the data view of the voters and
+                            // render the whole voting cycle invalid if the majority hash is not at least 80% of the
+                            // vote stake.
+                            blindVotePayloads.add(blindVotePayload);
+                        }
+                    } else {
+                        // In case we received the data from the seed node at startup we cannot apply the phase check as
+                        // even in the vote reveal phase we want to receive missed blind votes.
+                        blindVotePayloads.add(blindVotePayload);
                     }
-                    blindVotePayloads.add(blindVotePayload);
                 } else {
                     log.warn("We received an invalid blindVotePayload. blindVoteTxId={}", txId);
                 }
             }
         }
+    }
+
+    private boolean notInVoteRevealPhase(int blockHeight) {
+        return !periodService.isInPhase(blockHeight, DaoPhase.Phase.VOTE_REVEAL);
     }
 }

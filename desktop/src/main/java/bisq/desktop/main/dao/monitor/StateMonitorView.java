@@ -23,6 +23,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -36,7 +37,10 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
 
-import javax.inject.Inject;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.storage.FileManager;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -64,8 +68,12 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+import java.io.File;
+
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @FxmlView
@@ -78,6 +86,8 @@ public abstract class StateMonitorView<StH extends StateHash,
     protected final DaoFacade daoFacade;
     protected final CycleService cycleService;
     protected final PeriodService periodService;
+    protected final Set<NodeAddress> seedNodeAddresses;
+    private final File storageDir;
 
     protected TextField statusTextField;
     protected Button resyncButton;
@@ -91,22 +101,26 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     protected int gridRow = 0;
     private Subscription selectedItemSubscription;
-    protected final BooleanProperty isInConflict = new SimpleBooleanProperty();
+    protected final BooleanProperty isInConflictWithNonSeedNode = new SimpleBooleanProperty();
+    protected final BooleanProperty isInConflictWithSeedNode = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
-    public StateMonitorView(DaoStateService daoStateService,
-                            DaoFacade daoFacade,
-                            CycleService cycleService,
-                            PeriodService periodService) {
+    protected StateMonitorView(DaoStateService daoStateService,
+                               DaoFacade daoFacade,
+                               CycleService cycleService,
+                               PeriodService periodService,
+                               SeedNodeRepository seedNodeRepository,
+                               File storageDir) {
         this.daoStateService = daoStateService;
         this.daoFacade = daoFacade;
         this.cycleService = cycleService;
         this.periodService = periodService;
+        this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
+        this.storageDir = storageDir;
     }
 
     @Override
@@ -124,8 +138,36 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflict);
-        resyncButton.managedProperty().bind(isInConflict);
+        resyncButton.visibleProperty().bind(isInConflictWithSeedNode);
+        resyncButton.managedProperty().bind(isInConflictWithSeedNode);
+
+        resyncButton.setOnAction(ev -> {
+            try {
+                // We delete all consensus payload data and reset the daoState so it will rebuild from genesis.
+                // Deleting the daoState would cause to read the file from the resources and we would not rebuild from
+                // genesis if a snapshot exist!
+                long currentTime = System.currentTimeMillis();
+                String backupDirName = "out_of_sync_dao_data";
+                String newFileName = "BlindVoteStore_" + currentTime;
+                FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
+
+                newFileName = "ProposalStore_" + currentTime;
+                FileManager.removeAndBackupFile(storageDir, new File(storageDir, "ProposalStore"), newFileName, backupDirName);
+
+                // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
+                newFileName = "BallotList_" + currentTime;
+                FileManager.removeAndBackupFile(storageDir, new File(storageDir, "BallotList"), newFileName, backupDirName);
+
+                daoFacade.resyncDao(() -> new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                        .useShutDownButton()
+                        .hideCloseButton()
+                        .show());
+            } catch (Throwable t) {
+                t.printStackTrace();
+                log.error(t.toString());
+                new Popup<>().error(t.toString()).show();
+            }
+        });
 
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
@@ -250,6 +292,17 @@ public abstract class StateMonitorView<StH extends StateHash,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void onDataUpdate() {
+        if (isInConflictWithSeedNode.get()) {
+            statusTextField.setText(Res.get("dao.monitor.isInConflictWithSeedNode"));
+            statusTextField.getStyleClass().add("dao-inConflict");
+        } else if (isInConflictWithNonSeedNode.get()) {
+            statusTextField.setText(Res.get("dao.monitor.isInConflictWithNonSeedNode"));
+            statusTextField.getStyleClass().remove("dao-inConflict");
+        } else {
+            statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
+            statusTextField.getStyleClass().remove("dao-inConflict");
+        }
+
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
     }
 
@@ -455,7 +508,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
 
         column = new AutoTooltipTableColumn<>(getPeersTableHeader());
-        column.setMinWidth(80);
+        column.setMinWidth(150);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -479,7 +532,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
 
         column = new AutoTooltipTableColumn<>(getHashTableHeader());
-        column.setMinWidth(150);
+        column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -503,7 +556,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
 
         column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
-        column.setMinWidth(150);
+        column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {
@@ -527,7 +580,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
 
         column = new AutoTooltipTableColumn<>("");
-        column.setMinWidth(100);
+        column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(
                 new Callback<>() {

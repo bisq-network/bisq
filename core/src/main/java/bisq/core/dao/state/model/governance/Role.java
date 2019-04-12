@@ -28,8 +28,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import io.bisq.generated.protobuffer.PB;
 
-import java.math.BigInteger;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -104,8 +102,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
 
     @Override
     public byte[] getHash() {
-        // We use only the immutable data as input for hash
-        byte[] bytes = BigInteger.valueOf(hashCode()).toByteArray();
+        byte[] bytes = toProtoMessage().toByteArray();
         return Hash.getSha256Ripemd160hash(bytes);
     }
 
