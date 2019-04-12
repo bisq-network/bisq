@@ -94,6 +94,7 @@ public class RpcService {
                       @Named(DaoOptionKeys.RPC_HOST) String rpcHost,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
+        log.info(rpcHost);
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
@@ -103,6 +104,7 @@ public class RpcService {
         boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
         boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
         boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
+        log.info("The value of rpchost is {}", rpcHost);
         this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? "8332" :
@@ -111,7 +113,8 @@ public class RpcService {
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
-        log.info("Starting RPCService with options: {} {} {}", this.rpcHost, this.rpcPort, this.rpcUser);
+        log.info("Starting RPCService with options: {} {} {} {}", this.rpcHost, rpcHost,
+                this.rpcPort, this.rpcUser);
     }
 
 

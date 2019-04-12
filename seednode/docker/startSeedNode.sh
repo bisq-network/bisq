@@ -1,8 +1,8 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-SETUP_SCRIPT=${SCRIPT_DIR}/setup.sh
-source ${SETUP_SCRIPT}
+#SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
+#SETUP_SCRIPT=${SCRIPT_DIR}/setup.sh
+#source ${SETUP_SCRIPT}
 
 ARGS=""
 
@@ -26,6 +26,9 @@ if [ ! -z "$DAO_ACTIVATED" ]; then
 fi
 if [ ! -z "$FULL_DAO_NODE" ]; then
     ARGS="$ARGS --fullDaoNode=$FULL_DAO_NODE"
+fi
+if [ ! -z "$RPC_HOST" ]; then
+    ARGS="$ARGS --rpcHost=$RPC_HOST"
 fi
 if [ ! -z "$RPC_PORT" ]; then
     ARGS="$ARGS --rpcPort=$RPC_PORT"
