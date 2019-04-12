@@ -29,6 +29,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.dao.DaoFacade;
@@ -58,7 +59,6 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
-import bisq.core.util.validation.UrlInputValidator;
 
 import bisq.asset.Asset;
 
@@ -230,8 +230,20 @@ public class ProposalDisplay {
         linkInputTextField = addInputTextField(gridPane, ++gridRow,
                 Res.get("dao.proposal.display.link"));
         linkInputTextField.setPromptText(Res.get("dao.proposal.display.link.prompt"));
-        if (isMakeProposalScreen)
-            linkInputTextField.setValidator(new UrlInputValidator());
+        if (isMakeProposalScreen) {
+            RegexValidator validator = new RegexValidator();
+            if (proposalType == ProposalType.COMPENSATION_REQUEST) {
+                validator.setPattern("https://bisq.network/compensation/\\d+");
+                linkInputTextField.setText("https://bisq.network/compensation/#");
+            } else if (proposalType == ProposalType.REIMBURSEMENT_REQUEST) {
+                validator.setPattern("https://bisq.network/reimbursement/\\d+");
+                linkInputTextField.setText("https://bisq.network/reimbursement/#");
+            } else {
+                validator.setPattern("https://bisq.network/proposals/\\d+");
+                linkInputTextField.setText("https://bisq.network/proposals/#");
+            }
+            linkInputTextField.setValidator(validator);
+        }
         inputControls.add(linkInputTextField);
 
         Tuple3<Label, HyperlinkWithIcon, VBox> tuple = addTopLabelHyperlinkWithIcon(gridPane, gridRow,
