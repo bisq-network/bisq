@@ -70,9 +70,9 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     private ArrayList<Section> sections = new ArrayList<>();
     private IntegerProperty currentSectionIndex = new SimpleIntegerProperty(0);
     private Label sectionDescriptionLabel;
-    private Timeline autoPlayTimeline;
-    private Timeline slideTimeline;
+    private Timeline autoPlayTimeline, slideInTimeline, slideOutTimeline;
     private Section selectedSection;
+    private boolean showSlideInAnimation = true;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +124,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
         addListeners();
 
-        createSlideAnimation();
+        createSlideAnimations();
         startAutoSectionChange();
     }
 
@@ -132,7 +132,10 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
     protected void onShow() {
         display();
 
-        slideTimeline.playFrom(Duration.millis(2 * DURATION));
+        new Timeline(new KeyFrame(
+                Duration.millis(2000),
+                ae -> slideInTimeline.playFrom(Duration.millis(DURATION))
+        )).play();
     }
 
     @Override
@@ -150,6 +153,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         currentSectionIndex.addListener((observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue)) {
                 ObservableList<Toggle> toggles = sectionButtonsGroup.getToggles();
+
                 Toggle toggleToSelect = toggles.get(newValue.intValue() % toggles.size());
                 if (sectionButtonsGroup.getSelectedToggle() != toggleToSelect)
                     sectionButtonsGroup.selectToggle(toggleToSelect);
@@ -161,7 +165,10 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
                 int index = ((SectionButton) newValue).index;
                 selectedSection = sections.get(index);
 
-                slideTimeline.playFromStart();
+                if (showSlideInAnimation)
+                    slideInTimeline.playFromStart();
+                else
+                    slideOutTimeline.playFromStart();
 
                 currentSectionIndex.set(index);
             }
@@ -208,10 +215,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         Button prevButton = getIconButton(MaterialDesignIcon.ARROW_LEFT, "dao-launch-paging-button");
         prevButton.setOnAction(event -> {
             autoPlayTimeline.stop();
-            if (currentSectionIndex.get() == 0)
-                currentSectionIndex.set(sections.size() - 1);
-            else
-                currentSectionIndex.set(currentSectionIndex.get() - 1);
+            goToPrevSection();
         });
         Button nextButton = getIconButton(MaterialDesignIcon.ARROW_RIGHT, "dao-launch-paging-button");
         nextButton.setOnAction(event -> {
@@ -245,17 +249,34 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
         gridPane.getChildren().add(slidingContentWithPagingBox);
     }
 
+    private void goToPrevSection() {
+        showSlideInAnimation = false;
+
+        if (currentSectionIndex.get() == 0)
+            currentSectionIndex.set(sections.size() - 1);
+        else
+            currentSectionIndex.set(currentSectionIndex.get() - 1);
+    }
+
     private void goToNextSection() {
+        showSlideInAnimation = true;
         currentSectionIndex.set(currentSectionIndex.get() + 1);
     }
 
-    private void createSlideAnimation() {
-        slideTimeline = new Timeline();
-
-        Interpolator interpolator = Interpolator.EASE_OUT;
-        ObservableList<KeyFrame> keyFrames = slideTimeline.getKeyFrames();
+    private void createSlideAnimations() {
+        slideInTimeline = new Timeline();
+        slideOutTimeline = new Timeline();
 
         double imageWidth = 534;
+
+        createSlideAnimation(slideInTimeline, imageWidth);
+        createSlideAnimation(slideOutTimeline, -imageWidth);
+    }
+
+    private void createSlideAnimation(Timeline timeline, double imageWidth) {
+        Interpolator interpolator = Interpolator.EASE_OUT;
+        ObservableList<KeyFrame> keyFrames = timeline.getKeyFrames();
+
         double endX = -imageWidth;
         keyFrames.add(new KeyFrame(Duration.millis(0),
                 new KeyValue(sectionScreenshot.opacityProperty(), 1, interpolator),
@@ -284,6 +305,7 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
     private class SectionButton extends AutoTooltipToggleButton {
         int index;
+
         SectionButton(String title, int index) {
             super(title);
             this.index = index;
@@ -293,7 +315,10 @@ public class DaoLaunchWindow extends Overlay<DaoLaunchWindow> {
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> this.setMouseTransparent(newValue));
 
-            this.setOnAction(event -> autoPlayTimeline.stop());
+            this.setOnAction(event -> {
+                autoPlayTimeline.stop();
+                showSlideInAnimation = true;
+            });
         }
     }
 
