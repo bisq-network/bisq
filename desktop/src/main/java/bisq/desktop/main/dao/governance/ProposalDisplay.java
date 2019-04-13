@@ -233,14 +233,14 @@ public class ProposalDisplay {
         if (isMakeProposalScreen) {
             RegexValidator validator = new RegexValidator();
             if (proposalType == ProposalType.COMPENSATION_REQUEST) {
-                validator.setPattern("https://bisq.network/compensation/\\d+");
-                linkInputTextField.setText("https://bisq.network/compensation/#");
+                validator.setPattern("https://bisq.network/dao-compensation/\\d+");
+                linkInputTextField.setText("https://bisq.network/dao-compensation/#");
             } else if (proposalType == ProposalType.REIMBURSEMENT_REQUEST) {
-                validator.setPattern("https://bisq.network/reimbursement/\\d+");
-                linkInputTextField.setText("https://bisq.network/reimbursement/#");
+                validator.setPattern("https://bisq.network/dao-reimbursement/\\d+");
+                linkInputTextField.setText("https://bisq.network/dao-reimbursement/#");
             } else {
-                validator.setPattern("https://bisq.network/proposals/\\d+");
-                linkInputTextField.setText("https://bisq.network/proposals/#");
+                validator.setPattern("https://bisq.network/dao-proposals/\\d+");
+                linkInputTextField.setText("https://bisq.network/dao-proposals/#");
             }
             linkInputTextField.setValidator(validator);
         }
