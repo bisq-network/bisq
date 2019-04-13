@@ -538,7 +538,7 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     boolean isIgnored(Offer offer) {
         return preferences.getIgnoreTradersList().stream()
-                .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getHostNameWithoutPostFix()));
+                .anyMatch(i -> i.equals(offer.getMakerNodeAddress().getFullAddress()));
     }
 
     boolean isOfferBanned(Offer offer) {

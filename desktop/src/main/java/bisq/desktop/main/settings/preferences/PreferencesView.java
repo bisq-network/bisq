@@ -319,9 +319,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         ignoreTradersListInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("setting.preferences.ignorePeers"));
         ignoreTradersListListener = (observable, oldValue, newValue) ->
-                preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue)
-                        .replace(":9999", "").replace(".onion", "")
-                        .split(",")));
+                preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue).split(",")));
 
         // referralId
         referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));

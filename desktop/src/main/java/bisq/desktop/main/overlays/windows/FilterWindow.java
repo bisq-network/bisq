@@ -203,10 +203,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             }
 
             if (!nodesInputTextField.getText().isEmpty()) {
-                nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
+                nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText()).split(",")));
             }
 
             if (!paymentAccountFilterInputTextField.getText().isEmpty()) {
@@ -234,24 +231,15 @@ public class FilterWindow extends Overlay<FilterWindow> {
             }
 
             if (!arbitratorsInputTextField.getText().isEmpty()) {
-                arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
+                arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText()).split(",")));
             }
 
             if (!seedNodesInputTextField.getText().isEmpty()) {
-                seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
+                seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText()).split(",")));
             }
 
             if (!priceRelayNodesInputTextField.getText().isEmpty()) {
-                priceRelayNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(priceRelayNodesInputTextField.getText())
-                        .replace(":9999", "")
-                        .replace(".onion", "")
-                        .split(",")));
+                priceRelayNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(priceRelayNodesInputTextField.getText()).split(",")));
             }
 
             if (!btcNodesInputTextField.getText().isEmpty()) {
