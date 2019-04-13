@@ -899,7 +899,7 @@ public abstract class Overlay<T extends Overlay> {
             closeButton = new AutoTooltipButton(closeButtonText == null ? Res.get("shared.close") : closeButtonText);
             closeButton.getStyleClass().add("compact-button");
             closeButton.setOnAction(event -> doClose());
-            closeButton.setMinWidth(120);
+            closeButton.setMinWidth(70);
             HBox.setHgrow(closeButton, Priority.SOMETIMES);
         }
 
