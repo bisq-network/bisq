@@ -708,6 +708,12 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public double getBuyerSecurityDepositAsPercent() {
         double value = prefPayload.getBuyerSecurityDepositAsPercent();
+
+        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent()) {
+            value = Restrictions.getMinBuyerSecurityDepositAsPercent();
+            setBuyerSecurityDepositAsPercent(value);
+        }
+
         return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
     }
 
