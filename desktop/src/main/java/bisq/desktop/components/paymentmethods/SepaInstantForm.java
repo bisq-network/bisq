@@ -60,7 +60,7 @@ public class SepaInstantForm extends GeneralSepaForm {
         final String value = sepaInstantAccountPayload.getHolderName();
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
 
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
                 Res.get("payment.bank.country"),
                 CountryUtil.getNameAndCode(sepaInstantAccountPayload.getCountryCode()));
         // IBAN, BIC will not be translated
