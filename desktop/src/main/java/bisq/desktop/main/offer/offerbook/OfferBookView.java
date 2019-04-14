@@ -441,6 +441,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             boolean isCurrencyBanned,
                             boolean isPaymentMethodBanned,
                             boolean isNodeAddressBanned,
+                            boolean requireUpdateToNewVersion,
                             boolean isInsufficientTradeLimit) {
         if (!isPaymentAccountValidForOffer) {
             openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
@@ -459,6 +460,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
         } else if (isNodeAddressBanned) {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+        } else if (requireUpdateToNewVersion) {
+            new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else if (isInsufficientTradeLimit) {
             final Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
             if (account.isPresent()) {
@@ -811,7 +814,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             final AutoTooltipButton button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
-                                    isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit;
+                                    isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit,
+                                    requireUpdateToNewVersion;
 
                             {
                                 button.setGraphic(iconView);
@@ -836,6 +840,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isCurrencyBanned = model.isCurrencyBanned(offer);
                                         isPaymentMethodBanned = model.isPaymentMethodBanned(offer);
                                         isNodeAddressBanned = model.isNodeAddressBanned(offer);
+                                        requireUpdateToNewVersion = model.requireUpdateToNewVersion();
                                         isInsufficientTradeLimit = model.isInsufficientTradeLimit(offer);
                                         isTradable = isPaymentAccountValidForOffer &&
                                                 hasSameProtocolVersion &&
@@ -844,6 +849,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 !isCurrencyBanned &&
                                                 !isPaymentMethodBanned &&
                                                 !isNodeAddressBanned &&
+                                                !requireUpdateToNewVersion &&
                                                 !isInsufficientTradeLimit;
 
                                         tableRow.setOpacity(isTradable || myOffer ? 1 : 0.4);
@@ -865,6 +871,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                             isCurrencyBanned,
                                                             isPaymentMethodBanned,
                                                             isNodeAddressBanned,
+                                                            requireUpdateToNewVersion,
                                                             isInsufficientTradeLimit);
                                             });
                                         }
@@ -904,6 +911,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 isCurrencyBanned,
                                                 isPaymentMethodBanned,
                                                 isNodeAddressBanned,
+                                                requireUpdateToNewVersion,
                                                 isInsufficientTradeLimit));
 
                                     button.updateText(title);

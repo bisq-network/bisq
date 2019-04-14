@@ -93,6 +93,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // added in v0.9.8
     @Nullable
     private final String disableDaoBelowVersion;
+    @Nullable
+    private final String disableTradeBelowVersion;
 
     public Filter(List<String> bannedOfferIds,
                   List<String> bannedNodeAddress,
@@ -105,7 +107,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean preventPublicBtcNetwork,
                   @Nullable List<String> btcNodes,
                   boolean disableDao,
-                  @Nullable String disableDaoBelowVersion) {
+                  @Nullable String disableDaoBelowVersion,
+                  @Nullable String disableTradeBelowVersion) {
         this.bannedOfferIds = bannedOfferIds;
         this.bannedNodeAddress = bannedNodeAddress;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -118,6 +121,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.btcNodes = btcNodes;
         this.disableDao = disableDao;
         this.disableDaoBelowVersion = disableDaoBelowVersion;
+        this.disableTradeBelowVersion = disableTradeBelowVersion;
     }
 
 
@@ -138,6 +142,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   @Nullable List<String> btcNodes,
                   boolean disableDao,
                   @Nullable String disableDaoBelowVersion,
+                  @Nullable String disableTradeBelowVersion,
                   String signatureAsBase64,
                   byte[] ownerPubKeyBytes,
                   @Nullable Map<String, String> extraDataMap) {
@@ -152,7 +157,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 preventPublicBtcNetwork,
                 btcNodes,
                 disableDao,
-                disableDaoBelowVersion);
+                disableDaoBelowVersion,
+                disableTradeBelowVersion);
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
@@ -183,6 +189,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         Optional.ofNullable(priceRelayNodes).ifPresent(builder::addAllPriceRelayNodes);
         Optional.ofNullable(btcNodes).ifPresent(builder::addAllBtcNodes);
         Optional.ofNullable(disableDaoBelowVersion).ifPresent(builder::setDisableDaoBelowVersion);
+        Optional.ofNullable(disableTradeBelowVersion).ifPresent(builder::setDisableTradeBelowVersion);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
         return PB.StoragePayload.newBuilder().setFilter(builder).build();
@@ -203,6 +210,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 CollectionUtils.isEmpty(proto.getBtcNodesList()) ? null : new ArrayList<>(proto.getBtcNodesList()),
                 proto.getDisableDao(),
                 proto.getDisableDaoBelowVersion().isEmpty() ? null : proto.getDisableDaoBelowVersion(),
+                proto.getDisableTradeBelowVersion().isEmpty() ? null : proto.getDisableTradeBelowVersion(),
                 proto.getSignatureAsBase64(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());

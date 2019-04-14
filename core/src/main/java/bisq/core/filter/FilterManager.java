@@ -35,6 +35,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 
 import io.bisq.generated.protobuffer.PB;
@@ -347,6 +348,20 @@ public class FilterManager {
         return getFilter() != null &&
                 getFilter().getBannedNodeAddress().stream()
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
+    }
+
+    public boolean requireUpdateToNewVersion() {
+        if (getFilter() == null) {
+            return false;
+        }
+
+        boolean requireUpdateToNewVersion = false;
+        String getDisableTradeBelowVersion = getFilter().getDisableTradeBelowVersion();
+        if (getDisableTradeBelowVersion != null && !getDisableTradeBelowVersion.isEmpty()) {
+            requireUpdateToNewVersion = Version.isNewVersion(getDisableTradeBelowVersion);
+        }
+
+        return requireUpdateToNewVersion;
     }
 
     public boolean isPeersPaymentAccountDataAreBanned(PaymentAccountPayload paymentAccountPayload,

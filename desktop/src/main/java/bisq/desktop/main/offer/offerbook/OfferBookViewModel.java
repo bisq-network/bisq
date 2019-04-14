@@ -557,6 +557,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         return filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
     }
 
+    boolean requireUpdateToNewVersion() {
+        return filterManager.requireUpdateToNewVersion();
+    }
+
     boolean isInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
         final long myTradeLimit = accountOptional
