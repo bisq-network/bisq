@@ -376,7 +376,7 @@ public class FilterManager {
                                     Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
                                     String result = (String) method.invoke(paymentAccountPayload);
                                     appliedPaymentAccountFilter[0] = paymentAccountFilter;
-                                    return result.equals(paymentAccountFilter.getValue());
+                                    return result.toLowerCase().equals(paymentAccountFilter.getValue().toLowerCase());
                                 } catch (Throwable e) {
                                     log.error(e.getMessage());
                                     return false;
