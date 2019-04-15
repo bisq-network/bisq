@@ -25,7 +25,6 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
@@ -87,7 +86,6 @@ import javafx.util.StringConverter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.*;
 
@@ -230,13 +228,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });*/
 
-        userLanguageComboBox = FormBuilder.addComboBox(root, gridRow,
+        userLanguageComboBox = addComboBox(root, gridRow,
                 Res.get("shared.language"), Layout.FIRST_ROW_DISTANCE);
-        userCountryComboBox = FormBuilder.addComboBox(root, ++gridRow,
+        userCountryComboBox = addComboBox(root, ++gridRow,
                 Res.get("shared.country"));
         userCountryComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.country"), userCountryComboBox,
                 false));
-        blockChainExplorerComboBox = FormBuilder.addComboBox(root, ++gridRow,
+        blockChainExplorerComboBox = addComboBox(root, ++gridRow,
                 Res.get("setting.preferences.explorer"));
         blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
                 blockChainExplorerComboBox, false));
@@ -345,12 +343,15 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void initializeDisplayCurrencies() {
         int displayCurrenciesGridRowIndex = 0;
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 9, Res.get("setting.preferences.currenciesInList"));
+
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 9,
+                Res.get("setting.preferences.currenciesInList"));
         GridPane.setColumnIndex(titledGroupBg, 2);
         GridPane.setColumnSpan(titledGroupBg, 2);
 
 
-        preferredTradeCurrencyComboBox = FormBuilder.addComboBox(root, displayCurrenciesGridRowIndex++, Res.get("setting.preferences.prefCurrency"),
+        preferredTradeCurrencyComboBox = addComboBox(root, displayCurrenciesGridRowIndex++,
+                Res.get("setting.preferences.prefCurrency"),
                 Layout.FIRST_ROW_DISTANCE);
         GridPane.setColumnIndex(preferredTradeCurrencyComboBox, 2);
 
@@ -371,7 +372,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         preferredTradeCurrencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory("", "",
                 Collections.emptyMap()));
 
-        Tuple3<Label, ListView<FiatCurrency>, VBox> fiatTuple = FormBuilder.addTopLabelListView(root, displayCurrenciesGridRowIndex, Res.get("setting.preferences.displayFiat"));
+        Tuple3<Label, ListView<FiatCurrency>, VBox> fiatTuple = addTopLabelListView(root, displayCurrenciesGridRowIndex,
+                Res.get("setting.preferences.displayFiat"));
 
         int listRowSpan = 6;
         GridPane.setColumnIndex(fiatTuple.third, 2);
@@ -426,7 +428,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        Tuple3<Label, ListView<CryptoCurrency>, VBox> cryptoCurrenciesTuple = FormBuilder.addTopLabelListView(root, displayCurrenciesGridRowIndex, Res.get("setting.preferences.displayAltcoins"));
+        Tuple3<Label, ListView<CryptoCurrency>, VBox> cryptoCurrenciesTuple = addTopLabelListView(root,
+                displayCurrenciesGridRowIndex, Res.get("setting.preferences.displayAltcoins"));
 
         GridPane.setColumnIndex(cryptoCurrenciesTuple.third, 3);
         GridPane.setRowSpan(cryptoCurrenciesTuple.third, listRowSpan);
@@ -480,7 +483,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        fiatCurrenciesComboBox = FormBuilder.addComboBox(root, displayCurrenciesGridRowIndex + listRowSpan);
+        fiatCurrenciesComboBox = addComboBox(root, displayCurrenciesGridRowIndex + listRowSpan);
         GridPane.setColumnIndex(fiatCurrenciesComboBox, 2);
         GridPane.setValignment(fiatCurrenciesComboBox, VPos.TOP);
         fiatCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addFiat"));
@@ -509,9 +512,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        cryptoCurrenciesComboBox = FormBuilder.addComboBox(root, displayCurrenciesGridRowIndex + listRowSpan);
+        cryptoCurrenciesComboBox = addComboBox(root, displayCurrenciesGridRowIndex + listRowSpan);
         GridPane.setColumnIndex(cryptoCurrenciesComboBox, 3);
         GridPane.setValignment(cryptoCurrenciesComboBox, VPos.TOP);
+        GridPane.setMargin(cryptoCurrenciesComboBox, new Insets(Layout.FLOATING_LABEL_DISTANCE,
+                0, 0, 20));
         cryptoCurrenciesComboBox.setPromptText(Res.get("setting.preferences.addAltcoin"));
         cryptoCurrenciesComboBox.setButtonCell(new ListCell<>() {
             @Override
@@ -602,7 +607,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         }
 
         transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
-        ignoreTradersListInputTextField.setText(preferences.getIgnoreTradersList().stream().collect(Collectors.joining(", ")));
+        ignoreTradersListInputTextField.setText(String.join(", ", preferences.getIgnoreTradersList()));
         referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));
         userLanguageComboBox.setItems(languageCodes);
