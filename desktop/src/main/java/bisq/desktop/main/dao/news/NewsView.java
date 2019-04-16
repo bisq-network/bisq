@@ -4,7 +4,6 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -13,7 +12,6 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
@@ -158,10 +156,6 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
     @Override
     protected void activate() {
-        // Hide dao new badge if user saw this page
-        if (!DevEnv.isDaoActivated())
-            preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
-
         addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
     }
 
