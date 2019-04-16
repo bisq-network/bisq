@@ -250,8 +250,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
             updatePriceToggle();
 
-            showFiatRoundingInfoPopup();
-
             boolean currencyForMakerFeeBtc = model.getDataModel().isCurrencyForMakerFeeBtc();
             tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
             tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
@@ -346,7 +344,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void showFiatRoundingInfoPopup() {
+    protected void showFiatRoundingInfoPopup() {
         if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get()) && !DevEnv.isDevMode()) {
             new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
                     .information(Res.get("popup.roundedFiatValues.msg", model.tradeCurrencyCode.get()))
