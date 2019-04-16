@@ -55,17 +55,8 @@ class BtcNodeConverter {
     PeerAddress convertOnionHost(BtcNode node) {
         // no DNS lookup for onion addresses
         String onionAddress = Objects.requireNonNull(node.getOnionAddress());
-        try {
-            // OnionCatConverter.onionHostToInetAddress converts onion to ipv6 representation
-            // inetAddress is not used but required for wallet persistence. Throws nullPointer if not set.
-            InetAddress inetAddress = facade.onionHostToInetAddress(onionAddress);
-            PeerAddress result = new PeerAddress(onionAddress, node.getPort());
-            result.setAddr(inetAddress);
-            return result;
-        } catch (UnknownHostException e) {
-            log.error("Failed to convert node", e);
-            return null;
-        }
+        PeerAddress result = new PeerAddress(onionAddress, node.getPort());
+        return result;
     }
 
     @Nullable
