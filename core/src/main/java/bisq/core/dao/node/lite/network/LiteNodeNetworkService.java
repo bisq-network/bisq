@@ -39,8 +39,6 @@ import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Joiner;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -228,19 +226,18 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof NewBlockBroadcastMessage) {
-            log.info("We received blocks from peer {}", connection.getPeersNodeAddressOptional());
             NewBlockBroadcastMessage newBlockBroadcastMessage = (NewBlockBroadcastMessage) networkEnvelope;
-
             // We combine blockHash and txId list in case we receive blocks with different transactions.
             List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
-            String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + "_" + Joiner.on(", ").join(txIds);
+            String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
             if (!receivedBlocks.contains(extBlockId)) {
-                log.error("We received a new message and broadcast it to our peers. extBlockId={}", extBlockId);
+                log.info("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
+                        connection.getPeersNodeAddressOptional(), extBlockId);
                 receivedBlocks.add(extBlockId);
                 broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null, false);
                 listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
             } else {
-                log.error("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);
+                log.debug("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);
             }
         }
     }
