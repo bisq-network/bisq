@@ -182,7 +182,6 @@ configure(project(':common')) {
             exclude(module: 'protobuf-java')
         }
         compile 'org.jetbrains:annotations:13.0'
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
         compile 'commons-io:commons-io:2.4'
         compile "org.apache.commons:commons-lang3:$langVersion"
