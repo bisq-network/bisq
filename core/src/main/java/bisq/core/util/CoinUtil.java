@@ -49,8 +49,19 @@ public class CoinUtil {
      * @return The percentage value as double (e.g. 1% is 0.01)
      */
     public static double getAsPercentPerBtc(Coin value) {
-        double asDouble = value != null ? (double) value.value : 0;
-        double btcAsDouble = (double) Coin.COIN.value;
+        return getAsPercentPerBtc(value, Coin.COIN);
+    }
+
+    /**
+     * @param part Btc amount to be converted to percent value, based on total value passed.
+     *              E.g. 0.1 BTC is 25% (of 0.4 BTC)
+     * @param total Total Btc amount the percentage part is calculated from
+     *
+     * @return The percentage value as double (e.g. 1% is 0.01)
+     */
+    public static double getAsPercentPerBtc(Coin part, Coin total) {
+        double asDouble = part != null ? (double) part.value : 0;
+        double btcAsDouble = total != null ? (double) total.value : 1;
         return MathUtils.roundDouble(asDouble / btcAsDouble, 4);
     }
 

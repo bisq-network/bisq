@@ -114,7 +114,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
         CurrencyUtil.getTradeCurrency(offer.getCurrencyCode())
                 .ifPresent(c -> this.tradeCurrency = c);
         tradeCurrencyCode.set(offer.getCurrencyCode());
-        buyerSecurityDeposit.set(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit()));
+        buyerSecurityDeposit.set(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
 
         this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
