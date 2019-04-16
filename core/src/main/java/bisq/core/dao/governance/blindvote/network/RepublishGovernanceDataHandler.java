@@ -165,6 +165,7 @@ public final class RepublishGovernanceDataHandler {
         }
     }
 
+    // TODO support also lite nodes
     private void connectToAnyFullNode() {
         Capabilities required = new Capabilities(Capability.DAO_FULL_NODE);
 
