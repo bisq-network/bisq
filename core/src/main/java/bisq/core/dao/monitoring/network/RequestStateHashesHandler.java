@@ -121,7 +121,7 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
                         TIMEOUT);
             }
 
-            log.info("We send to peer {} a {}.", nodeAddress, getStateHashesRequest);
+            log.debug("We send to peer {} a {}.", nodeAddress, getStateHashesRequest);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getStateHashesRequest);
             Futures.addCallback(future, new FutureCallback<>() {
