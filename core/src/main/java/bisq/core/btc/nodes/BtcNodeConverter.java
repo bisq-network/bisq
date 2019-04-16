@@ -98,7 +98,7 @@ class BtcNodeConverter {
             // Blocking call. takes about 600 ms ;-(
             InetAddress lookupAddress = facade.torLookup(proxy, host);
             InetSocketAddress address = new InetSocketAddress(lookupAddress, port);
-            return new PeerAddress(address.getAddress(), address.getPort());
+            return new PeerAddress(address);
         } catch (Exception e) {
             log.error("Failed to create peer address", e);
             return null;
@@ -109,7 +109,7 @@ class BtcNodeConverter {
     private static PeerAddress create(String hostName, int port) {
         try {
             InetSocketAddress address = new InetSocketAddress(hostName, port);
-            return new PeerAddress(address.getAddress(), address.getPort());
+            return new PeerAddress(address);
         } catch (Exception e) {
             log.error("Failed to create peer address", e);
             return null;
