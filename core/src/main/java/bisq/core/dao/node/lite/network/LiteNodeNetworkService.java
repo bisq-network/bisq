@@ -19,6 +19,7 @@ package bisq.core.dao.node.lite.network;
 
 import bisq.core.dao.node.messages.GetBlocksResponse;
 import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
@@ -26,6 +27,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
@@ -37,6 +39,8 @@ import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Joiner;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -87,6 +92,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
+    private final Broadcaster broadcaster;
     private final Collection<NodeAddress> seedNodeAddresses;
 
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -95,6 +101,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     private final Map<Tuple2<NodeAddress, Integer>, RequestBlocksHandler> requestBlocksHandlerMap = new HashMap<>();
     private Timer retryTimer;
     private boolean stopped;
+    private Set<String> receivedBlocks = new HashSet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -104,9 +111,11 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     @Inject
     public LiteNodeNetworkService(NetworkNode networkNode,
                                   PeerManager peerManager,
+                                  Broadcaster broadcaster,
                                   SeedNodeRepository seedNodesRepository) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
+        this.broadcaster = broadcaster;
         // seedNodeAddresses can be empty (in case there is only 1 seed node, the seed node starting up has no other seed nodes)
         this.seedNodeAddresses = new HashSet<>(seedNodesRepository.getSeedNodeAddresses());
     }
@@ -220,9 +229,22 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         if (networkEnvelope instanceof NewBlockBroadcastMessage) {
             log.info("We received blocks from peer {}", connection.getPeersNodeAddressOptional());
-            listeners.forEach(listener -> listener.onNewBlockReceived((NewBlockBroadcastMessage) networkEnvelope));
+            NewBlockBroadcastMessage newBlockBroadcastMessage = (NewBlockBroadcastMessage) networkEnvelope;
+
+            // We combine blockHash and txId list in case we receive blocks with different transactions.
+            List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
+            String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + "_" + Joiner.on(", ").join(txIds);
+            if (!receivedBlocks.contains(extBlockId)) {
+                log.error("We received a new message and broadcast it to our peers. extBlockId={}", extBlockId);
+                receivedBlocks.add(extBlockId);
+                broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null, false);
+                listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
+            } else {
+                log.error("We had that message already and do not further broadcast it. extBlockId={}", extBlockId);
+            }
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // RequestData
