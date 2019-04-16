@@ -261,7 +261,7 @@ class TakeOfferDataModel extends OfferDataModel {
                                     .onClose(() -> setFeeFromFundingTx(Coin.NEGATIVE_SATOSHI))
                                     .show());
                         }
-                    });
+                    }, MoreExecutors.directExecutor());
                 } else {
                     setFeeFromFundingTx(FeePolicy.getMinRequiredFeeForFundingTx());
                     isFeeFromFundingTxSufficient.set(feeFromFundingTx.compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0);

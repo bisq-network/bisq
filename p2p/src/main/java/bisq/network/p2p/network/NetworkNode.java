@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import javafx.beans.property.ObjectProperty;
@@ -227,7 +228,7 @@ public abstract class NetworkNode implements MessageListener {
                     log.debug("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
                     UserThread.execute(() -> resultFuture.setException(throwable));
                 }
-            });
+            }, MoreExecutors.directExecutor());
 
             return resultFuture;
         }
@@ -292,7 +293,7 @@ public abstract class NetworkNode implements MessageListener {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> resultFuture.setException(throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
         return resultFuture;
     }
 

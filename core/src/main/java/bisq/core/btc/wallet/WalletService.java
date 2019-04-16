@@ -68,6 +68,7 @@ import javax.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -507,7 +508,7 @@ public abstract class WalletService {
                 log.error("emptyWallet onFailure " + t.toString());
                 errorMessageHandler.handleErrorMessage(t.getMessage());
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
 

@@ -320,6 +320,6 @@ public class TorNetworkNode extends NetworkNode {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 }

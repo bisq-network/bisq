@@ -29,6 +29,7 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -129,7 +130,7 @@ public class TxBroadcaster {
                 UserThread.execute(() -> callback.onFailure(new TxBroadcastException("We got an onFailure from " +
                         "the peerGroup.broadcastTransaction callback.", throwable)));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private static void stopAndRemoveTimer(String txId) {
