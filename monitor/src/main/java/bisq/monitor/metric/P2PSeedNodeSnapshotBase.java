@@ -37,6 +37,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.time.Clock;
@@ -135,7 +136,7 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                         log.error(
                                 "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
                     }
-                });
+                }, MoreExecutors.directExecutor());
 
             } catch (Exception e) {
                 gate.proceed(); // release the gate on error

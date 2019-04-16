@@ -29,6 +29,7 @@ import bisq.common.UserThread;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.concurrent.TimeUnit;
@@ -128,7 +129,7 @@ class GetPeersRequestHandler {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         peerManager.addToReportedPeers(getPeersRequest.getReportedPeers(), connection);
     }
