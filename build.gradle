@@ -65,7 +65,8 @@ configure([project(':desktop'),
            project(':monitor'),
            project(':relay'),
            project(':seednode'),
-           project(':statsnode')]) {
+           project(':statsnode'),
+           project(':pricenode')]) {
 
     apply plugin: 'application'
 
