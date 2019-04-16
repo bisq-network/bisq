@@ -18,9 +18,7 @@
 package bisq.seednode;
 
 import bisq.core.app.misc.AppSetup;
-import bisq.core.app.misc.AppSetupWithP2P;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
-import bisq.core.user.Preferences;
 
 import com.google.inject.Injector;
 
@@ -37,8 +35,7 @@ public class SeedNode {
     }
 
     public void startApplication() {
-        boolean isDaoFullNode = injector.getInstance(Preferences.class).isDaoFullNode();
-        appSetup = isDaoFullNode ? injector.getInstance(AppSetupWithP2PAndDAO.class) : injector.getInstance(AppSetupWithP2P.class);
+        appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
         appSetup.start();
     }
 }
