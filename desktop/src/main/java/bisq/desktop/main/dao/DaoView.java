@@ -34,9 +34,11 @@ import bisq.desktop.main.dao.news.NewsView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.send.BsqSendView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.presentation.DaoPresentation;
 
 import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 
 import bisq.common.app.DevEnv;
 
@@ -61,13 +63,16 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
+    private Preferences preferences;
     private Tab selectedTab;
     private BsqWalletView bsqWalletView;
 
     @Inject
-    private DaoView(CachingViewLoader viewLoader, VoteRevealService voteRevealService, Navigation navigation) {
+    private DaoView(CachingViewLoader viewLoader, VoteRevealService voteRevealService, Navigation navigation,
+                    Preferences preferences) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
+        this.preferences = preferences;
 
         voteRevealService.addVoteRevealTxPublishedListener(txId -> {
             new Popup<>().headLine(Res.get("dao.voteReveal.txPublished.headLine"))
@@ -140,6 +145,10 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
     @Override
     protected void activate() {
         if (DevEnv.isDaoActivated()) {
+
+            // Hide dao new badge if user saw this section
+            preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+
             navigation.addListener(navigationListener);
             root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
