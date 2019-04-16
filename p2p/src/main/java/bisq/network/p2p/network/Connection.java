@@ -304,11 +304,18 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             result = true;
         }
 
-        if (!result)
-            log.info("We did not send the message because the peer does not support our required capabilities. " +
-                            "message={}, peer={}, peers supportedCapabilities={}",
-                    msg, peersNodeAddressOptional, capabilities);
-
+        if (!result) {
+            if (capabilities.size() > 1) {
+                Proto data = msg;
+                if (msg instanceof AddDataMessage) {
+                    data = ((AddDataMessage) msg).getProtectedStorageEntry().getProtectedStoragePayload();
+                }
+                // Monitoring nodes have only one capability set, we don't want to log those
+                log.info("We did not send the message because the peer does not support our required capabilities. " +
+                                "messageClass={}, peer={}, peers supportedCapabilities={}",
+                        data.getClass().getSimpleName(), peersNodeAddressOptional, capabilities);
+            }
+        }
         return result;
     }
 
