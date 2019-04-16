@@ -63,6 +63,7 @@ import org.bitcoinj.core.TransactionConfidence;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -932,7 +933,7 @@ public abstract class Trade implements Tradable, Model {
                         log.error(t.getMessage());
                         throw new RuntimeException(t);
                     }
-                });
+                }, MoreExecutors.directExecutor());
             }
         } else {
             log.error("depositTx == null. That must not happen.");

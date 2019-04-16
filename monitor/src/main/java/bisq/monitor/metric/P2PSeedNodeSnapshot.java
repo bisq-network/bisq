@@ -43,6 +43,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.net.MalformedURLException;
@@ -190,7 +191,7 @@ public class P2PSeedNodeSnapshot extends Metric implements MessageListener {
                                         "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
                                                 + throwable.getMessage());
                             }
-                        });
+                        }, MoreExecutors.directExecutor());
 
                     } catch (Exception e) {
                         gate.proceed(); // release the gate on error

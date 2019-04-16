@@ -30,6 +30,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Random;
@@ -129,7 +130,7 @@ class KeepAliveHandler implements MessageListener {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                     }
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } else {
             log.trace("We have stopped already. We ignore that sendPing call.");
         }

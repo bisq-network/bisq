@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.Map;
@@ -57,7 +58,7 @@ public class FeeRequest {
             public void onFailure(@NotNull Throwable throwable) {
                 resultFuture.setException(throwable);
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         return resultFuture;
     }

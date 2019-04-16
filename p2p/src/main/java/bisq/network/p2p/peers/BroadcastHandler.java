@@ -28,6 +28,7 @@ import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.ArrayList;
@@ -204,7 +205,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                                 onFault("stopped at onFailure: " + errorMessage);
                             }
                         }
-                    });
+                    }, MoreExecutors.directExecutor());
                 }
             } else {
                 onFault("Connection stopped already", false);

@@ -53,6 +53,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.List;
 import java.util.Properties;
@@ -162,7 +163,7 @@ public class RpcService {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     void addNewBtcBlockHandler(Consumer<RawBlock> btcBlockHandler,
@@ -204,7 +205,7 @@ public class RpcService {
             public void onFailure(@NotNull Throwable throwable) {
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     void requestBtcBlock(int blockHeight,
@@ -237,7 +238,7 @@ public class RpcService {
                 log.error("Error at requestBtcBlock: blockHeight={}", blockHeight);
                 UserThread.execute(() -> errorHandler.accept(throwable));
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
 

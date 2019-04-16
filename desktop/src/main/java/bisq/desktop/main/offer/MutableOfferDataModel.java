@@ -208,7 +208,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                     .onClose(() -> feeFromFundingTxProperty.set(Coin.ZERO))
                                     .show());
                         }
-                    });
+                    }, MoreExecutors.directExecutor());
                 }*/
             }
         };

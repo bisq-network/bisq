@@ -42,6 +42,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
@@ -121,7 +122,7 @@ public class P2PRoundTripTime extends Metric implements MessageListener, SetupLi
                             log.error("Sending ping failed. That is expected if the peer is offline.\n\tException="
                                     + throwable.getMessage());
                         }
-                    });
+                    }, MoreExecutors.directExecutor());
 
                     // wait for the gate to open again
                     gate.await();

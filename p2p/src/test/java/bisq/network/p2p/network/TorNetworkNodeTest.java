@@ -22,6 +22,7 @@ import bisq.network.p2p.mocks.MockPayload;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.io.File;
@@ -124,7 +125,7 @@ public class TorNetworkNodeTest {
             public void onFailure(@NotNull Throwable throwable) {
                 log.debug("onFailure ");
             }
-        });
+        }, MoreExecutors.directExecutor());
         latch.await();
 
 
@@ -207,7 +208,7 @@ public class TorNetworkNodeTest {
             public void onFailure(@NotNull Throwable throwable) {
                 log.debug("onFailure ");
             }
-        });
+        }, MoreExecutors.directExecutor());
         latch.await();
 
 

@@ -35,6 +35,7 @@ import bisq.common.util.Utilities;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashSet;
@@ -129,7 +130,7 @@ public class GetDataRequestHandler {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onFailure call.");
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest, Connection connection) {

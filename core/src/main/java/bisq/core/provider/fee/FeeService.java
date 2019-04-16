@@ -32,6 +32,7 @@ import com.google.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import javafx.beans.property.IntegerProperty;
@@ -169,7 +170,7 @@ public class FeeService {
                     if (faultHandler != null)
                         UserThread.execute(() -> faultHandler.handleFault("Could not load fees", throwable));
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } else {
             log.debug("We got a requestFees called again before min pause of {} minutes has passed.", MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN);
             UserThread.execute(() -> {

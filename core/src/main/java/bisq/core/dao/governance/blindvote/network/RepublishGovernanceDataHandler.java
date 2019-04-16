@@ -35,6 +35,7 @@ import javax.inject.Inject;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.ArrayList;
@@ -135,7 +136,7 @@ public final class RepublishGovernanceDataHandler {
                             "Might be caused by an previous timeout.");
                 }
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private void connectToNextNode() {
