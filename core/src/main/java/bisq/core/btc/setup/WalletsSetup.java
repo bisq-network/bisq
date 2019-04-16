@@ -163,7 +163,6 @@ public class WalletsSetup {
         btcWalletFileName = "bisq_" + BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode() + ".wallet";
         params = BisqEnvironment.getParameters();
         walletDir = new File(appDir, "wallet");
-        PeerGroup.setIgnoreHttpSeeds(true);
     }
 
 
