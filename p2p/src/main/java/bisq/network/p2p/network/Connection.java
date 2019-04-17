@@ -149,7 +149,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
     // mutable data, set from other threads but not changed internally.
     @Getter
-    private Optional<NodeAddress> peersNodeAddressOptional = Optional.<NodeAddress>empty();
+    private Optional<NodeAddress> peersNodeAddressOptional = Optional.empty();
     @Getter
     private volatile boolean stopped;
 
@@ -754,8 +754,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
-                    if (networkEnvelope instanceof SupportedCapabilitiesMessage)
-                        capabilities.set(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
+                    if (networkEnvelope instanceof SupportedCapabilitiesMessage) {
+                        Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
+                        if (supportedCapabilities != null) {
+                            capabilities.set(supportedCapabilities);
+                        }
+                    }
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
                         // If we get a CloseConnectionMessage we shut down
@@ -791,17 +795,19 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         // 4. DirectMessage (implements SendersNodeAddressMessage)
                         if (networkEnvelope instanceof SendersNodeAddressMessage) {
                             NodeAddress senderNodeAddress = ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress();
-                            Optional<NodeAddress> peersNodeAddressOptional = getPeersNodeAddressOptional();
-                            if (peersNodeAddressOptional.isPresent()) {
-                                // If we have already the peers address we check again if it matches our stored one
-                                checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
-                                        "senderNodeAddress not matching connections peer address.\n\t" +
-                                                "message=" + networkEnvelope);
-                            } else {
-                                // We must not shut down a banned peer at that moment as it would trigger a connection termination
-                                // and we could not send the CloseConnectionMessage.
-                                // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
-                                setPeersNodeAddress(senderNodeAddress);
+                            if (senderNodeAddress != null) {
+                                Optional<NodeAddress> peersNodeAddressOptional = getPeersNodeAddressOptional();
+                                if (peersNodeAddressOptional.isPresent()) {
+                                    // If we have already the peers address we check again if it matches our stored one
+                                    checkArgument(peersNodeAddressOptional.get().equals(senderNodeAddress),
+                                            "senderNodeAddress not matching connections peer address.\n\t" +
+                                                    "message=" + networkEnvelope);
+                                } else {
+                                    // We must not shut down a banned peer at that moment as it would trigger a connection termination
+                                    // and we could not send the CloseConnectionMessage.
+                                    // We check for a banned peer inside setPeersNodeAddress() and shut down if banned.
+                                    setPeersNodeAddress(senderNodeAddress);
+                                }
                             }
                         }
 

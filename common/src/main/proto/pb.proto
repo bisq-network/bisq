@@ -317,6 +317,8 @@ message PrivateNotificationMessage {
 message GetBlocksRequest {
     int32 from_block_height = 1;
     int32 nonce = 2;
+    NodeAddress sender_node_address = 3;
+    repeated int32 supported_capabilities = 4;
 }
 
 message GetBlocksResponse {
