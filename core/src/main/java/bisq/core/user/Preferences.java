@@ -32,6 +32,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
@@ -130,7 +131,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final Storage<PreferencesPayload> storage;
     private final BisqEnvironment bisqEnvironment;
     private final String btcNodesFromOptions, useTorFlagFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
-            rpcUserFromOptions, rpcPasswordFromOptions;
+            rpcUserFromOptions, rpcPwFromOptions, blockNotifyPortFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -149,7 +150,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(AppOptionKeys.REFERRAL_ID) String referralId,
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                        @Named(DaoOptionKeys.RPC_USER) String rpcUser,
-                       @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword) {
+                       @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
+                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
 
 
         this.storage = storage;
@@ -159,7 +161,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.referralIdFromOptions = referralId;
         this.fullDaoNodeFromOptions = fullDaoNode;
         this.rpcUserFromOptions = rpcUser;
-        this.rpcPasswordFromOptions = rpcPassword;
+        this.rpcPwFromOptions = rpcPassword;
+        this.blockNotifyPortFromOptions = rpcBlockNotificationPort;
 
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
@@ -279,15 +282,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         if (referralIdFromOptions != null && !referralIdFromOptions.isEmpty())
             setReferralId(referralIdFromOptions);
 
-        if (fullDaoNodeFromOptions != null && !fullDaoNodeFromOptions.isEmpty())
-            setDaoFullNode(fullDaoNodeFromOptions.toLowerCase().equals("true"));
-
-        if (rpcUserFromOptions != null && !rpcUserFromOptions.isEmpty())
-            setRpcUser(rpcUserFromOptions);
-
-        if (rpcPasswordFromOptions != null && !rpcPasswordFromOptions.isEmpty())
-            setRpcPw(rpcPasswordFromOptions);
-
         // For users from old versions the 4 flags a false but we want to have it true by default
         // PhoneKeyAndToken is also null so we can use that to enable the flags
         if (prefPayload.getPhoneKeyAndToken() == null) {
@@ -297,9 +291,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setUsePriceNotifications(true);
         }
 
+        // We set the capability in CoreNetworkCapabilities if the program argument is set.
+        // If we have set it in the preferences view we handle it here.
+        CoreNetworkCapabilities.maybeApplyDaoFullMode(bisqEnvironment);
+
         initialReadDone = true;
         persist();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -598,24 +597,43 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.useStandbyModeProperty.set(useStandbyMode);
     }
 
-    public void setDaoFullNode(boolean value) {
-        prefPayload.setDaoFullNode(value);
+    public void setTakeOfferSelectedPaymentAccountId(String value) {
+        prefPayload.setTakeOfferSelectedPaymentAccountId(value);
         persist();
     }
 
+    public void setDaoFullNode(boolean value) {
+        // We only persist if we have not set the program argument
+        if (fullDaoNodeFromOptions == null || fullDaoNodeFromOptions.isEmpty()) {
+            prefPayload.setDaoFullNode(value);
+            persist();
+        }
+    }
+
     public void setRpcUser(String value) {
+        // We only persist if we have not set the program argument
+        if (rpcUserFromOptions == null || rpcUserFromOptions.isEmpty()) {
+            prefPayload.setRpcUser(value);
+            persist();
+        }
         prefPayload.setRpcUser(value);
         persist();
     }
 
     public void setRpcPw(String value) {
-        prefPayload.setRpcPw(value);
-        persist();
+        // We only persist if we have not set the program argument
+        if (rpcPwFromOptions == null || rpcPwFromOptions.isEmpty()) {
+            prefPayload.setRpcPw(value);
+            persist();
+        }
     }
 
-    public void setTakeOfferSelectedPaymentAccountId(String value) {
-        prefPayload.setTakeOfferSelectedPaymentAccountId(value);
-        persist();
+    public void setBlockNotifyPort(int value) {
+        // We only persist if we have not set the program argument
+        if (blockNotifyPortFromOptions == null || blockNotifyPortFromOptions.isEmpty()) {
+            prefPayload.setBlockNotifyPort(value);
+            persist();
+        }
     }
 
 
@@ -732,6 +750,43 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return Math.max(prefPayload.getWithdrawalTxFeeInBytes(), BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte());
     }
 
+    public boolean isDaoFullNode() {
+        if (fullDaoNodeFromOptions != null && !fullDaoNodeFromOptions.isEmpty()) {
+            return fullDaoNodeFromOptions.toLowerCase().equals("true");
+        } else {
+            return prefPayload.isDaoFullNode();
+        }
+    }
+
+    public String getRpcUser() {
+        if (rpcUserFromOptions != null && !rpcUserFromOptions.isEmpty()) {
+            return rpcUserFromOptions;
+        } else {
+            return prefPayload.getRpcUser();
+        }
+    }
+
+    public String getRpcPw() {
+        if (rpcPwFromOptions != null && !rpcPwFromOptions.isEmpty()) {
+            return rpcPwFromOptions;
+        } else {
+            return prefPayload.getRpcPw();
+        }
+    }
+
+    public int getBlockNotifyPort() {
+        if (blockNotifyPortFromOptions != null && !blockNotifyPortFromOptions.isEmpty()) {
+            try {
+                return Integer.parseInt(blockNotifyPortFromOptions);
+            } catch (Throwable ignore) {
+                return 0;
+            }
+
+        } else {
+            return prefPayload.getBlockNotifyPort();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -840,16 +895,26 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         void setUseStandbyMode(boolean useStandbyMode);
 
+        void setTakeOfferSelectedPaymentAccountId(String value);
+
+        void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
+
+        double getBuyerSecurityDepositAsPercent();
+
         void setDaoFullNode(boolean value);
 
         void setRpcUser(String value);
 
         void setRpcPw(String value);
 
-        void setTakeOfferSelectedPaymentAccountId(String value);
+        void setBlockNotifyPort(int value);
 
-        void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
+        boolean isDaoFullNode();
 
-        double getBuyerSecurityDepositAsPercent();
+        String getRpcUser();
+
+        String getRpcPw();
+
+        int getBlockNotifyPort();
     }
 }

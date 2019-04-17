@@ -87,6 +87,7 @@ public class P2PNetworkSetup {
         p2PNetworkInfoBinding = EasyBind.combine(bootstrapState, bootstrapWarning, p2PService.getNumConnectedPeers(), hiddenServicePublished, initialP2PNetworkDataReceived,
                 (state, warning, numPeers, hiddenService, dataReceived) -> {
                     String result;
+                    String daoFullNode = preferences.isDaoFullNode() ? Res.get("mainView.footer.daoFullNode") + " / " : "";
                     int peers = (int) numPeers;
                     if (warning != null && peers == 0) {
                         result = warning;
@@ -99,7 +100,7 @@ public class P2PNetworkSetup {
                         else
                             result = state + " / " + p2pInfo;
                     }
-                    return result;
+                    return daoFullNode + result;
                 });
         p2PNetworkInfoBinding.subscribe((observable, oldValue, newValue) -> {
             p2PNetworkInfo.set(newValue);
