@@ -132,7 +132,7 @@ public class RequestBlocksHandler implements MessageListener {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
-                        log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getHostName());
+                        log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
                     } else {
                         log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call." +
                                 "Might be caused by an previous timeout.");

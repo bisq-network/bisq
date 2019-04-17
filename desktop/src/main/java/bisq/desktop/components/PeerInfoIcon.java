@@ -57,7 +57,7 @@ public class PeerInfoIcon extends Group {
     private final Label tagLabel;
     protected final Pane tagPane;
     protected final Pane numTradesPane;
-    private final String hostName;
+    private final String fullAddress;
     private final double scaleFactor;
 
     public PeerInfoIcon(NodeAddress nodeAddress,
@@ -72,8 +72,7 @@ public class PeerInfoIcon extends Group {
         this.numTrades = numTrades;
 
         scaleFactor = getScaleFactor();
-        hostName = nodeAddress != null ? nodeAddress.getHostName() : "";
-        String address = nodeAddress != null ? nodeAddress.getFullAddress() : "";
+        fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
 
         peerTagMap = preferences.getPeerTagMap();
 
@@ -85,8 +84,8 @@ public class PeerInfoIcon extends Group {
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
         tooltipText = hasTraded ?
-                Res.get("peerInfoIcon.tooltip.trade.traded", role, hostName, numTrades, accountAge) :
-                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, hostName, accountAge);
+                Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, accountAge) :
+                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, accountAge);
 
         // outer circle
         Color ringColor;
@@ -122,7 +121,7 @@ public class PeerInfoIcon extends Group {
         int intValue = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] bytes = md.digest(address.getBytes());
+            byte[] bytes = md.digest(fullAddress.getBytes());
             intValue = Math.abs(((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16)
                     | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 
@@ -189,12 +188,12 @@ public class PeerInfoIcon extends Group {
                         Res.get("peerInfo.unknownAge") :
                 null;
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
-                .hostName(hostName)
+                .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
-                    preferences.setTagForPeer(hostName, newTag);
+                    preferences.setTagForPeer(fullAddress, newTag);
                     updatePeerInfoIcon();
                 })
                 .show());
@@ -206,8 +205,8 @@ public class PeerInfoIcon extends Group {
 
     protected void updatePeerInfoIcon() {
         String tag;
-        if (peerTagMap.containsKey(hostName)) {
-            tag = peerTagMap.get(hostName);
+        if (peerTagMap.containsKey(fullAddress)) {
+            tag = peerTagMap.get(fullAddress);
             final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
             Tooltip.install(this, new Tooltip(text));
         } else {
