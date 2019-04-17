@@ -121,6 +121,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     @Nullable
     String takeOfferSelectedPaymentAccountId;
     private double buyerSecurityDepositAsPercent = Restrictions.getDefaultBuyerSecurityDepositAsPercent();
+    private int ignoreDustThreshold = 600;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +178,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUsePriceNotifications(usePriceNotifications)
                 .setUseStandbyMode(useStandbyMode)
                 .setIsDaoFullNode(isDaoFullNode)
-                .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent);
+                .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent).
+                        setIgnoreDustThreshold(ignoreDustThreshold);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -259,6 +261,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getRpcUser().isEmpty() ? null : proto.getRpcUser(),
                 proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
                 proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
-                proto.getBuyerSecurityDepositAsPercent());
+                proto.getBuyerSecurityDepositAsPercent(),
+                proto.getIgnoreDustThreshold());
     }
 }

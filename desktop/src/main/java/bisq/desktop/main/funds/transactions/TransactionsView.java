@@ -341,7 +341,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             TransactionsListItem> column) {
                         return new TableCell<>() {
 
-                            private HyperlinkWithIcon field;
+                            private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
@@ -349,17 +349,24 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     if (item.getDetailsAvailable()) {
-                                        field = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.INFO_SIGN);
-                                        field.setOnAction(event -> openDetailPopup(item));
-                                        field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
-                                        setGraphic(field);
+                                        hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.INFO_SIGN);
+                                        hyperlinkWithIcon.setOnAction(event -> openDetailPopup(item));
+                                        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                        setGraphic(hyperlinkWithIcon);
+                                        // If details are available its a trade tx and we don't expect any dust attack tx
                                     } else {
-                                        setGraphic(new AutoTooltipLabel(item.getDetails()));
+                                        if (item.isDustAttackTx()) {
+                                            hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
+                                            hyperlinkWithIcon.setOnAction(event -> new Popup<>().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                            setGraphic(hyperlinkWithIcon);
+                                        } else {
+                                            setGraphic(new AutoTooltipLabel(item.getDetails()));
+                                        }
                                     }
                                 } else {
                                     setGraphic(null);
-                                    if (field != null)
-                                        field.setOnAction(null);
+                                    if (hyperlinkWithIcon != null)
+                                        hyperlinkWithIcon.setOnAction(null);
                                 }
                             }
                         };

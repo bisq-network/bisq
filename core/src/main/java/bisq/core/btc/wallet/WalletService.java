@@ -423,13 +423,17 @@ public abstract class WalletService {
     protected Coin getBalance(List<TransactionOutput> transactionOutputs, Address address) {
         Coin balance = Coin.ZERO;
         for (TransactionOutput output : transactionOutputs) {
-            if (isOutputScriptConvertibleToAddress(output) &&
-                    address != null &&
-                    address.equals(getAddressFromOutput(output)))
-                balance = balance.add(output.getValue());
+            if (!isDustAttackUtxo(output)) {
+                if (isOutputScriptConvertibleToAddress(output) &&
+                        address != null &&
+                        address.equals(getAddressFromOutput(output)))
+                    balance = balance.add(output.getValue());
+            }
         }
         return balance;
     }
+
+    protected abstract boolean isDustAttackUtxo(TransactionOutput output);
 
     public Coin getBalance(TransactionOutput output) {
         return getBalanceForAddress(getAddressFromOutput(output));
