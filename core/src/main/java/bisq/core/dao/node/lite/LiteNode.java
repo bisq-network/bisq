@@ -103,11 +103,12 @@ public class LiteNode extends BsqNode {
             // We expect to receive the new BSQ block from the network shortly after BitcoinJ has been aware of it.
             // If we don't receive it we request it manually from seed nodes
             checkForBlockReceivedTimer = UserThread.runAfter(() -> {
-                if (daoStateService.getChainHeight() < height) {
+                int chainHeight = daoStateService.getChainHeight();
+                if (chainHeight < height) {
                     log.warn("We did not receive a block from the network {} seconds after we saw the new block in BicoinJ. " +
                                     "We request from our seed nodes missing blocks from block height {}.",
-                            CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, daoStateService.getChainHeight());
-                    liteNodeNetworkService.requestBlocks(daoStateService.getChainHeight());
+                            CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, chainHeight + 1);
+                    liteNodeNetworkService.requestBlocks(chainHeight + 1);
                 }
             }, CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC);
         });
