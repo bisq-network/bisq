@@ -46,7 +46,6 @@ public class MarketsPrintTool {
 
         final List<CryptoCurrency> allSortedCryptoCurrencies = CurrencyUtil.getAllSortedCryptoCurrencies();
         final Stream<MarketCurrency> cryptoStream = allSortedCryptoCurrencies.stream()
-                .filter(e -> !e.getCode().equals("BSQ"))
                 .filter(e -> !e.getCode().equals("BTC"))
                 .map(e -> new MarketCurrency(e.getCode().toLowerCase() + "_btc", e.getName(), e.getCode()))
                 .distinct();
