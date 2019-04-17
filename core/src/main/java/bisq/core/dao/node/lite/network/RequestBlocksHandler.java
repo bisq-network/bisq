@@ -108,7 +108,7 @@ public class RequestBlocksHandler implements MessageListener {
 
     public void requestBlocks() {
         if (!stopped) {
-            GetBlocksRequest getBlocksRequest = new GetBlocksRequest(startBlockHeight, nonce);
+            GetBlocksRequest getBlocksRequest = new GetBlocksRequest(startBlockHeight, nonce, networkNode.getNodeAddress());
             log.debug("getBlocksRequest " + getBlocksRequest);
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
