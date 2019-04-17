@@ -107,7 +107,7 @@ public class ArbitratorService {
                 .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
                 .map(data -> (Arbitrator) data.getProtectedStoragePayload())
                 .filter(a -> bannedArbitrators == null ||
-                        !bannedArbitrators.contains(a.getNodeAddress().getHostName()))
+                        !bannedArbitrators.contains(a.getNodeAddress().getFullAddress()))
                 .collect(Collectors.toSet());
 
         Map<NodeAddress, Arbitrator> map = new HashMap<>();
