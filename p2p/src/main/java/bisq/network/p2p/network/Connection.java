@@ -754,8 +754,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
-                    if (networkEnvelope instanceof SupportedCapabilitiesMessage)
-                        capabilities.set(((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities());
+                    if (networkEnvelope instanceof SupportedCapabilitiesMessage) {
+                        Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
+                        if (supportedCapabilities != null) {
+                            capabilities.set(supportedCapabilities);
+                        }
+                    }
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
                         // If we get a CloseConnectionMessage we shut down
