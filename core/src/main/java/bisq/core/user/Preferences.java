@@ -431,8 +431,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setTagForPeer(String hostName, String tag) {
-        prefPayload.getPeerTagMap().put(hostName, tag);
+    public void setTagForPeer(String fullAddress, String tag) {
+        prefPayload.getPeerTagMap().put(fullAddress, tag);
         persist();
     }
 
