@@ -17,6 +17,8 @@
 
 package bisq.common.crypto;
 
+import com.google.common.base.Charsets;
+
 import org.bouncycastle.bcpg.BCPGKey;
 import org.bouncycastle.bcpg.RSAPublicBCPGKey;
 import org.bouncycastle.openpgp.PGPException;
@@ -54,7 +56,7 @@ public class PGP {
     @Nullable
     public static PGPPublicKey getPubKeyFromPem(@Nullable String pem) {
         if (pem != null) {
-            InputStream inputStream = new ByteArrayInputStream(pem.getBytes());
+            InputStream inputStream = new ByteArrayInputStream(pem.getBytes(Charsets.UTF_8));
             try {
                 inputStream = PGPUtil.getDecoderStream(inputStream);
                 try {

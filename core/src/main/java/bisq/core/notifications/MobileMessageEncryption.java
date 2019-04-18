@@ -19,6 +19,8 @@ package bisq.core.notifications;
 
 import javax.inject.Inject;
 
+import com.google.common.base.Charsets;
+
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -40,7 +42,7 @@ public class MobileMessageEncryption {
     }
 
     public void setKey(String key) {
-        keySpec = new SecretKeySpec(key.getBytes(), "AES");
+        keySpec = new SecretKeySpec(key.getBytes(Charsets.UTF_8), "AES");
         try {
             cipher = Cipher.getInstance("AES/CBC/NOPadding");
         } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
@@ -56,7 +58,7 @@ public class MobileMessageEncryption {
         if (iv.length() != 16) {
             throw new Exception("iv not 16 characters");
         }
-        IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
+        IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(Charsets.UTF_8));
         byte[] encryptedBytes = doEncrypt(valueToEncrypt, ivSpec);
         return Base64.encodeBase64String(encryptedBytes);
     }
@@ -69,7 +71,7 @@ public class MobileMessageEncryption {
         byte[] encrypted;
         try {
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-            encrypted = cipher.doFinal(text.getBytes());
+            encrypted = cipher.doFinal(text.getBytes(Charsets.UTF_8));
         } catch (Exception e) {
             throw new Exception("[encrypt] " + e.getMessage());
         }

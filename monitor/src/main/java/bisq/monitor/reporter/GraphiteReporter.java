@@ -28,8 +28,12 @@ import bisq.common.app.Version;
 
 import org.berndpruenster.netlayer.tor.TorSocket;
 
-import java.io.IOException;
+import com.google.common.base.Charsets;
+
 import java.net.Socket;
+
+import java.io.IOException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,7 +91,7 @@ public class GraphiteReporter extends Reporter {
             else
                 socket = new Socket(nodeAddress.getHostName(), nodeAddress.getPort());
 
-            socket.getOutputStream().write(report.getBytes());
+            socket.getOutputStream().write(report.getBytes(Charsets.UTF_8));
             socket.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
