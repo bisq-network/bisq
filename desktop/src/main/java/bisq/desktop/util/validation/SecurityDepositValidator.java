@@ -17,21 +17,28 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.util.BSFormatter;
 
 import javax.inject.Inject;
 
+import static bisq.core.btc.wallet.Restrictions.getMaxBuyerSecurityDepositAsPercent;
+import static bisq.core.btc.wallet.Restrictions.getMinBuyerSecurityDepositAsPercent;
+
 public class SecurityDepositValidator extends NumberValidator {
 
     private final BSFormatter formatter;
+    private PaymentAccount paymentAccount;
 
     @Inject
     public SecurityDepositValidator(BSFormatter formatter) {
         this.formatter = formatter;
     }
 
+    public void setPaymentAccount(PaymentAccount paymentAccount) {
+        this.paymentAccount = paymentAccount;
+    }
 
     @Override
     public ValidationResult validate(String input) {
@@ -54,7 +61,7 @@ public class SecurityDepositValidator extends NumberValidator {
     private ValidationResult validateIfNotTooLowPercentageValue(String input) {
         try {
             double percentage = formatter.parsePercentStringToDouble(input);
-            double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent();
+            double minPercentage = getMinBuyerSecurityDepositAsPercent(paymentAccount);
             if (percentage < minPercentage)
                 return new ValidationResult(false,
                         Res.get("validation.inputTooSmall", formatter.formatToPercentWithSymbol(minPercentage)));
@@ -68,7 +75,7 @@ public class SecurityDepositValidator extends NumberValidator {
     private ValidationResult validateIfNotTooHighPercentageValue(String input) {
         try {
             double percentage = formatter.parsePercentStringToDouble(input);
-            double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent();
+            double maxPercentage = getMaxBuyerSecurityDepositAsPercent(paymentAccount);
             if (percentage > maxPercentage)
                 return new ValidationResult(false,
                         Res.get("validation.inputTooLarge", formatter.formatToPercentWithSymbol(maxPercentage)));

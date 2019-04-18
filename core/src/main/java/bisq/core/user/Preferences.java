@@ -32,6 +32,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountUtil;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
@@ -493,10 +494,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
-    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent) {
-        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent();
-        double min = Restrictions.getMinBuyerSecurityDepositAsPercent();
-        prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
+    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent, PaymentAccount paymentAccount) {
+        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
+        double min = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+
+        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
+            prefPayload.setBuyerSecurityDepositAsPercentForCrypto(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
+        else
+            prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
         persist();
     }
 
@@ -715,15 +720,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return withdrawalTxFeeInBytesProperty;
     }
 
-    public double getBuyerSecurityDepositAsPercent() {
-        double value = prefPayload.getBuyerSecurityDepositAsPercent();
+    public double getBuyerSecurityDepositAsPercent(PaymentAccount paymentAccount) {
+        double value = PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount) ?
+                prefPayload.getBuyerSecurityDepositAsPercentForCrypto() : prefPayload.getBuyerSecurityDepositAsPercent();
 
-        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent()) {
-            value = Restrictions.getMinBuyerSecurityDepositAsPercent();
-            setBuyerSecurityDepositAsPercent(value);
+        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount)) {
+            value = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+            setBuyerSecurityDepositAsPercent(value, paymentAccount);
         }
 
-        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
+        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent(paymentAccount) : value;
     }
 
     //TODO remove and use isPayFeeInBtc instead
