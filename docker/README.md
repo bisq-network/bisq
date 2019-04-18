@@ -25,3 +25,14 @@ docker run -ti --rm \
   -v $HOME/.local/share/Bisq:/root/.local/share/Bisq:rw \
   bisq ./bisq-desktop
 ```
+
+## Troubleshooting
+
+#### I see "Exception in thread "main" java.lang.UnsupportedOperationException: Unable to open DISPLAY" when I start the Docker container.
+
+You may need to modify your X11 access; try running 
+```sh
+xhost +
+```
+
+and then retrying the `docker run` command.
