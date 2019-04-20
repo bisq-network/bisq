@@ -180,7 +180,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
-        buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent());
+        buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(null));
         sellerSecurityDeposit.set(Restrictions.getSellerSecurityDepositAsPercent());
 
         btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
@@ -435,6 +435,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             this.paymentAccount = paymentAccount;
 
             setTradeCurrencyFromPaymentAccount(paymentAccount);
+
+            buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(getPaymentAccount()));
 
             long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
             if (amount.get() != null)
@@ -710,7 +712,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     void setBuyerSecurityDeposit(double value) {
         this.buyerSecurityDeposit.set(value);
-        preferences.setBuyerSecurityDepositAsPercent(value);
+        preferences.setBuyerSecurityDepositAsPercent(value, getPaymentAccount());
     }
 
     protected boolean isUseMarketBasedPriceValue() {
