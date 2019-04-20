@@ -24,8 +24,11 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.payment.AccountAgeWitness;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -56,6 +59,9 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 
+import java.util.Date;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,6 +73,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
     private final TradeManager tradeManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private Trade trade;
     private ChangeListener<Number> changeListener;
     private TextArea textArea;
@@ -77,10 +84,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager) {
+    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager,
+                              AccountAgeWitnessService accountAgeWitnessService) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.tradeManager = tradeManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         type = Type.Confirmation;
     }
 
@@ -216,15 +225,31 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         if (contract != null) {
             if (buyerPaymentAccountPayload != null) {
+                String paymentDetails = buyerPaymentAccountPayload.getPaymentDetails();
+                Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
+                long age = witness.map(accountAgeWitness -> accountAgeWitnessService.getAccountAge(accountAgeWitness, new Date()))
+                        .orElse(-1L);
+                String accountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                                Res.get("peerInfoIcon.tooltip.unknownAge") :
+                        "";
                 TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                        buyerPaymentAccountPayload.getPaymentDetails()).second;
+                        paymentDetails + " / " + accountAge).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountPayload != null) {
+                String paymentDetails = sellerPaymentAccountPayload.getPaymentDetails();
+                Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
+                long age = witness.map(accountAgeWitness -> accountAgeWitnessService.getAccountAge(accountAgeWitness, new Date()))
+                        .orElse(-1L);
+                String accountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                                Res.get("peerInfoIcon.tooltip.unknownAge") :
+                        "";
                 TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                        sellerPaymentAccountPayload.getPaymentDetails()).second;
+                        paymentDetails + " / " + accountAge).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
