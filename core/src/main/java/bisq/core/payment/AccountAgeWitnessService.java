@@ -22,6 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
+import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
@@ -283,6 +284,20 @@ public class AccountAgeWitnessService {
                 Optional.empty();
         return witnessByHashAsHex
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
+                .orElse(-1L);
+    }
+
+    public long getTradingPeersAccountAge(Trade trade) {
+        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
+            // unexpected
+            return -1;
+        }
+        PaymentAccountPayload peersPaymentAccountPayload = tradingPeer.getPaymentAccountPayload();
+        PubKeyRing peersPubKeyRing = tradingPeer.getPubKeyRing();
+
+        Optional<AccountAgeWitness> witness = findWitness(peersPaymentAccountPayload, peersPubKeyRing);
+        return witness.map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
                 .orElse(-1L);
     }
 

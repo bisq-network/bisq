@@ -23,17 +23,12 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitness;
 import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
-
-import bisq.common.crypto.PubKeyRing;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -51,7 +46,6 @@ import java.security.NoSuchAlgorithmException;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -254,17 +248,7 @@ public class PeerInfoIcon extends Group {
                 return -1;
             }
 
-            TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
-            if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
-                // unexpected
-                return -1;
-            }
-            PaymentAccountPayload peersPaymentAccountPayload = tradingPeer.getPaymentAccountPayload();
-            PubKeyRing peersPubKeyRing = tradingPeer.getPubKeyRing();
-
-            Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(peersPaymentAccountPayload, peersPubKeyRing);
-            return witness.map(accountAgeWitness -> accountAgeWitnessService.getAccountAge(accountAgeWitness, new Date()))
-                    .orElse(-1L);
+            return accountAgeWitnessService.getTradingPeersAccountAge(trade);
         } else {
             checkNotNull(offer, "Offer must not be null if trade is null.");
 
