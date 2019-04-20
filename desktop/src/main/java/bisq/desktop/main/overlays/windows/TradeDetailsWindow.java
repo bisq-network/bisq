@@ -73,6 +73,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     private Trade trade;
     private ChangeListener<Number> changeListener;
     private TextArea textArea;
+    private String buyersAccountAge;
+    private String sellersAccountAge;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -223,25 +225,28 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             if (buyerPaymentAccountPayload != null) {
                 String paymentDetails = buyerPaymentAccountPayload.getPaymentDetails();
                 long age = accountAgeWitnessService.getAccountAge(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
-                String accountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                buyersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
                                 Res.get("peerInfoIcon.tooltip.unknownAge") :
                         "";
+
+                String postFix = buyersAccountAge.isEmpty() ? "" : " / " + buyersAccountAge;
                 TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                        paymentDetails + " / " + accountAge).second;
+                        paymentDetails + postFix).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountPayload != null) {
                 String paymentDetails = sellerPaymentAccountPayload.getPaymentDetails();
                 long age = accountAgeWitnessService.getAccountAge(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
-                String accountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                sellersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
                                 Res.get("peerInfoIcon.tooltip.unknownAge") :
                         "";
+                String postFix = sellersAccountAge.isEmpty() ? "" : " / " + sellersAccountAge;
                 TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                        paymentDetails + " / " + accountAge).second;
+                        paymentDetails + postFix).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
@@ -273,6 +278,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 String contractAsJson = trade.getContractAsJson();
                 contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
                 contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
+                if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+                    contractAsJson += "\nBuyersAccountAge: " + buyersAccountAge;
+                    contractAsJson += "\nSellersAccountAge: " + sellersAccountAge;
+                }
+
                 textArea.setText(contractAsJson);
                 textArea.setPrefHeight(50);
                 textArea.setEditable(false);
