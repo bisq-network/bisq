@@ -90,7 +90,10 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     @Nullable
     private String accountAge;
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences, boolean useDevPrivilegeKeys) {
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
+                                 Offer offer,
+                                 Preferences preferences,
+                                 boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
