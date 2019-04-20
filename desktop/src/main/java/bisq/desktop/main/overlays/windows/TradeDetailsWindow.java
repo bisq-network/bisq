@@ -27,7 +27,6 @@ import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitness;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Contract;
@@ -58,9 +57,6 @@ import javafx.geometry.Insets;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
-
-import java.util.Date;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -226,9 +222,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (contract != null) {
             if (buyerPaymentAccountPayload != null) {
                 String paymentDetails = buyerPaymentAccountPayload.getPaymentDetails();
-                Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
-                long age = witness.map(accountAgeWitness -> accountAgeWitnessService.getAccountAge(accountAgeWitness, new Date()))
-                        .orElse(-1L);
+                long age = accountAgeWitnessService.getAccountAge(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
                 String accountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
                                 Res.get("peerInfoIcon.tooltip.unknownAge") :
@@ -240,9 +234,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             }
             if (sellerPaymentAccountPayload != null) {
                 String paymentDetails = sellerPaymentAccountPayload.getPaymentDetails();
-                Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
-                long age = witness.map(accountAgeWitness -> accountAgeWitnessService.getAccountAge(accountAgeWitness, new Date()))
-                        .orElse(-1L);
+                long age = accountAgeWitnessService.getAccountAge(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
                 String accountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
                                 Res.get("peerInfoIcon.tooltip.unknownAge") :

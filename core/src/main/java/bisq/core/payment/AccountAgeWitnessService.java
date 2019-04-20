@@ -189,6 +189,12 @@ public class AccountAgeWitnessService {
         return now.getTime() - accountAgeWitness.getDate();
     }
 
+    public long getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        return findWitness(paymentAccountPayload, pubKeyRing)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
+    }
+
     public AccountAge getAccountAgeCategory(long accountAge) {
         if (accountAge < TimeUnit.DAYS.toMillis(30)) {
             return AccountAge.LESS_ONE_MONTH;
@@ -293,12 +299,8 @@ public class AccountAgeWitnessService {
             // unexpected
             return -1;
         }
-        PaymentAccountPayload peersPaymentAccountPayload = tradingPeer.getPaymentAccountPayload();
-        PubKeyRing peersPubKeyRing = tradingPeer.getPubKeyRing();
 
-        Optional<AccountAgeWitness> witness = findWitness(peersPaymentAccountPayload, peersPubKeyRing);
-        return witness.map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
-                .orElse(-1L);
+        return getAccountAge(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
 
