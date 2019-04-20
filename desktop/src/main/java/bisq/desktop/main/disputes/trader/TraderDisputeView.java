@@ -42,6 +42,7 @@ import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -147,6 +148,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final P2PService p2PService;
 
     private final List<Attachment> tempAttachments = new ArrayList<>();
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final boolean useDevPrivilegeKeys;
 
     private TableView<Dispute> tableView;
@@ -192,6 +194,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
                              P2PService p2PService,
+                             AccountAgeWitnessService accountAgeWitnessService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
@@ -202,6 +205,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.p2PService = p2PService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -1161,7 +1165,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getBuyerOnionAddressColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.buyerAddress")) {
             {
-                setMinWidth(170);
+                setMinWidth(190);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1187,7 +1191,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getSellerOnionAddressColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.sellerAddress")) {
             {
-                setMinWidth(170);
+                setMinWidth(190);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1215,9 +1219,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
-            if (buyerNodeAddress != null)
-                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(true, contract) + ")";
-            else
+            if (buyerNodeAddress != null) {
+                String nrOfDisputes = disputeManager.getNrOfDisputes(true, contract);
+                long accountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+                String age = formatter.formatAccountAge(accountAge);
+                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + " / " + age + ")";
+            } else
                 return Res.get("shared.na");
         } else {
             return Res.get("shared.na");
@@ -1228,9 +1235,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();
-            if (sellerNodeAddress != null)
-                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + disputeManager.getNrOfDisputes(false, contract) + ")";
-            else
+            if (sellerNodeAddress != null) {
+                String nrOfDisputes = disputeManager.getNrOfDisputes(false, contract);
+                long accountAge = accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
+                String age = formatter.formatAccountAge(accountAge);
+                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + " / " + age + ")";
+            } else
                 return Res.get("shared.na");
         } else {
             return Res.get("shared.na");
@@ -1240,7 +1250,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private TableColumn<Dispute, Dispute> getMarketColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
             {
-                setMinWidth(130);
+                setMinWidth(80);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
