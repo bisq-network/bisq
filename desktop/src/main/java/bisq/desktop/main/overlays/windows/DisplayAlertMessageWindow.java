@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
@@ -25,13 +24,10 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.alert.Alert;
 import bisq.core.locale.Res;
 
-import javafx.scene.layout.GridPane;
-
-import javafx.geometry.Insets;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow> {
@@ -50,10 +46,22 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
     public void show() {
         width = 768;
         // need to set headLine, otherwise the fields will not be created in addHeadLine
-        headLine = Res.get("displayAlertMessageWindow.headline");
         createGridPane();
+
+        checkNotNull(alert, "alertMessage must not be null");
+
+        if (alert.isUpdateInfo()) {
+            information("");
+            headLine = Res.get("displayAlertMessageWindow.update.headline");
+        } else {
+            error("");
+            headLine = Res.get("displayAlertMessageWindow.headline");
+        }
+
+        headLine = Res.get("displayAlertMessageWindow.headline");
         addHeadLine();
         addContent();
+        addButtons();
         applyStyles();
         display();
     }
@@ -69,28 +77,13 @@ public class DisplayAlertMessageWindow extends Overlay<DisplayAlertMessageWindow
 
     private void addContent() {
         checkNotNull(alert, "alertMessage must not be null");
-        FormBuilder.addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
+        addMultilineLabel(gridPane, ++rowIndex, alert.getMessage(), 10);
         if (alert.isUpdateInfo()) {
-            headLine = Res.get("displayAlertMessageWindow.update.headline");
-            headLineLabel.getStyleClass().addAll("headline-label", "highlight");
             String url = "https://bisq.network/downloads";
             HyperlinkWithIcon hyperlinkWithIcon = FormBuilder.addLabelHyperlinkWithIcon(gridPane, ++rowIndex,
                     Res.get("displayAlertMessageWindow.update.download"), url, url).second;
             hyperlinkWithIcon.setMaxWidth(550);
-        } else {
-            headLine = Res.get("displayAlertMessageWindow.headline");
-            headLineLabel.getStyleClass().addAll("headline-label", "error-text");
         }
-        closeButton = new AutoTooltipButton(Res.get("shared.close"));
-        closeButton.setOnAction(e -> {
-            hide();
-            closeHandlerOptional.ifPresent(Runnable::run);
-        });
-
-        GridPane.setRowIndex(closeButton, ++rowIndex);
-        GridPane.setColumnIndex(closeButton, 1);
-        gridPane.getChildren().add(closeButton);
-        GridPane.setMargin(closeButton, new Insets(10, 0, 0, 0));
     }
 
 
