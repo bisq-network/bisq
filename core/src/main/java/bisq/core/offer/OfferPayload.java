@@ -33,6 +33,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -378,7 +379,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     public String toString() {
         return "OfferPayload{" +
                 "\n     id='" + id + '\'' +
-                ",\n     date=" + date +
+                ",\n     date=" + new Date(date) +
                 ",\n     ownerNodeAddress=" + ownerNodeAddress +
                 ",\n     pubKeyRing=" + pubKeyRing +
                 ",\n     direction=" + direction +
