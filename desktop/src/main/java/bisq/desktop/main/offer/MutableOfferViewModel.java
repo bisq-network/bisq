@@ -84,7 +84,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> extends ActivatableWithDataModel<M> {
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
-    private final SecurityDepositValidator securityDepositValidator;
+    protected final SecurityDepositValidator securityDepositValidator;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
@@ -104,7 +104,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public final StringProperty amount = new SimpleStringProperty();
     public final StringProperty minAmount = new SimpleStringProperty();
-    final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
+    protected final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositInBTC = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositLabel = new SimpleStringProperty();
 
