@@ -17,11 +17,11 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
@@ -46,6 +46,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 
 @Slf4j
 @Data
@@ -120,8 +122,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
     String rpcPw;
     @Nullable
     String takeOfferSelectedPaymentAccountId;
-    private double buyerSecurityDepositAsPercent = Restrictions.getDefaultBuyerSecurityDepositAsPercent();
+    private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent(null);
     private int ignoreDustThreshold = 600;
+    private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -178,8 +181,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUsePriceNotifications(usePriceNotifications)
                 .setUseStandbyMode(useStandbyMode)
                 .setIsDaoFullNode(isDaoFullNode)
-                .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent).
-                        setIgnoreDustThreshold(ignoreDustThreshold);
+                .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
+                .setIgnoreDustThreshold(ignoreDustThreshold)
+                .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -262,6 +266,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
                 proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
                 proto.getBuyerSecurityDepositAsPercent(),
-                proto.getIgnoreDustThreshold());
+                proto.getIgnoreDustThreshold(),
+                proto.getBuyerSecurityDepositAsPercentForCrypto());
+
     }
 }

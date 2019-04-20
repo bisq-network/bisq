@@ -19,6 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.locale.Country;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentMethod;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -112,6 +113,11 @@ public class PaymentAccountUtil {
             return country != null ? country.code : null;
         }
         return null;
+    }
+
+    public static boolean isCryptoCurrencyAccount(PaymentAccount paymentAccount) {
+        return (paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS) ||
+                paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT));
     }
 
     // TODO no code duplication found in UI code (added for API)
