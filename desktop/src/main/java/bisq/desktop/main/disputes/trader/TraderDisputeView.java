@@ -41,6 +41,7 @@ import bisq.core.arbitration.Attachment;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.Contract;
@@ -1223,7 +1224,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 String nrOfDisputes = disputeManager.getNrOfDisputes(true, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
                 String age = formatter.formatAccountAge(accountAge);
-                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + " / " + age + ")";
+                String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
+                return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
             } else
                 return Res.get("shared.na");
         } else {
@@ -1239,7 +1241,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 String nrOfDisputes = disputeManager.getNrOfDisputes(false, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
                 String age = formatter.formatAccountAge(accountAge);
-                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + " / " + age + ")";
+                String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
+                return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
             } else
                 return Res.get("shared.na");
         } else {
