@@ -17,11 +17,11 @@
 
 package bisq.core.user;
 
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 
@@ -46,6 +46,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 
 @Slf4j
 @Data
@@ -120,7 +122,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String rpcPw;
     @Nullable
     private String takeOfferSelectedPaymentAccountId;
-    private double buyerSecurityDepositAsPercent = Restrictions.getDefaultBuyerSecurityDepositAsPercent();
+    private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent(null);
+    private int ignoreDustThreshold = 600;
+    private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
     private int blockNotifyPort;
 
 
@@ -179,6 +183,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseStandbyMode(useStandbyMode)
                 .setIsDaoFullNode(isDaoFullNode)
                 .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
+                .setIgnoreDustThreshold(ignoreDustThreshold)
+                .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((PB.TradeCurrency) e.toProtoMessage()));
@@ -262,6 +268,9 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
                 proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
                 proto.getBuyerSecurityDepositAsPercent(),
+                proto.getIgnoreDustThreshold(),
+                proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort());
+
     }
 }

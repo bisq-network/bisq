@@ -112,7 +112,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         return this;
     }
 
-    public PeerInfoWithTagEditor hostName(String hostName) {
+    public PeerInfoWithTagEditor fullAddress(String hostName) {
         this.hostName = hostName;
         return this;
     }

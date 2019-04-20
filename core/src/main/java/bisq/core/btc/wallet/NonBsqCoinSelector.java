@@ -59,4 +59,10 @@ public class NonBsqCoinSelector extends BisqDefaultCoinSelector {
         // So we consider any txOutput which is not in the state as BTC output.
         return !daoStateService.existsTxOutput(key) || daoStateService.isRejectedIssuanceOutput(key);
     }
+
+    // BTC utxo in the BSQ wallet are usually from rejected comp request so we don't expect dust attack utxos here.
+    @Override
+    protected boolean isDustAttackUtxo(TransactionOutput output) {
+        return false;
+    }
 }

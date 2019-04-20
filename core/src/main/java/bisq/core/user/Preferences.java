@@ -33,6 +33,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.setup.CoreNetworkCapabilities;
+import bisq.core.payment.PaymentAccountUtil;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
@@ -282,6 +283,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         if (referralIdFromOptions != null && !referralIdFromOptions.isEmpty())
             setReferralId(referralIdFromOptions);
 
+        if (prefPayload.getIgnoreDustThreshold() < Restrictions.getMinNonDustOutput().value) {
+            setIgnoreDustThreshold(600);
+        }
+
         // For users from old versions the 4 flags a false but we want to have it true by default
         // PhoneKeyAndToken is also null so we can use that to enable the flags
         if (prefPayload.getPhoneKeyAndToken() == null) {
@@ -430,8 +435,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setTagForPeer(String hostName, String tag) {
-        prefPayload.getPeerTagMap().put(hostName, tag);
+    public void setTagForPeer(String fullAddress, String tag) {
+        prefPayload.getPeerTagMap().put(fullAddress, tag);
         persist();
     }
 
@@ -488,10 +493,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         withdrawalTxFeeInBytesProperty.set(withdrawalTxFeeInBytes);
     }
 
-    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent) {
-        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent();
-        double min = Restrictions.getMinBuyerSecurityDepositAsPercent();
-        prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
+    public void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent, PaymentAccount paymentAccount) {
+        double max = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
+        double min = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+
+        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
+            prefPayload.setBuyerSecurityDepositAsPercentForCrypto(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
+        else
+            prefPayload.setBuyerSecurityDepositAsPercent(Math.min(max, Math.max(min, buyerSecurityDepositAsPercent)));
         persist();
     }
 
@@ -636,6 +645,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
     }
 
+    public void setIgnoreDustThreshold(int value) {
+        prefPayload.setIgnoreDustThreshold(value);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -724,15 +738,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return withdrawalTxFeeInBytesProperty;
     }
 
-    public double getBuyerSecurityDepositAsPercent() {
-        double value = prefPayload.getBuyerSecurityDepositAsPercent();
+    public double getBuyerSecurityDepositAsPercent(PaymentAccount paymentAccount) {
+        double value = PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount) ?
+                prefPayload.getBuyerSecurityDepositAsPercentForCrypto() : prefPayload.getBuyerSecurityDepositAsPercent();
 
-        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent()) {
-            value = Restrictions.getMinBuyerSecurityDepositAsPercent();
-            setBuyerSecurityDepositAsPercent(value);
+        if (value < Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount)) {
+            value = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
+            setBuyerSecurityDepositAsPercent(value, paymentAccount);
         }
 
-        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent() : value;
+        return value == 0 ? Restrictions.getDefaultBuyerSecurityDepositAsPercent(paymentAccount) : value;
     }
 
     //TODO remove and use isPayFeeInBtc instead
@@ -896,6 +911,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setUseStandbyMode(boolean useStandbyMode);
 
         void setTakeOfferSelectedPaymentAccountId(String value);
+
+        void setIgnoreDustThreshold(int value);
 
         void setBuyerSecurityDepositAsPercent(double buyerSecurityDepositAsPercent);
 

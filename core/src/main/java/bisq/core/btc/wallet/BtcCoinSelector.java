@@ -24,38 +24,38 @@ import com.google.common.collect.Sets;
 
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * We use a specialized version of the CoinSelector based on the DefaultCoinSelector implementation.
  * We lookup for spendable outputs which matches any of our addresses.
  */
+@Slf4j
 class BtcCoinSelector extends BisqDefaultCoinSelector {
-    private static final Logger log = LoggerFactory.getLogger(BtcCoinSelector.class);
-
     private final Set<Address> addresses;
+    private final long ignoreDustThreshold;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    BtcCoinSelector(Set<Address> addresses, boolean permitForeignPendingTx) {
+    private BtcCoinSelector(Set<Address> addresses, long ignoreDustThreshold, boolean permitForeignPendingTx) {
         super(permitForeignPendingTx);
         this.addresses = addresses;
+        this.ignoreDustThreshold = ignoreDustThreshold;
     }
 
-    BtcCoinSelector(Set<Address> addresses) {
-        this(addresses, true);
+    BtcCoinSelector(Set<Address> addresses, long ignoreDustThreshold) {
+        this(addresses, ignoreDustThreshold, true);
     }
 
-    BtcCoinSelector(Address address, @SuppressWarnings("SameParameterValue") boolean permitForeignPendingTx) {
-        this(Sets.newHashSet(address), permitForeignPendingTx);
+    BtcCoinSelector(Address address, long ignoreDustThreshold, @SuppressWarnings("SameParameterValue") boolean permitForeignPendingTx) {
+        this(Sets.newHashSet(address), ignoreDustThreshold, permitForeignPendingTx);
     }
 
-    BtcCoinSelector(Address address) {
-        this(Sets.newHashSet(address), true);
+    BtcCoinSelector(Address address, long ignoreDustThreshold) {
+        this(Sets.newHashSet(address), ignoreDustThreshold, true);
     }
 
     @Override
@@ -67,5 +67,13 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
             log.warn("transactionOutput.getScriptPubKey() not isSentToAddress or isPayToScriptHash");
             return false;
         }
+    }
+
+    // We ignore utxos which are considered dust attacks for spying on users wallets.
+    // The ignoreDustThreshold value is set in the preferences. If not set we use default non dust
+    // value of 546 sat.
+    @Override
+    protected boolean isDustAttackUtxo(TransactionOutput output) {
+        return output.getValue().value < ignoreDustThreshold;
     }
 }

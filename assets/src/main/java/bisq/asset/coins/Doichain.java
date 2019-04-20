@@ -30,7 +30,8 @@ public class Doichain extends Coin {
     public static class DoichainParams extends NetworkParametersAdapter {
         public DoichainParams() {
             addressHeader = 52;
-            acceptableAddressCodes = new int[]{addressHeader};
+            p2shHeader = 13;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
         }
     }
 }

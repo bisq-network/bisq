@@ -75,23 +75,27 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         long total = 0;
         long targetValue = target.value;
         for (TransactionOutput output : sortedOutputs) {
-            if (total >= targetValue) {
-                long change = total - targetValue;
-                if (change == 0 || change >= Restrictions.getMinNonDustOutput().value)
-                    break;
-            }
+            if (!isDustAttackUtxo(output)) {
+                if (total >= targetValue) {
+                    long change = total - targetValue;
+                    if (change == 0 || change >= Restrictions.getMinNonDustOutput().value)
+                        break;
+                }
 
-            if (output.getParentTransaction() != null &&
-                    isTxSpendable(output.getParentTransaction()) &&
-                    isTxOutputSpendable(output)) {
-                selected.add(output);
-                total += output.getValue().value;
+                if (output.getParentTransaction() != null &&
+                        isTxSpendable(output.getParentTransaction()) &&
+                        isTxOutputSpendable(output)) {
+                    selected.add(output);
+                    total += output.getValue().value;
+                }
             }
         }
         // Total may be lower than target here, if the given candidates were insufficient to create to requested
         // transaction.
         return new CoinSelection(Coin.valueOf(total), selected);
     }
+
+    protected abstract boolean isDustAttackUtxo(TransactionOutput output);
 
     public Coin getChange(Coin target, CoinSelection coinSelection) throws InsufficientMoneyException {
         long value = target.value;

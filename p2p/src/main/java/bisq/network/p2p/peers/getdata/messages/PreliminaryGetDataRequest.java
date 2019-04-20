@@ -42,7 +42,6 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class PreliminaryGetDataRequest extends GetDataRequest implements AnonymousMessage, SupportedCapabilitiesMessage {
-    // ordinals of enum
     @Nullable
     private final Capabilities supportedCapabilities;
 
@@ -81,9 +80,13 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     }
 
     public static PreliminaryGetDataRequest fromProto(PB.PreliminaryGetDataRequest proto, int messageVersion) {
+        Capabilities supportedCapabilities = proto.getSupportedCapabilitiesList().isEmpty() ?
+                null :
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList());
+
         return new PreliminaryGetDataRequest(proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
-                Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
+                supportedCapabilities,
                 messageVersion);
     }
 }

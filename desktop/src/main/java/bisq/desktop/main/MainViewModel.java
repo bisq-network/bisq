@@ -333,6 +333,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                 .show());
         bisqSetup.setDisplayAlertHandler(alert -> new DisplayAlertMessageWindow()
                 .alertMessage(alert)
+                .closeButtonText(Res.get("shared.close"))
                 .onClose(() -> {
                     user.setDisplayedAlert(alert);
                 })

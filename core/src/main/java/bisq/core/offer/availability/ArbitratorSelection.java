@@ -60,13 +60,13 @@ public class ArbitratorSelection {
                 .collect(Collectors.toList());
 
         Set<String> arbitrators = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .map(arbitrator -> arbitrator.getNodeAddress().getHostName())
+                .map(arbitrator -> arbitrator.getNodeAddress().getFullAddress())
                 .collect(Collectors.toSet());
 
         String result = getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
 
         Optional<Arbitrator> optionalArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .filter(e -> e.getNodeAddress().getHostName().equals(result))
+                .filter(e -> e.getNodeAddress().getFullAddress().equals(result))
                 .findAny();
         checkArgument(optionalArbitrator.isPresent(), "optionalArbitrator has to be present");
         return optionalArbitrator.get();

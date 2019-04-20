@@ -317,6 +317,8 @@ message PrivateNotificationMessage {
 message GetBlocksRequest {
     int32 from_block_height = 1;
     int32 nonce = 2;
+    NodeAddress sender_node_address = 3;
+    repeated int32 supported_capabilities = 4;
 }
 
 message GetBlocksResponse {
@@ -1351,7 +1353,9 @@ message PreferencesPayload {
     string rpc_pw = 48;
     string take_offer_selected_payment_account_id = 49;
     double buyer_security_deposit_as_percent = 50;
-    int32 block_notify_port = 51;
+    int32 ignore_dust_threshold = 51;
+    double buyer_security_deposit_as_percent_for_crypto = 52;
+    int32 block_notify_port = 53;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

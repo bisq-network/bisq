@@ -66,7 +66,7 @@ public class CreateOfferDataModelTest {
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(preferences.isUsePercentageBasedPrice()).thenReturn(true);
-        when(preferences.getBuyerSecurityDepositAsPercent()).thenReturn(0.01);
+        when(preferences.getBuyerSecurityDepositAsPercent(null)).thenReturn(0.01);
 
         model = new CreateOfferDataModel(null, btcWalletService,
                 null, preferences, user, null,

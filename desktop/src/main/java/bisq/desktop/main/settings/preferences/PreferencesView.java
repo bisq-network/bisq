@@ -30,6 +30,8 @@ import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.btc.BaseCurrencyNetwork;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.asset.AssetService;
@@ -43,10 +45,10 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -90,6 +92,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
@@ -105,8 +108,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
             useCustomFee;
     private int gridRow = 0;
-    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, referralIdInputTextField,
-            rpcUserTextField, blockNotifyPortTextField;
+    private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
+    /*referralIdInputTextField,*/
+    rpcUserTextField, blockNotifyPortTextField;
     private ToggleButton isDaoFullNodeToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
@@ -114,7 +118,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Boolean> transactionFeeFocusedListener;
     private final Preferences preferences;
     private final FeeService feeService;
-    private final ReferralIdService referralIdService;
+    //private final ReferralIdService referralIdService;
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
@@ -135,8 +139,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<CryptoCurrency> allCryptoCurrencies;
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
-    private ChangeListener<String> deviationListener, ignoreTradersListListener, referralIdListener, rpcUserListener,
-            rpcPwListener, blockNotifyPortListener;
+    private ChangeListener<String> deviationListener, ignoreTradersListListener, ignoreDustThresholdListener,
+    /*referralIdListener,*/ rpcUserListener, rpcPwListener, blockNotifyPortListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
@@ -151,7 +155,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     public PreferencesView(PreferencesViewModel model,
                            Preferences preferences,
                            FeeService feeService,
-                           ReferralIdService referralIdService,
                            AssetService assetService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
@@ -163,7 +166,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         super(model);
         this.preferences = preferences;
         this.feeService = feeService;
-        this.referralIdService = referralIdService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
@@ -338,10 +340,31 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 preferences.setIgnoreTradersList(Arrays.asList(StringUtils.deleteWhitespace(newValue).split(",")));
 
         // referralId
-        referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
+       /* referralIdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.refererId"));
         referralIdListener = (observable, oldValue, newValue) -> {
             if (!newValue.equals(oldValue))
                 referralIdService.setReferralId(newValue);
+        };*/
+
+
+        // ignoreDustThreshold
+        ignoreDustThresholdInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.ignoreDustThreshold"));
+        IntegerValidator validator = new IntegerValidator();
+        validator.setMinValue((int) Restrictions.getMinNonDustOutput().value);
+        validator.setMaxValue(2000);
+        ignoreDustThresholdInputTextField.setValidator(validator);
+        ignoreDustThresholdListener = (observable, oldValue, newValue) -> {
+            try {
+                int value = Integer.parseInt(newValue);
+                checkArgument(value >= Restrictions.getMinNonDustOutput().value,
+                        "Input must be at least " + Restrictions.getMinNonDustOutput().value);
+                checkArgument(value <= 2000,
+                        "Input must not be higher than 2000 Satoshis");
+                if (!newValue.equals(oldValue)) {
+                    preferences.setIgnoreDustThreshold(value);
+                }
+            } catch (Throwable ignore) {
+            }
         };
 
         // AvoidStandbyModeService
@@ -642,8 +665,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         transactionFeeInputTextField.setText(String.valueOf(getTxFeeForWithdrawalPerByte()));
         ignoreTradersListInputTextField.setText(String.join(", ", preferences.getIgnoreTradersList()));
-        referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
-        referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));
+        /* referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
+        referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));*/
+        ignoreDustThresholdInputTextField.setText(String.valueOf(preferences.getIgnoreDustThreshold()));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
         userLanguageComboBox.setConverter(new StringConverter<>() {
@@ -728,7 +752,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         transactionFeeInputTextField.focusedProperty().addListener(transactionFeeFocusedListener);
         ignoreTradersListInputTextField.textProperty().addListener(ignoreTradersListListener);
         useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
-        referralIdInputTextField.textProperty().addListener(referralIdListener);
+        //referralIdInputTextField.textProperty().addListener(referralIdListener);
+        ignoreDustThresholdInputTextField.textProperty().addListener(ignoreDustThresholdListener);
     }
 
     private Coin getTxFeeForWithdrawalPerByte() {
@@ -906,7 +931,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             feeService.feeUpdateCounterProperty().removeListener(transactionFeeChangeListener);
         ignoreTradersListInputTextField.textProperty().removeListener(ignoreTradersListListener);
         useCustomFee.selectedProperty().removeListener(useCustomFeeCheckboxListener);
-        referralIdInputTextField.textProperty().removeListener(referralIdListener);
+        //referralIdInputTextField.textProperty().removeListener(referralIdListener);
+        ignoreDustThresholdInputTextField.textProperty().removeListener(ignoreDustThresholdListener);
     }
 
     private void deactivateDisplayCurrencies() {

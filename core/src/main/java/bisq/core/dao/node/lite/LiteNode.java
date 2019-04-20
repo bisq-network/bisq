@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.lite;
 
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.node.full.RawBlock;
@@ -31,6 +32,7 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
 
+import bisq.common.Timer;
 import bisq.common.UserThread;
 
 import com.google.inject.Inject;
@@ -48,7 +50,11 @@ import org.jetbrains.annotations.Nullable;
  */
 @Slf4j
 public class LiteNode extends BsqNode {
+    private static final int CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC = 10;
+
     private final LiteNodeNetworkService liteNodeNetworkService;
+    private final BsqWalletService bsqWalletService;
+    private Timer checkForBlockReceivedTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,10 +68,12 @@ public class LiteNode extends BsqNode {
                     DaoStateSnapshotService daoStateSnapshotService,
                     P2PService p2PService,
                     LiteNodeNetworkService liteNodeNetworkService,
+                    BsqWalletService bsqWalletService,
                     ExportJsonFilesService exportJsonFilesService) {
         super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
 
         this.liteNodeNetworkService = liteNodeNetworkService;
+        this.bsqWalletService = bsqWalletService;
     }
 
 
@@ -78,6 +86,32 @@ public class LiteNode extends BsqNode {
         super.onInitialized();
 
         liteNodeNetworkService.start();
+
+        bsqWalletService.addNewBestBlockListener(block -> {
+            int height = block.getHeight();
+            log.info("New block at height {} from bsqWalletService", height);
+
+            // Check if we are done with parsing
+            if (!daoStateService.isParseBlockChainComplete())
+                return;
+
+            if (checkForBlockReceivedTimer != null) {
+                // In case we received a new block before out timer gets called we stop the old timer
+                checkForBlockReceivedTimer.stop();
+            }
+
+            // We expect to receive the new BSQ block from the network shortly after BitcoinJ has been aware of it.
+            // If we don't receive it we request it manually from seed nodes
+            checkForBlockReceivedTimer = UserThread.runAfter(() -> {
+                int chainHeight = daoStateService.getChainHeight();
+                if (chainHeight < height) {
+                    log.warn("We did not receive a block from the network {} seconds after we saw the new block in BicoinJ. " +
+                                    "We request from our seed nodes missing blocks from block height {}.",
+                            CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC, chainHeight + 1);
+                    liteNodeNetworkService.requestBlocks(chainHeight + 1);
+                }
+            }, CHECK_FOR_BLOCK_RECEIVED_DELAY_SEC);
+        });
     }
 
     @Override
