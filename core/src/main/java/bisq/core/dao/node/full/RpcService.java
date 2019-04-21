@@ -73,7 +73,7 @@ public class RpcService {
     private final String rpcUser;
     private final String rpcPassword;
     private final String rpcPort;
-    private final String rpcBlockPort;
+    private final int blockNotifyPort;
 
     private BtcdClient client;
     private BtcdDaemon daemon;
@@ -90,10 +90,10 @@ public class RpcService {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public RpcService(Preferences preferences,
-                      @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
+                      @Named(DaoOptionKeys.RPC_PORT) String rpcPort) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
+        this.blockNotifyPort = preferences.getBlockNotifyPort();
 
         // mainnet is 8332, testnet 18332, regtest 18443
         boolean isPortSet = rpcPort != null && !rpcPort.isEmpty();
@@ -104,7 +104,6 @@ public class RpcService {
                 isMainnet || isDaoBetaNet ? "8332" :
                         isTestnet ? "18332" :
                                         "18443"; // regtest
-        this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
         log.info("Version of btcd-cli4j library: {}", BtcdCli4jVersion.VERSION);
     }
@@ -127,7 +126,7 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.user", rpcUser);
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
                 nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
-                nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+                nodeConfig.setProperty("node.bitcoind.notification.block.port", String.valueOf(blockNotifyPort));
                 nodeConfig.setProperty("node.bitcoind.notification.alert.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
                 nodeConfig.setProperty("node.bitcoind.notification.wallet.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
 

@@ -1355,6 +1355,7 @@ message PreferencesPayload {
     double buyer_security_deposit_as_percent = 50;
     int32 ignore_dust_threshold = 51;
     double buyer_security_deposit_as_percent_for_crypto = 52;
+    int32 block_notify_port = 53;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
