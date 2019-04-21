@@ -35,6 +35,8 @@ import org.bitcoinj.core.Utils;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.google.common.base.Charsets;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -145,13 +147,13 @@ public class PrivateNotificationManager {
     }
 
     private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotificationPayload privateNotification) {
-        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes());
+        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(Charsets.UTF_8));
         String signatureAsBase64 = privateNotificationSigningKey.signMessage(privateNotificationMessageAsHex);
         privateNotification.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 
     private boolean verifySignature(PrivateNotificationPayload privateNotification) {
-        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes());
+        String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(Charsets.UTF_8));
         try {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(privateNotificationMessageAsHex, privateNotification.getSignatureAsBase64());
             return true;

@@ -29,6 +29,8 @@ import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import com.google.common.base.Charsets;
+
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -121,7 +123,7 @@ public class PeerInfoIcon extends Group {
         int intValue = 0;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] bytes = md.digest(fullAddress.getBytes());
+            byte[] bytes = md.digest(fullAddress.getBytes(Charsets.UTF_8));
             intValue = Math.abs(((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16)
                     | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF));
 

@@ -23,6 +23,8 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.Hash;
 
+import com.google.common.base.Charsets;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +45,7 @@ public class MediatorSelectionRule {
         }
         checkArgument(candidates.size() > 0, "candidates.size() <= 0");
 
-        int index = Math.abs(Arrays.hashCode(Hash.getSha256Hash(offer.getId().getBytes()))) % candidates.size();
+        int index = Math.abs(Arrays.hashCode(Hash.getSha256Hash(offer.getId().getBytes(Charsets.UTF_8)))) % candidates.size();
         NodeAddress selectedMediator = candidates.get(index);
         log.debug("selectedMediator " + selectedMediator);
         return selectedMediator;
