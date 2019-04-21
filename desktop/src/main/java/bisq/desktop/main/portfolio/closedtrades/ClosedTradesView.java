@@ -32,7 +32,6 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
@@ -48,8 +47,6 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import com.google.inject.name.Named;
 
 import javax.inject.Inject;
-
-import com.google.common.base.Preconditions;
 
 import javafx.fxml.FXML;
 
@@ -335,14 +332,12 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     Trade trade = (Trade) newItem.getTradable();
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-                                    final Offer offer = trade.getOffer();
-                                    Preconditions.checkNotNull(offer, "Offer must not be null");
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
-                                            offer,
+                                            trade,
                                             preferences,
                                             model.accountAgeWitnessService,
                                             formatter,
