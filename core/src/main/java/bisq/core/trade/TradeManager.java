@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
@@ -642,12 +643,31 @@ public class TradeManager implements PersistedDataHost {
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
                 if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
                     Date now = new Date();
-                    if (now.after(maxTradePeriodDate))
+                    if (now.after(maxTradePeriodDate)) {
                         trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    else if (now.after(halfTradePeriodDate))
+                    } else if (now.after(halfTradePeriodDate)) {
                         trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
+                    }
                 }
             }
         });
+    }
+
+    public boolean isFiatBuyerWithImmatureAccount(Trade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null)
+            return false;
+
+        Contract contract = trade.getContract();
+        if (contract == null)
+            return false;
+
+        boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
+        if (!isFiatCurrency)
+            return false;
+
+        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        long requiredAccountAge = offer.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE);
+        return buyersAccountAge < requiredAccountAge;
     }
 }
