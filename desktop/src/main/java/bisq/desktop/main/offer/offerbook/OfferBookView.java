@@ -50,6 +50,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -102,6 +103,7 @@ import javafx.collections.ListChangeListener;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -115,6 +117,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final OfferDetailsWindow offerDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final boolean useDevPrivilegeKeys;
 
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -141,6 +144,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                   OfferDetailsWindow offerDetailsWindow,
                   BSFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
+                  AccountAgeWitnessService accountAgeWitnessService,
                   @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
 
@@ -148,6 +152,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         this.offerDetailsWindow = offerDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -479,19 +484,38 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        if (model.isBootstrapped()) {
-            if (offer.getDirection() == OfferPayload.Direction.SELL &&
-                    offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
-                new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
-                        .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
-                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
-                        .show();
-            } else {
-                offerActionHandler.onTakeOffer(offer);
-            }
-        } else {
+        if (!model.isBootstrapped()) {
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            return;
         }
+
+        if (offer.getDirection() == OfferPayload.Direction.SELL &&
+                offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
+            new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
+                    .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
+                    .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                    .show();
+            return;
+        }
+
+        if (offer.getDirection() == OfferPayload.Direction.BUY &&
+                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+            long minAccountAgeFactor = offer.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE);
+            long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+            if (makersAccountAge < minAccountAgeFactor) {
+                new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",
+                        formatter.formatAccountAge(makersAccountAge),
+                        formatter.formatAccountAge(minAccountAgeFactor),
+                        formatter.formatAccountAge(minAccountAgeFactor)))
+                        .actionButtonText(Res.get("offerbook.warning.buyerHasImmatureAccount.confirm"))
+                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+                return;
+            }
+        }
+
+        offerActionHandler.onTakeOffer(offer);
     }
 
     private void onRemoveOpenOffer(Offer offer) {

@@ -21,6 +21,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.portfolio.pendingtrades.PendingTradesListItem;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.util.Layout;
@@ -391,12 +392,14 @@ public class SellerStep3View extends TradeStepView {
             confirmButton.setVisible(false);
             confirmButton.setManaged(false);
             busyAnimation.stop();
-            String id = "delayedPayoutInfo_" + model.dataModel.getSelectedItem().getTrade().getId();
+            PendingTradesListItem selectedItem = model.dataModel.getSelectedItem();
+            String id = "delayedPayoutInfo_" + (selectedItem != null ? selectedItem.getTrade().getId() : "");
             if (preferences.showAgain(id)) {
                 new Popup().information(Res.get("portfolio.pending.step3_seller.popup.delayedPayoutInfo",
                         model.dataModel.getFormattedBuyersAccountAge(),
                         model.dataModel.getFormattedDelayedPayoutDate()))
                         .dontShowAgainId(id)
+                        .width(900)
                         .show();
             }
             statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.delayedPayoutInfo",
