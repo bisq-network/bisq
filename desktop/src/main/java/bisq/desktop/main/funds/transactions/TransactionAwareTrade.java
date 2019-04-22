@@ -23,6 +23,7 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javafx.collections.ObservableList;
@@ -40,7 +41,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     @Override
     public boolean isRelatedToTransaction(Transaction transaction) {
-        String txId = transaction.getHashAsString();
+        String txId = transaction.getTxId().toString();
 
         boolean isTakerOfferFeeTx = txId.equals(delegate.getTakerFeeTxId());
         boolean isOfferFeeTx = isOfferFeeTx(txId);
@@ -53,14 +54,16 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     private boolean isPayoutTx(String txId) {
         return Optional.ofNullable(delegate.getPayoutTx())
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
 
     private boolean isDepositTx(String txId) {
         return Optional.ofNullable(delegate.getDepositTx())
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }

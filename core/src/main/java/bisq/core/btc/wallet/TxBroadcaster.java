@@ -87,7 +87,7 @@ public class TxBroadcaster {
 
     public static void broadcastTx(Wallet wallet, PeerGroup peerGroup, Transaction tx, Callback callback, int delayInSec) {
         Timer timeoutTimer;
-        final String txId = tx.getHashAsString();
+        final String txId = tx.getTxId().toString();
         if (!broadcastTimerMap.containsKey(txId)) {
             timeoutTimer = UserThread.runAfter(() -> {
                 log.warn("Broadcast of tx {} not completed after {} sec.", txId, delayInSec);

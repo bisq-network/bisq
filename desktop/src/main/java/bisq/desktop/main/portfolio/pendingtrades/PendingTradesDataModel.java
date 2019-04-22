@@ -382,7 +382,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             selectedTrade = item.getTrade();
             tradeStateChangeListener = (observable, oldValue, newValue) -> {
                 if (selectedTrade.getDepositTx() != null) {
-                    txId.set(selectedTrade.getDepositTx().getHashAsString());
+                    txId.set(selectedTrade.getDepositTx().getTxId().toString());
                     notificationCenter.setSelectedTradeId(selectedTrade.getId());
                     selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
                 }
@@ -390,7 +390,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             selectedTrade.stateProperty().addListener(tradeStateChangeListener);
             isMaker = tradeManager.isMyOffer(selectedTrade.getOffer());
             if (selectedTrade.getDepositTx() != null)
-                txId.set(selectedTrade.getDepositTx().getHashAsString());
+                txId.set(selectedTrade.getDepositTx().getTxId().toString());
             else
                 txId.set("");
             notificationCenter.setSelectedTradeId(selectedTrade.getId());
@@ -453,7 +453,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         String payoutTxHashAsString = null;
         if (depositTx != null) {
             depositTxSerialized = depositTx.bitcoinSerialize();
-            depositTxHashAsString = depositTx.getHashAsString();
+            depositTxHashAsString = depositTx.getTxId().toString();
         } else {
             log.warn("depositTx is null");
         }
@@ -462,7 +462,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Transaction payoutTx = trade.getPayoutTx();
             if (payoutTx != null) {
                 payoutTxSerialized = payoutTx.bitcoinSerialize();
-                payoutTxHashAsString = payoutTx.getHashAsString();
+                payoutTxHashAsString = payoutTx.getTxId().toString();
             } else {
                 log.debug("payoutTx is null at doOpenDispute");
             }

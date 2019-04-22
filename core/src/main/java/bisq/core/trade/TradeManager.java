@@ -493,7 +493,7 @@ public class TradeManager implements PersistedDataHost {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
-                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     resultHandler.handleResult();

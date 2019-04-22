@@ -52,6 +52,7 @@ import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.signers.TransactionSigner;
 import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.DecryptingKeyBag;
@@ -360,7 +361,7 @@ public abstract class WalletService {
         if (wallet != null) {
             Set<Transaction> transactions = wallet.getTransactions(false);
             for (Transaction tx : transactions) {
-                if (tx.getHashAsString().equals(txId))
+                if (tx.getTxId().toString().equals(txId))
                     return tx.getConfidence();
             }
         }
@@ -762,9 +763,9 @@ public abstract class WalletService {
             }
             txConfidenceListeners.stream()
                     .filter(txConfidenceListener -> tx != null &&
-                            tx.getHashAsString() != null &&
+                            tx.getTxId().toString() != null &&
                             txConfidenceListener != null &&
-                            tx.getHashAsString().equals(txConfidenceListener.getTxID()))
+                            tx.getTxId().toString().equals(txConfidenceListener.getTxID()))
                     .forEach(txConfidenceListener ->
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }

@@ -96,7 +96,7 @@ public class CreateTakerFeeTx extends TradeTask {
             // We did not broadcast and commit the tx yet to avoid issues with lost trade fee in case the
             // take offer attempt failed.
 
-            trade.setTakerFeeTxId(transaction.getHashAsString());
+            trade.setTakerFeeTxId(transaction.getTxId().toString());
             processModel.setTakeOfferFeeTx(transaction);
             walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.OFFER_FUNDING);
             complete();

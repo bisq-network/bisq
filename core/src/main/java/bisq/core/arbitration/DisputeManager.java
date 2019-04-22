@@ -953,7 +953,7 @@ public class DisputeManager implements PersistedDataHost {
                             public void onSuccess(Transaction transaction) {
                                 // after successful publish we send peer the tx
 
-                                dispute.setDisputePayoutTxId(transaction.getHashAsString());
+                                dispute.setDisputePayoutTxId(transaction.getTxId().toString());
                                 sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
 
                                 // set state after payout as we call swapTradeEntryToAvailableEntry
@@ -980,7 +980,7 @@ public class DisputeManager implements PersistedDataHost {
                 } else {
                     log.warn("We got already a payout tx. That might be the case if the other peer did not get the " +
                             "payout tx and opened a dispute. TradeId = " + tradeId);
-                    dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
+                    dispute.setDisputePayoutTxId(payoutTx.getTxId().toString());
                     sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
 
                     success = true;
@@ -1054,7 +1054,7 @@ public class DisputeManager implements PersistedDataHost {
 
         cleanupRetryMap(uid);
         Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction());
-        dispute.setDisputePayoutTxId(walletTx.getHashAsString());
+        dispute.setDisputePayoutTxId(walletTx.getTxId().toString());
         BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute

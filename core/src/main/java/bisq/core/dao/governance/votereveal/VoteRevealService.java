@@ -244,7 +244,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
             // We don't want to wait for a successful broadcast to avoid issues if the broadcast succeeds delayed or at
             // next startup but the tx was actually broadcasted.
-            myVoteListService.applyRevealTxId(myVote, voteRevealTx.getHashAsString());
+            myVoteListService.applyRevealTxId(myVote, voteRevealTx.getTxId().toString());
         } catch (IOException | WalletException | TransactionVerificationException
                 | InsufficientMoneyException e) {
             voteRevealExceptions.add(new VoteRevealException("Exception at calling revealVote.",
@@ -259,7 +259,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             @Override
             public void onSuccess(Transaction transaction) {
                 log.info("voteRevealTx successfully broadcasted.");
-                voteRevealTxPublishedListeners.forEach(l -> l.onVoteRevealTxPublished(transaction.getHashAsString()));
+                voteRevealTxPublishedListeners.forEach(l -> l.onVoteRevealTxPublished(transaction.getTxId().toString()));
             }
 
             @Override

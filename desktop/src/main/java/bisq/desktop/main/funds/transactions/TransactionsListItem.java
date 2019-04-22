@@ -91,7 +91,7 @@ class TransactionsListItem {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
 
-        txId = transaction.getHashAsString();
+        txId = transaction.getTxId().toString();
 
         Coin valueSentToMe = btcWalletService.getValueSentToMeForTransaction(transaction);
         Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
@@ -210,10 +210,10 @@ class TransactionsListItem {
                     if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
                         details = Res.get("funds.tx.createOfferFee", id);
                     } else if (trade.getDepositTx() != null &&
-                            trade.getDepositTx().getHashAsString().equals(txId)) {
+                            trade.getDepositTx().getTxId().toString().equals(txId)) {
                         details = Res.get("funds.tx.multiSigDeposit", id);
                     } else if (trade.getPayoutTx() != null &&
-                            trade.getPayoutTx().getHashAsString().equals(txId)) {
+                            trade.getPayoutTx().getTxId().toString().equals(txId)) {
                         details = Res.get("funds.tx.multiSigPayout", id);
                     } else if (trade.getDisputeState() != Trade.DisputeState.NO_DISPUTE) {
                         if (valueSentToMe.isPositive()) {

@@ -157,7 +157,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             public void onSuccess(@Nullable Transaction result) {
                 log.error("onSuccess");
                 UserThread.execute(() -> {
-                    String txId = result != null ? result.getHashAsString() : "null";
+                    String txId = result != null ? result.getTxId().toString() : "null";
                     new Popup<>()
                             .information("Transaction successful published. Transaction ID: " + txId)
                             .show();

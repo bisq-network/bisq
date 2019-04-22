@@ -129,7 +129,7 @@ public class TradeStatisticsManager {
                     trade.getTradePrice(),
                     trade.getTradeAmount(),
                     trade.getDate(),
-                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
+                    (trade.getDepositTx() != null ? trade.getDepositTx().getTxId().toString() : ""),
                     extraDataMap);
             addToMap(tradeStatistics, true);
 
