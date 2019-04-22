@@ -28,7 +28,7 @@ configure(subprojects) {
 
     ext { // in alphabetical order
         bcVersion = '1.56'
-        bitcoinjVersion = 'a88d36d'
+        bitcoinjVersion = '86c7094'
         btcdCli4jVersion = '975ff5d4'
         codecVersion = '1.13'
         easybindVersion = '1.0.3'
@@ -211,7 +211,7 @@ configure(project(':proto')) {
 
 configure(project(':assets')) {
     dependencies {
-        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
@@ -241,7 +241,7 @@ configure(project(':common')) {
         compile("com.google.inject:guice:$guiceVersion") {
             exclude(module: 'guava')
         }
-        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
