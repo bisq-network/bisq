@@ -761,7 +761,7 @@ public abstract class WalletService {
                                                  Wallet wallet,
                                                  TransactionConfidence.Source source) throws VerificationException {
         Transaction tx = new Transaction(wallet.getParams(), serializedTransaction);
-        Transaction walletTransaction = wallet.getTransaction(tx.getHash());
+        Transaction walletTransaction = wallet.getTransaction(tx.getTxId());
 
         if (walletTransaction == null) {
             // We need to recreate the transaction otherwise we get a null pointer...
