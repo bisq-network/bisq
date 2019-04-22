@@ -33,7 +33,7 @@ configure(subprojects) {
         jmockitVersion = '1.42'
         joptVersion = '5.0.3'
         langVersion = '3.4'
-        bitcoinjVersion = 'a88d36d'
+        bitcoinjVersion = '40c9898'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '2.21.0'
@@ -132,7 +132,7 @@ configure([project(':desktop'),
 
 configure(project(':assets')) {
     dependencies {
-        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
@@ -175,7 +175,7 @@ configure(project(':common')) {
         compile('com.google.inject:guice:4.1.0') {
             exclude(module: 'guava')
         }
-        compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
+        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
