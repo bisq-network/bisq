@@ -45,6 +45,7 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.ScriptChunk;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.RiskAnalysis;
 import org.bitcoinj.wallet.Wallet;
 
@@ -198,7 +199,7 @@ public class BisqRiskAnalysis implements RiskAnalysis {
      */
     public static RuleViolation isOutputStandard(TransactionOutput output) {
         // OP_RETURN has usually output value zero, so we exclude that from the MIN_ANALYSIS_NONDUST_OUTPUT check
-        if (!output.getScriptPubKey().isOpReturn()
+        if (!ScriptPattern.isOpReturn(output.getScriptPubKey())
                 && output.getValue().compareTo(MIN_ANALYSIS_NONDUST_OUTPUT) < 0)
             return RuleViolation.DUST;
         for (ScriptChunk chunk : output.getScriptPubKey().getChunks()) {

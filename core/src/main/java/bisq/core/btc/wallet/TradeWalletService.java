@@ -49,6 +49,7 @@ import org.bitcoinj.crypto.DeterministicKey;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
+import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
@@ -1169,9 +1170,9 @@ public class TradeWalletService {
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
-        if (scriptPubKey.isSentToRawPubKey()) {
+        if (ScriptPattern.isP2PK(scriptPubKey)) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig));
-        } else if (scriptPubKey.isSentToAddress()) {
+        } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
             input.setScriptSig(ScriptBuilder.createInputScript(txSig, sigKey));
         } else {
             throw new SigningException("Don't know how to sign for this kind of scriptPubKey: " + scriptPubKey);
