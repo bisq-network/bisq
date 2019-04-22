@@ -405,7 +405,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                     if (isConfirmed) {
                         // We lookup if we have a BSQ tx matching the parent tx
                         // We cannot make that findTx call outside of the loop as the parent tx can change at each iteration
-                        Optional<Tx> txOptional = daoStateService.getTx(parentTransaction.getHash().toString());
+                        Optional<Tx> txOptional = daoStateService.getTx(parentTransaction.getTxId().toString());
                         if (txOptional.isPresent()) {
                             TxOutput txOutput = txOptional.get().getTxOutputs().get(connectedOutput.getIndex());
                             if (daoStateService.isBsqTxOutputType(txOutput)) {
