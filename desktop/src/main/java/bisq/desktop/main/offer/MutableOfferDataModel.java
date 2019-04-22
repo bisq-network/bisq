@@ -828,4 +828,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     public boolean isHalCashAccount() {
         return paymentAccount instanceof HalCashAccount;
     }
+
+    long getMyAccountAge() {
+        return accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload());
+    }
+
+    long getRequiredFiatBuyersAccountAge() {
+        return paymentAccount.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE);
+    }
 }

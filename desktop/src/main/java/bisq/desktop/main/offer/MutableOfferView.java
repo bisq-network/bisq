@@ -468,6 +468,26 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 .toByteArray();
         Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
         qrCodeImageView.setImage(qrImage);
+
+        maybeShowImmatureAccoutAgeWarning();
+    }
+
+    private void maybeShowImmatureAccoutAgeWarning() {
+        String key = "immatureBuyerAccountAgeCreateOffer";
+        if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get()) &&
+                model.getDataModel().getDirection() == OfferPayload.Direction.BUY &&
+                preferences.showAgain(key) &&
+                !DevEnv.isDevMode()) {
+            long myAccountAge = model.getDataModel().getMyAccountAge();
+            long requiredAccountAge = model.getDataModel().getRequiredFiatBuyersAccountAge();
+            String requiredAccountAgeAsString = btcFormatter.formatAccountAge(requiredAccountAge);
+            if (myAccountAge < requiredAccountAge) {
+                new Popup().information(Res.get("popup.immatureBuyerAccountAge.createOffer.msg",
+                        btcFormatter.formatAccountAge(myAccountAge), requiredAccountAgeAsString, requiredAccountAgeAsString))
+                        .dontShowAgainId(key)
+                        .show();
+            }
+        }
     }
 
     private void updateOfferElementsStyle() {
