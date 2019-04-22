@@ -354,7 +354,7 @@ configure(project(':monitor')) {
 
 
 configure(project(':pricenode')) {
-    apply plugin: "org.springframework.boot"
+    mainClassName = 'bisq.price.Main'
 
     version = file("src/main/resources/version.txt").text.trim()
 
@@ -368,7 +368,7 @@ configure(project(':pricenode')) {
         compile("org.knowm.xchange:xchange-coinmarketcap:4.3.3")
         compile("org.knowm.xchange:xchange-poloniex:4.3.3")
         compile("org.springframework.boot:spring-boot-starter-web:1.5.10.RELEASE")
-        compile("org.springframework.boot:spring-boot-starter-actuator")
+        compile("org.springframework.boot:spring-boot-starter-actuator:1.5.10.RELEASE")
     }
 
     task stage {
