@@ -469,10 +469,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
         qrCodeImageView.setImage(qrImage);
 
-        maybeShowImmatureAccoutAgeWarning();
-    }
-
-    private void maybeShowImmatureAccoutAgeWarning() {
         String key = "immatureBuyerAccountAgeCreateOffer";
         if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get()) &&
                 model.getDataModel().getDirection() == OfferPayload.Direction.BUY &&
