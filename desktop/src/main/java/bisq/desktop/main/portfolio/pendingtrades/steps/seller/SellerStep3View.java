@@ -43,8 +43,6 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.DontShowAgainLookup;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple4;
 
@@ -71,7 +69,8 @@ public class SellerStep3View extends TradeStepView {
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
-    private Timer timeoutTimer;
+    private boolean delayedPayoutInfoDisplayed;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -85,30 +84,29 @@ public class SellerStep3View extends TradeStepView {
     public void activate() {
         super.activate();
 
-        if (timeoutTimer != null)
-            timeoutTimer.stop();
-
         tradeStatePropertySubscription = EasyBind.subscribe(trade.stateProperty(), state -> {
-            if (timeoutTimer != null)
-                timeoutTimer.stop();
-
             if (trade.isFiatSent() && !trade.isFiatReceived()) {
                 showPopup();
             } else if (trade.isFiatReceived()) {
                 if (!trade.hasFailed()) {
                     switch (state) {
                         case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
-                        case SELLER_PUBLISHED_PAYOUT_TX:
-                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
-                            busyAnimation.play();
-                            confirmButton.setDisable(true);
-                            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+                            if (model.dataModel.isReleaseBtcPermitted()) {
+                                statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.confirmRelease",
+                                        model.dataModel.getFormattedBuyersAccountAge()));
+                                confirmButton.setText(Res.get("portfolio.pending.step3_seller.button.release").toUpperCase());
 
-                            timeoutTimer = UserThread.runAfter(() -> {
                                 busyAnimation.stop();
                                 confirmButton.setDisable(false);
-                                statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                            }, 10);
+                            } else {
+                                handleDelayedPayout();
+                            }
+                            break;
+                        case SELLER_PUBLISHED_PAYOUT_TX:
+                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                            if (!model.dataModel.isReleaseBtcPermitted()) {
+                                handleDelayedPayout();
+                            }
                             break;
                         case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
                             busyAnimation.stop();
@@ -119,7 +117,7 @@ public class SellerStep3View extends TradeStepView {
                             statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
                             break;
                         case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
-                            // We get a popup and the trade closed, so we dont need to show anything here
+                            // We get a popup and the trade closed, so we don't need to show anything here
                             busyAnimation.stop();
                             confirmButton.setDisable(false);
                             statusLabel.setText("");
@@ -150,9 +148,6 @@ public class SellerStep3View extends TradeStepView {
         }
 
         busyAnimation.stop();
-
-        if (timeoutTimer != null)
-            timeoutTimer.stop();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +292,9 @@ public class SellerStep3View extends TradeStepView {
                         message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
                     }
                 }
-                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
+                if (model.dataModel.isReleaseBtcPermitted()) {
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
+                }
                 new Popup<>()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
@@ -384,7 +381,27 @@ public class SellerStep3View extends TradeStepView {
             confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
-        });
+        }, this::handleDelayedPayout);
+    }
+
+    private void handleDelayedPayout() {
+        if (!delayedPayoutInfoDisplayed) {
+            delayedPayoutInfoDisplayed = true;
+            confirmButton.setDisable(true);
+            confirmButton.setVisible(false);
+            confirmButton.setManaged(false);
+            busyAnimation.stop();
+            String id = "delayedPayoutInfo_" + model.dataModel.getSelectedItem().getTrade().getId();
+            if (preferences.showAgain(id)) {
+                new Popup().information(Res.get("portfolio.pending.step3_seller.popup.delayedPayoutInfo",
+                        model.dataModel.getFormattedBuyersAccountAge(),
+                        model.dataModel.getFormattedDelayedPayoutDate()))
+                        .dontShowAgainId(id)
+                        .show();
+            }
+            statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.delayedPayoutInfo",
+                    model.dataModel.getFormattedDelayedPayoutDate()));
+        }
     }
 
     private Optional<String> getOptionalHolderName() {

@@ -159,6 +159,7 @@ public abstract class PaymentMethodForm {
         long hours = paymentAccount.getMaxTradePeriod() / 3600_000;
 
         final TradeCurrency tradeCurrency;
+        boolean isAltcoin = paymentAccount instanceof AssetAccount;
         if (paymentAccount.getSingleTradeCurrency() != null)
             tradeCurrency = paymentAccount.getSingleTradeCurrency();
         else if (paymentAccount.getSelectedTradeCurrency() != null)
@@ -166,29 +167,31 @@ public abstract class PaymentMethodForm {
         else if (!paymentAccount.getTradeCurrencies().isEmpty())
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
-            tradeCurrency = paymentAccount instanceof AssetAccount ?
+            tradeCurrency = isAltcoin ?
                     CurrencyUtil.getAllSortedCryptoCurrencies().get(0) :
                     CurrencyUtil.getDefaultTradeCurrency();
 
+        boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
+        String tradeLimit = formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode())));
+        String limitationsText = Res.get("payment.maxPeriodAndTradeLimits", getTimeText(hours), tradeLimit);
+        String accountAgeText = "";
+        if (!isAltcoin) {
+            String buyersMinAccountAge = formatter.formatAccountAge(paymentAccount.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE));
+            long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
+            accountAgeText = Res.get("payment.accountAge", formatter.formatAccountAge(accountAge), buyersMinAccountAge);
+        }
 
-        final boolean isAddAccountScreen = paymentAccount.getAccountName() == null;
-        final long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
-
-        final String limitationsText = paymentAccount instanceof AssetAccount ?
-                Res.get("payment.maxPeriodAndLimitCrypto",
-                        getTimeText(hours),
-                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))))
-                :
-                Res.get("payment.maxPeriodAndLimit",
-                        getTimeText(hours),
-                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
-                        formatter.formatAccountAge(accountAge));
-
-        if (isDisplayForm)
+        if (isDisplayForm) {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
-        else
+            if (!isAltcoin) {
+                addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountAgeTitle"), accountAgeText);
+            }
+        } else {
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
-
+            if (!isAltcoin) {
+                addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountAgeTitle"), accountAgeText);
+            }
+        }
         if (isAddAccountScreen) {
             InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
             inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));

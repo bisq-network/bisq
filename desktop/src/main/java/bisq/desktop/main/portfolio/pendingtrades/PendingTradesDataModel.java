@@ -32,15 +32,19 @@ import bisq.core.arbitration.DisputeAlreadyOpenException;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.BuyerTrade;
+import bisq.core.trade.Contract;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -68,6 +72,7 @@ import javafx.collections.ObservableList;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,6 +91,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
+    private final AccountAgeWitnessService accountAgeWitnessService;
+    private final BSFormatter formatter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
@@ -97,6 +104,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private boolean activated;
     private ChangeListener<Trade.State> tradeStateChangeListener;
     private Trade selectedTrade;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -112,7 +120,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   WalletsSetup walletsSetup,
                                   Navigation navigation,
                                   WalletPasswordWindow walletPasswordWindow,
-                                  NotificationCenter notificationCenter) {
+                                  NotificationCenter notificationCenter,
+                                  AccountAgeWitnessService accountAgeWitnessService,
+                                  BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.keyRing = keyRing;
@@ -123,6 +133,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
+        this.accountAgeWitnessService = accountAgeWitnessService;
+        this.formatter = formatter;
 
         tradesListChangeListener = change -> onListChanged();
         notificationCenter.setSelectItemByTradeIdConsumer(this::selectItemByTradeId);
@@ -163,11 +175,48 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
-    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, Runnable delayedPayoutHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
-        if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE)
-            ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
+
+        if (isReleaseBtcPermitted()) {
+            if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE)
+                ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
+        } else {
+            delayedPayoutHandler.run();
+        }
+    }
+
+    public boolean isReleaseBtcPermitted() {
+        return selectedTrade.getOffer() != null &&
+                (CurrencyUtil.isCryptoCurrency(selectedTrade.getOffer().getCurrencyCode()) ||
+                        getBuyersAccountAge() >= selectedTrade.getOffer().getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE));
+    }
+
+    public String getFormattedDelayedPayoutDate() {
+        return formatter.formatDateTime(getDelayedPayoutDate());
+    }
+
+    public String getFormattedBuyersAccountAge() {
+        return formatter.formatAccountAge(getBuyersAccountAge());
+    }
+
+    private long getBuyersAccountAge() {
+        Contract contract = selectedTrade.getContract();
+        if (contract == null) {
+            return 0;    // Not expected case
+        }
+        return accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+    }
+
+    private Date getDelayedPayoutDate() {
+        long accountAgeInMillis = getBuyersAccountAge();
+        Offer offer = selectedTrade.getOffer();
+        long waitPeriod = offer != null ?
+                (Math.max(0, selectedTrade.getOffer().getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE)) - accountAgeInMillis) :
+                0L;
+        long now = new Date().getTime();
+        return new Date(waitPeriod + now);
     }
 
     public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
@@ -211,7 +260,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     @Nullable
     public PendingTradesListItem getSelectedItem() {
-        return selectedItemProperty.get() != null ? selectedItemProperty.get() : null;
+        return selectedItemProperty.get();
     }
 
     @Nullable
@@ -224,7 +273,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getTrade() != null ? getTrade().getOffer() : null;
     }
 
-    boolean isBuyOffer() {
+    private boolean isBuyOffer() {
         return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
     }
 
@@ -246,7 +295,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             Offer offer = trade.getOffer();
             if (isMaker()) {
-                if (offer.isCurrencyForMakerFeeBtc())
+                if (offer != null && offer.isCurrencyForMakerFeeBtc())
                     return offer.getMakerFee();
                 else
                     return Coin.ZERO;// getTradeFeeAsBsq is used for BSQ
@@ -267,6 +316,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
+                if (offer == null)
+                    return Coin.ZERO;
+
                 if (offer.isCurrencyForMakerFeeBtc())
                     return offer.getTxFee();
                 else
@@ -288,6 +340,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
+                if (offer == null)
+                    return Coin.ZERO;
+
                 if (offer.isCurrencyForMakerFeeBtc())
                     return Coin.ZERO; // getTradeFeeInBTC is used for BTC
                 else
@@ -407,7 +462,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
                 List<Transaction> candidates = new ArrayList<>();
                 List<Transaction> transactions = btcWalletService.getRecentTransactions(100, true);
-                transactions.stream().forEach(transaction -> {
+                transactions.forEach(transaction -> {
                     Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
                     if (!valueSentFromMe.isZero()) {
                         // spending tx
@@ -458,10 +513,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             final PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
             checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
+            Offer offer = trade.getOffer();
+            boolean disputeOpenerIsBuyer = offer != null && offer.getDirection() == OfferPayload.Direction.BUY ?
+                    isMaker : !isMaker;
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isMaker : !isMaker,
+                    disputeOpenerIsBuyer,
                     isMaker,
                     keyRing.getPubKeyRing(),
                     trade.getDate().getTime(),
