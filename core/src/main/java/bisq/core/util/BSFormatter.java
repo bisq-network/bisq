@@ -608,7 +608,9 @@ public class BSFormatter {
         String day = Res.get("time.day").toLowerCase();
         String days = Res.get("time.days");
         String format = "d\' " + days + "\'";
-        return StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), "1 " + days, "1 " + day);
+        String duration = DurationFormatUtils.formatDuration(durationMillis, format);
+        long daysAsLong = durationMillis / DateUtils.MILLIS_PER_DAY;
+        return daysAsLong == 1 ? StringUtils.replaceOnce(duration, "1 " + days, "1 " + day) : duration;
     }
 
     public String formatDurationAsWords(long durationMillis) {
