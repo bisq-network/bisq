@@ -588,7 +588,7 @@ public class TradeManager implements PersistedDataHost {
             @Override
             public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                 if (transaction != null) {
-                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getHashAsString());
+                    log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     addTradeToClosedTrades(trade);
                     trade.setState(Trade.State.WITHDRAW_COMPLETED);
                     resultHandler.handleResult();
@@ -811,7 +811,7 @@ public class TradeManager implements PersistedDataHost {
                 .map(trade -> {
                     Transaction depositTx = trade.getDepositTx();
                     if (depositTx != null) {
-                        TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(depositTx.getHashAsString());
+                        TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(depositTx.getTxId().toString());
                         if (confidence != null && confidence.getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING) {
                             tradeTxException.set(new TradeTxException(Res.get("error.closedTradeWithUnconfirmedDepositTx", trade.getShortId())));
                         } else {

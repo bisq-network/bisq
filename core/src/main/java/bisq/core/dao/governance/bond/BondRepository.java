@@ -28,6 +28,7 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
@@ -117,7 +118,8 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
                 .filter(transactionOutput -> transactionOutput.getIndex() == 0) // The output at the lockupTx must be index 0
                 .map(TransactionOutput::getParentTransaction)
                 .filter(Objects::nonNull)
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .map(lockupTxId -> daoStateService.getLockupOpReturnTxOutput(lockupTxId).orElse(null))
                 .filter(Objects::nonNull)
                 .map(BaseTxOutput::getOpReturnData)

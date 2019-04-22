@@ -700,7 +700,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void applyDepositTx(Transaction tx) {
         this.depositTx = tx;
-        depositTxId = depositTx.getHashAsString();
+        depositTxId = depositTx.getTxId().toString();
         setupConfidenceListener();
         persist();
     }
@@ -880,7 +880,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
-        payoutTxId = payoutTx.getHashAsString();
+        payoutTxId = payoutTx.getTxId().toString();
     }
 
     public void setErrorMessage(String errorMessage) {
@@ -952,7 +952,7 @@ public abstract class Trade implements Tradable, Model {
                 log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
                         new Date(startTime), new Date(tradeTime), new Date(blockTime));
             } else {
-                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getHashAsString());
+                log.debug("depositTx not confirmed yet. We don't start counting remaining trade period yet. txId={}", depositTx.getTxId().toString());
                 startTime = now;
             }
         } else {

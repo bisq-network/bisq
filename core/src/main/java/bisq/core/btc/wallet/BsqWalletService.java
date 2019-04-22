@@ -45,6 +45,7 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.LegacyAddress;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.listeners.TransactionConfidenceEventListener;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.core.Transaction;
@@ -250,7 +251,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                                             // TODO SQ
                                             if (parentTransaction != null/* &&
                                                     parentTransaction.getConfidence().getConfidenceType() == BUILDING*/) {
-                                                TxOutputKey key = new TxOutputKey(parentTransaction.getHashAsString(),
+                                                TxOutputKey key = new TxOutputKey(parentTransaction.getTxId().toString(),
                                                         connectedOutput.getIndex());
 
                                                 return (connectedOutput.isMine(wallet)
@@ -269,7 +270,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
         Set<String> confirmedTxIdSet = getTransactions(false).stream()
                 .filter(tx -> tx.getConfidence().getConfidenceType() == BUILDING)
-                .map(Transaction::getHashAsString)
+                .map(Transaction::getTxId)
+                .map(Sha256Hash::toString)
                 .collect(Collectors.toSet());
 
         lockedForVotingBalance = Coin.valueOf(daoStateService.getUnspentBlindVoteStakeTxOutputs().stream()
@@ -358,7 +360,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private Set<Transaction> getBsqWalletTransactions() {
         return getTransactions(false).stream()
                 .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING ||
-                        daoStateService.containsTx(transaction.getHashAsString()))
+                        daoStateService.containsTx(transaction.getTxId().toString()))
                 .collect(Collectors.toSet());
     }
 
@@ -372,12 +374,12 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             return new HashSet<>();
         } else {
             Map<String, Transaction> map = walletTxs.stream()
-                    .collect(Collectors.toMap(Transaction::getHashAsString, Function.identity()));
+                    .collect(Collectors.toMap(t -> t.getTxId().toString(), Function.identity()));
 
             Set<String> walletTxIds = walletTxs.stream()
-                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
+                    .map(Transaction::getTxId).map(Sha256Hash::toString).collect(Collectors.toSet());
             Set<String> bsqTxIds = bsqWalletTransactions.stream()
-                    .map(Transaction::getHashAsString).collect(Collectors.toSet());
+                    .map(Transaction::getTxId).map(Sha256Hash::toString).collect(Collectors.toSet());
 
             walletTxIds.stream()
                     .filter(bsqTxIds::contains)
@@ -432,7 +434,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     @Override
     public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
         Coin result = Coin.ZERO;
-        final String txId = transaction.getHashAsString();
+        final String txId = transaction.getTxId().toString();
         // We check if we have a matching BSQ tx. We do that call here to avoid repeated calls in the loop.
         Optional<Tx> txOptional = daoStateService.getTx(txId);
         // We check all the outputs of our tx
@@ -469,7 +471,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public Optional<Transaction> isWalletTransaction(String txId) {
-        return walletTransactions.stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
+        return walletTransactions.stream().filter(e -> e.getTxId().toString().equals(txId)).findAny();
     }
 
 

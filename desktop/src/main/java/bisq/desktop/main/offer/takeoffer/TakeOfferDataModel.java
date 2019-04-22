@@ -247,7 +247,7 @@ class TakeOfferDataModel extends OfferDataModel {
                 updateBalance();
 
                 /*if (isMainNet.get()) {
-                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
+                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getTxId().toString());
                     Futures.addCallback(future, new FutureCallback<Coin>() {
                         public void onSuccess(Coin fee) {
                             UserThread.execute(() -> setFeeFromFundingTx(fee));
