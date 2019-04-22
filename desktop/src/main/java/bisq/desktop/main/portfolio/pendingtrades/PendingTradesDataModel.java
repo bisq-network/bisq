@@ -52,6 +52,7 @@ import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.script.ScriptPattern;
 
 import com.google.inject.Inject;
 
@@ -418,7 +419,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         // MS tx
                         candidates.addAll(transaction.getOutputs().stream()
                                 .filter(output -> !btcWalletService.isTransactionOutputMine(output))
-                                .filter(output -> output.getScriptPubKey().isPayToScriptHash())
+                                .filter(output -> ScriptPattern.isP2SH(output.getScriptPubKey()))
                                 .map(transactionOutput -> transaction)
                                 .collect(Collectors.toList()));
                     }

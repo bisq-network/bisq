@@ -32,6 +32,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.script.ScriptPattern;
 
 import javax.inject.Inject;
 
@@ -102,7 +103,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     public static boolean isLockupTxUnconfirmed(BsqWalletService bsqWalletService, BondedAsset bondedAsset) {
         return bsqWalletService.getPendingWalletTransactionsStream()
                 .map(transaction -> transaction.getOutputs().get(transaction.getOutputs().size() - 1))
-                .filter(lastOutput -> lastOutput.getScriptPubKey().isOpReturn())
+                .filter(lastOutput -> ScriptPattern.isOpReturn(lastOutput.getScriptPubKey()))
                 .map(lastOutput -> lastOutput.getScriptPubKey().getChunks())
                 .filter(chunks -> chunks.size() > 1)
                 .map(chunks -> chunks.get(1).data)
