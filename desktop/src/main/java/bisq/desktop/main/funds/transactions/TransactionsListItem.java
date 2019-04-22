@@ -92,7 +92,7 @@ class TransactionsListItem {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
 
-        txId = transaction.getHashAsString();
+        txId = transaction.getTxId().toString();
 
         Optional<Tradable> optionalTradable = Optional.ofNullable(transactionAwareTradable)
                 .map(TransactionAwareTradable::asTradable);
@@ -215,10 +215,10 @@ class TransactionsListItem {
                     if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
                         details = Res.get("funds.tx.createOfferFee", tradeId);
                     } else if (trade.getDepositTx() != null &&
-                            trade.getDepositTx().getHashAsString().equals(txId)) {
+                            trade.getDepositTx().getTxId().toString().equals(txId)) {
                         details = Res.get("funds.tx.multiSigDeposit", tradeId);
                     } else if (trade.getPayoutTx() != null &&
-                            trade.getPayoutTx().getHashAsString().equals(txId)) {
+                            trade.getPayoutTx().getTxId().toString().equals(txId)) {
                         details = Res.get("funds.tx.multiSigPayout", tradeId);
 
                         if (amountAsCoin.isZero()) {

@@ -50,7 +50,7 @@ public class TransactionAwareTradeTest {
     @Before
     public void setUp() {
         this.transaction = mock(Transaction.class);
-        when(transaction.getHashAsString()).thenReturn(XID);
+        when(transaction.getTxId().toString()).thenReturn(XID);
 
         delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
         arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
@@ -67,13 +67,13 @@ public class TransactionAwareTradeTest {
 
     @Test
     public void testIsRelatedToTransactionWhenPayoutTx() {
-        when(delegate.getPayoutTx().getHashAsString()).thenReturn(XID);
+        when(delegate.getPayoutTx().getTxId().toString()).thenReturn(XID);
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
     @Test
     public void testIsRelatedToTransactionWhenDepositTx() {
-        when(delegate.getDepositTx().getHashAsString()).thenReturn(XID);
+        when(delegate.getDepositTx().getTxId().toString()).thenReturn(XID);
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 

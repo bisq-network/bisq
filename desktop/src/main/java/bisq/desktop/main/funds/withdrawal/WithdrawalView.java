@@ -384,7 +384,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                     @Override
                                     public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
                                         if (transaction != null) {
-                                            log.debug("onWithdraw onSuccess tx ID:{}", transaction.getHashAsString());
+                                            log.debug("onWithdraw onSuccess tx ID:{}", transaction.getTxId().toString());
                                         } else {
                                             log.error("onWithdraw transaction is null");
                                         }

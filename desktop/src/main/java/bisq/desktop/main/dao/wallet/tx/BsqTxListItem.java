@@ -65,7 +65,7 @@ class BsqTxListItem extends TxConfidenceListItem {
         super(transaction, bsqWalletService);
 
         this.daoFacade = daoFacade;
-        this.isBurnedBsqTx = daoFacade.hasTxBurntFee(transaction.getHashAsString());
+        this.isBurnedBsqTx = daoFacade.hasTxBurntFee(transaction.getTxId().toString());
         this.date = date;
         this.bsqFormatter = bsqFormatter;
 

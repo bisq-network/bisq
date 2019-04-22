@@ -80,7 +80,7 @@ public class TakerPublishFeeTx extends TradeTask {
                             public void onSuccess(@Nullable Transaction transaction) {
                                 if (!completed) {
                                     if (transaction != null) {
-                                        trade.setTakerFeeTxId(transaction.getHashAsString());
+                                        trade.setTakerFeeTxId(transaction.getTxId().toString());
                                         processModel.setTakeOfferFeeTx(transaction);
                                         trade.setState(Trade.State.TAKER_PUBLISHED_TAKER_FEE_TX);
 

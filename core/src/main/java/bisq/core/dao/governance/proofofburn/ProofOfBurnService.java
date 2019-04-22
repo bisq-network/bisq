@@ -153,7 +153,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
         walletsManager.publishAndCommitBsqTx(transaction, TxType.PROOF_OF_BURN, new TxBroadcaster.Callback() {
             @Override
             public void onSuccess(Transaction transaction) {
-                log.info("Proof of burn tx has been published. TxId={}", transaction.getHashAsString());
+                log.info("Proof of burn tx has been published. TxId={}", transaction.getTxId().toString());
                 resultHandler.handleResult();
             }
 
@@ -163,7 +163,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
             }
         });
 
-        MyProofOfBurn myProofOfBurn = new MyProofOfBurn(transaction.getHashAsString(), preImageAsString);
+        MyProofOfBurn myProofOfBurn = new MyProofOfBurn(transaction.getTxId().toString(), preImageAsString);
         myProofOfBurnListService.addMyProofOfBurn(myProofOfBurn);
     }
 

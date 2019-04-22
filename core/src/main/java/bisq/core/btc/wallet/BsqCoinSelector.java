@@ -53,12 +53,12 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
             return false;
 
         // If it is a normal confirmed BSQ output we use the default lookup at the daoState
-        if (daoStateService.isTxOutputSpendable(new TxOutputKey(parentTransaction.getHashAsString(), output.getIndex())))
+        if (daoStateService.isTxOutputSpendable(new TxOutputKey(parentTransaction.getTxId().toString(), output.getIndex())))
             return true;
 
         // It might be that it is an unconfirmed change output which we allow to be used for spending without requiring a confirmation.
         // We check if we have the output in the dao state, if so we have a confirmed but unspendable output (e.g. confiscated).
-        if (daoStateService.getTxOutput(new TxOutputKey(parentTransaction.getHashAsString(), output.getIndex())).isPresent())
+        if (daoStateService.getTxOutput(new TxOutputKey(parentTransaction.getTxId().toString(), output.getIndex())).isPresent())
             return false;
 
         // Only if it's not existing yet in the dao state (unconfirmed) we use our unconfirmedBsqChangeOutputList to

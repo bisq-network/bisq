@@ -743,7 +743,7 @@ public class BtcWalletService extends WalletService {
         AddressEntry addressEntry = getFreshAddressEntry();
         checkNotNull(addressEntry.getAddress(), "addressEntry.getAddress() must not be null");
         Optional<Transaction> transactionOptional = wallet.getTransactions(true).stream()
-                .filter(t -> t.getHashAsString().equals(txId))
+                .filter(t -> t.getTxId().toString().equals(txId))
                 .findAny();
         if (transactionOptional.isPresent()) {
             Transaction txToDoubleSpend = transactionOptional.get();
@@ -1022,7 +1022,7 @@ public class BtcWalletService extends WalletService {
         Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
+        return sendResult.tx.getTxId().toString();
     }
 
     public String sendFundsForMultipleAddresses(Set<String> fromAddresses,
@@ -1039,7 +1039,7 @@ public class BtcWalletService extends WalletService {
         Futures.addCallback(sendResult.broadcastComplete, callback, MoreExecutors.directExecutor());
 
         printTx("sendFunds", sendResult.tx);
-        return sendResult.tx.getHashAsString();
+        return sendResult.tx.getTxId().toString();
     }
 
     private SendRequest getSendRequest(String fromAddress,

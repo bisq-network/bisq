@@ -43,7 +43,7 @@ public class TxConfidenceListItem {
                                    BsqWalletService bsqWalletService) {
         this.bsqWalletService = bsqWalletService;
 
-        txId = transaction.getHashAsString();
+        txId = transaction.getTxId().toString();
         txConfidenceIndicator = new TxConfidenceIndicator();
         txConfidenceIndicator.setId("funds-confidence");
         Tooltip tooltip = new Tooltip();

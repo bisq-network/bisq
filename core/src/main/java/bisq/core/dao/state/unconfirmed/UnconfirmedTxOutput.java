@@ -47,7 +47,7 @@ public final class UnconfirmedTxOutput implements PersistablePayload, ImmutableD
         if (parentTransaction != null) {
             return new UnconfirmedTxOutput(transactionOutput.getIndex(),
                     transactionOutput.getValue().value,
-                    parentTransaction.getHashAsString());
+                    parentTransaction.getTxId().toString());
         } else {
             log.warn("parentTransaction of transactionOutput is null. " +
                             "This must not happen. " +
