@@ -28,7 +28,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreNetworkCapabilities {
     public static void setSupportedCapabilities(BisqEnvironment bisqEnvironment) {
-        Capabilities.app.addAll(Capability.TRADE_STATISTICS, Capability.TRADE_STATISTICS_2, Capability.ACCOUNT_AGE_WITNESS, Capability.ACK_MSG);
+        Capabilities.app.addAll(Capability.TRADE_STATISTICS,
+                Capability.TRADE_STATISTICS_2,
+                Capability.ACCOUNT_AGE_WITNESS,
+                Capability.ACK_MSG,
+                Capability.SIGNED_ACCOUNT_AGE_WITNESS);
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
             Capabilities.app.addAll(Capability.PROPOSAL, Capability.BLIND_VOTE, Capability.BSQ_BLOCK, Capability.DAO_STATE);
