@@ -24,7 +24,7 @@ import bisq.desktop.util.validation.UpholdValidator;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.UpholdAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;

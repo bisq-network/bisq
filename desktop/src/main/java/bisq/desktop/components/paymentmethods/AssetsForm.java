@@ -28,7 +28,7 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;

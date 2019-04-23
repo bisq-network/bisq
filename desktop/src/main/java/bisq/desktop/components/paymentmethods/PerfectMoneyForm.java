@@ -21,7 +21,7 @@ import bisq.desktop.util.validation.PerfectMoneyValidator;
 
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PerfectMoneyAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;

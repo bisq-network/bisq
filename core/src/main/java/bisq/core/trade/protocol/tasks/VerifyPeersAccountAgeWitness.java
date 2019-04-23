@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.tasks;
 
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;

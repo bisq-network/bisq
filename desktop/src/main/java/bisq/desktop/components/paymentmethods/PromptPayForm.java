@@ -23,7 +23,7 @@ import bisq.desktop.util.validation.PromptPayValidator;
 
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PromptPayAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;

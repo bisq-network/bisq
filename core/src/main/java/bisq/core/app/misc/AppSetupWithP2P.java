@@ -20,7 +20,7 @@ package bisq.core.app.misc;
 import bisq.core.app.SetupUtils;
 import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
-import bisq.core.payment.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.crypto.EncryptionService;
