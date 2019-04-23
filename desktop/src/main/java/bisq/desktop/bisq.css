@@ -165,6 +165,9 @@ bg color of non edit textFields: fafafa
     -fx-selection-bar-non-focused: -fx-selection-bar;
 
     -fx-font-size: 13;
+}
+
+.root:dir(ltr){
     -fx-font-family: "IBM Plex Sans";
 }
 
