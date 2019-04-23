@@ -43,14 +43,15 @@ import lombok.extern.slf4j.Slf4j;
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload, CapabilityRequiringPayload {
+public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
+        DateTolerantPayload, CapabilityRequiringPayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
     private final long date;                        // 8 byte
 
-    public AccountAgeWitness(byte[] hash,
-                             long date) {
+    AccountAgeWitness(byte[] hash,
+                      long date) {
         this.hash = hash;
         this.date = date;
     }
