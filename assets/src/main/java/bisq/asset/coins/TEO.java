@@ -18,11 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.RegexAddressValidator;
 
 public class TEO extends Coin {
 
     public TEO() {
-        super("Trust Ether reOrigin", "TEO", new DefaultAddressValidator());
+        super("Trust Ether reOrigin", "TEO", new RegexAddressValidator("^0x[0-9a-fA-F]{40}$"));
     }
 }

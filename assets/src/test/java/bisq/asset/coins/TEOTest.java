@@ -17,11 +17,29 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
 
-public class TEOTest extends AbstractAssetWithDefaultValidatorTest {
+import org.junit.Test;
+
+public class TEOTest extends AbstractAssetTest {
 
     public TEOTest() {
         super(new TEO());
+    }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("0x8d1ba0497c3e3db17143604ab7f5e93a3cbac68b");
+        assertValidAddress("0x23c9c5ae8c854e9634a610af82924a5366a360a3");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("");
+        assertInvalidAddress("8d1ba0497c3e3db17143604ab7f5e93a3cbac68b");
+        assertInvalidAddress("0x8d1ba0497c3e3db17143604ab7f5e93a3cbac68");
+        assertInvalidAddress("0x8d1ba0497c3e3db17143604ab7f5e93a3cbac68k");
+        assertInvalidAddress("098d1ba0497c3e3db17143604ab7f5e93a3cbac68b");
+        assertInvalidAddress("098d1ba0497c3e3db17143604ab7f5e93a3cbac68b");
     }
 }
