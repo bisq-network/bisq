@@ -22,6 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
+import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
@@ -161,7 +162,7 @@ public class AccountAgeWitnessService {
         return new AccountAgeWitness(hash, new Date().getTime());
     }
 
-    private Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+    public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
@@ -186,6 +187,12 @@ public class AccountAgeWitnessService {
     public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
         log.debug("getAccountAge now={}, accountAgeWitness.getDate()={}", now.getTime(), accountAgeWitness.getDate());
         return now.getTime() - accountAgeWitness.getDate();
+    }
+
+    public long getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        return findWitness(paymentAccountPayload, pubKeyRing)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
     }
 
     public AccountAge getAccountAgeCategory(long accountAge) {
@@ -284,6 +291,16 @@ public class AccountAgeWitnessService {
         return witnessByHashAsHex
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
                 .orElse(-1L);
+    }
+
+    public long getTradingPeersAccountAge(Trade trade) {
+        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
+            // unexpected
+            return -1;
+        }
+
+        return getAccountAge(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
 
