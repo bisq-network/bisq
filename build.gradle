@@ -65,7 +65,8 @@ configure([project(':desktop'),
            project(':monitor'),
            project(':relay'),
            project(':seednode'),
-           project(':statsnode')]) {
+           project(':statsnode'),
+           project(':pricenode')]) {
 
     apply plugin: 'application'
 
@@ -271,7 +272,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '0.9.8-SNAPSHOT'
+    version = '1.0.1-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 

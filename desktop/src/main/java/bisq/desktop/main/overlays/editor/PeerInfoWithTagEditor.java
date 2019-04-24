@@ -28,6 +28,7 @@ import bisq.core.offer.Offer;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
@@ -90,7 +91,10 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     @Nullable
     private String accountAge;
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager, Offer offer, Preferences preferences, boolean useDevPrivilegeKeys) {
+    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
+                                 Offer offer,
+                                 Preferences preferences,
+                                 boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
@@ -112,7 +116,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         return this;
     }
 
-    public PeerInfoWithTagEditor hostName(String hostName) {
+    public PeerInfoWithTagEditor fullAddress(String hostName) {
         this.hostName = hostName;
         return this;
     }
@@ -202,7 +206,9 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 // otherwise the text input handler does not work.
                 doClose();
                 UserThread.runAfter(() -> {
-                    new SendPrivateNotificationWindow(offer.getPubKeyRing(), offer.getMakerNodeAddress(), useDevPrivilegeKeys)
+                    //TODO only taker could send msg as maker would use its own key from offer....
+                    PubKeyRing pubKeyRing = offer.getPubKeyRing();
+                    new SendPrivateNotificationWindow(pubKeyRing, offer.getMakerNodeAddress(), useDevPrivilegeKeys)
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }, 100, TimeUnit.MILLISECONDS);

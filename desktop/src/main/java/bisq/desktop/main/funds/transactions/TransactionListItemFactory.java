@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.trade.Tradable;
+import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import org.bitcoinj.core.Transaction;
@@ -36,20 +37,23 @@ public class TransactionListItemFactory {
     private final BsqWalletService bsqWalletService;
     private final DaoFacade daoFacade;
     private final BSFormatter formatter;
+    private final Preferences preferences;
 
     @Inject
     TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                               DaoFacade daoFacade, BSFormatter formatter) {
+                               DaoFacade daoFacade, BSFormatter formatter, Preferences preferences) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
         this.formatter = formatter;
+        this.preferences = preferences;
     }
 
     TransactionsListItem create(Transaction transaction, @Nullable TransactionAwareTradable tradable) {
         Optional<Tradable> maybeTradable = Optional.ofNullable(tradable)
                 .map(TransactionAwareTradable::asTradable);
 
-        return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, maybeTradable, daoFacade, formatter);
+        return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, maybeTradable,
+                daoFacade, formatter, preferences.getIgnoreDustThreshold());
     }
 }

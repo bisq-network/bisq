@@ -46,6 +46,8 @@ import org.bitcoinj.utils.Fiat;
 
 import org.springframework.util.CollectionUtils;
 
+import com.google.common.base.Charsets;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -156,7 +158,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         if (hash == null)
             // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
             // tradeDate is different for both peers so we ignore it for hash.
-            this.hash = Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes());
+            this.hash = Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
         else
             this.hash = hash;
     }

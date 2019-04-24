@@ -18,6 +18,9 @@
 package bisq.core.dao.node.messages;
 
 import bisq.network.p2p.DirectMessage;
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.SendersNodeAddressMessage;
+import bisq.network.p2p.SupportedCapabilitiesMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
 import bisq.common.app.Capabilities;
@@ -27,17 +30,38 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import io.bisq.generated.protobuffer.PB;
 
+import java.util.Optional;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {
+@Slf4j
+public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, SendersNodeAddressMessage,
+        CapabilityRequiringPayload, SupportedCapabilitiesMessage {
     private final int fromBlockHeight;
     private final int nonce;
 
-    public GetBlocksRequest(int fromBlockHeight, int nonce) {
-        this(fromBlockHeight, nonce, Version.getP2PMessageVersion());
+    // Added after version 1.0.1. Can be null if received from older clients.
+    @Nullable
+    private final NodeAddress senderNodeAddress;
+
+    // Added after version 1.0.1. Can be null if received from older clients.
+    @Nullable
+    private final Capabilities supportedCapabilities;
+
+    public GetBlocksRequest(int fromBlockHeight,
+                            int nonce,
+                            @Nullable NodeAddress senderNodeAddress) {
+        this(fromBlockHeight,
+                nonce,
+                senderNodeAddress,
+                Capabilities.app,
+                Version.getP2PMessageVersion());
     }
 
 
@@ -45,23 +69,41 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private GetBlocksRequest(int fromBlockHeight, int nonce, int messageVersion) {
+    private GetBlocksRequest(int fromBlockHeight,
+                             int nonce,
+                             @Nullable NodeAddress senderNodeAddress,
+                             @Nullable Capabilities supportedCapabilities,
+                             int messageVersion) {
         super(messageVersion);
         this.fromBlockHeight = fromBlockHeight;
         this.nonce = nonce;
+        this.senderNodeAddress = senderNodeAddress;
+        this.supportedCapabilities = supportedCapabilities;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setGetBlocksRequest(PB.GetBlocksRequest.newBuilder()
-                        .setFromBlockHeight(fromBlockHeight)
-                        .setNonce(nonce))
-                .build();
+        PB.GetBlocksRequest.Builder builder = PB.GetBlocksRequest.newBuilder()
+                .setFromBlockHeight(fromBlockHeight)
+                .setNonce(nonce);
+        Optional.ofNullable(senderNodeAddress).ifPresent(e -> builder.setSenderNodeAddress(e.toProtoMessage()));
+        Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
+        return getNetworkEnvelopeBuilder().setGetBlocksRequest(builder).build();
     }
 
     public static NetworkEnvelope fromProto(PB.GetBlocksRequest proto, int messageVersion) {
-        return new GetBlocksRequest(proto.getFromBlockHeight(), proto.getNonce(), messageVersion);
+        PB.NodeAddress protoNodeAddress = proto.getSenderNodeAddress();
+        NodeAddress senderNodeAddress = protoNodeAddress.getHostName().isEmpty() ?
+                null :
+                NodeAddress.fromProto(protoNodeAddress);
+        Capabilities supportedCapabilities = proto.getSupportedCapabilitiesList().isEmpty() ?
+                null :
+                Capabilities.fromIntList(proto.getSupportedCapabilitiesList());
+        return new GetBlocksRequest(proto.getFromBlockHeight(),
+                proto.getNonce(),
+                senderNodeAddress,
+                supportedCapabilities,
+                messageVersion);
     }
 
     @Override
@@ -69,12 +111,13 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
         return new Capabilities(Capability.DAO_FULL_NODE);
     }
 
-
     @Override
     public String toString() {
         return "GetBlocksRequest{" +
                 "\n     fromBlockHeight=" + fromBlockHeight +
                 ",\n     nonce=" + nonce +
+                ",\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     supportedCapabilities=" + supportedCapabilities +
                 "\n} " + super.toString();
     }
 }

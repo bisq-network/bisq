@@ -84,7 +84,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> extends ActivatableWithDataModel<M> {
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
-    private final SecurityDepositValidator securityDepositValidator;
+    protected final SecurityDepositValidator securityDepositValidator;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
@@ -104,7 +104,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public final StringProperty amount = new SimpleStringProperty();
     public final StringProperty minAmount = new SimpleStringProperty();
-    final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
+    protected final StringProperty buyerSecurityDeposit = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositInBTC = new SimpleStringProperty();
     final StringProperty buyerSecurityDepositLabel = new SimpleStringProperty();
 
@@ -599,6 +599,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
                 isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
 
+        securityDepositValidator.setPaymentAccount(dataModel.paymentAccount);
         buyerSecurityDeposit.set(btcFormatter.formatToPercent(dataModel.getBuyerSecurityDeposit().get()));
         buyerSecurityDepositLabel.set(getSecurityDepositLabel());
 
@@ -663,6 +664,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
         btcValidator.setMaxValue(dataModel.paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(dataModel.getTradeCurrencyCode().get()));
         btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
+
+        securityDepositValidator.setPaymentAccount(paymentAccount);
     }
 
     public void onCurrencySelected(TradeCurrency tradeCurrency) {
@@ -853,7 +856,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             InputValidator.ValidationResult result = securityDepositValidator.validate(buyerSecurityDeposit.get());
             buyerSecurityDepositValidationResult.set(result);
             if (result.isValid) {
-                double defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDepositAsPercent();
+                double defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount());
                 String key = "buyerSecurityDepositIsLowerAsDefault";
                 double depositAsDouble = btcFormatter.parsePercentStringToDouble(buyerSecurityDeposit.get());
                 if (preferences.showAgain(key) && depositAsDouble < defaultSecurityDeposit) {
@@ -1121,7 +1124,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (buyerSecurityDeposit.get() != null && !buyerSecurityDeposit.get().isEmpty()) {
             dataModel.setBuyerSecurityDeposit(btcFormatter.parsePercentStringToDouble(buyerSecurityDeposit.get()));
         } else {
-            dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
+            dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount()));
         }
     }
 

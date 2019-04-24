@@ -202,17 +202,18 @@ public class BtcWalletService extends WalletService {
         // safety check counter to avoid endless loops
         int counter = 0;
         // estimated size of input sig
-        final int sigSizePerInput = 106;
+        int sigSizePerInput = 106;
         // typical size for a tx with 3 inputs
         int txSizeWithUnsignedInputs = 300;
-        final Coin txFeePerByte = feeService.getTxFeePerByte();
+        Coin txFeePerByte = feeService.getTxFeePerByte();
 
         Address changeAddress = getFreshAddressEntry().getAddress();
         checkNotNull(changeAddress, "changeAddress must not be null");
 
-        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        final List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
-        final List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
+        BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
+        List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size();
         Transaction resultTx = null;
         boolean isFeeOutsideTolerance;
@@ -309,17 +310,18 @@ public class BtcWalletService extends WalletService {
         // safety check counter to avoid endless loops
         int counter = 0;
         // estimated size of input sig
-        final int sigSizePerInput = 106;
+        int sigSizePerInput = 106;
         // typical size for a tx with 3 inputs
         int txSizeWithUnsignedInputs = 300;
-        final Coin txFeePerByte = feeService.getTxFeePerByte();
+        Coin txFeePerByte = feeService.getTxFeePerByte();
 
         Address changeAddress = getFreshAddressEntry().getAddress();
         checkNotNull(changeAddress, "changeAddress must not be null");
 
-        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        final List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
-        final List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
+        BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        List<TransactionInput> preparedBsqTxInputs = preparedTx.getInputs();
+        List<TransactionOutput> preparedBsqTxOutputs = preparedTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size();
         Transaction resultTx = null;
         boolean isFeeOutsideTolerance;
@@ -444,20 +446,21 @@ public class BtcWalletService extends WalletService {
         // safety check counter to avoid endless loops
         int counter = 0;
         // estimated size of input sig
-        final int sigSizePerInput = 106;
+        int sigSizePerInput = 106;
         // typical size for a tx with 2 inputs
         int txSizeWithUnsignedInputs = 203;
         // If useCustomTxFee we allow overriding the estimated fee from preferences
-        final Coin txFeePerByte = useCustomTxFee ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
+        Coin txFeePerByte = useCustomTxFee ? getTxFeeForWithdrawalPerByte() : feeService.getTxFeePerByte();
         // In case there are no change outputs we force a change by adding min dust to the BTC input
         Coin forcedChangeValue = Coin.ZERO;
 
         Address changeAddress = getFreshAddressEntry().getAddress();
         checkNotNull(changeAddress, "changeAddress must not be null");
 
-        final BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        final List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
-        final List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
+        BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        List<TransactionInput> preparedBsqTxInputs = preparedBsqTx.getInputs();
+        List<TransactionOutput> preparedBsqTxOutputs = preparedBsqTx.getOutputs();
         int numInputs = preparedBsqTxInputs.size() + 1; // We add 1 for the BTC fee input
         Transaction resultTx = null;
         boolean isFeeOutsideTolerance;
@@ -781,7 +784,7 @@ public class BtcWalletService extends WalletService {
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.ensureMinRequiredFee = false;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(toAddress);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress, preferences.getIgnoreDustThreshold());
                             sendRequest.changeAddress = toAddress;
                             wallet.completeTx(sendRequest);
                             tx = sendRequest.tx;
@@ -802,7 +805,7 @@ public class BtcWalletService extends WalletService {
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.ensureMinRequiredFee = false;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(toAddress);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress, preferences.getIgnoreDustThreshold());
                             sendRequest.changeAddress = toAddress;
                             sendResult = wallet.sendCoins(sendRequest);
                         } catch (InsufficientMoneyException e) {
@@ -818,7 +821,8 @@ public class BtcWalletService extends WalletService {
                             sendRequest.feePerKb = Coin.ZERO;
                             sendRequest.ensureMinRequiredFee = false;
                             sendRequest.aesKey = aesKey;
-                            sendRequest.coinSelector = new BtcCoinSelector(toAddress, false);
+                            sendRequest.coinSelector = new BtcCoinSelector(toAddress,
+                                    preferences.getIgnoreDustThreshold(), false);
                             sendRequest.changeAddress = toAddress;
 
                             try {
@@ -972,7 +976,8 @@ public class BtcWalletService extends WalletService {
         SendRequest sendRequest = SendRequest.forTx(transaction);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
-        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
         sendRequest.fee = txFee;
         sendRequest.feePerKb = Coin.ZERO;
         sendRequest.ensureMinRequiredFee = false;
@@ -1044,7 +1049,7 @@ public class BtcWalletService extends WalletService {
 
         checkNotNull(addressEntry.get(), "addressEntry.get() must not be null");
         checkNotNull(addressEntry.get().getAddress(), "addressEntry.get().getAddress() must not be null");
-        sendRequest.coinSelector = new BtcCoinSelector(addressEntry.get().getAddress());
+        sendRequest.coinSelector = new BtcCoinSelector(addressEntry.get().getAddress(), preferences.getIgnoreDustThreshold());
         sendRequest.changeAddress = addressEntry.get().getAddress();
         return sendRequest;
     }
@@ -1089,7 +1094,8 @@ public class BtcWalletService extends WalletService {
         if (addressEntries.isEmpty())
             throw new AddressEntryException("No Addresses for withdraw found in our wallet");
 
-        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries));
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
+                preferences.getIgnoreDustThreshold());
         Optional<AddressEntry> addressEntryOptional = Optional.<AddressEntry>empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)
@@ -1099,5 +1105,13 @@ public class BtcWalletService extends WalletService {
         checkNotNull(changeAddressAddressEntry, "change address must not be null");
         sendRequest.changeAddress = changeAddressAddressEntry.getAddress();
         return sendRequest;
+    }
+
+    // We ignore utxos which are considered dust attacks for spying on users wallets.
+    // The ignoreDustThreshold value is set in the preferences. If not set we use default non dust
+    // value of 546 sat.
+    @Override
+    protected boolean isDustAttackUtxo(TransactionOutput output) {
+        return output.getValue().value < preferences.getIgnoreDustThreshold();
     }
 }

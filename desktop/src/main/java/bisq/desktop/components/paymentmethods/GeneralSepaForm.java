@@ -105,7 +105,7 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
             currencyComboBox.setConverter(new StringConverter<>() {
                 @Override
                 public String toString(TradeCurrency currency) {
-                    return currency.getNameAndCode();
+                    return currency != null ? currency.getNameAndCode() : Res.get("shared.na");
                 }
 
                 @Override

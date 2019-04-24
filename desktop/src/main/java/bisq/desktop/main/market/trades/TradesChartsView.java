@@ -342,8 +342,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             }
         });
         priceChart.setId("price-chart");
-        priceChart.setMinHeight(198);
-        priceChart.setPrefHeight(198);
+        priceChart.setMinHeight(178);
+        priceChart.setPrefHeight(178);
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setPadding(new Insets(0));
@@ -398,8 +398,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         //noinspection unchecked
         volumeChart.setId("volume-chart");
         volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
-        volumeChart.setMinHeight(148);
-        volumeChart.setPrefHeight(148);
+        volumeChart.setMinHeight(128);
+        volumeChart.setPrefHeight(128);
         volumeChart.setMaxHeight(200);
         volumeChart.setLegendVisible(false);
         volumeChart.setPadding(new Insets(0));
@@ -517,7 +517,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void createTable() {
         tableView = new TableView<>();
-        tableView.setMinHeight(130);
+        tableView.setMinHeight(120);
         tableView.setPrefHeight(130);
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
@@ -732,9 +732,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             else
                 available = root.getHeight();
 
-            available = available - volumeChart.getHeight() - toolBox.getHeight() - nrOfTradeStatisticsLabel.getHeight() - 65;
+            available = available - volumeChartPane.getHeight() - toolBox.getHeight() - nrOfTradeStatisticsLabel.getHeight() - 75;
             if (priceChart.isManaged())
-                available = available - priceChart.getHeight();
+                available = available - priceChartPane.getHeight();
             else
                 available = available + 10;
             tableView.setPrefHeight(available);

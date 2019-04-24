@@ -115,4 +115,8 @@ public class Capabilities {
     public String toString() {
         return Arrays.toString(Capabilities.toIntList(this).toArray());
     }
+
+    public int size() {
+        return capabilities.size();
+    }
 }

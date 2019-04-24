@@ -130,6 +130,11 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         removeBindings();
     }
 
+    @Override
+    protected void showFiatRoundingInfoPopup() {
+        // don't show it again as it was already shown when creating the offer in the first place
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -143,11 +148,15 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         model.onStartEditOffer(errorMessage -> {
             log.error(errorMessage);
             new Popup<>().warning(Res.get("editOffer.failed", errorMessage))
-                    .onClose(() -> {
-                        close();
-                    })
+                    .onClose(this::close)
                     .show();
         });
+
+        if (!model.isSecurityDepositValid()) {
+            new Popup<>().warning(Res.get("editOffer.invalidDeposit"))
+                    .onClose(this::close)
+                    .show();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

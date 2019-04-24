@@ -19,6 +19,8 @@ package bisq.network;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
+import com.google.common.base.Charsets;
+
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -80,7 +82,7 @@ public class DnsLookupTor {
                 throw new DnsLookupException("Unrecognized Tor Auth Method");
             }
 
-            byte[] hostBytes = host.getBytes();
+            byte[] hostBytes = host.getBytes(Charsets.UTF_8);
             buf = new byte[7 + hostBytes.length];
             buf[0] = b('\u0005');
             buf[1] = b('\u00f0');

@@ -27,7 +27,7 @@ import lombok.Getter;
 
 public class DaoPresentation implements DaoStateListener {
 
-    public static final String DAO_NEWS = "daoNewsVersion0.9.4";
+    public static final String DAO_NEWS = "daoNewsVersion1.0.0";
 
     private final Preferences preferences;
     private final BtcWalletService btcWalletService;
@@ -56,7 +56,7 @@ public class DaoPresentation implements DaoStateListener {
         this.daoStateService = daoStateService;
 
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
-            if (change.getKey().equals(DAO_NEWS) && !DevEnv.isDaoActivated()) {
+            if (change.getKey().equals(DAO_NEWS) && DevEnv.isDaoActivated()) {
                 showNotification.set(!change.wasAdded());
             }
         });
@@ -115,7 +115,7 @@ public class DaoPresentation implements DaoStateListener {
     }
 
     public void setup() {
-        if (!DevEnv.isDaoActivated())
+        if (DevEnv.isDaoActivated())
             showNotification.set(preferences.showAgain(DAO_NEWS));
 
         this.btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);

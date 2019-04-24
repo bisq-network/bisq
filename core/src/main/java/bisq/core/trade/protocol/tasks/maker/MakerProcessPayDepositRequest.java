@@ -27,6 +27,8 @@ import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
 
+import com.google.common.base.Charsets;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.util.Validator.checkTradeId;
@@ -70,7 +72,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
                 failed("acceptedArbitratorNodeAddresses must not be empty");
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
-            tradingPeer.setAccountAgeWitnessNonce(trade.getOffer().getId().getBytes());
+            tradingPeer.setAccountAgeWitnessNonce(trade.getOffer().getId().getBytes(Charsets.UTF_8));
             tradingPeer.setAccountAgeWitnessSignature(payDepositRequest.getAccountAgeWitnessSignatureOfOfferId());
             tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
 

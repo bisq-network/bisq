@@ -65,4 +65,11 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
         // check if it is an own change output.
         return unconfirmedBsqChangeOutputListService.hasTransactionOutput(output);
     }
+
+    // For BSQ we do not check for dust attack utxos as they are 5.46 BSQ and a considerable value.
+    // The default 546 sat dust limit is handled in the BitcoinJ side anyway.
+    @Override
+    protected boolean isDustAttackUtxo(TransactionOutput output) {
+        return false;
+    }
 }

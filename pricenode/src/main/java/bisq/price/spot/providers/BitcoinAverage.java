@@ -30,6 +30,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.google.common.base.Charsets;
+
 import org.bouncycastle.util.encoders.Hex;
 
 import javax.crypto.Mac;
@@ -118,12 +120,12 @@ public abstract class BitcoinAverage extends ExchangeRateProvider {
 
     protected String getAuthSignature() {
         String payload = String.format("%s.%s", Instant.now().getEpochSecond(), pubKey);
-        return String.format("%s.%s", payload, Hex.toHexString(mac.doFinal(payload.getBytes())));
+        return String.format("%s.%s", payload, Hex.toHexString(mac.doFinal(payload.getBytes(Charsets.UTF_8))));
     }
 
     private static Mac initMac(String privKey) {
         String algorithm = "HmacSHA256";
-        SecretKey secretKey = new SecretKeySpec(privKey.getBytes(), algorithm);
+        SecretKey secretKey = new SecretKeySpec(privKey.getBytes(Charsets.UTF_8), algorithm);
         try {
             Mac mac = Mac.getInstance(algorithm);
             mac.init(secretKey);

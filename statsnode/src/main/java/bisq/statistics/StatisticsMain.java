@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StatisticsMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "0.6.1";
+    private static final String VERSION = "1.0.1";
     private Statistics statistics;
 
     public StatisticsMain() {
@@ -42,6 +42,7 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     public static void main(String[] args) throws Exception {
         log.info("Statistics.VERSION: " + VERSION);
         BisqEnvironment.setDefaultAppName("bisq_statistics");
+
         if (BisqExecutable.setupInitialOptionParser(args))
             new StatisticsMain().execute(args);
     }
@@ -50,10 +51,14 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     protected void doExecute(OptionSet options) {
         super.doExecute(options);
 
-        CommonSetup.setup(this);
         checkMemory(bisqEnvironment, this);
+        CommonSetup.setup(this);
 
         keepRunning();
+    }
+
+    @Override
+    protected void addCapabilities() {
     }
 
     @Override

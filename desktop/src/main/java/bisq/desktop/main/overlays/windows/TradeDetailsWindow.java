@@ -24,8 +24,10 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
@@ -67,9 +69,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     private final BSFormatter formatter;
     private final DisputeManager disputeManager;
     private final TradeManager tradeManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private Trade trade;
     private ChangeListener<Number> changeListener;
     private TextArea textArea;
+    private String buyersAccountAge;
+    private String sellersAccountAge;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,10 +82,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager) {
+    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager,
+                              AccountAgeWitnessService accountAgeWitnessService) {
         this.formatter = formatter;
         this.disputeManager = disputeManager;
         this.tradeManager = tradeManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         type = Type.Confirmation;
     }
 
@@ -216,15 +223,30 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         if (contract != null) {
             if (buyerPaymentAccountPayload != null) {
+                String paymentDetails = buyerPaymentAccountPayload.getPaymentDetails();
+                long age = accountAgeWitnessService.getAccountAge(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
+                buyersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                                Res.get("peerInfoIcon.tooltip.unknownAge") :
+                        "";
+
+                String postFix = buyersAccountAge.isEmpty() ? "" : " / " + buyersAccountAge;
                 TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                        buyerPaymentAccountPayload.getPaymentDetails()).second;
+                        paymentDetails + postFix).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountPayload != null) {
+                String paymentDetails = sellerPaymentAccountPayload.getPaymentDetails();
+                long age = accountAgeWitnessService.getAccountAge(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
+                sellersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                                Res.get("peerInfoIcon.tooltip.unknownAge") :
+                        "";
+                String postFix = sellersAccountAge.isEmpty() ? "" : " / " + sellersAccountAge;
                 TextFieldWithCopyIcon tf = addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
                         Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                        sellerPaymentAccountPayload.getPaymentDetails()).second;
+                        paymentDetails + postFix).second;
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (buyerPaymentAccountPayload == null && sellerPaymentAccountPayload == null)
@@ -256,6 +278,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 String contractAsJson = trade.getContractAsJson();
                 contractAsJson += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
                 contractAsJson += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
+                if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+                    contractAsJson += "\nBuyersAccountAge: " + buyersAccountAge;
+                    contractAsJson += "\nSellersAccountAge: " + sellersAccountAge;
+                }
+
                 textArea.setText(contractAsJson);
                 textArea.setPrefHeight(50);
                 textArea.setEditable(false);

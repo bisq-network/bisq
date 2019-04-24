@@ -28,6 +28,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletConfig;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -115,6 +116,7 @@ public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
 
     private final WalletsSetup walletsSetup;
+    private final Preferences preferences;
     private final NetworkParameters params;
 
     @Nullable
@@ -130,8 +132,9 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeWalletService(WalletsSetup walletsSetup) {
+    public TradeWalletService(WalletsSetup walletsSetup, Preferences preferences) {
         this.walletsSetup = walletsSetup;
+        this.preferences = preferences;
         this.params = BisqEnvironment.getParameters();
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
@@ -198,10 +201,12 @@ public class TradeWalletService {
             sendRequest = SendRequest.forTx(tradingFeeTx);
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
-            if (useSavingsWallet)
-                sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-            else
-                sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
+            if (useSavingsWallet) {
+                sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                        preferences.getIgnoreDustThreshold());
+            } else {
+                sendRequest.coinSelector = new BtcCoinSelector(fundingAddress, preferences.getIgnoreDustThreshold());
+            }
             // We use a fixed fee
 
             sendRequest.fee = txFee;
@@ -278,10 +283,12 @@ public class TradeWalletService {
         SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
         sendRequest.shuffleOutputs = false;
         sendRequest.aesKey = aesKey;
-        if (useSavingsWallet)
-            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE));
-        else
-            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress);
+        if (useSavingsWallet) {
+            sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                    preferences.getIgnoreDustThreshold());
+        } else {
+            sendRequest.coinSelector = new BtcCoinSelector(fundingAddress, preferences.getIgnoreDustThreshold());
+        }
         // We use a fixed fee
         sendRequest.fee = txFee;
         sendRequest.feePerKb = Coin.ZERO;
@@ -1196,7 +1203,7 @@ public class TradeWalletService {
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)
-            sendRequest.coinSelector = new BtcCoinSelector(address);
+            sendRequest.coinSelector = new BtcCoinSelector(address, preferences.getIgnoreDustThreshold());
             // We use always the same address in a trade for all transactions
             sendRequest.changeAddress = changeAddress;
             // With the usage of completeTx() we get all the work done with fee calculation, validation and coin selection.

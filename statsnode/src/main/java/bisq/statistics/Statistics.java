@@ -18,7 +18,7 @@
 package bisq.statistics;
 
 import bisq.core.app.misc.AppSetup;
-import bisq.core.app.misc.AppSetupWithP2P;
+import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.offer.OfferBookService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -65,7 +65,7 @@ public class Statistics {
             }
         });
 
-        appSetup = injector.getInstance(AppSetupWithP2P.class);
+        appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
         appSetup.start();
     }
 }

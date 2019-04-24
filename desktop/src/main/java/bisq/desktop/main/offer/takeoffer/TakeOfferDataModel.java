@@ -304,6 +304,8 @@ class TakeOfferDataModel extends OfferDataModel {
             new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+        } else if (filterManager.requireUpdateToNewVersion()) {
+            new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,

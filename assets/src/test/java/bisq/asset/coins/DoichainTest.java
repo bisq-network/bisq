@@ -30,6 +30,7 @@ public class DoichainTest extends AbstractAssetTest {
     public void testValidAddresses() {
         assertValidAddress("NGHV9LstnZfrkGx5QJmYhEepbzc66W7LN5");
         assertValidAddress("N4jeY9YhU49qHN5wUv7HBxeVZrFg32XFy7");
+        assertValidAddress("6a6xk7Ff6XbgrNWhSwn7nM394KZJNt7JuV");
     }
 
     @Test
