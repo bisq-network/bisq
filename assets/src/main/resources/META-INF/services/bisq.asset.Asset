@@ -22,6 +22,7 @@ bisq.asset.coins.BSQ$Mainnet
 bisq.asset.coins.BSQ$Regtest
 bisq.asset.coins.BSQ$Testnet
 bisq.asset.coins.Byteball
+bisq.asset.coins.Bzedge
 bisq.asset.coins.Cash2
 bisq.asset.coins.Chaucha
 bisq.asset.coins.CloakCoin
