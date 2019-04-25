@@ -199,6 +199,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         tableView.getSortOrder().add(dateColumn);
 
         filterLabel.setText(Res.getWithCol("support.filter"));
+        filterTextField.setPromptText(Res.get("support.filter.prompt"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
         footerBox.setSpacing(5);
