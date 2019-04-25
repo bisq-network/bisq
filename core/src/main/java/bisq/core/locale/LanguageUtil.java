@@ -84,7 +84,7 @@ public class LanguageUtil {
             */
     );
 
-    public static final List<String> rtlLanguagesCodes = Arrays.asList(
+    private static final List<String> rtlLanguagesCodes = Arrays.asList(
             "fa", // Persian
             "ar", // Arabic
             "iw" // Hebrew
