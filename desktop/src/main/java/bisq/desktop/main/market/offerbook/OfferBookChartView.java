@@ -214,15 +214,18 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     String code = tradeCurrency.getCode();
                     volumeColumnLabel.set(Res.get("shared.amountWithCur", code));
                     xAxis.setTickLabelFormatter(new StringConverter<>() {
+                        int cryptoPrecision = 3;
                         @Override
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                                final String withPrecision3 = formatter.formatRoundedDoubleWithPrecision(doubleValue, 3);
-                                if (withPrecision3.equals("0.000"))
-                                    return formatter.formatRoundedDoubleWithPrecision(doubleValue, 8);
-                                else
-                                    return withPrecision3;
+                                final String withCryptoPrecision = formatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                if (withCryptoPrecision.equals("0.000")) {
+                                    cryptoPrecision = 8;
+                                    return formatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                } else {
+                                    return withCryptoPrecision;
+                                }
                             } else {
                                 return formatter.formatRoundedDoubleWithPrecision(doubleValue, 2);
                             }

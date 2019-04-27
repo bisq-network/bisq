@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -34,6 +35,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
@@ -49,8 +51,6 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
-import com.google.common.base.Preconditions;
-
 import javafx.fxml.FXML;
 
 import javafx.stage.Stage;
@@ -60,13 +60,18 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -76,19 +81,31 @@ import java.util.Comparator;
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
     private final boolean useDevPrivilegeKeys;
+
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
     TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
+    HBox footerBox;
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
+    @FXML
+    Pane spacer;
+    @FXML
     AutoTooltipButton exportButton;
+
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
     private final BSFormatter formatter;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private SortedList<ClosedTradableListItem> sortedList;
+    private FilteredList<ClosedTradableListItem> filteredList;
+    private ChangeListener<String> filterTextFieldListener;
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model,
@@ -178,13 +195,24 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
+
+        filterLabel.setText(Res.getWithCol("support.filter"));
+        filterTextField.setPromptText(Res.get("support.filter.prompt"));
+        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
+        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+        footerBox.setSpacing(5);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
         exportButton.updateText(Res.get("shared.exportCSV"));
+        HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
     }
 
     @Override
     protected void activate() {
-        sortedList = new SortedList<>(model.getList());
+        filteredList = new FilteredList<>(model.getList());
+
+        sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+
         tableView.setItems(sortedList);
 
         exportButton.setOnAction(event -> {
@@ -211,14 +239,52 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
                     new ClosedTradableListItem(null), sortedList, (Stage) root.getScene().getWindow());
         });
+
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
     }
 
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
         exportButton.setOnAction(null);
+
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
     }
 
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            Offer offer = item.getTradable().getOffer();
+            boolean matchesId = offer.getId().contains(filterString);
+            boolean matchesOfferDate = formatter.formatDate(offer.getDate()).contains(filterString);
+            boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
+
+            if (item.getTradable() instanceof Trade) {
+                boolean isBuyerOnion = false;
+                boolean isSellerOnion = false;
+                boolean matchesBuyersPaymentAccountData = false;
+                boolean matchesSellersPaymentAccountData = false;
+
+                Trade trade = (Trade) item.getTradable();
+                boolean matchesTradeDate = formatter.formatDate(trade.getTakeOfferDate()).contains(filterString);
+                Contract contract = trade.getContract();
+                if (contract != null) {
+                    isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
+                    isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
+                    matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                    matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                }
+                return matchesId || matchesOfferDate || isMakerOnion ||
+                        matchesTradeDate || isBuyerOnion || isSellerOnion ||
+                        matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+            } else {
+                return matchesId || matchesOfferDate || isMakerOnion;
+            }
+        });
+    }
 
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.getStyleClass().add("first-column");
@@ -335,14 +401,12 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     Trade trade = (Trade) newItem.getTradable();
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-                                    final Offer offer = trade.getOffer();
-                                    Preconditions.checkNotNull(offer, "Offer must not be null");
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
-                                            offer,
+                                            trade,
                                             preferences,
                                             model.accountAgeWitnessService,
                                             formatter,

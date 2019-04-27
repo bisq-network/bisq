@@ -25,14 +25,17 @@ import bisq.desktop.util.Layout;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
+import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Utils;
 
@@ -64,6 +67,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
     private final DisputeManager disputeManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private Dispute dispute;
 
@@ -73,8 +77,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, BSFormatter formatter) {
+    public ContractWindow(DisputeManager disputeManager, AccountAgeWitnessService accountAgeWitnessService,
+                          BSFormatter formatter) {
         this.disputeManager = disputeManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
         type = Type.Confirmation;
     }
@@ -109,7 +115,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         List<String> acceptedCountryCodes = offer.getAcceptedCountryCodes();
         boolean showAcceptedCountryCodes = acceptedCountryCodes != null && !acceptedCountryCodes.isEmpty();
 
-        int rows = 17;
+        int rows = 18;
         if (dispute.getDepositTxSerialized() != null)
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
@@ -147,6 +153,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
                         contract.getSellerPayoutAddressString()).second.setMouseTransparent(false);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.onions"),
                 contract.getBuyerNodeAddress().getFullAddress() + " / " + contract.getSellerNodeAddress().getFullAddress());
+
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.accountAge"),
+                getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing(), offer.getCurrencyCode()) + " / " +
+                        getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing(), offer.getCurrencyCode()));
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
                 disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
@@ -239,11 +249,17 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
         GridPane.setColumnSpan(closeButton, 2);
-        //TODO app wide focus
-        //closeButton.requestFocus();
         closeButton.setOnAction(e -> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();
         });
+    }
+
+    private String getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing, String currencyCode) {
+        long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
+        return CurrencyUtil.isFiatCurrency(currencyCode) ?
+                age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                        Res.get("peerInfoIcon.tooltip.unknownAge") :
+                "";
     }
 }

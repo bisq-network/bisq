@@ -26,6 +26,7 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.arbitration.DisputeManager;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -41,14 +42,28 @@ import javax.inject.Inject;
 public class ArbitratorDisputeView extends TraderDisputeView {
 
     @Inject
-    public ArbitratorDisputeView(DisputeManager disputeManager, KeyRing keyRing, TradeManager tradeManager,
-                                 BSFormatter formatter, DisputeSummaryWindow disputeSummaryWindow,
+    public ArbitratorDisputeView(DisputeManager disputeManager,
+                                 KeyRing keyRing,
+                                 TradeManager tradeManager,
+                                 BSFormatter formatter,
+                                 DisputeSummaryWindow disputeSummaryWindow,
                                  PrivateNotificationManager privateNotificationManager,
-                                 ContractWindow contractWindow, TradeDetailsWindow tradeDetailsWindow,
-                                 P2PService p2PService, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(disputeManager, keyRing, tradeManager, formatter,
-                disputeSummaryWindow, privateNotificationManager, contractWindow,
-                tradeDetailsWindow, p2PService, useDevPrivilegeKeys);
+                                 ContractWindow contractWindow,
+                                 TradeDetailsWindow tradeDetailsWindow,
+                                 P2PService p2PService,
+                                 AccountAgeWitnessService accountAgeWitnessService,
+                                 @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+        super(disputeManager,
+                keyRing,
+                tradeManager,
+                formatter,
+                disputeSummaryWindow,
+                privateNotificationManager,
+                contractWindow,
+                tradeDetailsWindow,
+                p2PService,
+                accountAgeWitnessService,
+                useDevPrivilegeKeys);
     }
 
     @Override
@@ -65,8 +80,8 @@ public class ArbitratorDisputeView extends TraderDisputeView {
         filteredList.setPredicate(dispute -> {
             boolean matchesTradeId = dispute.getTradeId().contains(filterString);
             boolean matchesDate = formatter.formatDate(dispute.getOpeningDate()).contains(filterString);
-            boolean isBuyerOnion = getBuyerOnionAddressColumnLabel(dispute).contains(filterString);
-            boolean isSellerOnion = getSellerOnionAddressColumnLabel(dispute).contains(filterString);
+            boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
+            boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
             boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
             boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
 

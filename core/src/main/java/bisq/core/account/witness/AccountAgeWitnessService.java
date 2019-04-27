@@ -24,6 +24,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
+import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
@@ -129,6 +130,20 @@ public class AccountAgeWitnessService {
     // Generic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
+        AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
+        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
+            p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
+    }
+
+    public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
+                pubKeyRing.getSignaturePubKeyBytes()));
+
+        return getWitnessByHash(hash);
+    }
+
     public Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
@@ -139,15 +154,16 @@ public class AccountAgeWitnessService {
         return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
     }
 
-    public void publishMyAccountAgeWitness(PaymentAccountPayload paymentAccountPayload) {
-        AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccountPayload);
-        if (!accountAgeWitnessMap.containsKey(accountAgeWitness.getHashAsByteArray()))
-            p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
-    }
 
     public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
         log.debug("getAccountAge now={}, accountAgeWitness.getDate()={}", now.getTime(), accountAgeWitness.getDate());
         return now.getTime() - accountAgeWitness.getDate();
+    }
+
+    public long getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        return findWitness(paymentAccountPayload, pubKeyRing)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
     }
 
     public AccountAge getAccountAgeCategory(long accountAge) {
@@ -207,6 +223,16 @@ public class AccountAgeWitnessService {
         return witnessByHashAsHex
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
                 .orElse(-1L);
+    }
+
+    public long getTradingPeersAccountAge(Trade trade) {
+        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
+            // unexpected
+            return -1;
+        }
+
+        return getAccountAge(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
 
@@ -330,14 +356,6 @@ public class AccountAgeWitnessService {
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
         return new AccountAgeWitness(hash, new Date().getTime());
-    }
-
-    private Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
-        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
-        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
-                pubKeyRing.getSignaturePubKeyBytes()));
-
-        return getWitnessByHash(hash);
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {

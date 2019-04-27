@@ -28,7 +28,6 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
@@ -69,8 +68,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -488,14 +485,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     final Trade trade = newItem.getTrade();
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
                                     int numPastTrades = model.getNumPastTrades(trade);
-                                    final Offer offer = trade.getOffer();
-                                    checkNotNull(offer, "Offer must not be null in PendingTradesView");
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
-                                            offer,
+                                            trade,
                                             preferences,
                                             model.accountAgeWitnessService,
                                             formatter,
