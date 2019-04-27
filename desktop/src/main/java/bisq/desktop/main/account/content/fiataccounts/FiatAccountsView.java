@@ -237,7 +237,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
         } else {
-            String buyersMinAccountAge = formatter.formatAccountAge(accountScoreService.getMinAccountAgeFactor(paymentAccount.getPaymentMethod()));
+            String buyersMinAccountAge = formatter.formatAccountAge(accountScoreService.getBuyersRequiredAccountAge(paymentAccount.getPaymentMethod()));
             String text = Res.get("payment.limits.info",
                     formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),

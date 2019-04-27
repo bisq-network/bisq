@@ -104,7 +104,6 @@ import javafx.collections.ListChangeListener;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.Date;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -502,22 +501,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             return;
         }
 
-        if (offer.getDirection() == OfferPayload.Direction.BUY &&
-                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
-
-            long minAccountAgeFactor = accountScoreService.getMinAccountAgeFactor(offer.getPaymentMethod());
-            long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer, new Date());
-            if (makersAccountAge < minAccountAgeFactor) {
-                new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",
-                        formatter.formatAccountAge(makersAccountAge),
-                        formatter.formatAccountAge(minAccountAgeFactor),
-                        formatter.formatAccountAge(minAccountAgeFactor)))
-                        .actionButtonText(Res.get("offerbook.warning.buyerHasImmatureAccount.confirm"))
-                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .show();
-                return;
-            }
+        if (accountScoreService.hasFiatBuyerAsMakerImmatureAccount(offer)) {
+            long minAccountAge = accountScoreService.getBuyersRequiredAccountAge(offer.getPaymentMethod());
+            long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+            new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",
+                    formatter.formatAccountAge(makersAccountAge),
+                    formatter.formatAccountAge(minAccountAge),
+                    formatter.formatAccountAge(minAccountAge)))
+                    .actionButtonText(Res.get("offerbook.warning.buyerHasImmatureAccount.confirm"))
+                    .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+            return;
         }
 
         offerActionHandler.onTakeOffer(offer);

@@ -470,16 +470,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         qrCodeImageView.setImage(qrImage);
 
         String key = "immatureBuyerAccountAgeCreateOffer";
-        if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get()) &&
-                model.getDataModel().getDirection() == OfferPayload.Direction.BUY &&
-                preferences.showAgain(key) &&
-                !DevEnv.isDevMode()) {
-            long myAccountAge = model.getDataModel().getMyAccountAge();
-            long requiredAccountAge = model.getDataModel().getRequiredFiatBuyersAccountAge();
-            String requiredAccountAgeAsString = btcFormatter.formatAccountAge(requiredAccountAge);
-            if (myAccountAge < requiredAccountAge) {
+        if (preferences.showAgain(key) && !DevEnv.isDevMode()) {
+            if (model.getDataModel().isMyAccountImmature()) {
+                String myAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getMyAccountAge());
+                String buyersRequiredAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getBuyersRequiredAccountAge());
                 new Popup().information(Res.get("popup.immatureBuyerAccountAge.createOffer.msg",
-                        btcFormatter.formatAccountAge(myAccountAge), requiredAccountAgeAsString, requiredAccountAgeAsString))
+                        myAccountAge, buyersRequiredAccountAge, buyersRequiredAccountAge))
                         .dontShowAgainId(key)
                         .show();
             }

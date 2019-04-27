@@ -46,7 +46,6 @@ import javafx.geometry.Point2D;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import java.util.Date;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -254,7 +253,7 @@ public class PeerInfoIcon extends Group {
         } else {
             checkNotNull(offer, "Offer must not be null if trade is null.");
 
-            return accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+            return accountAgeWitnessService.getMakersAccountAge(offer);
         }
     }
 

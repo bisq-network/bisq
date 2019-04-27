@@ -285,13 +285,13 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Return -1 if witness data is not found (old versions)
-    public long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
+    public long getMakersAccountAge(Offer offer) {
         final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         final Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
                 getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
                 Optional.empty();
         return witnessByHashAsHex
-                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
                 .orElse(-1L);
     }
 

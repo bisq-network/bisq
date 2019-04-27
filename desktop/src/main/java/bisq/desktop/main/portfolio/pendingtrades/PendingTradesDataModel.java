@@ -34,7 +34,6 @@ import bisq.core.arbitration.DisputeAlreadyOpenException;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -73,7 +72,6 @@ import javafx.collections.ObservableList;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -191,14 +189,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public boolean isReleaseBtcPermitted() {
-        //TODO move to domain
-        return selectedTrade.getOffer() != null &&
-                (CurrencyUtil.isCryptoCurrency(selectedTrade.getOffer().getCurrencyCode()) ||
-                        getBuyersAccountAge() >= accountScoreService.getMinAccountAgeFactor(selectedTrade.getOffer().getPaymentMethod()));
+        return !accountScoreService.isFiatBuyerWithImmatureAccount(selectedTrade);
     }
 
     public String getFormattedDelayedPayoutDate() {
-        return formatter.formatDateTime(getDelayedPayoutDate());
+        return formatter.formatDateTime(accountScoreService.getDelayedPayoutDate(selectedTrade));
     }
 
     public String getFormattedBuyersAccountAge() {
@@ -211,18 +206,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return 0;    // Not expected case
         }
         return accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-    }
-
-    private Date getDelayedPayoutDate() {
-        //TODO move
-        long accountAgeInMillis = getBuyersAccountAge();
-        Offer offer = selectedTrade.getOffer();
-        long waitPeriod = offer != null ?
-                (Math.max(0, accountScoreService.getMinAccountAgeFactor(selectedTrade.getOffer().getPaymentMethod())) - accountAgeInMillis) :
-                0L;
-
-        long now = new Date().getTime();
-        return new Date(waitPeriod + now);
     }
 
     public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {

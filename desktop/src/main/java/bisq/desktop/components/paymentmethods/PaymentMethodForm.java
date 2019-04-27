@@ -184,7 +184,7 @@ public abstract class PaymentMethodForm {
         String limitationsText = Res.get("payment.maxPeriodAndTradeLimits", getTimeText(hours), tradeLimit);
         String accountAgeText = "";
         if (!isAltcoin) {
-            String buyersMinAccountAge = formatter.formatAccountAge(accountScoreService.getMinAccountAgeFactor(paymentAccount.getPaymentMethod()));
+            String buyersMinAccountAge = formatter.formatAccountAge(accountScoreService.getBuyersRequiredAccountAge(paymentAccount.getPaymentMethod()));
             long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
             accountAgeText = Res.get("payment.accountAge", formatter.formatAccountAge(accountAge), buyersMinAccountAge);
         }
