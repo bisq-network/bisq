@@ -33,6 +33,7 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
