@@ -17,9 +17,9 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessStorageService;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.AccountAgeWitnessStorageService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;

@@ -15,10 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.payment;
+package bisq.core.account.witness;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
+import bisq.core.payment.AssetAccount;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
