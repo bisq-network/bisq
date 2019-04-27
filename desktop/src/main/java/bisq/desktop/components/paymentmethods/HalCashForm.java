@@ -22,6 +22,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.HalCashValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -50,9 +51,9 @@ public class HalCashForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public HalCashForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, HalCashValidator halCashValidator,
+    public HalCashForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, HalCashValidator halCashValidator,
                        InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.halCashAccount = (HalCashAccount) paymentAccount;
         this.halCashValidator = halCashValidator;
     }

@@ -3,6 +3,7 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -22,8 +23,8 @@ abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
 
     private InputTextField accountNrInputTextField;
 
-    GeneralAccountNumberForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+    GeneralAccountNumberForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
     }
 
     @Override

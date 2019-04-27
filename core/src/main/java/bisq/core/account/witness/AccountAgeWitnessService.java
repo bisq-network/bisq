@@ -46,8 +46,6 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import java.security.PublicKey;
 
 import java.util.Arrays;
@@ -67,7 +65,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
-    public static final long BUYERS_MIN_ACCOUNT_AGE = 31 * DateUtils.MILLIS_PER_DAY;
 
     public enum AccountAge {
         LESS_ONE_MONTH,

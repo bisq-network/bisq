@@ -19,6 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
@@ -52,9 +53,9 @@ public class SpecificBankForm extends BankForm {
         return BankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
     }
 
-    public SpecificBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
+    public SpecificBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, InputValidator inputValidator,
                             GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.specificBanksAccountPayload = (SpecificBanksAccountPayload) paymentAccount.paymentAccountPayload;
     }
 

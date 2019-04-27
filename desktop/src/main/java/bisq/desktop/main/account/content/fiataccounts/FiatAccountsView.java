@@ -69,6 +69,7 @@ import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
@@ -138,6 +139,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final BSFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
@@ -167,6 +169,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             PromptPayValidator promptPayValidator,
                             AdvancedCashValidator advancedCashValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
+                            AccountScoreService accountScoreService,
                             BSFormatter formatter) {
         super(model);
 
@@ -190,6 +193,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.formatter = formatter;
     }
 
@@ -233,7 +237,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
         } else {
-            String buyersMinAccountAge = formatter.formatAccountAge(paymentAccount.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE));
+            String buyersMinAccountAge = formatter.formatAccountAge(accountScoreService.getMinAccountAgeFactor(paymentAccount.getPaymentMethod()));
             String text = Res.get("payment.limits.info",
                     formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
@@ -418,55 +422,55 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, PaymentAccount paymentAccount) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.UPHOLD_ID:
-                return new UpholdForm(paymentAccount, accountAgeWitnessService, upholdValidator, inputValidator, root, gridRow, formatter);
+                return new UpholdForm(paymentAccount, accountAgeWitnessService, accountScoreService, upholdValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.MONEY_BEAM_ID:
-                return new MoneyBeamForm(paymentAccount, accountAgeWitnessService, moneyBeamValidator, inputValidator, root, gridRow, formatter);
+                return new MoneyBeamForm(paymentAccount, accountAgeWitnessService, accountScoreService, moneyBeamValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.POPMONEY_ID:
-                return new PopmoneyForm(paymentAccount, accountAgeWitnessService, popmoneyValidator, inputValidator, root, gridRow, formatter);
+                return new PopmoneyForm(paymentAccount, accountAgeWitnessService, accountScoreService, popmoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.REVOLUT_ID:
-                return new RevolutForm(paymentAccount, accountAgeWitnessService, revolutValidator, inputValidator, root, gridRow, formatter);
+                return new RevolutForm(paymentAccount, accountAgeWitnessService, accountScoreService, revolutValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PERFECT_MONEY_ID:
-                return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
+                return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, accountScoreService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
-                return new SepaForm(paymentAccount, accountAgeWitnessService, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
+                return new SepaForm(paymentAccount, accountAgeWitnessService, accountScoreService, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_INSTANT_ID:
-                return new SepaInstantForm(paymentAccount, accountAgeWitnessService, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
+                return new SepaInstantForm(paymentAccount, accountAgeWitnessService, accountScoreService, ibanValidator, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.FASTER_PAYMENTS_ID:
-                return new FasterPaymentsForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new FasterPaymentsForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
-                return new NationalBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new NationalBankForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SAME_BANK_ID:
-                return new SameBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new SameBankForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SPECIFIC_BANKS_ID:
-                return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new SpecificBankForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
-                return new AliPayForm(paymentAccount, accountAgeWitnessService, aliPayValidator, inputValidator, root, gridRow, formatter);
+                return new AliPayForm(paymentAccount, accountAgeWitnessService, accountScoreService, aliPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WECHAT_PAY_ID:
-                return new WeChatPayForm(paymentAccount, accountAgeWitnessService, weChatPayValidator, inputValidator, root, gridRow, formatter);
+                return new WeChatPayForm(paymentAccount, accountAgeWitnessService, accountScoreService, weChatPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWISH_ID:
-                return new SwishForm(paymentAccount, accountAgeWitnessService, swishValidator, inputValidator, root, gridRow, formatter);
+                return new SwishForm(paymentAccount, accountAgeWitnessService, accountScoreService, swishValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CLEAR_X_CHANGE_ID:
-                return new ClearXchangeForm(paymentAccount, accountAgeWitnessService, clearXchangeValidator, inputValidator, root, gridRow, formatter);
+                return new ClearXchangeForm(paymentAccount, accountAgeWitnessService, accountScoreService, clearXchangeValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CHASE_QUICK_PAY_ID:
-                return new ChaseQuickPayForm(paymentAccount, accountAgeWitnessService, chaseQuickPayValidator, inputValidator, root, gridRow, formatter);
+                return new ChaseQuickPayForm(paymentAccount, accountAgeWitnessService, accountScoreService, chaseQuickPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.INTERAC_E_TRANSFER_ID:
-                return new InteracETransferForm(paymentAccount, accountAgeWitnessService, interacETransferValidator, inputValidator, root, gridRow, formatter);
+                return new InteracETransferForm(paymentAccount, accountAgeWitnessService, accountScoreService, interacETransferValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
-                return new USPostalMoneyOrderForm(paymentAccount, accountAgeWitnessService, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
+                return new USPostalMoneyOrderForm(paymentAccount, accountAgeWitnessService, accountScoreService, usPostalMoneyOrderValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.MONEY_GRAM_ID:
-                return new MoneyGramForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new MoneyGramForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.WESTERN_UNION_ID:
-                return new WesternUnionForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new WesternUnionForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.CASH_DEPOSIT_ID:
-                return new CashDepositForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+                return new CashDepositForm(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.HAL_CASH_ID:
-                return new HalCashForm(paymentAccount, accountAgeWitnessService, halCashValidator, inputValidator, root, gridRow, formatter);
+                return new HalCashForm(paymentAccount, accountAgeWitnessService, accountScoreService, halCashValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.F2F_ID:
-                return new F2FForm(paymentAccount, accountAgeWitnessService, f2FValidator, inputValidator, root, gridRow, formatter);
+                return new F2FForm(paymentAccount, accountAgeWitnessService, accountScoreService, f2FValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.PROMPT_PAY_ID:
-                return new PromptPayForm(paymentAccount, accountAgeWitnessService, promptPayValidator, inputValidator, root, gridRow, formatter);
+                return new PromptPayForm(paymentAccount, accountAgeWitnessService, accountScoreService, promptPayValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ADVANCED_CASH_ID:
-                return new AdvancedCashForm(paymentAccount, accountAgeWitnessService, advancedCashValidator, inputValidator, root, gridRow, formatter);
+                return new AdvancedCashForm(paymentAccount, accountAgeWitnessService, accountScoreService, advancedCashValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

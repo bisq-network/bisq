@@ -19,6 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -44,9 +45,9 @@ public class PerfectMoneyForm extends GeneralAccountNumberForm {
         return gridRow;
     }
 
-    public PerfectMoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PerfectMoneyValidator perfectMoneyValidator, InputValidator inputValidator, GridPane gridPane, int
+    public PerfectMoneyForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, PerfectMoneyValidator perfectMoneyValidator, InputValidator inputValidator, GridPane gridPane, int
             gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.perfectMoneyAccount = (PerfectMoneyAccount) paymentAccount;
     }
 

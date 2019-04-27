@@ -6,6 +6,7 @@ import bisq.desktop.util.validation.BankIdValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
 import bisq.desktop.util.validation.NationalAccountIdValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
@@ -38,8 +39,8 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
 
     boolean accountNrInputTextFieldEdited;
 
-    public GeneralBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+    public GeneralBankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
     }
 
     static int getIndexOfColumn(int colIndex) {

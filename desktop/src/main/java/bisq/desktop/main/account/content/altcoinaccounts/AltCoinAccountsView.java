@@ -26,6 +26,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
@@ -73,6 +74,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final BSFormatter formatter;
@@ -88,6 +90,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                InputValidator inputValidator,
                                AltCoinAddressValidator altCoinAddressValidator,
                                AccountAgeWitnessService accountAgeWitnessService,
+                               AccountScoreService accountScoreService,
                                AssetService assetService,
                                FilterManager filterManager,
                                BSFormatter formatter,
@@ -97,6 +100,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.formatter = formatter;
@@ -236,7 +240,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     }
 
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
-        return new AssetsForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
+        return new AssetsForm(paymentAccount, accountAgeWitnessService, accountScoreService, altCoinAddressValidator,
                 inputValidator, root, gridRow, formatter, assetService, filterManager, preferences);
     }
 

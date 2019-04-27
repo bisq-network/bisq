@@ -316,32 +316,4 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public boolean isAsset() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
-
-    public long getMinAccountAgeFactor(long minAccountAge) {
-        switch (id) {
-            case PaymentMethod.BLOCK_CHAINS_ID:
-            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
-
-            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
-            case PaymentMethod.HAL_CASH_ID:
-            case PaymentMethod.F2F_ID:
-            case PaymentMethod.MONEY_GRAM_ID:
-            case PaymentMethod.WESTERN_UNION_ID:
-
-            case PaymentMethod.SWISH_ID:
-            case PaymentMethod.PERFECT_MONEY_ID:
-            case PaymentMethod.ALI_PAY_ID:
-            case PaymentMethod.WECHAT_PAY_ID:
-                return 0;
-
-            case PaymentMethod.ADVANCED_CASH_ID:
-            case PaymentMethod.PROMPT_PAY_ID:
-            case PaymentMethod.CASH_DEPOSIT_ID:
-                return minAccountAge / 4;
-
-            default:
-                // All other bank transfer methods
-                return minAccountAge;
-        }
-    }
 }

@@ -27,6 +27,7 @@ import bisq.desktop.main.overlays.windows.SelectDepositTxWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeAlreadyOpenException;
@@ -92,6 +93,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final BSFormatter formatter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
@@ -122,6 +124,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter,
                                   AccountAgeWitnessService accountAgeWitnessService,
+                                  AccountScoreService accountScoreService,
                                   BSFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
@@ -134,6 +137,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.formatter = formatter;
 
         tradesListChangeListener = change -> onListChanged();
@@ -187,9 +191,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public boolean isReleaseBtcPermitted() {
+        //TODO move to domain
         return selectedTrade.getOffer() != null &&
                 (CurrencyUtil.isCryptoCurrency(selectedTrade.getOffer().getCurrencyCode()) ||
-                        getBuyersAccountAge() >= selectedTrade.getOffer().getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE));
+                        getBuyersAccountAge() >= accountScoreService.getMinAccountAgeFactor(selectedTrade.getOffer().getPaymentMethod()));
     }
 
     public String getFormattedDelayedPayoutDate() {
@@ -209,11 +214,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private Date getDelayedPayoutDate() {
+        //TODO move
         long accountAgeInMillis = getBuyersAccountAge();
         Offer offer = selectedTrade.getOffer();
         long waitPeriod = offer != null ?
-                (Math.max(0, selectedTrade.getOffer().getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE)) - accountAgeInMillis) :
+                (Math.max(0, accountScoreService.getMinAccountAgeFactor(selectedTrade.getOffer().getPaymentMethod())) - accountAgeInMillis) :
                 0L;
+
         long now = new Date().getTime();
         return new Date(waitPeriod + now);
     }

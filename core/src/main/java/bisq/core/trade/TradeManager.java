@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.exceptions.AddressEntryException;
@@ -25,7 +26,6 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.filter.FilterManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
@@ -118,6 +118,7 @@ public class TradeManager implements PersistedDataHost {
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
+    private final AccountScoreService accountScoreService;
     private final Clock clock;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
@@ -152,6 +153,7 @@ public class TradeManager implements PersistedDataHost {
                         PersistenceProtoResolver persistenceProtoResolver,
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
+                        AccountScoreService accountScoreService,
                         Clock clock,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.user = user;
@@ -169,6 +171,7 @@ public class TradeManager implements PersistedDataHost {
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
+        this.accountScoreService = accountScoreService;
         this.clock = clock;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
@@ -654,20 +657,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public boolean isFiatBuyerWithImmatureAccount(Trade trade) {
-        Offer offer = trade.getOffer();
-        if (offer == null)
-            return false;
-
-        Contract contract = trade.getContract();
-        if (contract == null)
-            return false;
-
-        boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
-        if (!isFiatCurrency)
-            return false;
-
-        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = offer.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE);
-        return buyersAccountAge < requiredAccountAge;
+        return accountScoreService.isFiatBuyerWithImmatureAccount(trade);
     }
 }

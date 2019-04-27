@@ -21,6 +21,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PromptPayValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -50,9 +51,9 @@ public class PromptPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public PromptPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, PromptPayValidator promptPayValidator,
-                       InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+    public PromptPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, PromptPayValidator promptPayValidator,
+                         InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.promptPayAccount = (PromptPayAccount) paymentAccount;
         this.promptPayValidator = promptPayValidator;
     }

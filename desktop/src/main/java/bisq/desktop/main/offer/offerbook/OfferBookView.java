@@ -40,6 +40,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
@@ -118,6 +119,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final boolean useDevPrivilegeKeys;
 
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -145,6 +147,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                   BSFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
                   AccountAgeWitnessService accountAgeWitnessService,
+                  AccountScoreService accountScoreService,
                   @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
 
@@ -153,6 +156,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -500,7 +504,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         if (offer.getDirection() == OfferPayload.Direction.BUY &&
                 CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
-            long minAccountAgeFactor = offer.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE);
+
+            long minAccountAgeFactor = accountScoreService.getMinAccountAgeFactor(offer.getPaymentMethod());
             long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer, new Date());
             if (makersAccountAge < minAccountAgeFactor) {
                 new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",

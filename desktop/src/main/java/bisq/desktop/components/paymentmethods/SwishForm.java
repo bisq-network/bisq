@@ -22,6 +22,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.SwishValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -58,9 +59,9 @@ public class SwishForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public SwishForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, SwishValidator swishValidator,
+    public SwishForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, SwishValidator swishValidator,
                      InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.swishAccount = (SwishAccount) paymentAccount;
         this.swishValidator = swishValidator;
     }

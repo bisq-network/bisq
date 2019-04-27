@@ -22,6 +22,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.UpholdValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -52,10 +53,15 @@ public class UpholdForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public UpholdForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
-                      UpholdValidator upholdValidator, InputValidator inputValidator, GridPane gridPane,
-                      int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+    public UpholdForm(PaymentAccount paymentAccount,
+                      AccountAgeWitnessService accountAgeWitnessService,
+                      AccountScoreService accountScoreService,
+                      UpholdValidator upholdValidator,
+                      InputValidator inputValidator,
+                      GridPane gridPane,
+                      int gridRow,
+                      BSFormatter formatter) {
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.upholdAccount = (UpholdAccount) paymentAccount;
         this.upholdValidator = upholdValidator;
     }

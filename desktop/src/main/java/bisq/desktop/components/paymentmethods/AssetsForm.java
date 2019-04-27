@@ -23,6 +23,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
@@ -89,6 +90,7 @@ public class AssetsForm extends PaymentMethodForm {
 
     public AssetsForm(PaymentAccount paymentAccount,
                       AccountAgeWitnessService accountAgeWitnessService,
+                      AccountScoreService accountScoreService,
                       AltCoinAddressValidator altCoinAddressValidator,
                       InputValidator inputValidator,
                       GridPane gridPane,
@@ -97,7 +99,7 @@ public class AssetsForm extends PaymentMethodForm {
                       AssetService assetService,
                       FilterManager filterManager,
                       Preferences preferences) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;

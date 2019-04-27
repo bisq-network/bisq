@@ -23,6 +23,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BICValidator;
 import bisq.desktop.util.validation.IBANValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -73,10 +74,10 @@ public class SepaForm extends GeneralSepaForm {
     private final IBANValidator ibanValidator;
     private final BICValidator bicValidator;
 
-    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
+    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, IBANValidator ibanValidator,
                     BICValidator bicValidator, InputValidator inputValidator,
                     GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;

@@ -22,6 +22,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -52,9 +53,9 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         return gridRow;
     }
 
-    public ChaseQuickPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, ChaseQuickPayValidator chaseQuickPayValidator,
+    public ChaseQuickPayForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, ChaseQuickPayValidator chaseQuickPayValidator,
                              InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
         this.chaseQuickPayAccount = (ChaseQuickPayAccount) paymentAccount;
         this.chaseQuickPayValidator = chaseQuickPayValidator;
     }

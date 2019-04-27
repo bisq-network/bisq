@@ -20,6 +20,7 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -68,6 +69,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        PriceFeedService priceFeedService,
                        FilterManager filterManager,
                        AccountAgeWitnessService accountAgeWitnessService,
+                       AccountScoreService accountScoreService,
                        FeeService feeService,
                        TxFeeEstimationService txFeeEstimationService,
                        ReferralIdService referralIdService,
@@ -83,6 +85,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 priceFeedService,
                 filterManager,
                 accountAgeWitnessService,
+                accountScoreService,
                 feeService,
                 txFeeEstimationService,
                 referralIdService,

@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.offer;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
@@ -101,6 +102,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     final String shortOfferId;
     private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final FeeService feeService;
     private final TxFeeEstimationService txFeeEstimationService;
     private final ReferralIdService referralIdService;
@@ -153,6 +155,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  PriceFeedService priceFeedService,
                                  FilterManager filterManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
+                                 AccountScoreService accountScoreService,
                                  FeeService feeService,
                                  TxFeeEstimationService txFeeEstimationService,
                                  ReferralIdService referralIdService,
@@ -168,6 +171,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.feeService = feeService;
         this.txFeeEstimationService = txFeeEstimationService;
         this.referralIdService = referralIdService;
@@ -834,6 +838,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     long getRequiredFiatBuyersAccountAge() {
-        return paymentAccount.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE);
+        return accountScoreService.getMinAccountAgeFactor(paymentAccount.getPaymentMethod());
     }
 }

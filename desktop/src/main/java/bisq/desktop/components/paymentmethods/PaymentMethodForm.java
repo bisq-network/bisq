@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
@@ -69,6 +70,7 @@ import static bisq.desktop.util.FormBuilder.*;
 public abstract class PaymentMethodForm {
     protected final PaymentAccount paymentAccount;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     protected final InputValidator inputValidator;
     protected final GridPane gridPane;
     protected int gridRow;
@@ -80,10 +82,16 @@ public abstract class PaymentMethodForm {
     ToggleButton useCustomAccountNameToggleButton;
     protected ComboBox<TradeCurrency> currencyComboBox;
 
-    public PaymentMethodForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService,
-                             InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+    public PaymentMethodForm(PaymentAccount paymentAccount,
+                             AccountAgeWitnessService accountAgeWitnessService,
+                             AccountScoreService accountScoreService,
+                             InputValidator inputValidator,
+                             GridPane gridPane,
+                             int gridRow,
+                             BSFormatter formatter) {
         this.paymentAccount = paymentAccount;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.inputValidator = inputValidator;
         this.gridPane = gridPane;
         this.gridRow = gridRow;
@@ -176,7 +184,7 @@ public abstract class PaymentMethodForm {
         String limitationsText = Res.get("payment.maxPeriodAndTradeLimits", getTimeText(hours), tradeLimit);
         String accountAgeText = "";
         if (!isAltcoin) {
-            String buyersMinAccountAge = formatter.formatAccountAge(paymentAccount.getPaymentMethod().getMinAccountAgeFactor(AccountAgeWitnessService.BUYERS_MIN_ACCOUNT_AGE));
+            String buyersMinAccountAge = formatter.formatAccountAge(accountScoreService.getMinAccountAgeFactor(paymentAccount.getPaymentMethod()));
             long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
             accountAgeText = Res.get("payment.accountAge", formatter.formatAccountAge(accountAge), buyersMinAccountAge);
         }

@@ -23,6 +23,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.F2FValidator;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
@@ -73,9 +74,9 @@ public class F2FForm extends PaymentMethodForm {
     }
 
     public F2FForm(PaymentAccount paymentAccount,
-                   AccountAgeWitnessService accountAgeWitnessService, F2FValidator f2fValidator,
+                   AccountAgeWitnessService accountAgeWitnessService, AccountScoreService accountScoreService, F2FValidator f2fValidator,
                    InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
-        super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
+        super(paymentAccount, accountAgeWitnessService, accountScoreService, inputValidator, gridPane, gridRow, formatter);
 
         this.f2fAccount = (F2FAccount) paymentAccount;
         this.f2fValidator = f2fValidator;
