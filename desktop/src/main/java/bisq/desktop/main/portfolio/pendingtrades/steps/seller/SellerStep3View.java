@@ -120,19 +120,19 @@ public class SellerStep3View extends TradeStepView {
                         case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
                             // We get a popup and the trade closed, so we don't need to show anything here
                             busyAnimation.stop();
-                            confirmButton.setDisable(false);
+                            // confirmButton.setDisable(false);
                             statusLabel.setText("");
                             break;
                         default:
                             log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
                             busyAnimation.stop();
-                            confirmButton.setDisable(false);
+                            // confirmButton.setDisable(false);
                             statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                             break;
                     }
                 } else {
                     log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                    confirmButton.setDisable(true);
+                    // confirmButton.setDisable(true);
                     statusLabel.setText("");
                 }
             }
@@ -263,7 +263,7 @@ public class SellerStep3View extends TradeStepView {
 
     @Override
     protected void applyOnDisputeOpened() {
-        confirmButton.setDisable(true);
+        // confirmButton.setDisable(true);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -366,7 +366,7 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void confirmPaymentReceived() {
-        confirmButton.setDisable(true);
+        // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
         if (!trade.isPayoutPublished())
@@ -379,7 +379,7 @@ public class SellerStep3View extends TradeStepView {
             //if (notificationGroup != null)
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            confirmButton.setDisable(false);
+            // confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
         }, this::handleDelayedPayout);

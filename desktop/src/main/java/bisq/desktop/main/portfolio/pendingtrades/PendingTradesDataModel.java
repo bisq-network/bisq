@@ -169,7 +169,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         final Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
-        checkArgument(trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE, "Check failed: trade.getDisputeState() == Trade.DisputeState.NONE");
         // TODO UI not impl yet
         trade.setCounterCurrencyTxId("");
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);

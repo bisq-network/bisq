@@ -18,8 +18,12 @@
   -->
 
 <?import bisq.desktop.components.AutoTooltipButton?>
+<?import bisq.desktop.components.AutoTooltipLabel?>
+<?import bisq.desktop.components.InputTextField?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 <VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.closedtrades.ClosedTradesView"
@@ -41,5 +45,10 @@
             <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>
         </columns>
     </TableView>
-    <AutoTooltipButton fx:id="exportButton"/>
+    <HBox fx:id="footerBox">
+        <AutoTooltipLabel fx:id="filterLabel"/>
+        <InputTextField fx:id="filterTextField" minWidth="300"/>
+        <Pane fx:id="spacer"/>
+        <AutoTooltipButton fx:id="exportButton"/>
+    </HBox>
 </VBox>

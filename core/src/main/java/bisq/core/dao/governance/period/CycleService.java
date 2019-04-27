@@ -90,7 +90,8 @@ public class CycleService implements DaoStateListener, DaoSetupService {
     }
 
     public int getCycleIndex(Cycle cycle) {
-        return (cycle.getHeightOfFirstBlock() - genesisBlockHeight) / cycle.getDuration();
+        Optional<Cycle> previousCycle = getCycle(cycle.getHeightOfFirstBlock() - 1, daoStateService.getCycles());
+        return previousCycle.map(cycle1 -> getCycleIndex(cycle1) + 1).orElse(0);
     }
 
     public boolean isTxInCycle(Cycle cycle, String txId) {

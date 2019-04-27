@@ -128,12 +128,12 @@ public class BuyerStep2View extends TradeStepView {
                             case BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED:
                             case BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG:
                                 busyAnimation.play();
-                                confirmButton.setDisable(true);
+                                // confirmButton.setDisable(true);
                                 statusLabel.setText(Res.get("shared.sendingConfirmation"));
                                 model.setMessageStateProperty(MessageState.SENT);
                                 timeoutTimer = UserThread.runAfter(() -> {
                                     busyAnimation.stop();
-                                    confirmButton.setDisable(false);
+                                    // confirmButton.setDisable(false);
                                     statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                                 }, 10);
                                 break;
@@ -150,20 +150,20 @@ public class BuyerStep2View extends TradeStepView {
                             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:
                                 // We get a popup and the trade closed, so we dont need to show anything here
                                 busyAnimation.stop();
-                                confirmButton.setDisable(false);
+                                // confirmButton.setDisable(false);
                                 statusLabel.setText("");
                                 model.setMessageStateProperty(MessageState.FAILED);
                                 break;
                             default:
                                 log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
                                 busyAnimation.stop();
-                                confirmButton.setDisable(false);
+                                // confirmButton.setDisable(false);
                                 statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
                                 break;
                         }
                     } else {
                         log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                        confirmButton.setDisable(true);
+                        // confirmButton.setDisable(true);
                         statusLabel.setText("");
                     }
                 }
@@ -351,7 +351,7 @@ public class BuyerStep2View extends TradeStepView {
 
     @Override
     protected void applyOnDisputeOpened() {
-        confirmButton.setDisable(true);
+        // confirmButton.setDisable(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -463,7 +463,7 @@ public class BuyerStep2View extends TradeStepView {
     }
 
     private void confirmPaymentStarted() {
-        confirmButton.setDisable(true);
+        // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
         if (trade.isFiatSent())
@@ -476,7 +476,7 @@ public class BuyerStep2View extends TradeStepView {
             //if (notificationGroup != null)
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            confirmButton.setDisable(false);
+            // confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
