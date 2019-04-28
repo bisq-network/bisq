@@ -12,7 +12,6 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -20,7 +19,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -73,8 +71,6 @@ public class EditOfferDataModelTest {
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
 
-        final BSFormatter bsFormatter = new BSFormatter();
-
         FeeService feeService = mock(FeeService.class);
         AddressEntry addressEntry = mock(AddressEntry.class);
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
@@ -103,7 +99,7 @@ public class EditOfferDataModelTest {
         model = new EditOfferDataModel(null,
                 btcWalletService, bsqWalletService, empty, user,
                 null, null, priceFeedService, null,
-                accountAgeWitnessService, feeService, null, null,
+                accountAgeWitnessService, null, feeService, null, null,
                 null, null);
     }
 

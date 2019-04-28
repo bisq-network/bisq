@@ -71,7 +71,7 @@ public class CreateOfferDataModelTest {
         model = new CreateOfferDataModel(null, btcWalletService,
                 null, preferences, user, null,
                 null, priceFeedService, null,
-                null, feeService, feeEstimationService,
+                null, null, feeService, feeEstimationService,
                 null, null);
     }
 
