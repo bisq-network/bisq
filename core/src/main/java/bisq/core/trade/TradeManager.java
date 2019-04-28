@@ -657,6 +657,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public boolean isFiatBuyerWithImmatureAccount(Trade trade) {
-        return accountScoreService.isFiatBuyerWithImmatureAccount(trade);
+        return accountScoreService.requirePayoutDelay(trade);
     }
 }

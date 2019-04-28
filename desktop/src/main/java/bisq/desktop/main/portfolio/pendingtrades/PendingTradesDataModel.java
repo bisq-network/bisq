@@ -180,20 +180,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
 
-        if (isReleaseBtcPermitted()) {
-            if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE)
-                ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
-        } else {
+        if (requirePayoutDelay()) {
             delayedPayoutHandler.run();
+        } else if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
+            ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
         }
     }
 
-    public boolean isReleaseBtcPermitted() {
-        return !accountScoreService.isFiatBuyerWithImmatureAccount(selectedTrade);
+    public boolean requirePayoutDelay() {
+        return accountScoreService.requirePayoutDelay(selectedTrade);
     }
 
     public String getFormattedDelayedPayoutDate() {
-        return formatter.formatDateTime(accountScoreService.getDelayedPayoutDate(selectedTrade));
+        return formatter.formatDateTime(accountScoreService.getDelayAsDate(selectedTrade));
     }
 
     public String getFormattedBuyersAccountAge() {

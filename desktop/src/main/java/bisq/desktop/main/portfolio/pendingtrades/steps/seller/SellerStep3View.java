@@ -92,20 +92,20 @@ public class SellerStep3View extends TradeStepView {
                 if (!trade.hasFailed()) {
                     switch (state) {
                         case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
-                            if (model.dataModel.isReleaseBtcPermitted()) {
+                            if (model.dataModel.requirePayoutDelay()) {
+                                handleDelayedPayout();
+                            } else {
                                 statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.confirmRelease",
                                         model.dataModel.getFormattedBuyersAccountAge()));
                                 confirmButton.setText(Res.get("portfolio.pending.step3_seller.button.release").toUpperCase());
 
                                 busyAnimation.stop();
                                 confirmButton.setDisable(false);
-                            } else {
-                                handleDelayedPayout();
                             }
                             break;
                         case SELLER_PUBLISHED_PAYOUT_TX:
                         case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
-                            if (!model.dataModel.isReleaseBtcPermitted()) {
+                            if (model.dataModel.requirePayoutDelay()) {
                                 handleDelayedPayout();
                             }
                             break;
@@ -293,9 +293,11 @@ public class SellerStep3View extends TradeStepView {
                         message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.name", optionalHolderName.get());
                     }
                 }
-                if (model.dataModel.isReleaseBtcPermitted()) {
+
+                if (!model.dataModel.requirePayoutDelay()) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
                 }
+
                 new Popup<>()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)

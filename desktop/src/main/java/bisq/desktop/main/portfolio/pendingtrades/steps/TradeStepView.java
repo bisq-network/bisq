@@ -290,11 +290,11 @@ public abstract class TradeStepView extends AnchorPane {
                     timeLeftProgressBar.getStyleClass().add("error");
                 }
             } else {
-                if (model.dataModel.isReleaseBtcPermitted()) {
+                if (model.dataModel.requirePayoutDelay()) {
+                    timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted.immatureBuyerAccount"));
+                } else {
                     timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted",
                             model.getDateForOpenDispute()));
-                } else {
-                    timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted.immatureBuyerAccount"));
                 }
 
                 timeLeftTextField.getStyleClass().add("error-text");
@@ -491,7 +491,7 @@ public abstract class TradeStepView extends AnchorPane {
                         removeWarning();
                     break;
                 case TRADE_PERIOD_OVER:
-                    if (model.dataModel.isReleaseBtcPermitted()) {
+                    if (!model.dataModel.requirePayoutDelay()) {
                         onOpenForDispute();
                     }
                     break;

@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.creation.AccountCreationAgeService;
 import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessStorageService;
@@ -49,6 +50,7 @@ public class TradeModule extends AppModule {
         bind(TradeStatistics2StorageService.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
+        bind(AccountCreationAgeService.class).in(Singleton.class);
         bind(AccountScoreService.class).in(Singleton.class);
         bind(AccountAgeWitnessService.class).in(Singleton.class);
         bind(ReferralIdService.class).in(Singleton.class);

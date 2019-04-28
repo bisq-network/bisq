@@ -501,13 +501,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             return;
         }
 
-        if (accountScoreService.hasFiatBuyerAsMakerImmatureAccount(offer)) {
-            long minAccountAge = accountScoreService.getBuyersRequiredAccountAge(offer.getPaymentMethod());
-            long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+        if (accountScoreService.requirePayoutDelay(offer)) {
+            String requiredAccountAge = formatter.formatAccountAge(accountScoreService.getRequiredAccountAge(offer.getPaymentMethod()));
+            String makersAccountAge = formatter.formatAccountAge(accountAgeWitnessService.getMakersAccountAge(offer));
             new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",
-                    formatter.formatAccountAge(makersAccountAge),
-                    formatter.formatAccountAge(minAccountAge),
-                    formatter.formatAccountAge(minAccountAge)))
+                    makersAccountAge,
+                    requiredAccountAge,
+                    requiredAccountAge))
                     .actionButtonText(Res.get("offerbook.warning.buyerHasImmatureAccount.confirm"))
                     .onAction(() -> offerActionHandler.onTakeOffer(offer))
                     .closeButtonText(Res.get("shared.cancel"))

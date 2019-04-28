@@ -17,126 +17,62 @@
 
 package bisq.core.account.score;
 
+import bisq.core.account.creation.AccountCreationAgeService;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.time.DateUtils;
-
 import java.util.Date;
 
+/**
+ * Main class for account score domain.
+ * Provides access to any data related to account score. Internally it used different protection tools to constructing
+ * the resulting parameters.
+ */
 public class AccountScoreService {
-    private static final long BUYERS_MIN_ACCOUNT_AGE = 31 * DateUtils.MILLIS_PER_DAY;
-
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountCreationAgeService accountCreationAgeService;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountScoreService(AccountAgeWitnessService accountAgeWitnessService) {
+    public AccountScoreService(AccountAgeWitnessService accountAgeWitnessService,
+                               AccountCreationAgeService accountCreationAgeService) {
         this.accountAgeWitnessService = accountAgeWitnessService;
-    }
-
-    public boolean isFiatBuyerWithImmatureAccount(Trade trade) {
-        Offer offer = trade.getOffer();
-        if (offer == null) {
-            return false;
-        }
-
-        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
-            return false;
-        }
-
-        Contract contract = trade.getContract();
-        if (contract == null) {
-            return false;
-        }
-
-
-        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = getBuyersRequiredAccountAge(offer.getPaymentMethod());
-        return buyersAccountAge < requiredAccountAge;
-    }
-
-    public boolean hasFiatBuyerAsMakerImmatureAccount(Offer offer) {
-        if (offer.getDirection() == OfferPayload.Direction.SELL) {
-            return false;
-        }
-
-        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
-            return false;
-        }
-
-        long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
-        long requiredAccountAge = getBuyersRequiredAccountAge(offer.getPaymentMethod());
-        return makersAccountAge < requiredAccountAge;
+        this.accountCreationAgeService = accountCreationAgeService;
     }
 
 
-    public boolean isMyAccountImmature(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction direction) {
-        if (direction == OfferPayload.Direction.SELL) {
-            return false;
-        }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-            return false;
-        }
-
-        long myAccountAge = accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload());
-        long requiredAccountAge = getBuyersRequiredAccountAge(paymentAccount.getPaymentMethod());
-        return myAccountAge < requiredAccountAge;
+    public boolean requirePayoutDelay(Trade trade) {
+        return accountCreationAgeService.requirePayoutDelay(trade);
     }
 
-    public Date getDelayedPayoutDate(Trade trade) {
-        Offer offer = trade.getOffer();
-        if (offer == null) {
-            return new Date();
-        }
-
-        Contract contract = trade.getContract();
-        if (contract == null) {
-            return new Date();
-        }
-
-        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = getBuyersRequiredAccountAge(offer.getPaymentMethod());
-        long delay = Math.max(0, requiredAccountAge - buyersAccountAge);
-
-        long now = new Date().getTime();
-        return new Date(delay + now);
+    public boolean requirePayoutDelay(Offer offer) {
+        return accountCreationAgeService.requirePayoutDelay(offer);
     }
 
 
-    public long getBuyersRequiredAccountAge(PaymentMethod paymentMethod) {
-        switch (paymentMethod.getId()) {
-            case PaymentMethod.BLOCK_CHAINS_ID:
-            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
+    public boolean myMakerAccountRequiresPayoutDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        return accountCreationAgeService.myMakerAccountRequiresPayoutDelay(myPaymentAccount, currencyCode, direction);
+    }
 
-            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
-            case PaymentMethod.HAL_CASH_ID:
-            case PaymentMethod.F2F_ID:
-            case PaymentMethod.MONEY_GRAM_ID:
-            case PaymentMethod.WESTERN_UNION_ID:
+    public Date getDelayAsDate(Trade trade) {
+        return accountCreationAgeService.getDelayAsDate(trade);
+    }
 
-            case PaymentMethod.SWISH_ID:
-            case PaymentMethod.PERFECT_MONEY_ID:
-            case PaymentMethod.ALI_PAY_ID:
-            case PaymentMethod.WECHAT_PAY_ID:
-                return 0;
-
-            case PaymentMethod.ADVANCED_CASH_ID:
-            case PaymentMethod.PROMPT_PAY_ID:
-            case PaymentMethod.CASH_DEPOSIT_ID:
-                return BUYERS_MIN_ACCOUNT_AGE / 4;
-
-            default:
-                // All other bank transfer methods
-                return BUYERS_MIN_ACCOUNT_AGE;
-        }
+    public long getRequiredAccountAge(PaymentMethod paymentMethod) {
+        return accountCreationAgeService.getRequiredAccountAge(paymentMethod);
     }
 }

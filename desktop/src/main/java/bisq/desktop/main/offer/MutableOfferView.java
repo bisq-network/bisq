@@ -471,11 +471,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         String key = "immatureBuyerAccountAgeCreateOffer";
         if (preferences.showAgain(key) && !DevEnv.isDevMode()) {
-            if (model.getDataModel().isMyAccountImmature()) {
+            if (model.getDataModel().myAccountRequiresPayoutDelay()) {
                 String myAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getMyAccountAge());
-                String buyersRequiredAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getBuyersRequiredAccountAge());
+                String requiredAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getRequiredAccountAge());
                 new Popup().information(Res.get("popup.immatureBuyerAccountAge.createOffer.msg",
-                        myAccountAge, buyersRequiredAccountAge, buyersRequiredAccountAge))
+                        myAccountAge, requiredAccountAge, requiredAccountAge))
                         .dontShowAgainId(key)
                         .show();
             }

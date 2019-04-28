@@ -837,11 +837,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload());
     }
 
-    long getBuyersRequiredAccountAge() {
-        return accountScoreService.getBuyersRequiredAccountAge(paymentAccount.getPaymentMethod());
+    long getRequiredAccountAge() {
+        return accountScoreService.getRequiredAccountAge(paymentAccount.getPaymentMethod());
     }
 
-    boolean isMyAccountImmature() {
-        return accountScoreService.isMyAccountImmature(paymentAccount, tradeCurrencyCode.get(), getDirection());
+    boolean myAccountRequiresPayoutDelay() {
+        return accountScoreService.myMakerAccountRequiresPayoutDelay(paymentAccount, tradeCurrencyCode.get(), getDirection());
     }
 }
