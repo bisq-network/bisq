@@ -235,6 +235,11 @@ public class AccountAgeWitnessService {
         return getAccountAge(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
+    public Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
+        return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
+    }
+
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Verification
@@ -356,10 +361,6 @@ public class AccountAgeWitnessService {
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
         return new AccountAgeWitness(hash, new Date().getTime());
-    }
-
-    private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
-        return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
     private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date now) {

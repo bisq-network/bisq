@@ -17,7 +17,6 @@
 
 package bisq.core.account.age;
 
-import bisq.core.account.score.AccountScoreCategory;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
@@ -34,7 +33,6 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.util.Date;
-import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,8 +44,8 @@ import javax.annotation.Nullable;
  */
 @Slf4j
 public class AccountCreationAgeService {
-    private final static int MAX_REQUIRED_AGE = 42;
-    private final static int MAX_DELAY = 28;
+    public final static int MAX_REQUIRED_AGE = 42;
+    public final static int MAX_DELAY = 28;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
 
@@ -241,55 +239,6 @@ public class AccountCreationAgeService {
                 direction);
     }
 
-    /**
-     * @param myPaymentAccount My payment account used for my offer
-     * @return The AccountScoreCategory representing the account age.
-     */
-    public Optional<AccountScoreCategory> getMyAccountScoreCategory(PaymentAccount myPaymentAccount) {
-        return Optional.of(getAccountScoreCategory(accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload())));
-    }
-
-    /**
-     * @param offer The offer for which we request the AccountScoreCategory.
-     * @return The AccountScoreCategory representing the account age.
-     */
-    public Optional<AccountScoreCategory> getAccountScoreCategoryOfMaker(Offer offer) {
-        //TODO probably we want to show the AccountScoreCategory also for sellers
-       /* if (offer.getDirection() == OfferPayload.Direction.SELL) {
-            return Optional.empty();
-        }*/
-
-        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
-            return Optional.empty();
-        }
-
-        long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
-        return Optional.of(getAccountScoreCategory(makersAccountAge));
-    }
-
-    /**
-     * @param trade The trade for which we request the AccountScoreCategory.
-     * @return The AccountScoreCategory representing the account age.
-     */
-    public Optional<AccountScoreCategory> getAccountScoreCategoryOfBuyer(Trade trade) {
-        Offer offer = trade.getOffer();
-        if (offer == null) {
-            return Optional.empty();
-        }
-
-        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
-            return Optional.empty();
-        }
-
-        Contract contract = trade.getContract();
-        if (contract == null) {
-            return Optional.empty();
-        }
-
-        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        return Optional.of(getAccountScoreCategory(buyersAccountAge));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -311,14 +260,4 @@ public class AccountCreationAgeService {
         return accountAge < requiredAccountAge;
     }
 
-    private AccountScoreCategory getAccountScoreCategory(long accountAge) {
-        long maxRequiredAge = MAX_REQUIRED_AGE * DateUtils.MILLIS_PER_DAY;
-        if (accountAge >= maxRequiredAge) {
-            return AccountScoreCategory.GOLD;
-        } else if (accountAge >= maxRequiredAge / 2) {
-            return AccountScoreCategory.SILVER;
-        } else {
-            return AccountScoreCategory.BRONZE;
-        }
-    }
 }

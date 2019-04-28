@@ -52,12 +52,12 @@ public class TradeModule extends AppModule {
         bind(TradeStatistics2StorageService.class).in(Singleton.class);
         bind(ClosedTradableManager.class).in(Singleton.class);
         bind(FailedTradesManager.class).in(Singleton.class);
-        bind(AccountCreationAgeService.class).in(Singleton.class);
-        bind(AccountScoreService.class).in(Singleton.class);
-        bind(AccountAgeWitnessService.class).in(Singleton.class);
-        bind(ReferralIdService.class).in(Singleton.class);
         bind(AccountAgeWitnessStorageService.class).in(Singleton.class);
+        bind(AccountAgeWitnessService.class).in(Singleton.class);
+        bind(AccountScoreService.class).in(Singleton.class);
+        bind(AccountCreationAgeService.class).in(Singleton.class);
         bind(SignedWitnessService.class).in(Singleton.class);
+        bind(ReferralIdService.class).in(Singleton.class);
         bind(SignedWitnessStorageService.class).in(Singleton.class);
         bind(AssetTradeActivityCheck.class).in(Singleton.class);
         bindConstant().annotatedWith(named(AppOptionKeys.DUMP_STATISTICS)).to(environment.getRequiredProperty(AppOptionKeys.DUMP_STATISTICS));

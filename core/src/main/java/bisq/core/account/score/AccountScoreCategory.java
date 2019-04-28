@@ -18,7 +18,6 @@
 package bisq.core.account.score;
 
 public enum AccountScoreCategory {
-    UNDEFINED,
     BRONZE,
     SILVER,
     GOLD

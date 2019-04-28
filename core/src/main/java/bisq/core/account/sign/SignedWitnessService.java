@@ -20,6 +20,7 @@ package bisq.core.account.sign;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.payment.payload.PaymentAccountPayload;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -42,6 +43,7 @@ import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -101,6 +103,23 @@ public class SignedWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public List<Long> getMyWitnessAgeList(PaymentAccountPayload myPaymentAccountPayload) {
+        AccountAgeWitness accountAgeWitness = accountAgeWitnessService.getMyWitness(myPaymentAccountPayload);
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .map(SignedWitness::getDate)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+
+    public List<Long> getWitnessAgeList(AccountAgeWitness accountAgeWitness) {
+        return signedWitnessMap.values().stream()
+                .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
+                .map(SignedWitness::getDate)
+                .sorted()
+                .collect(Collectors.toList());
+    }
 
     // Arbitrators sign with EC key
     public SignedWitness signAccountAgeWitness(AccountAgeWitness accountAgeWitness, ECKey key, PublicKey peersPubKey) {
@@ -162,7 +181,6 @@ public class SignedWitnessService {
         }
     }
 
-
     public Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
                 .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
@@ -193,6 +211,7 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
+    //TODO pass list and remove items once processed to avoid endless loop in case of multiple sigs
     public boolean isValidAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
         Set<SignedWitness> arbitratorsSignedWitnessSet = getArbitratorsSignedWitnessSet(accountAgeWitness);
         if (!arbitratorsSignedWitnessSet.isEmpty()) {

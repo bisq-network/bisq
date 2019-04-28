@@ -52,6 +52,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     private final byte[] signerPubKey;
     private final byte[] witnessOwnerPubKey;
     private final long date;
+    //TODO should we add trade amount?
 
     transient private final byte[] hash;
 
