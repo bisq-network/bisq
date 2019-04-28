@@ -68,8 +68,8 @@ public class AccountScoreService {
         return accountCreationAgeService.myMakerAccountRequiresPayoutDelay(myPaymentAccount, currencyCode, direction);
     }
 
-    public Date getDelayAsDate(Trade trade) {
-        return accountCreationAgeService.getDelayAsDate(trade);
+    public Date getDelayedPayoutDate(Trade trade) {
+        return accountCreationAgeService.getDelayedPayoutDate(trade);
     }
 
     public long getDelay(Offer offer) {

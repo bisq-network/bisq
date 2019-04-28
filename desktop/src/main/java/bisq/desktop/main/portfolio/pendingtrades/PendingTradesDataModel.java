@@ -192,7 +192,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public String getFormattedDelayedPayoutDate() {
-        return formatter.formatDateTime(accountScoreService.getDelayAsDate(selectedTrade));
+        return formatter.formatDateTime(accountScoreService.getDelayedPayoutDate(selectedTrade));
     }
 
     public String getFormattedBuyersAccountAge() {

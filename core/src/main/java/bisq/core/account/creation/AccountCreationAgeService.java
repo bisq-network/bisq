@@ -140,10 +140,10 @@ public class AccountCreationAgeService {
     }
 
     /**
-     * @param trade     The trade wor which we want to know the delayed payout for the buyer.
+     * @param trade     The trade for which we want to know the delayed payout date.
      * @return The date of a delayed payout
      */
-    public Date getDelayAsDate(Trade trade) {
+    public Date getDelayedPayoutDate(Trade trade) {
         long delay = getDelay(trade);
         long now = new Date().getTime();
         return new Date(delay + now);
