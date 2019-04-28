@@ -22,6 +22,7 @@ import bisq.desktop.util.validation.AliPayValidator;
 import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AliPayAccountPayload;

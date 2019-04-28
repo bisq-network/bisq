@@ -25,6 +25,7 @@ import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.TradeManager;

@@ -23,6 +23,7 @@ import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PerfectMoneyAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;

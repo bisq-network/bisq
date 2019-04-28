@@ -32,6 +32,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;

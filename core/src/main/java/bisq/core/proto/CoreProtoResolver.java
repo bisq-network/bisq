@@ -17,6 +17,7 @@
 
 package bisq.core.proto;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
@@ -168,6 +169,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return ProposalPayload.fromProto(proto.getProposalPayload());
                 case BLIND_VOTE_PAYLOAD:
                     return BlindVotePayload.fromProto(proto.getBlindVotePayload());
+                case SIGNED_WITNESS:
+                    return SignedWitness.fromProto(proto.getSignedWitness());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case (PB.PersistableNetworkPayload). messageCase=" + proto.getMessageCase());
             }

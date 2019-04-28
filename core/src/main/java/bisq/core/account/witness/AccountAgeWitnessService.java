@@ -125,23 +125,6 @@ public class AccountAgeWitnessService {
         }
     }
 
-    // At startup we re-publish the witness data of all fiat accounts to ensure we got our data well distributed.
-    private void republishAllFiatAccounts() {
-        if (user.getPaymentAccounts() != null)
-            user.getPaymentAccounts().stream()
-                    .filter(e -> !(e instanceof AssetAccount))
-                    .forEach(e -> {
-                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't stress the
-                        // P2P network with publishing all at once at startup time.
-                        final int delayInSec = 20 + new Random().nextInt(40);
-                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(e.getPaymentAccountPayload()), true), delayInSec);
-                    });
-    }
-
-    private void addToMap(AccountAgeWitness accountAgeWitness) {
-        accountAgeWitnessMap.putIfAbsent(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Generic
@@ -153,17 +136,6 @@ public class AccountAgeWitnessService {
             p2PService.addPersistableNetworkPayload(accountAgeWitness, false);
     }
 
-    private byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
-        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
-    }
-
-    private AccountAgeWitness getNewWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
-        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
-        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
-                pubKeyRing.getSignaturePubKeyBytes()));
-        return new AccountAgeWitness(hash, new Date().getTime());
-    }
-
     public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
@@ -172,7 +144,7 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(hash);
     }
 
-    private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
+    public Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
         final boolean containsKey = accountAgeWitnessMap.containsKey(hashAsByteArray);
@@ -182,9 +154,6 @@ public class AccountAgeWitnessService {
         return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
     }
 
-    private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
-        return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
-    }
 
     public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
         log.debug("getAccountAge now={}, accountAgeWitness.getDate()={}", now.getTime(), accountAgeWitness.getDate());
@@ -207,45 +176,6 @@ public class AccountAgeWitnessService {
         }
     }
 
-    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date now) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            double factor;
-
-            final long accountAge = getAccountAge((accountAgeWitnessOptional.get()), now);
-            AccountAge accountAgeCategory = accountAgeWitnessOptional
-                    .map(accountAgeWitness1 -> getAccountAgeCategory(accountAge))
-                    .orElse(AccountAge.LESS_ONE_MONTH);
-
-            // TODO Fade in by date can be removed after feb 2018
-            // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when
-            // we deploy that feature.
-
-            switch (accountAgeCategory) {
-                case TWO_MONTHS_OR_MORE:
-                    factor = 1;
-                    break;
-                case ONE_TO_TWO_MONTHS:
-                    factor = 0.5;
-                    break;
-                case LESS_ONE_MONTH:
-                default:
-                    factor = 0.25;
-                    break;
-            }
-
-            final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            log.debug("accountAgeCategory={}, accountAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
-                    accountAgeCategory,
-                    accountAge / TimeUnit.DAYS.toMillis(1) + " days",
-                    Coin.valueOf(limit).toFriendlyString(),
-                    factor,
-                    accountAgeWitnessOptional.map(accountAgeWitness -> Utilities.bytesAsHexString(accountAgeWitness.getHash())).orElse("accountAgeWitnessOptional not present"));
-            return limit;
-        } else {
-            return maxTradeLimit.value;
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // My witness
@@ -256,7 +186,7 @@ public class AccountAgeWitnessService {
         return accountAgeWitnessOptional.orElseGet(() -> getNewWitness(paymentAccountPayload, keyRing.getPubKeyRing()));
     }
 
-    private byte[] getMyWitnessHash(PaymentAccountPayload paymentAccountPayload) {
+    public byte[] getMyWitnessHash(PaymentAccountPayload paymentAccountPayload) {
         return getMyWitness(paymentAccountPayload).getHash();
     }
 
@@ -374,6 +304,103 @@ public class AccountAgeWitnessService {
         return result;
     }
 
+    boolean verifySignature(PublicKey peersPublicKey,
+                            byte[] nonce,
+                            byte[] signature,
+                            ErrorMessageHandler errorMessageHandler) {
+        boolean result;
+        try {
+            result = Sig.verify(peersPublicKey, nonce, signature);
+        } catch (CryptoException e) {
+            log.warn(e.toString());
+            result = false;
+        }
+        if (!result) {
+            final String msg = "Signature of nonce is not correct. " +
+                    "peersPublicKey=" + peersPublicKey + ", nonce(hex)=" + Utilities.bytesAsHexString(nonce) +
+                    ", signature=" + Utilities.bytesAsHexString(signature);
+            log.warn(msg);
+            errorMessageHandler.handleErrorMessage(msg);
+        }
+        return result;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // At startup we re-publish the witness data of all fiat accounts to ensure we got our data well distributed.
+    private void republishAllFiatAccounts() {
+        if (user.getPaymentAccounts() != null)
+            user.getPaymentAccounts().stream()
+                    .filter(e -> !(e instanceof AssetAccount))
+                    .forEach(e -> {
+                        // We delay with a random interval of 20-60 sec to ensure to be better connected and don't stress the
+                        // P2P network with publishing all at once at startup time.
+                        final int delayInSec = 20 + new Random().nextInt(40);
+                        UserThread.runAfter(() -> p2PService.addPersistableNetworkPayload(getMyWitness(e.getPaymentAccountPayload()), true), delayInSec);
+                    });
+    }
+
+    private void addToMap(AccountAgeWitness accountAgeWitness) {
+        accountAgeWitnessMap.putIfAbsent(accountAgeWitness.getHashAsByteArray(), accountAgeWitness);
+    }
+
+    private byte[] getAccountInputDataWithSalt(PaymentAccountPayload paymentAccountPayload) {
+        return Utilities.concatenateByteArrays(paymentAccountPayload.getAgeWitnessInputData(), paymentAccountPayload.getSalt());
+    }
+
+    private AccountAgeWitness getNewWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+        byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
+        byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
+                pubKeyRing.getSignaturePubKeyBytes()));
+        return new AccountAgeWitness(hash, new Date().getTime());
+    }
+
+    private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
+        return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
+    }
+
+    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date now) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            double factor;
+
+            final long accountAge = getAccountAge((accountAgeWitnessOptional.get()), now);
+            AccountAge accountAgeCategory = accountAgeWitnessOptional
+                    .map(accountAgeWitness1 -> getAccountAgeCategory(accountAge))
+                    .orElse(AccountAge.LESS_ONE_MONTH);
+
+            // TODO Fade in by date can be removed after feb 2018
+            // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when
+            // we deploy that feature.
+
+            switch (accountAgeCategory) {
+                case TWO_MONTHS_OR_MORE:
+                    factor = 1;
+                    break;
+                case ONE_TO_TWO_MONTHS:
+                    factor = 0.5;
+                    break;
+                case LESS_ONE_MONTH:
+                default:
+                    factor = 0.25;
+                    break;
+            }
+
+            final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
+            log.debug("accountAgeCategory={}, accountAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
+                    accountAgeCategory,
+                    accountAge / TimeUnit.DAYS.toMillis(1) + " days",
+                    Coin.valueOf(limit).toFriendlyString(),
+                    factor,
+                    accountAgeWitnessOptional.map(accountAgeWitness -> Utilities.bytesAsHexString(accountAgeWitness.getHash())).orElse("accountAgeWitnessOptional not present"));
+            return limit;
+        } else {
+            return maxTradeLimit.value;
+        }
+    }
+
     private boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
         final boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
         if (!result) {
@@ -414,27 +441,6 @@ public class AccountAgeWitnessService {
             String msg = "The peers trade limit is less than the traded amount.\n" +
                     "tradeAmount=" + tradeAmount.toFriendlyString() +
                     "\nPeers trade limit=" + Coin.valueOf(peersCurrentTradeLimit).toFriendlyString();
-            log.warn(msg);
-            errorMessageHandler.handleErrorMessage(msg);
-        }
-        return result;
-    }
-
-    boolean verifySignature(PublicKey peersPublicKey,
-                            byte[] nonce,
-                            byte[] signature,
-                            ErrorMessageHandler errorMessageHandler) {
-        boolean result;
-        try {
-            result = Sig.verify(peersPublicKey, nonce, signature);
-        } catch (CryptoException e) {
-            log.warn(e.toString());
-            result = false;
-        }
-        if (!result) {
-            final String msg = "Signature of nonce is not correct. " +
-                    "peersPublicKey=" + peersPublicKey + ", nonce(hex)=" + Utilities.bytesAsHexString(nonce) +
-                    ", signature=" + Utilities.bytesAsHexString(signature);
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);
         }

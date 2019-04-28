@@ -129,7 +129,26 @@ public class ArbitratorManager {
                         "02b517c0cbc3a49548f448ddf004ed695c5a1c52ec110be1bfd65fa0ca0761c94b",
                         "03df837a3a0f3d858e82f3356b71d1285327f101f7c10b404abed2abc1c94e7169",
                         "0203a90fb2ab698e524a5286f317a183a84327b8f8c3f7fa4a98fec9e1cefd6b72",
-                        "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5"
+                        "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5",
+                        "034e2dbeeb30da78750a14f1ca69fe08c916785ddceb14d93f695bfa7805b16fdf",
+                        "02762e6d613e69e29ff6bf39c12f9f38d521ad317cc29dd2aaec0750ce6e730310",
+                        "03d01e3fb9fa33cb1cc834290563e9dd0af56e6d2ed570996a933141a305eac855",
+                        "03089b5a325b2f4d05c0efb2680882883495148d8b47bde0a5fd12ed11883192eb",
+                        "02ea15f1259dd2be903a69bd44a8bf83f8b071c7245ec16b1019446bc53a1fbc16",
+                        "0305a30db223f9c066be6720c29cee1000f527f8906b258ff29afc23aedc3e3b40",
+                        "0339f3a784bb901957cdd0035c66ec5f5773f189ffd0e7a8a6f54e690765f80355",
+                        "02a23dc2000669b3b6bca06342da7fed0d3d85178f723295c5525ed5acf07a07f6",
+                        "027e630e1010f17e70eefa3f3f8091dba9b8bf4285ffe39a4ca36e832e86d317e1",
+                        "0399fd6fa3e9a7e9cc372be01df2b6b0105c2017684ba74f0cee40c1d7f964b827",
+                        "02fab3407946c5a37294417ccb0560a1380a88a172ed1aec001f72d3024d32ff47",
+                        "02283f539936d45d0fa1443a5fee7823a0b46b224d066de41a385f5b72ccc5986a",
+                        "03abccde40a2d821fa35527db4b6c4a4e02a159cee600eebc325350f2383b8a40c",
+                        "0209ad1e77f8cbcdacad301ae64d30ce8b96a61bb048810384d0c9991d5cd4eb71",
+                        "0372e00c0c3b459977caff6ad55d80c372ed3245411d90fcbd6045184bb87b03e9",
+                        "02c81cd2b8975ab00e0299156bb352a4afac3f1b88ff3ec9680ea8992ee706a742",
+                        "0288f6e6b406b44ecda924c5f802663883365993c21d891bee70f5135c54ffa90e",
+                        "0391428bc51114e9803f68a1560d0db2fcd43d330662ec08be0c34f58dddc46ffb",
+                        "03ce4d6a6ea7791577bca143f76d1b1f57b0770a6f5d41276b4798feb937520564"
                 ));
     }
 
@@ -319,6 +338,7 @@ public class ArbitratorManager {
                 .distinct()
                 .collect(Collectors.toList());
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.account.witness;
+package bisq.core.account.sign;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
@@ -25,6 +25,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
@@ -38,22 +39,38 @@ import java.util.concurrent.TimeUnit;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-// Object has 28 raw bytes (33 bytes is size of ProtoBuffer object in storage list, 5 byte extra for list -> totalBytes = 5 + n*33)
-// With 1 000 000 entries we get about 33 MB of data. Old entries will be shipped with the resource file,
-// so only the newly added objects since the last release will be retrieved over the P2P network.
+// Supports signatures made from EC key (arbitrators) and signature created with DSA key.
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
+public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
         DateTolerantPayload, CapabilityRequiringPayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
-    private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
-    private final long date;                        // 8 byte
+    private final boolean signedByArbitrator;
+    private final byte[] witnessHash;
+    private final byte[] signature;
+    private final byte[] signerPubKey;
+    private final byte[] witnessOwnerPubKey;
+    private final long date;
 
-    AccountAgeWitness(byte[] hash,
-                      long date) {
-        this.hash = hash;
+    transient private final byte[] hash;
+
+    public SignedWitness(boolean signedByArbitrator,
+                         byte[] witnessHash,
+                         byte[] signature,
+                         byte[] signerPubKey,
+                         byte[] witnessOwnerPubKey,
+                         long date) {
+        this.signedByArbitrator = signedByArbitrator;
+        this.witnessHash = witnessHash;
+        this.signature = signature;
+        this.signerPubKey = signerPubKey;
+        this.witnessOwnerPubKey = witnessOwnerPubKey;
         this.date = date;
+
+        byte[] data = Utilities.concatenateByteArrays(witnessHash, signature);
+        data = Utilities.concatenateByteArrays(data, signerPubKey);
+        hash = Hash.getSha256Ripemd160hash(data);
     }
 
 
@@ -63,24 +80,26 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
 
     @Override
     public PB.PersistableNetworkPayload toProtoMessage() {
-        final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
-                .setHash(ByteString.copyFrom(hash))
+        final PB.SignedWitness.Builder builder = PB.SignedWitness.newBuilder()
+                .setSignedByArbitrator(signedByArbitrator)
+                .setWitnessHash(ByteString.copyFrom(witnessHash))
+                .setSignature(ByteString.copyFrom(signature))
+                .setSignerPubKey(ByteString.copyFrom(signerPubKey))
+                .setWitnessOwnerPubKey(ByteString.copyFrom(witnessOwnerPubKey))
                 .setDate(date);
-        return PB.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
+        return PB.PersistableNetworkPayload.newBuilder().setSignedWitness(builder).build();
     }
 
-    public PB.AccountAgeWitness toProtoAccountAgeWitness() {
-        return toProtoMessage().getAccountAgeWitness();
+    public PB.SignedWitness toProtoSignedWitness() {
+        return toProtoMessage().getSignedWitness();
     }
 
-    public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
-        byte[] hash = proto.getHash().toByteArray();
-        if (hash.length != 20) {
-            log.warn("We got a a hash which is not 20 bytes");
-            hash = new byte[0];
-        }
-        return new AccountAgeWitness(
-                hash,
+    public static SignedWitness fromProto(PB.SignedWitness proto) {
+        return new SignedWitness(proto.getSignedByArbitrator(),
+                proto.getWitnessHash().toByteArray(),
+                proto.getSignature().toByteArray(),
+                proto.getSignerPubKey().toByteArray(),
+                proto.getWitnessOwnerPubKey().toByteArray(),
                 proto.getDate());
     }
 
@@ -101,10 +120,10 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
         return hash.length == 20;
     }
 
-    // Pre 0.6 version don't know the new message type and throw an error which leads to disconnecting the peer.
+    // Pre 1.0.1 version don't know the new message type and throw an error which leads to disconnecting the peer.
     @Override
     public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.ACCOUNT_AGE_WITNESS);
+        return new Capabilities(Capability.SIGNED_ACCOUNT_AGE_WITNESS);
     }
 
     @Override
@@ -123,9 +142,14 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
 
     @Override
     public String toString() {
-        return "AccountAgeWitness{" +
-                "\n     hash=" + Utilities.bytesAsHexString(hash) +
-                ",\n     date=" + new Date(date) +
+        return "SignedWitness{" +
+                ",\n     signedByArbitrator=" + signedByArbitrator +
+                ",\n     witnessHash=" + Utilities.bytesAsHexString(witnessHash) +
+                ",\n     signature=" + Utilities.bytesAsHexString(signature) +
+                ",\n     signerPubKey=" + Utilities.bytesAsHexString(signerPubKey) +
+                ",\n     witnessOwnerPubKey=" + Utilities.bytesAsHexString(witnessOwnerPubKey) +
+                ",\n     date=" + date +
+                ",\n     hash=" + Utilities.bytesAsHexString(hash) +
                 "\n}";
     }
 }

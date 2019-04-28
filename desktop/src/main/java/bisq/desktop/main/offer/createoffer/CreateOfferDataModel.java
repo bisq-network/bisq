@@ -30,6 +30,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;

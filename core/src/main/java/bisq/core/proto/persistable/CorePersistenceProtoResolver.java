@@ -17,6 +17,7 @@
 
 package bisq.core.proto.persistable;
 
+import bisq.core.account.sign.SignedWitnessStore;
 import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.arbitration.DisputeList;
 import bisq.core.btc.model.AddressEntryList;
@@ -138,6 +139,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyProofOfBurnList.fromProto(proto.getMyProofOfBurnList());
                 case UNCONFIRMED_BSQ_CHANGE_OUTPUT_LIST:
                     return UnconfirmedBsqChangeOutputList.fromProto(proto.getUnconfirmedBsqChangeOutputList());
+                case SIGNED_WITNESS_STORE:
+                    return SignedWitnessStore.fromProto(proto.getSignedWitnessStore());
 
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
