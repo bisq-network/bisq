@@ -17,12 +17,12 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.creation.AccountCreationAgeService;
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.sign.SignedWitnessStorageService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessStorageService;
-import bisq.core.account.creation.AccountCreationAgeService;
-import bisq.core.account.score.AccountScoreService;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;

@@ -27,7 +27,6 @@ import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;

@@ -10,7 +10,6 @@ import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import bisq.core.util.BSFormatter;

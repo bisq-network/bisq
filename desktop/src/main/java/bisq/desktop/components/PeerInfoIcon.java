@@ -24,7 +24,6 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;

@@ -22,14 +22,12 @@ import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 
+import bisq.asset.AssetRegistry;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-
-
-import bisq.asset.AssetRegistry;
 
 public class AltCoinAddressValidatorTest {
 

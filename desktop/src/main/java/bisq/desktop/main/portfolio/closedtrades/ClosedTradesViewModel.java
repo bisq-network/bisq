@@ -23,7 +23,6 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.BSFormatter;

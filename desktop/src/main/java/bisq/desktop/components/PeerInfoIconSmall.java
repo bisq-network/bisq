@@ -3,7 +3,6 @@ package bisq.desktop.components;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.offer.Offer;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 

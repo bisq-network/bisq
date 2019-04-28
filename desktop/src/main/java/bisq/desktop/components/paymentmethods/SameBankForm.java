@@ -17,7 +17,6 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;

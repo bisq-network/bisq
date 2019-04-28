@@ -73,7 +73,6 @@ import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;

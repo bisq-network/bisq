@@ -28,7 +28,6 @@ import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.crypto.EncryptionService;

@@ -32,8 +32,8 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.setup.CoreNetworkCapabilities;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 

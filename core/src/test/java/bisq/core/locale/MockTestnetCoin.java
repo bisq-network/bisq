@@ -17,16 +17,14 @@
 
 package bisq.core.locale;
 
+import bisq.asset.AddressValidationResult;
+import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Coin;
+
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
-
-
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
-import bisq.asset.Coin;
 
 public class MockTestnetCoin extends Coin {
 
