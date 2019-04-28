@@ -657,6 +657,6 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public boolean requirePayoutDelay(Trade trade) {
-        return accountScoreService.requirePayoutDelay(trade);
+        return accountScoreService.tradeRequirePayoutDelay(trade);
     }
 }

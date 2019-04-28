@@ -18,7 +18,6 @@
 package bisq.core.account.score;
 
 import bisq.core.account.creation.AccountCreationAgeService;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -28,6 +27,7 @@ import bisq.core.trade.Trade;
 import javax.inject.Inject;
 
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Main class for account score domain.
@@ -35,7 +35,6 @@ import java.util.Date;
  * the resulting parameters.
  */
 public class AccountScoreService {
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final AccountCreationAgeService accountCreationAgeService;
 
 
@@ -44,9 +43,7 @@ public class AccountScoreService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountScoreService(AccountAgeWitnessService accountAgeWitnessService,
-                               AccountCreationAgeService accountCreationAgeService) {
-        this.accountAgeWitnessService = accountAgeWitnessService;
+    public AccountScoreService(AccountCreationAgeService accountCreationAgeService) {
         this.accountCreationAgeService = accountCreationAgeService;
     }
 
@@ -55,32 +52,45 @@ public class AccountScoreService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean requirePayoutDelay(Trade trade) {
-        return accountCreationAgeService.requirePayoutDelay(trade);
+    public long getRequiredAccountAge(PaymentMethod paymentMethod) {
+        return accountCreationAgeService.getRequiredAccountAge(paymentMethod);
     }
-
-    public boolean requirePayoutDelay(Offer offer) {
-        return accountCreationAgeService.requirePayoutDelay(offer);
-    }
-
 
     public boolean myMakerAccountRequiresPayoutDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
         return accountCreationAgeService.myMakerAccountRequiresPayoutDelay(myPaymentAccount, currencyCode, direction);
     }
 
-    public Date getDelayedPayoutDate(Trade trade) {
-        return accountCreationAgeService.getDelayedPayoutDate(trade);
+    public boolean offerRequirePayoutDelay(Offer offer) {
+        return accountCreationAgeService.offerRequirePayoutDelay(offer);
     }
 
-    public long getDelay(Offer offer) {
-        return accountCreationAgeService.getDelay(offer);
+    public boolean tradeRequirePayoutDelay(Trade trade) {
+        return accountCreationAgeService.tradeRequirePayoutDelay(trade);
     }
 
-    public long getDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
-        return accountCreationAgeService.getDelay(myPaymentAccount, currencyCode, direction);
+    public long getDelayForMyOffer(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        return accountCreationAgeService.getDelayForMyOffer(myPaymentAccount, currencyCode, direction);
     }
 
-    public long getRequiredAccountAge(PaymentMethod paymentMethod) {
-        return accountCreationAgeService.getRequiredAccountAge(paymentMethod);
+    public long getDelayForOffer(Offer offer) {
+        return accountCreationAgeService.getDelayForOffer(offer);
     }
+
+    public Date getDelayedTradePayoutDate(Trade trade) {
+        return accountCreationAgeService.getDelayedTradePayoutDate(trade);
+    }
+
+    public Optional<AccountScoreCategory> getMyAccountScoreCategory(PaymentAccount myPaymentAccount) {
+        return accountCreationAgeService.getMyAccountScoreCategory(myPaymentAccount);
+    }
+
+    public Optional<AccountScoreCategory> getAccountScoreCategoryOfMaker(Offer offer) {
+        return accountCreationAgeService.getAccountScoreCategoryOfMaker(offer);
+    }
+
+    public Optional<AccountScoreCategory> getAccountScoreCategoryOfBuyer(Trade trade) {
+        return accountCreationAgeService.getAccountScoreCategoryOfBuyer(trade);
+    }
+
+
 }

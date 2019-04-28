@@ -842,7 +842,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     long getDelay() {
-        return accountScoreService.getDelay(paymentAccount, tradeCurrencyCode.get(), getDirection());
+        return accountScoreService.getDelayForMyOffer(paymentAccount, tradeCurrencyCode.get(), getDirection());
     }
 
     boolean myAccountRequiresPayoutDelay() {

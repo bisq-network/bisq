@@ -17,6 +17,7 @@
 
 package bisq.core.account.creation;
 
+import bisq.core.account.score.AccountScoreCategory;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
@@ -33,8 +34,11 @@ import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.time.DateUtils;
 
 import java.util.Date;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Responsible for delayed payout based on account age. It does not consider if the account was yet used for
@@ -42,7 +46,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AccountCreationAgeService {
-
+    private final static int MAX_REQUIRED_AGE = 42;
+    private final static int MAX_DELAY = 28;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
 
@@ -69,7 +74,7 @@ public class AccountCreationAgeService {
      */
     @VisibleForTesting
     public static long getDelayInDays(long buyersAccountAge, long requiredAccountAge) {
-        double maxDelay = (double) 28;
+        double maxDelay = (double) MAX_DELAY;
         double requiredAccountAgeAsDays = ((double) requiredAccountAge) / DateUtils.MILLIS_PER_DAY;
         double buyersAccountAgeAsDays = ((double) buyersAccountAge) / DateUtils.MILLIS_PER_DAY;
         double result = (requiredAccountAgeAsDays - buyersAccountAgeAsDays) / requiredAccountAgeAsDays * maxDelay;
@@ -105,7 +110,7 @@ public class AccountCreationAgeService {
      * @param offer     The offer for which we want to know the delayed payout.
      * @return The delay in ms for the payout if offer maker is buyer.
      */
-    public long getDelay(Offer offer) {
+    public long getDelayForOffer(Offer offer) {
         if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
             return 0;
         }
@@ -125,12 +130,12 @@ public class AccountCreationAgeService {
      * @param direction             Direction of my offer
      * @return The delay in ms for the payout of maker.
      */
-    public long getDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
-        if (direction == OfferPayload.Direction.SELL) {
+    public long getDelayForMyOffer(PaymentAccount myPaymentAccount, @Nullable String currencyCode, @Nullable OfferPayload.Direction direction) {
+        if (direction != null && direction == OfferPayload.Direction.SELL) {
             return 0;
         }
 
-        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+        if (currencyCode != null && CurrencyUtil.isCryptoCurrency(currencyCode)) {
             return 0;
         }
 
@@ -143,7 +148,7 @@ public class AccountCreationAgeService {
      * @param trade     The trade for which we want to know the delayed payout date.
      * @return The date of a delayed payout
      */
-    public Date getDelayedPayoutDate(Trade trade) {
+    public Date getDelayedTradePayoutDate(Trade trade) {
         long delay = getDelay(trade);
         long now = new Date().getTime();
         return new Date(delay + now);
@@ -175,11 +180,11 @@ public class AccountCreationAgeService {
             case PaymentMethod.ADVANCED_CASH_ID:
             case PaymentMethod.PROMPT_PAY_ID:
             case PaymentMethod.CASH_DEPOSIT_ID:
-                return 21 * DateUtils.MILLIS_PER_DAY;
+                return MAX_REQUIRED_AGE / 2 * DateUtils.MILLIS_PER_DAY;
 
             default:
                 // All other bank transfer methods
-                return 42 * DateUtils.MILLIS_PER_DAY;
+                return MAX_REQUIRED_AGE * DateUtils.MILLIS_PER_DAY;
         }
     }
 
@@ -188,7 +193,7 @@ public class AccountCreationAgeService {
      * @param trade The trade for which we request the delayed payout state.
      * @return If that trade requires a delayed payout
      */
-    public boolean requirePayoutDelay(Trade trade) {
+    public boolean tradeRequirePayoutDelay(Trade trade) {
         Offer offer = trade.getOffer();
         if (offer == null) {
             return false;
@@ -213,7 +218,7 @@ public class AccountCreationAgeService {
      * @param offer The offer for which we request the delayed payout state.
      * @return If that offer requires a delayed payout
      */
-    public boolean requirePayoutDelay(Offer offer) {
+    public boolean offerRequirePayoutDelay(Offer offer) {
         return accountRequiresPayoutDelay(offer.getPaymentMethod(),
                 accountAgeWitnessService.getMakersAccountAge(offer),
                 offer.getCurrencyCode(),
@@ -236,6 +241,55 @@ public class AccountCreationAgeService {
                 direction);
     }
 
+    /**
+     * @param myPaymentAccount My payment account used for my offer
+     * @return The AccountScoreCategory representing the account age.
+     */
+    public Optional<AccountScoreCategory> getMyAccountScoreCategory(PaymentAccount myPaymentAccount) {
+        return Optional.of(getAccountScoreCategory(accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload())));
+    }
+
+    /**
+     * @param offer The offer for which we request the AccountScoreCategory.
+     * @return The AccountScoreCategory representing the account age.
+     */
+    public Optional<AccountScoreCategory> getAccountScoreCategoryOfMaker(Offer offer) {
+        //TODO probably we want to show the AccountScoreCategory also for sellers
+       /* if (offer.getDirection() == OfferPayload.Direction.SELL) {
+            return Optional.empty();
+        }*/
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return Optional.empty();
+        }
+
+        long makersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+        return Optional.of(getAccountScoreCategory(makersAccountAge));
+    }
+
+    /**
+     * @param trade The trade for which we request the AccountScoreCategory.
+     * @return The AccountScoreCategory representing the account age.
+     */
+    public Optional<AccountScoreCategory> getAccountScoreCategoryOfBuyer(Trade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return Optional.empty();
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return Optional.empty();
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return Optional.empty();
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        return Optional.of(getAccountScoreCategory(buyersAccountAge));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -255,5 +309,16 @@ public class AccountCreationAgeService {
 
         long requiredAccountAge = getRequiredAccountAge(paymentMethod);
         return accountAge < requiredAccountAge;
+    }
+
+    private AccountScoreCategory getAccountScoreCategory(long accountAge) {
+        long maxRequiredAge = MAX_REQUIRED_AGE * DateUtils.MILLIS_PER_DAY;
+        if (accountAge >= maxRequiredAge) {
+            return AccountScoreCategory.GOLD;
+        } else if (accountAge >= maxRequiredAge / 2) {
+            return AccountScoreCategory.SILVER;
+        } else {
+            return AccountScoreCategory.BRONZE;
+        }
     }
 }
