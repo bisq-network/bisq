@@ -134,7 +134,7 @@ public class AccountScoreService {
                 accountAgeWitnessService.getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
                 Optional.empty();
         if (witnessByHashAsHex.isPresent()) {
-            List<Long> myWitnessAgeList = signedWitnessService.getWitnessAgeList(witnessByHashAsHex.get());
+            List<Long> myWitnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witnessByHashAsHex.get());
             if (!myWitnessAgeList.isEmpty()) {
                 long oldestAge = myWitnessAgeList.get(0);
                 return Optional.of(getAccountScoreCategory(oldestAge, true));
@@ -162,7 +162,7 @@ public class AccountScoreService {
 
         Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
         if (witness.isPresent()) {
-            List<Long> witnessAgeList = signedWitnessService.getWitnessAgeList(witness.get());
+            List<Long> witnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witness.get());
             if (!witnessAgeList.isEmpty()) {
                 long oldestAge = witnessAgeList.get(0);
                 return Optional.of(getAccountScoreCategory(oldestAge, true));

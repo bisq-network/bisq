@@ -64,7 +64,6 @@ public class SignedWitnessService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     @Inject
     public SignedWitnessService(KeyRing keyRing,
                                 P2PService p2PService,
@@ -106,6 +105,7 @@ public class SignedWitnessService {
 
     public List<Long> getMyWitnessAgeList(PaymentAccountPayload myPaymentAccountPayload) {
         AccountAgeWitness accountAgeWitness = accountAgeWitnessService.getMyWitness(myPaymentAccountPayload);
+        // We do not validate as it would not make sense to cheat one self...
         return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(SignedWitness::getDate)
                 .sorted()
@@ -113,9 +113,10 @@ public class SignedWitnessService {
     }
 
 
-    public List<Long> getWitnessAgeList(AccountAgeWitness accountAgeWitness) {
+    public List<Long> getVerifiedWitnessAgeList(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
                 .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
+                .filter(this::verify)
                 .map(SignedWitness::getDate)
                 .sorted()
                 .collect(Collectors.toList());
