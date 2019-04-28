@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.account.creation;
+package bisq.core.account.age;
 
 import org.apache.commons.lang3.time.DateUtils;
 

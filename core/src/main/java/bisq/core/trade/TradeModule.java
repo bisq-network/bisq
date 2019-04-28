@@ -17,7 +17,7 @@
 
 package bisq.core.trade;
 
-import bisq.core.account.creation.AccountCreationAgeService;
+import bisq.core.account.age.AccountCreationAgeService;
 import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.sign.SignedWitnessStorageService;

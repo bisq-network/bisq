@@ -17,7 +17,7 @@
 
 package bisq.core.account.score;
 
-import bisq.core.account.creation.AccountCreationAgeService;
+import bisq.core.account.age.AccountCreationAgeService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
