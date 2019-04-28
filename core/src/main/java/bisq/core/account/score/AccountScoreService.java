@@ -72,6 +72,14 @@ public class AccountScoreService {
         return accountCreationAgeService.getDelayAsDate(trade);
     }
 
+    public long getDelay(Offer offer) {
+        return accountCreationAgeService.getDelay(offer);
+    }
+
+    public long getDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        return accountCreationAgeService.getDelay(myPaymentAccount, currencyCode, direction);
+    }
+
     public long getRequiredAccountAge(PaymentMethod paymentMethod) {
         return accountCreationAgeService.getRequiredAccountAge(paymentMethod);
     }

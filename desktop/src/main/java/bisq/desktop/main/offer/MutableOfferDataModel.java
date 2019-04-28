@@ -841,6 +841,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return accountScoreService.getRequiredAccountAge(paymentAccount.getPaymentMethod());
     }
 
+    long getDelay() {
+        return accountScoreService.getDelay(paymentAccount, tradeCurrencyCode.get(), getDirection());
+    }
+
     boolean myAccountRequiresPayoutDelay() {
         return accountScoreService.myMakerAccountRequiresPayoutDelay(paymentAccount, tradeCurrencyCode.get(), getDirection());
     }

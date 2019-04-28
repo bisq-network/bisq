@@ -474,8 +474,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             if (model.getDataModel().myAccountRequiresPayoutDelay()) {
                 String myAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getMyAccountAge());
                 String requiredAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getRequiredAccountAge());
+                String delay = btcFormatter.formatAccountAge(model.getDataModel().getDelay());
                 new Popup().information(Res.get("popup.immatureBuyerAccountAge.createOffer.msg",
-                        myAccountAge, requiredAccountAge, requiredAccountAge))
+                        myAccountAge, requiredAccountAge, delay))
                         .dontShowAgainId(key)
                         .show();
             }

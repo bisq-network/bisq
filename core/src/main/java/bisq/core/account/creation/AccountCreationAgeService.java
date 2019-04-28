@@ -63,18 +63,22 @@ public class AccountCreationAgeService {
     /**
      * Returns the delay for the payout in days based on a linear function which starts with a delay of 28 days at age 0 and
      * ends with 0 days delay at account age 42 (6 weeks).
-     * @param buyersAccountAge      Account age of buyer
-     * @param requiredAccountAge    Required account age
-     * @return The delay for the delayed payout.
+     * @param buyersAccountAge      Account age of buyer in ms
+     * @param requiredAccountAge    Required account age in ms
+     * @return The delay for the delayed payout in days.
      */
     @VisibleForTesting
-    public static long getDelay(long buyersAccountAge, long requiredAccountAge) {
-        return Math.round(Math.max(0, (double) (requiredAccountAge - buyersAccountAge) / (double) requiredAccountAge * 28d));
+    public static long getDelayInDays(long buyersAccountAge, long requiredAccountAge) {
+        double maxDelay = (double) 28;
+        double requiredAccountAgeAsDays = ((double) requiredAccountAge) / DateUtils.MILLIS_PER_DAY;
+        double buyersAccountAgeAsDays = ((double) buyersAccountAge) / DateUtils.MILLIS_PER_DAY;
+        double result = (requiredAccountAgeAsDays - buyersAccountAgeAsDays) / requiredAccountAgeAsDays * maxDelay;
+        return Math.round(Math.max(0, result));
     }
 
     /**
      * @param trade     The trade for which we want to know the delayed payout for the buyer.
-     * @return The delay for the payout for the fiat buyer in a trade.
+     * @return The delay in ms for the payout for the fiat buyer in a trade.
      */
     public long getDelay(Trade trade) {
         Offer offer = trade.getOffer();
@@ -94,7 +98,45 @@ public class AccountCreationAgeService {
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
         long requiredAccountAge = getRequiredAccountAge(offer.getPaymentMethod());
 
-        return getDelay(buyersAccountAge, requiredAccountAge);
+        return getDelayInDays(buyersAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
+    }
+
+    /**
+     * @param offer     The offer for which we want to know the delayed payout.
+     * @return The delay in ms for the payout if offer maker is buyer.
+     */
+    public long getDelay(Offer offer) {
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return 0;
+        }
+        if (offer.getDirection() == OfferPayload.Direction.SELL) {
+            return 0;
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+        long requiredAccountAge = getRequiredAccountAge(offer.getPaymentMethod());
+        return getDelayInDays(buyersAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
+    }
+
+    /**
+     * Delay for maker if he is fiat buyer.
+     * @param myPaymentAccount      My payment account used for my offer
+     * @param currencyCode          Currency code of my offer
+     * @param direction             Direction of my offer
+     * @return The delay in ms for the payout of maker.
+     */
+    public long getDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.SELL) {
+            return 0;
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+            return 0;
+        }
+
+        long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
+        long requiredAccountAge = getRequiredAccountAge(myPaymentAccount.getPaymentMethod());
+        return getDelayInDays(myAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
     /**

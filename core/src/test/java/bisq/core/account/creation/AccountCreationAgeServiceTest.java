@@ -17,6 +17,8 @@
 
 package bisq.core.account.creation;
 
+import org.apache.commons.lang3.time.DateUtils;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -27,49 +29,42 @@ public class AccountCreationAgeServiceTest {
     public void testGetDelay() {
         long buyersAccountAge, requiredAccountAge, expected;
 
-        buyersAccountAge = 0;
         requiredAccountAge = 0;
-        expected = 0;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
-
         buyersAccountAge = 0;
-        requiredAccountAge = 42;
+        expected = 0;
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
+
+        requiredAccountAge = 42 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 0;
         expected = 28;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 42;
-        requiredAccountAge = 42;
+        buyersAccountAge = 42 * DateUtils.MILLIS_PER_DAY;
         expected = 0;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 28;
-        requiredAccountAge = 42;
+        buyersAccountAge = 28 * DateUtils.MILLIS_PER_DAY;
         expected = 9;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 100;
-        requiredAccountAge = 42;
+        buyersAccountAge = 100 * DateUtils.MILLIS_PER_DAY;
         expected = 0;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 1;
-        requiredAccountAge = 42;
+        buyersAccountAge = 1 * DateUtils.MILLIS_PER_DAY;
         expected = 27;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 2;
-        requiredAccountAge = 42;
+        buyersAccountAge = 2 * DateUtils.MILLIS_PER_DAY;
         expected = 27;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 40;
-        requiredAccountAge = 42;
+        buyersAccountAge = 40 * DateUtils.MILLIS_PER_DAY;
         expected = 1;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 41;
-        requiredAccountAge = 42;
+        buyersAccountAge = 41 * DateUtils.MILLIS_PER_DAY;
         expected = 1;
-        assertEquals(expected, AccountCreationAgeService.getDelay(buyersAccountAge, requiredAccountAge));
+        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
     }
 }

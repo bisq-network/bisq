@@ -223,7 +223,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                             }
                             break;
                         case TRADE_PERIOD_OVER:
-                            if (!tradeManager.isFiatBuyerWithImmatureAccount(trade)) {
+                            if (!tradeManager.requirePayoutDelay(trade)) {
                                 key = "displayTradePeriodOver" + trade.getId();
                                 if (DontShowAgainLookup.showAgain(key)) {
                                     DontShowAgainLookup.dontShowAgain(key, true);

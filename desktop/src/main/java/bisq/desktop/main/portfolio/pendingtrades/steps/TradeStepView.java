@@ -293,12 +293,10 @@ public abstract class TradeStepView extends AnchorPane {
                 if (model.dataModel.requirePayoutDelay()) {
                     timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted.immatureBuyerAccount"));
                 } else {
-                    timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted",
-                            model.getDateForOpenDispute()));
+                    timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted", model.getDateForOpenDispute()));
+                    timeLeftTextField.getStyleClass().add("error-text");
+                    timeLeftProgressBar.getStyleClass().add("error");
                 }
-
-                timeLeftTextField.getStyleClass().add("error-text");
-                timeLeftProgressBar.getStyleClass().add("error");
             }
         }
     }
