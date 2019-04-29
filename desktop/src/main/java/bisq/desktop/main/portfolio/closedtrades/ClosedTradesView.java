@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
@@ -100,6 +101,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
+    private final AccountScoreService accountScoreService;
     private final BSFormatter formatter;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
@@ -113,6 +115,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
+                            AccountScoreService accountScoreService,
                             BSFormatter formatter,
                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
@@ -120,6 +123,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
+        this.accountScoreService = accountScoreService;
         this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -410,7 +414,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             preferences,
                                             model.accountAgeWitnessService,
                                             formatter,
-                                            useDevPrivilegeKeys);
+                                            useDevPrivilegeKeys,
+                                            accountScoreService);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

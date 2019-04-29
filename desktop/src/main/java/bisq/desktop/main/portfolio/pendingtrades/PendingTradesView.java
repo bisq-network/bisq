@@ -25,6 +25,7 @@ import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
@@ -75,6 +76,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final AccountScoreService accountScoreService;
     private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<PendingTradesListItem> tableView;
@@ -100,12 +102,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              BSFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
+                             AccountScoreService accountScoreService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
+        this.accountScoreService = accountScoreService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -494,7 +498,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             preferences,
                                             model.accountAgeWitnessService,
                                             formatter,
-                                            useDevPrivilegeKeys);
+                                            useDevPrivilegeKeys,
+                                            accountScoreService);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

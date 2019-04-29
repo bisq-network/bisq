@@ -32,6 +32,7 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -103,6 +104,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private NumberAxis xAxis;
     private XYChart.Series seriesBuy, seriesSell;
     private final Navigation navigation;
+    private final AccountScoreService accountScoreService;
     private final BSFormatter formatter;
     private TableView<OfferListItem> buyOfferTableView;
     private TableView<OfferListItem> sellOfferTableView;
@@ -134,10 +136,14 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter,
+    public OfferBookChartView(OfferBookChartViewModel model,
+                              Navigation navigation,
+                              AccountScoreService accountScoreService,
+                              BSFormatter formatter,
                               @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.navigation = navigation;
+        this.accountScoreService = accountScoreService;
         this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -215,6 +221,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     volumeColumnLabel.set(Res.get("shared.amountWithCur", code));
                     xAxis.setTickLabelFormatter(new StringConverter<>() {
                         int cryptoPrecision = 3;
+
                         @Override
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
@@ -571,7 +578,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                             model.preferences,
                                             model.accountAgeWitnessService,
                                             formatter,
-                                            useDevPrivilegeKeys);
+                                            useDevPrivilegeKeys,
+                                            accountScoreService);
 //                                    setAlignment(Pos.CENTER);
                                     setGraphic(peerInfoIcon);
                                 } else {

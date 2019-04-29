@@ -163,7 +163,7 @@ public class AccountScoreService {
                 canSign));
     }
 
-    private Optional<ScoreInfo> getScoreInfoForMaker(Offer offer) {
+    public Optional<ScoreInfo> getScoreInfoForMaker(Offer offer) {
         if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
             return Optional.empty();
         }
@@ -199,7 +199,7 @@ public class AccountScoreService {
     }
 
 
-    private Optional<ScoreInfo> getScoreInfoForBuyer(Trade trade) {
+    public Optional<ScoreInfo> getScoreInfoForBuyer(Trade trade) {
         Offer offer = trade.getOffer();
         if (offer == null) {
             return Optional.empty();

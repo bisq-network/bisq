@@ -21,11 +21,15 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 
+import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
@@ -64,6 +68,7 @@ import javafx.collections.ObservableList;
 import javafx.util.Duration;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -76,6 +81,8 @@ import static bisq.desktop.util.FormBuilder.addInputTextField;
 
 @Slf4j
 public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
+    private final AccountScoreService accountScoreService;
+    private final BSFormatter formatter;
     private final boolean useDevPrivilegeKeys;
     private InputTextField inputTextField;
     private Point2D position;
@@ -94,10 +101,14 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
                                  Offer offer,
                                  Preferences preferences,
+                                 AccountScoreService accountScoreService,
+                                 BSFormatter formatter,
                                  boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
+        this.accountScoreService = accountScoreService;
+        this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         width = 468;
         type = Type.Undefined;
@@ -194,10 +205,41 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         if (accountAge != null)
             GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.age"), accountAge).third, 2);
 
+        Optional<ScoreInfo> optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
+        if (optionalScoreInfo.isPresent()) {
+            ScoreInfo scoreInfo = optionalScoreInfo.get();
+
+            if (offer.getDirection() == OfferPayload.Direction.BUY) {
+                String requiredDelay = formatter.formatAccountAge(scoreInfo.getRequiredDelay());
+                GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.buyersDelay"), requiredDelay).third, 2);
+            }
+
+            String canSign = scoreInfo.isCanSign() ? Res.get("shared.yes") : Res.get("shared.no");
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.canSign"), canSign).third, 2);
+            String tradeAge = scoreInfo.getSignedTradeAge().isPresent() ?
+                    formatter.formatAccountAge(scoreInfo.getSignedTradeAge().get()) :
+                    Res.get("peerInfo.notTraded");
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.tradeAge"), tradeAge).third, 2);
+            String category;
+            switch (scoreInfo.getAccountScoreCategory()) {
+                case GOLD:
+                    category = Res.get("peerInfo.category.gold");
+                    break;
+                case SILVER:
+                    category = Res.get("peerInfo.category.silver");
+                    break;
+                default:
+                case BRONZE:
+                    category = Res.get("peerInfo.category.bronze");
+                    break;
+            }
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.category"), category).third, 2);
+        }
+
         inputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag"));
         GridPane.setColumnSpan(inputTextField, 2);
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
-        String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
+        String tag = peerTagMap.getOrDefault(hostName, "");
         inputTextField.setText(tag);
 
         keyEventEventHandler = event -> {

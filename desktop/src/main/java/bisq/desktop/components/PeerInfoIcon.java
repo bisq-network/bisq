@@ -19,6 +19,9 @@ package bisq.desktop.components;
 
 import bisq.desktop.main.overlays.editor.PeerInfoWithTagEditor;
 
+import bisq.core.account.score.AccountScoreCategory;
+import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
@@ -31,6 +34,9 @@ import bisq.core.util.BSFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import com.google.common.base.Charsets;
+
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -47,6 +53,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,7 +65,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PeerInfoIcon extends Group {
     private final String tooltipText;
     private final int numTrades;
+    @Nullable
+    private final Offer offer;
+    @Nullable
+    private final Trade trade;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final Map<String, String> peerTagMap;
     private final Label numTradesLabel;
     private final Label tagLabel;
@@ -66,6 +78,7 @@ public class PeerInfoIcon extends Group {
     protected final Pane numTradesPane;
     private final String fullAddress;
     private final double scaleFactor;
+    private final Label categoryIcon, delayIcon, signIcon;
 
     public PeerInfoIcon(NodeAddress nodeAddress,
                         String role,
@@ -75,7 +88,8 @@ public class PeerInfoIcon extends Group {
                         Preferences preferences,
                         AccountAgeWitnessService accountAgeWitnessService,
                         BSFormatter formatter,
-                        boolean useDevPrivilegeKeys) {
+                        boolean useDevPrivilegeKeys,
+                        AccountScoreService accountScoreService) {
         this(nodeAddress,
                 role,
                 numTrades,
@@ -85,7 +99,8 @@ public class PeerInfoIcon extends Group {
                 preferences,
                 accountAgeWitnessService,
                 formatter,
-                useDevPrivilegeKeys);
+                useDevPrivilegeKeys,
+                accountScoreService);
 
     }
 
@@ -97,7 +112,8 @@ public class PeerInfoIcon extends Group {
                         Preferences preferences,
                         AccountAgeWitnessService accountAgeWitnessService,
                         BSFormatter formatter,
-                        boolean useDevPrivilegeKeys) {
+                        boolean useDevPrivilegeKeys,
+                        AccountScoreService accountScoreService) {
         this(nodeAddress,
                 role,
                 numTrades,
@@ -107,7 +123,8 @@ public class PeerInfoIcon extends Group {
                 preferences,
                 accountAgeWitnessService,
                 formatter,
-                useDevPrivilegeKeys);
+                useDevPrivilegeKeys,
+                accountScoreService);
     }
 
     private PeerInfoIcon(NodeAddress nodeAddress,
@@ -119,9 +136,13 @@ public class PeerInfoIcon extends Group {
                          Preferences preferences,
                          AccountAgeWitnessService accountAgeWitnessService,
                          BSFormatter formatter,
-                         boolean useDevPrivilegeKeys) {
+                         boolean useDevPrivilegeKeys,
+                         AccountScoreService accountScoreService) {
         this.numTrades = numTrades;
+        this.offer = offer;
+        this.trade = trade;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
 
         scaleFactor = getScaleFactor();
         fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
@@ -234,11 +255,26 @@ public class PeerInfoIcon extends Group {
         tagLabel.setId("ident-num-label");
         tagPane.getChildren().addAll(tagCircle, tagLabel);
 
-        updatePeerInfoIcon();
+        //TODO just dummy impl.
+        categoryIcon = new Label();
+        categoryIcon.setLayoutX(-20);
+        categoryIcon.setLayoutY(5);
 
-        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
+        delayIcon = new Label();
+        delayIcon.setLayoutX(-40);
+        delayIcon.setLayoutY(5);
+        AwesomeDude.setIcon(delayIcon, AwesomeIcon.TIME);
+
+        signIcon = new Label();
+        signIcon.setLayoutX(-60);
+        signIcon.setLayoutY(5);
+        AwesomeDude.setIcon(signIcon, AwesomeIcon.PENCIL);
+
+        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, delayIcon, signIcon);
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
+
+        updatePeerInfoIcon();
     }
 
     private long getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
@@ -270,7 +306,7 @@ public class PeerInfoIcon extends Group {
                         formatter.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, accountScoreService, formatter, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
@@ -308,5 +344,39 @@ public class PeerInfoIcon extends Group {
         numTradesPane.setVisible(numTrades > 0);
 
         tagPane.setVisible(!tag.isEmpty());
+        Optional<ScoreInfo> optionalScoreInfo;
+        if (trade == null) {
+            optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
+        } else {
+            optionalScoreInfo = accountScoreService.getScoreInfoForBuyer(trade);
+        }
+        boolean isScoreInfoPresent = optionalScoreInfo.isPresent();
+        categoryIcon.setVisible(isScoreInfoPresent);
+        categoryIcon.setManaged(isScoreInfoPresent);
+        delayIcon.setVisible(isScoreInfoPresent);
+        delayIcon.setManaged(isScoreInfoPresent);
+
+        if (isScoreInfoPresent) {
+            //TODO just dummy impl.
+            ScoreInfo scoreInfo = optionalScoreInfo.get();
+            boolean canSign = scoreInfo.isCanSign();
+            signIcon.setVisible(canSign);
+            signIcon.setManaged(canSign);
+
+            boolean requireDelay = scoreInfo.getRequiredDelay() > 0;
+            delayIcon.setVisible(requireDelay);
+            delayIcon.setManaged(requireDelay);
+
+            if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
+                categoryIcon.getStyleClass().addAll("score-gold");
+                AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR);
+            } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.SILVER) {
+                categoryIcon.getStyleClass().addAll("score-silver");
+                AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_HALF_EMPTY);
+            } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.BRONZE) {
+                categoryIcon.getStyleClass().addAll("score-bronze");
+                AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_EMPTY);
+            }
+        }
     }
 }

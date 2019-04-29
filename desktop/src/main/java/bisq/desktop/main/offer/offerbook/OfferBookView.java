@@ -960,8 +960,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getAvatarColumn() {
         AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.trader")) {
             {
-                setMinWidth(80);
-                setMaxWidth(80);
+                setMinWidth(150);
+                setMaxWidth(150);
                 setSortable(true);
             }
         };
@@ -989,7 +989,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             model.preferences,
                                             model.accountAgeWitnessService,
                                             formatter,
-                                            useDevPrivilegeKeys);
+                                            useDevPrivilegeKeys,
+                                            accountScoreService);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

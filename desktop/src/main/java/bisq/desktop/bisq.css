@@ -197,6 +197,18 @@ bg color of non edit textFields: fafafa
     -fx-fill: -bs-rd-black;
 }
 
+.score-gold {
+    -fx-text-fill: #ffde5d;
+}
+
+.score-silver {
+    -fx-text-fill: #d2d0d1;
+}
+
+.score-bronze {
+    -fx-text-fill: #8f7837;
+}
+
 .info {
     -fx-text-fill: -bs-rd-green;
     -fx-fill: -bs-rd-green;

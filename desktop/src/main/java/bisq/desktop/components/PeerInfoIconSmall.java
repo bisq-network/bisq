@@ -1,5 +1,6 @@
 package bisq.desktop.components;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.offer.Offer;
@@ -14,7 +15,8 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
                              Preferences preferences,
                              AccountAgeWitnessService accountAgeWitnessService,
                              BSFormatter formatter,
-                             boolean useDevPrivilegeKeys) {
+                             boolean useDevPrivilegeKeys,
+                             AccountScoreService accountScoreService) {
         // We don't want to show number of trades in that case as it would be unreadable.
         // Also we don't need the privateNotificationManager as no interaction will take place with this icon.
         super(nodeAddress, role,
@@ -24,7 +26,8 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
                 preferences,
                 accountAgeWitnessService,
                 formatter,
-                useDevPrivilegeKeys);
+                useDevPrivilegeKeys,
+                accountScoreService);
     }
 
     @Override
