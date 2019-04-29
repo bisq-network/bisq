@@ -92,7 +92,6 @@ public class AccountCreationAgeServiceTest {
     @Test
     public void testGetMyAccountMinDepositAsPercent() {
         long buyersAccountAge, requiredAccountAge;
-        double minBuyerSecurityDeposit = 0.05;
         double expected;
         double delta = 0.00001;
 
@@ -103,23 +102,23 @@ public class AccountCreationAgeServiceTest {
 */
         requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
         buyersAccountAge = 0;
-        expected = 6 * minBuyerSecurityDeposit;
-        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+        expected = 0.3;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, 0.1), delta);
 
         requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
         buyersAccountAge = 15 * DateUtils.MILLIS_PER_DAY;
-        expected = 0.175;
-        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+        expected = 0.2;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, 0.1), delta);
 
         requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
-        buyersAccountAge = requiredAccountAge;
-        expected = minBuyerSecurityDeposit;
-        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+        buyersAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        expected = 0.1;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, 0.1), delta);
 
         requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
-        buyersAccountAge = 2 * requiredAccountAge;
-        expected = minBuyerSecurityDeposit;
-        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+        buyersAccountAge = 60 * DateUtils.MILLIS_PER_DAY;
+        expected = 0.1;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, 0.1), delta);
     }
 
 

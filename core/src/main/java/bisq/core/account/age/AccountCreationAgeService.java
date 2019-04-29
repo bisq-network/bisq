@@ -117,7 +117,7 @@ public class AccountCreationAgeService {
         double accountAgeInDays = accountAge / (double) DateUtils.MILLIS_PER_DAY;
         double phaseOnePeriodInDays = phaseOnePeriod / (double) DateUtils.MILLIS_PER_DAY;
         double remaining = Math.max(0, phaseOnePeriodInDays - accountAgeInDays);
-        long initialMinBuyerSecurityDeposit = 3 * minBuyerSecurityDepositAsCoin; // 0.003 / 15 USD
+        long initialMinBuyerSecurityDeposit = 3 * minBuyerSecurityDepositAsCoin; // 0.003 BTC / 15 USD
         double diff = initialMinBuyerSecurityDeposit - minBuyerSecurityDepositAsCoin;
         return Math.round(remaining / phaseOnePeriodInDays * diff) + minBuyerSecurityDepositAsCoin;
     }
@@ -147,8 +147,7 @@ public class AccountCreationAgeService {
 
         long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
         long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
-        // Restrictions.getMinBuyerSecurityDepositAsPercent() is  5% of trade amount.
-        return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsPercent);
+        return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, 0.1);
     }
 
     public double getMinDepositAsPercent(Trade trade) {
@@ -170,17 +169,16 @@ public class AccountCreationAgeService {
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
         long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
-        // Restrictions.getMinBuyerSecurityDepositAsPercent() is  5% of trade amount.
-        return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsPercent);
+        return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, 0.1);
     }
 
-    // Starts with 30% for new accounts, goes linear to 5% for 30 days and stays 5% afterwards
+    // Starts with 30% for new accounts, goes linear to 10% for 30 days and stays 10% afterwards
     @VisibleForTesting
     public static double getMyAccountMinDepositAsPercent(long accountAge, long phaseOnePeriod, double minBuyerSecurityDepositAsPercent) {
         double accountAgeInDays = accountAge / (double) DateUtils.MILLIS_PER_DAY;
         double phaseOnePeriodInDays = phaseOnePeriod / (double) DateUtils.MILLIS_PER_DAY;
         double remaining = Math.max(0, phaseOnePeriodInDays - accountAgeInDays);
-        double initialMinBuyerSecurityDeposit = 6 * minBuyerSecurityDepositAsPercent; // 30%
+        double initialMinBuyerSecurityDeposit = 0.3; // 30%
         double diff = initialMinBuyerSecurityDeposit - minBuyerSecurityDepositAsPercent;
         return remaining / phaseOnePeriodInDays * diff + minBuyerSecurityDepositAsPercent;
     }
