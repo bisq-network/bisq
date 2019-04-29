@@ -18,13 +18,17 @@
 package bisq.core.account.age;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
@@ -36,16 +40,14 @@ import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 /**
  * Responsible for delayed payout based on account age. It does not consider if the account was yet used for
  * trading and is therefor not considered a strong protection.
  */
 @Slf4j
 public class AccountCreationAgeService {
-    public final static int MAX_REQUIRED_AGE = 42;
-    public final static int MAX_DELAY = 28;
+    public final static long PHASE_ONE_PERIOD = 30;
+    public final static long PERM_DELAY = 7;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
 
@@ -60,23 +62,149 @@ public class AccountCreationAgeService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
+    // MinDepositAsCoin
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Coin getMyAccountMinDepositAsCoin(PaymentAccount myPaymentAccount) {
+        long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
+        long phaseOnePeriod = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        // Restrictions.getMinBuyerSecurityDepositAsCoin() is 0.001 BTC / 5 USD
+        return Coin.valueOf(getMyAccountMinDepositAsCoin(myAccountAge, phaseOnePeriod, Restrictions.getMinBuyerSecurityDepositAsCoin().value));
+    }
+
+    public Coin getMinDepositAsCoin(Offer offer) {
+        Coin minBuyerSecurityDepositAsCoin = Restrictions.getMinBuyerSecurityDepositAsCoin();
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+        //TODO does that make sense here?
+        if (offer.getDirection() == OfferPayload.Direction.SELL) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+
+        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        // Restrictions.getMinBuyerSecurityDepositAsCoin() is 0.001 BTC / 5 USD
+        return Coin.valueOf(getMyAccountMinDepositAsCoin(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsCoin.value));
+    }
+
+    public Coin getMinDepositAsCoin(Trade trade) {
+        Coin minBuyerSecurityDepositAsCoin = Restrictions.getMinBuyerSecurityDepositAsCoin();
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        // Restrictions.getMinBuyerSecurityDepositAsCoin() is 0.001 BTC / 5 USD
+        return Coin.valueOf(getMyAccountMinDepositAsCoin(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsCoin.value));
+    }
+
+    // Starts with 0.003 BTC for new accounts, goes linear to 0.001 BTC for 30 days and stays 0.001 BTC afterwards
+    @VisibleForTesting
+    public static long getMyAccountMinDepositAsCoin(long accountAge, long phaseOnePeriod, long minBuyerSecurityDepositAsCoin) {
+        double accountAgeInDays = accountAge / (double) DateUtils.MILLIS_PER_DAY;
+        double phaseOnePeriodInDays = phaseOnePeriod / (double) DateUtils.MILLIS_PER_DAY;
+        double remaining = Math.max(0, phaseOnePeriodInDays - accountAgeInDays);
+        long initialMinBuyerSecurityDeposit = 3 * minBuyerSecurityDepositAsCoin; // 0.003 / 15 USD
+        double diff = initialMinBuyerSecurityDeposit - minBuyerSecurityDepositAsCoin;
+        return Math.round(remaining / phaseOnePeriodInDays * diff) + minBuyerSecurityDepositAsCoin;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // MinDepositAsPercent
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public double getMyAccountMinDepositAsPercent(PaymentAccount myPaymentAccount) {
+        long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
+        long phaseOnePeriod = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        // Restrictions.getMinBuyerSecurityDepositAsPercent() is  5% of trade amount.
+        return getMyAccountMinDepositAsPercent(myAccountAge, phaseOnePeriod, Restrictions.getMinBuyerSecurityDepositAsPercent(myPaymentAccount));
+    }
+
+    public double getMinDepositAsPercent(Offer offer) {
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(offer.getPaymentMethod());
+        double minBuyerSecurityDepositAsPercent = Restrictions.getMinBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+        //TODO does that make sense here?
+        if (offer.getDirection() == OfferPayload.Direction.SELL) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        // Restrictions.getMinBuyerSecurityDepositAsPercent() is  5% of trade amount.
+        return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsPercent);
+    }
+
+    public double getMinDepositAsPercent(Trade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return 0.05; // unexpected case
+        }
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(offer.getPaymentMethod());
+        double minBuyerSecurityDepositAsPercent = Restrictions.getMinBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        // Restrictions.getMinBuyerSecurityDepositAsPercent() is  5% of trade amount.
+        return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsPercent);
+    }
+
+    // Starts with 30% for new accounts, goes linear to 5% for 30 days and stays 5% afterwards
+    @VisibleForTesting
+    public static double getMyAccountMinDepositAsPercent(long accountAge, long phaseOnePeriod, double minBuyerSecurityDepositAsPercent) {
+        double accountAgeInDays = accountAge / (double) DateUtils.MILLIS_PER_DAY;
+        double phaseOnePeriodInDays = phaseOnePeriod / (double) DateUtils.MILLIS_PER_DAY;
+        double remaining = Math.max(0, phaseOnePeriodInDays - accountAgeInDays);
+        double initialMinBuyerSecurityDeposit = 6 * minBuyerSecurityDepositAsPercent; // 30%
+        double diff = initialMinBuyerSecurityDeposit - minBuyerSecurityDepositAsPercent;
+        return remaining / phaseOnePeriodInDays * diff + minBuyerSecurityDepositAsPercent;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delay
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Returns the delay for the payout in days based on a linear function which starts with a delay of 28 days at age 0 and
-     * ends with 0 days delay at account age 42 (6 weeks).
+     * Returns the delay for the payout in days based on a linear function which starts with a delay of 30 days at age 0 and
+     * ends with 7 days delay at account age 30 days and stays 7 days indefinitely.
      * @param buyersAccountAge      Account age of buyer in ms
-     * @param requiredAccountAge    Required account age in ms
+     * @param phaseOnePeriod    Required account age in ms
      * @return The delay for the delayed payout in days.
      */
     @VisibleForTesting
-    public static long getDelayInDays(long buyersAccountAge, long requiredAccountAge) {
-        double maxDelay = (double) MAX_DELAY;
-        double requiredAccountAgeAsDays = ((double) requiredAccountAge) / DateUtils.MILLIS_PER_DAY;
-        double buyersAccountAgeAsDays = ((double) buyersAccountAge) / DateUtils.MILLIS_PER_DAY;
-        double result = (requiredAccountAgeAsDays - buyersAccountAgeAsDays) / requiredAccountAgeAsDays * maxDelay;
-        return Math.round(Math.max(0, result));
+    public static long getDelayInDays(long buyersAccountAge, long phaseOnePeriod) {
+        double buyersAccountAgeInDays = buyersAccountAge / (double) DateUtils.MILLIS_PER_DAY;
+        double phaseOnePeriodInDays = phaseOnePeriod / (double) DateUtils.MILLIS_PER_DAY;
+        double remaining = Math.max(0, phaseOnePeriodInDays - buyersAccountAgeInDays);
+        double permDelay = (double) PERM_DELAY;
+        double diffDelay = phaseOnePeriodInDays - permDelay;
+        return Math.round(((remaining / phaseOnePeriodInDays * diffDelay) + permDelay));
     }
 
     /**
@@ -99,7 +227,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = getRequiredAccountAge(offer.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriod(offer.getPaymentMethod());
 
         return getDelayInDays(buyersAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
@@ -117,7 +245,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
-        long requiredAccountAge = getRequiredAccountAge(offer.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriod(offer.getPaymentMethod());
         return getDelayInDays(buyersAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
@@ -128,17 +256,17 @@ public class AccountCreationAgeService {
      * @param direction             Direction of my offer
      * @return The delay in ms for the payout of maker.
      */
-    public long getDelayForMyOffer(PaymentAccount myPaymentAccount, @Nullable String currencyCode, @Nullable OfferPayload.Direction direction) {
-        if (direction != null && direction == OfferPayload.Direction.SELL) {
+    public long getDelayForMyOffer(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.SELL) {
             return 0;
         }
 
-        if (currencyCode != null && CurrencyUtil.isCryptoCurrency(currencyCode)) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
             return 0;
         }
 
         long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        long requiredAccountAge = getRequiredAccountAge(myPaymentAccount.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
         return getDelayInDays(myAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
@@ -153,12 +281,10 @@ public class AccountCreationAgeService {
     }
 
     /**
-     * Depending on payment methods chargeback risk we determine the required account age when we do not apply a payout delay anymore.
-     * The max. period is 42 days/6 weeks. For lower risk payment methods we reduce that to 21 days.
      * @param paymentMethod     The paymentMethod which determines the max. period
-     * @return The required account age in ms as day units when we do not apply a payout delay anymore
+     * @return The period ofr phase one in ms (day units)
      */
-    public long getRequiredAccountAge(PaymentMethod paymentMethod) {
+    public long getPhaseOnePeriod(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.BLOCK_CHAINS_ID:
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
@@ -173,18 +299,79 @@ public class AccountCreationAgeService {
             case PaymentMethod.PERFECT_MONEY_ID:
             case PaymentMethod.ALI_PAY_ID:
             case PaymentMethod.WECHAT_PAY_ID:
-                return 0;
-
             case PaymentMethod.ADVANCED_CASH_ID:
             case PaymentMethod.PROMPT_PAY_ID:
             case PaymentMethod.CASH_DEPOSIT_ID:
-                return MAX_REQUIRED_AGE / 2 * DateUtils.MILLIS_PER_DAY;
+                return 0;
 
             default:
                 // All other bank transfer methods
-                return MAX_REQUIRED_AGE * DateUtils.MILLIS_PER_DAY;
+                return getPhaseOnePeriodAsMilli();
         }
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Is in phase one period
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * My account is taken into consideration for a delayed payout.
+     * @param myPaymentAccount      My payment account used for my offer
+     * @param currencyCode          Currency code of my offer
+     * @param direction             Direction of my offer
+     * @return If my account requires a delayed payout
+     */
+    public boolean myMakerAccountInPhaseOnePeriod(PaymentAccount myPaymentAccount,
+                                                  String currencyCode,
+                                                  OfferPayload.Direction direction) {
+        return accountInPhaseOnePeriod(myPaymentAccount.getPaymentMethod(),
+                accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload()),
+                currencyCode,
+                direction);
+    }
+
+    /**
+     * We take the maker as buyer into consideration for a delayed payout.
+     * @param offer The offer for which we request the delayed payout state.
+     * @return If that offer requires a delayed payout
+     */
+    public boolean offerInPhaseOnePeriod(Offer offer) {
+        return accountInPhaseOnePeriod(offer.getPaymentMethod(),
+                accountAgeWitnessService.getMakersAccountAge(offer),
+                offer.getCurrencyCode(),
+                offer.getDirection());
+    }
+
+    /**
+     * We take the buyer in a trade (maker or taker) into consideration for a delayed payout.
+     * @param trade The trade for which we request the delayed payout state.
+     * @return If that trade requires a delayed payout
+     */
+    public boolean tradeInPhaseOnePeriod(Trade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return false;
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return false;
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return false;
+        }
+
+        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        long requiredAccountAge = getPhaseOnePeriod(offer.getPaymentMethod());
+        return buyersAccountAge < requiredAccountAge;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Is delay required
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * We take the buyer in a trade (maker or taker) into consideration for a delayed payout.
@@ -201,14 +388,7 @@ public class AccountCreationAgeService {
             return false;
         }
 
-        Contract contract = trade.getContract();
-        if (contract == null) {
-            return false;
-        }
-
-        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = getRequiredAccountAge(offer.getPaymentMethod());
-        return buyersAccountAge < requiredAccountAge;
+        return true;
     }
 
     /**
@@ -217,26 +397,24 @@ public class AccountCreationAgeService {
      * @return If that offer requires a delayed payout
      */
     public boolean offerRequirePayoutDelay(Offer offer) {
-        return accountRequiresPayoutDelay(offer.getPaymentMethod(),
-                accountAgeWitnessService.getMakersAccountAge(offer),
-                offer.getCurrencyCode(),
+        return accountRequiresPayoutDelay(offer.getCurrencyCode(),
                 offer.getDirection());
     }
 
     /**
      * My account is taken into consideration for a delayed payout.
-     * @param myPaymentAccount      My payment account used for my offer
      * @param currencyCode          Currency code of my offer
      * @param direction             Direction of my offer
      * @return If my account requires a delayed payout
      */
-    public boolean myMakerAccountRequiresPayoutDelay(PaymentAccount myPaymentAccount,
-                                                     String currencyCode,
+    public boolean myMakerAccountRequiresPayoutDelay(String currencyCode,
                                                      OfferPayload.Direction direction) {
-        return accountRequiresPayoutDelay(myPaymentAccount.getPaymentMethod(),
-                accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload()),
-                currencyCode,
+        return accountRequiresPayoutDelay(currencyCode,
                 direction);
+    }
+
+    public long getPhaseOnePeriodAsMilli() {
+        return PHASE_ONE_PERIOD * DateUtils.MILLIS_PER_DAY;
     }
 
 
@@ -244,9 +422,23 @@ public class AccountCreationAgeService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean accountRequiresPayoutDelay(PaymentMethod paymentMethod,
-                                               long accountAge,
-                                               String currencyCode,
+    private boolean accountInPhaseOnePeriod(PaymentMethod paymentMethod,
+                                            long accountAge,
+                                            String currencyCode,
+                                            OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.SELL) {
+            return false;
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+            return false;
+        }
+
+        long requiredAccountAge = getPhaseOnePeriod(paymentMethod);
+        return accountAge < requiredAccountAge;
+    }
+
+    private boolean accountRequiresPayoutDelay(String currencyCode,
                                                OfferPayload.Direction direction) {
         if (direction == OfferPayload.Direction.SELL) {
             return false;
@@ -256,8 +448,6 @@ public class AccountCreationAgeService {
             return false;
         }
 
-        long requiredAccountAge = getRequiredAccountAge(paymentMethod);
-        return accountAge < requiredAccountAge;
+        return true;
     }
-
 }

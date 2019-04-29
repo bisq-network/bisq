@@ -17,6 +17,8 @@
 
 package bisq.core.account.age;
 
+import org.bitcoinj.core.Coin;
+
 import org.apache.commons.lang3.time.DateUtils;
 
 import org.junit.Test;
@@ -28,43 +30,97 @@ public class AccountCreationAgeServiceTest {
     @Test
     public void testGetDelay() {
         long buyersAccountAge, requiredAccountAge, expected;
-
         requiredAccountAge = 0;
         buyersAccountAge = 0;
         expected = 0;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        requiredAccountAge = 42 * DateUtils.MILLIS_PER_DAY;
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
         buyersAccountAge = 0;
-        expected = 28;
+        expected = 30;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 42 * DateUtils.MILLIS_PER_DAY;
-        expected = 0;
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 15 * DateUtils.MILLIS_PER_DAY;
+        expected = 19;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 28 * DateUtils.MILLIS_PER_DAY;
-        expected = 9;
+
+        buyersAccountAge = 60 * DateUtils.MILLIS_PER_DAY;
+        expected = 7;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
-        buyersAccountAge = 100 * DateUtils.MILLIS_PER_DAY;
-        expected = 0;
-        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
-
-        buyersAccountAge = 1 * DateUtils.MILLIS_PER_DAY;
-        expected = 27;
+        buyersAccountAge = DateUtils.MILLIS_PER_DAY;
+        expected = 29;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
         buyersAccountAge = 2 * DateUtils.MILLIS_PER_DAY;
-        expected = 27;
-        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
-
-        buyersAccountAge = 40 * DateUtils.MILLIS_PER_DAY;
-        expected = 1;
-        assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
-
-        buyersAccountAge = 41 * DateUtils.MILLIS_PER_DAY;
-        expected = 1;
+        expected = 28;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
     }
+
+    @Test
+    public void testGetMyAccountMinDepositAsCoin() {
+        long buyersAccountAge, requiredAccountAge, expected;
+        long minBuyerSecurityDeposit = Coin.parseCoin("0.001").value;
+        requiredAccountAge = 0;
+        buyersAccountAge = 0;
+        expected = minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsCoin(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit));
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 0;
+        expected = 3 * minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsCoin(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit));
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 15 * DateUtils.MILLIS_PER_DAY;
+        expected = 2 * minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsCoin(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit));
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = requiredAccountAge;
+        expected = minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsCoin(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit));
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 2 * requiredAccountAge;
+        expected = minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsCoin(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit));
+    }
+
+    @Test
+    public void testGetMyAccountMinDepositAsPercent() {
+        long buyersAccountAge, requiredAccountAge;
+        double minBuyerSecurityDeposit = 0.05;
+        double expected;
+        double delta = 0.00001;
+
+      /*  requiredAccountAge = 0;
+        buyersAccountAge = 0;
+        expected = minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+*/
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 0;
+        expected = 6 * minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 15 * DateUtils.MILLIS_PER_DAY;
+        expected = 0.175;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = requiredAccountAge;
+        expected = minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+
+        requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
+        buyersAccountAge = 2 * requiredAccountAge;
+        expected = minBuyerSecurityDeposit;
+        assertEquals(expected, AccountCreationAgeService.getMyAccountMinDepositAsPercent(buyersAccountAge, requiredAccountAge, minBuyerSecurityDeposit), delta);
+    }
+
+
 }

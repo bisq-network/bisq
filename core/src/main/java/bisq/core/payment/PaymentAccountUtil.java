@@ -116,9 +116,14 @@ public class PaymentAccountUtil {
         return null;
     }
 
-    public static boolean isCryptoCurrencyAccount(PaymentAccount paymentAccount) {
+    public static boolean isCryptoCurrencyAccount(@Nullable PaymentAccount paymentAccount) {
         return (paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS) ||
                 paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT));
+    }
+
+    public static boolean isCryptoCurrencyAccount(@Nullable PaymentMethod paymentMethod) {
+        return (paymentMethod != null && paymentMethod.equals(PaymentMethod.BLOCK_CHAINS) ||
+                paymentMethod != null && paymentMethod.equals(PaymentMethod.BLOCK_CHAINS_INSTANT));
     }
 
     // TODO no code duplication found in UI code (added for API)

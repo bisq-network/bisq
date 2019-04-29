@@ -55,21 +55,36 @@ public class Restrictions {
     }
 
     public static double getDefaultBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
-        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount != null ? paymentAccount.getPaymentMethod() : null);
+        return getDefaultBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+    }
+
+    public static double getDefaultBuyerSecurityDepositAsPercent(boolean cryptoCurrencyAccount) {
+        if (cryptoCurrencyAccount)
             return 0.02; // 2% of trade amount.
         else
             return 0.1; // 10% of trade amount.
     }
 
     public static double getMinBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
-        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount != null ? paymentAccount.getPaymentMethod() : null);
+        return getMinBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+    }
+
+    public static double getMinBuyerSecurityDepositAsPercent(boolean cryptoCurrencyAccount) {
+        if (cryptoCurrencyAccount)
             return 0.005; // 0.5% of trade amount.
         else
             return 0.05; // 5% of trade amount.
     }
 
     public static double getMaxBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
-        if (PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount))
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(paymentAccount != null ? paymentAccount.getPaymentMethod() : null);
+        return getMaxBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+    }
+
+    public static double getMaxBuyerSecurityDepositAsPercent(boolean cryptoCurrencyAccount) {
+        if (cryptoCurrencyAccount)
             return 0.2; // 20% of trade amount. For a 1 BTC trade it is about 800 USD @ 4000 USD/BTC
         else
             return 0.5; // 50% of trade amount. For a 1 BTC trade it is about 2000 USD @ 4000 USD/BTC

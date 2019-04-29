@@ -21,21 +21,25 @@ import bisq.core.account.age.AccountCreationAgeService;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 
-import javax.inject.Inject;
+import org.bitcoinj.core.Coin;
 
-import org.apache.commons.lang3.time.DateUtils;
+import javax.inject.Inject;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Main class for account score domain.
@@ -67,7 +71,24 @@ public class AccountScoreService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public long getRequiredAccountAge(PaymentMethod paymentMethod) {
-        return accountCreationAgeService.getRequiredAccountAge(paymentMethod);
+        return accountCreationAgeService.getPhaseOnePeriod(paymentMethod);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Is in phase one period
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean myMakerAccountInPhaseOnePeriod(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        return accountCreationAgeService.myMakerAccountInPhaseOnePeriod(myPaymentAccount, currencyCode, direction);
+    }
+
+    public boolean offerInPhaseOnePeriod(Offer offer) {
+        return accountCreationAgeService.offerInPhaseOnePeriod(offer);
+    }
+
+    public boolean tradeInPhaseOnePeriod(Trade trade) {
+        return accountCreationAgeService.tradeInPhaseOnePeriod(trade);
     }
 
 
@@ -75,8 +96,8 @@ public class AccountScoreService {
     // Is delay required
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean myMakerAccountRequiresPayoutDelay(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
-        return accountCreationAgeService.myMakerAccountRequiresPayoutDelay(myPaymentAccount, currencyCode, direction);
+    public boolean myMakerAccountRequiresPayoutDelay(String currencyCode, OfferPayload.Direction direction) {
+        return accountCreationAgeService.myMakerAccountRequiresPayoutDelay(currencyCode, direction);
     }
 
     public boolean offerRequirePayoutDelay(Offer offer) {
@@ -86,6 +107,7 @@ public class AccountScoreService {
     public boolean tradeRequirePayoutDelay(Trade trade) {
         return accountCreationAgeService.tradeRequirePayoutDelay(trade);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delay
@@ -101,6 +123,277 @@ public class AccountScoreService {
 
     public Date getDelayedTradePayoutDate(Trade trade) {
         return accountCreationAgeService.getDelayedTradePayoutDate(trade);
+    }
+
+
+    // TODO handle small trades
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // ScoreInfo
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Optional<ScoreInfo> getMyScoreInfo(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+            return Optional.empty();
+        }
+
+        Optional<AccountScoreCategory> accountScoreCategory = getMyAccountScoreCategory(myPaymentAccount, currencyCode);
+        checkArgument(accountScoreCategory.isPresent(), "accountScoreCategory must be present");
+        long accountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
+
+        Optional<Long> signedTradeAge;
+        List<Long> myWitnessAgeList = signedWitnessService.getMyWitnessAgeList(myPaymentAccount.getPaymentAccountPayload());
+        if (!myWitnessAgeList.isEmpty()) {
+            signedTradeAge = Optional.of(myWitnessAgeList.get(0));
+        } else {
+            signedTradeAge = Optional.empty();
+        }
+
+        Coin minDepositAsCoin = getMyAccountMinDepositAsCoin(myPaymentAccount, currencyCode);
+        double minDepositAsPercent = getMyAccountMinDepositAsPercent(myPaymentAccount, currencyCode);
+        ;
+        long requiredDelay = accountCreationAgeService.getDelayForMyOffer(myPaymentAccount, currencyCode, direction);
+        boolean canSign = signedTradeAge.isPresent() && signedTradeAge.get() > getPhaseOnePeriodAsMilli();
+        return Optional.of(new ScoreInfo(accountScoreCategory.get(),
+                accountAge,
+                signedTradeAge,
+                minDepositAsCoin,
+                minDepositAsPercent,
+                requiredDelay,
+                canSign));
+    }
+
+    private Optional<ScoreInfo> getScoreInfoForMaker(Offer offer) {
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return Optional.empty();
+        }
+
+        Optional<AccountScoreCategory> accountScoreCategory = getAccountScoreCategoryForMaker(offer);
+        checkArgument(accountScoreCategory.isPresent(), "accountScoreCategory must be present");
+        long accountAge = accountAgeWitnessService.getMakersAccountAge(offer);
+
+        Optional<Long> signedTradeAge = Optional.empty();
+        ;
+        Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
+        Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
+                accountAgeWitnessService.getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+                Optional.empty();
+        if (witnessByHashAsHex.isPresent()) {
+            List<Long> myWitnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witnessByHashAsHex.get());
+            if (!myWitnessAgeList.isEmpty()) {
+                signedTradeAge = Optional.of(myWitnessAgeList.get(0));
+            }
+        }
+
+        Coin minDepositAsCoin = getMinDepositAsCoin(offer);
+        double minDepositAsPercent = getMinDepositAsPercent(offer);
+        long requiredDelay = accountCreationAgeService.getDelayForOffer(offer);
+        boolean canSign = signedTradeAge.isPresent() && signedTradeAge.get() > getPhaseOnePeriodAsMilli();
+        return Optional.of(new ScoreInfo(accountScoreCategory.get(),
+                accountAge,
+                signedTradeAge,
+                minDepositAsCoin,
+                minDepositAsPercent,
+                requiredDelay,
+                canSign));
+    }
+
+
+    private Optional<ScoreInfo> getScoreInfoForBuyer(Trade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return Optional.empty();
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return Optional.empty();
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return Optional.empty();
+        }
+
+        Optional<Long> signedTradeAge = Optional.empty();
+        ;
+        Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        if (witness.isPresent()) {
+            List<Long> witnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witness.get());
+            if (!witnessAgeList.isEmpty()) {
+                signedTradeAge = Optional.of(witnessAgeList.get(0));
+            }
+        }
+
+        Optional<AccountScoreCategory> accountScoreCategory = getAccountScoreCategoryOfBuyer(trade);
+        checkArgument(accountScoreCategory.isPresent(), "accountScoreCategory must be present");
+        long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        Coin minDepositAsCoin = getMinDepositAsCoin(trade);
+        double minDepositAsPercent = getMinDepositAsPercent(trade);
+        long requiredDelay = accountCreationAgeService.getDelay(trade);
+        boolean canSign = signedTradeAge.isPresent() && signedTradeAge.get() > getPhaseOnePeriodAsMilli();
+        return Optional.of(new ScoreInfo(accountScoreCategory.get(),
+                buyersAccountAge,
+                signedTradeAge,
+                minDepositAsCoin,
+                minDepositAsPercent,
+                requiredDelay,
+                canSign));
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DepositAsCoin
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Coin getMyAccountMinDepositAsCoin(PaymentAccount myPaymentAccount, String currencyCode) {
+        Coin minBuyerSecurityDepositAsCoin = Restrictions.getMinBuyerSecurityDepositAsCoin();
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        List<Long> myWitnessAgeList = signedWitnessService.getMyWitnessAgeList(myPaymentAccount.getPaymentAccountPayload());
+        if (!myWitnessAgeList.isEmpty()) {
+            long oldestAge = myWitnessAgeList.get(0);
+            if (oldestAge >= getPhaseOnePeriodAsMilli()) {
+                return minBuyerSecurityDepositAsCoin;
+            }
+        }
+        // No signature yet or it is too young to be considered, so we use the deposit based on the account age.
+        return accountCreationAgeService.getMyAccountMinDepositAsCoin(myPaymentAccount);
+    }
+
+    public Coin getMinDepositAsCoin(Offer offer) {
+        Coin minBuyerSecurityDepositAsCoin = Restrictions.getMinBuyerSecurityDepositAsCoin();
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
+        Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
+                accountAgeWitnessService.getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+                Optional.empty();
+        if (witnessByHashAsHex.isPresent()) {
+            List<Long> myWitnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witnessByHashAsHex.get());
+            if (!myWitnessAgeList.isEmpty()) {
+                long oldestAge = myWitnessAgeList.get(0);
+                if (oldestAge >= getPhaseOnePeriodAsMilli()) {
+                    return minBuyerSecurityDepositAsCoin;
+                }
+            }
+        }
+
+        // No signature yet or it is too young to be considered, so we use the deposit based on the account age.
+        return accountCreationAgeService.getMinDepositAsCoin(offer);
+    }
+
+    public Coin getMinDepositAsCoin(Trade trade) {
+        Coin minBuyerSecurityDepositAsCoin = Restrictions.getMinBuyerSecurityDepositAsCoin();
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return minBuyerSecurityDepositAsCoin; // unexpected case
+        }
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return minBuyerSecurityDepositAsCoin;
+        }
+
+        Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        if (witness.isPresent()) {
+            List<Long> witnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witness.get());
+            if (!witnessAgeList.isEmpty()) {
+                long oldestAge = witnessAgeList.get(0);
+                if (oldestAge >= getPhaseOnePeriodAsMilli()) {
+                    return minBuyerSecurityDepositAsCoin;
+                }
+            }
+        }
+
+        // No signature yet or it is too young to be considered, so we use the deposit based on the account age.
+        return accountCreationAgeService.getMinDepositAsCoin(trade);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DepositAsPercent
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public double getMyAccountMinDepositAsPercent(PaymentAccount myPaymentAccount, String currencyCode) {
+        double minBuyerSecurityDepositAsPercent = Restrictions.getMinBuyerSecurityDepositAsPercent(myPaymentAccount);
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        List<Long> myWitnessAgeList = signedWitnessService.getMyWitnessAgeList(myPaymentAccount.getPaymentAccountPayload());
+        if (!myWitnessAgeList.isEmpty()) {
+            long oldestAge = myWitnessAgeList.get(0);
+            if (oldestAge >= getPhaseOnePeriodAsMilli()) {
+                return minBuyerSecurityDepositAsPercent;
+            }
+        }
+        // No signature yet or it is too young to be considered, so we use the deposit based on the account age.
+        return accountCreationAgeService.getMyAccountMinDepositAsPercent(myPaymentAccount);
+    }
+
+    public double getMinDepositAsPercent(Offer offer) {
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(offer.getPaymentMethod());
+        double minBuyerSecurityDepositAsPercent = Restrictions.getMinBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
+        Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
+                accountAgeWitnessService.getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+                Optional.empty();
+        if (witnessByHashAsHex.isPresent()) {
+            List<Long> myWitnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witnessByHashAsHex.get());
+            if (!myWitnessAgeList.isEmpty()) {
+                long oldestAge = myWitnessAgeList.get(0);
+                if (oldestAge >= getPhaseOnePeriodAsMilli()) {
+                    return minBuyerSecurityDepositAsPercent;
+                }
+            }
+        }
+
+        // No signature yet or it is too young to be considered, so we use the deposit based on the account age.
+        return accountCreationAgeService.getMinDepositAsPercent(offer);
+    }
+
+    public double getMinDepositAsPercent(Trade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null) {
+            return 0.05; // unexpected case
+        }
+        boolean cryptoCurrencyAccount = PaymentAccountUtil.isCryptoCurrencyAccount(offer.getPaymentMethod());
+        double minBuyerSecurityDepositAsPercent = Restrictions.getMinBuyerSecurityDepositAsPercent(cryptoCurrencyAccount);
+
+        if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        Contract contract = trade.getContract();
+        if (contract == null) {
+            return minBuyerSecurityDepositAsPercent;
+        }
+
+        Optional<AccountAgeWitness> witness = accountAgeWitnessService.findWitness(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
+        if (witness.isPresent()) {
+            List<Long> witnessAgeList = signedWitnessService.getVerifiedWitnessAgeList(witness.get());
+            if (!witnessAgeList.isEmpty()) {
+                long oldestAge = witnessAgeList.get(0);
+                if (oldestAge >= getPhaseOnePeriodAsMilli()) {
+                    return minBuyerSecurityDepositAsPercent;
+                }
+            }
+        }
+
+        // No signature yet or it is too young to be considered, so we use the deposit based on the account age.
+        return accountCreationAgeService.getMinDepositAsPercent(trade);
     }
 
 
@@ -124,7 +417,7 @@ public class AccountScoreService {
         }
     }
 
-    public Optional<AccountScoreCategory> getAccountScoreCategoryOfMaker(Offer offer) {
+    public Optional<AccountScoreCategory> getAccountScoreCategoryForMaker(Offer offer) {
         if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
             return Optional.empty();
         }
@@ -180,21 +473,20 @@ public class AccountScoreService {
 
     private AccountScoreCategory getAccountScoreCategory(long accountAge, boolean isSignedWitness) {
         if (isSignedWitness) {
-            long maxRequiredAge = AccountCreationAgeService.MAX_DELAY * DateUtils.MILLIS_PER_DAY;
-            if (accountAge >= maxRequiredAge) {
+            long phaseOnePeriod = getPhaseOnePeriodAsMilli();
+            if (accountAge >= 2 * phaseOnePeriod) {
                 return AccountScoreCategory.GOLD;
-            } else if (accountAge >= maxRequiredAge / 2) {
+            } else if (accountAge >= phaseOnePeriod) {
                 return AccountScoreCategory.SILVER;
             } else {
                 return AccountScoreCategory.BRONZE;
             }
         } else {
-            long maxRequiredAge = AccountCreationAgeService.MAX_REQUIRED_AGE * DateUtils.MILLIS_PER_DAY;
-            if (accountAge >= maxRequiredAge) {
-                return AccountScoreCategory.SILVER;
-            } else {
-                return AccountScoreCategory.BRONZE;
-            }
+            return AccountScoreCategory.BRONZE;
         }
+    }
+
+    private long getPhaseOnePeriodAsMilli() {
+        return accountCreationAgeService.getPhaseOnePeriodAsMilli();
     }
 }
