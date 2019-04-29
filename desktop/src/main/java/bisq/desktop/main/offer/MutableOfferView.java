@@ -48,6 +48,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -115,6 +116,7 @@ import java.io.ByteArrayInputStream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
@@ -471,12 +473,22 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         String key = "immatureBuyerAccountAgeCreateOffer";
         if (preferences.showAgain(key) && !DevEnv.isDevMode()) {
-            if (model.getDataModel().myAccountRequiresPayoutDelay()) {
-                String myAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getMyAccountAge());
-                String requiredAccountAge = btcFormatter.formatAccountAge(model.getDataModel().getRequiredAccountAge());
-                String delay = btcFormatter.formatAccountAge(model.getDataModel().getDelay());
-                new Popup().information(Res.get("popup.immatureBuyerAccountAge.createOffer.msg",
-                        myAccountAge, requiredAccountAge, delay))
+            Optional<ScoreInfo> optionalScoreInfo = model.getDataModel().getOptionalScoreInfo();
+            if (optionalScoreInfo.isPresent()) {
+                ScoreInfo scoreInfo = optionalScoreInfo.get();
+
+                String delay = btcFormatter.formatAccountAge(scoreInfo.getRequiredDelay());
+                String minDepositAsPercent = btcFormatter.formatToPercentWithSymbol(scoreInfo.getMinDepositAsPercent());
+
+                String myAccountAge = "\n" + Res.getWithCol("peerInfo.age") + " " + btcFormatter.formatAccountAge(model.getDataModel().getMyAccountAge());
+
+                String signedTradeAge = scoreInfo.getSignedTradeAge().isPresent() ?
+                        btcFormatter.formatAccountAge(scoreInfo.getSignedTradeAge().get()) :
+                        Res.get("peerInfo.notTraded");
+                signedTradeAge = "\n" + Res.getWithCol("peerInfo.tradeAge") + " " + signedTradeAge;
+
+                new Popup().information(Res.get("popup.restrictedBuyerAccount.createOffer.msg",
+                        delay, minDepositAsPercent, myAccountAge, signedTradeAge, model.getDataModel().getPhaseOnePeriod()))
                         .dontShowAgainId(key)
                         .show();
             }

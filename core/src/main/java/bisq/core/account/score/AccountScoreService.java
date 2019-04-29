@@ -52,6 +52,8 @@ public class AccountScoreService {
     private final AccountAgeWitnessService accountAgeWitnessService;
 
 
+    // TODO missing: If trade amount is below 0.01 BTC (about 50 USD atm) there are no delays and increased security deposit (same as now).
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +72,7 @@ public class AccountScoreService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public long getRequiredAccountAge(PaymentMethod paymentMethod) {
+    public long getPhaseOnePeriod(PaymentMethod paymentMethod) {
         return accountCreationAgeService.getPhaseOnePeriod(paymentMethod);
     }
 
@@ -125,8 +127,6 @@ public class AccountScoreService {
         return accountCreationAgeService.getDelayedTradePayoutDate(trade);
     }
 
-
-    // TODO handle small trades
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ScoreInfo

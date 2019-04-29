@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer;
 
 import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
@@ -837,15 +838,25 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload());
     }
 
-    long getRequiredAccountAge() {
-        return accountScoreService.getRequiredAccountAge(paymentAccount.getPaymentMethod());
+    long getPhaseOnePeriod() {
+        return accountScoreService.getPhaseOnePeriod(paymentAccount.getPaymentMethod());
     }
 
     long getDelay() {
         return accountScoreService.getDelayForMyOffer(paymentAccount, tradeCurrencyCode.get(), getDirection());
     }
 
+    Coin getMinBuyerSecurityDepositAsCoin() {
+        return accountScoreService.getMyAccountMinDepositAsCoin(paymentAccount, tradeCurrencyCode.get());
+    }
+
+    Optional<ScoreInfo> getOptionalScoreInfo() {
+        return accountScoreService.getMyScoreInfo(paymentAccount, tradeCurrencyCode.get(), getDirection());
+    }
+
     boolean myAccountRequiresPayoutDelay() {
         return accountScoreService.myMakerAccountRequiresPayoutDelay(tradeCurrencyCode.get(), getDirection());
     }
+
+
 }

@@ -27,11 +27,14 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
+
+import bisq.common.util.Utilities;
 
 import com.google.common.base.Charsets;
 
@@ -63,7 +66,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class PeerInfoIcon extends Group {
-    private final String tooltipText;
     private final int numTrades;
     @Nullable
     private final Offer offer;
@@ -78,7 +80,9 @@ public class PeerInfoIcon extends Group {
     protected final Pane numTradesPane;
     private final String fullAddress;
     private final double scaleFactor;
-    private final Label categoryIcon, delayIcon, signIcon;
+    private final Label accountAgeIcon, categoryIcon, delayIcon, signIcon;
+    private final BSFormatter formatter;
+    private String tooltipText;
 
     public PeerInfoIcon(NodeAddress nodeAddress,
                         String role,
@@ -101,7 +105,6 @@ public class PeerInfoIcon extends Group {
                 formatter,
                 useDevPrivilegeKeys,
                 accountScoreService);
-
     }
 
     public PeerInfoIcon(NodeAddress nodeAddress,
@@ -143,6 +146,7 @@ public class PeerInfoIcon extends Group {
         this.trade = trade;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.accountScoreService = accountScoreService;
+        this.formatter = formatter;
 
         scaleFactor = getScaleFactor();
         fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
@@ -164,10 +168,31 @@ public class PeerInfoIcon extends Group {
                 peersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(peersAccountAge)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
-        tooltipText = hasTraded ?
-                Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, accountAge) :
-                Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, accountAge);
 
+        Optional<ScoreInfo> optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
+        if (optionalScoreInfo.isPresent()) {
+            ScoreInfo scoreInfo = optionalScoreInfo.get();
+            String buyersDelay = offer.getDirection() == OfferPayload.Direction.BUY ?
+                    "\n" + Res.getWithCol("peerInfo.buyersDelay") + " " + formatter.formatAccountAge(scoreInfo.getRequiredDelay()) :
+                    "";
+
+            String signedTradeAge = scoreInfo.getSignedTradeAge().isPresent() ?
+                    formatter.formatAccountAge(scoreInfo.getSignedTradeAge().get()) :
+                    Res.get("peerInfo.notTraded");
+            signedTradeAge = "\n" + Res.getWithCol("peerInfo.tradeAge") + " " + signedTradeAge;
+
+            String canSign = scoreInfo.isCanSign() ? Res.get("shared.yes") : Res.get("shared.no");
+            canSign = "\n" + Res.getWithCol("peerInfo.canSign") + " " + canSign;
+            tooltipText = hasTraded ?
+                    Res.get("peerInfoIcon.tooltip.trade.scoreInfo.traded", role, fullAddress, numTrades, accountAge,
+                            buyersDelay, signedTradeAge, canSign) :
+                    Res.get("peerInfoIcon.tooltip.trade.scoreInfo.notTraded", role, fullAddress, accountAge,
+                            buyersDelay, signedTradeAge, canSign);
+        } else {
+            tooltipText = hasTraded ?
+                    Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, accountAge) :
+                    Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, accountAge);
+        }
         // outer circle
         Color ringColor;
         if (isFiatCurrency) {
@@ -260,6 +285,14 @@ public class PeerInfoIcon extends Group {
         categoryIcon.setLayoutX(-20);
         categoryIcon.setLayoutY(5);
 
+        accountAgeIcon = new Label();
+        accountAgeIcon.setLayoutX(-33);
+        accountAgeIcon.setLayoutY(20);
+        accountAgeIcon.setMinWidth(40);
+        accountAgeIcon.setMaxWidth(40);
+        accountAgeIcon.getStyleClass().add("account-age-label");
+
+
         delayIcon = new Label();
         delayIcon.setLayoutX(-40);
         delayIcon.setLayoutY(5);
@@ -270,7 +303,7 @@ public class PeerInfoIcon extends Group {
         signIcon.setLayoutY(5);
         AwesomeDude.setIcon(signIcon, AwesomeIcon.PENCIL);
 
-        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, delayIcon, signIcon);
+        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, accountAgeIcon, delayIcon, signIcon);
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
 
@@ -355,6 +388,8 @@ public class PeerInfoIcon extends Group {
         categoryIcon.setManaged(isScoreInfoPresent);
         delayIcon.setVisible(isScoreInfoPresent);
         delayIcon.setManaged(isScoreInfoPresent);
+        signIcon.setVisible(isScoreInfoPresent);
+        signIcon.setManaged(isScoreInfoPresent);
 
         if (isScoreInfoPresent) {
             //TODO just dummy impl.
@@ -362,6 +397,9 @@ public class PeerInfoIcon extends Group {
             boolean canSign = scoreInfo.isCanSign();
             signIcon.setVisible(canSign);
             signIcon.setManaged(canSign);
+
+            String age = Utilities.toTruncatedString(formatter.formatAccountAge(scoreInfo.getAccountAge()), 8);
+            accountAgeIcon.setText(age);
 
             boolean requireDelay = scoreInfo.getRequiredDelay() > 0;
             delayIcon.setVisible(requireDelay);

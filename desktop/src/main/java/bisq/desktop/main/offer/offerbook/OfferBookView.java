@@ -502,7 +502,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
 
         if (accountScoreService.offerRequirePayoutDelay(offer)) {
-            String requiredAccountAge = formatter.formatAccountAge(accountScoreService.getRequiredAccountAge(offer.getPaymentMethod()));
+            String requiredAccountAge = formatter.formatAccountAge(accountScoreService.getPhaseOnePeriod(offer.getPaymentMethod()));
             String makersAccountAge = formatter.formatAccountAge(accountAgeWitnessService.getMakersAccountAge(offer));
             String delay = formatter.formatAccountAge(accountScoreService.getDelayForOffer(offer));
             new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",
