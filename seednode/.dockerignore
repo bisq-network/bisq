@@ -10,7 +10,7 @@ docker/README.md
 
 # Gradle
 .gradle
-#build
+#build -> docker needs to see the build dir, used to run the seednode
 
 # IDEA
 .idea

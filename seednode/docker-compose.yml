@@ -26,7 +26,7 @@ services:
             - MAX_MEMORY=1200
             - MAX_CONNECTIONS=30
             - BASE_CURRENCY_NETWORK=BTC_MAINNET
-            - APP_NAME=seed
+            - APP_NAME=${APP_NAME}
             - NODE_PORT=8000
             - DAO_ACTIVATED=true
             - FULL_DAO_NODE=true
@@ -35,22 +35,6 @@ services:
             - RPC_USER=${RPC_USER}
             - RPC_PASSWORD=${RPC_PASSWORD}
             - RPC_BLOCKNOTIFY_PORT=5120
-
-    # fullnode:
-    #     container_name: btcd
-    #     restart: unless-stopped
-    #     image: kylemanna/bitcoind
-    #     ports:
-    #         - 8333:8333
-    #         # - 127.0.0.1:8332:8332
-    #         - 18443:18443
-    #     networks:
-    #       bisq_net:
-    #         ipv4_address: 172.28.1.4
-    #     volumes:
-    #         - ./mybitcoin.conf:/bitcoin/.bitcoin/bitcoin.conf
-    #         - ./docker/prod/blocknotify:/bitcoin/.bitcoin/blocknotify
-    #         - ${BTC_DATA_DIR}:/bitcoin
 
     bitcoin-core:
         build:
@@ -81,7 +65,6 @@ services:
         # environment:
         #     - BITCOIN_DATA=${BTC_DATA_DIR}
         volumes:
-#            - ./docker/prod/mybitcoin.conf:/bitcoin/.bitcoin/bitcoin.conf
             - ./docker/prod/blocknotify:/home/bitcoin/.bitcoin/blocknotify
             - ${BTC_DATA_DIR}:/home/bitcoin/.bitcoin/
 
