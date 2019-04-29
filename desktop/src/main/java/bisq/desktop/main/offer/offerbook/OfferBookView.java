@@ -41,6 +41,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
@@ -501,19 +502,24 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             return;
         }
 
-        if (accountScoreService.offerRequirePayoutDelay(offer)) {
-            String requiredAccountAge = formatter.formatAccountAge(accountScoreService.getPhaseOnePeriod(offer.getPaymentMethod()));
-            String makersAccountAge = formatter.formatAccountAge(accountAgeWitnessService.getMakersAccountAge(offer));
-            String delay = formatter.formatAccountAge(accountScoreService.getDelayForOffer(offer));
-            new Popup<>().confirmation(Res.get("offerbook.warning.buyerHasImmatureAccount",
-                    makersAccountAge,
-                    requiredAccountAge,
-                    delay))
-                    .actionButtonText(Res.get("offerbook.warning.buyerHasImmatureAccount.confirm"))
-                    .onAction(() -> offerActionHandler.onTakeOffer(offer))
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .show();
-            return;
+        if (offer.getDirection() == OfferPayload.Direction.BUY) {
+            Optional<ScoreInfo> optionalScoreInfo = model.getScoreInfoForMaker(offer);
+            if (optionalScoreInfo.isPresent()) {
+                ScoreInfo scoreInfo = optionalScoreInfo.get();
+                String delay = formatter.formatAccountAge(scoreInfo.getRequiredDelay());
+                String accountAge = "\n" + Res.getWithCol("peerInfo.age") + " " + formatter.formatAccountAge(model.getMakersAccountAge(offer));
+                String signedTradeAge = scoreInfo.getSignedTradeAge().isPresent() ?
+                        formatter.formatAccountAge(scoreInfo.getSignedTradeAge().get()) :
+                        Res.get("peerInfo.notTraded");
+                signedTradeAge = "\n" + Res.getWithCol("peerInfo.tradeAge") + " " + signedTradeAge;
+                String message = Res.get("offerbook.warning.takerOffer.restrictedBuyerAccount", delay, accountAge, signedTradeAge);
+                new Popup<>().confirmation(message)
+                        .actionButtonText(Res.get("offerbook.warning.takerOffer.restrictedBuyerAccount.confirm"))
+                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+                return;
+            }
         }
 
         offerActionHandler.onTakeOffer(offer);

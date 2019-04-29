@@ -80,7 +80,7 @@ public class PeerInfoIcon extends Group {
     protected final Pane numTradesPane;
     private final String fullAddress;
     private final double scaleFactor;
-    private final Label accountAgeIcon, categoryIcon, delayIcon, signIcon;
+    private final Label delayLabel, categoryIcon, delayIcon, signIcon;
     private final BSFormatter formatter;
     private String tooltipText;
 
@@ -285,25 +285,24 @@ public class PeerInfoIcon extends Group {
         categoryIcon.setLayoutX(-20);
         categoryIcon.setLayoutY(5);
 
-        accountAgeIcon = new Label();
-        accountAgeIcon.setLayoutX(-33);
-        accountAgeIcon.setLayoutY(20);
-        accountAgeIcon.setMinWidth(40);
-        accountAgeIcon.setMaxWidth(40);
-        accountAgeIcon.getStyleClass().add("account-age-label");
-
-
         delayIcon = new Label();
         delayIcon.setLayoutX(-40);
         delayIcon.setLayoutY(5);
         AwesomeDude.setIcon(delayIcon, AwesomeIcon.TIME);
 
+        delayLabel = new Label();
+        delayLabel.setLayoutX(-53);
+        delayLabel.setLayoutY(20);
+        delayLabel.setMinWidth(40);
+        delayLabel.setMaxWidth(40);
+        delayLabel.getStyleClass().add("delay-label");
+
         signIcon = new Label();
         signIcon.setLayoutX(-60);
         signIcon.setLayoutY(5);
-        AwesomeDude.setIcon(signIcon, AwesomeIcon.PENCIL);
+        AwesomeDude.setIcon(signIcon, AwesomeIcon.CHECK);
 
-        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, accountAgeIcon, delayIcon, signIcon);
+        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, delayIcon, delayLabel, signIcon);
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
 
@@ -398,12 +397,15 @@ public class PeerInfoIcon extends Group {
             signIcon.setVisible(canSign);
             signIcon.setManaged(canSign);
 
-            String age = Utilities.toTruncatedString(formatter.formatAccountAge(scoreInfo.getAccountAge()), 8);
-            accountAgeIcon.setText(age);
+            long requiredDelay = scoreInfo.getRequiredDelay();
+            String age = Utilities.toTruncatedString(formatter.formatAccountAge(requiredDelay), 8);
+            delayLabel.setText(age);
 
-            boolean requireDelay = scoreInfo.getRequiredDelay() > 0;
+            boolean requireDelay = requiredDelay > 0;
             delayIcon.setVisible(requireDelay);
             delayIcon.setManaged(requireDelay);
+            delayLabel.setVisible(requireDelay);
+            delayLabel.setManaged(requireDelay);
 
             if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
                 categoryIcon.getStyleClass().addAll("score-gold");

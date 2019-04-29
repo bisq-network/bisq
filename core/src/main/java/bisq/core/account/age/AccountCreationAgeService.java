@@ -269,6 +269,22 @@ public class AccountCreationAgeService {
     }
 
     /**
+     * Delay for taker when he is fiat buyer.
+     * @param myPaymentAccount      My payment account used for my offer
+     * @param currencyCode          Currency code of my offer
+     * @return The delay in ms for the payout of taker.
+     */
+    public long getDelayForMyPaymentAccount(PaymentAccount myPaymentAccount, String currencyCode) {
+        if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+            return 0;
+        }
+
+        long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
+        long requiredAccountAge = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        return getDelayInDays(myAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
+    }
+
+    /**
      * @param trade     The trade for which we want to know the delayed payout date.
      * @return The date of a delayed payout
      */

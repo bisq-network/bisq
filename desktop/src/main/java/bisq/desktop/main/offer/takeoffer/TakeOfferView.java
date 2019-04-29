@@ -47,6 +47,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -108,6 +109,7 @@ import java.net.URI;
 
 import java.io.ByteArrayInputStream;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
@@ -508,15 +510,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
         if (!DevEnv.isDevMode()) {
-            String key = "securityDepositInfo";
-            new Popup<>().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
-                    .actionButtonText(Res.get("shared.faq"))
-                    .onAction(() -> GUIUtil.openWebPage("https://bisq.network/faq#6"))
-                    .useIUnderstandButton()
-                    .dontShowAgainId(key)
-                    .show();
-
-
             String tradeAmountText = model.isSeller() ? Res.get("takeOffer.takeOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
             String message = Res.get("takeOffer.takeOfferFundWalletInfo.msg",
                     model.totalToPay.get(),
@@ -525,11 +518,30 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     model.getTradeFee(),
                     model.getTxFee()
             );
-            key = "takeOfferFundWalletInfo";
+            String key = "takeOfferFundWalletInfo";
             new Popup<>().headLine(Res.get("takeOffer.takeOfferFundWalletInfo.headline"))
                     .instruction(message)
                     .dontShowAgainId(key)
                     .show();
+        }
+
+        String key = "immatureBuyerAccountAgeTakeOffer";
+        if (model.preferences.showAgain(key) && !DevEnv.isDevMode()) {
+            Optional<ScoreInfo> optionalScoreInfo = model.dataModel.getMyScoreInfo();
+            if (optionalScoreInfo.isPresent()) {
+                ScoreInfo scoreInfo = optionalScoreInfo.get();
+                String requiredDelay = formatter.formatAccountAge(scoreInfo.getRequiredDelay());
+                String myAccountAge = "\n" + Res.getWithCol("peerInfo.age") + " " + formatter.formatAccountAge(scoreInfo.getAccountAge());
+                String signedTradeAge = scoreInfo.getSignedTradeAge().isPresent() ?
+                        formatter.formatAccountAge(scoreInfo.getSignedTradeAge().get()) :
+                        Res.get("peerInfo.notTraded");
+                signedTradeAge = "\n" + Res.getWithCol("peerInfo.tradeAge") + " " + signedTradeAge;
+                String phaseOnePeriod = formatter.formatAccountAge(model.dataModel.getPhaseOnePeriod());
+                String message = Res.get("popup.restrictedBuyerAccount.takeOffer.msg", requiredDelay, myAccountAge, signedTradeAge, phaseOnePeriod);
+                new Popup().information(message)
+                        .dontShowAgainId(key)
+                        .show();
+            }
         }
 
         cancelButton2.setVisible(true);

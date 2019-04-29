@@ -77,7 +77,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final BtcValidator btcValidator;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
-    private final Preferences preferences;
+    final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final BSFormatter btcFormatter;

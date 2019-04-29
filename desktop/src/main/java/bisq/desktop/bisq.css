@@ -209,7 +209,7 @@ bg color of non edit textFields: fafafa
     -fx-text-fill: #8f7837;
 }
 
-.account-age-label {
+.delay-label {
     -fx-alignment: center;
     -fx-font-size: 0.7em;
 }

@@ -20,6 +20,8 @@ package bisq.desktop.main.offer.takeoffer;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
@@ -63,6 +65,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
@@ -86,6 +89,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private final Preferences preferences;
     private final TxFeeEstimationService txFeeEstimationService;
     private final PriceFeedService priceFeedService;
+    private final AccountScoreService accountScoreService;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
     private Coin txFeeFromFeeService;
@@ -123,6 +127,7 @@ class TakeOfferDataModel extends OfferDataModel {
                        Preferences preferences,
                        TxFeeEstimationService txFeeEstimationService,
                        PriceFeedService priceFeedService,
+                       AccountScoreService accountScoreService,
                        AccountAgeWitnessService accountAgeWitnessService) {
         super(btcWalletService);
 
@@ -134,6 +139,7 @@ class TakeOfferDataModel extends OfferDataModel {
         this.preferences = preferences;
         this.txFeeEstimationService = txFeeEstimationService;
         this.priceFeedService = priceFeedService;
+        this.accountScoreService = accountScoreService;
         this.accountAgeWitnessService = accountAgeWitnessService;
 
         // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
@@ -661,5 +667,13 @@ class TakeOfferDataModel extends OfferDataModel {
 
     public boolean isBsqForFeeAvailable() {
         return OfferUtil.isBsqForTakerFeeAvailable(bsqWalletService, amount.get());
+    }
+
+    long getPhaseOnePeriod() {
+        return accountScoreService.getPhaseOnePeriod(paymentAccount.getPaymentMethod());
+    }
+
+    Optional<ScoreInfo> getMyScoreInfo() {
+        return accountScoreService.getScoreInfoForMyPaymentAccount(paymentAccount, getCurrencyCode());
     }
 }

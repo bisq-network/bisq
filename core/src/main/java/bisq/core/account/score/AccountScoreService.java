@@ -132,7 +132,17 @@ public class AccountScoreService {
     // ScoreInfo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Optional<ScoreInfo> getMyScoreInfo(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+    public Optional<ScoreInfo> getScoreInfoForMyOffer(PaymentAccount myPaymentAccount, String currencyCode, OfferPayload.Direction direction) {
+        long requiredDelay = accountCreationAgeService.getDelayForMyOffer(myPaymentAccount, currencyCode, direction);
+        return getMyScoreInfo(myPaymentAccount, currencyCode, requiredDelay);
+    }
+
+    public Optional<ScoreInfo> getScoreInfoForMyPaymentAccount(PaymentAccount myPaymentAccount, String currencyCode) {
+        long requiredDelay = accountCreationAgeService.getDelayForMyPaymentAccount(myPaymentAccount, currencyCode);
+        return getMyScoreInfo(myPaymentAccount, currencyCode, requiredDelay);
+    }
+
+    private Optional<ScoreInfo> getMyScoreInfo(PaymentAccount myPaymentAccount, String currencyCode, long requiredDelay) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
             return Optional.empty();
         }
@@ -151,8 +161,6 @@ public class AccountScoreService {
 
         Coin minDepositAsCoin = getMyAccountMinDepositAsCoin(myPaymentAccount, currencyCode);
         double minDepositAsPercent = getMyAccountMinDepositAsPercent(myPaymentAccount, currencyCode);
-        ;
-        long requiredDelay = accountCreationAgeService.getDelayForMyOffer(myPaymentAccount, currencyCode, direction);
         boolean canSign = signedTradeAge.isPresent() && signedTradeAge.get() > getPhaseOnePeriodAsMilli();
         return Optional.of(new ScoreInfo(accountScoreCategory.get(),
                 accountAge,

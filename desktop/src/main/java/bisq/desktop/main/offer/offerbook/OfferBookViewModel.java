@@ -24,6 +24,8 @@ import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.BankUtil;
@@ -99,6 +101,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
+    private final AccountScoreService accountScoreService;
     private final Navigation navigation;
     final BSFormatter formatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
@@ -142,6 +145,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               ClosedTradableManager closedTradableManager,
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
+                              AccountScoreService accountScoreService,
                               Navigation navigation,
                               BSFormatter formatter) {
         super();
@@ -155,6 +159,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.navigation = navigation;
         this.formatter = formatter;
 
@@ -474,6 +479,15 @@ class OfferBookViewModel extends ActivatableViewModel {
     Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
         return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
     }
+
+    long getMakersAccountAge(Offer offer) {
+        return accountAgeWitnessService.getMakersAccountAge(offer);
+    }
+
+    Optional<ScoreInfo> getScoreInfoForMaker(Offer offer) {
+        return accountScoreService.getScoreInfoForMaker(offer);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

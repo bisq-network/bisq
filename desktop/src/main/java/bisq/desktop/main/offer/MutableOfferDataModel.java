@@ -834,29 +834,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return paymentAccount instanceof HalCashAccount;
     }
 
-    long getMyAccountAge() {
-        return accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload());
-    }
-
     long getPhaseOnePeriod() {
         return accountScoreService.getPhaseOnePeriod(paymentAccount.getPaymentMethod());
     }
 
-    long getDelay() {
-        return accountScoreService.getDelayForMyOffer(paymentAccount, tradeCurrencyCode.get(), getDirection());
+    Optional<ScoreInfo> getMyScoreInfo() {
+        return accountScoreService.getScoreInfoForMyOffer(paymentAccount, tradeCurrencyCode.get(), getDirection());
     }
-
-    Coin getMinBuyerSecurityDepositAsCoin() {
-        return accountScoreService.getMyAccountMinDepositAsCoin(paymentAccount, tradeCurrencyCode.get());
-    }
-
-    Optional<ScoreInfo> getOptionalScoreInfo() {
-        return accountScoreService.getMyScoreInfo(paymentAccount, tradeCurrencyCode.get(), getDirection());
-    }
-
-    boolean myAccountRequiresPayoutDelay() {
-        return accountScoreService.myMakerAccountRequiresPayoutDelay(tradeCurrencyCode.get(), getDirection());
-    }
-
-
 }
