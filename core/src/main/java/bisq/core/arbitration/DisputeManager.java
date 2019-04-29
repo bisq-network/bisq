@@ -998,9 +998,8 @@ public class DisputeManager implements PersistedDataHost {
                 success = true;
             }
         } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
-            e.printStackTrace();
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             success = false;
             throw new RuntimeException(errorMessage);
         } finally {
