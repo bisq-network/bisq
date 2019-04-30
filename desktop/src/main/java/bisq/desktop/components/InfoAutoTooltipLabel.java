@@ -47,11 +47,16 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
         addIcon(contentDisplay, info, 300);
     }
 
+
     public InfoAutoTooltipLabel(String text, AwesomeIcon icon, ContentDisplay contentDisplay, String info, double width) {
         super(text);
 
         textIcon = getIcon(icon);
         addIcon(contentDisplay, info, width);
+    }
+
+    public InfoAutoTooltipLabel(String text, AwesomeIcon icon, ContentDisplay contentDisplay, String info) {
+        this(text, icon, contentDisplay, info, 300);
     }
 
     private void addIcon(ContentDisplay contentDisplay, String info, double width) {
