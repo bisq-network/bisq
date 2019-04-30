@@ -220,7 +220,7 @@ public class SignedWitnessService {
             return arbitratorsSignedWitnessSet.stream().anyMatch(this::verify);
         } else {
             Set<SignedWitness> trustedPeerSignedWitnessSet = getTrustedPeerSignedWitnessSet(accountAgeWitness);
-            // We have some SignedWitness singed by any trusted peer and need to see if it is valid and has a
+            // We have some SignedWitness signed by any trusted peer and need to see if it is valid and has a
             // valid chain back to the arbitrators SignedWitness.
             for (SignedWitness trustedPeerSignedWitness : trustedPeerSignedWitnessSet) {
                 if (verify(trustedPeerSignedWitness)) {

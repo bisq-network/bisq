@@ -71,6 +71,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
 
         byte[] data = Utilities.concatenateByteArrays(witnessHash, signature);
         data = Utilities.concatenateByteArrays(data, signerPubKey);
+        // Date is not added to hash to avoid that the same account with same sigs can be stored multiple
+        // times if date would differ
         hash = Hash.getSha256Ripemd160hash(data);
     }
 

@@ -450,7 +450,7 @@ public class AccountScoreService {
 
         List<Long> myWitnessAgeList = signedWitnessService.getMyWitnessAgeList(myPaymentAccount.getPaymentAccountPayload());
         if (myWitnessAgeList.isEmpty()) {
-            // Nobody has singed my witness object yet, so I am considered as an account which has never traded.
+            // Nobody has signed my witness object yet, so I am considered as an account which has never traded.
             long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
             return Optional.of(getAccountScoreCategory(myAccountAge, false));
         } else {
