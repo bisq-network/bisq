@@ -21,6 +21,7 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
@@ -59,11 +60,6 @@ import javax.annotation.Nullable;
 import static bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.UNDEFINED;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
-
-    @Getter
-    @Nullable
-    private Trade trade;
-
     interface State {
     }
 
@@ -89,6 +85,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
     private final ClosedTradableManager closedTradableManager;
+    @Getter
+    private final AccountScoreService accountScoreService;
     public final Clock clock;
     @Getter
     private final User user;
@@ -99,6 +97,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final ObjectProperty<MessageState> messageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     private Subscription tradeStateSubscription;
     private Subscription messageStateSubscription;
+    @Getter
+    @Nullable
+    private Trade trade;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +114,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   P2PService p2PService,
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
+                                  AccountScoreService accountScoreService,
                                   Clock clock,
                                   User user) {
         super(dataModel);
@@ -123,6 +125,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.p2PService = p2PService;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.clock = clock;
         this.user = user;
     }

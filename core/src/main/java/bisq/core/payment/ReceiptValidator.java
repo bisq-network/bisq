@@ -17,23 +17,26 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.offer.Offer;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 class ReceiptValidator {
+    private final AccountScoreService accountScoreService;
     private final ReceiptPredicates predicates;
     private final PaymentAccount account;
     private final Offer offer;
 
-    ReceiptValidator(Offer offer, PaymentAccount account) {
-        this(offer, account, new ReceiptPredicates());
+    ReceiptValidator(Offer offer, PaymentAccount account, AccountScoreService accountScoreService) {
+        this(offer, account, accountScoreService, new ReceiptPredicates());
     }
 
-    ReceiptValidator(Offer offer, PaymentAccount account, ReceiptPredicates predicates) {
+    ReceiptValidator(Offer offer, PaymentAccount account, AccountScoreService accountScoreService, ReceiptPredicates predicates) {
         this.offer = offer;
         this.account = account;
+        this.accountScoreService = accountScoreService;
         this.predicates = predicates;
     }
 
@@ -68,6 +71,10 @@ class ReceiptValidator {
 
         if (predicates.isOfferRequireSameOrSpecificBank(offer, account)) {
             return predicates.isMatchingBankId(offer, account);
+        }
+
+        if (!predicates.isMatchingAccountLevel(offer, account, accountScoreService)) {
+            return false;
         }
 
         return isEqualPaymentMethods;

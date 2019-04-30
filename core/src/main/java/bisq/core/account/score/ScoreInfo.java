@@ -28,8 +28,8 @@ public class ScoreInfo {
     private AccountScoreCategory accountScoreCategory;
     private long accountAge;
     private Optional<Long> signedTradeAge;
-    private Coin minDepositAsCoin;
-    private double minDepositAsPercent;
+    private Coin minDepositAsCoin; //TODO remove?
+    private double minDepositAsPercent; //TODO remove?
     private long requiredDelay;
     private boolean canSign;
 

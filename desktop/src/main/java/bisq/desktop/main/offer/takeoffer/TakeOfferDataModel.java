@@ -411,7 +411,7 @@ class TakeOfferDataModel extends OfferDataModel {
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
         Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
         checkNotNull(paymentAccounts, "paymentAccounts must not be null");
-        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, paymentAccounts);
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, paymentAccounts, accountScoreService);
     }
 
     public PaymentAccount getLastSelectedPaymentAccount() {
@@ -675,5 +675,9 @@ class TakeOfferDataModel extends OfferDataModel {
 
     Optional<ScoreInfo> getMyScoreInfo() {
         return accountScoreService.getScoreInfoForMyPaymentAccount(paymentAccount, getCurrencyCode());
+    }
+
+    boolean ignoreRestrictions() {
+        return amount.get() == null || accountScoreService.ignoreRestrictions(amount.get());
     }
 }

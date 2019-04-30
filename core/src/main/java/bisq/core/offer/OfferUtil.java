@@ -321,7 +321,8 @@ public class OfferUtil {
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
-                                                      String currencyCode) {
+                                                      String currencyCode,
+                                                      boolean requireAuthorizedTaker) {
         Map<String, String> extraDataMap = null;
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             extraDataMap = new HashMap<>();
@@ -341,6 +342,10 @@ public class OfferUtil {
             extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
             extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
         }
+
+        if (extraDataMap == null)
+            extraDataMap = new HashMap<>();
+        extraDataMap.put(OfferPayload.REQUIRE_AUTHORIZED_TAKER, String.valueOf(requireAuthorizedTaker));
 
         return extraDataMap;
     }

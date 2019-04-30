@@ -149,7 +149,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private FundsTextField totalToPayTextField;
     private Label amountDescriptionLabel, priceCurrencyLabel, priceDescriptionLabel, volumeDescriptionLabel,
             waitingForFundsLabel, marketBasedPriceLabel, percentagePriceDescription, tradeFeeDescriptionLabel,
-            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel, buyerSecurityDepositLabel;
+            resultLabel, tradeFeeInBtcLabel, tradeFeeInBsqLabel, xLabel, fakeXLabel, buyerSecurityDepositLabel,
+            requireAuthorizedBuyerLabel, takerRestrictionsLabel;
     protected Label amountBtcLabel, volumeCurrencyLabel, minAmountBtcLabel;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private ComboBox<TradeCurrency> currencyComboBox;
@@ -164,7 +165,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private ChangeListener<Boolean> amountFocusedListener, minAmountFocusedListener, volumeFocusedListener,
             buyerSecurityDepositFocusedListener, priceFocusedListener, placeOfferCompletedListener,
             priceAsPercentageFocusedListener, getShowWalletFundedNotificationListener,
-            tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener;
+            tradeFeeInBtcToggleListener, tradeFeeInBsqToggleListener, tradeFeeVisibleListener,
+            requireAuthorizedTakerToggleListener;
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
@@ -176,8 +178,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private boolean clearXchangeWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
             buyerSecurityDepositInfoInputTextField;
-    private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
+    private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle, requireAuthorizedTakerToggle;
     private Text xIcon, fakeXIcon;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -262,6 +265,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 tradeFeeInBsqToggle.setVisible(false);
                 tradeFeeInBsqToggle.setManaged(false);
             }
+
+            requireAuthorizedTakerToggle.setSelected(model.getDataModel().isRequireAuthorizedTaker());
         }
     }
 
@@ -461,7 +466,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         qrCodeImageView.setImage(qrImage);
 
         String key = "immatureBuyerAccountAgeCreateOffer";
-        if (preferences.showAgain(key) && !DevEnv.isDevMode()) {
+        if (model.getDataModel().getDirection() == OfferPayload.Direction.BUY &&
+                preferences.showAgain(key) &&
+                !model.getDataModel().ignoreRestrictions() &&
+                !DevEnv.isDevMode()) {
             Optional<ScoreInfo> optionalScoreInfo = model.getDataModel().getMyScoreInfo();
             if (optionalScoreInfo.isPresent()) {
                 ScoreInfo scoreInfo = optionalScoreInfo.get();
@@ -475,6 +483,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 String message = Res.get("popup.restrictedBuyerAccount.createOffer.msg", requiredDelay, myAccountAge, signedTradeAge, phaseOnePeriod);
                 new Popup().information(message)
                         .dontShowAgainId(key)
+                        .width(900)
                         .show();
             }
         }
@@ -842,6 +851,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 tradeFeeInBsqToggle.setVisible(newValue);
             }
         };
+
+        requireAuthorizedTakerToggleListener = (observable, oldValue, newValue) -> {
+            model.getDataModel().setRequireAuthorizedTaker(newValue);
+        };
     }
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
@@ -882,6 +895,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         tradeFeeInBtcToggle.selectedProperty().addListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().addListener(tradeFeeInBsqToggleListener);
+        requireAuthorizedTakerToggle.selectedProperty().addListener(requireAuthorizedTakerToggleListener);
 
         // focus out
         amountTextField.focusedProperty().addListener(amountFocusedListener);
@@ -912,8 +926,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         model.volume.removeListener(volumeListener);
         model.isTradeFeeVisible.removeListener(tradeFeeVisibleListener);
         model.buyerSecurityDepositInBTC.removeListener(buyerSecurityDepositInBTCListener);
+
         tradeFeeInBtcToggle.selectedProperty().removeListener(tradeFeeInBtcToggleListener);
         tradeFeeInBsqToggle.selectedProperty().removeListener(tradeFeeInBsqToggleListener);
+        requireAuthorizedTakerToggle.selectedProperty().removeListener(requireAuthorizedTakerToggleListener);
 
         // focus out
         amountTextField.focusedProperty().removeListener(amountFocusedListener);
@@ -1054,8 +1070,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         NewBadge securityDepositBoxWithNewBadge = new NewBadge(getBuyerSecurityDepositBox(),
                 BUYER_SECURITY_DEPOSIT_NEWS, preferences);
 
-        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTradeFeeFieldsBox());
-
+        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTakerRestrictionFieldsBox(), getTradeFeeFieldsBox());
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
                 Res.get("shared.nextStep"), Res.get("shared.cancel"));
@@ -1456,6 +1471,27 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         tradeFeeDescriptionLabel = tradeInputBox.first;
 
         return tradeInputBox.second;
+    }
+
+    private VBox getTakerRestrictionFieldsBox() {
+        requireAuthorizedBuyerLabel = new Label(Res.get("createOffer.takerRestriction.canSign"));
+        requireAuthorizedBuyerLabel.setMouseTransparent(true);
+        requireAuthorizedBuyerLabel.setId("trade-fee-textfield");
+
+        requireAuthorizedTakerToggle = new AutoTooltipSlideToggleButton();
+        requireAuthorizedTakerToggle.setText(Res.get("shared.yes"));
+        requireAuthorizedTakerToggle.setPadding(new Insets(-8, 5, -10, 5));
+
+        HBox hBox = new HBox();
+        hBox.getChildren().addAll(requireAuthorizedBuyerLabel, requireAuthorizedTakerToggle);
+        hBox.setMinHeight(47);
+        hBox.setMaxHeight(hBox.getMinHeight());
+
+        final Tuple2<Label, VBox> tuple = getTradeInputBox(hBox, Res.get("createOffer.takerRestriction"));
+
+        takerRestrictionsLabel = tuple.first;
+
+        return tuple.second;
     }
 
 

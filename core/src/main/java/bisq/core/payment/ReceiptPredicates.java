@@ -17,6 +17,8 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
@@ -108,5 +110,10 @@ class ReceiptPredicates {
 
     boolean isMatchingSepaInstant(Offer offer, PaymentAccount account) {
         return offer.getPaymentMethod().equals(PaymentMethod.SEPA_INSTANT) && account instanceof SepaInstantAccount;
+    }
+
+    boolean isMatchingAccountLevel(Offer offer, PaymentAccount account, AccountScoreService accountScoreService) {
+        Optional<ScoreInfo> optionalScoreInfo = accountScoreService.getScoreInfoForMyPaymentAccount(account, offer.getCurrencyCode());
+        return optionalScoreInfo.map(scoreInfo -> !offer.requireAuthorizedTaker() || scoreInfo.isCanSign()).orElse(true);
     }
 }

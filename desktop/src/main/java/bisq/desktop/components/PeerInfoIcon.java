@@ -300,7 +300,7 @@ public class PeerInfoIcon extends Group {
         signIcon = new Label();
         signIcon.setLayoutX(-60);
         signIcon.setLayoutY(5);
-        AwesomeDude.setIcon(signIcon, AwesomeIcon.CHECK);
+        AwesomeDude.setIcon(signIcon, AwesomeIcon.SHIELD);
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, delayIcon, delayLabel, signIcon);
 

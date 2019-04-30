@@ -352,7 +352,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService,
                 referralIdService,
                 paymentAccount,
-                currencyCode);
+                currencyCode,
+                preferences.isRequireAuthorizedTaker());
 
         OfferUtil.validateOfferData(filterManager,
                 p2PService,
@@ -840,5 +841,17 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     Optional<ScoreInfo> getMyScoreInfo() {
         return accountScoreService.getScoreInfoForMyOffer(paymentAccount, tradeCurrencyCode.get(), getDirection());
+    }
+
+    boolean ignoreRestrictions() {
+        return amount.get() == null || accountScoreService.ignoreRestrictions(amount.get());
+    }
+
+    boolean isRequireAuthorizedTaker() {
+        return preferences.isRequireAuthorizedTaker();
+    }
+
+    public void setRequireAuthorizedTaker(boolean requireAuthorizedTaker) {
+        preferences.setRequireAuthorizedTaker(requireAuthorizedTaker);
     }
 }

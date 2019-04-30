@@ -650,6 +650,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setRequireAuthorizedTaker(boolean value) {
+        prefPayload.setRequireAuthorizedTaker(value);
+        persist();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -933,5 +938,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         String getRpcPw();
 
         int getBlockNotifyPort();
+
+        void setRequireAuthorizedTaker(boolean value);
     }
 }

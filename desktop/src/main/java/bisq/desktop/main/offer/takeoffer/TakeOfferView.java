@@ -526,7 +526,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         String key = "immatureBuyerAccountAgeTakeOffer";
-        if (model.preferences.showAgain(key) && !DevEnv.isDevMode()) {
+        if (model.dataModel.getDirection() == OfferPayload.Direction.SELL &&
+                model.preferences.showAgain(key) &&
+                !DevEnv.isDevMode() && !model.dataModel.ignoreRestrictions()) {
             Optional<ScoreInfo> optionalScoreInfo = model.dataModel.getMyScoreInfo();
             if (optionalScoreInfo.isPresent()) {
                 ScoreInfo scoreInfo = optionalScoreInfo.get();
@@ -540,6 +542,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 String message = Res.get("popup.restrictedBuyerAccount.takeOffer.msg", requiredDelay, myAccountAge, signedTradeAge, phaseOnePeriod);
                 new Popup().information(message)
                         .dontShowAgainId(key)
+                        .width(900)
                         .show();
             }
         }

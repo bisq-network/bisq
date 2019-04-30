@@ -47,6 +47,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * the resulting parameters.
  */
 public class AccountScoreService {
+    public final static long LOW_AMOUNT_THRESHOLD = Coin.parseCoin("0.01").value;
     private final AccountCreationAgeService accountCreationAgeService;
     private final SignedWitnessService signedWitnessService;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -74,6 +75,10 @@ public class AccountScoreService {
 
     public long getPhaseOnePeriod(PaymentMethod paymentMethod) {
         return accountCreationAgeService.getPhaseOnePeriod(paymentMethod);
+    }
+
+    public boolean ignoreRestrictions(Coin tradeAmount) {
+        return tradeAmount.value <= LOW_AMOUNT_THRESHOLD;
     }
 
 

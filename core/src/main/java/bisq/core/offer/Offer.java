@@ -366,6 +366,13 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    public boolean requireAuthorizedTaker() {
+        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.REQUIRE_AUTHORIZED_TAKER))
+            return getExtraDataMap().get(OfferPayload.REQUIRE_AUTHORIZED_TAKER).equals("true");
+        else
+            return false;
+    }
+
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();

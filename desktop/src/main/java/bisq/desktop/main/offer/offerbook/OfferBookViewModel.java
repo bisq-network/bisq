@@ -477,7 +477,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
-        return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
+        return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(),
+                accountAgeWitnessService, accountScoreService);
     }
 
     long getMakersAccountAge(Offer offer) {
@@ -519,7 +520,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return user.getPaymentAccounts() != null && PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
+        return user.getPaymentAccounts() != null && PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts(), accountScoreService);
     }
 
     boolean hasPaymentAccountForCurrency() {
@@ -532,6 +533,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     boolean hasAcceptedArbitrators() {
         return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Filters

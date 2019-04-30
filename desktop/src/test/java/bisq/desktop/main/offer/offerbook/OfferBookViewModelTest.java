@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.offer.offerbook;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
@@ -82,7 +83,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({OfferBook.class, OpenOfferManager.class, PriceFeedService.class})
+@PrepareForTest({OfferBook.class, OpenOfferManager.class, PriceFeedService.class, AccountScoreService.class})
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class OfferBookViewModelTest {
     private static final Logger log = LoggerFactory.getLogger(OfferBookViewModelTest.class);
@@ -96,50 +97,52 @@ public class OfferBookViewModelTest {
 
     @Ignore("PaymentAccountPayload needs to be set (has been changed with PB changes)")
     public void testIsAnyPaymentAccountValidForOffer() {
+        AccountScoreService accountScoreService = mock(AccountScoreService.class);
+
         Collection<PaymentAccount> paymentAccounts;
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "DE", "1212324",
                 new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
 
         // empty paymentAccounts
         paymentAccounts = new ArrayList<>();
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(getSEPAPaymentMethod("EUR", "AT",
-                new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
         // simple cases: same payment methods
 
         // offer: alipay paymentAccount: alipay - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getAliPayAccount("CNY")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getAliPayPaymentMethod("EUR"), paymentAccounts));
+                getAliPayPaymentMethod("EUR"), paymentAccounts, accountScoreService));
 
         // offer: ether paymentAccount: ether - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getCryptoAccount("ETH")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getBlockChainsPaymentMethod("ETH"), paymentAccounts));
+                getBlockChainsPaymentMethod("ETH"), paymentAccounts, accountScoreService));
 
         // offer: sepa paymentAccount: sepa - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "AT", "1212324",
                 new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
         // offer: nationalBank paymentAccount: nationalBank - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // offer: SameBank paymentAccount: SameBank - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSameBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getSameBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // offer: sepa paymentAccount: sepa - diff. country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "DE", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
 
         //////
@@ -147,79 +150,79 @@ public class OfferBookViewModelTest {
         // offer: sepa paymentAccount: sepa - same country, same currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSepaAccount("EUR", "AT", "1212324", new ArrayList<>(Arrays.asList("AT", "DE")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
 
         // offer: sepa paymentAccount: nationalBank - same country, same currency
         // wrong method
         paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "AT", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
         // wrong currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("USD", "US", "XXX")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // wrong country
         paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "FR", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // sepa wrong country
         paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("EUR", "CH", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
         // sepa wrong currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getNationalBankAccount("CHF", "DE", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts));
+                getSEPAPaymentMethod("EUR", "AT", new ArrayList<>(Arrays.asList("AT", "DE")), "PSK"), paymentAccounts, accountScoreService));
 
 
         // same bank
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "PSK")));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // not same bank
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "AT", "Raika")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // same bank, wrong country
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("EUR", "DE", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // same bank, wrong currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSameBankAccount("USD", "AT", "PSK")));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // spec. bank
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("EUR", "AT", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
         assertTrue(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // spec. bank, missing bank
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("EUR", "AT", "PSK",
                 new ArrayList<>(Collections.singletonList("Raika")))));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // spec. bank, wrong country
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("EUR", "FR", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         // spec. bank, wrong currency
         paymentAccounts = new ArrayList<>(Collections.singletonList(getSpecificBanksAccount("USD", "AT", "PSK",
                 new ArrayList<>(Arrays.asList("PSK", "Raika")))));
         assertFalse(PaymentAccountUtil.isAnyPaymentAccountValidForOffer(
-                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts));
+                getNationalBankPaymentMethod("EUR", "AT", "PSK"), paymentAccounts, accountScoreService));
 
         //TODO add more tests
 
@@ -233,7 +236,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForAmount.intValue());
     }
 
@@ -247,7 +250,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(6, model.maxPlacesForAmount.intValue());
@@ -265,7 +268,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(15, model.maxPlacesForAmount.intValue());
@@ -284,7 +287,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForVolume.intValue());
     }
 
@@ -298,7 +301,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(8, model.maxPlacesForVolume.intValue());
@@ -316,7 +319,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(15, model.maxPlacesForVolume.intValue());
@@ -335,7 +338,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForPrice.intValue());
     }
 
@@ -349,7 +352,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(7, model.maxPlacesForPrice.intValue());
@@ -367,7 +370,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForMarketPriceMargin.intValue());
     }
 
@@ -395,7 +398,7 @@ public class OfferBookViewModelTest {
         offerBookListItems.addAll(item1, item2);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, priceFeedService,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(8, model.maxPlacesForMarketPriceMargin.intValue()); //" (1.97%)"
@@ -416,7 +419,7 @@ public class OfferBookViewModelTest {
         when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
 
         final OfferBookListItem item = make(btcBuyItem.but(
                 with(useMarketBasedPrice, true),

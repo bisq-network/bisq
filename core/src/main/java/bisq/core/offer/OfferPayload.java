@@ -77,6 +77,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     public static final String REFERRAL_ID = "referralId";
     public static final String F2F_CITY = "f2fCity";
     public static final String F2F_EXTRA_INFO = "f2fExtraInfo";
+    public static final String REQUIRE_AUTHORIZED_TAKER = "requireAuthorizedTaker";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,7 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.offer.Offer;
@@ -38,38 +39,45 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class PaymentAccountUtil {
-    public static boolean isAnyPaymentAccountValidForOffer(Offer offer, Collection<PaymentAccount> paymentAccounts) {
+    public static boolean isAnyPaymentAccountValidForOffer(Offer offer,
+                                                           Collection<PaymentAccount> paymentAccounts,
+                                                           AccountScoreService accountScoreService) {
         for (PaymentAccount paymentAccount : paymentAccounts) {
-            if (isPaymentAccountValidForOffer(offer, paymentAccount))
+            if (isPaymentAccountValidForOffer(offer, paymentAccount, accountScoreService))
                 return true;
         }
         return false;
     }
 
-    public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer, Set<PaymentAccount> paymentAccounts) {
+    public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer,
+                                                                            Set<PaymentAccount> paymentAccounts,
+                                                                            AccountScoreService accountScoreService) {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
-                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount, accountScoreService))
                 .collect(Collectors.toList()));
         return result;
     }
 
     // TODO might be used to show more details if we get payment methods updates with diff. limits
     public static String getInfoForMismatchingPaymentMethodLimits(Offer offer, PaymentAccount paymentAccount) {
-        // dont translate atm as it is not used so far in the UI just for logs
+        // don't translate atm as it is not used so far in the UI just for logs
         return "Payment methods have different trade limits or trade periods.\n" +
                 "Our local Payment method: " + paymentAccount.getPaymentMethod().toString() + "\n" +
                 "Payment method from offer: " + offer.getPaymentMethod().toString();
     }
 
-    public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
-        return new ReceiptValidator(offer, paymentAccount).isValid();
+    public static boolean isPaymentAccountValidForOffer(Offer offer,
+                                                        PaymentAccount paymentAccount,
+                                                        AccountScoreService accountScoreService) {
+        return new ReceiptValidator(offer, paymentAccount, accountScoreService).isValid();
     }
 
     public static Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer,
                                                                                Set<PaymentAccount> paymentAccounts,
-                                                                               AccountAgeWitnessService service) {
-        PaymentAccounts accounts = new PaymentAccounts(paymentAccounts, service);
+                                                                               AccountAgeWitnessService service,
+                                                                               AccountScoreService accountScoreService) {
+        PaymentAccounts accounts = new PaymentAccounts(paymentAccounts, service, accountScoreService);
         return Optional.ofNullable(accounts.getOldestPaymentAccountForOffer(offer));
     }
 
