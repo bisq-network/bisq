@@ -641,6 +641,7 @@ message SignedWitness {
     bytes signer_pub_key = 4;
     bytes witness_owner_pub_key = 5;
     int64 date = 6;
+    int64 trade_amount = 7;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

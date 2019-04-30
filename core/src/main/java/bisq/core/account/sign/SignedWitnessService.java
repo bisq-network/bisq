@@ -31,6 +31,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 
 import javax.inject.Inject;
@@ -123,7 +124,7 @@ public class SignedWitnessService {
     }
 
     // Arbitrators sign with EC key
-    public SignedWitness signAccountAgeWitness(AccountAgeWitness accountAgeWitness, ECKey key, PublicKey peersPubKey) {
+    public SignedWitness signAccountAgeWitness(Coin tradeAmount, AccountAgeWitness accountAgeWitness, ECKey key, PublicKey peersPubKey) {
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
         String signatureBase64 = key.signMessage(accountAgeWitnessHashAsHex);
         return new SignedWitness(true,
@@ -131,18 +132,20 @@ public class SignedWitnessService {
                 signatureBase64.getBytes(Charsets.UTF_8),
                 key.getPubKey(),
                 peersPubKey.getEncoded(),
-                new Date().getTime());
+                new Date().getTime(),
+                tradeAmount.value);
     }
 
     // Any peer can sign with DSA key
-    public SignedWitness sign(AccountAgeWitness accountAgeWitness, PublicKey peersPubKey) throws CryptoException {
+    public SignedWitness sign(Coin tradeAmount, AccountAgeWitness accountAgeWitness, PublicKey peersPubKey) throws CryptoException {
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
         return new SignedWitness(false,
                 accountAgeWitness.getHash(),
                 signature,
                 keyRing.getSignatureKeyPair().getPublic().getEncoded(),
                 peersPubKey.getEncoded(),
-                new Date().getTime());
+                new Date().getTime(),
+                tradeAmount.value);
     }
 
     public boolean verify(SignedWitness signedWitness) {

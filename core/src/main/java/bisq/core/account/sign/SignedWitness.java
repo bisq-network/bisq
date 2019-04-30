@@ -33,6 +33,8 @@ import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 
+import org.bitcoinj.core.Coin;
+
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -52,7 +54,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     private final byte[] signerPubKey;
     private final byte[] witnessOwnerPubKey;
     private final long date;
-    //TODO should we add trade amount?
+    private final long tradeAmount;
 
     transient private final byte[] hash;
 
@@ -61,13 +63,15 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
                          byte[] signature,
                          byte[] signerPubKey,
                          byte[] witnessOwnerPubKey,
-                         long date) {
+                         long date,
+                         long tradeAmount) {
         this.signedByArbitrator = signedByArbitrator;
         this.witnessHash = witnessHash;
         this.signature = signature;
         this.signerPubKey = signerPubKey;
         this.witnessOwnerPubKey = witnessOwnerPubKey;
         this.date = date;
+        this.tradeAmount = tradeAmount;
 
         byte[] data = Utilities.concatenateByteArrays(witnessHash, signature);
         data = Utilities.concatenateByteArrays(data, signerPubKey);
@@ -89,7 +93,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
                 .setSignature(ByteString.copyFrom(signature))
                 .setSignerPubKey(ByteString.copyFrom(signerPubKey))
                 .setWitnessOwnerPubKey(ByteString.copyFrom(witnessOwnerPubKey))
-                .setDate(date);
+                .setDate(date)
+                .setTradeAmount(tradeAmount);
         return PB.PersistableNetworkPayload.newBuilder().setSignedWitness(builder).build();
     }
 
@@ -103,7 +108,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
                 proto.getSignature().toByteArray(),
                 proto.getSignerPubKey().toByteArray(),
                 proto.getWitnessOwnerPubKey().toByteArray(),
-                proto.getDate());
+                proto.getDate(),
+                proto.getTradeAmount());
     }
 
 
@@ -152,6 +158,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
                 ",\n     signerPubKey=" + Utilities.bytesAsHexString(signerPubKey) +
                 ",\n     witnessOwnerPubKey=" + Utilities.bytesAsHexString(witnessOwnerPubKey) +
                 ",\n     date=" + date +
+                ",\n     tradeAmount=" + Coin.valueOf(tradeAmount).toFriendlyString() +
                 ",\n     hash=" + Utilities.bytesAsHexString(hash) +
                 "\n}";
     }
