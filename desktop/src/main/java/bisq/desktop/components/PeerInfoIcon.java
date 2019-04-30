@@ -284,11 +284,15 @@ public class PeerInfoIcon extends Group {
         categoryIcon = new Label();
         categoryIcon.setLayoutX(-20);
         categoryIcon.setLayoutY(5);
+        categoryIcon.setVisible(false);
+        categoryIcon.setManaged(false);
 
         delayIcon = new Label();
+        AwesomeDude.setIcon(delayIcon, AwesomeIcon.TIME);
         delayIcon.setLayoutX(-40);
         delayIcon.setLayoutY(5);
-        AwesomeDude.setIcon(delayIcon, AwesomeIcon.TIME);
+        delayIcon.setVisible(false);
+        delayIcon.setManaged(false);
 
         delayLabel = new Label();
         delayLabel.setLayoutX(-53);
@@ -296,11 +300,15 @@ public class PeerInfoIcon extends Group {
         delayLabel.setMinWidth(40);
         delayLabel.setMaxWidth(40);
         delayLabel.getStyleClass().add("delay-label");
+        delayLabel.setVisible(false);
+        delayLabel.setManaged(false);
 
         signIcon = new Label();
+        AwesomeDude.setIcon(signIcon, AwesomeIcon.SHIELD);
         signIcon.setLayoutX(-60);
         signIcon.setLayoutY(5);
-        AwesomeDude.setIcon(signIcon, AwesomeIcon.SHIELD);
+        signIcon.setVisible(false);
+        signIcon.setManaged(false);
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, delayIcon, delayLabel, signIcon);
 
@@ -376,46 +384,49 @@ public class PeerInfoIcon extends Group {
         numTradesPane.setVisible(numTrades > 0);
 
         tagPane.setVisible(!tag.isEmpty());
-        Optional<ScoreInfo> optionalScoreInfo;
-        if (trade == null) {
-            optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
-        } else {
-            optionalScoreInfo = accountScoreService.getScoreInfoForBuyer(trade);
-        }
-        boolean isScoreInfoPresent = optionalScoreInfo.isPresent();
-        categoryIcon.setVisible(isScoreInfoPresent);
-        categoryIcon.setManaged(isScoreInfoPresent);
-        delayIcon.setVisible(isScoreInfoPresent);
-        delayIcon.setManaged(isScoreInfoPresent);
-        signIcon.setVisible(isScoreInfoPresent);
-        signIcon.setManaged(isScoreInfoPresent);
 
-        if (isScoreInfoPresent) {
-            //TODO just dummy impl.
-            ScoreInfo scoreInfo = optionalScoreInfo.get();
-            boolean canSign = scoreInfo.isCanSign();
-            signIcon.setVisible(canSign);
-            signIcon.setManaged(canSign);
+        if (!accountScoreService.ignoreRestrictions(offer)) {
+            Optional<ScoreInfo> optionalScoreInfo;
+            if (trade == null) {
+                optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
+            } else {
+                optionalScoreInfo = accountScoreService.getScoreInfoForBuyer(trade);
+            }
+            boolean isScoreInfoPresent = optionalScoreInfo.isPresent();
+            categoryIcon.setVisible(isScoreInfoPresent);
+            categoryIcon.setManaged(isScoreInfoPresent);
+            delayIcon.setVisible(isScoreInfoPresent);
+            delayIcon.setManaged(isScoreInfoPresent);
+            signIcon.setVisible(isScoreInfoPresent);
+            signIcon.setManaged(isScoreInfoPresent);
 
-            long requiredDelay = scoreInfo.getRequiredDelay();
-            String age = Utilities.toTruncatedString(formatter.formatAccountAge(requiredDelay), 8);
-            delayLabel.setText(age);
+            if (isScoreInfoPresent) {
+                //TODO just dummy impl.
+                ScoreInfo scoreInfo = optionalScoreInfo.get();
+                boolean canSign = scoreInfo.isCanSign();
+                signIcon.setVisible(canSign);
+                signIcon.setManaged(canSign);
 
-            boolean requireDelay = requiredDelay > 0;
-            delayIcon.setVisible(requireDelay);
-            delayIcon.setManaged(requireDelay);
-            delayLabel.setVisible(requireDelay);
-            delayLabel.setManaged(requireDelay);
+                long requiredDelay = scoreInfo.getRequiredDelay();
+                String age = Utilities.toTruncatedString(formatter.formatAccountAge(requiredDelay), 8);
+                delayLabel.setText(age);
 
-            if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
-                categoryIcon.getStyleClass().addAll("score-gold");
-                AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR);
-            } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.SILVER) {
-                categoryIcon.getStyleClass().addAll("score-silver");
-                AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_HALF_EMPTY);
-            } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.BRONZE) {
-                categoryIcon.getStyleClass().addAll("score-bronze");
-                AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_EMPTY);
+                boolean requireDelay = requiredDelay > 0;
+                delayIcon.setVisible(requireDelay);
+                delayIcon.setManaged(requireDelay);
+                delayLabel.setVisible(requireDelay);
+                delayLabel.setManaged(requireDelay);
+
+                if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
+                    categoryIcon.getStyleClass().addAll("score-gold");
+                    AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR);
+                } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.SILVER) {
+                    categoryIcon.getStyleClass().addAll("score-silver");
+                    AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_HALF_EMPTY);
+                } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.BRONZE) {
+                    categoryIcon.getStyleClass().addAll("score-bronze");
+                    AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_EMPTY);
+                }
             }
         }
     }

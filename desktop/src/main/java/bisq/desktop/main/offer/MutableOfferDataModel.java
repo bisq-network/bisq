@@ -836,7 +836,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     long getPhaseOnePeriod() {
-        return accountScoreService.getPhaseOnePeriod(paymentAccount.getPaymentMethod());
+        return accountScoreService.getPhaseOnePeriodAsMilli();
     }
 
     Optional<ScoreInfo> getMyScoreInfo() {
@@ -844,7 +844,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     boolean ignoreRestrictions() {
-        return amount.get() == null || accountScoreService.ignoreRestrictions(amount.get());
+        return amount.get() == null ||
+                accountScoreService.ignoreRestrictions(amount.get()) ||
+                accountScoreService.ignoreRestrictions(paymentAccount.getPaymentMethod());
+    }
+
+    boolean ignoreRestrictionsBasedOnPaymentMethod() {
+        return accountScoreService.ignoreRestrictions(paymentAccount.getPaymentMethod());
     }
 
     boolean isRequireAuthorizedTaker() {

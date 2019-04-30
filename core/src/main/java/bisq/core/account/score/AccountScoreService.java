@@ -73,14 +73,43 @@ public class AccountScoreService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public long getPhaseOnePeriod(PaymentMethod paymentMethod) {
-        return accountCreationAgeService.getPhaseOnePeriod(paymentMethod);
+    public long getPhaseOnePeriodAsMilli() {
+        return accountCreationAgeService.getPhaseOnePeriodAsMilli();
     }
 
     public boolean ignoreRestrictions(Coin tradeAmount) {
         return tradeAmount.value <= LOW_AMOUNT_THRESHOLD;
     }
 
+    public boolean ignoreRestrictions(Offer offer) {
+        return ignoreRestrictions(offer.getPaymentMethod()) || ignoreRestrictions(offer.getAmount());
+    }
+
+    public boolean ignoreRestrictions(PaymentMethod paymentMethod) {
+        switch (paymentMethod.getId()) {
+            case PaymentMethod.BLOCK_CHAINS_ID:
+            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
+
+            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
+            case PaymentMethod.HAL_CASH_ID:
+            case PaymentMethod.F2F_ID:
+            case PaymentMethod.MONEY_GRAM_ID:
+            case PaymentMethod.WESTERN_UNION_ID:
+
+            case PaymentMethod.SWISH_ID:
+            case PaymentMethod.PERFECT_MONEY_ID:
+            case PaymentMethod.ALI_PAY_ID:
+            case PaymentMethod.WECHAT_PAY_ID:
+            case PaymentMethod.ADVANCED_CASH_ID:
+            case PaymentMethod.PROMPT_PAY_ID:
+            case PaymentMethod.CASH_DEPOSIT_ID:
+                return true;
+
+            default:
+                // All other bank transfer methods
+                return false;
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Is in phase one period
@@ -497,9 +526,5 @@ public class AccountScoreService {
         } else {
             return AccountScoreCategory.BRONZE;
         }
-    }
-
-    private long getPhaseOnePeriodAsMilli() {
-        return accountCreationAgeService.getPhaseOnePeriodAsMilli();
     }
 }

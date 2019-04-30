@@ -484,6 +484,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         return accountAgeWitnessService.getMakersAccountAge(offer);
     }
 
+    boolean ignoreRestrictions(Offer offer) {
+        return accountScoreService.ignoreRestrictions(offer);
+    }
+
     Optional<ScoreInfo> getScoreInfoForMaker(Offer offer) {
         return accountScoreService.getScoreInfoForMaker(offer);
     }
@@ -523,7 +527,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean hasAuthorizedAccount(Offer offer) {
-        return user.getPaymentAccounts() != null && PaymentAccountUtil.hasAuthorizedAccount(offer, user.getPaymentAccounts(), accountScoreService);
+        return user.getPaymentAccounts() != null &&
+                PaymentAccountUtil.hasAuthorizedAccount(offer, user.getPaymentAccounts(), accountScoreService) ||
+                accountScoreService.ignoreRestrictions(offer);
     }
 
     boolean hasPaymentAccountForCurrency() {

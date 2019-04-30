@@ -505,7 +505,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             return;
         }
 
-        if (offer.getDirection() == OfferPayload.Direction.BUY) {
+        if (offer.getDirection() == OfferPayload.Direction.BUY && !model.ignoreRestrictions(offer)) {
             Optional<ScoreInfo> optionalScoreInfo = model.getScoreInfoForMaker(offer);
             if (optionalScoreInfo.isPresent()) {
                 ScoreInfo scoreInfo = optionalScoreInfo.get();

@@ -670,7 +670,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     long getPhaseOnePeriod() {
-        return accountScoreService.getPhaseOnePeriod(paymentAccount.getPaymentMethod());
+        return accountScoreService.getPhaseOnePeriodAsMilli();
     }
 
     Optional<ScoreInfo> getMyScoreInfo() {
@@ -678,6 +678,6 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean ignoreRestrictions() {
-        return amount.get() == null || accountScoreService.ignoreRestrictions(amount.get());
+        return accountScoreService.ignoreRestrictions(offer);
     }
 }

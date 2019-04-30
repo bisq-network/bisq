@@ -25,6 +25,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.score.AccountScoreService;
+import bisq.core.account.score.ScoreInfo;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
@@ -61,6 +62,7 @@ import javafx.collections.FXCollections;
 import javafx.util.StringConverter;
 
 import java.util.List;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -168,10 +170,11 @@ public abstract class PaymentMethodForm {
 
         final TradeCurrency tradeCurrency;
         boolean isAltcoin = paymentAccount instanceof AssetAccount;
+        TradeCurrency selectedTradeCurrency = paymentAccount.getSelectedTradeCurrency();
         if (paymentAccount.getSingleTradeCurrency() != null)
             tradeCurrency = paymentAccount.getSingleTradeCurrency();
-        else if (paymentAccount.getSelectedTradeCurrency() != null)
-            tradeCurrency = paymentAccount.getSelectedTradeCurrency();
+        else if (selectedTradeCurrency != null)
+            tradeCurrency = selectedTradeCurrency;
         else if (!paymentAccount.getTradeCurrencies().isEmpty())
             tradeCurrency = paymentAccount.getTradeCurrencies().get(0);
         else
@@ -183,11 +186,19 @@ public abstract class PaymentMethodForm {
         String tradeLimit = formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode())));
         String limitationsText = Res.get("payment.maxPeriodAndTradeLimits", getTimeText(hours), tradeLimit);
         String accountAgeText = "";
+        String canSign = "";
+        long accountAge = 0;
         if (!isAltcoin) {
-            String requiredAccountAge = formatter.formatAccountAge(accountScoreService.getPhaseOnePeriod(paymentAccount.getPaymentMethod()));
-            long accountAge = !isAddAccountScreen ? accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) : 0L;
-            accountAgeText = Res.get("payment.accountAge", formatter.formatAccountAge(accountAge), requiredAccountAge);
+            Optional<ScoreInfo> optionalScoreInfo = accountScoreService.getScoreInfoForMyPaymentAccount(paymentAccount, tradeCurrency.getCode());
+            if (optionalScoreInfo.isPresent()) {
+                ScoreInfo scoreInfo = optionalScoreInfo.get();
+
+                canSign = scoreInfo.isCanSign() ? Res.get("shared.yes") : Res.get("shared.no");
+                canSign = "\n" + Res.getWithCol("peerInfo.canSign") + " " + canSign;
+                accountAge = !isAddAccountScreen ? scoreInfo.getAccountAge() : 0L;
+            }
         }
+        accountAgeText = Res.get("payment.accountAge", formatter.formatAccountAge(accountAge), canSign);
 
         if (isDisplayForm) {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
@@ -196,9 +207,6 @@ public abstract class PaymentMethodForm {
             }
         } else {
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
-            if (!isAltcoin) {
-                addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountAgeTitle"), accountAgeText);
-            }
         }
         if (isAddAccountScreen) {
             InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);

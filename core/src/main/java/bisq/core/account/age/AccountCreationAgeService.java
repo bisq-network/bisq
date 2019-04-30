@@ -67,7 +67,7 @@ public class AccountCreationAgeService {
 
     public Coin getMyAccountMinDepositAsCoin(PaymentAccount myPaymentAccount) {
         long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        long phaseOnePeriod = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        long phaseOnePeriod = getPhaseOnePeriodAsMilli();
         // Restrictions.getMinBuyerSecurityDepositAsCoin() is 0.001 BTC / 5 USD
         return Coin.valueOf(getMyAccountMinDepositAsCoin(myAccountAge, phaseOnePeriod, Restrictions.getMinBuyerSecurityDepositAsCoin().value));
     }
@@ -84,7 +84,7 @@ public class AccountCreationAgeService {
 
         long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
 
-        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        long phaseOnePeriod = getPhaseOnePeriodAsMilli();
         // Restrictions.getMinBuyerSecurityDepositAsCoin() is 0.001 BTC / 5 USD
         return Coin.valueOf(getMyAccountMinDepositAsCoin(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsCoin.value));
     }
@@ -106,7 +106,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        long phaseOnePeriod = getPhaseOnePeriodAsMilli();
         // Restrictions.getMinBuyerSecurityDepositAsCoin() is 0.001 BTC / 5 USD
         return Coin.valueOf(getMyAccountMinDepositAsCoin(buyersAccountAge, phaseOnePeriod, minBuyerSecurityDepositAsCoin.value));
     }
@@ -129,7 +129,7 @@ public class AccountCreationAgeService {
 
     public double getMyAccountMinDepositAsPercent(PaymentAccount myPaymentAccount) {
         long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        long phaseOnePeriod = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        long phaseOnePeriod = getPhaseOnePeriodAsMilli();
         // Restrictions.getMinBuyerSecurityDepositAsPercent() is  5% of trade amount.
         return getMyAccountMinDepositAsPercent(myAccountAge, phaseOnePeriod, Restrictions.getMinBuyerSecurityDepositAsPercent(myPaymentAccount));
     }
@@ -146,7 +146,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
-        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        long phaseOnePeriod = getPhaseOnePeriodAsMilli();
         return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, 0.1);
     }
 
@@ -168,7 +168,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long phaseOnePeriod = getPhaseOnePeriod(offer.getPaymentMethod());
+        long phaseOnePeriod = getPhaseOnePeriodAsMilli();
         return getMyAccountMinDepositAsPercent(buyersAccountAge, phaseOnePeriod, 0.1);
     }
 
@@ -225,7 +225,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = getPhaseOnePeriod(offer.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriodAsMilli();
 
         return getDelayInDays(buyersAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
@@ -243,7 +243,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getMakersAccountAge(offer);
-        long requiredAccountAge = getPhaseOnePeriod(offer.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriodAsMilli();
         return getDelayInDays(buyersAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
@@ -264,7 +264,7 @@ public class AccountCreationAgeService {
         }
 
         long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        long requiredAccountAge = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriodAsMilli();
         return getDelayInDays(myAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
@@ -280,7 +280,7 @@ public class AccountCreationAgeService {
         }
 
         long myAccountAge = accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        long requiredAccountAge = getPhaseOnePeriod(myPaymentAccount.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriodAsMilli();
         return getDelayInDays(myAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
@@ -292,36 +292,6 @@ public class AccountCreationAgeService {
         long delay = getDelay(trade);
         long now = new Date().getTime();
         return new Date(delay + now);
-    }
-
-    /**
-     * @param paymentMethod     The paymentMethod which determines the max. period
-     * @return The period ofr phase one in ms (day units)
-     */
-    public long getPhaseOnePeriod(PaymentMethod paymentMethod) {
-        switch (paymentMethod.getId()) {
-            case PaymentMethod.BLOCK_CHAINS_ID:
-            case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
-
-            case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
-            case PaymentMethod.HAL_CASH_ID:
-            case PaymentMethod.F2F_ID:
-            case PaymentMethod.MONEY_GRAM_ID:
-            case PaymentMethod.WESTERN_UNION_ID:
-
-            case PaymentMethod.SWISH_ID:
-            case PaymentMethod.PERFECT_MONEY_ID:
-            case PaymentMethod.ALI_PAY_ID:
-            case PaymentMethod.WECHAT_PAY_ID:
-            case PaymentMethod.ADVANCED_CASH_ID:
-            case PaymentMethod.PROMPT_PAY_ID:
-            case PaymentMethod.CASH_DEPOSIT_ID:
-                return 0;
-
-            default:
-                // All other bank transfer methods
-                return getPhaseOnePeriodAsMilli();
-        }
     }
 
 
@@ -378,7 +348,7 @@ public class AccountCreationAgeService {
         }
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-        long requiredAccountAge = getPhaseOnePeriod(offer.getPaymentMethod());
+        long requiredAccountAge = getPhaseOnePeriodAsMilli();
         return buyersAccountAge < requiredAccountAge;
     }
 
@@ -448,7 +418,7 @@ public class AccountCreationAgeService {
             return false;
         }
 
-        long requiredAccountAge = getPhaseOnePeriod(paymentMethod);
+        long requiredAccountAge = getPhaseOnePeriodAsMilli();
         return accountAge < requiredAccountAge;
     }
 
