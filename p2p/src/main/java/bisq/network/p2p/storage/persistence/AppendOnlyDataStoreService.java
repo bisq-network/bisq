@@ -68,7 +68,7 @@ public class AppendOnlyDataStoreService {
         // We read the file if it exists in the db folder
         persistableNetworkPayloadListService.readStore();
         // Transfer the content to the new services
-        persistableNetworkPayloadListService.getMap().forEach(this::put);
+        persistableNetworkPayloadListService.getMap().forEach(this::putIfAbsent);
         // We are done with the transfer, now let's remove the file
         persistableNetworkPayloadListService.removeFile();
     }
@@ -79,7 +79,7 @@ public class AppendOnlyDataStoreService {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public void put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
+    public void putIfAbsent(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
         services.stream()
                 .filter(service -> service.canHandle(payload))
                 .forEach(service -> {
