@@ -444,6 +444,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onShowInfo(Offer offer,
                             boolean isPaymentAccountValidForOffer,
+                            boolean noAuthorizedAccount,
                             boolean hasSameProtocolVersion,
                             boolean isIgnored,
                             boolean isOfferBanned,
@@ -457,6 +458,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     Res.get("offerbook.warning.noMatchingAccount.msg"),
                     FiatAccountsView.class,
                     "navigation.account");
+        } else if (!noAuthorizedAccount) {
+            new Popup<>().warning(Res.get("offerbook.warning.noAuthorizedAccount")).show();
         } else if (!hasSameProtocolVersion) {
             new Popup<>().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {
@@ -843,7 +846,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
-                            boolean isTradable, isPaymentAccountValidForOffer,
+                            boolean isTradable, isPaymentAccountValidForOffer, noAuthorizedAccount,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit,
                                     requireUpdateToNewVersion;
@@ -865,6 +868,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean myOffer = model.isMyOffer(offer);
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
+                                        noAuthorizedAccount = model.hasAuthorizedAccount(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
                                         isIgnored = model.isIgnored(offer);
                                         isOfferBanned = model.isOfferBanned(offer);
@@ -874,6 +878,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         requireUpdateToNewVersion = model.requireUpdateToNewVersion();
                                         isInsufficientTradeLimit = model.isInsufficientTradeLimit(offer);
                                         isTradable = isPaymentAccountValidForOffer &&
+                                                noAuthorizedAccount &&
                                                 hasSameProtocolVersion &&
                                                 !isIgnored &&
                                                 !isOfferBanned &&
@@ -896,6 +901,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                 if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
                                                     onShowInfo(offer,
                                                             isPaymentAccountValidForOffer,
+                                                            noAuthorizedAccount,
                                                             hasSameProtocolVersion,
                                                             isIgnored,
                                                             isOfferBanned,
@@ -936,6 +942,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (!myOffer && !isTradable)
                                         button.setOnAction(e -> onShowInfo(offer,
                                                 isPaymentAccountValidForOffer,
+                                                noAuthorizedAccount,
                                                 hasSameProtocolVersion,
                                                 isIgnored,
                                                 isOfferBanned,

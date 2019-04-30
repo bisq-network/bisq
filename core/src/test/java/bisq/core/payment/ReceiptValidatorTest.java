@@ -17,7 +17,6 @@
 
 package bisq.core.payment;
 
-import bisq.core.account.score.AccountScoreService;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
 
@@ -37,23 +36,20 @@ import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SpecificBanksAccount.class, SameBankAccount.class, NationalBankAccount.class,
-        MoneyGramAccount.class, WesternUnionAccount.class, CashDepositAccount.class, PaymentMethod.class,
-        AccountScoreService.class})
+        MoneyGramAccount.class, WesternUnionAccount.class, CashDepositAccount.class, PaymentMethod.class})
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class ReceiptValidatorTest {
     private ReceiptValidator validator;
     private PaymentAccount account;
     private Offer offer;
     private ReceiptPredicates predicates;
-    private AccountScoreService accountScoreService;
 
     @Before
     public void setUp() {
         this.predicates = mock(ReceiptPredicates.class);
         this.account = mock(CountryBasedPaymentAccount.class);
         this.offer = mock(Offer.class);
-        accountScoreService = mock(AccountScoreService.class);
-        this.validator = new ReceiptValidator(offer, account, accountScoreService, predicates);
+        this.validator = new ReceiptValidator(offer, account, predicates);
     }
 
     @Test
@@ -72,7 +68,7 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingCurrency(offer, account)).thenReturn(true);
         when(predicates.isEqualPaymentMethods(offer, account)).thenReturn(true);
 
-        assertTrue(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -118,7 +114,7 @@ public class ReceiptValidatorTest {
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
         when(predicates.isMatchingBankId(offer, account)).thenReturn(false);
 
-        assertFalse(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -133,7 +129,7 @@ public class ReceiptValidatorTest {
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
         when(predicates.isMatchingBankId(offer, account)).thenReturn(false);
 
-        assertFalse(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertFalse(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -148,7 +144,7 @@ public class ReceiptValidatorTest {
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
         when(predicates.isMatchingBankId(offer, account)).thenReturn(true);
 
-        assertTrue(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -163,7 +159,7 @@ public class ReceiptValidatorTest {
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(true);
         when(predicates.isMatchingBankId(offer, account)).thenReturn(true);
 
-        assertTrue(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -177,9 +173,8 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
         when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
-        when(predicates.isMatchingAccountLevel(offer, account, accountScoreService)).thenReturn(true);
 
-        assertTrue(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -196,9 +191,8 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
         when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
-        when(predicates.isMatchingAccountLevel(offer, account, accountScoreService)).thenReturn(true);
 
-        assertTrue(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 
     @Test
@@ -209,7 +203,6 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
         when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
-        when(predicates.isMatchingAccountLevel(offer, account, accountScoreService)).thenReturn(true);
 
         assertTrue(validator.isValid());
     }
@@ -228,8 +221,7 @@ public class ReceiptValidatorTest {
         when(predicates.isMatchingSepaOffer(offer, account)).thenReturn(false);
         when(predicates.isMatchingSepaInstant(offer, account)).thenReturn(false);
         when(predicates.isOfferRequireSameOrSpecificBank(offer, account)).thenReturn(false);
-        when(predicates.isMatchingAccountLevel(offer, account, accountScoreService)).thenReturn(true);
 
-        assertTrue(new ReceiptValidator(offer, account, accountScoreService, predicates).isValid());
+        assertTrue(new ReceiptValidator(offer, account, predicates).isValid());
     }
 }

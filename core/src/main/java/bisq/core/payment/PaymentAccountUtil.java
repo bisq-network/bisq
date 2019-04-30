@@ -40,21 +40,32 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PaymentAccountUtil {
     public static boolean isAnyPaymentAccountValidForOffer(Offer offer,
-                                                           Collection<PaymentAccount> paymentAccounts,
-                                                           AccountScoreService accountScoreService) {
+                                                           Collection<PaymentAccount> paymentAccounts) {
         for (PaymentAccount paymentAccount : paymentAccounts) {
-            if (isPaymentAccountValidForOffer(offer, paymentAccount, accountScoreService))
+            if (isPaymentAccountValidForOffer(offer, paymentAccount))
                 return true;
         }
         return false;
     }
 
+    public static boolean hasAuthorizedAccount(Offer offer,
+                                               Collection<PaymentAccount> paymentAccounts,
+                                               AccountScoreService accountScoreService) {
+        for (PaymentAccount paymentAccount : paymentAccounts) {
+            if (accountScoreService.getScoreInfoForMyPaymentAccount(paymentAccount, offer.getCurrencyCode())
+                    .map(scoreInfo -> !offer.requireAuthorizedTaker() || scoreInfo.isCanSign())
+                    .orElse(true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer,
-                                                                            Set<PaymentAccount> paymentAccounts,
-                                                                            AccountScoreService accountScoreService) {
+                                                                            Set<PaymentAccount> paymentAccounts) {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
-                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount, accountScoreService))
+                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
                 .collect(Collectors.toList()));
         return result;
     }
@@ -68,16 +79,14 @@ public class PaymentAccountUtil {
     }
 
     public static boolean isPaymentAccountValidForOffer(Offer offer,
-                                                        PaymentAccount paymentAccount,
-                                                        AccountScoreService accountScoreService) {
-        return new ReceiptValidator(offer, paymentAccount, accountScoreService).isValid();
+                                                        PaymentAccount paymentAccount) {
+        return new ReceiptValidator(offer, paymentAccount).isValid();
     }
 
     public static Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer,
                                                                                Set<PaymentAccount> paymentAccounts,
-                                                                               AccountAgeWitnessService service,
-                                                                               AccountScoreService accountScoreService) {
-        PaymentAccounts accounts = new PaymentAccounts(paymentAccounts, service, accountScoreService);
+                                                                               AccountAgeWitnessService service) {
+        PaymentAccounts accounts = new PaymentAccounts(paymentAccounts, service);
         return Optional.ofNullable(accounts.getOldestPaymentAccountForOffer(offer));
     }
 

@@ -17,7 +17,6 @@
 
 package bisq.core.payment;
 
-import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
@@ -26,6 +25,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -38,12 +38,17 @@ class PaymentAccounts {
 
     private final Set<PaymentAccount> accounts;
     private final AccountAgeWitnessService service;
-    private final AccountScoreService accountScoreService;
+    private final BiFunction<Offer, PaymentAccount, Boolean> validator;
 
-    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service, AccountScoreService accountScoreService) {
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service) {
+        this(accounts, service, PaymentAccountUtil::isPaymentAccountValidForOffer);
+    }
+
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service,
+                    BiFunction<Offer, PaymentAccount, Boolean> validator) {
         this.accounts = accounts;
         this.service = service;
-        this.accountScoreService = accountScoreService;
+        this.validator = validator;
     }
 
     @Nullable
@@ -58,7 +63,7 @@ class PaymentAccounts {
     private List<PaymentAccount> sortValidAccounts(Offer offer) {
         Comparator<PaymentAccount> comparator = this::compareByAge;
         return accounts.stream()
-                .filter(account -> PaymentAccountUtil.isPaymentAccountValidForOffer(offer, account, accountScoreService))
+                .filter(account -> validator.apply(offer, account))
                 .sorted(comparator.reversed())
                 .collect(Collectors.toList());
     }

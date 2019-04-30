@@ -17,7 +17,6 @@
 
 package bisq.core.payment;
 
-import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
@@ -27,12 +26,12 @@ import com.google.common.collect.Sets;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -44,19 +43,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({PaymentAccount.class, AccountAgeWitness.class, AccountScoreService.class})
+@PrepareForTest({PaymentAccount.class, AccountAgeWitness.class})
 @PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class PaymentAccountsTest {
     @Test
     public void testGetOldestPaymentAccountForOfferWhenNoValidAccounts() {
-        PaymentAccounts accounts = new PaymentAccounts(Collections.emptySet(), mock(AccountAgeWitnessService.class), mock(AccountScoreService.class));
+        PaymentAccounts accounts = new PaymentAccounts(Collections.emptySet(), mock(AccountAgeWitnessService.class));
         PaymentAccount actual = accounts.getOldestPaymentAccountForOffer(mock(Offer.class));
 
         assertNull(actual);
     }
 
-    //TODO test fails after adding isMatchingAccountLevel.
-    @Ignore
     @Test
     public void testGetOldestPaymentAccountForOffer() {
         AccountAgeWitnessService service = mock(AccountAgeWitnessService.class);
@@ -67,10 +64,10 @@ public class PaymentAccountsTest {
                 createAccountWithAge(service, 2),
                 createAccountWithAge(service, 1));
 
-        PaymentAccounts testedEntity = new PaymentAccounts(accounts, service, mock(AccountScoreService.class));
+        BiFunction<Offer, PaymentAccount, Boolean> dummyValidator = (offer, account) -> true;
+        PaymentAccounts testedEntity = new PaymentAccounts(accounts, service, dummyValidator);
 
         PaymentAccount actual = testedEntity.getOldestPaymentAccountForOffer(mock(Offer.class));
-
         assertEquals(oldest, actual);
     }
 
