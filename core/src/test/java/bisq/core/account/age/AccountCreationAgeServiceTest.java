@@ -42,20 +42,20 @@ public class AccountCreationAgeServiceTest {
 
         requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
         buyersAccountAge = 15 * DateUtils.MILLIS_PER_DAY;
-        expected = 19;
+        expected = 23;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
 
         buyersAccountAge = 60 * DateUtils.MILLIS_PER_DAY;
-        expected = 7;
+        expected = 15;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
         buyersAccountAge = DateUtils.MILLIS_PER_DAY;
-        expected = 29;
+        expected = 30;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
         buyersAccountAge = 2 * DateUtils.MILLIS_PER_DAY;
-        expected = 28;
+        expected = 29;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
     }
 

@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountCreationAgeService {
     public final static long PHASE_ONE_PERIOD = 30;
-    public final static long PERM_DELAY = 7;
+    public final static long PERM_DELAY = 15;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
 
