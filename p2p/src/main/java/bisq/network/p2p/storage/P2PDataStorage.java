@@ -313,7 +313,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (!containsKey || reBroadcast) {
                 if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance()) {
                     if (!containsKey) {
-                        appendOnlyDataStoreService.put(hashAsByteArray, payload);
+                        appendOnlyDataStoreService.putIfAbsent(hashAsByteArray, payload);
                         appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
                     }
                     if (allowBroadcast)
