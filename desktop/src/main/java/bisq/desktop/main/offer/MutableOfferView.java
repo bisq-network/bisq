@@ -26,6 +26,7 @@ import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.BalanceTextField;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
+import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.NewBadge;
@@ -72,11 +73,13 @@ import org.bitcoinj.core.Coin;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
@@ -318,16 +321,21 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
             percentagePriceDescription.setText(Res.get("shared.belowInPercent"));
+            takerRestrictionsLabel.setText(Res.get("createOffer.takerRestriction.seller"));
+            requireAuthorizedBuyerLabel.setText(Res.get("createOffer.takerRestriction.canSign.seller"));
         } else {
             placeOfferButton.setId("sell-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
             percentagePriceDescription.setText(Res.get("shared.aboveInPercent"));
+            takerRestrictionsLabel.setText(Res.get("createOffer.takerRestriction.buyer"));
+            requireAuthorizedBuyerLabel.setText(Res.get("createOffer.takerRestriction.canSign.buyer"));
         }
 
         updatePriceToggle();
 
         if (!model.getDataModel().isMakerFeeValid() && model.getDataModel().getMakerFee() != null)
             showInsufficientBsqFundsForBtcFeePaymentPopup();
+
     }
 
     // called form parent as the view does not get notified when the tab is closed
@@ -867,6 +875,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         };
 
         requireAuthorizedTakerToggleListener = (observable, oldValue, newValue) -> {
+            requireAuthorizedTakerToggle.setText(newValue ? Res.get("shared.yes") : Res.get("shared.no"));
             model.getDataModel().setRequireAuthorizedTaker(newValue);
         };
 
@@ -1492,12 +1501,14 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private VBox getTakerRestrictionFieldsBox() {
-        requireAuthorizedBuyerLabel = new Label(Res.get("createOffer.takerRestriction.canSign"));
-        requireAuthorizedBuyerLabel.setMouseTransparent(true);
+        requireAuthorizedBuyerLabel = new InfoAutoTooltipLabel(Res.get("createOffer.takerRestriction.canSign"),
+                AwesomeIcon.QUESTION_SIGN,
+                ContentDisplay.RIGHT,
+                Res.get("createOffer.takerRestriction.canSign.info"));
         requireAuthorizedBuyerLabel.setId("trade-fee-textfield");
 
         requireAuthorizedTakerToggle = new AutoTooltipSlideToggleButton();
-        requireAuthorizedTakerToggle.setText(Res.get("shared.yes"));
+        requireAuthorizedTakerToggle.setText(Res.get("shared.no"));
         requireAuthorizedTakerToggle.setPadding(new Insets(-8, 5, -10, 5));
 
         HBox hBox = new HBox();
@@ -1507,6 +1518,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
 
         final Tuple2<Label, VBox> tuple = getTradeInputBox(hBox, Res.get("createOffer.takerRestriction"));
         takerRestrictionsLabel = tuple.first;
+        tuple.second.setSpacing(15);
         return tuple.second;
     }
 
