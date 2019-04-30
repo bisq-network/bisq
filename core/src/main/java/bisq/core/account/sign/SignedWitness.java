@@ -73,10 +73,15 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         this.date = date;
         this.tradeAmount = tradeAmount;
 
+        // The hash is only using the data which do not change in repeated trades between same users (no date or amount).
+        // We only want to store the first and oldest one and will ignore others. That will help also to protect privacy
+        // so that the total number of trades is not revealed. We use putIfAbsent when we store the data so first
+        // object will win. We consider one signed trade with one peer enough and do not consider repeated trades with
+        // same peer to add more security as if that one would be colluding it would be not detected anyway. The total
+        // number of signed trades with different peers is still available and can be considered more valuable data for
+        // security.
         byte[] data = Utilities.concatenateByteArrays(witnessHash, signature);
         data = Utilities.concatenateByteArrays(data, signerPubKey);
-        // Date is not added to hash to avoid that the same account with same sigs can be stored multiple
-        // times if date would differ
         hash = Hash.getSha256Ripemd160hash(data);
     }
 
