@@ -63,7 +63,7 @@ public class Restrictions {
         if (cryptoCurrencyAccount)
             return 0.02; // 2% of trade amount.
         else
-            return 0.1; // 10% of trade amount.
+            return 0.20; // 20% of trade amount.
     }
 
     public static double getMinBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
@@ -75,7 +75,7 @@ public class Restrictions {
         if (cryptoCurrencyAccount)
             return 0.005; // 0.5% of trade amount.
         else
-            return 0.05; // 5% of trade amount.
+            return 0.15; // 15% of trade amount.
     }
 
     public static double getMaxBuyerSecurityDepositAsPercent(@Nullable PaymentAccount paymentAccount) {
