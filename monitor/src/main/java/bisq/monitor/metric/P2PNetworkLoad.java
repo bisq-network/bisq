@@ -17,36 +17,19 @@
 
 package bisq.monitor.metric;
 
-import java.io.File;
+import bisq.monitor.AvailableTor;
+import bisq.monitor.Metric;
+import bisq.monitor.Monitor;
+import bisq.monitor.Reporter;
+import bisq.monitor.ThreadGate;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.core.env.PropertySource;
-
-import bisq.common.Clock;
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
-import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.monitor.AvailableTor;
-import bisq.monitor.Metric;
-import bisq.monitor.Monitor;
-import bisq.monitor.Reporter;
-import bisq.monitor.ThreadGate;
+
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
@@ -56,6 +39,26 @@ import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
+
+import bisq.common.Clock;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
+import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.proto.network.NetworkProtoResolver;
+
+import org.springframework.core.env.PropertySource;
+
+import java.io.File;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -172,7 +175,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 });
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
-                CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
+                CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null, null,
                         networkProtoResolver, storageDir);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(environment, null);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new Clock(),
