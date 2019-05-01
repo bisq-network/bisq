@@ -634,6 +634,8 @@ public class TradeManager implements PersistedDataHost {
         clock.addListener(new Clock.Listener() {
             @Override
             public void onSecondTick() {
+                //TODO dev testing
+                updateTradePeriodState();
             }
 
             @Override
@@ -654,13 +656,22 @@ public class TradeManager implements PersistedDataHost {
                 Date now = new Date();
                 // If there is no payout delay releaseBtcEndDate=payoutDelayEndDate=maxTradePeriodDate
                 if (now.after(releaseBtcEndDate)) {
+                    // We are over the time
                     trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                } else if (now.after(payoutDelayEndDate)) {
-                    trade.setTradePeriodState(Trade.TradePeriodState.RELEASE_BTC);
-                } else if (now.after(maxTradePeriodDate)) {
-                    trade.setTradePeriodState(Trade.TradePeriodState.PAYOUT_DELAY);
-                } else if (now.after(halfTradePeriodDate)) {
-                    trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
+                } else if ((trade instanceof BuyerTrade && trade.getState() == Trade.State.BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION) ||
+                        (trade instanceof SellerTrade && trade.getState() == Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT)) {
+                    // Seller has confirmed receipt but we are in delay phase or release phase
+                    if (now.after(payoutDelayEndDate)) {
+                        trade.setTradePeriodState(Trade.TradePeriodState.RELEASE_BTC);
+                    } else {
+                        trade.setTradePeriodState(Trade.TradePeriodState.PAYOUT_DELAY);
+                    }
+                } else {
+                    if (now.after(halfTradePeriodDate)) {
+                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
+                    } else {
+                        trade.setTradePeriodState(Trade.TradePeriodState.FIRST_HALF);
+                    }
                 }
             }
         });

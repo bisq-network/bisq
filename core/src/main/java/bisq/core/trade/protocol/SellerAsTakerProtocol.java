@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.tasks.seller.SellerSendFiatReceivedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
@@ -175,6 +176,31 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // User clicked the "bank transfer received" button, but because there is a payout delay we do not create the
+    // payout tx yet but only notify the peer about the receipt as well as sign their account witness in case we are
+    // authorized to sign.
+    @Override
+    public void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+        TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onSendFiatPaymentReceivedMessage");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
+
+        taskRunner.addTasks(
+                CheckIfPeerIsBanned.class,
+                TakerVerifyMakerAccount.class,
+                TakerVerifyMakerFeePayment.class,
+                SellerSendFiatReceivedMessage.class
+        );
+        taskRunner.run();
+    }
 
     // User clicked the "bank transfer received" button, so we release the funds for pay out
     @Override

@@ -1596,6 +1596,10 @@ textfield */
     -fx-border-width: 0;
 }
 
+.titled-group-bg.warning, .titled-group-bg-active.warning {
+    -fx-text-fill: -bs-yellow;
+}
+
 /* TableGroupHeadline */
 #table-group-headline {
     -fx-background-color: -bs-content-bg-grey;

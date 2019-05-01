@@ -210,6 +210,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                     Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                     String key;
                     switch (trade.getTradePeriodState()) {
+                        case WAITING_FOR_BLOCKCHAIN_CONFIRMATION:
                         case FIRST_HALF:
                             break;
                         case SECOND_HALF:
@@ -222,6 +223,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                         .show();
                             }
                             break;
+                        case PAYOUT_DELAY: //TODO
+                            break;
+                        case RELEASE_BTC:   //TODO
+                            break;
+                        default:
                         case TRADE_PERIOD_OVER:
                             if (!tradeManager.requirePayoutDelay(trade)) {
                                 key = "displayTradePeriodOver" + trade.getId();

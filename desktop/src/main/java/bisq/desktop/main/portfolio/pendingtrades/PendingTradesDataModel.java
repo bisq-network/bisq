@@ -179,11 +179,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
+    public void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        checkNotNull(getTrade(), "trade must not be null");
+        checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
+
+        if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
+            ((SellerTrade) getTrade()).onSendFiatPaymentReceivedMessage(resultHandler, errorMessageHandler);
+        }
+    }
+
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
 
-        //TODO should we allow to release btc even if dispute open?
         if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
             ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
         }
@@ -194,7 +202,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public String getFormattedDelayedPayoutDate() {
-        return formatter.formatDateTime(accountScoreService.getDelayedTradePayoutDate(selectedTrade));
+        long fiatReceivedDate = selectedTrade.getFiatReceivedDate();
+        long startOfDelay = fiatReceivedDate > 0 ? fiatReceivedDate : new Date().getTime();
+        Date date = new Date(startOfDelay + accountScoreService.getPayoutDelay(selectedTrade));
+        return formatter.formatDateTime(date);
     }
 
     public String getFormattedBuyersAccountAge() {
@@ -585,6 +596,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public Date getTradePeriodSectionDate() {
         return selectedTrade.getTradePeriodSectionDate();
+    }
+
+    public long getRemainingTradePeriod() {
+        return getTradePeriodSectionDate().getTime() - new Date().getTime();
     }
 }
 

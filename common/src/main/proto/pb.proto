@@ -66,6 +66,8 @@ message NetworkEnvelope {
         NewBlindVoteStateHashMessage new_blind_vote_state_hash_message = 40;
         GetBlindVoteStateHashesRequest get_blind_vote_state_hashes_request = 41;
         GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
+
+        FiatReceivedMessage fiat_received_message = 43; // added at v 1.1 as part of trade protocol changes for payout delay
     }
 }
 
@@ -257,6 +259,13 @@ message FinalizePayoutTxRequest {
 message PayoutTxPublishedMessage {
     string trade_id = 1;
     bytes payout_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+message FiatReceivedMessage {
+    int64 fiat_received_date = 1;
+    string trade_id = 2;
     NodeAddress sender_node_address = 3;
     string uid = 4;
 }
@@ -1194,6 +1203,7 @@ message Trade {
         BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG = 28;
         BUYER_SAW_PAYOUT_TX_IN_NETWORK = 29;
         WITHDRAW_COMPLETED = 30;
+        BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION = 31; // Added with 1.1.0 and cannot be put in logical place due PB restrictions
     }
 
     enum Phase {
@@ -1221,8 +1231,9 @@ message Trade {
         FIRST_HALF = 1;
         SECOND_HALF = 2;
         TRADE_PERIOD_OVER = 3;
-        PAYOUT_DELAY = 4; // Added later so it is not in logical order but as we cannot change PB definition we need to keep it that way.
-        RELEASE_BTC = 5;
+        WAITING_FOR_BLOCKCHAIN_CONFIRMATION = 4; // Added with 1.1.0 so it is not in logical order but as we cannot change PB definition we need to keep it that way.
+        PAYOUT_DELAY = 5;
+        RELEASE_BTC = 6;
     }
 
     Offer offer = 1;
@@ -1253,6 +1264,7 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
+    int64 fiat_received_date = 29;
 }
 
 message BuyerAsMakerTrade {

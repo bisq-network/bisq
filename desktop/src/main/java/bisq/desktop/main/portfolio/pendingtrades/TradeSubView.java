@@ -106,8 +106,9 @@ public abstract class TradeSubView extends HBox {
         addWizards();
 
         TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
-                0);
-        noticeTitledGroupBg.getStyleClass().add("last");
+                Layout.FIRST_ROW_DISTANCE);
+        // TODO @Christoph: does not take orange warning color, any idea why?
+        noticeTitledGroupBg.getStyleClass().addAll("last", "warning");
         Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
                 Layout.FIRST_ROW_DISTANCE);
         openDisputeButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));

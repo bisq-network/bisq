@@ -154,6 +154,9 @@ public class BuyerStep2View extends TradeStepView {
                                 statusLabel.setText("");
                                 model.setMessageStateProperty(MessageState.FAILED);
                                 break;
+                            case BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION:
+                                //TODO
+                                break;
                             default:
                                 log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
                                 busyAnimation.stop();

@@ -22,27 +22,24 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
-
-import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class PayoutTxPublishedMessage extends TradeMessage implements MailboxMessage {
-    private final byte[] payoutTx;
+public final class FiatReceivedMessage extends TradeMessage implements MailboxMessage {
     private final NodeAddress senderNodeAddress;
+    private long fiatReceivedDate;
 
-    public PayoutTxPublishedMessage(String tradeId,
-                                    byte[] payoutTx,
-                                    NodeAddress senderNodeAddress,
-                                    String uid) {
-        this(tradeId,
-                payoutTx,
+    public FiatReceivedMessage(long fiatReceivedDate,
+                               String tradeId,
+                               NodeAddress senderNodeAddress,
+                               String uid) {
+        this(fiatReceivedDate,
+                tradeId,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -53,30 +50,30 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private PayoutTxPublishedMessage(String tradeId,
-                                     byte[] payoutTx,
-                                     NodeAddress senderNodeAddress,
-                                     String uid,
-                                     int messageVersion) {
+    private FiatReceivedMessage(long fiatReceivedDate,
+                                String tradeId,
+                                NodeAddress senderNodeAddress,
+                                String uid,
+                                int messageVersion) {
         super(messageVersion, tradeId, uid);
-        this.payoutTx = payoutTx;
+        this.fiatReceivedDate = fiatReceivedDate;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage.newBuilder()
+                .setFiatReceivedMessage(PB.FiatReceivedMessage.newBuilder()
+                        .setFiatReceivedDate(fiatReceivedDate)
                         .setTradeId(tradeId)
-                        .setPayoutTx(ByteString.copyFrom(payoutTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.PayoutTxPublishedMessage proto, int messageVersion) {
-        return new PayoutTxPublishedMessage(proto.getTradeId(),
-                proto.getPayoutTx().toByteArray(),
+    public static NetworkEnvelope fromProto(PB.FiatReceivedMessage proto, int messageVersion) {
+        return new FiatReceivedMessage(proto.getFiatReceivedDate(),
+                proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -84,8 +81,8 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
 
     @Override
     public String toString() {
-        return "PayoutTxPublishedMessage{" +
-                "\n     payoutTx=" + Utilities.bytesAsHexString(payoutTx) +
+        return "FiatReceivedMessage{" +
+                ",\n     fiatReceivedDate=" + fiatReceivedDate +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 "\n} " + super.toString();
     }

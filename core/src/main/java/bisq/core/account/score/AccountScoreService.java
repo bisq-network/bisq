@@ -35,7 +35,6 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -161,10 +160,6 @@ public class AccountScoreService {
 
     public long getPayoutDelay(Trade trade) {
         return accountCreationAgeService.getDelay(trade);
-    }
-
-    public Date getDelayedTradePayoutDate(Trade trade) {
-        return accountCreationAgeService.getDelayedTradePayoutDate(trade);
     }
 
 

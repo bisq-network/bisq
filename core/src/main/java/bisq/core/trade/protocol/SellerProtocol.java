@@ -21,5 +21,7 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 public interface SellerProtocol {
+    void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
+
     void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 }

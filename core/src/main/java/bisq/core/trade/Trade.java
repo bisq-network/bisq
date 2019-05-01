@@ -167,7 +167,9 @@ public abstract class Trade implements Tradable, Model {
 
 
         // #################### Phase WITHDRAWN
-        WITHDRAW_COMPLETED(Phase.WITHDRAWN);
+        WITHDRAW_COMPLETED(Phase.WITHDRAWN),
+
+        BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION(Phase.FIAT_RECEIVED); // Added with 1.1.0 and cannot be put in logical place due PB restrictions
 
         @NotNull
         public Phase getPhase() {
@@ -228,6 +230,7 @@ public abstract class Trade implements Tradable, Model {
         FIRST_HALF,
         SECOND_HALF,
         TRADE_PERIOD_OVER,
+        WAITING_FOR_BLOCKCHAIN_CONFIRMATION,   // Added later so it is not in logical order but as we cannot change PB definition we need to keep it that way.
         PAYOUT_DELAY,   // Added later so it is not in logical order but as we cannot change PB definition we need to keep it that way.
         RELEASE_BTC;
 
@@ -289,7 +292,7 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
     @Getter
-    private TradePeriodState tradePeriodState = TradePeriodState.FIRST_HALF;
+    private TradePeriodState tradePeriodState = TradePeriodState.WAITING_FOR_BLOCKCHAIN_CONFIRMATION;
     @Nullable
     @Getter
     @Setter
@@ -337,6 +340,9 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     @Nullable
     private String counterCurrencyTxId;
+    @Getter
+    @Setter
+    private long fiatReceivedDate;
 
     // Transient
     // Immutable
@@ -438,7 +444,8 @@ public abstract class Trade implements Tradable, Model {
                 .setTradePrice(tradePrice)
                 .setState(PB.Trade.State.valueOf(state.name()))
                 .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
-                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()));
+                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
+                .setFiatReceivedDate(fiatReceivedDate);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -482,6 +489,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
+        trade.setFiatReceivedDate(proto.getFiatReceivedDate());
         return trade;
     }
 
@@ -746,11 +754,14 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public Date getPayoutDelayEndDate() {
-        return new Date(getTradeStartTime() + getMaxTradePeriod() + getPayoutDelay());
+        long fiatReceivedDate = getFiatReceivedDate();
+        // If fiatReceivedDate is not set yet we use the date of the max. trade period
+        long startOfDelay = fiatReceivedDate > 0 ? fiatReceivedDate : (getTradeStartTime() + getMaxTradePeriod());
+        return new Date(startOfDelay + getPayoutDelay());
     }
 
     public Date getReleaseBtcEndDate() {
-        return new Date(getTradeStartTime() + getMaxTradePeriod() + getPayoutDelay() + getReleaseBtcPeriod());
+        return new Date(getPayoutDelayEndDate().getTime() + getReleaseBtcPeriod());
     }
 
     private long getPayoutDelay() {
@@ -766,14 +777,14 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public long getTradeStartTime() {
-        final long now = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
         long startTime;
-        final Transaction depositTx = getDepositTx();
+        Transaction depositTx = getDepositTx();
         if (depositTx != null && getTakeOfferDate() != null) {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
-                final long tradeTime = getTakeOfferDate().getTime();
+                long tradeTime = getTakeOfferDate().getTime();
                 // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
-                long blockTime = depositTx.getIncludedInBestChainAt() != null ? depositTx.getIncludedInBestChainAt().getTime() : depositTx.getUpdateTime().getTime();
+                long blockTime = depositTx.getIncludedInBestChainAt() != null ? depositTx.getIncludedInBestChainAt().getTime() : 0;
                 // If block date is in future (Date in Bitcoin blocks can be off by +/- 2 hours) we use our current date.
                 // If block date is earlier than our trade date we use our trade date.
                 if (blockTime > now)
@@ -782,6 +793,10 @@ public abstract class Trade implements Tradable, Model {
                     startTime = tradeTime;
                 else
                     startTime = blockTime;
+
+                if (blockTime > 0 && getTradePeriodState() == TradePeriodState.WAITING_FOR_BLOCKCHAIN_CONFIRMATION) {
+                    setTradePeriodState(TradePeriodState.FIRST_HALF);
+                }
 
                 log.debug("We set the start for the trade period to {}. Trade started at: {}. Block got mined at: {}",
                         new Date(startTime), new Date(tradeTime), new Date(blockTime));
@@ -810,24 +825,27 @@ public abstract class Trade implements Tradable, Model {
 
         long maxTradePeriod = getMaxTradePeriod();
 
+        long tradePeriodOverDate;
+        //TODO is 0 case handled correclty?
+        long fiatReceivedDate = getFiatReceivedDate();
 
-        long addedPeriod;
         switch (tradePeriodState) {
+            case WAITING_FOR_BLOCKCHAIN_CONFIRMATION:
             case FIRST_HALF:
             case SECOND_HALF:
-                addedPeriod = maxTradePeriod;
+                tradePeriodOverDate = tradePeriodStartTime + maxTradePeriod;
                 break;
             case PAYOUT_DELAY:
-                addedPeriod = maxTradePeriod + payoutDelay;
+                tradePeriodOverDate = fiatReceivedDate + payoutDelay;
                 break;
             case RELEASE_BTC:
+                tradePeriodOverDate = fiatReceivedDate + payoutDelay + releaseTime;
+                break;
             case TRADE_PERIOD_OVER:
             default:
-                addedPeriod = maxTradePeriod + payoutDelay + releaseTime;
+                tradePeriodOverDate = fiatReceivedDate + payoutDelay + releaseTime;
                 break;
         }
-
-        long tradePeriodOverDate = tradePeriodStartTime + addedPeriod;
         return new Date(tradePeriodOverDate);
     }
 

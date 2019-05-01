@@ -20,12 +20,14 @@ package bisq.core.trade.protocol;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
+import bisq.core.trade.messages.FiatReceivedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessFiatReceivedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -99,12 +101,15 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
                 log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
                         tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-                if (tradeMessage instanceof DepositTxPublishedMessage)
+                if (tradeMessage instanceof DepositTxPublishedMessage) {
                     handle((DepositTxPublishedMessage) tradeMessage, peerNodeAddress);
-                else if (tradeMessage instanceof PayoutTxPublishedMessage)
+                } else if (tradeMessage instanceof FiatReceivedMessage) {
+                    handle((FiatReceivedMessage) tradeMessage, peerNodeAddress);
+                } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
                     handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-                else
+                } else {
                     log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
+                }
             }
         }
     }
@@ -204,6 +209,20 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void handle(FiatReceivedMessage tradeMessage, NodeAddress peerNodeAddress) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsMakerTrade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle FiatReceivedMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                BuyerProcessFiatReceivedMessage.class
+        );
+        taskRunner.run();
+    }
+
     private void handle(PayoutTxPublishedMessage tradeMessage, NodeAddress peerNodeAddress) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
@@ -230,6 +249,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
         if (tradeMessage instanceof DepositTxPublishedMessage) {
             handle((DepositTxPublishedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof FiatReceivedMessage) {
+            handle((FiatReceivedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
         } else //noinspection StatementWithEmptyBody

@@ -27,6 +27,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
 import bisq.core.locale.Res;
+import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
@@ -89,6 +90,7 @@ public abstract class TradeStepView extends AnchorPane {
     private Clock.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
+    private Label timeLeftLabel;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -243,8 +245,9 @@ public abstract class TradeStepView extends AnchorPane {
         }
 
         Tuple3<Label, TextField, VBox> labelTextFieldVBoxTuple3 = addCompactTopLabelTextField(gridPane, gridRow,
-                1, Res.get("portfolio.pending.remainingTime"), "");
+                1, "", "");
 
+        timeLeftLabel = labelTextFieldVBoxTuple3.first;
         timeLeftTextField = labelTextFieldVBoxTuple3.second;
         timeLeftTextField.setMinWidth(500);
 
@@ -281,7 +284,7 @@ public abstract class TradeStepView extends AnchorPane {
         return "";
     }
 
-    private void updateTimeLeft() {
+    protected void updateTimeLeft() {
         if (timeLeftTextField != null) {
             Optional<Double> remainingTradePeriodAsPercentage = model.dataModel.getRemainingTradePeriodAsPercentage();
             boolean present = remainingTradePeriodAsPercentage.isPresent();
@@ -291,33 +294,53 @@ public abstract class TradeStepView extends AnchorPane {
                 timeLeftProgressBar.setProgress(remainingTradePeriodAsPercentage.get());
             }
 
-            String tradePeriodOverDate = model.getTradePeriodOverDate();
-            String remainingTradePeriod = model.getRemainingTradePeriod();
+            String tradePeriodSectionDate = model.getTradePeriodSectionDate();
+            long remainingTradePeriod = model.dataModel.getRemainingTradePeriod();
+            String remainingTradePeriodAsWords = remainingTradePeriod > 0 ?
+                    model.getRemainingTradePeriodAsWords() :
+                    Res.get("portfolio.pending.remainingTimeDetail.timeOver");
             String tradePeriodInfo = "";
-
 
             Trade trade = model.dataModel.getTrade();
             if (trade != null) {
-                String prefix;
-
+                String period = "";
                 timeLeftTextField.getStyleClass().remove("error-text");
                 timeLeftTextField.getStyleClass().remove("warning");
                 timeLeftProgressBar.getStyleClass().remove("error");
                 timeLeftProgressBar.getStyleClass().remove("warning");
                 switch (trade.getTradePeriodState()) {
+                    case WAITING_FOR_BLOCKCHAIN_CONFIRMATION:
+                        tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail.notStartedYet");
+                        break;
                     case FIRST_HALF:
+                        period = Res.get("portfolio.pending.remainingTime.tradePeriod");
+                        tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
+                                remainingTradePeriodAsWords, tradePeriodSectionDate);
                         break;
                     case SECOND_HALF:
-                        prefix = Res.get("portfolio.pending.remainingTime.tradePeriod");
-                        tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
-                                prefix, remainingTradePeriod, tradePeriodOverDate);
-                        timeLeftProgressBar.getStyleClass().add("warning");
-                        showWarning();
+                        if (trade instanceof BuyerTrade && trade.isFiatReceived()) {
+                            period = Res.get("portfolio.pending.remainingTime.payoutDelay");
+                            tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
+                                    remainingTradePeriodAsWords, tradePeriodSectionDate);
+                        } else {
+                            period = Res.get("portfolio.pending.remainingTime.tradePeriod");
+                            tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
+                                    remainingTradePeriodAsWords, tradePeriodSectionDate);
+
+                        }
+                        if (remainingTradePeriod > 0) {
+                            timeLeftProgressBar.getStyleClass().add("warning");
+                            showWarning();
+                        } else {
+                            showOpenDisputeButton();
+                            showDisputeInfoLabel();
+                            onOpenForDispute();
+                        }
                         break;
                     case PAYOUT_DELAY:
-                        prefix = Res.get("portfolio.pending.remainingTime.payoutDelay");
+                        period = Res.get("portfolio.pending.remainingTime.payoutDelay");
                         tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
-                                prefix, remainingTradePeriod, tradePeriodOverDate);
+                                remainingTradePeriodAsWords, tradePeriodSectionDate);
 
                         if (trade instanceof SellerTrade) {
                             if (trade.getState().ordinal() < Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT.ordinal()) {
@@ -331,9 +354,9 @@ public abstract class TradeStepView extends AnchorPane {
                         }
                         break;
                     case RELEASE_BTC:
-                        prefix = Res.get("portfolio.pending.remainingTime.release");
+                        period = Res.get("portfolio.pending.remainingTime.release");
                         tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
-                                prefix, remainingTradePeriod, tradePeriodOverDate);
+                                remainingTradePeriodAsWords, tradePeriodSectionDate);
                         timeLeftProgressBar.getStyleClass().add("warning");
                         if (trade instanceof SellerTrade) {
                             showReleaseBtcButton();
@@ -341,8 +364,8 @@ public abstract class TradeStepView extends AnchorPane {
                         break;
                     case TRADE_PERIOD_OVER:
                         tradePeriodInfo = model.dataModel.requirePayoutDelay() ?
-                                Res.get("portfolio.pending.bitcoinNotReleased", tradePeriodOverDate) :
-                                Res.get("portfolio.pending.tradeNotCompleted", tradePeriodOverDate);
+                                Res.get("portfolio.pending.bitcoinNotReleased", tradePeriodSectionDate) :
+                                Res.get("portfolio.pending.tradeNotCompleted", tradePeriodSectionDate);
                         timeLeftTextField.getStyleClass().add("error-text");
                         timeLeftProgressBar.getStyleClass().add("error");
                         showOpenDisputeButton();
@@ -351,6 +374,7 @@ public abstract class TradeStepView extends AnchorPane {
                         break;
                 }
 
+                timeLeftLabel.setText(Res.get("portfolio.pending.remainingTime", period));
                 timeLeftTextField.setText(tradePeriodInfo);
             }
         }
@@ -541,6 +565,7 @@ public abstract class TradeStepView extends AnchorPane {
         if (trade.getDisputeState() != Trade.DisputeState.DISPUTE_REQUESTED &&
                 trade.getDisputeState() != Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
             switch (tradePeriodState) {
+                case WAITING_FOR_BLOCKCHAIN_CONFIRMATION:
                 case FIRST_HALF:
                     break;
                 case SECOND_HALF:
@@ -549,6 +574,10 @@ public abstract class TradeStepView extends AnchorPane {
                     else
                         removeWarning();
                     break;
+                case PAYOUT_DELAY: //TODO
+                    break;
+                case RELEASE_BTC: //TODO
+                default:
                 case TRADE_PERIOD_OVER:
                     if (!model.dataModel.requirePayoutDelay()) {
                         onOpenForDispute();

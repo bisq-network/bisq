@@ -213,15 +213,12 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getOffer() != null ? dataModel.getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
     }
 
-    public String getTradePeriodOverDate() {
+    public String getTradePeriodSectionDate() {
         return btcFormatter.formatDateTime(dataModel.getTradePeriodSectionDate());
     }
 
-    public String getRemainingTradePeriod() {
-        long now = new Date().getTime();
-        long tradePeriodOverDate = dataModel.getTradePeriodSectionDate().getTime();
-        long remaining = tradePeriodOverDate - now;
-        return btcFormatter.formatDurationAsWords(remaining);
+    public String getRemainingTradePeriodAsWords() {
+        return btcFormatter.formatDurationAsWords(dataModel.getRemainingTradePeriod());
     }
 
     public String getMaxTradePeriodAsString() {
@@ -299,7 +296,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getDateForOpenDispute() {
-        return btcFormatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
+        return trade != null ? btcFormatter.formatDateTime(trade.getTradePeriodSectionDate()) : "";
     }
 
     public boolean showWarning() {
@@ -482,6 +479,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
             case BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG arrived
             case BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG in mailbox
+            case BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION:  //TODO
                 buyerState.set(BuyerState.STEP3);
                 break;
             case BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG:  // FIAT_PAYMENT_INITIATED_MSG failed

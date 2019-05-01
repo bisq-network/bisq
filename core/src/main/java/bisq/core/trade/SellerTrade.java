@@ -30,6 +30,8 @@ import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
 
+import java.util.Date;
+
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -62,6 +64,12 @@ public abstract class SellerTrade extends Trade {
                 BtcWalletService btcWalletService,
                 AccountScoreService accountScoreService) {
         super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
+    }
+
+    public void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        setFiatReceivedDate(new Date().getTime());
+        checkArgument(tradeProtocol instanceof SellerProtocol, "tradeProtocol NOT instanceof SellerProtocol");
+        ((SellerProtocol) tradeProtocol).onSendFiatPaymentReceivedMessage(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

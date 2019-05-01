@@ -36,8 +36,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.commons.lang3.time.DateUtils;
 
-import java.util.Date;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -47,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AccountCreationAgeService {
     public final static long PHASE_ONE_PERIOD = 30;
-    public final static long PERM_DELAY = 15;
+    public final static long PERM_DELAY = 30;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
 
@@ -284,15 +282,6 @@ public class AccountCreationAgeService {
         return getDelayInDays(myAccountAge, requiredAccountAge) * DateUtils.MILLIS_PER_DAY;
     }
 
-    /**
-     * @param trade     The trade for which we want to know the delayed payout date.
-     * @return The date of a delayed payout
-     */
-    public Date getDelayedTradePayoutDate(Trade trade) {
-        long delay = getDelay(trade);
-        long now = new Date().getTime();
-        return new Date(delay + now);
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Is in phase one period

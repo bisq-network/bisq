@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AccountCreationAgeServiceTest {
 
+    // TODO remove if we stick with 30 days fixed
     @Test
     public void testGetDelay() {
         long buyersAccountAge, requiredAccountAge, expected;
@@ -42,12 +43,12 @@ public class AccountCreationAgeServiceTest {
 
         requiredAccountAge = 30 * DateUtils.MILLIS_PER_DAY;
         buyersAccountAge = 15 * DateUtils.MILLIS_PER_DAY;
-        expected = 23;
+        expected = 30;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
 
         buyersAccountAge = 60 * DateUtils.MILLIS_PER_DAY;
-        expected = 15;
+        expected = 30;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
         buyersAccountAge = DateUtils.MILLIS_PER_DAY;
@@ -55,7 +56,7 @@ public class AccountCreationAgeServiceTest {
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
 
         buyersAccountAge = 2 * DateUtils.MILLIS_PER_DAY;
-        expected = 29;
+        expected = 30;
         assertEquals(expected, AccountCreationAgeService.getDelayInDays(buyersAccountAge, requiredAccountAge));
     }
 
