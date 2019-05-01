@@ -130,6 +130,9 @@ bg color of non edit textFields: fafafa
     -bs-rd-error-red: #dd0000; /* 5 usages */
     -bs-rd-message-bubble: #0086C6;
     -bs-toggle-selected: #7B7B7B;
+    -bs-level-bronze: #CD7F32;
+    -bs-level-silver: #A9A9A9;
+    -bs-level-gold: #DAA520;
 
     -bs-red: #D73030; /* 5 usages */
     -fx-box-border: -bs-rd-grey-medium-light;
@@ -198,15 +201,18 @@ bg color of non edit textFields: fafafa
 }
 
 .score-gold {
-    -fx-text-fill: #ffde5d;
+    -fx-fill: -bs-level-gold;
+    -fx-opacity: 1;
 }
 
 .score-silver {
-    -fx-text-fill: #d2d0d1;
+    -fx-fill: -bs-level-silver;
+    -fx-opacity: 1;
 }
 
 .score-bronze {
-    -fx-text-fill: #8f7837;
+    -fx-fill: -bs-level-bronze;
+    -fx-opacity: 1;
 }
 
 .delay-label {

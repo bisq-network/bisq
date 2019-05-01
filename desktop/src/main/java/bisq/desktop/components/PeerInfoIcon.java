@@ -38,8 +38,7 @@ import bisq.common.util.Utilities;
 
 import com.google.common.base.Charsets;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -62,6 +61,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.desktop.util.FormBuilder.getBigIconForLabel;
+import static bisq.desktop.util.FormBuilder.getIconForLabel;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -80,7 +81,7 @@ public class PeerInfoIcon extends Group {
     protected final Pane numTradesPane;
     private final String fullAddress;
     private final double scaleFactor;
-    private final Label delayLabel, categoryIcon, delayIcon, signIcon;
+    private final Label delayLabel, accountLevelIcon, delayIcon, signIcon;
     private final BSFormatter formatter;
     private String tooltipText;
 
@@ -286,22 +287,20 @@ public class PeerInfoIcon extends Group {
         tagPane.getChildren().addAll(tagCircle, tagLabel);
 
         //TODO just dummy impl.
-        categoryIcon = new Label();
-        categoryIcon.setLayoutX(-20);
-        categoryIcon.setLayoutY(5);
-        categoryIcon.setVisible(false);
-        categoryIcon.setManaged(false);
+        accountLevelIcon = new Label();
+        accountLevelIcon.setLayoutX(-30);
+        accountLevelIcon.setVisible(false);
+        accountLevelIcon.setManaged(false);
 
         delayIcon = new Label();
-        AwesomeDude.setIcon(delayIcon, AwesomeIcon.TIME);
-        delayIcon.setLayoutX(-40);
-        delayIcon.setLayoutY(5);
+        getIconForLabel(MaterialDesignIcon.CLOCK_FAST, delayIcon);
+        delayIcon.setLayoutX(-50);
         delayIcon.setVisible(false);
         delayIcon.setManaged(false);
 
         delayLabel = new Label();
-        delayLabel.setLayoutX(-53);
-        delayLabel.setLayoutY(20);
+        delayLabel.setLayoutX(-63);
+        delayLabel.setLayoutY(15);
         delayLabel.setMinWidth(40);
         delayLabel.setMaxWidth(40);
         delayLabel.getStyleClass().add("delay-label");
@@ -309,13 +308,12 @@ public class PeerInfoIcon extends Group {
         delayLabel.setManaged(false);
 
         signIcon = new Label();
-        AwesomeDude.setIcon(signIcon, AwesomeIcon.SHIELD);
-        signIcon.setLayoutX(-60);
-        signIcon.setLayoutY(5);
+        getIconForLabel(MaterialDesignIcon.APPROVAL, signIcon);
+        signIcon.setLayoutX(-70);
         signIcon.setVisible(false);
         signIcon.setManaged(false);
 
-        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, categoryIcon, delayIcon, delayLabel, signIcon);
+        getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane, accountLevelIcon, delayIcon, delayLabel, signIcon);
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
 
@@ -398,8 +396,8 @@ public class PeerInfoIcon extends Group {
                 optionalScoreInfo = accountScoreService.getScoreInfoForBuyer(trade);
             }
             boolean isScoreInfoPresent = optionalScoreInfo.isPresent();
-            categoryIcon.setVisible(isScoreInfoPresent);
-            categoryIcon.setManaged(isScoreInfoPresent);
+            accountLevelIcon.setVisible(isScoreInfoPresent);
+            accountLevelIcon.setManaged(isScoreInfoPresent);
             delayIcon.setVisible(isScoreInfoPresent);
             delayIcon.setManaged(isScoreInfoPresent);
             signIcon.setVisible(isScoreInfoPresent);
@@ -423,14 +421,14 @@ public class PeerInfoIcon extends Group {
                 delayLabel.setManaged(requireDelay);
 
                 if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
-                    categoryIcon.getStyleClass().addAll("score-gold");
-                    AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR);
+                    getBigIconForLabel(MaterialDesignIcon.SHIELD, accountLevelIcon)
+                            .getStyleClass().add("score-gold");
                 } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.SILVER) {
-                    categoryIcon.getStyleClass().addAll("score-silver");
-                    AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_HALF_EMPTY);
+                    getBigIconForLabel(MaterialDesignIcon.SHIELD_HALF_FULL, accountLevelIcon)
+                            .getStyleClass().add("score-silver");
                 } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.BRONZE) {
-                    categoryIcon.getStyleClass().addAll("score-bronze");
-                    AwesomeDude.setIcon(categoryIcon, AwesomeIcon.STAR_EMPTY);
+                    getBigIconForLabel(MaterialDesignIcon.SHIELD_OUTLINE, accountLevelIcon)
+                            .getStyleClass().add("score-bronze");
                 }
             }
         }

@@ -1710,6 +1710,14 @@ public class FormBuilder {
         }
     }
 
+    public static Text getIconForLabel(GlyphIcons icon, Label label) {
+        return getIconForLabel(icon, "1.231em", label);
+    }
+
+    public static Text getBigIconForLabel(GlyphIcons icon, Label label) {
+        return getIconForLabel(icon, "2em", label);
+    }
+
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {
         return getIconForLabel(icon, "0.769em", label);
     }
