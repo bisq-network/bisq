@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.Trade;
 
 import org.bitcoinj.core.Coin;
 
@@ -35,6 +36,17 @@ public class OfferRestrictions {
         return offer != null &&
                 PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) &&
                 isMinTradeAmountRisky(offer);
+    }
+
+    public static boolean isTradeRisky(Trade trade) {
+        if (trade == null)
+            return false;
+
+        Offer offer = trade.getOffer();
+        return offer != null &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) &&
+                trade.getTradeAmount() != null &&
+                isAmountRisky(trade.getTradeAmount());
     }
 
     public static boolean isMinTradeAmountRisky(Offer offer) {

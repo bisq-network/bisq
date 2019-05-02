@@ -17,7 +17,6 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
-import bisq.core.offer.Offer;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AccountAgeRestrictions;
 import bisq.core.trade.Trade;
@@ -40,11 +39,13 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
         try {
             runInterceptHook();
 
-            Offer offer = trade.getOffer();
-            if (OfferRestrictions.isOfferRisky(offer) &&
+            log.error("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}", OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade));
+            if (OfferRestrictions.isTradeRisky(trade) &&
                     AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
-                failed("Trade process failed because the buyer's payment account was created after March 15th 2019 and the payment method is considered " +
-                        "risky regarding chargeback risk.");
+                failed("Violation of security restrictions:\n" +
+                        "  - The peer's account was created after March 15th 2019\n" +
+                        "  - The trade amount is above 0.01 BTC\n" +
+                        "  - The payment method for that offer is considered risky for bank chargebacks\n");
             } else {
                 complete();
             }
