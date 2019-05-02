@@ -86,7 +86,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -256,20 +255,16 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         fillPaymentAccounts();
 
-        PaymentAccount account = null;
+        PaymentAccount account;
 
         PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 lastSelectedPaymentAccount.getTradeCurrencies().contains(tradeCurrency) &&
                 user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId().equals(lastSelectedPaymentAccount.getId())) &&
-                isPaymentAccountMatureForBuyOffer(lastSelectedPaymentAccount)) {
+                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId().equals(lastSelectedPaymentAccount.getId()))) {
             account = lastSelectedPaymentAccount;
         } else {
-            PaymentAccount firstPaymentAccountWithCurrency = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
-            if (firstPaymentAccountWithCurrency != null && isPaymentAccountMatureForBuyOffer(firstPaymentAccountWithCurrency)) {
-                account = firstPaymentAccountWithCurrency;
-            }
+            account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
         }
 
         if (account != null) {
@@ -277,9 +272,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         } else {
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
-                PaymentAccount anyPaymentAccount = paymentAccountOptional.get();
-                if (isPaymentAccountMatureForBuyOffer(anyPaymentAccount))
-                    this.paymentAccount = anyPaymentAccount;
+                this.paymentAccount = paymentAccountOptional.get();
+
             } else {
                 log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
@@ -433,7 +427,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount) && isPaymentAccountMatureForBuyOffer(paymentAccount)) {
+        if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
             volume.set(null);
             minVolume.set(null);
             price.set(null);
@@ -707,11 +701,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     private void fillPaymentAccounts() {
-        if (user.getPaymentAccounts() != null) {
-            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts().stream()
-                    .filter(this::isPaymentAccountMatureForBuyOffer)
-                    .collect(Collectors.toSet())));
-        }
+        if (user.getPaymentAccounts() != null)
+            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
     }
 
     protected void setAmount(Coin amount) {
