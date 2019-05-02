@@ -451,9 +451,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     FiatAccountsView.class,
                     "navigation.account");
         } else if (isRiskyBuyOfferWithImmatureAccountAge) {
-            new Popup<>().warning(Res.get("offerbook.warning.riskyBuyOfferWithImmatureAccountAge")).show();
+            new Popup<>().warning(Res.get("offerbook.warning.riskyBuyOfferWithImmatureAccountAge",
+                    Res.get("offerbook.warning.newVersionAnnouncement"))).show();
         } else if (!isSellOfferAndAnyTakerPaymentAccountForOfferMature) {
-            new Popup<>().warning(Res.get("offerbook.warning.sellOfferAndAnyTakerPaymentAccountForOfferMature")).show();
+            new Popup<>().warning(Res.get("offerbook.warning.sellOfferAndAnyTakerPaymentAccountForOfferMature",
+                    Res.get("offerbook.warning.newVersionAnnouncement"))).show();
         } else if (!hasSameProtocolVersion) {
             new Popup<>().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
         } else if (isIgnored) {

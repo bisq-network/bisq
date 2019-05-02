@@ -1,0 +1,50 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.payment;
+
+import bisq.core.offer.Offer;
+import bisq.core.trade.Trade;
+
+import bisq.common.util.Utilities;
+
+import java.util.Date;
+import java.util.GregorianCalendar;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class AccountAgeRestrictions {
+    public static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.MARCH, 15).getTime();
+
+    public static boolean isMakersAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, Offer offer) {
+        long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+        return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public static boolean isTradePeersAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, Trade trade) {
+        long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getTradingPeersAccountAge(trade);
+        return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public static boolean isMyAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount myPaymentAccount) {
+        long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
+        log.error("isMyAccountAgeImmature {}", accountCreationDate > SAFE_ACCOUNT_AGE_DATE);
+
+        return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+    }
+}

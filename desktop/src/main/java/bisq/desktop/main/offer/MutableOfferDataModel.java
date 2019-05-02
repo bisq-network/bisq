@@ -39,7 +39,6 @@ import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -443,12 +442,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             if (amount.get() != null)
                 this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
         }
-    }
-
-    private boolean isPaymentAccountMatureForBuyOffer(PaymentAccount paymentAccount) {
-        return direction == OfferPayload.Direction.SELL ||
-                !PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) ||
-                new Date().getTime() - accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) <= AccountAgeWitnessService.SAFE_ACCOUNT_AGE_DATE;
     }
 
     private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {

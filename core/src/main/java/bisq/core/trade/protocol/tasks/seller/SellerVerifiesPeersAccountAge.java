@@ -18,14 +18,12 @@
 package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitnessService;
-import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.offer.OfferRestrictions;
+import bisq.core.payment.AccountAgeRestrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
-
-import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,15 +41,10 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
             runInterceptHook();
 
             Offer offer = trade.getOffer();
-            if (offer != null && PaymentMethod.hasChargebackRisk(offer.getPaymentMethod())) {
-                AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();
-                long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getTradingPeersAccountAge(trade);
-                if (accountCreationDate <= AccountAgeWitnessService.SAFE_ACCOUNT_AGE_DATE) {
-                    complete();
-                } else {
-                    failed("Trade process failed because the buyer's payment account was created after March 15th 2019 and the payment method is considered " +
-                            "risky regarding chargeback risk.");
-                }
+            if (OfferRestrictions.isOfferRisky(offer) &&
+                    AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
+                failed("Trade process failed because the buyer's payment account was created after March 15th 2019 and the payment method is considered " +
+                        "risky regarding chargeback risk.");
             } else {
                 complete();
             }
