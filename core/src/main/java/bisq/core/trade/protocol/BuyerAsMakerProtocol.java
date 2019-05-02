@@ -27,6 +27,7 @@ import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.VerifyPeersAccountScore;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessFiatReceivedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
@@ -137,6 +138,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 CheckIfPeerIsBanned.class,
                 MakerVerifyTakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
+                VerifyPeersAccountScore.class,
                 MakerVerifyTakerFeePayment.class,
                 MakerCreateAndSignContract.class,
                 BuyerAsMakerCreatesAndSignsDepositTx.class,

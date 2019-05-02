@@ -24,6 +24,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
+import bisq.core.trade.Trade;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -83,12 +84,20 @@ public class BuyerStep3View extends TradeStepView {
 
     @Override
     protected String getInfoBlockTitle() {
-        return Res.get("portfolio.pending.step3_buyer.wait.headline");
+        if (model.getTrade().getState() == Trade.State.BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION) {
+            return Res.get("portfolio.pending.step3_buyer.wait.headline.delayedPayout");
+        } else {
+            return Res.get("portfolio.pending.step3_buyer.wait.headline");
+        }
     }
 
     @Override
     protected String getInfoText() {
-        return Res.get("portfolio.pending.step3_buyer.wait.info", model.dataModel.getCurrencyCode());
+        if (model.getTrade().getState() == Trade.State.BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION) {
+            return Res.get("portfolio.pending.step3_buyer.wait.info.delayedPayout", model.dataModel.getCurrencyCode());
+        } else {
+            return Res.get("portfolio.pending.step3_buyer.wait.info", model.dataModel.getCurrencyCode());
+        }
     }
 
     private void updateMessageStateInfo() {

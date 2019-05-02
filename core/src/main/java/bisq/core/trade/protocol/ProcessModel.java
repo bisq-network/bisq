@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.model.RawTransactionInput;
@@ -83,6 +84,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private User user;
     transient private FilterManager filterManager;
     transient private AccountAgeWitnessService accountAgeWitnessService;
+    transient private AccountScoreService accountScoreService;
     transient private TradeStatisticsManager tradeStatisticsManager;
     transient private ArbitratorManager arbitratorManager;
     transient private KeyRing keyRing;
@@ -232,6 +234,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          User user,
                                          FilterManager filterManager,
                                          AccountAgeWitnessService accountAgeWitnessService,
+                                         AccountScoreService accountScoreService,
                                          TradeStatisticsManager tradeStatisticsManager,
                                          ArbitratorManager arbitratorManager,
                                          KeyRing keyRing,
@@ -247,6 +250,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.user = user;
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.accountScoreService = accountScoreService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
         this.keyRing = keyRing;

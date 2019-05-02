@@ -529,6 +529,7 @@ public abstract class Trade implements Tradable, Model {
                 user,
                 filterManager,
                 accountAgeWitnessService,
+                accountScoreService,
                 tradeStatisticsManager,
                 arbitratorManager,
                 keyRing,

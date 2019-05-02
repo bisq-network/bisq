@@ -71,6 +71,7 @@ public class SellerStep3View extends TradeStepView {
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
     private boolean delayedPayoutInfoDisplayed;
+    private TitledGroupBg titledGroupBg;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +120,7 @@ public class SellerStep3View extends TradeStepView {
 
         addTradeInfoBlock();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3,
+        titledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3,
                 Res.get("portfolio.pending.step3_seller.confirmPaymentReceipt"), Layout.COMPACT_GROUP_DISTANCE);
 
         TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow,
@@ -311,6 +312,8 @@ public class SellerStep3View extends TradeStepView {
     private void updateFromTradeState(Trade.State state) {
         if (!trade.hasFailed()) {
             switch (state) {
+                case SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG:
+                    break;
                 case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
                     if (model.dataModel.requirePayoutDelay()) {
                         updateDelayPayoutControls();
@@ -455,6 +458,10 @@ public class SellerStep3View extends TradeStepView {
             }
             statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.delayedPayoutInfo",
                     model.dataModel.getFormattedDelayedPayoutDate()));
+
+            if (model.getTrade().getState() == Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT) {
+                titledGroupBg.setText(Res.get("portfolio.pending.step3_seller.payoutDelay"));
+            }
         }
     }
 
