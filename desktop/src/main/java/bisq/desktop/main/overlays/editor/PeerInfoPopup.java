@@ -80,13 +80,13 @@ import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
 @Slf4j
-public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
+public class PeerInfoPopup extends Overlay<PeerInfoPopup> {
     private final AccountScoreService accountScoreService;
     private final BSFormatter formatter;
     private final boolean useDevPrivilegeKeys;
     private InputTextField inputTextField;
     private Point2D position;
-    private static PeerInfoWithTagEditor INSTANCE;
+    private static PeerInfoPopup INSTANCE;
     private Consumer<String> saveHandler;
     private String hostName;
     private int numTrades;
@@ -98,12 +98,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     @Nullable
     private String accountAge;
 
-    public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
-                                 Offer offer,
-                                 Preferences preferences,
-                                 AccountScoreService accountScoreService,
-                                 BSFormatter formatter,
-                                 boolean useDevPrivilegeKeys) {
+    public PeerInfoPopup(PrivateNotificationManager privateNotificationManager,
+                         Offer offer,
+                         Preferences preferences,
+                         AccountScoreService accountScoreService,
+                         BSFormatter formatter,
+                         boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
         this.offer = offer;
         this.preferences = preferences;
@@ -117,27 +117,27 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
         INSTANCE = this;
     }
 
-    public PeerInfoWithTagEditor onSave(Consumer<String> saveHandler) {
+    public PeerInfoPopup onSave(Consumer<String> saveHandler) {
         this.saveHandler = saveHandler;
         return this;
     }
 
-    public PeerInfoWithTagEditor position(Point2D position) {
+    public PeerInfoPopup position(Point2D position) {
         this.position = position;
         return this;
     }
 
-    public PeerInfoWithTagEditor fullAddress(String hostName) {
+    public PeerInfoPopup fullAddress(String hostName) {
         this.hostName = hostName;
         return this;
     }
 
-    public PeerInfoWithTagEditor accountAge(@Nullable String accountAge) {
+    public PeerInfoPopup accountAge(@Nullable String accountAge) {
         this.accountAge = accountAge;
         return this;
     }
 
-    public PeerInfoWithTagEditor numTrades(int numTrades) {
+    public PeerInfoPopup numTrades(int numTrades) {
         this.numTrades = numTrades;
         if (numTrades == 0)
             width = 568;

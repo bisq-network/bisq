@@ -17,7 +17,7 @@
 
 package bisq.desktop.components;
 
-import bisq.desktop.main.overlays.editor.PeerInfoWithTagEditor;
+import bisq.desktop.main.overlays.editor.PeerInfoPopup;
 
 import bisq.core.account.score.AccountScoreCategory;
 import bisq.core.account.score.AccountScoreService;
@@ -349,7 +349,7 @@ public class PeerInfoIcon extends Group {
                         formatter.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, accountScoreService, formatter, useDevPrivilegeKeys)
+        setOnMouseClicked(e -> new PeerInfoPopup(privateNotificationManager, offer, preferences, accountScoreService, formatter, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
