@@ -425,8 +425,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     })
                     .width(725)
                     .show();
-        } else if (!model.hasMakerAnyMatureAccountForBuyOffer()) {
-            new Popup<>().warning(Res.get("offerbook.warning.makerHasNoMatureAccountForBuyOffer")).show();
         } else if (!model.hasAcceptedArbitrators()) {
             new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
         } else {
