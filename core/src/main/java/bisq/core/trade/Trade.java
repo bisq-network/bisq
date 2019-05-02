@@ -826,9 +826,8 @@ public abstract class Trade implements Tradable, Model {
         long maxTradePeriod = getMaxTradePeriod();
 
         long tradePeriodOverDate;
-        //TODO is 0 case handled correclty?
         long fiatReceivedDate = getFiatReceivedDate();
-
+        long payoutDelayStartDate = fiatReceivedDate > 0 ? fiatReceivedDate : tradePeriodStartTime + maxTradePeriod;
         switch (tradePeriodState) {
             case WAITING_FOR_BLOCKCHAIN_CONFIRMATION:
             case FIRST_HALF:
@@ -836,14 +835,14 @@ public abstract class Trade implements Tradable, Model {
                 tradePeriodOverDate = tradePeriodStartTime + maxTradePeriod;
                 break;
             case PAYOUT_DELAY:
-                tradePeriodOverDate = fiatReceivedDate + payoutDelay;
+                tradePeriodOverDate = payoutDelayStartDate + payoutDelay;
                 break;
             case RELEASE_BTC:
-                tradePeriodOverDate = fiatReceivedDate + payoutDelay + releaseTime;
+                tradePeriodOverDate = payoutDelayStartDate + payoutDelay + releaseTime;
                 break;
             case TRADE_PERIOD_OVER:
             default:
-                tradePeriodOverDate = fiatReceivedDate + payoutDelay + releaseTime;
+                tradePeriodOverDate = payoutDelayStartDate + payoutDelay + releaseTime;
                 break;
         }
         return new Date(tradePeriodOverDate);
