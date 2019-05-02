@@ -23,7 +23,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.SelectDepositTxWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
@@ -425,15 +424,22 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     }
                 });
 
-                if (candidates.size() == 1)
+                if (candidates.size() > 0) {
+                    log.error("Trade.depositTx is null. We take the first possible MultiSig tx just to be able to open a dispute. " +
+                            "candidates={}", candidates);
                     doOpenDispute(isSupportTicket, candidates.get(0));
-                else if (candidates.size() > 1)
+                }/* else if (candidates.size() > 1) {
+                // Let remove that as it confused users and was from little help
                     new SelectDepositTxWindow().transactions(candidates)
                             .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
-                else
-                    log.error("Trade.depositTx is null and we did not find any MultiSig transaction.");
+                }*/ else if (transactions.size() > 0) {
+                    doOpenDispute(isSupportTicket, transactions.get(0));
+                    log.error("Trade.depositTx is null and we did not find any MultiSig transaction. We take any random tx just to be able to open a dispute");
+                } else {
+                    log.error("Trade.depositTx is null and we did not find any transaction.");
+                }
             }
         } else {
             log.error("Trade is null");
