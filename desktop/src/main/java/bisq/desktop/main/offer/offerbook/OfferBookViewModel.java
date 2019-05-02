@@ -505,7 +505,17 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
-        return user.getPaymentAccounts() != null && PaymentAccountUtil.isAnyPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
+        return user.getPaymentAccounts() != null &&
+                PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
+    }
+
+    boolean isSellOfferAndAnyTakerPaymentAccountForOfferMature(Offer offer) {
+        return user.getPaymentAccounts() != null &&
+                PaymentAccountUtil.isSellOfferAndAnyTakerPaymentAccountForOfferMature(offer, user.getPaymentAccounts(), accountAgeWitnessService);
+    }
+
+    boolean isRiskyBuyOfferWithImmatureAccountAge(Offer offer) {
+        return user.getPaymentAccounts() != null && PaymentAccountUtil.isRiskyBuyOfferWithImmatureAccountAge(offer, accountAgeWitnessService);
     }
 
     boolean hasPaymentAccountForCurrency() {
@@ -513,6 +523,12 @@ class OfferBookViewModel extends ActivatableViewModel {
                 user.getPaymentAccounts() != null &&
                 !user.getPaymentAccounts().isEmpty()) ||
                 user.hasPaymentAccountForCurrency(selectedTradeCurrency);
+    }
+
+    boolean hasMakerAnyMatureAccountForBuyOffer() {
+        return direction == OfferPayload.Direction.SELL ||
+                (user.getPaymentAccounts() != null &&
+                        PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
     }
 
     boolean hasAcceptedArbitrators() {

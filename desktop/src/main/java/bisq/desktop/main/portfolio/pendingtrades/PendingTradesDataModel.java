@@ -35,6 +35,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
@@ -71,6 +72,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -83,6 +86,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final DisputeManager disputeManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
+    @Getter
+    private final AccountAgeWitnessService accountAgeWitnessService;
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -110,6 +115,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   Preferences preferences,
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
+                                  AccountAgeWitnessService accountAgeWitnessService,
                                   Navigation navigation,
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter) {
@@ -120,6 +126,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;

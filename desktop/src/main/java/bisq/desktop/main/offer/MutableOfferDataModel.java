@@ -39,6 +39,7 @@ import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -85,6 +86,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -254,16 +256,20 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         fillPaymentAccounts();
 
-        PaymentAccount account;
+        PaymentAccount account = null;
 
         PaymentAccount lastSelectedPaymentAccount = getPreselectedPaymentAccount();
         if (lastSelectedPaymentAccount != null &&
                 lastSelectedPaymentAccount.getTradeCurrencies().contains(tradeCurrency) &&
                 user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId().equals(lastSelectedPaymentAccount.getId()))) {
+                user.getPaymentAccounts().stream().anyMatch(paymentAccount -> paymentAccount.getId().equals(lastSelectedPaymentAccount.getId())) &&
+                isPaymentAccountMatureForBuyOffer(lastSelectedPaymentAccount)) {
             account = lastSelectedPaymentAccount;
         } else {
-            account = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+            PaymentAccount firstPaymentAccountWithCurrency = user.findFirstPaymentAccountWithCurrency(tradeCurrency);
+            if (firstPaymentAccountWithCurrency != null && isPaymentAccountMatureForBuyOffer(firstPaymentAccountWithCurrency)) {
+                account = firstPaymentAccountWithCurrency;
+            }
         }
 
         if (account != null) {
@@ -271,8 +277,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         } else {
             Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
             if (paymentAccountOptional.isPresent()) {
-                this.paymentAccount = paymentAccountOptional.get();
-
+                PaymentAccount anyPaymentAccount = paymentAccountOptional.get();
+                if (isPaymentAccountMatureForBuyOffer(anyPaymentAccount))
+                    this.paymentAccount = anyPaymentAccount;
             } else {
                 log.warn("PaymentAccount not available. Should never get called as in offer view you should not be able to open a create offer view");
                 return false;
@@ -426,7 +433,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
-        if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
+        if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount) && isPaymentAccountMatureForBuyOffer(paymentAccount)) {
             volume.set(null);
             minVolume.set(null);
             price.set(null);
@@ -442,6 +449,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             if (amount.get() != null)
                 this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
         }
+    }
+
+    private boolean isPaymentAccountMatureForBuyOffer(PaymentAccount paymentAccount) {
+        return direction == OfferPayload.Direction.SELL ||
+                !PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) ||
+                new Date().getTime() - accountAgeWitnessService.getMyAccountAge(paymentAccount.getPaymentAccountPayload()) <= AccountAgeWitnessService.SAFE_ACCOUNT_AGE_DATE;
     }
 
     private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
@@ -694,8 +707,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     private void fillPaymentAccounts() {
-        if (user.getPaymentAccounts() != null)
-            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
+        if (user.getPaymentAccounts() != null) {
+            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts().stream()
+                    .filter(this::isPaymentAccountMatureForBuyOffer)
+                    .collect(Collectors.toSet())));
+        }
     }
 
     protected void setAmount(Coin amount) {

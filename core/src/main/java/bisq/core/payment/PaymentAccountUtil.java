@@ -26,6 +26,7 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -37,18 +38,68 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class PaymentAccountUtil {
-    public static boolean isAnyPaymentAccountValidForOffer(Offer offer, Collection<PaymentAccount> paymentAccounts) {
-        for (PaymentAccount paymentAccount : paymentAccounts) {
-            if (isPaymentAccountValidForOffer(offer, paymentAccount))
+
+    public static boolean isRiskyBuyOfferWithImmatureAccountAge(Offer offer, AccountAgeWitnessService accountAgeWitnessService) {
+        long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+        return offer.isBuyOffer() &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) &&
+                accountCreationDate > AccountAgeWitnessService.SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public static boolean isSellOfferAndAnyTakerPaymentAccountForOfferMature(Offer offer,
+                                                                             Collection<PaymentAccount> takerPaymentAccounts,
+                                                                             AccountAgeWitnessService accountAgeWitnessService) {
+        if (offer.isBuyOffer() || !PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()))
+            return true;
+
+        for (PaymentAccount takerPaymentAccount : takerPaymentAccounts) {
+            if (isTakerPaymentAccountForOfferMature(offer, takerPaymentAccount, accountAgeWitnessService))
                 return true;
         }
         return false;
     }
 
-    public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer, Set<PaymentAccount> paymentAccounts) {
+    private static boolean isTakerPaymentAccountForOfferMature(Offer offer,
+                                                               PaymentAccount takerPaymentAccount,
+                                                               AccountAgeWitnessService accountAgeWitnessService) {
+        long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMyAccountAge(takerPaymentAccount.getPaymentAccountPayload());
+        return isTakerPaymentAccountValidForOffer(offer, takerPaymentAccount) &&
+                accountCreationDate <= AccountAgeWitnessService.SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public static boolean hasMakerAnyMatureAccountForBuyOffer(Collection<PaymentAccount> makerPaymentAccounts,
+                                                              AccountAgeWitnessService accountAgeWitnessService) {
+        for (PaymentAccount makerPaymentAccount : makerPaymentAccounts) {
+            if (hasMakerMatureAccountForBuyOffer(makerPaymentAccount, accountAgeWitnessService))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean hasMakerMatureAccountForBuyOffer(PaymentAccount makerPaymentAccount,
+                                                            AccountAgeWitnessService accountAgeWitnessService) {
+        if (!PaymentMethod.hasChargebackRisk(makerPaymentAccount.getPaymentMethod()))
+            return true;
+
+        long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMyAccountAge(makerPaymentAccount.getPaymentAccountPayload());
+        return accountCreationDate <= AccountAgeWitnessService.SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public static boolean isAnyTakerPaymentAccountValidForOffer(Offer offer, Collection<PaymentAccount> takerPaymentAccounts) {
+        for (PaymentAccount takerPaymentAccount : takerPaymentAccounts) {
+            if (isTakerPaymentAccountValidForOffer(offer, takerPaymentAccount))
+                return true;
+        }
+        return false;
+    }
+
+    public static ObservableList<PaymentAccount> getPossiblePaymentAccounts(Offer offer,
+                                                                            Set<PaymentAccount> paymentAccounts,
+                                                                            AccountAgeWitnessService accountAgeWitnessService) {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
-                .filter(paymentAccount -> isPaymentAccountValidForOffer(offer, paymentAccount))
+                .filter(paymentAccount -> isTakerPaymentAccountValidForOffer(offer, paymentAccount))
+                .filter(paymentAccount -> isTakerPaymentAccountForOfferMature(offer, paymentAccount, accountAgeWitnessService))
                 .collect(Collectors.toList()));
         return result;
     }
@@ -61,7 +112,7 @@ public class PaymentAccountUtil {
                 "Payment method from offer: " + offer.getPaymentMethod().toString();
     }
 
-    public static boolean isPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
+    public static boolean isTakerPaymentAccountValidForOffer(Offer offer, PaymentAccount paymentAccount) {
         return new ReceiptValidator(offer, paymentAccount).isValid();
     }
 
