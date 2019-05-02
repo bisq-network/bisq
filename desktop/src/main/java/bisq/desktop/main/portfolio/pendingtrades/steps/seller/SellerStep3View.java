@@ -89,54 +89,11 @@ public class SellerStep3View extends TradeStepView {
             if (trade.isFiatSent() && !trade.isFiatReceived()) {
                 showPopup();
             } else if (trade.isFiatReceived()) {
-                if (!trade.hasFailed()) {
-                    switch (state) {
-                        case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
-                            if (model.dataModel.requirePayoutDelay()) {
-                                handleDelayedPayout();
-                            } else {
-                                statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.confirmRelease",
-                                        model.dataModel.getFormattedBuyersAccountAge()));
-                                confirmButton.setText(Res.get("portfolio.pending.step3_seller.button.release").toUpperCase());
-
-                                busyAnimation.stop();
-                                confirmButton.setDisable(false);
-                            }
-                            break;
-                        case SELLER_PUBLISHED_PAYOUT_TX:
-                        case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
-                            if (model.dataModel.requirePayoutDelay()) {
-                                handleDelayedPayout();
-                            }
-                            break;
-                        case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
-                            busyAnimation.stop();
-                            statusLabel.setText(Res.get("shared.messageArrived"));
-                            break;
-                        case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
-                            busyAnimation.stop();
-                            statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
-                            break;
-                        case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
-                            // We get a popup and the trade closed, so we don't need to show anything here
-                            busyAnimation.stop();
-                            // confirmButton.setDisable(false);
-                            statusLabel.setText("");
-                            break;
-                        default:
-                            log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
-                            busyAnimation.stop();
-                            // confirmButton.setDisable(false);
-                            statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
-                            break;
-                    }
-                } else {
-                    log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
-                    // confirmButton.setDisable(true);
-                    statusLabel.setText("");
-                }
+                updateFromTradeState(state);
             }
         });
+
+        updateFromTradeState(trade.stateProperty().get());
     }
 
     @Override
@@ -269,7 +226,7 @@ public class SellerStep3View extends TradeStepView {
             confirmButton.setManaged(true);
             confirmButton.setDisable(false);
             confirmButton.setText(Res.get("portfolio.pending.step3_seller.releaseBtc").toUpperCase());
-            confirmButton.setOnAction(e -> releaseBtc());
+            confirmButton.setOnAction(e -> onReleaseBtc());
             statusLabel.setText("");
         }
     }
@@ -323,7 +280,7 @@ public class SellerStep3View extends TradeStepView {
         }
     }
 
-    private void releaseBtc() {
+    private void onReleaseBtc() {
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
         model.dataModel.onFiatPaymentReceived(() -> {
@@ -333,11 +290,69 @@ public class SellerStep3View extends TradeStepView {
             //if (notificationGroup != null)
             //   notificationGroup.setButtonVisible(false);
         }, errorMessage -> {
-            // confirmButton.setDisable(false);
             busyAnimation.stop();
             new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void updateTimeLeft() {
+        super.updateTimeLeft();
+
+        if (model.dataModel.requirePayoutDelay()) {
+            updateDelayPayoutControls();
+        }
+    }
+
+    private void updateFromTradeState(Trade.State state) {
+        if (!trade.hasFailed()) {
+            switch (state) {
+                case SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT:
+                    if (model.dataModel.requirePayoutDelay()) {
+                        updateDelayPayoutControls();
+                    } else {
+                        statusLabel.setText(Res.get("portfolio.pending.step3_seller.status.confirmRelease"));
+                        confirmButton.setText(Res.get("portfolio.pending.step3_seller.button.release").toUpperCase());
+
+                        busyAnimation.stop();
+                        confirmButton.setDisable(false);
+                    }
+                    break;
+                case SELLER_PUBLISHED_PAYOUT_TX:
+                case SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG:
+                    if (model.dataModel.requirePayoutDelay()) {
+                        updateDelayPayoutControls();
+                    }
+                    break;
+                case SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG:
+                    busyAnimation.stop();
+                    statusLabel.setText(Res.get("shared.messageArrived"));
+                    break;
+                case SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG:
+                    busyAnimation.stop();
+                    statusLabel.setText(Res.get("shared.messageStoredInMailbox"));
+                    break;
+                case SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG:
+                    // We get a popup and the trade closed, so we don't need to show anything here
+                    busyAnimation.stop();
+                    statusLabel.setText("");
+                    break;
+                default:
+                    log.warn("Unexpected case: State={}, tradeId={} " + state.name(), trade.getId());
+                    busyAnimation.stop();
+                    statusLabel.setText(Res.get("shared.sendingConfirmationAgain"));
+                    break;
+            }
+        } else {
+            log.warn("confirmButton gets disabled because trade contains error message {}", trade.getErrorMessage());
+            statusLabel.setText("");
+        }
+    }
+
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
@@ -393,14 +408,17 @@ public class SellerStep3View extends TradeStepView {
     }
 
     private void confirmPaymentReceived() {
-        // confirmButton.setDisable(true);
         busyAnimation.play();
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
-        if (!trade.isPayoutPublished())
-            trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
         if (model.dataModel.requirePayoutDelay()) {
-            handleDelayedPayout();
+            model.dataModel.sendFiatPaymentReceivedMessage(() -> {
+            }, errorMessage -> {
+                busyAnimation.stop();
+                new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            });
+
+            updateDelayPayoutControls();
         } else {
             model.dataModel.onFiatPaymentReceived(() -> {
                 // In case the first send failed we got the support button displayed.
@@ -409,15 +427,17 @@ public class SellerStep3View extends TradeStepView {
                 //if (notificationGroup != null)
                 //   notificationGroup.setButtonVisible(false);
             }, errorMessage -> {
-                // confirmButton.setDisable(false);
                 busyAnimation.stop();
                 new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
             });
         }
     }
 
-    private void handleDelayedPayout() {
-        if (!delayedPayoutInfoDisplayed) {
+    private void updateDelayPayoutControls() {
+        if (!delayedPayoutInfoDisplayed &&
+                confirmButton != null &&
+                model.getTrade() != null &&
+                model.getTrade().getState() == Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT) {
             delayedPayoutInfoDisplayed = true;
             confirmButton.setDisable(true);
             confirmButton.setVisible(false);

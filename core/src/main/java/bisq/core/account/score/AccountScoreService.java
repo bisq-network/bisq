@@ -82,10 +82,10 @@ public class AccountScoreService {
     }
 
     public boolean ignoreRestrictions(Offer offer) {
-        return ignoreRestrictions(offer.getPaymentMethod()) || ignoreRestrictions(offer.getAmount());
+        return ignoreRestrictionsByPaymentMethod(offer.getPaymentMethod()) || ignoreRestrictions(offer.getAmount());
     }
 
-    public boolean ignoreRestrictions(PaymentMethod paymentMethod) {
+    public boolean ignoreRestrictionsByPaymentMethod(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
             case PaymentMethod.BLOCK_CHAINS_ID:
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
@@ -142,7 +142,7 @@ public class AccountScoreService {
 
     public boolean tradeRequirePayoutDelay(Trade trade) {
         //TODO add signature domain
-        return accountCreationAgeService.tradeRequirePayoutDelay(trade);
+        return !ignoreRestrictions(trade.getOffer()) && accountCreationAgeService.tradeRequirePayoutDelay(trade);
     }
 
 
@@ -210,13 +210,15 @@ public class AccountScoreService {
         if (CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode())) {
             return Optional.empty();
         }
+        if (ignoreRestrictionsByPaymentMethod(offer.getPaymentMethod())) {
+            return Optional.empty();
+        }
 
         Optional<AccountScoreCategory> accountScoreCategory = getAccountScoreCategoryForMaker(offer);
         checkArgument(accountScoreCategory.isPresent(), "accountScoreCategory must be present");
         long accountAge = accountAgeWitnessService.getMakersAccountAge(offer);
 
         Optional<Long> signedTradeAge = Optional.empty();
-        ;
         Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
         Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
                 accountAgeWitnessService.getWitnessByHashAsHex(accountAgeWitnessHash.get()) :

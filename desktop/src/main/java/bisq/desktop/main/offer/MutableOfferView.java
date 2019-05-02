@@ -1097,7 +1097,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         NewBadge securityDepositBoxWithNewBadge = new NewBadge(getBuyerSecurityDepositBox(),
                 BUYER_SECURITY_DEPOSIT_NEWS, preferences);
 
-        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTradeFeeFieldsBox(), getTakerRestrictionFieldsBox());
+        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTakerRestrictionFieldsBox(), getTradeFeeFieldsBox());
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
                 Res.get("shared.nextStep"), Res.get("shared.cancel"));
@@ -1504,7 +1504,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         requireAuthorizedBuyerLabel = new InfoAutoTooltipLabel(Res.get("createOffer.takerRestriction.canSign"),
                 AwesomeIcon.QUESTION_SIGN,
                 ContentDisplay.RIGHT,
-                Res.get("createOffer.takerRestriction.canSign.info"));
+                Res.get("createOffer.takerRestriction.canSign.info",
+                        btcFormatter.formatTimePeriodInDays(model.getDataModel().accountScoreService.getPhaseOnePeriodAsMilli())));
         requireAuthorizedBuyerLabel.setId("trade-fee-textfield");
 
         requireAuthorizedTakerToggle = new AutoTooltipSlideToggleButton();

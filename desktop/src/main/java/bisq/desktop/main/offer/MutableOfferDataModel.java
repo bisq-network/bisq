@@ -103,7 +103,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     final String shortOfferId;
     private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final AccountScoreService accountScoreService;
+    final AccountScoreService accountScoreService;
     private final FeeService feeService;
     private final TxFeeEstimationService txFeeEstimationService;
     private final ReferralIdService referralIdService;
@@ -846,11 +846,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     boolean ignoreRestrictions() {
         return amount.get() == null ||
                 accountScoreService.ignoreRestrictions(amount.get()) ||
-                accountScoreService.ignoreRestrictions(paymentAccount.getPaymentMethod());
+                accountScoreService.ignoreRestrictionsByPaymentMethod(paymentAccount.getPaymentMethod());
     }
 
     boolean ignoreRestrictionsBasedOnPaymentMethod() {
-        return accountScoreService.ignoreRestrictions(paymentAccount.getPaymentMethod());
+        return accountScoreService.ignoreRestrictionsByPaymentMethod(paymentAccount.getPaymentMethod());
     }
 
     boolean isRequireAuthorizedTaker() {

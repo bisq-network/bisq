@@ -388,48 +388,59 @@ public class PeerInfoIcon extends Group {
 
         tagPane.setVisible(!tag.isEmpty());
 
-        if (!accountScoreService.ignoreRestrictions(offer)) {
-            Optional<ScoreInfo> optionalScoreInfo;
-            if (trade == null) {
-                optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
-            } else {
-                optionalScoreInfo = accountScoreService.getScoreInfoForBuyer(trade);
-            }
-            boolean isScoreInfoPresent = optionalScoreInfo.isPresent();
-            accountLevelIcon.setVisible(isScoreInfoPresent);
-            accountLevelIcon.setManaged(isScoreInfoPresent);
-            delayIcon.setVisible(isScoreInfoPresent);
-            delayIcon.setManaged(isScoreInfoPresent);
-            signIcon.setVisible(isScoreInfoPresent);
-            signIcon.setManaged(isScoreInfoPresent);
+        Optional<ScoreInfo> optionalScoreInfo;
+        boolean isSmallAmount;
+        if (trade == null) {
+            checkNotNull(offer, "offer must not be null");
+            optionalScoreInfo = accountScoreService.getScoreInfoForMaker(offer);
+            isSmallAmount = accountScoreService.ignoreRestrictions(offer.getAmount());
+        } else {
+            optionalScoreInfo = accountScoreService.getScoreInfoForBuyer(trade);
+            isSmallAmount = accountScoreService.ignoreRestrictions(trade.getTradeAmount());
+        }
 
-            if (isScoreInfoPresent) {
-                //TODO just dummy impl.
-                ScoreInfo scoreInfo = optionalScoreInfo.get();
-                boolean canSign = scoreInfo.isCanSign();
-                signIcon.setVisible(canSign);
-                signIcon.setManaged(canSign);
 
-                long requiredDelay = scoreInfo.getRequiredDelay();
-                String age = Utilities.toTruncatedString(formatter.formatAccountAge(requiredDelay), 8);
-                delayLabel.setText(age);
+        boolean isScoreInfoPresent = optionalScoreInfo.isPresent();
+        accountLevelIcon.setVisible(isScoreInfoPresent);
+        accountLevelIcon.setManaged(isScoreInfoPresent);
+        delayIcon.setVisible(isScoreInfoPresent);
+        delayIcon.setManaged(isScoreInfoPresent);
+        delayLabel.setVisible(isScoreInfoPresent);
+        delayLabel.setManaged(isScoreInfoPresent);
+        signIcon.setVisible(isScoreInfoPresent);
+        signIcon.setManaged(isScoreInfoPresent);
 
-                boolean requireDelay = requiredDelay > 0;
-                delayIcon.setVisible(requireDelay);
-                delayIcon.setManaged(requireDelay);
-                delayLabel.setVisible(requireDelay);
-                delayLabel.setManaged(requireDelay);
+        if (isScoreInfoPresent) {
+            double opacity = isSmallAmount ? 0.25 : 1;
+            accountLevelIcon.setOpacity(opacity);
+            delayIcon.setOpacity(opacity);
+            delayLabel.setOpacity(opacity);
+            signIcon.setOpacity(opacity);
 
-                if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
-                    getBigIconForLabel(MaterialDesignIcon.SHIELD, accountLevelIcon)
-                            .getStyleClass().add("score-gold");
-                } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.SILVER) {
-                    getBigIconForLabel(MaterialDesignIcon.SHIELD_HALF_FULL, accountLevelIcon)
-                            .getStyleClass().add("score-silver");
-                } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.BRONZE) {
-                    getBigIconForLabel(MaterialDesignIcon.SHIELD_OUTLINE, accountLevelIcon)
-                            .getStyleClass().add("score-bronze");
-                }
+            ScoreInfo scoreInfo = optionalScoreInfo.get();
+            boolean canSign = scoreInfo.isCanSign();
+            signIcon.setVisible(canSign);
+            signIcon.setManaged(canSign);
+
+            long requiredDelay = scoreInfo.getRequiredDelay();
+            String age = Utilities.toTruncatedString(formatter.formatAccountAge(requiredDelay), 8);
+            delayLabel.setText(age);
+
+            boolean requireDelay = requiredDelay > 0;
+            delayIcon.setVisible(requireDelay);
+            delayIcon.setManaged(requireDelay);
+            delayLabel.setVisible(requireDelay);
+            delayLabel.setManaged(requireDelay);
+
+            if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.GOLD) {
+                getBigIconForLabel(MaterialDesignIcon.SHIELD, accountLevelIcon)
+                        .getStyleClass().add("score-gold");
+            } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.SILVER) {
+                getBigIconForLabel(MaterialDesignIcon.SHIELD_HALF_FULL, accountLevelIcon)
+                        .getStyleClass().add("score-silver");
+            } else if (scoreInfo.getAccountScoreCategory() == AccountScoreCategory.BRONZE) {
+                getBigIconForLabel(MaterialDesignIcon.SHIELD_OUTLINE, accountLevelIcon)
+                        .getStyleClass().add("score-bronze");
             }
         }
     }

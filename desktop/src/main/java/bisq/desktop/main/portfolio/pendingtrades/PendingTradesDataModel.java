@@ -179,12 +179,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
-    public void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void sendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
 
         if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
-            ((SellerTrade) getTrade()).onSendFiatPaymentReceivedMessage(resultHandler, errorMessageHandler);
+            ((SellerTrade) getTrade()).sendFiatPaymentReceivedMessage(resultHandler, errorMessageHandler);
         }
     }
 

@@ -66,10 +66,10 @@ public abstract class SellerTrade extends Trade {
         super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
     }
 
-    public void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void sendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         setFiatReceivedDate(new Date().getTime());
         checkArgument(tradeProtocol instanceof SellerProtocol, "tradeProtocol NOT instanceof SellerProtocol");
-        ((SellerProtocol) tradeProtocol).onSendFiatPaymentReceivedMessage(resultHandler, errorMessageHandler);
+        ((SellerProtocol) tradeProtocol).sendFiatPaymentReceivedMessage(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

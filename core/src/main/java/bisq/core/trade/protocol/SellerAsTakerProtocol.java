@@ -181,7 +181,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // payout tx yet but only notify the peer about the receipt as well as sign their account witness in case we are
     // authorized to sign.
     @Override
-    public void onSendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void sendFiatPaymentReceivedMessage(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         sellerAsTakerTrade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
         TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,
                 () -> {

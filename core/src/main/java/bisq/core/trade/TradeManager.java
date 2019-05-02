@@ -658,7 +658,8 @@ public class TradeManager implements PersistedDataHost {
                 if (now.after(releaseBtcEndDate)) {
                     // We are over the time
                     trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                } else if ((trade instanceof BuyerTrade && trade.getState() == Trade.State.BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION) ||
+                } else if (!accountScoreService.ignoreRestrictions(trade.getOffer()) &&
+                        (trade instanceof BuyerTrade && trade.getState() == Trade.State.BUYER_RECEIVED_SELLERS_FIAT_PAYMENT_RECEIPT_CONFIRMATION) ||
                         (trade instanceof SellerTrade && trade.getState() == Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT)) {
                     // Seller has confirmed receipt but we are in delay phase or release phase
                     if (now.after(payoutDelayEndDate)) {
