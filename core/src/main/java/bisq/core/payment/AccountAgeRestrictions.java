@@ -18,6 +18,7 @@
 package bisq.core.payment;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.trade.Trade;
 
 import bisq.common.util.Utilities;
@@ -43,8 +44,14 @@ public class AccountAgeRestrictions {
 
     public static boolean isMyAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount myPaymentAccount) {
         long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        log.error("isMyAccountAgeImmature {}", accountCreationDate > SAFE_ACCOUNT_AGE_DATE);
-
         return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public static long getMyTradeLimitAtTakeOffer(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
+        if (AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, paymentAccount)) {
+            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        } else {
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
+        }
     }
 }
