@@ -30,9 +30,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class CheckIfPeerIsBanned extends TradeTask {
+public class ApplyFilter extends TradeTask {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public CheckIfPeerIsBanned(TaskRunner taskHandler, Trade trade) {
+    public ApplyFilter(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
