@@ -18,7 +18,9 @@
 package bisq.core.payment;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 
 import bisq.common.util.Utilities;
@@ -47,8 +49,31 @@ public class AccountAgeRestrictions {
         return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
     }
 
-    public static long getMyTradeLimitAtTakeOffer(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount paymentAccount, String currencyCode) {
-        if (AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, paymentAccount)) {
+    public static long getMyTradeLimitAtCreateOffer(AccountAgeWitnessService accountAgeWitnessService,
+                                                    PaymentAccount paymentAccount,
+                                                    String currencyCode,
+                                                    OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.BUY &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) &&
+                AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, paymentAccount)) {
+            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        } else {
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
+        }
+    }
+
+    public static long getMyTradeLimitAtTakeOffer(AccountAgeWitnessService accountAgeWitnessService,
+                                                  PaymentAccount paymentAccount,
+                                                  Offer offer,
+                                                  String currencyCode,
+                                                  OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.BUY && PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) &&
+                AccountAgeRestrictions.isMakersAccountAgeImmature(accountAgeWitnessService, offer)) {
+            // Taker is seller
+            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        } else if (direction == OfferPayload.Direction.SELL && PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) &&
+                AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, paymentAccount)) {
+            // Taker is buyer
             return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
         } else {
             return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);

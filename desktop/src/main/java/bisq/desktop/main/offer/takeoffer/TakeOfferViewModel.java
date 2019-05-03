@@ -373,10 +373,18 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
-                new Popup<>().information(Res.get("takeOffer.popup.tradeLimitDueAccountAgeRestriction",
-                        Res.get("offerbook.warning.newVersionAnnouncement")))
-                        .width(900)
-                        .show();
+                if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
+                    new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
+                            .width(900)
+                            .show();
+                } else {
+                    new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
+                            .width(900)
+                            .show();
+                }
+
             }
         }
     }

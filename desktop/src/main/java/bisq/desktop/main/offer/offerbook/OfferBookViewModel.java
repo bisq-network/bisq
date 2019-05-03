@@ -515,7 +515,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isRiskyBuyOfferWithImmatureAccountAge(Offer offer) {
-        return user.getPaymentAccounts() != null && PaymentAccountUtil.isRiskyBuyOfferWithImmatureAccountAge(offer, accountAgeWitnessService);
+        return PaymentAccountUtil.isRiskyBuyOfferWithImmatureAccountAge(offer, accountAgeWitnessService);
     }
 
     boolean hasPaymentAccountForCurrency() {

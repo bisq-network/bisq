@@ -61,7 +61,8 @@ public class PaymentAccountUtil {
     private static boolean isTakerAccountForOfferMature(Offer offer,
                                                         PaymentAccount takerPaymentAccount,
                                                         AccountAgeWitnessService accountAgeWitnessService) {
-        return !OfferRestrictions.isMinTradeAmountRisky(offer) ||
+        return !PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) ||
+                !OfferRestrictions.isMinTradeAmountRisky(offer) ||
                 (isTakerPaymentAccountValidForOffer(offer, takerPaymentAccount) &&
                         !AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, takerPaymentAccount));
     }

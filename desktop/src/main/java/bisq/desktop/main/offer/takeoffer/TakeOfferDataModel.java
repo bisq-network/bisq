@@ -430,7 +430,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
     long getMaxTradeLimit() {
         if (paymentAccount != null)
-            return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, getCurrencyCode());
+            return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, offer, getCurrencyCode(), getDirection());
         else
             return 0;
     }
