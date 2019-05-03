@@ -878,10 +878,9 @@ public class DisputeManager implements PersistedDataHost {
             }
             return;
         }
-
+        Dispute dispute = disputeOptional.get();
         try {
             cleanupRetryMap(uid);
-            Dispute dispute = disputeOptional.get();
             arbitratorsPubKeyRing = dispute.getArbitratorPubKeyRing();
             DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
             if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage))
@@ -997,7 +996,24 @@ public class DisputeManager implements PersistedDataHost {
 
                 success = true;
             }
-        } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
+        } catch (TransactionVerificationException e) {
+            e.printStackTrace();
+            errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
+            log.error(errorMessage);
+            success = false;
+
+            // We prefer to close the dispute in that case. If there was no deposit tx and a random tx was used
+            // we get a TransactionVerificationException. No reason to keep that dispute open...
+            if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
+                tradeManager.closeDisputedTrade(dispute.getTradeId());
+            else {
+                Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
+                openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
+            }
+            dispute.setIsClosed(true);
+
+            throw new RuntimeException(errorMessage);
+        } catch (AddressFormatException | WalletException e) {
             e.printStackTrace();
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
             log.error(errorMessage);

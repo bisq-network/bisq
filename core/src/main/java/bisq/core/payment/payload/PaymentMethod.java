@@ -316,4 +316,23 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public boolean isAsset() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
+
+    public static boolean hasChargebackRisk(PaymentMethod paymentMethod) {
+        if (paymentMethod == null)
+            return false;
+
+        String id = paymentMethod.getId();
+        return id.equals(PaymentMethod.SEPA_ID) ||
+                id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
+                id.equals(PaymentMethod.INTERAC_E_TRANSFER_ID) ||
+                id.equals(PaymentMethod.CLEAR_X_CHANGE_ID) ||
+                id.equals(PaymentMethod.REVOLUT_ID) ||
+                id.equals(PaymentMethod.NATIONAL_BANK_ID) ||
+                id.equals(PaymentMethod.SAME_BANK_ID) ||
+                id.equals(PaymentMethod.SPECIFIC_BANKS_ID) ||
+                id.equals(PaymentMethod.CHASE_QUICK_PAY_ID) ||
+                id.equals(PaymentMethod.POPMONEY_ID) ||
+                id.equals(PaymentMethod.MONEY_BEAM_ID) ||
+                id.equals(PaymentMethod.UPHOLD_ID);
+    }
 }

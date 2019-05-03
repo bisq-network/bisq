@@ -34,6 +34,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -371,6 +372,19 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                 if (dataModel.wouldCreateDustForMaker())
                     amountValidationResult.set(new InputValidator.ValidationResult(false,
                             Res.get("takeOffer.validation.amountLargerThanOfferAmountMinusFee")));
+            } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
+                if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
+                    new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
+                            .width(900)
+                            .show();
+                } else {
+                    new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
+                            .width(900)
+                            .show();
+                }
+
             }
         }
     }

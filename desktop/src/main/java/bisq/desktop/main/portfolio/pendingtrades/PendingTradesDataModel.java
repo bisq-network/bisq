@@ -23,7 +23,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.SelectDepositTxWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
@@ -35,6 +34,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
@@ -71,6 +71,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -83,6 +85,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final DisputeManager disputeManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
+    @Getter
+    private final AccountAgeWitnessService accountAgeWitnessService;
     public final Navigation navigation;
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
@@ -110,6 +114,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   Preferences preferences,
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
+                                  AccountAgeWitnessService accountAgeWitnessService,
                                   Navigation navigation,
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter) {
@@ -120,6 +125,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
@@ -418,15 +424,22 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     }
                 });
 
-                if (candidates.size() == 1)
+                if (candidates.size() > 0) {
+                    log.error("Trade.depositTx is null. We take the first possible MultiSig tx just to be able to open a dispute. " +
+                            "candidates={}", candidates);
                     doOpenDispute(isSupportTicket, candidates.get(0));
-                else if (candidates.size() > 1)
+                }/* else if (candidates.size() > 1) {
+                // Let remove that as it confused users and was from little help
                     new SelectDepositTxWindow().transactions(candidates)
                             .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
                             .closeButtonText(Res.get("shared.cancel"))
                             .show();
-                else
-                    log.error("Trade.depositTx is null and we did not find any MultiSig transaction.");
+                }*/ else if (transactions.size() > 0) {
+                    doOpenDispute(isSupportTicket, transactions.get(0));
+                    log.error("Trade.depositTx is null and we did not find any MultiSig transaction. We take any random tx just to be able to open a dispute");
+                } else {
+                    log.error("Trade.depositTx is null and we did not find any transaction.");
+                }
             }
         } else {
             log.error("Trade is null");

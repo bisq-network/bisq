@@ -35,6 +35,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
+import bisq.core.payment.AccountAgeRestrictions;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
@@ -185,8 +186,7 @@ class TakeOfferDataModel extends OfferDataModel {
         checkArgument(!possiblePaymentAccounts.isEmpty(), "possiblePaymentAccounts.isEmpty()");
         paymentAccount = getLastSelectedPaymentAccount();
 
-        long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
-        this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, myLimit)));
+        this.amount.set(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
 
         securityDeposit = offer.getDirection() == OfferPayload.Direction.SELL ?
                 getBuyerSecurityDeposit() :
@@ -304,7 +304,7 @@ class TakeOfferDataModel extends OfferDataModel {
             new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
             new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
-        } else if (filterManager.requireUpdateToNewVersion()) {
+        } else if (filterManager.requireUpdateToNewVersionForTrading()) {
             new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
@@ -373,7 +373,7 @@ class TakeOfferDataModel extends OfferDataModel {
         if (paymentAccount != null) {
             this.paymentAccount = paymentAccount;
 
-            long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+            long myLimit = getMaxTradeLimit();
             this.amount.set(Coin.valueOf(Math.max(offer.getMinAmount().value, Math.min(amount.get().value, myLimit))));
 
             preferences.setTakeOfferSelectedPaymentAccountId(paymentAccount.getId());
@@ -405,7 +405,7 @@ class TakeOfferDataModel extends OfferDataModel {
     ObservableList<PaymentAccount> getPossiblePaymentAccounts() {
         Set<PaymentAccount> paymentAccounts = user.getPaymentAccounts();
         checkNotNull(paymentAccounts, "paymentAccounts must not be null");
-        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, paymentAccounts);
+        return PaymentAccountUtil.getPossiblePaymentAccounts(offer, paymentAccounts, accountAgeWitnessService);
     }
 
     public PaymentAccount getLastSelectedPaymentAccount() {
@@ -430,10 +430,11 @@ class TakeOfferDataModel extends OfferDataModel {
 
     long getMaxTradeLimit() {
         if (paymentAccount != null)
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
+            return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, offer, getCurrencyCode(), getDirection());
         else
             return 0;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings, listeners
@@ -446,6 +447,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private void removeListeners() {
         btcWalletService.removeBalanceListener(balanceListener);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -468,8 +470,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     void applyAmount(Coin amount) {
-        long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, getCurrencyCode());
-        this.amount.set(Coin.valueOf(Math.min(amount.value, myLimit)));
+        this.amount.set(Coin.valueOf(Math.min(amount.value, getMaxTradeLimit())));
 
         calculateTotalToPay();
     }
