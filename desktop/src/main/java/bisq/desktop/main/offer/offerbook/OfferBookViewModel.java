@@ -574,7 +574,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean requireUpdateToNewVersion() {
-        return filterManager.requireUpdateToNewVersion();
+        return filterManager.requireUpdateToNewVersionForTrading();
     }
 
     boolean isInsufficientTradeLimit(Offer offer) {

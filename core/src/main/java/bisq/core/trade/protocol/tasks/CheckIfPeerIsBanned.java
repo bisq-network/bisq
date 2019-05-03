@@ -61,7 +61,7 @@ public class CheckIfPeerIsBanned extends TradeTask {
                 failed("Other trader is banned by his trading account data.\n" +
                         "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
-            } else if (processModel.getFilterManager().requireUpdateToNewVersion()) {
+            } else if (processModel.getFilterManager().requireUpdateToNewVersionForTrading()) {
                 failed("Your version of Bisq is not compatible for trading anymore. " +
                         "Please update to the latest Bisq version at https://bisq.network/downloads.");
             } else {
