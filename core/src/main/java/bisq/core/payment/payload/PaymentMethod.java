@@ -318,6 +318,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod) {
+        if (paymentMethod == null)
+            return false;
+
         String id = paymentMethod.getId();
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
