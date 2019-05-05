@@ -45,7 +45,7 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
         try {
             runInterceptHook();
 
-            if (CurrencyUtil.isFiatCurrency(trade.getOffer().getCurrencyCode())) {
+            if (trade.getOffer() != null && CurrencyUtil.isFiatCurrency(trade.getOffer().getCurrencyCode())) {
                 final AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();
                 final TradingPeer tradingPeer = processModel.getTradingPeer();
                 final PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),

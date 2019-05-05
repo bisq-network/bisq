@@ -27,7 +27,7 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "1.0.1";
+    public static final String VERSION = "1.1.0";
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
@@ -82,6 +82,7 @@ public class Version {
 
     // The version no. of the current protocol. The offer holds that version.
     // A taker will check the version of the offers to see if his version is compatible.
+    // Offers created with the old version will become invalid and have to be canceled.
     // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
     public static final int TRADE_PROTOCOL_VERSION = 1;
     private static int p2pMessageVersion;

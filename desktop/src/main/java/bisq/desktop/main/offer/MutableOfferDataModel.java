@@ -35,6 +35,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.payment.AccountAgeRestrictions;
 import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
@@ -438,9 +439,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
             buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(getPaymentAccount()));
 
-            long myLimit = accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
             if (amount.get() != null)
-                this.amount.set(Coin.valueOf(Math.min(amount.get().value, myLimit)));
+                this.amount.set(Coin.valueOf(Math.min(amount.get().value, getMaxTradeLimit())));
         }
     }
 
@@ -581,7 +581,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     long getMaxTradeLimit() {
         if (paymentAccount != null)
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get());
+            return AccountAgeRestrictions.getMyTradeLimitAtCreateOffer(accountAgeWitnessService, paymentAccount, tradeCurrencyCode.get(), direction);
         else
             return 0;
     }

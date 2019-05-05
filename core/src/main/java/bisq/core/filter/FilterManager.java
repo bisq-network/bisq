@@ -350,7 +350,7 @@ public class FilterManager {
                         .anyMatch(e -> e.equals(nodeAddress.getFullAddress()));
     }
 
-    public boolean requireUpdateToNewVersion() {
+    public boolean requireUpdateToNewVersionForTrading() {
         if (getFilter() == null) {
             return false;
         }
@@ -359,6 +359,20 @@ public class FilterManager {
         String getDisableTradeBelowVersion = getFilter().getDisableTradeBelowVersion();
         if (getDisableTradeBelowVersion != null && !getDisableTradeBelowVersion.isEmpty()) {
             requireUpdateToNewVersion = Version.isNewVersion(getDisableTradeBelowVersion);
+        }
+
+        return requireUpdateToNewVersion;
+    }
+
+    public boolean requireUpdateToNewVersionForDAO() {
+        if (getFilter() == null) {
+            return false;
+        }
+
+        boolean requireUpdateToNewVersion = false;
+        String disableDaoBelowVersion = getFilter().getDisableDaoBelowVersion();
+        if (disableDaoBelowVersion != null && !disableDaoBelowVersion.isEmpty()) {
+            requireUpdateToNewVersion = Version.isNewVersion(disableDaoBelowVersion);
         }
 
         return requireUpdateToNewVersion;

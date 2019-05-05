@@ -23,7 +23,7 @@ import bisq.core.trade.messages.DepositTxPublishedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
@@ -129,7 +129,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 });
         taskRunner.addTasks(
                 MakerProcessPayDepositRequest.class,
-                CheckIfPeerIsBanned.class,
+                ApplyFilter.class,
                 MakerVerifyTakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
                 MakerVerifyTakerFeePayment.class,
@@ -186,7 +186,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                         handleTaskRunnerFault(errorMessage);
                     });
             taskRunner.addTasks(
-                    CheckIfPeerIsBanned.class,
+                    ApplyFilter.class,
                     MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
                     BuyerAsMakerSignPayoutTx.class,

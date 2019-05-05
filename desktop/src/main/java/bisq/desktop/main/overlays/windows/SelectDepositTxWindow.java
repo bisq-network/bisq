@@ -40,14 +40,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 
+//TODO might be removed, but leave it for now until sure we will not use it anymore.
 public class SelectDepositTxWindow extends Overlay<SelectDepositTxWindow> {
-    private static final Logger log = LoggerFactory.getLogger(SelectDepositTxWindow.class);
-
     private ComboBox<Transaction> transactionsComboBox;
     private List<Transaction> transactions;
     private Optional<Consumer<Transaction>> selectHandlerOptional;

@@ -18,6 +18,8 @@
 package bisq.core.offer;
 
 import bisq.core.app.AppOptionKeys;
+import bisq.core.filter.FilterManager;
+import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.network.p2p.BootstrapListener;
@@ -63,6 +65,7 @@ public class OfferBookService {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final List<OfferBookChangedListener> offerBookChangedListeners = new LinkedList<>();
+    private final FilterManager filterManager;
     private final JsonFileManager jsonFileManager;
 
 
@@ -73,10 +76,12 @@ public class OfferBookService {
     @Inject
     public OfferBookService(P2PService p2PService,
                             PriceFeedService priceFeedService,
+                            FilterManager filterManager,
                             @Named(Storage.STORAGE_DIR) File storageDir,
                             @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.filterManager = filterManager;
         jsonFileManager = new JsonFileManager(storageDir);
 
         p2PService.addHashSetChangedListener(new HashMapChangedListener() {
@@ -132,6 +137,11 @@ public class OfferBookService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (filterManager.requireUpdateToNewVersionForTrading()) {
+            errorMessageHandler.handleErrorMessage(Res.get("popup.warning.mandatoryUpdate.trading"));
+            return;
+        }
+
         boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload(), true);
         if (result) {
             resultHandler.handleResult();
@@ -141,6 +151,11 @@ public class OfferBookService {
     }
 
     public void refreshTTL(OfferPayload offerPayload, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (filterManager.requireUpdateToNewVersionForTrading()) {
+            errorMessageHandler.handleErrorMessage(Res.get("popup.warning.mandatoryUpdate.trading"));
+            return;
+        }
+
         boolean result = p2PService.refreshTTL(offerPayload, true);
         if (result) {
             resultHandler.handleResult();

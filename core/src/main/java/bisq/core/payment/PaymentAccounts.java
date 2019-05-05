@@ -39,7 +39,7 @@ class PaymentAccounts {
     private final BiFunction<Offer, PaymentAccount, Boolean> validator;
 
     PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service) {
-        this(accounts, service, PaymentAccountUtil::isPaymentAccountValidForOffer);
+        this(accounts, service, PaymentAccountUtil::isTakerPaymentAccountValidForOffer);
     }
 
     PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service,

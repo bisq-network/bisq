@@ -23,13 +23,14 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerVerifiesPeersAccountAge;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignAndPublishDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
@@ -137,9 +138,10 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 TakerProcessPublishDepositTxRequest.class,
-                CheckIfPeerIsBanned.class,
+                ApplyFilter.class,
                 TakerVerifyMakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
+                SellerVerifiesPeersAccountAge.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 TakerPublishFeeTx.class,
@@ -192,7 +194,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     });
 
             taskRunner.addTasks(
-                    CheckIfPeerIsBanned.class,
+                    ApplyFilter.class,
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     SellerSignAndFinalizePayoutTx.class,
@@ -217,7 +219,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                     });
 
             taskRunner.addTasks(
-                    CheckIfPeerIsBanned.class,
+                    ApplyFilter.class,
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
                     SellerSendPayoutTxPublishedMessage.class

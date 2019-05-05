@@ -649,11 +649,28 @@ public class BisqSetup {
         filterManager.onAllServicesInitialized();
         filterManager.addListener(filter -> {
             if (filter != null && filterWarningHandler != null) {
-                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty())
-                    filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
+                    log.warn(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                    // Lets keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
+                }
 
-                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty())
-                    filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
+                    log.warn(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                    // Lets keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
+                }
+
+                if (filterManager.requireUpdateToNewVersionForTrading()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.trading"));
+                }
+
+                if (filterManager.requireUpdateToNewVersionForDAO()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.mandatoryUpdate.dao"));
+                }
+                if (filter.isDisableDao()) {
+                    filterWarningHandler.accept(Res.get("popup.warning.disable.dao"));
+                }
             }
         });
 

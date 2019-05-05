@@ -301,7 +301,7 @@ public class BuyerStep2View extends TradeStepView {
         if (trade != null && model.getUser().getPaymentAccounts() != null) {
             Offer offer = trade.getOffer();
             List<PaymentAccount> possiblePaymentAccounts = PaymentAccountUtil.getPossiblePaymentAccounts(offer,
-                    model.getUser().getPaymentAccounts());
+                    model.getUser().getPaymentAccounts(), model.dataModel.getAccountAgeWitnessService());
             PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
             if (buyersPaymentAccountPayload != null && possiblePaymentAccounts.size() > 1) {
                 String id = buyersPaymentAccountPayload.getId();

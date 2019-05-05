@@ -26,7 +26,7 @@ import bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
 import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
 import bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
 import bisq.core.offer.placeoffer.tasks.ValidateOffer;
-import bisq.core.trade.protocol.tasks.CheckIfPeerIsBanned;
+import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
@@ -107,7 +107,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
         addGroup("BuyerAsMakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,
@@ -120,7 +120,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerVerifyTakerFeePayment.class,
                         PublishTradeStatistics.class,
 
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         BuyerAsMakerSignPayoutTx.class,
@@ -137,7 +137,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         TakerSendPayDepositRequest.class,
 
                         TakerProcessPublishDepositTxRequest.class,
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         TakerVerifyAndSignContract.class,
@@ -148,7 +148,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
 
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         SellerSignAndFinalizePayoutTx.class,
@@ -164,14 +164,14 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         TakerSendPayDepositRequest.class,
 
                         TakerProcessPublishDepositTxRequest.class,
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         TakerVerifyAndSignContract.class,
                         BuyerAsTakerSignAndPublishDepositTx.class,
                         TakerSendDepositTxPublishedMessage.class,
 
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         TakerVerifyMakerAccount.class,
                         TakerVerifyMakerFeePayment.class,
                         BuyerAsMakerSignPayoutTx.class,
@@ -181,7 +181,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
         addGroup("SellerAsMakerProtocol",
                 FXCollections.observableArrayList(Arrays.asList(
                         MakerProcessPayDepositRequest.class,
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,
@@ -198,7 +198,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
 
-                        CheckIfPeerIsBanned.class,
+                        ApplyFilter.class,
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         SellerSignAndFinalizePayoutTx.class,
