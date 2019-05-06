@@ -43,7 +43,7 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
             if (OfferRestrictions.isTradeRisky(trade) &&
                     AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
                 failed("Violation of security restrictions:\n" +
-                        "  - The peer's account was created after March 15th 2019\n" +
+                        "  - The peer's account was created after March 1st 2019\n" +
                         "  - The trade amount is above 0.01 BTC\n" +
                         "  - The payment method for that offer is considered risky for bank chargebacks\n");
             } else {
