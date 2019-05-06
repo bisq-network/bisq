@@ -47,7 +47,7 @@ public class ClearXchangeForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ((ClearXchangeAccountPayload) paymentAccountPayload).getHolderName());
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email.mobile"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.email.mobile"),
                 ((ClearXchangeAccountPayload) paymentAccountPayload).getEmailOrMobileNr());
         return gridRow;
     }

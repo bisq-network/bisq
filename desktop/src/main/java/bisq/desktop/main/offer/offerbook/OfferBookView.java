@@ -436,7 +436,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private void onShowInfo(Offer offer,
                             boolean isPaymentAccountValidForOffer,
                             boolean isRiskyBuyOfferWithImmatureAccountAge,
-                            boolean isSellOfferAndAnyTakerPaymentAccountForOfferMature,
+                            boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature,
                             boolean hasSameProtocolVersion,
                             boolean isIgnored,
                             boolean isOfferBanned,
@@ -453,7 +453,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         } else if (isRiskyBuyOfferWithImmatureAccountAge) {
             new Popup<>().warning(Res.get("offerbook.warning.riskyBuyOfferWithImmatureAccountAge",
                     Res.get("offerbook.warning.newVersionAnnouncement"))).show();
-        } else if (!isSellOfferAndAnyTakerPaymentAccountForOfferMature) {
+        } else if (isSellOfferAndAllTakerPaymentAccountsForOfferImmature) {
             new Popup<>().warning(Res.get("offerbook.warning.sellOfferAndAnyTakerPaymentAccountForOfferMature",
                     Res.get("offerbook.warning.newVersionAnnouncement"))).show();
         } else if (!hasSameProtocolVersion) {
@@ -821,7 +821,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
                             boolean isTradable, isPaymentAccountValidForOffer, isRiskyBuyOfferWithImmatureAccountAge,
-                                    isSellOfferAndAnyTakerPaymentAccountForOfferMature,
+                                    isSellOfferAndAllTakerPaymentAccountsForOfferImmature,
                                     hasSameProtocolVersion, isIgnored, isOfferBanned, isCurrencyBanned,
                                     isPaymentMethodBanned, isNodeAddressBanned, isInsufficientTradeLimit,
                                     requireUpdateToNewVersion;
@@ -844,7 +844,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     if (tableRow != null) {
                                         isPaymentAccountValidForOffer = model.isAnyPaymentAccountValidForOffer(offer);
                                         isRiskyBuyOfferWithImmatureAccountAge = model.isRiskyBuyOfferWithImmatureAccountAge(offer);
-                                        isSellOfferAndAnyTakerPaymentAccountForOfferMature = model.isSellOfferAndAnyTakerPaymentAccountForOfferMature(offer);
+                                        isSellOfferAndAllTakerPaymentAccountsForOfferImmature = model.isSellOfferAndAllTakerPaymentAccountsForOfferImmature(offer);
                                         hasSameProtocolVersion = model.hasSameProtocolVersion(offer);
                                         isIgnored = model.isIgnored(offer);
                                         isOfferBanned = model.isOfferBanned(offer);
@@ -855,7 +855,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         isInsufficientTradeLimit = model.isInsufficientTradeLimit(offer);
                                         isTradable = isPaymentAccountValidForOffer &&
                                                 !isRiskyBuyOfferWithImmatureAccountAge &&
-                                                isSellOfferAndAnyTakerPaymentAccountForOfferMature &&
+                                                !isSellOfferAndAllTakerPaymentAccountsForOfferImmature &&
                                                 hasSameProtocolVersion &&
                                                 !isIgnored &&
                                                 !isOfferBanned &&
@@ -879,7 +879,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                                     onShowInfo(offer,
                                                             isPaymentAccountValidForOffer,
                                                             isRiskyBuyOfferWithImmatureAccountAge,
-                                                            isSellOfferAndAnyTakerPaymentAccountForOfferMature,
+                                                            isSellOfferAndAllTakerPaymentAccountsForOfferImmature,
                                                             hasSameProtocolVersion,
                                                             isIgnored,
                                                             isOfferBanned,
@@ -921,7 +921,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setOnAction(e -> onShowInfo(offer,
                                                 isPaymentAccountValidForOffer,
                                                 isRiskyBuyOfferWithImmatureAccountAge,
-                                                isSellOfferAndAnyTakerPaymentAccountForOfferMature,
+                                                isSellOfferAndAllTakerPaymentAccountsForOfferImmature,
                                                 hasSameProtocolVersion,
                                                 isIgnored,
                                                 isOfferBanned,
