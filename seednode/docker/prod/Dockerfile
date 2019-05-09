@@ -2,6 +2,7 @@ FROM openjdk:11
 ENV APP_NAME=seednode
 ENV NODE_PORT=8000
 EXPOSE 8000
+EXPOSE 5120
 WORKDIR /home/bisq/seednode
 COPY ./build/ ./build/
 COPY ./docker/*.sh ./docker/
