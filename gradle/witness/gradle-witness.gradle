@@ -43,7 +43,7 @@ dependencyVerification {
         'com.google.code.findbugs:jsr305:766ad2a0783f2687962c8ad74ceecc38a28b9f72a2d085ee438b7813e928d0c7',
         'com.google.guava:guava:e1c814fd04492a27c38e0317eabeaa1b3e950ec8010239e400fe90ad6c9107b4',
         'com.google.inject:guice:9b9df27a5b8c7864112b4137fd92b36c3f1395bfe57be42fedf2f520ead1a93e',
-        'com.github.bisq-network:bitcoinj:47dd30f2872ee7dd57efc6247a3cc4b40e7c43892ad1b960d46e1f883324792d',
+        'com.github.bisq-network:bitcoinj:7a5c1dc4697a29e37d6290445096d8e8b80ee7171d18b101c695304d69598a4c',
         'com.github.JesusMcCloud.netlayer:tor:35cf892e6ce3a8d942cfd2b589cfbde5aed31d49777aee873d6614e134df0b42',
         'org.jetbrains.kotlin:kotlin-stdlib-jdk8:193ab7813e4d249f2ea4fc1b968fea8c2126bcbeeb5d6127050ce1b93dbaa7c2',
         'io.github.microutils:kotlin-logging:4992504fd3c6ecdf9ed10874b9508e758bb908af9e9d7af19a61e9afb6b7e27a',
