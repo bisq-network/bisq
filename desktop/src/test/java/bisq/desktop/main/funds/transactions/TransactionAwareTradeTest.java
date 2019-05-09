@@ -23,6 +23,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Trade;
 
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javafx.collections.FXCollections;
@@ -38,7 +39,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class TransactionAwareTradeTest {
-    private static final String XID = "123";
+    private static final Sha256Hash XID = Sha256Hash.wrap("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
+
+
 
     private Transaction transaction;
     private ArbitrationManager arbitrationManager;
@@ -50,7 +53,7 @@ public class TransactionAwareTradeTest {
     @Before
     public void setUp() {
         this.transaction = mock(Transaction.class);
-        when(transaction.getTxId().toString()).thenReturn(XID);
+        when(transaction.getTxId()).thenReturn(XID);
 
         delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
         arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
@@ -61,25 +64,25 @@ public class TransactionAwareTradeTest {
 
     @Test
     public void testIsRelatedToTransactionWhenTakerOfferFeeTx() {
-        when(delegate.getTakerFeeTxId()).thenReturn(XID);
+        when(delegate.getTakerFeeTxId()).thenReturn(XID.toString());
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
     @Test
     public void testIsRelatedToTransactionWhenPayoutTx() {
-        when(delegate.getPayoutTx().getTxId().toString()).thenReturn(XID);
+        when(delegate.getPayoutTx().getTxId()).thenReturn(XID);
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
     @Test
     public void testIsRelatedToTransactionWhenDepositTx() {
-        when(delegate.getDepositTx().getTxId().toString()).thenReturn(XID);
+        when(delegate.getDepositTx().getTxId()).thenReturn(XID);
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
     @Test
     public void testIsRelatedToTransactionWhenOfferFeeTx() {
-        when(delegate.getOffer().getOfferFeePaymentTxId()).thenReturn(XID);
+        when(delegate.getOffer().getOfferFeePaymentTxId()).thenReturn(XID.toString());
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
@@ -88,7 +91,7 @@ public class TransactionAwareTradeTest {
         final String tradeId = "7";
 
         Dispute dispute = mock(Dispute.class);
-        when(dispute.getDisputePayoutTxId()).thenReturn(XID);
+        when(dispute.getDisputePayoutTxId()).thenReturn(XID.toString());
         when(dispute.getTradeId()).thenReturn(tradeId);
 
         when(arbitrationManager.getDisputesAsObservableList())
