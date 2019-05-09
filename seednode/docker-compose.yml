@@ -19,7 +19,6 @@ services:
           bisq_net:
             ipv4_address: 172.28.1.3
         volumes:
-            - ./hiddenservice:${TOR_HIDDEN_SERVICE_DIR}
             - ./local:${WORKING_DIR}
         environment:
             - GRADLE_USER_HOME=/home/gradle
