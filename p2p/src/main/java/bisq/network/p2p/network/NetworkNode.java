@@ -455,9 +455,4 @@ public abstract class NetworkNode implements MessageListener {
     public NodeAddress getNodeAddress() {
         return nodeAddressProperty.get();
     }
-
-    @Nullable
-    public ObjectProperty<NodeAddress> getNodeAddressProperty() {
-        return nodeAddressProperty;
-    }
 }
