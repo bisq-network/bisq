@@ -268,6 +268,11 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                                     // we only notify if our request was latest
                                     if (startBlockHeight >= lastReceivedBlockHeight) {
                                         lastReceivedBlockHeight = startBlockHeight;
+
+                                        // After we received the blocks we allow to disconnect seed nodes.
+                                        // We delay 20 seconds to allow multiple requests to finish.
+                                        UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
+
                                         listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse));
                                     } else {
                                         log.warn("We got a response which is already obsolete because we receive a " +

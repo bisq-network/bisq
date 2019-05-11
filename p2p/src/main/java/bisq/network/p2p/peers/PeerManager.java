@@ -56,6 +56,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -78,9 +79,10 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     // Age of what we consider connected peers still as live peers
     private static final long MAX_AGE_LIVE_PEERS = TimeUnit.MINUTES.toMillis(30);
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
-    private long allowDisconnectSeedNodesTs;
+    @Setter
     private boolean allowDisconnectSeedNodes;
     private Set<Peer> latestLivePeers = new HashSet<>();
+
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -215,25 +217,15 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         maxConnectionsAbsolute = Math.max(12, (int) Math.round(maxConnections * 2.5));            // app node 30; seedNode 66
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onConnection(Connection connection) {
-        if (!allowDisconnectSeedNodes) {
-            if (allowDisconnectSeedNodesTs == 0) {
-                allowDisconnectSeedNodesTs = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(3);
-            }
-            // We do not want to disconnect seed nodes at start up as we would not get the response of our blockRequests
-            // Those requests should be happen soon after start up, to be on the safe side we give it 3 minutes.
-            // If seed nodes get too heavy under load we still might get disconnected from their side.
-            allowDisconnectSeedNodes = System.currentTimeMillis() > allowDisconnectSeedNodesTs;
-        }
-
-        final boolean seedNode = isSeedNode(connection);
-
-        final Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
+        boolean seedNode = isSeedNode(connection);
+        Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
         log.debug("onConnection: peer = {}{}",
                 (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
                 seedNode ? " (SeedNode)" : "");
@@ -398,7 +390,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                         .collect(Collectors.toList());
 
                 if (!seedNodes.isEmpty()) {
-                    seedNodes.sort((o1, o2) -> ((Long) o1.getStatistic().getLastActivityTimestamp()).compareTo(((Long) o2.getStatistic().getLastActivityTimestamp())));
+                    seedNodes.sort(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()));
                     log.debug("Number of seed node connections to disconnect. Current size=" + seedNodes.size());
                     Connection connection = seedNodes.get(0);
                     log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
