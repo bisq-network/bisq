@@ -91,6 +91,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     public void start() {
         networkNode.addMessageListener(this);
         peerManager.addListener(this);
+        peerManager.setAllowDisconnectSeedNodes(true);
     }
 
     @SuppressWarnings("Duplicates")

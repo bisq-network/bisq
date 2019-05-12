@@ -272,7 +272,7 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         nodeAddressSubscription = EasyBind.subscribe(p2PService.getNetworkNode().nodeAddressProperty(),
                 nodeAddress -> onionAddress.setText(nodeAddress == null ?
                         Res.get("settings.net.notKnownYet") :
-                        p2PService.getAddress().getFullAddress()));
+                        nodeAddress.getFullAddress()));
         numP2PPeersSubscription = EasyBind.subscribe(p2PService.getNumConnectedPeers(), numPeers -> updateP2PTable());
         totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(),
                 Statistic.totalReceivedBytesProperty(),
