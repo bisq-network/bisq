@@ -25,7 +25,6 @@ bisq.asset.coins.Byteball
 bisq.asset.coins.Cash2
 bisq.asset.coins.Chaucha
 bisq.asset.coins.CloakCoin
-bisq.asset.tokens.CMBToken
 bisq.asset.coins.Counterparty
 bisq.asset.coins.Credits
 bisq.asset.coins.Croat
@@ -97,6 +96,7 @@ bisq.asset.coins.Zcoin
 bisq.asset.coins.ZelCash
 bisq.asset.coins.Zero
 bisq.asset.tokens.AugmintEuro
+bisq.asset.tokens.CMBToken
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone
 bisq.asset.tokens.TrueUSD
