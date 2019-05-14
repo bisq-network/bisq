@@ -102,6 +102,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
     @Override
     protected void createGridPane() {
         super.createGridPane();
+
+        gridPane.getColumnConstraints().get(0).setMinWidth(250d);
+
         gridPane.setPadding(new Insets(35, 40, 30, 40));
         gridPane.getStyleClass().add("grid-pane");
     }
