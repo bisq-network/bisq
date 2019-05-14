@@ -35,8 +35,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
 
-import javafx.beans.property.SimpleObjectProperty;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -119,15 +117,13 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
 
-        this.networkNode.getNodeAddressProperty().addListener(observable -> {
-
-            NodeAddress myAddress = (NodeAddress) ((SimpleObjectProperty) observable).get();
-
-            seedNodeAddresses.remove(myAddress);
-
-            if (myAddress != null && seedNodeRepository.isSeedNode(myAddress)) {
-                NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
-                NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
+        this.networkNode.nodeAddressProperty().addListener((observable, oldValue, myAddress) -> {
+            if (myAddress != null) {
+                seedNodeAddresses.remove(myAddress);
+                if (seedNodeRepository.isSeedNode(myAddress)) {
+                    NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
+                    NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
+                }
             }
         });
     }

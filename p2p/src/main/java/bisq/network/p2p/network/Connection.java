@@ -528,6 +528,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         return "Connection{" +
                 "peerAddress=" + peersNodeAddressOptional +
                 ", peerType=" + peerType +
+                ", connectionType=" + (this instanceof InboundConnection ? "InboundConnection" : "OutboundConnection") +
                 ", uid='" + uid + '\'' +
                 '}';
     }
