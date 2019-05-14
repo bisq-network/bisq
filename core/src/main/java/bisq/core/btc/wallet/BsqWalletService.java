@@ -17,6 +17,7 @@
 
 package bisq.core.btc.wallet;
 
+import bisq.core.btc.exceptions.BsqChangeBelowDustException;
 import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
@@ -475,7 +476,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendBsqTx(String receiverAddress, Coin receiverAmount)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException {
+            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
         return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector);
     }
 
@@ -484,12 +485,12 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction getPreparedSendBtcTx(String receiverAddress, Coin receiverAmount)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException {
+            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
         return getPreparedSendTx(receiverAddress, receiverAmount, nonBsqCoinSelector);
     }
 
     private Transaction getPreparedSendTx(String receiverAddress, Coin receiverAmount, CoinSelector coinSelector)
-            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException {
+            throws AddressFormatException, InsufficientBsqException, WalletException, TransactionVerificationException, BsqChangeBelowDustException {
         DaoKillSwitch.assertDaoIsNotDisabled();
         Transaction tx = new Transaction(params);
         checkArgument(Restrictions.isAboveDust(receiverAmount),
@@ -510,6 +511,18 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             checkWalletConsistency(wallet);
             verifyTransaction(tx);
             // printTx("prepareSendTx", tx);
+
+            // Tx has as first output BSQ and an optional second BSQ change output.
+            // At that stage we do not have added the BTC inputs so there is no BTC change output here.
+            if (tx.getOutputs().size() == 2) {
+                TransactionOutput bsqChangeOutput = tx.getOutputs().get(1);
+                if (!Restrictions.isAboveDust(bsqChangeOutput.getValue())) {
+                    String msg = "BSQ change output is below dust limit. outputValue=" + bsqChangeOutput.getValue().toFriendlyString();
+                    log.warn(msg);
+                    throw new BsqChangeBelowDustException(msg, bsqChangeOutput.getValue());
+                }
+            }
+
             return tx;
         } catch (InsufficientMoneyException e) {
             log.error(e.toString());
