@@ -1,8 +1,8 @@
 # This doc specifies who gets requested to review GitHub pull requests.
 # See https://help.github.com/articles/about-codeowners/.
 
-* @ManfredKarrer
+* @ripcurlx
 /assets/ @blabno
-/desktop/ @ripcurlx @ManfredKarrer
+/desktop/ @ripcurlx @sqrrm
 *gradle* @cbeams
 /pricenode/ @cbeams
