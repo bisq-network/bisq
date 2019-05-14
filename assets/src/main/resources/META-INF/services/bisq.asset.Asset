@@ -25,6 +25,7 @@ bisq.asset.coins.Byteball
 bisq.asset.coins.Cash2
 bisq.asset.coins.Chaucha
 bisq.asset.coins.CloakCoin
+bisq.asset.tokens.CMBToken
 bisq.asset.coins.Counterparty
 bisq.asset.coins.Credits
 bisq.asset.coins.Croat
@@ -101,4 +102,3 @@ bisq.asset.tokens.EtherStone
 bisq.asset.tokens.TrueUSD
 bisq.asset.tokens.USDCoin
 bisq.asset.tokens.VectorspaceAI
-bisq.asset.tokens.CMBToken
