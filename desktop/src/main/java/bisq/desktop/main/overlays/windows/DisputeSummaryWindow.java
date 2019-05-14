@@ -246,7 +246,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void addInfoPane() {
         Contract contract = dispute.getContract();
-        addTitledGroupBg(gridPane, ++rowIndex, 16, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
+        addTitledGroupBg(gridPane, ++rowIndex, 17, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
@@ -268,6 +268,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 formatter.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
                 formatter.formatVolumeWithCode(contract.getTradeVolume()));
+        String securityDeposit = Res.getWithColAndCap("shared.buyer") +
+                " " +
+                formatter.formatCoinWithCode(contract.getOfferPayload().getBuyerSecurityDeposit()) +
+                " / " +
+                Res.getWithColAndCap("shared.seller") +
+                " " +
+                formatter.formatCoinWithCode(contract.getOfferPayload().getSellerSecurityDeposit());
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
     }
 
     private void addCheckboxes() {
