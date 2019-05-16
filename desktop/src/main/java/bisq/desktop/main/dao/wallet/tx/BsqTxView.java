@@ -270,13 +270,23 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             chainSyncIndicator.setManaged(!synced);
             if (synced) {
                 chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSynced",
-                        currentBlockHeight,
-                        walletChainHeight));
+                        currentBlockHeight));
             } else {
                 chainSyncIndicator.setProgress(progress);
-                chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
-                        currentBlockHeight,
-                        walletChainHeight));
+                if (walletChainHeight > currentBlockHeight) {
+                    // Normally we get the latest block height from BitcoinJ as the target height,
+                    // and we request BSQ blocks from seed nodes up to latest block
+                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                            currentBlockHeight,
+                            walletChainHeight));
+                } else {
+                    // But when restoring from seed, we receive the latest block height
+                    // from the seed nodes while BitcoinJ has not received all blocks yet and
+                    // is still syncing
+                    chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
+                            walletChainHeight,
+                            currentBlockHeight));
+                }
             }
         } else {
             chainHeightLabel.setText(Res.get("dao.wallet.chainHeightSyncing",
