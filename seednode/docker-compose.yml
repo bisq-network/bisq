@@ -3,7 +3,7 @@ version: '2.1'
 services:
     seednode:
         container_name: seednode
-        restart: on-failure
+        restart: unless-stopped
         env_file:
             - .env
         build:
@@ -43,7 +43,7 @@ services:
             dockerfile: docker/prod/Dockerfile-btc
         image: bisq/bitcoin-core
         container_name: btcd
-        restart: on-failure
+        restart: unless-stopped
         command:
             -printtoconsole
             -rpcport=8332
