@@ -308,7 +308,9 @@ configure(project(':core')) {
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
+        compile "com.google.guava:guava:$guavaVersion"
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
+            exclude(module: 'guava')
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
@@ -317,6 +319,7 @@ configure(project(':core')) {
             exclude(module: 'jackson-databind')
         }
         compile("network.bisq.btcd-cli4j:btcd-cli4j-daemon:$btcdCli4jVersion") {
+            exclude(module: 'guava')
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
