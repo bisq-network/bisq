@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.main.Chat.Chat;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
@@ -29,10 +30,12 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
+import bisq.core.trade.TradeChatSession;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
@@ -75,6 +78,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
+    private final P2PService p2PService;
     private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<PendingTradesListItem> tableView;
@@ -88,6 +92,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedTableItemSubscription;
     private Subscription selectedItemSubscription;
     private final Preferences preferences;
+    private Chat tradeChat;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -100,12 +105,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              BSFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
+                             P2PService p2PService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
+        this.p2PService = p2PService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -182,6 +189,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .show();
             }
         };
+
+        tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
+        tradeChat.initialize();
     }
 
     @Override
@@ -221,9 +231,22 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);
                     if (root.getChildren().size() == 1)
                         root.getChildren().add(selectedSubView);
-                    else if (root.getChildren().size() == 2)
+                    else if (root.getChildren().size() > 1)
                         root.getChildren().set(1, selectedSubView);
 
+                    boolean isTaker = !model.dataModel.isMaker(selectedItem.getTrade().getOffer());
+                    boolean isBuyer = model.dataModel.isBuyer();
+                    if (tradeChat != null)
+                        tradeChat.display(new TradeChatSession(selectedItem.getTrade(), isTaker, isBuyer,
+                                        model.dataModel.tradeManager,
+                                        model.dataModel.tradeManager.getChatManager()),
+                                null,
+                                root.widthProperty());
+
+//                    if (root.getChildren().size() == 2)
+//                        root.getChildren().add(tradeChat);
+//                    else if (root.getChildren().size() > 2)
+//                        root.getChildren().set(2, tradeChat);
                 }
 
                 updateTableSelection();
@@ -244,6 +267,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 });
 
         updateTableSelection();
+        if (tradeChat != null) {
+            tradeChat.activate();
+            tradeChat.scrollToBottom();
+        }
     }
 
     @Override
@@ -256,6 +283,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        if (tradeChat != null)
+            tradeChat.deactivate();
     }
 
     private void removeSelectedSubView() {

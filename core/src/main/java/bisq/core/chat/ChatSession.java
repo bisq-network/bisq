@@ -20,28 +20,29 @@ package bisq.core.chat;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.arbitration.messages.DisputeMessage;
 
-import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
-import javafx.scene.control.Button;
-
-import javafx.beans.property.ReadOnlyDoubleProperty;
-
 import javafx.collections.ObservableList;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import lombok.Getter;
 
 public abstract class ChatSession {
-    abstract public boolean isTrader();
+    @Getter
+    DisputeCommunicationMessage.Type type;
+
+    public ChatSession(DisputeCommunicationMessage.Type type) {
+        this.type = type;
+    }
+
+    abstract public boolean isClient();
 
     abstract public String getTradeId();
 
-    abstract public PubKeyRing getPubKeyRing();
+    abstract public PubKeyRing getClientPubKeyRing();
 
     abstract public void addDisputeCommunicationMessage(DisputeCommunicationMessage message);
 

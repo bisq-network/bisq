@@ -22,6 +22,7 @@ import bisq.core.arbitration.Attachment;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
 import io.bisq.generated.protobuffer.PB;
@@ -49,17 +50,41 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+/* Message for direct communication between two nodes. Originally built for trader to
+ * arbitrator communication as no other direct communication was allowed. Aribtrator is
+ * considered as the server and trader as the client in arbitration chats
+ *
+ * For trader to trader communication the maker is considered to be the server
+ * and the taker is considered as the client.
+ * */
 @EqualsAndHashCode(callSuper = true) // listener is transient and therefore excluded anyway
 @Getter
 @Slf4j
 public final class DisputeCommunicationMessage extends DisputeMessage {
 
+    public enum Type {
+        DISPUTE,
+        TRADE;
+
+        public static DisputeCommunicationMessage.Type fromProto(
+                PB.DisputeCommunicationMessage.Type type) {
+            return ProtoUtil.enumFromProto(DisputeCommunicationMessage.Type.class, type.name());
+        }
+
+        public static PB.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
+            return PB.DisputeCommunicationMessage.Type.valueOf(type.name());
+        }
+    }
+
     public interface Listener {
         void onMessageStateChanged();
     }
 
+    private final DisputeCommunicationMessage.Type type;
     private final String tradeId;
     private final int traderId;
+    // This is only used for the server client relationship
+    // If senderIsTrader == true then the sender is the client
     private final boolean senderIsTrader;
     private final String message;
     private final ArrayList<Attachment> attachments = new ArrayList<>();
@@ -76,12 +101,14 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     transient private WeakReference<Listener> listener;
 
-    public DisputeCommunicationMessage(String tradeId,
+    public DisputeCommunicationMessage(DisputeCommunicationMessage.Type type,
+                                       String tradeId,
                                        int traderId,
                                        boolean senderIsTrader,
                                        String message,
                                        NodeAddress senderNodeAddress) {
-        this(tradeId,
+        this(type,
+                tradeId,
                 traderId,
                 senderIsTrader,
                 message,
@@ -102,7 +129,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeCommunicationMessage(String tradeId,
+    private DisputeCommunicationMessage(Type type,
+                                        String tradeId,
                                         int traderId,
                                         boolean senderIsTrader,
                                         String message,
@@ -117,6 +145,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                         @Nullable String sendMessageError,
                                         @Nullable String ackError) {
         super(messageVersion, uid);
+        this.type = type;
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -135,6 +164,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         PB.DisputeCommunicationMessage.Builder builder = PB.DisputeCommunicationMessage.newBuilder()
+                .setType(DisputeCommunicationMessage.Type.toProtoMessage(type))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
@@ -156,6 +186,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto, int messageVersion) {
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                DisputeCommunicationMessage.Type.fromProto(proto.getType()),
                 proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getSenderIsTrader(),
@@ -186,7 +217,6 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
     public void addAllAttachments(List<Attachment> attachments) {
         this.attachments.addAll(attachments);
     }
@@ -258,7 +288,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Override
     public String toString() {
         return "DisputeCommunicationMessage{" +
-                "\n     tradeId='" + tradeId + '\'' +
+                "\n     type='" + type + '\'' +
+                ",\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     senderIsTrader=" + senderIsTrader +
                 ",\n     message='" + message + '\'' +

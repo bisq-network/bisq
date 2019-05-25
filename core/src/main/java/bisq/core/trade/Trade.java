@@ -20,6 +20,7 @@ package bisq.core.trade;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.Mediator;
+import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -71,10 +72,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -333,6 +338,8 @@ public abstract class Trade implements Tradable, Model {
     @Setter
     @Nullable
     private String counterCurrencyTxId;
+    @Getter
+    private final ObservableList<DisputeCommunicationMessage> communicationMessages = FXCollections.observableArrayList();
 
     // Transient
     // Immutable
@@ -431,7 +438,10 @@ public abstract class Trade implements Tradable, Model {
                 .setTradePrice(tradePrice)
                 .setState(PB.Trade.State.valueOf(state.name()))
                 .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
-                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()));
+                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
+                .addAllCommunicationMessages(communicationMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                        .collect(Collectors.toList()));
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -475,6 +485,11 @@ public abstract class Trade implements Tradable, Model {
         trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
+
+        trade.communicationMessages.addAll(proto.getCommunicationMessagesList().stream()
+                .map(DisputeCommunicationMessage::fromPayloadProto)
+                .collect(Collectors.toList()));
+
         return trade;
     }
 
@@ -585,6 +600,14 @@ public abstract class Trade implements Tradable, Model {
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
+    public void addCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+        if (!communicationMessages.contains(disputeCommunicationMessage)) {
+            communicationMessages.add(disputeCommunicationMessage);
+            storage.queueUpForSave();
+        } else {
+            log.error("Trade DisputeCommunicationMessage already exists");
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
@@ -991,6 +1014,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     decryptedMessageWithPubKeySet=" + decryptedMessageWithPubKeySet +
                 ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
+                ",\n     communicationMessages=" + communicationMessages +
                 "\n}";
     }
 }

@@ -74,6 +74,10 @@ public class FileManager<T extends PersistableEnvelope> {
             try {
                 Thread.currentThread().setName("Save-file-task-" + new Random().nextInt(10000));
                 // Runs in an auto save thread.
+                // TODO: this looks like it could cause corrupt data as the savePending is unset before the actual
+                // save. By moving to after the save there might be some persist operations that are not performed
+                // and data would be lost. Probably all persist operations should happen sequencially rather than
+                // skip one when there is already one scheduled
                 if (!savePending.getAndSet(false)) {
                     // Some other scheduled request already beat us to it.
                     return null;

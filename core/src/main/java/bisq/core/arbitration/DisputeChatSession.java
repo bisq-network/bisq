@@ -17,17 +17,13 @@
 
 package bisq.core.arbitration;
 
-import bisq.core.chat.ChatManager;
-import bisq.core.chat.ChatSession;
-
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.arbitration.messages.DisputeMessage;
 import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.arbitration.messages.OpenNewDisputeMessage;
 import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
 import bisq.core.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
+import bisq.core.chat.ChatSession;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -49,16 +45,14 @@ public class DisputeChatSession extends ChatSession {
 
     private Dispute dispute;
     private DisputeManager disputeManager;
-    private ChatManager chatManager;
 
     public DisputeChatSession(
             @Nullable Dispute dispute,
-            DisputeManager disputeManager,
-            ChatManager chatManager
+            DisputeManager disputeManager
     ) {
+        super(DisputeCommunicationMessage.Type.DISPUTE);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
-        this.chatManager = chatManager;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +60,7 @@ public class DisputeChatSession extends ChatSession {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean isTrader() {
+    public boolean isClient() {
         return disputeManager.isTrader(dispute);
     }
 
@@ -76,13 +70,14 @@ public class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public PubKeyRing getPubKeyRing() {
+    public PubKeyRing getClientPubKeyRing() {
+        // Get pubkeyring of trader. Arbitrator is considered server for the chat session
         return dispute.getTraderPubKeyRing();
     }
 
     @Override
     public void addDisputeCommunicationMessage(DisputeCommunicationMessage message) {
-        if (isTrader() || (!isTrader() && !message.isSystemMessage()))
+        if (isClient() || (!isClient() && !message.isSystemMessage()))
             dispute.addDisputeCommunicationMessage(message);
     }
 
@@ -137,8 +132,13 @@ public class DisputeChatSession extends ChatSession {
             disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
         else if (message instanceof PeerOpenedDisputeMessage)
             disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        else if (message instanceof DisputeCommunicationMessage)
-            chatManager.onDisputeDirectMessage((DisputeCommunicationMessage) message);
+        else if (message instanceof DisputeCommunicationMessage) {
+            if (((DisputeCommunicationMessage)message).getType() != DisputeCommunicationMessage.Type.DISPUTE){
+                log.debug("Ignore non distpute type communication message");
+                return;
+            }
+            disputeManager.getChatManager().onDisputeDirectMessage((DisputeCommunicationMessage) message);
+        }
         else if (message instanceof DisputeResultMessage)
             disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
         else if (message instanceof PeerPublishedDisputePayoutTxMessage)
@@ -154,16 +154,18 @@ public class DisputeChatSession extends ChatSession {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public boolean channelOpen(DisputeCommunicationMessage message) {
         return disputeManager.findDispute(message.getTradeId(), message.getTraderId()).isPresent();
     }
 
+    @Override
     public void storeDisputeCommunicationMessage(DisputeCommunicationMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message.getTradeId(), message.getTraderId());
 
         if (disputeOptional.isPresent()) {
-            if (!disputeOptional.get().getDisputeCommunicationMessages().stream()
-                    .anyMatch(m -> m.getUid().equals(message.getUid())))
+            if (disputeOptional.get().getDisputeCommunicationMessages().stream()
+                    .noneMatch(m -> m.getUid().equals(message.getUid())))
                 disputeOptional.get().addDisputeCommunicationMessage(message);
             else
                 log.warn("We got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",

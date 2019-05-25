@@ -276,6 +276,10 @@ message PeerOpenedDisputeMessage {
 }
 
 message DisputeCommunicationMessage {
+    enum Type {
+        DISPUTE = 0;
+        TRADE = 1;
+    }
     int64 date = 1;
     string trade_id = 2;
     int32 trader_id = 3;
@@ -290,6 +294,7 @@ message DisputeCommunicationMessage {
     string send_message_error = 12;
     bool acknowledged = 13;
     string ack_error = 14;
+    Type type = 15;
 }
 
 message DisputeResultMessage {
@@ -1235,6 +1240,7 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
+    repeated DisputeCommunicationMessage communication_messages = 29;
 }
 
 message BuyerAsMakerTrade {

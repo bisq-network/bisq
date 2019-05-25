@@ -20,9 +20,11 @@ package bisq.core.trade;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.chat.ChatManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -111,6 +113,7 @@ public class TradeManager implements PersistedDataHost {
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
@@ -129,6 +132,9 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
 
+    @Getter
+    private final ChatManager chatManager;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -144,6 +150,7 @@ public class TradeManager implements PersistedDataHost {
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
+                        WalletsSetup walletsSetup,
                         PriceFeedService priceFeedService,
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
@@ -162,6 +169,7 @@ public class TradeManager implements PersistedDataHost {
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
         this.priceFeedService = priceFeedService;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
@@ -171,6 +179,9 @@ public class TradeManager implements PersistedDataHost {
         this.clock = clock;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+
+        chatManager = new ChatManager(p2PService, walletsSetup);
+        chatManager.setChatSession(new TradeChatSession(null, true, true, this, chatManager));
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -649,5 +660,9 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
+    }
+
+    public void persistTrades() {
+        tradableList.persist();
     }
 }

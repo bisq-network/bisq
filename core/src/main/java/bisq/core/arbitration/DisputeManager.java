@@ -18,7 +18,6 @@
 package bisq.core.arbitration;
 
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
-import bisq.core.arbitration.messages.DisputeMessage;
 import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.arbitration.messages.OpenNewDisputeMessage;
 import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
@@ -40,10 +39,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
-import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.BootstrapListener;
-import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
@@ -55,7 +51,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
@@ -86,7 +81,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -150,7 +144,7 @@ public class DisputeManager implements PersistedDataHost {
         this.keyRing = keyRing;
 
         chatManager = new ChatManager(p2PService, walletsSetup);
-        chatManager.setChatSession(new DisputeChatSession(null, this, chatManager));
+        chatManager.setChatSession(new DisputeChatSession(null, this));
 
         disputeStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
@@ -259,6 +253,7 @@ public class DisputeManager implements PersistedDataHost {
                         : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                        chatManager.getChatSession().getType(),
                         dispute.getTradeId(),
                         keyRing.getPubKeyRing().hashCode(),
                         false,
@@ -371,6 +366,7 @@ public class DisputeManager implements PersistedDataHost {
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                    chatManager.getChatSession().getType(),
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -452,6 +448,7 @@ public class DisputeManager implements PersistedDataHost {
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                chatManager.getChatSession().getType(),
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,

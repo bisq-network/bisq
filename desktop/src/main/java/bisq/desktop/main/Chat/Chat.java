@@ -28,6 +28,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.arbitration.Attachment;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
@@ -115,7 +116,6 @@ public class Chat extends AnchorPane {
     private TableGroupHeadline tableGroupHeadline;
     private VBox messagesInputBox;
 
-    // TODO set these on new session or link to session action
     @Getter
     Button extraButton;
     @Getter
@@ -123,7 +123,6 @@ public class Chat extends AnchorPane {
 
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
-    private ChatSession chatSession;
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
     private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
@@ -134,11 +133,12 @@ public class Chat extends AnchorPane {
 
     protected final BSFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
+    private ChatManager chatManager;
 
-    public Chat(P2PService p2PService, BSFormatter formatter
-    ) {
-        this.p2PService = p2PService;
+    public Chat(ChatManager chatManager, BSFormatter formatter) {
+        this.chatManager = chatManager;
         this.formatter = formatter;
+        this.p2PService = chatManager.getP2PService();
     }
 
     public void initialize() {
@@ -146,7 +146,7 @@ public class Chat extends AnchorPane {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
-                if (chatSession.chatIsOpen() && inputTextArea.isFocused())
+                if (chatManager.getChatSession().chatIsOpen() && inputTextArea.isFocused())
                     onTrySendMessage();
             }
         };
@@ -164,8 +164,8 @@ public class Chat extends AnchorPane {
     public void display(ChatSession chatSession, @Nullable Button extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
         removeListenersOnSessionChange();
+        chatManager.setChatSession(chatSession);
         this.getChildren().clear();
-        this.chatSession = chatSession;
         this.extraButton = extraButton;
         this.widthProperty = widthProperty;
 
@@ -193,7 +193,7 @@ public class Chat extends AnchorPane {
         inputTextArea = new BisqTextArea();
         inputTextArea.setPrefHeight(70);
         inputTextArea.setWrapText(true);
-        if (chatSession.isTrader())
+        if (chatSession.isClient())
             inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
         sendButton = new AutoTooltipButton(Res.get("support.send"));
@@ -305,7 +305,7 @@ public class Chat extends AnchorPane {
                             AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
 
                             boolean senderIsTrader = message.isSenderIsTrader();
-                            boolean isMyMsg = chatSession.isTrader() == senderIsTrader;
+                            boolean isMyMsg = chatSession.isClient() == senderIsTrader;
 
                             arrow.setVisible(!message.isSystemMessage());
                             arrow.setManaged(!message.isSystemMessage());
@@ -328,7 +328,7 @@ public class Chat extends AnchorPane {
                                 bg.setId("message-bubble-blue");
                                 messageLabel.getStyleClass().add("my-message");
                                 copyIcon.getStyleClass().add("my-message");
-                                if (chatSession.isTrader())
+                                if (chatSession.isClient())
                                     arrow.setId("bubble_arrow_blue_left");
                                 else
                                     arrow.setId("bubble_arrow_blue_right");
@@ -349,7 +349,7 @@ public class Chat extends AnchorPane {
                                 bg.setId("message-bubble-grey");
                                 messageLabel.getStyleClass().add("message");
                                 copyIcon.getStyleClass().add("message");
-                                if (chatSession.isTrader())
+                                if (chatSession.isClient())
                                     arrow.setId("bubble_arrow_grey_right");
                                 else
                                     arrow.setId("bubble_arrow_grey_left");
@@ -624,21 +624,21 @@ public class Chat extends AnchorPane {
         }
     }
 
-    // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
     private DisputeCommunicationMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
         DisputeCommunicationMessage message = new DisputeCommunicationMessage(
-                chatSession.getTradeId(),
-                chatSession.getPubKeyRing().hashCode(),
-                chatSession.isTrader(),
+                chatManager.getChatSession().getType(),
+                chatManager.getChatSession().getTradeId(),
+                chatManager.getChatSession().getClientPubKeyRing().hashCode(),
+                chatManager.getChatSession().isClient(),
                 text,
                 p2PService.getAddress()
         );
 
         message.addAllAttachments(attachments);
-        NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress(message);
-        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(message);
+        NodeAddress peersNodeAddress = chatManager.getChatSession().getPeerNodeAddress(message);
+        PubKeyRing receiverPubKeyRing = chatManager.getChatSession().getPeerPubKeyRing(message);
 
-        chatSession.addDisputeCommunicationMessage(message);
+        chatManager.getChatSession().addDisputeCommunicationMessage(message);
 
         if (receiverPubKeyRing != null) {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -653,7 +653,7 @@ public class Chat extends AnchorPane {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setArrived(true);
-                            chatSession.persist();
+                            chatManager.getChatSession().persist();
                         }
 
                         @Override
@@ -661,7 +661,7 @@ public class Chat extends AnchorPane {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setStoredInMailbox(true);
-                            chatSession.persist();
+                            chatManager.getChatSession().persist();
                         }
 
                         @Override
@@ -669,7 +669,7 @@ public class Chat extends AnchorPane {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             message.setSendMessageError(errorMessage);
-                            chatSession.persist();
+                            chatManager.getChatSession().persist();
                         }
                     }
             );
