@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.Chat.Chat;
+import bisq.desktop.main.disputes.DisputeChatSession;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -47,6 +48,7 @@ import bisq.core.util.BSFormatter;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
@@ -227,9 +229,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> {
-            disputeChat.setInputBoxVisible(!newValue);
-        };
+        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> disputeChat.setInputBoxVisible(!newValue);
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
@@ -317,15 +317,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             }
         };
 
-        disputeChat = new Chat(this, disputeSummaryWindow, disputeManager, p2PService, formatter);
+        disputeChat = new Chat(this, p2PService, formatter);
         disputeChat.initialize();
     }
 
     @Override
     protected void activate() {
-        if (disputeChat != null)
-            disputeChat.activate();
-
         filterTextField.textProperty().addListener(filterTextFieldListener);
         disputeManager.cleanupDisputes();
 
@@ -343,8 +340,10 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (selectedItem != null)
             tableView.getSelectionModel().select(selectedItem);
 
-        if (disputeChat != null)
+        if (disputeChat != null) {
+            disputeChat.activate();
             disputeChat.scrollToBottom();
+        }
 
         scene = root.getScene();
         if (scene != null)
@@ -454,8 +453,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         } else if (selectedDispute != dispute) {
             this.selectedDispute = dispute;
             if (disputeChat != null) {
-                disputeChat.setTrader(disputeManager.isTrader(selectedDispute));
-                disputeChat.display();
+                disputeChat.display(new DisputeChatSession(dispute, disputeManager));
             }
 
             if (root.getChildren().size() > 2)
@@ -466,6 +464,17 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         addListenersOnSelectDispute();
     }
 
+    public void onCloseDispute(Dispute dispute) {
+        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
+        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
+            disputeSummaryWindow.onFinalizeDispute(() -> disputeChat.removeInputBox())
+                    .show(dispute);
+        } else {
+            new Popup<>()
+                    .warning(Res.get("support.wrongVersion", protocolVersion))
+                    .show();
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Table
@@ -674,7 +683,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
 
-    protected String getBuyerOnionAddressColumnLabel(Dispute item) {
+    private String getBuyerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
@@ -691,7 +700,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         }
     }
 
-    protected String getSellerOnionAddressColumnLabel(Dispute item) {
+    private String getSellerOnionAddressColumnLabel(Dispute item) {
         Contract contract = item.getContract();
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();

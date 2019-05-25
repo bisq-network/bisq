@@ -25,22 +25,21 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.arbitration.Attachment;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.network.Connection;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Version;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
 import com.google.common.io.ByteStreams;
@@ -100,8 +99,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import lombok.Setter;
-
 public class Chat extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(TextFieldWithIcon.class);
 
@@ -114,13 +111,12 @@ public class Chat extends AnchorPane {
     private TableGroupHeadline tableGroupHeadline;
     private VBox messagesInputBox;
 
-    // TODO Dispute stuff - need to go and generic functionality added
-    private final DisputeSummaryWindow disputeSummaryWindow;
+    // TODO Can be removed when close ticket button is made generic
     private TraderDisputeView traderDisputeView;
-    private final DisputeManager disputeManager;
 
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
+    private ChatSession chatSession;
     private DisputeCommunicationMessage disputeCommunicationMessage;
     private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
     private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
@@ -129,21 +125,14 @@ public class Chat extends AnchorPane {
     private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
     private ChangeListener<String> sendMessageErrorPropertyListener;
 
-    @Setter
-    private boolean isTrader;
-
     protected final BSFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
     public Chat(TraderDisputeView traderDisputeView,
-                DisputeSummaryWindow disputeSummaryWindow,
-                DisputeManager disputeManager,
                 P2PService p2PService,
                 BSFormatter formatter
     ) {
         this.traderDisputeView = traderDisputeView;
-        this.disputeSummaryWindow = disputeSummaryWindow;
-        this.disputeManager = disputeManager;
         this.p2PService = p2PService;
         this.formatter = formatter;
     }
@@ -153,26 +142,22 @@ public class Chat extends AnchorPane {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
-                if (traderDisputeView.getSelectedDispute() != null &&
-                        messagesInputBox.isVisible() && inputTextArea.isFocused())
+                if (chatSession.chatIsOpen() && inputTextArea.isFocused())
                     onTrySendMessage();
             }
         };
     }
 
     public void activate() {
-        if (getScene() != null)
-            getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
     public void deactivate() {
-        if (getScene() != null)
-            getScene().removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
     }
 
-    public void display() {
-        if (traderDisputeView.getSelectedDispute() == null)
-            return;
+    public void display(ChatSession chatSession) {
+        this.chatSession = chatSession;
         this.getChildren().clear();
 
         tableGroupHeadline = new TableGroupHeadline();
@@ -183,7 +168,7 @@ public class Chat extends AnchorPane {
         AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
         AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-        disputeCommunicationMessages = traderDisputeView.getSelectedDispute().getDisputeCommunicationMessages();
+        disputeCommunicationMessages = chatSession.getDisputeCommunicationMessages();
         SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
         sortedList.setComparator(Comparator.comparing(o -> new Date(o.getDate())));
         messageListView = new ListView<>(sortedList);
@@ -199,7 +184,7 @@ public class Chat extends AnchorPane {
         inputTextArea = new BisqTextArea();
         inputTextArea.setPrefHeight(70);
         inputTextArea.setWrapText(true);
-        if (isTrader)
+        if (chatSession.isTrader())
             inputTextArea.setPromptText(Res.get("support.input.prompt"));
 
         sendButton = new AutoTooltipButton(Res.get("support.send"));
@@ -217,14 +202,16 @@ public class Chat extends AnchorPane {
 
         sendMsgBusyAnimation = new BusyAnimation(false);
 
-        if (!traderDisputeView.getSelectedDispute().isClosed()) {
+        if (chatSession.chatIsOpen()) {
             HBox buttonBox = new HBox();
             buttonBox.setSpacing(10);
             buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
-            if (!isTrader) {
+            // TODO handle extra button separately
+            if (!chatSession.isTrader()) {
                 Button closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-                closeDisputeButton.setOnAction(e -> onCloseDispute(traderDisputeView.getSelectedDispute()));
+                closeDisputeButton.setOnAction(e -> traderDisputeView.onCloseDispute(
+                        traderDisputeView.getSelectedDispute()));
                 closeDisputeButton.setDefaultButton(true);
                 Pane spacer = new Pane();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -243,12 +230,16 @@ public class Chat extends AnchorPane {
             AnchorPane.setBottomAnchor(messageListView, 120d);
 
             this.getChildren().addAll(tableGroupHeadline, messageListView, messagesInputBox);
-        } else {
+        } else
+
+        {
             AnchorPane.setBottomAnchor(messageListView, 0d);
             this.getChildren().addAll(tableGroupHeadline, messageListView);
         }
 
-        messageListView.setCellFactory(new Callback<>() {
+        messageListView.setCellFactory(new Callback<>()
+
+        {
             @Override
             public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                 return new ListCell<>() {
@@ -309,7 +300,7 @@ public class Chat extends AnchorPane {
                             AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
 
                             boolean senderIsTrader = message.isSenderIsTrader();
-                            boolean isMyMsg = isTrader == senderIsTrader;
+                            boolean isMyMsg = chatSession.isTrader() == senderIsTrader;
 
                             arrow.setVisible(!message.isSystemMessage());
                             arrow.setManaged(!message.isSystemMessage());
@@ -332,7 +323,7 @@ public class Chat extends AnchorPane {
                                 bg.setId("message-bubble-blue");
                                 messageLabel.getStyleClass().add("my-message");
                                 copyIcon.getStyleClass().add("my-message");
-                                if (isTrader)
+                                if (chatSession.isTrader())
                                     arrow.setId("bubble_arrow_blue_left");
                                 else
                                     arrow.setId("bubble_arrow_blue_right");
@@ -353,7 +344,7 @@ public class Chat extends AnchorPane {
                                 bg.setId("message-bubble-grey");
                                 messageLabel.getStyleClass().add("message");
                                 copyIcon.getStyleClass().add("message");
-                                if (isTrader)
+                                if (chatSession.isTrader())
                                     arrow.setId("bubble_arrow_grey_right");
                                 else
                                     arrow.setId("bubble_arrow_grey_left");
@@ -500,6 +491,7 @@ public class Chat extends AnchorPane {
         });
 
         scrollToBottom();
+
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -511,7 +503,7 @@ public class Chat extends AnchorPane {
             String text = inputTextArea.getText();
             if (!text.isEmpty()) {
                 if (text.length() < 5_000) {
-                    onSendMessage(text, traderDisputeView.getSelectedDispute());
+                    onSendMessage(text);
                 } else {
                     new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
                 }
@@ -560,18 +552,6 @@ public class Chat extends AnchorPane {
         }
     }
 
-    private void onCloseDispute(Dispute dispute) {
-        long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
-        if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
-            disputeSummaryWindow.onFinalizeDispute(() -> this.getChildren().remove(messagesInputBox))
-                    .show(dispute);
-        } else {
-            new Popup<>()
-                    .warning(Res.get("support.wrongVersion", protocolVersion))
-                    .show();
-        }
-    }
-
     private void onOpenAttachment(Attachment attachment) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Res.get("support.save"));
@@ -589,14 +569,14 @@ public class Chat extends AnchorPane {
         }
     }
 
-    private void onSendMessage(String inputText, Dispute dispute) {
+    private void onSendMessage(String inputText) {
         if (disputeCommunicationMessage != null) {
             disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
             disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
             disputeCommunicationMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
         }
 
-        disputeCommunicationMessage = disputeManager.sendDisputeDirectMessage(dispute, inputText, new ArrayList<>(tempAttachments));
+        disputeCommunicationMessage = sendDisputeDirectMessage(inputText, new ArrayList<>(tempAttachments));
         tempAttachments.clear();
         scrollToBottom();
 
@@ -639,6 +619,60 @@ public class Chat extends AnchorPane {
         }
     }
 
+    // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
+    private DisputeCommunicationMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
+        DisputeCommunicationMessage message = new DisputeCommunicationMessage(
+                chatSession.getTradeId(),
+                chatSession.getPubKeyRing().hashCode(),
+                chatSession.isTrader(),
+                text,
+                p2PService.getAddress()
+        );
+
+        message.addAllAttachments(attachments);
+        NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress();
+        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing();
+
+        chatSession.addDisputeCommunicationMessage(message);
+
+        if (receiverPubKeyRing != null) {
+            log.info("Send {} to peer {}. tradeId={}, uid={}",
+                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+
+            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+                    receiverPubKeyRing,
+                    message,
+                    new SendMailboxMessageListener() {
+                        @Override
+                        public void onArrived() {
+                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                            message.setArrived(true);
+                            chatSession.persist();
+                        }
+
+                        @Override
+                        public void onStoredInMailbox() {
+                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                            message.setStoredInMailbox(true);
+                            chatSession.persist();
+                        }
+
+                        @Override
+                        public void onFault(String errorMessage) {
+                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
+                            message.setSendMessageError(errorMessage);
+                            chatSession.persist();
+                        }
+                    }
+            );
+        }
+
+        return message;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Helpers
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -665,6 +699,9 @@ public class Chat extends AnchorPane {
         AnchorPane.setBottomAnchor(messageListView, visible ? 120d : 0d);
     }
 
+    public void removeInputBox() {
+        this.getChildren().remove(messagesInputBox);
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings
     ///////////////////////////////////////////////////////////////////////////////////////////

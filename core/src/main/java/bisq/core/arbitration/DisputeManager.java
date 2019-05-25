@@ -79,7 +79,6 @@ import javafx.collections.ObservableList;
 
 import java.io.File;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -109,6 +108,7 @@ public class DisputeManager implements PersistedDataHost {
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final Storage<DisputeList> disputeStorage;
+    @Getter
     private DisputeList disputes;
     private final String disputeInfo;
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
@@ -530,63 +530,6 @@ public class DisputeManager implements PersistedDataHost {
             log.warn(msg);
             return msg;
         }
-    }
-
-    // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
-    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
-        DisputeCommunicationMessage message = new DisputeCommunicationMessage(
-                dispute.getTradeId(),
-                dispute.getTraderPubKeyRing().hashCode(),
-                isTrader(dispute),
-                text,
-                p2PService.getAddress()
-        );
-
-        message.addAllAttachments(attachments);
-        Tuple2<NodeAddress, PubKeyRing> tuple = getNodeAddressPubKeyRingTuple(dispute);
-        NodeAddress peersNodeAddress = tuple.first;
-        PubKeyRing receiverPubKeyRing = tuple.second;
-
-        if (isTrader(dispute) ||
-                (isArbitrator(dispute) && !message.isSystemMessage()))
-            dispute.addDisputeCommunicationMessage(message);
-
-        if (receiverPubKeyRing != null) {
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                    receiverPubKeyRing,
-                    message,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            message.setArrived(true);
-                            disputes.persist();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            message.setStoredInMailbox(true);
-                            disputes.persist();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            message.setSendMessageError(errorMessage);
-                            disputes.persist();
-                        }
-                    }
-            );
-        }
-
-        return message;
     }
 
     // arbitrator send result to trader
@@ -1109,7 +1052,7 @@ public class DisputeManager implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
+    public Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
