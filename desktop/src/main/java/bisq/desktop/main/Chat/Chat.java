@@ -23,7 +23,6 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TextFieldWithIcon;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
@@ -111,9 +110,6 @@ public class Chat extends AnchorPane {
     private TableGroupHeadline tableGroupHeadline;
     private VBox messagesInputBox;
 
-    // TODO Can be removed when close ticket button is made generic
-    private TraderDisputeView traderDisputeView;
-
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
     private ChatSession chatSession;
@@ -128,11 +124,8 @@ public class Chat extends AnchorPane {
     protected final BSFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
 
-    public Chat(TraderDisputeView traderDisputeView,
-                P2PService p2PService,
-                BSFormatter formatter
+    public Chat(P2PService p2PService, BSFormatter formatter
     ) {
-        this.traderDisputeView = traderDisputeView;
         this.p2PService = p2PService;
         this.formatter = formatter;
     }
@@ -207,15 +200,11 @@ public class Chat extends AnchorPane {
             buttonBox.setSpacing(10);
             buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
-            // TODO handle extra button separately
-            if (!chatSession.isTrader()) {
-                Button closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-                closeDisputeButton.setOnAction(e -> traderDisputeView.onCloseDispute(
-                        traderDisputeView.getSelectedDispute()));
-                closeDisputeButton.setDefaultButton(true);
+            if (chatSession.extraButton() != null) {
+                chatSession.extraButton().setDefaultButton(true);
                 Pane spacer = new Pane();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
-                buttonBox.getChildren().addAll(spacer, closeDisputeButton);
+                buttonBox.getChildren().addAll(spacer, chatSession.extraButton());
             }
 
             messagesInputBox = new VBox();

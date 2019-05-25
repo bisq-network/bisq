@@ -317,7 +317,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             }
         };
 
-        disputeChat = new Chat(this, p2PService, formatter);
+        disputeChat = new Chat(p2PService, formatter);
         disputeChat.initialize();
     }
 
@@ -453,7 +453,12 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         } else if (selectedDispute != dispute) {
             this.selectedDispute = dispute;
             if (disputeChat != null) {
-                disputeChat.display(new DisputeChatSession(dispute, disputeManager));
+                Button closeDisputeButton = null;
+                if (!dispute.isClosed() && !disputeManager.isTrader(dispute)) {
+                    closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
+                    closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
+                }
+                disputeChat.display(new DisputeChatSession(dispute, disputeManager, closeDisputeButton));
             }
 
             if (root.getChildren().size() > 2)
@@ -464,7 +469,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         addListenersOnSelectDispute();
     }
 
-    public void onCloseDispute(Dispute dispute) {
+    private void onCloseDispute(Dispute dispute) {
         long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
             disputeSummaryWindow.onFinalizeDispute(() -> disputeChat.removeInputBox())

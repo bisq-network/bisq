@@ -27,15 +27,21 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
+import javafx.scene.control.Button;
+
 import javafx.collections.ObservableList;
+
+import javax.annotation.Nullable;
 
 public class DisputeChatSession implements ChatSession {
     private Dispute dispute;
     private DisputeManager disputeManager;
+    private Button extraButton;
 
-    public DisputeChatSession(Dispute dispute, DisputeManager disputeManager) {
+    public DisputeChatSession(Dispute dispute, DisputeManager disputeManager, @Nullable Button extraButton) {
         this.dispute = dispute;
         this.disputeManager = disputeManager;
+        this.extraButton = extraButton;
     }
 
     @Override
@@ -72,6 +78,11 @@ public class DisputeChatSession implements ChatSession {
     @Override
     public boolean chatIsOpen() {
         return !dispute.isClosed();
+    }
+
+    @Override
+    public Button extraButton() {
+        return extraButton;
     }
 
     @Override

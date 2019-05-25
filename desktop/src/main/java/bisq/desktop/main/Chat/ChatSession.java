@@ -23,6 +23,8 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
+import javafx.scene.control.Button;
+
 import javafx.collections.ObservableList;
 
 public interface ChatSession {
@@ -43,4 +45,6 @@ public interface ChatSession {
     NodeAddress getPeerNodeAddress();
 
     PubKeyRing getPeerPubKeyRing();
+
+    Button extraButton();
 }
