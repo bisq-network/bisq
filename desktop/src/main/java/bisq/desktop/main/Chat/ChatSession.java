@@ -25,6 +25,8 @@ import bisq.common.crypto.PubKeyRing;
 
 import javafx.scene.control.Button;
 
+import javafx.beans.property.ReadOnlyDoubleProperty;
+
 import javafx.collections.ObservableList;
 
 public interface ChatSession {
@@ -42,9 +44,11 @@ public interface ChatSession {
 
     boolean chatIsOpen();
 
+    Button extraButton();
+
     NodeAddress getPeerNodeAddress();
 
     PubKeyRing getPeerPubKeyRing();
 
-    Button extraButton();
+    ReadOnlyDoubleProperty widthProperty();
 }

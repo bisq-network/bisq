@@ -428,8 +428,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     }
 
     private void removeListenersOnSelectDispute() {
-        if (disputeChat != null)
-            disputeChat.removeListenersOnSelectDispute();
         if (selectedDispute != null) {
             if (selectedDisputeClosedPropertyListener != null)
                 selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
@@ -439,8 +437,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private void addListenersOnSelectDispute() {
         if (selectedDispute != null)
             selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
-        if (disputeChat != null)
-            disputeChat.addListenersOnSelectDispute(root.widthProperty());
     }
 
     private void onSelectDispute(Dispute dispute) {
@@ -458,7 +454,8 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
                     closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
                 }
-                disputeChat.display(new DisputeChatSession(dispute, disputeManager, closeDisputeButton));
+                disputeChat.display(new DisputeChatSession(dispute, disputeManager, closeDisputeButton,
+                        root.widthProperty()));
             }
 
             if (root.getChildren().size() > 2)

@@ -29,6 +29,8 @@ import bisq.common.crypto.PubKeyRing;
 
 import javafx.scene.control.Button;
 
+import javafx.beans.property.ReadOnlyDoubleProperty;
+
 import javafx.collections.ObservableList;
 
 import javax.annotation.Nullable;
@@ -37,11 +39,18 @@ public class DisputeChatSession implements ChatSession {
     private Dispute dispute;
     private DisputeManager disputeManager;
     private Button extraButton;
+    private ReadOnlyDoubleProperty widthProperty;
 
-    public DisputeChatSession(Dispute dispute, DisputeManager disputeManager, @Nullable Button extraButton) {
+    public DisputeChatSession(
+            Dispute dispute,
+            DisputeManager disputeManager,
+            @Nullable Button extraButton,
+            ReadOnlyDoubleProperty widthProperty
+    ) {
         this.dispute = dispute;
         this.disputeManager = disputeManager;
         this.extraButton = extraButton;
+        this.widthProperty = widthProperty;
     }
 
     @Override
@@ -95,4 +104,8 @@ public class DisputeChatSession implements ChatSession {
         return disputeManager.getNodeAddressPubKeyRingTuple(dispute).second;
     }
 
+    @Override
+    public ReadOnlyDoubleProperty widthProperty() {
+        return widthProperty;
+    }
 }

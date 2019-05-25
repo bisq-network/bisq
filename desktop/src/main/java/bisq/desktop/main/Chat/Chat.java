@@ -147,9 +147,11 @@ public class Chat extends AnchorPane {
 
     public void deactivate() {
         removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        removeListenersOnSessionChange();
     }
 
     public void display(ChatSession chatSession) {
+        removeListenersOnSessionChange();
         this.chatSession = chatSession;
         this.getChildren().clear();
 
@@ -479,8 +481,8 @@ public class Chat extends AnchorPane {
             }
         });
 
+        addListenersOnSessionChange(chatSession.widthProperty());
         scrollToBottom();
-
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -695,7 +697,7 @@ public class Chat extends AnchorPane {
     // Bindings
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addListenersOnSelectDispute(ReadOnlyDoubleProperty widthProperty) {
+    private void addListenersOnSessionChange(ReadOnlyDoubleProperty widthProperty) {
         if (tableGroupHeadline != null) {
             tableGroupHeadline.prefWidthProperty().bind(widthProperty);
             messageListView.prefWidthProperty().bind(widthProperty);
@@ -705,7 +707,7 @@ public class Chat extends AnchorPane {
         }
     }
 
-    public void removeListenersOnSelectDispute() {
+    private void removeListenersOnSessionChange() {
         if (disputeCommunicationMessages != null && disputeDirectMessageListListener != null)
             disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
 
