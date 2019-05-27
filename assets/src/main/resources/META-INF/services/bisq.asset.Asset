@@ -95,6 +95,7 @@ bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
 bisq.asset.coins.ZelCash
 bisq.asset.coins.Zero
+bisq.asset.coins.ZeroClassic
 bisq.asset.tokens.AugmintEuro
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone
