@@ -223,7 +223,7 @@ configure(project(':core')) {
         compile project(':p2p')
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile "com.google.guava:guava:$guavaVersion"
-        compile('network.bisq.btcd-cli4j:btcd-cli4j-core:065d3786') {
+        compile('network.bisq.btcd-cli4j:btcd-cli4j-core:fb933fd') {
             exclude(module: 'guava')
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
@@ -232,7 +232,7 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
             exclude(module: 'jackson-databind')
         }
-        compile('network.bisq.btcd-cli4j:btcd-cli4j-daemon:065d3786') {
+        compile('network.bisq.btcd-cli4j:btcd-cli4j-daemon:fb933fd') {
             exclude(module: 'guava')
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
