@@ -28,6 +28,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.arbitration.Attachment;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.chat.ChatSession;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 
@@ -98,6 +99,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.Getter;
+
+import javax.annotation.Nullable;
+
 public class Chat extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(TextFieldWithIcon.class);
 
@@ -109,6 +114,12 @@ public class Chat extends AnchorPane {
     private BusyAnimation sendMsgBusyAnimation;
     private TableGroupHeadline tableGroupHeadline;
     private VBox messagesInputBox;
+
+    // TODO set these on new session or link to session action
+    @Getter
+    Button extraButton;
+    @Getter
+    private ReadOnlyDoubleProperty widthProperty;
 
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
@@ -150,10 +161,13 @@ public class Chat extends AnchorPane {
         removeListenersOnSessionChange();
     }
 
-    public void display(ChatSession chatSession) {
+    public void display(ChatSession chatSession, @Nullable Button extraButton,
+                        ReadOnlyDoubleProperty widthProperty) {
         removeListenersOnSessionChange();
-        this.chatSession = chatSession;
         this.getChildren().clear();
+        this.chatSession = chatSession;
+        this.extraButton = extraButton;
+        this.widthProperty = widthProperty;
 
         tableGroupHeadline = new TableGroupHeadline();
         tableGroupHeadline.setText(Res.get("support.messages"));
@@ -202,11 +216,11 @@ public class Chat extends AnchorPane {
             buttonBox.setSpacing(10);
             buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
-            if (chatSession.extraButton() != null) {
-                chatSession.extraButton().setDefaultButton(true);
+            if (extraButton != null) {
+                extraButton.setDefaultButton(true);
                 Pane spacer = new Pane();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
-                buttonBox.getChildren().addAll(spacer, chatSession.extraButton());
+                buttonBox.getChildren().addAll(spacer, extraButton);
             }
 
             messagesInputBox = new VBox();
@@ -481,7 +495,7 @@ public class Chat extends AnchorPane {
             }
         });
 
-        addListenersOnSessionChange(chatSession.widthProperty());
+        addListenersOnSessionChange(widthProperty);
         scrollToBottom();
     }
 
@@ -621,8 +635,8 @@ public class Chat extends AnchorPane {
         );
 
         message.addAllAttachments(attachments);
-        NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress();
-        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing();
+        NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress(message);
+        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(message);
 
         chatSession.addDisputeCommunicationMessage(message);
 

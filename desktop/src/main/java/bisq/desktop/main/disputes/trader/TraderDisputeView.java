@@ -25,7 +25,9 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.Chat.Chat;
-import bisq.desktop.main.disputes.DisputeChatSession;
+
+import bisq.core.arbitration.DisputeChatSession;
+
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -454,8 +456,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                     closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
                     closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
                 }
-                disputeChat.display(new DisputeChatSession(dispute, disputeManager, closeDisputeButton,
-                        root.widthProperty()));
+                disputeManager.getChatManager().setChatSession(new DisputeChatSession(dispute, disputeManager,
+                        disputeManager.getChatManager()));
+                disputeChat.display(disputeManager.getChatManager().getChatSession(), closeDisputeButton,
+                        root.widthProperty()
+                );
             }
 
             if (root.getChildren().size() > 2)
