@@ -44,18 +44,22 @@ public class PaymentAccountUtil {
                 AccountAgeRestrictions.isMakersAccountAgeImmature(accountAgeWitnessService, offer);
     }
 
-    public static boolean isSellOfferAndAnyTakerPaymentAccountForOfferMature(Offer offer,
-                                                                             Collection<PaymentAccount> takerPaymentAccounts,
-                                                                             AccountAgeWitnessService accountAgeWitnessService) {
+    public static boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature(Offer offer,
+                                                                                Collection<PaymentAccount> takerPaymentAccounts,
+                                                                                AccountAgeWitnessService accountAgeWitnessService) {
+        if (offer.isBuyOffer()) {
+            return false;
+        }
+
         if (!OfferRestrictions.isSellOfferRisky(offer)) {
-            return true;
+            return false;
         }
 
         for (PaymentAccount takerPaymentAccount : takerPaymentAccounts) {
             if (isTakerAccountForOfferMature(offer, takerPaymentAccount, accountAgeWitnessService))
-                return true;
+                return false;
         }
-        return false;
+        return true;
     }
 
     private static boolean isTakerAccountForOfferMature(Offer offer,
@@ -96,7 +100,7 @@ public class PaymentAccountUtil {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
                 .filter(paymentAccount -> isTakerPaymentAccountValidForOffer(offer, paymentAccount))
-                .filter(paymentAccount -> isTakerAccountForOfferMature(offer, paymentAccount, accountAgeWitnessService))
+                .filter(paymentAccount -> offer.isBuyOffer() || isTakerAccountForOfferMature(offer, paymentAccount, accountAgeWitnessService))
                 .collect(Collectors.toList()));
         return result;
     }

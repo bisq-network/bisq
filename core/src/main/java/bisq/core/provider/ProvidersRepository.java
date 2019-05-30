@@ -41,11 +41,11 @@ import javax.annotation.Nullable;
 @Slf4j
 public class ProvidersRepository {
     private static final List<String> DEFAULT_NODES = Arrays.asList(
-            "http://xc3nh4juf2hshy7e.onion/", // @emzy
-            "http://ceaanhbvluug4we6.onion/",// @miker
-            "http://44mgyoe2b6oqiytt.onion/",// @devinbileck
-            "http://5bmpx76qllutpcyp.onion/",// @cbeams
-            "http://62nvujg5iou3vu3i.onion/" // @manfredkarrer
+            "http://xc3nh4juf2hshy7e.onion/",   // @emzy
+            "http://ceaanhbvluug4we6.onion/",   // @mrosseel
+            "http://44mgyoe2b6oqiytt.onion/",   // @devinbileck
+            "http://5bmpx76qllutpcyp.onion/",   // @cbeams
+            "http://62nvujg5iou3vu3i.onion/"    // @alexej996
     );
 
     private final String providersFromProgramArgs;

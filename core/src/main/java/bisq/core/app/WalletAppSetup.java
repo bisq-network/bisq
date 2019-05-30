@@ -117,7 +117,7 @@ public class WalletAppSetup {
                         } else if (percentage > 0.0) {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
-                                    Res.get("mainView.footer.btcInfo.synchronizedWith"),
+                                    Res.get("mainView.footer.btcInfo.synchronizingWith"),
                                     getBtcNetworkAsString() + ": " + formatter.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",

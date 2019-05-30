@@ -21,6 +21,7 @@ bisq.asset.coins.Blur
 bisq.asset.coins.BSQ$Mainnet
 bisq.asset.coins.BSQ$Regtest
 bisq.asset.coins.BSQ$Testnet
+bisq.asset.coins.BurntBlackCoin
 bisq.asset.coins.Byteball
 bisq.asset.coins.Cash2
 bisq.asset.coins.Chaucha
@@ -95,6 +96,7 @@ bisq.asset.coins.Zcash
 bisq.asset.coins.Zcoin
 bisq.asset.coins.ZelCash
 bisq.asset.coins.Zero
+bisq.asset.coins.ZeroClassic
 bisq.asset.tokens.AugmintEuro
 bisq.asset.tokens.DaiStablecoin
 bisq.asset.tokens.EtherStone

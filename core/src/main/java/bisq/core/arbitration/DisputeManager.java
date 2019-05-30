@@ -997,9 +997,8 @@ public class DisputeManager implements PersistedDataHost {
                 success = true;
             }
         } catch (TransactionVerificationException e) {
-            e.printStackTrace();
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             success = false;
 
             // We prefer to close the dispute in that case. If there was no deposit tx and a random tx was used
@@ -1014,9 +1013,8 @@ public class DisputeManager implements PersistedDataHost {
 
             throw new RuntimeException(errorMessage);
         } catch (AddressFormatException | WalletException e) {
-            e.printStackTrace();
             errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage);
+            log.error(errorMessage, e);
             success = false;
             throw new RuntimeException(errorMessage);
         } finally {
