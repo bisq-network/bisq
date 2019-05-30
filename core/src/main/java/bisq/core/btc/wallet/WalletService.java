@@ -103,6 +103,7 @@ public abstract class WalletService {
     protected final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
     protected final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
     protected Wallet wallet;
+    @Getter
     protected KeyParameter aesKey;
     @Getter
     protected IntegerProperty chainHeightProperty = new SimpleIntegerProperty();

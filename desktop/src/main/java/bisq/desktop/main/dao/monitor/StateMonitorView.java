@@ -520,7 +520,7 @@ public abstract class StateMonitorView<StH extends StateHash,
                             public void updateItem(final CLI item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(item.getPeerAddress());
+                                    setText(item.getPeerAddressString());
                                 else
                                     setText("");
                             }
