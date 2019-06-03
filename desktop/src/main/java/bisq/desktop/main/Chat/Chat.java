@@ -101,6 +101,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.annotation.Nullable;
 
@@ -120,6 +121,8 @@ public class Chat extends AnchorPane {
     Button extraButton;
     @Getter
     private ReadOnlyDoubleProperty widthProperty;
+    @Setter
+    boolean allowAttachments;
 
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
@@ -139,6 +142,7 @@ public class Chat extends AnchorPane {
         this.chatManager = chatManager;
         this.formatter = formatter;
         this.p2PService = chatManager.getP2PService();
+        allowAttachments = true;
     }
 
     public void initialize() {
@@ -214,7 +218,10 @@ public class Chat extends AnchorPane {
         if (chatSession.chatIsOpen()) {
             HBox buttonBox = new HBox();
             buttonBox.setSpacing(10);
-            buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
+            if (allowAttachments)
+                buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
+            else
+                buttonBox.getChildren().addAll(sendButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
             if (extraButton != null) {
                 extraButton.setDefaultButton(true);
@@ -396,7 +403,9 @@ public class Chat extends AnchorPane {
                             headerLabel.setText(formatter.formatDateTime(new Date(message.getDate())));
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
-                            if (message.getAttachments() != null && message.getAttachments().size() > 0) {
+                            if (allowAttachments &&
+                                    message.getAttachments() != null &&
+                                    message.getAttachments().size() > 0) {
                                 AnchorPane.setBottomAnchor(messageLabel, bottomBorder + attachmentsBoxHeight + 10);
                                 attachmentsBox.getChildren().add(new AutoTooltipLabel(Res.get("support.attachments") + " ") {{
                                     setPadding(new Insets(0, 0, 3, 0));
@@ -519,6 +528,8 @@ public class Chat extends AnchorPane {
     }
 
     private void onRequestUpload() {
+        if (!allowAttachments)
+            return;
         int totalSize = tempAttachments.stream().mapToInt(a -> a.getBytes().length).sum();
         if (tempAttachments.size() < 3) {
             FileChooser fileChooser = new FileChooser();
@@ -558,6 +569,8 @@ public class Chat extends AnchorPane {
     }
 
     private void onOpenAttachment(Attachment attachment) {
+        if (!allowAttachments)
+            return;
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(Res.get("support.save"));
         fileChooser.setInitialFileName(attachment.getFileName());
