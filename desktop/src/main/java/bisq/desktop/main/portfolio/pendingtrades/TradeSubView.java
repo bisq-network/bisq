@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.main.Chat.Chat;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.util.Layout;
@@ -42,6 +43,8 @@ import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import lombok.Getter;
+
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
@@ -50,6 +53,7 @@ public abstract class TradeSubView extends HBox {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected final PendingTradesViewModel model;
+    @Getter
     protected VBox leftVBox;
     protected AnchorPane contentPane;
     protected TradeStepView tradeStepView;
@@ -189,6 +193,10 @@ public abstract class TradeSubView extends HBox {
             log.error("Creating viewClass {} caused an error {}", viewClass, e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    public void setChat(Chat chat) {
+        leftVBox.getChildren().setAll(chat);
     }
 
     private void addLeftBox() {

@@ -191,6 +191,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
+        tradeChat.setAllowAttachments(false);
         tradeChat.initialize();
     }
 
@@ -241,12 +242,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                         model.dataModel.tradeManager,
                                         model.dataModel.tradeManager.getChatManager()),
                                 null,
-                                root.widthProperty());
+                                selectedSubView.getLeftVBox().widthProperty());
+//                                root.widthProperty());
 
-//                    if (root.getChildren().size() == 2)
-//                        root.getChildren().add(tradeChat);
-//                    else if (root.getChildren().size() > 2)
-//                        root.getChildren().set(2, tradeChat);
+                    selectedSubView.setChat(tradeChat);
                 }
 
                 updateTableSelection();
