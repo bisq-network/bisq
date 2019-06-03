@@ -108,6 +108,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles desktop-$version-all.jar \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
+    -BjvmOptions=-Djava.net.preferIPv4Stack=true \
     -outfile Bisq-$version \
     -v
 
@@ -133,6 +134,7 @@ $JAVA_HOME/bin/javapackager \
     -srcfiles desktop-$version-all.jar \
     -appclass bisq.desktop.app.BisqAppMain \
     -BjvmOptions=-Xss1280k \
+    -BjvmOptions=-Djava.net.preferIPv4Stack=true \
     -outfile Bisq-$version \
     -v
 
