@@ -21,7 +21,6 @@
 <?import bisq.desktop.components.AutoTooltipCheckBox?>
 <?import bisq.desktop.components.AutoTooltipLabel?>
 <?import bisq.desktop.components.AutoTooltipRadioButton?>
-<?import bisq.desktop.components.BisqTextArea?>
 <?import bisq.desktop.components.BisqTextField?>
 <?import bisq.desktop.components.InputTextField?>
 <?import bisq.desktop.components.TitledGroupBg?>
@@ -45,12 +44,34 @@
     </padding>
 
     <TitledGroupBg fx:id="btcHeader" GridPane.rowSpan="5"/>
-    <BisqTextArea fx:id="bitcoinPeersTextArea" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"
-                  GridPane.vgrow="SOMETIMES" editable="false" focusTraversable="false" labelFloat="true">
-        <GridPane.margin>
-            <Insets top="25"/>
-        </GridPane.margin>
-    </BisqTextArea>
+    <VBox GridPane.rowIndex="0" GridPane.hgrow="ALWAYS" GridPane.vgrow="SOMETIMES">
+        <AutoTooltipLabel fx:id="bitcoinPeersLabel" styleClass="small-text"/>
+        <TableView fx:id="bitcoinPeersTableView">
+            <columns>
+                <TableColumn fx:id="bitcoinPeerAddressColumn" minWidth="220">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="onionAddress"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="bitcoinPeerVersionColumn" minWidth="80" maxWidth="90">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="version"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="bitcoinPeerSubVersionColumn" minWidth="180" maxWidth="180">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="subVersion"/>
+                    </cellValueFactory>
+                </TableColumn>
+                <TableColumn fx:id="bitcoinPeerHeightColumn" minWidth="80" maxWidth="80">
+                    <cellValueFactory>
+                        <PropertyValueFactory property="height"/>
+                    </cellValueFactory>
+                </TableColumn>
+            </columns>
+        </TableView>
+        <AutoTooltipLabel fx:id="localhostBtcNodeInfoLabel" styleClass="small-text"/>
+    </VBox>
 
     <AutoTooltipCheckBox fx:id="useTorForBtcJCheckBox" GridPane.rowIndex="1"/>
 
@@ -91,7 +112,7 @@
 
     <VBox GridPane.rowIndex="6" GridPane.hgrow="ALWAYS" GridPane.vgrow="SOMETIMES">
         <AutoTooltipLabel fx:id="p2PPeersLabel" styleClass="small-text"/>
-        <TableView fx:id="tableView">
+        <TableView fx:id="p2pPeersTableView">
             <columns>
                 <TableColumn fx:id="onionAddressColumn" minWidth="220">
                     <cellValueFactory>
