@@ -54,7 +54,7 @@ public class BtcNodes {
                         // emzy
                         new BtcNode("kirsche.emzy.de", "fz6nsij6jiyuwlsc.onion", "78.47.61.83", BtcNode.DEFAULT_PORT, "@emzy"),
                         new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.75.210.81", BtcNode.DEFAULT_PORT, "@emzy"),
-                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "163.172.171.119", BtcNode.DEFAULT_PORT, "@emzy"),
+                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "167.86.90.239", BtcNode.DEFAULT_PORT, "@emzy"),
                         new BtcNode(null, "3xucqntxp5ddoaz5.onion", null, BtcNode.DEFAULT_PORT, "@emzy"), // cannot provide IP because no static IP
 
                         // ripcurlx
