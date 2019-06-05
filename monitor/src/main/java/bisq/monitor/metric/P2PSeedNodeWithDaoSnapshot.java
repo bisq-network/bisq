@@ -73,6 +73,9 @@ public class P2PSeedNodeWithDaoSnapshot extends P2PSeedNodeSnapshot {
     Statistics statistics;
     final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
+    private int daostateheight = 550000;
+    private int proposalheight = daostateheight;
+    private int blindvoteheight = daostateheight;
 
     /**
      * Efficient way to count message occurrences.
@@ -146,15 +149,14 @@ public class P2PSeedNodeWithDaoSnapshot extends P2PSeedNodeSnapshot {
     protected List<NetworkEnvelope> getRequests() {
         List<NetworkEnvelope> result = new ArrayList<>();
 
-        int height = 550000;
         Random random = new Random();
         result.add(new PreliminaryGetDataRequest(random.nextInt(), hashes));
 
-        result.add(new GetDaoStateHashesRequest(height, random.nextInt()));
+        result.add(new GetDaoStateHashesRequest(daostateheight, random.nextInt()));
 
-        result.add(new GetProposalStateHashesRequest(height, random.nextInt()));
+        result.add(new GetProposalStateHashesRequest(proposalheight, random.nextInt()));
 
-        result.add(new GetBlindVoteStateHashesRequest(height, random.nextInt()));
+        result.add(new GetBlindVoteStateHashesRequest(blindvoteheight, random.nextInt()));
 
         return result;
     }
@@ -220,7 +222,16 @@ public class P2PSeedNodeWithDaoSnapshot extends P2PSeedNodeSnapshot {
         //   - process dao data
         perType.forEach((type, nodeAddressTupleMap) -> {
             //   - find head
-            long head = nodeAddressTupleMap.values().stream().sorted((o1, o2) -> Long.compare(o1.height, o2.height)).findFirst().get().height;
+            int head = (int) nodeAddressTupleMap.values().stream().sorted((o1, o2) -> Long.compare(o1.height, o2.height)).findFirst().get().height;
+
+            //   - update queried height
+            if(type.contains("DaoState"))
+                daostateheight = head - 20;
+            else if(type.contains("Proposal"))
+                proposalheight = head - 20;
+            else
+                blindvoteheight = head - 20;
+
             //   - calculate diffs
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".head", Long.toString(tuple.height - head)));
 
