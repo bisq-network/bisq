@@ -29,6 +29,7 @@ import bisq.core.locale.Res;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -55,14 +56,15 @@ public abstract class TradeSubView extends HBox {
     protected final PendingTradesViewModel model;
     @Getter
     protected VBox leftVBox;
-    protected AnchorPane contentPane;
-    protected TradeStepView tradeStepView;
+    private AnchorPane contentPane;
+    private TradeStepView tradeStepView;
     private AutoTooltipButton openDisputeButton;
     private NotificationGroup notificationGroup;
-    protected GridPane leftGridPane;
-    protected TitledGroupBg tradeProcessTitledGroupBg;
-    protected int leftGridPaneRowIndex = 0;
-    protected Subscription viewStateSubscription;
+    private GridPane leftGridPane;
+    private TitledGroupBg tradeProcessTitledGroupBg;
+    private int leftGridPaneRowIndex = 0;
+    Subscription viewStateSubscription;
+    private Chat chat;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -96,6 +98,15 @@ public abstract class TradeSubView extends HBox {
         addLeftBox();
         addContentPane();
 
+        GridPane titleGridPane = new GridPane();
+        leftVBox.getChildren().add(titleGridPane);
+        leftVBox.setPrefWidth(340);
+        ColumnConstraints cc1 = new ColumnConstraints();
+        cc1.setPrefWidth(150);
+        ColumnConstraints cc2 = new ColumnConstraints();
+        cc2.setPrefWidth(150);
+        titleGridPane.getColumnConstraints().addAll(cc1, cc2);
+
         leftGridPane = new GridPane();
         leftGridPane.setPrefWidth(340);
         leftGridPane.setHgap(Layout.GRID_GAP);
@@ -103,10 +114,23 @@ public abstract class TradeSubView extends HBox {
         VBox.setMargin(leftGridPane, new Insets(0, 10, 10, 10));
         leftVBox.getChildren().add(leftGridPane);
 
-        leftGridPaneRowIndex = 0;
-        tradeProcessTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, Res.get("portfolio.pending.tradeProcess"));
-        tradeProcessTitledGroupBg.getStyleClass().add("last");
+        tradeProcessTitledGroupBg = addTitledGroupBg(titleGridPane, 0, 0, 1, Res.get("portfolio.pending.tradeProcess"));
+        tradeProcessTitledGroupBg.getStyleClass().addAll("last", "show-hand");
+        tradeProcessTitledGroupBg.setOnMouseClicked(e -> {
+            leftVBox.setPrefWidth(340);
+            leftVBox.getChildren().set(1, leftGridPane);
+        });
+        TitledGroupBg chatTitleGroupBg = addTitledGroupBg(titleGridPane, 0, 1, 1, "Chat");
+        chatTitleGroupBg.getStyleClass().addAll("last", "show-hand");
+        chatTitleGroupBg.setOnMouseClicked(e -> {
+            if (chat == null)
+                return;
+            VBox.setMargin(chat, new Insets(11, 10, 10, 10));
+            leftVBox.setPrefWidth(640);
+            leftVBox.getChildren().set(1, chat);
+        });
 
+        leftGridPaneRowIndex = 0;
         addWizards();
 
         TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
@@ -196,7 +220,7 @@ public abstract class TradeSubView extends HBox {
     }
 
     public void setChat(Chat chat) {
-        leftVBox.getChildren().setAll(chat);
+        this.chat = chat;
     }
 
     private void addLeftBox() {

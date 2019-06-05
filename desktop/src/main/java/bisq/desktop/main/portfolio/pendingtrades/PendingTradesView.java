@@ -35,7 +35,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.util.Utilities;
@@ -78,7 +77,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
-    private final P2PService p2PService;
     private final boolean useDevPrivilegeKeys;
     @FXML
     TableView<PendingTradesListItem> tableView;
@@ -105,14 +103,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              BSFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
-                             P2PService p2PService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
-        this.p2PService = p2PService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -192,6 +188,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
         tradeChat.setAllowAttachments(false);
+        tradeChat.setDisplayHeader(false);
         tradeChat.initialize();
     }
 
@@ -243,7 +240,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                         model.dataModel.tradeManager.getChatManager()),
                                 null,
                                 selectedSubView.getLeftVBox().widthProperty());
-//                                root.widthProperty());
 
                     selectedSubView.setChat(tradeChat);
                 }

@@ -117,12 +117,15 @@ public class Chat extends AnchorPane {
     private TableGroupHeadline tableGroupHeadline;
     private VBox messagesInputBox;
 
+    // Options
     @Getter
     Button extraButton;
     @Getter
     private ReadOnlyDoubleProperty widthProperty;
     @Setter
     boolean allowAttachments;
+    @Setter
+    boolean displayHeader;
 
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
@@ -143,6 +146,7 @@ public class Chat extends AnchorPane {
         this.formatter = formatter;
         this.p2PService = chatManager.getP2PService();
         allowAttachments = true;
+        displayHeader = true;
     }
 
     public void initialize() {
@@ -215,6 +219,9 @@ public class Chat extends AnchorPane {
 
         sendMsgBusyAnimation = new BusyAnimation(false);
 
+        if (displayHeader)
+            this.getChildren().add(tableGroupHeadline);
+
         if (chatSession.chatIsOpen()) {
             HBox buttonBox = new HBox();
             buttonBox.setSpacing(10);
@@ -241,17 +248,13 @@ public class Chat extends AnchorPane {
 
             AnchorPane.setBottomAnchor(messageListView, 120d);
 
-            this.getChildren().addAll(tableGroupHeadline, messageListView, messagesInputBox);
-        } else
-
-        {
+            this.getChildren().addAll(messageListView, messagesInputBox);
+        } else {
             AnchorPane.setBottomAnchor(messageListView, 0d);
-            this.getChildren().addAll(tableGroupHeadline, messageListView);
+            this.getChildren().add(messageListView);
         }
 
-        messageListView.setCellFactory(new Callback<>()
-
-        {
+        messageListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                 return new ListCell<>() {
@@ -720,6 +723,7 @@ public class Chat extends AnchorPane {
     public void removeInputBox() {
         this.getChildren().remove(messagesInputBox);
     }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Bindings
     ///////////////////////////////////////////////////////////////////////////////////////////
