@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @author Florian Reimair
  */
 @Slf4j
-public class P2PMarketStats extends P2PSeedNodeSnapshot {
+public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
 
     /**
