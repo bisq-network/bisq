@@ -86,6 +86,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
 
+import static bisq.network.p2p.network.ConnectionConfig.MSG_THROTTLE_PER_10_SEC;
+import static bisq.network.p2p.network.ConnectionConfig.MSG_THROTTLE_PER_SEC;
+import static bisq.network.p2p.network.ConnectionConfig.SEND_MSG_THROTTLE_SLEEP;
+import static bisq.network.p2p.network.ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -184,6 +188,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
 
+        if(connectionConfig == null)
+            connectionConfig = new ConnectionConfig(MSG_THROTTLE_PER_SEC, MSG_THROTTLE_PER_10_SEC, SEND_MSG_THROTTLE_TRIGGER, SEND_MSG_THROTTLE_SLEEP);
         msgThrottlePerSec = connectionConfig.getMsgThrottlePerSec();
         msgThrottlePer10Sec = connectionConfig.getMsgThrottlePer10Sec();
         sendMsgThrottleTrigger = connectionConfig.getSendMsgThrottleTrigger();

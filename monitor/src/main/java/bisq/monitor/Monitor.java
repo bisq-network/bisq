@@ -20,12 +20,12 @@ package bisq.monitor;
 import bisq.monitor.metric.MarketStats;
 import bisq.monitor.metric.P2PMarketStats;
 import bisq.monitor.metric.P2PNetworkLoad;
-import bisq.monitor.metric.P2PSeedNodeSnapshot;
 import bisq.monitor.metric.P2PRoundTripTime;
 import bisq.monitor.metric.PriceNodeStats;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
+import bisq.monitor.metric.P2PSeedNodeSnapshot;
 import bisq.monitor.reporter.ConsoleReporter;
 import bisq.monitor.reporter.GraphiteReporter;
 
