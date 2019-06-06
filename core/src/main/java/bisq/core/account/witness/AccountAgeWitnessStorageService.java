@@ -84,6 +84,6 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
         super.readStore();
         checkArgument(store instanceof AccountAgeWitnessStore,
                 "Store is not instance of AccountAgeWitnessStore. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
+                        "file got changed. We cleared the data store and recreated it again.");
     }
 }

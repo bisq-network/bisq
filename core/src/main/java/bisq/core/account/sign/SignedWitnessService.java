@@ -246,7 +246,7 @@ public class SignedWitnessService {
      * Helper to isValidAccountAgeWitness(accountAgeWitness)
      * @param signedWitness the signedWitness to validate
      * @param childSignedWitnessDateMillis the date the child SignedWitness was signed or current time if it is a leave.
-     * @param excludedPubKeys stack to preventsrecursive loops
+     * @param excludedPubKeys stack to prevent recursive loops
      * @return true if signedWitness is valid, false otherwise.
      */
     private boolean isValidSignedWitnessInternal(SignedWitness signedWitness, long childSignedWitnessDateMillis, Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
@@ -261,7 +261,7 @@ public class SignedWitnessService {
                 return false;
             }
             if (excludedPubKeys.size() >= 2000) {
-                // Prevent DoS attack: an attacker floods the SignedWitness db with a long chain that takes lots of time to verify.ca
+                // Prevent DoS attack: an attacker floods the SignedWitness db with a long chain that takes lots of time to verify.
                 return false;
             }
             excludedPubKeys.push(new P2PDataStorage.ByteArray(signedWitness.getSignerPubKey()));

@@ -84,6 +84,6 @@ public class SignedWitnessStorageService extends MapStoreService<SignedWitnessSt
         super.readStore();
         checkArgument(store instanceof SignedWitnessStore,
                 "Store is not instance of SignedWitnessStore. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
+                        "file got changed. We cleared the data store and recreated it again.");
     }
 }
