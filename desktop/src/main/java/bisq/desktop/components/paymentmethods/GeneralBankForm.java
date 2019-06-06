@@ -6,9 +6,9 @@ import bisq.desktop.util.validation.BankIdValidator;
 import bisq.desktop.util.validation.BranchIdValidator;
 import bisq.desktop.util.validation.NationalAccountIdValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import bisq.core.util.BSFormatter;

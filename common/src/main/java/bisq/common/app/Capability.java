@@ -33,5 +33,6 @@ public enum Capability {
     ACK_MSG,
     BSQ_BLOCK,
     DAO_STATE,
-    BUNDLE_OF_ENVELOPES
+    BUNDLE_OF_ENVELOPES,
+    SIGNED_ACCOUNT_AGE_WITNESS
 }

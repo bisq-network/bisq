@@ -438,6 +438,7 @@ message PersistableNetworkPayload {
         TradeStatistics2 trade_statistics2 = 2;
         ProposalPayload proposal_payload = 3;
         BlindVotePayload blind_vote_payload = 4;
+        SignedWitness signed_witness = 5;
     }
 }
 
@@ -637,6 +638,16 @@ message OfferPayload {
 message AccountAgeWitness {
     bytes hash = 1;
     int64 date = 2;
+}
+
+message SignedWitness {
+    bool signed_by_arbitrator = 1;
+    bytes witness_hash = 2;
+    bytes signature = 3;
+    bytes signer_pub_key = 4;
+    bytes witness_owner_pub_key = 5;
+    int64 date = 6;
+    int64 trade_amount = 7;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1020,6 +1031,7 @@ message PersistableEnvelope {
         MyReputationList my_reputation_list = 25;
         MyProofOfBurnList my_proof_of_burn_list = 26;
         UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
+        SignedWitnessStore signed_witness_store = 28;
     }
 }
 
@@ -1058,6 +1070,10 @@ message PersistableNetworkPayloadList {
 // We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
 message AccountAgeWitnessStore {
     repeated AccountAgeWitness items = 1;
+}
+
+message SignedWitnessStore {
+    repeated SignedWitness items = 1;
 }
 
 // We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
