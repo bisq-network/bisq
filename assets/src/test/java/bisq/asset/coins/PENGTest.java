@@ -37,9 +37,9 @@ public class PENGTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertValidAddress("Pp9KqnVS9UpcJmLtCF1j4SV3fcccMuGEbhs");
-        assertValidAddress("PqUTXyY73s3HDvEzNJQekXMnjNjTrzFBzE2");
-        assertValidAddress("P8Efabj5DzRj6WBpc3jtVDorsVM5nddDxie");
-        assertValidAddress("P9AvXbSUAdCyd9MEtDPYYSmezmeLGL1HcjG");
+        assertInvalidAddress("Pp9KqnVS9UpcJmLtCF1j4SV3fcccMuGEbhs");
+        assertInvalidAddress("PqUTXyY73s3HDvEzNJQekXMnjNjTrzFBzE2");
+        assertInvalidAddress("P8Efabj5DzRj6WBpc3jtVDorsVM5nddDxie");
+        assertInvalidAddress("P9AvXbSUAdCyd9MEtDPYYSmezmeLGL1HcjG");
     }
 }
