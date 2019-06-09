@@ -67,6 +67,7 @@ bisq.asset.coins.Navcoin
 bisq.asset.coins.Neos
 bisq.asset.coins.Noir
 bisq.asset.coins.ParsiCoin
+bisq.asset.coins.PENG
 bisq.asset.coins.Persona
 bisq.asset.coins.Pinkcoin
 bisq.asset.coins.PIVX
@@ -89,6 +90,7 @@ bisq.asset.coins.TurtleCoin
 bisq.asset.coins.UnitedCommunityCoin
 bisq.asset.coins.Unobtanium
 bisq.asset.coins.Veil
+bisq.asset.coins.ViBook
 bisq.asset.coins.Webchain
 bisq.asset.coins.WrkzCoin
 bisq.asset.coins.XDR
