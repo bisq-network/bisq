@@ -222,6 +222,7 @@ public class SellerStep3View extends TradeStepView {
         statusLabel = tuple.third;
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Info
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +231,7 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected String getInfoText() {
         String currencyCode = model.dataModel.getCurrencyCode();
-        if (model.isBlockChainMethod()) {
+        if (model.isAsset()) {
             return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.altcoin", currencyCode));
         } else {
             return Res.get("portfolio.pending.step3_seller.buyerStartedPayment", Res.get("portfolio.pending.step3_seller.buyerStartedPayment.fiat", currencyCode));
@@ -244,7 +245,7 @@ public class SellerStep3View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setWarningHeadline();
-        String substitute = model.isBlockChainMethod() ?
+        String substitute = model.isAsset() ?
                 Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_seller.warn.part1b");
         return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
@@ -262,9 +263,17 @@ public class SellerStep3View extends TradeStepView {
     }
 
     @Override
-    protected void applyOnDisputeOpened() {
-        // confirmButton.setDisable(true);
+    protected void showReleaseBtcButton() {
+        if (confirmButton != null && confirmButton.isDisable()) {
+            confirmButton.setVisible(true);
+            confirmButton.setManaged(true);
+            confirmButton.setDisable(false);
+            confirmButton.setText(Res.get("portfolio.pending.step3_seller.releaseBtc").toUpperCase());
+            confirmButton.setOnAction(e -> releaseBtc());
+            statusLabel.setText("");
+        }
     }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
@@ -312,6 +321,22 @@ public class SellerStep3View extends TradeStepView {
         } else {
             model.dataModel.showNotReadyForTxBroadcastPopups();
         }
+    }
+
+    private void releaseBtc() {
+        busyAnimation.play();
+        statusLabel.setText(Res.get("shared.sendingConfirmation"));
+        model.dataModel.onFiatPaymentReceived(() -> {
+            // In case the first send failed we got the support button displayed.
+            // If it succeeds at a second try we remove the support button again.
+            //TODO check for support. in case of a dispute we dont want to hide the button
+            //if (notificationGroup != null)
+            //   notificationGroup.setButtonVisible(false);
+        }, errorMessage -> {
+            // confirmButton.setDisable(false);
+            busyAnimation.stop();
+            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+        });
     }
 
     @SuppressWarnings("PointlessBooleanExpression")
@@ -374,17 +399,21 @@ public class SellerStep3View extends TradeStepView {
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
 
-        model.dataModel.onFiatPaymentReceived(() -> {
-            // In case the first send failed we got the support button displayed.
-            // If it succeeds at a second try we remove the support button again.
-            //TODO check for support. in case of a dispute we dont want to hide the button
-            //if (notificationGroup != null)
-            //   notificationGroup.setButtonVisible(false);
-        }, errorMessage -> {
-            // confirmButton.setDisable(false);
-            busyAnimation.stop();
-            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
-        }, this::handleDelayedPayout);
+        if (model.dataModel.requirePayoutDelay()) {
+            handleDelayedPayout();
+        } else {
+            model.dataModel.onFiatPaymentReceived(() -> {
+                // In case the first send failed we got the support button displayed.
+                // If it succeeds at a second try we remove the support button again.
+                //TODO check for support. in case of a dispute we dont want to hide the button
+                //if (notificationGroup != null)
+                //   notificationGroup.setButtonVisible(false);
+            }, errorMessage -> {
+                // confirmButton.setDisable(false);
+                busyAnimation.stop();
+                new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            });
+        }
     }
 
     private void handleDelayedPayout() {

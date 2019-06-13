@@ -604,6 +604,10 @@ public class BSFormatter {
     }
 
     public String formatAccountAge(long durationMillis) {
+        return formatTimePeriodInDays(durationMillis);
+    }
+
+    public String formatTimePeriodInDays(long durationMillis) {
         durationMillis = Math.max(0, durationMillis);
         String day = Res.get("time.day").toLowerCase();
         String days = Res.get("time.days");

@@ -23,6 +23,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -40,6 +41,7 @@ import bisq.common.Clock;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
 
@@ -87,6 +89,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final ClosedTradableManager closedTradableManager;
     @Getter
     private final AccountScoreService accountScoreService;
+    private final BtcWalletService btcWalletService;
     public final Clock clock;
     @Getter
     private final User user;
@@ -115,6 +118,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
                                   AccountScoreService accountScoreService,
+                                  BtcWalletService btcWalletService,
                                   Clock clock,
                                   User user) {
         super(dataModel);
@@ -126,6 +130,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.accountScoreService = accountScoreService;
+        this.btcWalletService = btcWalletService;
         this.clock = clock;
         this.user = user;
     }
@@ -204,8 +209,23 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return btcFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
-    private long getMaxTradePeriod() {
+    long getMaxTradePeriod() {
         return dataModel.getOffer() != null ? dataModel.getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
+    }
+
+    public String getTradePeriodOverDate() {
+        return btcFormatter.formatDateTime(dataModel.getTradePeriodSectionDate());
+    }
+
+    public String getRemainingTradePeriod() {
+        long now = new Date().getTime();
+        long tradePeriodOverDate = dataModel.getTradePeriodSectionDate().getTime();
+        long remaining = tradePeriodOverDate - now;
+        return btcFormatter.formatDurationAsWords(remaining);
+    }
+
+    public String getMaxTradePeriodAsString() {
+        return btcFormatter.formatTimePeriodInDays(getMaxTradePeriod());
     }
 
     @Nullable
@@ -218,8 +238,41 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return dataModel.getTrade() != null ? dataModel.getTrade().getHalfTradePeriodDate() : null;
     }
 
-    private long getRemainingTradeDuration() {
-        return getMaxTradePeriodDate() != null ? getMaxTradePeriodDate().getTime() - new Date().getTime() : getMaxTradePeriod();
+    public long getRemainingTradeDuration() {
+        if (dataModel.getTrade() == null)
+            return 0;  // not expected
+
+        long maxPeriod = getMaxTradePeriod();
+        if (maxPeriod == 0)
+            return 0;   // not expected
+
+        long tradeTime = getTradeStartTime();
+        // In case delay is 0 or shorter as max trade period we use max trade period
+        long maxDuration = Math.max(maxPeriod, dataModel.getPayoutDelay());
+        long releaseBtcTime = tradeTime + maxDuration;
+
+        long now = new Date().getTime();
+        long totalRemaining = releaseBtcTime - now;
+        return totalRemaining;
+
+        //return getMaxTradePeriodDate() != null ? getMaxTradePeriodDate().getTime() - new Date().getTime() : getMaxTradePeriod();
+    }
+
+    private long getTradeStartTime() {
+        long now = new Date().getTime();
+        if (dataModel.getTrade() == null)
+            return now;
+
+
+        Transaction transaction = btcWalletService.getTransaction(dataModel.getTrade().getDepositTxId());
+        if (transaction == null)
+            return now;
+
+        Date confirmationTime = transaction.getIncludedInBestChainAt();
+        if (confirmationTime == null)
+            return now;
+
+        return confirmationTime.getTime();
     }
 
     public String getRemainingTradeDurationAsWords() {
@@ -227,12 +280,22 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public double getRemainingTradeDurationAsPercentage() {
+        if (dataModel.getTrade() == null)
+            return 0;  // not expected
+
         long maxPeriod = getMaxTradePeriod();
-        long remaining = getRemainingTradeDuration();
-        if (maxPeriod != 0) {
-            return 1 - (double) remaining / (double) maxPeriod;
-        } else
-            return 0;
+        if (maxPeriod == 0)
+            return 0;   // not expected
+
+        long tradeTime = getTradeStartTime();
+        // In case delay is 0 or shorter as max trade period we use max trade period
+        long maxDuration = Math.max(maxPeriod, dataModel.getPayoutDelay());
+        long releaseBtcTime = tradeTime + maxDuration;
+
+        long now = new Date().getTime();
+        long totalRemaining = releaseBtcTime - now;
+
+        return 1 - (double) totalRemaining / (double) maxDuration;
     }
 
     public String getDateForOpenDispute() {
@@ -323,7 +386,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         }
     }
 
-    public boolean isBlockChainMethod() {
+    public boolean isAsset() {
         return dataModel.getOffer() != null && dataModel.getOffer().getPaymentMethod().isAsset();
     }
 
@@ -342,6 +405,11 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 .collect(Collectors.toSet())
                 .size();
     }
+
+    public String getPayoutDelayAsString() {
+        return btcFormatter.formatTimePeriodInDays(dataModel.getPayoutDelay());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // States

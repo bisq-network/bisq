@@ -131,7 +131,7 @@ public class BuyerStep3View extends TradeStepView {
     @Override
     protected String getWarningText() {
         setInformationHeadline();
-        String substitute = model.isBlockChainMethod() ?
+        String substitute = model.isAsset() ?
                 Res.get("portfolio.pending.step3_buyer.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_buyer.warn.part1b");
         return Res.get("portfolio.pending.step3_buyer.warn.part2", substitute, model.getDateForOpenDispute());

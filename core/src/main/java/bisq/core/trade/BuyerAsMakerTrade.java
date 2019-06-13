@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
@@ -50,8 +51,9 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              boolean isCurrencyForTakerFeeBtc,
                              @Nullable NodeAddress arbitratorNodeAddress,
                              Storage<? extends TradableList> storage,
-                             BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+                             BtcWalletService btcWalletService,
+                             AccountScoreService accountScoreService) {
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -69,6 +71,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     public static Tradable fromProto(PB.BuyerAsMakerTrade buyerAsMakerTradeProto,
                                      Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
+                                     AccountScoreService accountScoreService,
                                      CoreProtoResolver coreProtoResolver) {
         PB.Trade proto = buyerAsMakerTradeProto.getTrade();
         BuyerAsMakerTrade trade = new BuyerAsMakerTrade(
@@ -78,7 +81,8 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 proto.getIsCurrencyForTakerFeeBtc(),
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 storage,
-                btcWalletService);
+                btcWalletService,
+                accountScoreService);
 
         trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
         trade.setTradePrice(proto.getTradePrice());

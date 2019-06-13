@@ -1221,6 +1221,8 @@ message Trade {
         FIRST_HALF = 1;
         SECOND_HALF = 2;
         TRADE_PERIOD_OVER = 3;
+        PAYOUT_DELAY = 4; // Added later so it is not in logical order but as we cannot change PB definition we need to keep it that way.
+        RELEASE_BTC = 5;
     }
 
     Offer offer = 1;

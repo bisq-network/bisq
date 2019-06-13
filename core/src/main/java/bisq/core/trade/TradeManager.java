@@ -335,7 +335,8 @@ public class TradeManager implements PersistedDataHost {
                         payDepositRequest.isCurrencyForTakerFeeBtc(),
                         openOffer.getArbitratorNodeAddress(),
                         tradableListStorage,
-                        btcWalletService);
+                        btcWalletService,
+                        accountScoreService);
             else
                 trade = new SellerAsMakerTrade(offer,
                         Coin.valueOf(payDepositRequest.getTxFee()),
@@ -343,7 +344,8 @@ public class TradeManager implements PersistedDataHost {
                         payDepositRequest.isCurrencyForTakerFeeBtc(),
                         openOffer.getArbitratorNodeAddress(),
                         tradableListStorage,
-                        btcWalletService);
+                        btcWalletService,
+                        accountScoreService);
 
             initTrade(trade, trade.getProcessModel().isUseSavingsWallet(), trade.getProcessModel().getFundsNeededForTradeAsLong());
             tradableList.add(trade);
@@ -454,7 +456,8 @@ public class TradeManager implements PersistedDataHost {
                     model.getPeerNodeAddress(),
                     model.getSelectedArbitrator(),
                     tradableListStorage,
-                    btcWalletService);
+                    btcWalletService,
+                    accountScoreService);
         else
             trade = new BuyerAsTakerTrade(offer,
                     amount,
@@ -465,7 +468,8 @@ public class TradeManager implements PersistedDataHost {
                     model.getPeerNodeAddress(),
                     model.getSelectedArbitrator(),
                     tradableListStorage,
-                    btcWalletService);
+                    btcWalletService,
+                    accountScoreService);
 
         trade.setTakerPaymentAccountId(paymentAccountId);
 
@@ -644,13 +648,19 @@ public class TradeManager implements PersistedDataHost {
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
-                if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
-                    Date now = new Date();
-                    if (now.after(maxTradePeriodDate)) {
-                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    } else if (now.after(halfTradePeriodDate)) {
-                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
-                    }
+                Date payoutDelayEndDate = trade.getPayoutDelayEndDate();
+                Date releaseBtcEndDate = trade.getReleaseBtcEndDate();
+
+                Date now = new Date();
+                // If there is no payout delay releaseBtcEndDate=payoutDelayEndDate=maxTradePeriodDate
+                if (now.after(releaseBtcEndDate)) {
+                    trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                } else if (now.after(payoutDelayEndDate)) {
+                    trade.setTradePeriodState(Trade.TradePeriodState.RELEASE_BTC);
+                } else if (now.after(maxTradePeriodDate)) {
+                    trade.setTradePeriodState(Trade.TradePeriodState.PAYOUT_DELAY);
+                } else if (now.after(halfTradePeriodDate)) {
+                    trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
                 }
             }
         });

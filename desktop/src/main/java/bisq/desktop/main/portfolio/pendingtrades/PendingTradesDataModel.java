@@ -72,7 +72,10 @@ import javafx.collections.ObservableList;
 import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -176,13 +179,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((BuyerTrade) trade).onFiatPaymentStarted(resultHandler, errorMessageHandler);
     }
 
-    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler, Runnable delayedPayoutHandler) {
+    public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         checkNotNull(getTrade(), "trade must not be null");
         checkArgument(getTrade() instanceof SellerTrade, "Check failed: trade not instanceof SellerTrade");
 
-        if (requirePayoutDelay()) {
-            delayedPayoutHandler.run();
-        } else if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
+        //TODO should we allow to release btc even if dispute open?
+        if (getTrade().getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
             ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
         }
     }
@@ -551,6 +553,38 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         new Popup<>().warning(errorMessage).show();
                     }
                 });
+    }
+
+    public long getPayoutDelay() {
+        return accountScoreService.getPayoutDelay(selectedTrade);
+    }
+
+    public Optional<Double> getRemainingTradePeriodAsPercentage() {
+        if (selectedTrade == null)
+            return Optional.empty();
+
+        Offer offer = selectedTrade.getOffer();
+        if (offer == null)
+            return Optional.empty();
+
+
+        long tradeStartTime = selectedTrade.getTradeStartTime();
+
+        long payoutDelay = accountScoreService.getPayoutDelay(selectedTrade);
+        // We give seller 1 day time for doing the release after the payout delay is over.
+        // If no payoutDelay is required it is 0.
+        long releaseTime = payoutDelay > 0 ? TimeUnit.DAYS.toMillis(1) : 0;
+
+        long maxTradePeriod = offer.getPaymentMethod().getMaxTradePeriod();
+
+        double maxTime = (double) (maxTradePeriod + payoutDelay + releaseTime);
+
+        double passedTime = (double) (new Date().getTime() - tradeStartTime);
+        return Optional.of(passedTime / maxTime);
+    }
+
+    public Date getTradePeriodSectionDate() {
+        return selectedTrade.getTradePeriodSectionDate();
     }
 }
 

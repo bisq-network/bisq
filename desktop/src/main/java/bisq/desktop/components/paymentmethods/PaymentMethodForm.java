@@ -145,12 +145,22 @@ public abstract class PaymentMethodForm {
 
     public static InfoTextField addOpenTradeDuration(GridPane gridPane,
                                                      int gridRow,
-                                                     Offer offer) {
+                                                     Offer offer,
+                                                     AccountScoreService accountScoreService,
+                                                     BSFormatter formatter) {
         long hours = offer.getMaxTradePeriod() / 3600_000;
+        String timeText = getTimeText(hours);
+        String payoutDelayText = getPayoutDelayText(offer, accountScoreService, formatter);
         final Tuple3<Label, InfoTextField, VBox> labelInfoTextFieldVBoxTuple3 =
-                addTopLabelInfoTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
-                        getTimeText(hours), -Layout.FLOATING_LABEL_DISTANCE);
+                addTopLabelInfoTextField(gridPane, gridRow,
+                        Res.get("payment.maxPeriod"),
+                        timeText + " / " + payoutDelayText,
+                        -Layout.FLOATING_LABEL_DISTANCE);
         return labelInfoTextFieldVBoxTuple3.second;
+    }
+
+    private static String getPayoutDelayText(Offer offer, AccountScoreService accountScoreService, BSFormatter formatter) {
+        return formatter.formatTimePeriodInDays(accountScoreService.getPayoutDelay(offer));
     }
 
     private static String getTimeText(long hours) {

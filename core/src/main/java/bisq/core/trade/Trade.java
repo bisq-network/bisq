@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
@@ -226,7 +227,9 @@ public abstract class Trade implements Tradable, Model {
     public enum TradePeriodState {
         FIRST_HALF,
         SECOND_HALF,
-        TRADE_PERIOD_OVER;
+        TRADE_PERIOD_OVER,
+        PAYOUT_DELAY,   // Added later so it is not in logical order but as we cannot change PB definition we need to keep it that way.
+        RELEASE_BTC;
 
         public static Trade.TradePeriodState fromProto(PB.Trade.TradePeriodState tradePeriodState) {
             return ProtoUtil.enumFromProto(Trade.TradePeriodState.class, tradePeriodState.name());
@@ -253,6 +256,7 @@ public abstract class Trade implements Tradable, Model {
     private final long txFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
+    private final AccountScoreService accountScoreService;
     @Setter
     private long takeOfferDate;
     @Getter
@@ -377,13 +381,15 @@ public abstract class Trade implements Tradable, Model {
                     boolean isCurrencyForTakerFeeBtc,
                     @Nullable NodeAddress arbitratorNodeAddress,
                     Storage<? extends TradableList> storage,
-                    BtcWalletService btcWalletService) {
+                    BtcWalletService btcWalletService,
+                    AccountScoreService accountScoreService) {
         this.offer = offer;
         this.txFee = txFee;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.storage = storage;
         this.btcWalletService = btcWalletService;
+        this.accountScoreService = accountScoreService;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
 
         txFeeAsLong = txFee.value;
@@ -404,9 +410,10 @@ public abstract class Trade implements Tradable, Model {
                     NodeAddress tradingPeerNodeAddress,
                     @Nullable NodeAddress arbitratorNodeAddress,
                     Storage<? extends TradableList> storage,
-                    BtcWalletService btcWalletService) {
+                    BtcWalletService btcWalletService,
+                    AccountScoreService accountScoreService) {
 
-        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
@@ -738,11 +745,27 @@ public abstract class Trade implements Tradable, Model {
         return new Date(getTradeStartTime() + getMaxTradePeriod());
     }
 
-    private long getMaxTradePeriod() {
-        return getOffer().getPaymentMethod().getMaxTradePeriod();
+    public Date getPayoutDelayEndDate() {
+        return new Date(getTradeStartTime() + getMaxTradePeriod() + getPayoutDelay());
     }
 
-    private long getTradeStartTime() {
+    public Date getReleaseBtcEndDate() {
+        return new Date(getTradeStartTime() + getMaxTradePeriod() + getPayoutDelay() + getReleaseBtcPeriod());
+    }
+
+    private long getPayoutDelay() {
+        return accountScoreService.getPayoutDelay(this);
+    }
+
+    private long getReleaseBtcPeriod() {
+        return accountScoreService.getReleaseBtcPeriod(this);
+    }
+
+    private long getMaxTradePeriod() {
+        return getOffer() != null ? getOffer().getPaymentMethod().getMaxTradePeriod() : 0;
+    }
+
+    public long getTradeStartTime() {
         final long now = System.currentTimeMillis();
         long startTime;
         final Transaction depositTx = getDepositTx();
@@ -771,6 +794,41 @@ public abstract class Trade implements Tradable, Model {
             startTime = now;
         }
         return startTime;
+    }
+
+    public Date getTradePeriodSectionDate() {
+        Offer offer = getOffer();
+        if (offer == null)
+            return new Date();
+
+        long tradePeriodStartTime = getTradeStartTime();
+
+        long payoutDelay = accountScoreService.getPayoutDelay(this);
+        // We give seller 1 day time for doing the release after the payout delay is over.
+        // If no payoutDelay is required it is 0.
+        long releaseTime = accountScoreService.getReleaseBtcPeriod(this);
+
+        long maxTradePeriod = getMaxTradePeriod();
+
+
+        long addedPeriod;
+        switch (tradePeriodState) {
+            case FIRST_HALF:
+            case SECOND_HALF:
+                addedPeriod = maxTradePeriod;
+                break;
+            case PAYOUT_DELAY:
+                addedPeriod = maxTradePeriod + payoutDelay;
+                break;
+            case RELEASE_BTC:
+            case TRADE_PERIOD_OVER:
+            default:
+                addedPeriod = maxTradePeriod + payoutDelay + releaseTime;
+                break;
+        }
+
+        long tradePeriodOverDate = tradePeriodStartTime + addedPeriod;
+        return new Date(tradePeriodOverDate);
     }
 
     public boolean hasFailed() {

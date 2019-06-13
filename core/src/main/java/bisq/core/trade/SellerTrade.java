@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.protocol.SellerProtocol;
@@ -46,9 +47,10 @@ public abstract class SellerTrade extends Trade {
                 NodeAddress tradingPeerNodeAddress,
                 @Nullable NodeAddress arbitratorNodeAddress,
                 Storage<? extends TradableList> storage,
-                BtcWalletService btcWalletService) {
+                BtcWalletService btcWalletService,
+                AccountScoreService accountScoreService) {
         super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
-                tradingPeerNodeAddress, arbitratorNodeAddress, storage, btcWalletService);
+                tradingPeerNodeAddress, arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
     }
 
     SellerTrade(Offer offer,
@@ -57,8 +59,9 @@ public abstract class SellerTrade extends Trade {
                 boolean isCurrencyForTakerFeeBtc,
                 @Nullable NodeAddress arbitratorNodeAddress,
                 Storage<? extends TradableList> storage,
-                BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+                BtcWalletService btcWalletService,
+                AccountScoreService accountScoreService) {
+        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {

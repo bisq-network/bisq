@@ -294,6 +294,11 @@ bg color of non edit textFields: fafafa
     -fx-background-color: -bs-rd-error-red;
 }
 
+.jfx-progress-bar.warning > .bar,
+.jfx-progress-bar:indeterminate.warning > .bar {
+    -fx-background-color: -bs-yellow;
+}
+
 .jfx-spinner {
     -jfx-radius: 10;
 }

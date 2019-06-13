@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.proto.CoreProtoResolver;
@@ -41,8 +42,6 @@ import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public final class TradableList<T extends Tradable> implements PersistableEnvelope {
@@ -82,11 +81,11 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                 .build();
     }
 
-    @Nullable
     public static TradableList fromProto(PB.TradableList proto,
                                          CoreProtoResolver coreProtoResolver,
                                          Storage<TradableList<Tradable>> storage,
-                                         BtcWalletService btcWalletService) {
+                                         BtcWalletService btcWalletService,
+                                         AccountScoreService accountScoreService) {
         log.debug("TradableList fromProto of {} ", proto);
 
         List<Tradable> list = proto.getTradableList().stream()
@@ -95,13 +94,13 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                         case OPEN_OFFER:
                             return OpenOffer.fromProto(tradable.getOpenOffer());
                         case BUYER_AS_MAKER_TRADE:
-                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return BuyerAsMakerTrade.fromProto(tradable.getBuyerAsMakerTrade(), storage, btcWalletService, accountScoreService, coreProtoResolver);
                         case BUYER_AS_TAKER_TRADE:
-                            return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return BuyerAsTakerTrade.fromProto(tradable.getBuyerAsTakerTrade(), storage, btcWalletService, accountScoreService, coreProtoResolver);
                         case SELLER_AS_MAKER_TRADE:
-                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return SellerAsMakerTrade.fromProto(tradable.getSellerAsMakerTrade(), storage, btcWalletService, accountScoreService, coreProtoResolver);
                         case SELLER_AS_TAKER_TRADE:
-                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), storage, btcWalletService, coreProtoResolver);
+                            return SellerAsTakerTrade.fromProto(tradable.getSellerAsTakerTrade(), storage, btcWalletService, accountScoreService, coreProtoResolver);
                         default:
                             log.error("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());

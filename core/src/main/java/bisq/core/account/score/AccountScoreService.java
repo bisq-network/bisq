@@ -38,6 +38,7 @@ import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -141,6 +142,7 @@ public class AccountScoreService {
     }
 
     public boolean tradeRequirePayoutDelay(Trade trade) {
+        //TODO add signature domain
         return accountCreationAgeService.tradeRequirePayoutDelay(trade);
     }
 
@@ -153,8 +155,12 @@ public class AccountScoreService {
         return accountCreationAgeService.getDelayForMyOffer(myPaymentAccount, currencyCode, direction);
     }
 
-    public long getDelayForOffer(Offer offer) {
+    public long getPayoutDelay(Offer offer) {
         return accountCreationAgeService.getDelayForOffer(offer);
+    }
+
+    public long getPayoutDelay(Trade trade) {
+        return accountCreationAgeService.getDelay(trade);
     }
 
     public Date getDelayedTradePayoutDate(Trade trade) {
@@ -506,6 +512,10 @@ public class AccountScoreService {
 
         long buyersAccountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
         return Optional.of(getAccountScoreCategory(buyersAccountAge, false));
+    }
+
+    public long getReleaseBtcPeriod(Trade trade) {
+        return tradeRequirePayoutDelay(trade) ? TimeUnit.DAYS.toMillis(1) : 0;
     }
 
 

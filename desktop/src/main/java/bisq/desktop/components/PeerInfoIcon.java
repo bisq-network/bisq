@@ -142,7 +142,12 @@ public class PeerInfoIcon extends Group {
                          boolean useDevPrivilegeKeys,
                          AccountScoreService accountScoreService) {
         this.numTrades = numTrades;
-        this.offer = offer;
+        if (offer == null) {
+            checkNotNull(trade, "trade must not be null if offer is null");
+            this.offer = trade.getOffer();
+        } else {
+            this.offer = offer;
+        }
         this.trade = trade;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.accountScoreService = accountScoreService;

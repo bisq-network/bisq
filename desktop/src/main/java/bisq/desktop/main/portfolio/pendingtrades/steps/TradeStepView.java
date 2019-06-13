@@ -27,6 +27,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.arbitration.Dispute;
 import bisq.core.locale.Res;
+import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
@@ -142,6 +143,8 @@ public abstract class TradeStepView extends AnchorPane {
         clockListener = new Clock.Listener() {
             @Override
             public void onSecondTick() {
+                // TODO for dev testing
+                updateTimeLeft();
             }
 
             @Override
@@ -235,15 +238,15 @@ public abstract class TradeStepView extends AnchorPane {
         if (model.dataModel.getTrade() != null) {
             checkNotNull(model.dataModel.getTrade().getOffer(), "Offer must not be null in TradeStepView");
             InfoTextField infoTextField = addOpenTradeDuration(gridPane, ++gridRow,
-                    model.dataModel.getTrade().getOffer());
+                    model.dataModel.getTrade().getOffer(), model.getAccountScoreService(), model.btcFormatter);
             infoTextField.setContentForInfoPopOver(createInfoPopover());
         }
 
-        final Tuple3<Label, TextField, VBox> labelTextFieldVBoxTuple3 = addCompactTopLabelTextField(gridPane, gridRow,
+        Tuple3<Label, TextField, VBox> labelTextFieldVBoxTuple3 = addCompactTopLabelTextField(gridPane, gridRow,
                 1, Res.get("portfolio.pending.remainingTime"), "");
 
         timeLeftTextField = labelTextFieldVBoxTuple3.second;
-        timeLeftTextField.setMinWidth(400);
+        timeLeftTextField.setMinWidth(500);
 
         timeLeftProgressBar = new JFXProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
@@ -280,26 +283,82 @@ public abstract class TradeStepView extends AnchorPane {
 
     private void updateTimeLeft() {
         if (timeLeftTextField != null) {
-            String remainingTime = model.getRemainingTradeDurationAsWords();
-            timeLeftProgressBar.setProgress(model.getRemainingTradeDurationAsPercentage());
-            if (!remainingTime.isEmpty()) {
-                timeLeftTextField.setText(Res.get("portfolio.pending.remainingTimeDetail",
-                        remainingTime, model.getDateForOpenDispute()));
-                if (model.showWarning() || model.showDispute()) {
-                    timeLeftTextField.getStyleClass().add("error-text");
-                    timeLeftProgressBar.getStyleClass().add("error");
+            Optional<Double> remainingTradePeriodAsPercentage = model.dataModel.getRemainingTradePeriodAsPercentage();
+            boolean present = remainingTradePeriodAsPercentage.isPresent();
+            timeLeftProgressBar.setVisible(present);
+            timeLeftProgressBar.setManaged(present);
+            if (present) {
+                timeLeftProgressBar.setProgress(remainingTradePeriodAsPercentage.get());
+            }
+
+            String tradePeriodOverDate = model.getTradePeriodOverDate();
+            String remainingTradePeriod = model.getRemainingTradePeriod();
+            String tradePeriodInfo = "";
+
+
+            Trade trade = model.dataModel.getTrade();
+            if (trade != null) {
+                String prefix;
+
+                timeLeftTextField.getStyleClass().remove("error-text");
+                timeLeftTextField.getStyleClass().remove("warning");
+                timeLeftProgressBar.getStyleClass().remove("error");
+                timeLeftProgressBar.getStyleClass().remove("warning");
+                switch (trade.getTradePeriodState()) {
+                    case FIRST_HALF:
+                        break;
+                    case SECOND_HALF:
+                        prefix = Res.get("portfolio.pending.remainingTime.tradePeriod");
+                        tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
+                                prefix, remainingTradePeriod, tradePeriodOverDate);
+                        timeLeftProgressBar.getStyleClass().add("warning");
+                        showWarning();
+                        break;
+                    case PAYOUT_DELAY:
+                        prefix = Res.get("portfolio.pending.remainingTime.payoutDelay");
+                        tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
+                                prefix, remainingTradePeriod, tradePeriodOverDate);
+
+                        if (trade instanceof SellerTrade) {
+                            if (trade.getState().ordinal() < Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT.ordinal()) {
+                                // Seller has not clicked the payment received button.
+                                showOpenDisputeButton();
+                                showDisputeInfoLabel();
+                                onOpenForDispute();
+                            } else {
+                                removeWarning();
+                            }
+                        }
+                        break;
+                    case RELEASE_BTC:
+                        prefix = Res.get("portfolio.pending.remainingTime.release");
+                        tradePeriodInfo = Res.get("portfolio.pending.remainingTimeDetail",
+                                prefix, remainingTradePeriod, tradePeriodOverDate);
+                        timeLeftProgressBar.getStyleClass().add("warning");
+                        if (trade instanceof SellerTrade) {
+                            showReleaseBtcButton();
+                        }
+                        break;
+                    case TRADE_PERIOD_OVER:
+                        tradePeriodInfo = model.dataModel.requirePayoutDelay() ?
+                                Res.get("portfolio.pending.bitcoinNotReleased", tradePeriodOverDate) :
+                                Res.get("portfolio.pending.tradeNotCompleted", tradePeriodOverDate);
+                        timeLeftTextField.getStyleClass().add("error-text");
+                        timeLeftProgressBar.getStyleClass().add("error");
+                        showOpenDisputeButton();
+                        showDisputeInfoLabel();
+
+                        break;
                 }
-            } else {
-                if (model.dataModel.requirePayoutDelay()) {
-                    timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted.immatureBuyerAccount"));
-                } else {
-                    timeLeftTextField.setText(Res.get("portfolio.pending.tradeNotCompleted", model.getDateForOpenDispute()));
-                    timeLeftTextField.getStyleClass().add("error-text");
-                    timeLeftProgressBar.getStyleClass().add("error");
-                }
+
+                timeLeftTextField.setText(tradePeriodInfo);
             }
         }
     }
+
+    protected void showReleaseBtcButton() {
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute/warning label and button
@@ -429,8 +488,10 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void hideNotificationGroup() {
-        notificationGroup.setLabelAndHeadlineVisible(false);
-        notificationGroup.setButtonVisible(false);
+        if (notificationGroup != null) {
+            notificationGroup.setLabelAndHeadlineVisible(false);
+            notificationGroup.setButtonVisible(false);
+        }
     }
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
@@ -507,7 +568,10 @@ public abstract class TradeStepView extends AnchorPane {
         infoGridPane.setHgap(5);
         infoGridPane.setVgap(10);
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
-        Label label = addMultilineLabel(infoGridPane, rowIndex++, Res.get("portfolio.pending.tradePeriodInfo"));
+
+        String postfix = model.dataModel.requirePayoutDelay() ? Res.get("portfolio.pending.tradePeriodInfo.delay", model.getPayoutDelayAsString()) : "";
+        String text = Res.get("portfolio.pending.tradePeriodInfo", model.getMaxTradePeriodAsString(), postfix);
+        Label label = addMultilineLabel(infoGridPane, rowIndex++, text);
         label.setMaxWidth(450);
 
         HBox warningBox = new HBox();

@@ -17,6 +17,7 @@
 
 package bisq.core.proto.persistable;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.account.sign.SignedWitnessStore;
 import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.arbitration.DisputeList;
@@ -67,14 +68,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CorePersistenceProtoResolver extends CoreProtoResolver implements PersistenceProtoResolver {
     private final Provider<BtcWalletService> btcWalletService;
+    private final Provider<AccountScoreService> accountScoreService;
     private final NetworkProtoResolver networkProtoResolver;
     private final File storageDir;
 
     @Inject
     public CorePersistenceProtoResolver(Provider<BtcWalletService> btcWalletService,
+                                        Provider<AccountScoreService> accountScoreService,
                                         NetworkProtoResolver networkProtoResolver,
                                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.btcWalletService = btcWalletService;
+        this.accountScoreService = accountScoreService;
         this.networkProtoResolver = networkProtoResolver;
         this.storageDir = storageDir;
 
@@ -94,7 +98,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return TradableList.fromProto(proto.getTradableList(),
                             this,
                             new Storage<>(storageDir, this),
-                            btcWalletService.get());
+                            btcWalletService.get(),
+                            accountScoreService.get());
                 case TRADE_STATISTICS_LIST:
                     throw new ProtobufferRuntimeException("TRADE_STATISTICS_LIST is not used anymore");
                 case DISPUTE_LIST:

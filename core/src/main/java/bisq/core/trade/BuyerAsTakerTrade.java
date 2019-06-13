@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.score.AccountScoreService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
@@ -53,9 +54,10 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                              NodeAddress tradingPeerNodeAddress,
                              @Nullable NodeAddress arbitratorNodeAddress,
                              Storage<? extends TradableList> storage,
-                             BtcWalletService btcWalletService) {
+                             BtcWalletService btcWalletService,
+                             AccountScoreService accountScoreService) {
         super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress,
-                arbitratorNodeAddress, storage, btcWalletService);
+                arbitratorNodeAddress, storage, btcWalletService, accountScoreService);
     }
 
 
@@ -74,6 +76,7 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     public static Tradable fromProto(PB.BuyerAsTakerTrade buyerAsTakerTradeProto,
                                      Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
+                                     AccountScoreService accountScoreService,
                                      CoreProtoResolver coreProtoResolver) {
         PB.Trade proto = buyerAsTakerTradeProto.getTrade();
         return fromProto(new BuyerAsTakerTrade(
@@ -86,7 +89,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                         proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
                         proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                         storage,
-                        btcWalletService),
+                        btcWalletService,
+                        accountScoreService),
                 proto,
                 coreProtoResolver);
     }
