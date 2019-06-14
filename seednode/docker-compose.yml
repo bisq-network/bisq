@@ -10,6 +10,8 @@ services:
             context: .
             dockerfile: docker/prod/Dockerfile
         image: seednode
+        depends_on:
+            - bitcoin-core
         ports:
             - 8000:8000
             - 9010:9010
@@ -44,8 +46,6 @@ services:
         image: bisq/bitcoin-core
         container_name: btcd
         restart: unless-stopped
-        depends_on:
-          - seednode
         command:
             -printtoconsole
             -rpcport=8332
