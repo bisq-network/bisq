@@ -6,5 +6,5 @@ EXPOSE 5120
 WORKDIR /home/bisq/seednode
 COPY ./build/ ./build/
 COPY ./docker/*.sh ./docker/
-CMD nohup sh ./docker/startSeedNode.sh
+CMD ./wait-for-it.sh 172.28.1.4:8332 --strict -- nohup sh ./docker/startSeedNode.sh
 #CMD sleep 100000
