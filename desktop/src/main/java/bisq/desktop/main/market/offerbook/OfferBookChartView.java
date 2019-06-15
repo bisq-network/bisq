@@ -74,6 +74,7 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
+import javafx.geometry.VPos;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -166,7 +167,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         topGrid.getChildren().add(currencyComboBoxTuple.first);
 
         // Extreme value checkbox
-        hideExtremes = addCheckBox(topGrid, 0, 1, Res.get("shared.hideExtremes"), 35);
+        hideExtremes = addCheckBox(topGrid, 0, 1, Res.get("shared.hideExtremes"),0);
+        GridPane.setValignment(hideExtremes, VPos.BOTTOM);
         GridPane.setHalignment(hideExtremes, HPos.RIGHT);
         ColumnConstraints column1 = new ColumnConstraints();
         column1.setPercentWidth(50);
