@@ -460,6 +460,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 })
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
+                        voteListItemList.stream()
+                                .anyMatch(voteListItem ->
+                                        bsqWalletService.getTransaction(voteListItem.getBlindVoteTxId()) != null),
                         bsqFormatter))
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 6);
