@@ -689,7 +689,11 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public String getParamValue(Param param) {
-        return daoStateService.getParamValue(param, periodService.getChainHeight());
+        return getParamValue(param, periodService.getChainHeight());
+    }
+
+    public String getParamValue(Param param, int blockHeight) {
+        return daoStateService.getParamValue(param, blockHeight);
     }
 
     public void resyncDao(Runnable resultHandler) {
