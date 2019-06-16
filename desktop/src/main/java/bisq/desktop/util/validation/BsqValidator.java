@@ -52,8 +52,8 @@ public class BsqValidator extends AltcoinValidator {
     @Inject
     public BsqValidator(BsqFormatter bsqFormatter) {
         this.bsqFormatter = bsqFormatter;
-        // TODO do we want a limit here?
-        //setMaxValue(bsqFormatter.parseToCoin("2500000"));
+        // Limit to avoid overflows
+        setMaxValue(bsqFormatter.parseToCoin("10000000"));
     }
 
     public void setMinValue(@NotNull Coin minValue) {
@@ -79,7 +79,11 @@ public class BsqValidator extends AltcoinValidator {
         if (result.isValid) {
             result = validateIfNotZero(input)
                     .and(validateIfNotNegative(input))
-                    .and(validateIfNotFractionalBtcValue(input))
+                    .and(validateIfNotExceedsMaxValue(input));
+        }
+
+        if (result.isValid) {
+            result = validateIfNotFractionalBtcValue(input)
                     .and(validateIfNotExceedsMaxBtcValue(input))
                     .and(validateIfSufficientAvailableBalance(input))
                     .and(validateIfAboveDust(input))
