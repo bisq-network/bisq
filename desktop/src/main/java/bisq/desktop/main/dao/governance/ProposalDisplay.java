@@ -547,7 +547,7 @@ public class ProposalDisplay {
                     daoFacade.getParamValue(changeParamProposal.getParam()));
             int height = daoFacade.getTx(changeParamProposal.getTxId())
                     .map(BaseTx::getBlockHeight)
-                    .orElse(1);
+                    .orElse(daoFacade.getGenesisBlockHeight());
             String valueAtProposal = bsqFormatter.formatParamValue(changeParamProposal.getParam(),
                     daoFacade.getParamValue(changeParamProposal.getParam(), height));
             paramValueTextField.setPromptText(Res.get("dao.param.currentAndPastValue", currentValue, valueAtProposal));
