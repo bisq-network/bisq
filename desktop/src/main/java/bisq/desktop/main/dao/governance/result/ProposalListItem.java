@@ -43,6 +43,8 @@ import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
+import javafx.geometry.Insets;
+
 import lombok.Getter;
 
 import org.jetbrains.annotations.NotNull;
@@ -78,13 +80,17 @@ public class ProposalListItem {
             } else {
                 myVoteIcon = getIcon(AwesomeIcon.THUMBS_DOWN, "dao-rejected-icon");
             }
+            if (!isMyBallotIncluded) {
+                Label notIncluded = FormBuilder.getIcon(AwesomeIcon.BAN_CIRCLE);
+                return new Label("", new HBox(10, new StackPane(myVoteIcon, notIncluded),
+                        getIcon(AwesomeIcon.MINUS, "dao-ignored-icon")));
+            }
         } else {
             myVoteIcon = getIcon(AwesomeIcon.MINUS, "dao-ignored-icon");
-        }
-        if (!isMyBallotIncluded) {
-            Label notIncluded = FormBuilder.getIcon(AwesomeIcon.BAN_CIRCLE);
-            return new Label("", new HBox(10, new StackPane(myVoteIcon, notIncluded),
-                    getIcon(AwesomeIcon.MINUS, "dao-ignored-icon")));
+            if (!isMyBallotIncluded) {
+                myVoteIcon.setPadding(new Insets(0, 0, 0, 25));
+                return myVoteIcon;
+            }
         }
         return myVoteIcon;
     }
