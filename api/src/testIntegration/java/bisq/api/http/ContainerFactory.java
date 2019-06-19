@@ -31,7 +31,7 @@ public final class ContainerFactory {
     public static final String ENV_SEED_NODES_KEY = "SEED_NODES";
     public static final String ENV_SEED_NODES_VALUE = SEED_NODE_ADDRESS;
     public static final String ENV_LOG_LEVEL_KEY = "LOG_LEVEL";
-    public static final String ENV_LOG_LEVEL_VALUE = "debug";
+    public static final String ENV_LOG_LEVEL_VALUE = "warn";
 
     @SuppressWarnings("WeakerAccess")
     public static ContainerBuilder.ContainerOptionsBuilder createApiContainerBuilder(String nameSuffix, String portBinding, int nodePort, boolean linkToSeedNode, boolean linkToBitcoin, boolean enableExperimentalFeatures) {
