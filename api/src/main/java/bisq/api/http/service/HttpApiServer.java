@@ -26,9 +26,15 @@ import bisq.core.app.BisqEnvironment;
 
 import javax.servlet.DispatcherType;
 
+import org.berndpruenster.netlayer.tor.HsContainer;
+import org.berndpruenster.netlayer.tor.Tor;
+import org.berndpruenster.netlayer.tor.TorCtlException;
+
 import javax.inject.Inject;
 
 import java.net.InetSocketAddress;
+
+import java.io.IOException;
 
 import java.util.EnumSet;
 
@@ -48,13 +54,12 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
-@SuppressWarnings("Duplicates")
 @Slf4j
 public class HttpApiServer {
-    private final HttpApiInterfaceV1 httpApiInterfaceV1;
-    private final BisqEnvironment bisqEnvironment;
-    private final TokenRegistry tokenRegistry;
     private final ApiPasswordManager apiPasswordManager;
+    private final BisqEnvironment bisqEnvironment;
+    private final HttpApiInterfaceV1 httpApiInterfaceV1;
+    private final TokenRegistry tokenRegistry;
 
     @Inject
     public HttpApiServer(ApiPasswordManager apiPasswordManager, BisqEnvironment bisqEnvironment, HttpApiInterfaceV1 httpApiInterfaceV1,
@@ -76,7 +81,8 @@ public class HttpApiServer {
             server.setRequestLog(new Slf4jRequestLog());
             server.start();
             log.info("HTTP API started on {}", socketAddress);
-        } catch (Exception e) {
+            startTorIfNeeded();
+        } catch (Exception | TorCtlException e) {
             throw new RuntimeException(e);
         }
     }
@@ -114,5 +120,22 @@ public class HttpApiServer {
     private void setupAuth(ServletContextHandler appContextHandler) {
         AuthFilter authFilter = new AuthFilter(apiPasswordManager, tokenRegistry);
         appContextHandler.addFilter(new FilterHolder(authFilter), "/*", EnumSet.allOf(DispatcherType.class));
+    }
+
+    /**
+     * If Bisq is configured to use start Tor then the default Tor instance should be available
+     * by the time this method is executed.
+     */
+    private void startTorIfNeeded() throws IOException, TorCtlException {
+        Tor tor = Tor.getDefault();
+        if (null == tor) {
+            log.info("Tor not started so API will be available only locally");
+            return;
+        }
+        final HsContainer hsContainer = tor.publishHiddenService("api", 80, bisqEnvironment.getHttpApiPort());
+        hsContainer.getHandler().attachHSReadyListener(hsContainer.getHostname(), () -> {
+            log.info("HTTP API hidden service is published and ready at {}", hsContainer.getHostname());
+            return null;
+        });
     }
 }
