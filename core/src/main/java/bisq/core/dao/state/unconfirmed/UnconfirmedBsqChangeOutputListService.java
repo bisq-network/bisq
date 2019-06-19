@@ -153,7 +153,8 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
     }
 
     public void onTransactionConfidenceChanged(Transaction tx) {
-        if (tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+        if (tx != null &&
+                tx.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
             removeConnectedOutputsOfInputsOfTx(tx);
 
             tx.getOutputs().forEach(transactionOutput -> {
