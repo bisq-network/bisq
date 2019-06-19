@@ -477,6 +477,10 @@ public class ProposalDisplay {
     }
 
     public void applyBallotAndVoteWeight(@Nullable Ballot ballot, long merit, long stake) {
+        applyBallotAndVoteWeight(ballot, merit, stake, true);
+    }
+
+    public void applyBallotAndVoteWeight(@Nullable Ballot ballot, long merit, long stake, boolean ballotIncluded) {
         boolean ballotIsNotNull = ballot != null;
         boolean hasVoted = stake > 0;
         if (hasVoted) {
@@ -487,11 +491,12 @@ public class ProposalDisplay {
                         Res.get("dao.proposal.display.myVote.rejected");
             }
 
+            String voteIncluded = ballotIncluded ? "" : " - " + Res.get("dao.proposal.display.myVote.unCounted");
             String meritString = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit));
             String stakeString = bsqFormatter.formatCoinWithCode(Coin.valueOf(stake));
             String weight = bsqFormatter.formatCoinWithCode(Coin.valueOf(merit + stake));
             String myVoteSummary = Res.get("dao.proposal.myVote.summary", myVote,
-                    weight, meritString, stakeString);
+                    weight, meritString, stakeString, voteIncluded);
             myVoteTextField.setText(myVoteSummary);
 
             GridPane.setRowSpan(myVoteTitledGroup, votingBoxRowSpan - 1);

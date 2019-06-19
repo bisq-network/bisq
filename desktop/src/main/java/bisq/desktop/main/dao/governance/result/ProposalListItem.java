@@ -40,8 +40,14 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TableRow;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+
+import javafx.geometry.Insets;
 
 import lombok.Getter;
+
+import org.jetbrains.annotations.NotNull;
 
 public class ProposalListItem {
 
@@ -50,16 +56,18 @@ public class ProposalListItem {
     @Getter
     private final Proposal proposal;
     private final Vote vote;
+    private final boolean isMyBallotIncluded;
     private final BsqFormatter bsqFormatter;
 
     private TableRow tableRow;
 
 
-    ProposalListItem(EvaluatedProposal evaluatedProposal, Ballot ballot, BsqFormatter bsqFormatter) {
+    ProposalListItem(EvaluatedProposal evaluatedProposal, Ballot ballot, boolean isMyBallotIncluded,
+                     BsqFormatter bsqFormatter) {
         this.evaluatedProposal = evaluatedProposal;
         proposal = evaluatedProposal.getProposal();
         vote = ballot.getVote();
-
+        this.isMyBallotIncluded = isMyBallotIncluded;
         this.bsqFormatter = bsqFormatter;
     }
 
@@ -68,16 +76,30 @@ public class ProposalListItem {
         Label myVoteIcon;
         if (vote != null) {
             if ((vote).isAccepted()) {
-                myVoteIcon = FormBuilder.getIcon(AwesomeIcon.THUMBS_UP);
-                myVoteIcon.getStyleClass().add("dao-accepted-icon");
+                myVoteIcon = getIcon(AwesomeIcon.THUMBS_UP, "dao-accepted-icon");
             } else {
-                myVoteIcon = FormBuilder.getIcon(AwesomeIcon.THUMBS_DOWN);
-                myVoteIcon.getStyleClass().add("dao-rejected-icon");
+                myVoteIcon = getIcon(AwesomeIcon.THUMBS_DOWN, "dao-rejected-icon");
+            }
+            if (!isMyBallotIncluded) {
+                Label notIncluded = FormBuilder.getIcon(AwesomeIcon.BAN_CIRCLE);
+                return new Label("", new HBox(10, new StackPane(myVoteIcon, notIncluded),
+                        getIcon(AwesomeIcon.MINUS, "dao-ignored-icon")));
             }
         } else {
-            myVoteIcon = FormBuilder.getIcon(AwesomeIcon.MINUS);
-            myVoteIcon.getStyleClass().add("dao-ignored-icon");
+            myVoteIcon = getIcon(AwesomeIcon.MINUS, "dao-ignored-icon");
+            if (!isMyBallotIncluded) {
+                myVoteIcon.setPadding(new Insets(0, 0, 0, 25));
+                return myVoteIcon;
+            }
         }
+        return myVoteIcon;
+    }
+
+    @NotNull
+    private Label getIcon(AwesomeIcon awesomeIcon, String s) {
+        Label myVoteIcon;
+        myVoteIcon = FormBuilder.getIcon(awesomeIcon);
+        myVoteIcon.getStyleClass().add(s);
         return myVoteIcon;
     }
 
