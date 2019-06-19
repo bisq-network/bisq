@@ -90,3 +90,8 @@ Integration tests leverage Docker and run in headless mode. First you need to bu
     
 IntelliJ Idea has awesome integration so just right click on `api/src/testIntegration` directory and select 
 `Debug All Tests`.
+
+### Integration tests logging
+
+Due to Travis log length limitations the log level is set to WARN, but if you need to see more details locally
+go to `ContainerFactory` class and set `ENV_LOG_LEVEL_VALUE` property to `debug`.
