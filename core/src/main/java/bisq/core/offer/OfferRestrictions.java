@@ -23,7 +23,7 @@ import bisq.core.trade.Trade;
 import org.bitcoinj.core.Coin;
 
 public class OfferRestrictions {
-    public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
+    public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.02");
 
     public static boolean isOfferRisky(Offer offer) {
         return offer != null &&

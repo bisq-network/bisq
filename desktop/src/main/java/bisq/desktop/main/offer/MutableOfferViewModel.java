@@ -731,7 +731,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                        Res.get("offerbook.warning.newVersionAnnouncement")))
+                        Res.get("offerbook.warning.newVersionAnnouncement"),
+                        btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT)))
                         .width(900)
                         .show();
             }
