@@ -20,14 +20,10 @@ package bisq.desktop.main.account.content.fiataccounts;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.locale.CryptoCurrency;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
-import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.PaymentAccountManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -49,28 +45,27 @@ import java.util.stream.Collectors;
 
 class FiatAccountsDataModel extends ActivatableDataModel {
 
+    private final PaymentAccountManager paymentAccountManager;
     private final User user;
     private final Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "FiatPaymentAccounts";
     private final PersistenceProtoResolver persistenceProtoResolver;
 
     @Inject
-    public FiatAccountsDataModel(User user,
+    public FiatAccountsDataModel(PaymentAccountManager paymentAccountManager, User user,
                                  Preferences preferences,
                                  OpenOfferManager openOfferManager,
                                  TradeManager tradeManager,
-                                 AccountAgeWitnessService accountAgeWitnessService,
                                  PersistenceProtoResolver persistenceProtoResolver) {
+        this.paymentAccountManager = paymentAccountManager;
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
@@ -102,29 +97,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
-        user.addPaymentAccount(paymentAccount);
-        TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
-        if (singleTradeCurrency != null) {
-            if (singleTradeCurrency instanceof FiatCurrency)
-                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
-            else
-                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
-        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
-            if (tradeCurrencies.contains(CurrencyUtil.getDefaultTradeCurrency()))
-                paymentAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
-            else
-                paymentAccount.setSelectedTradeCurrency(tradeCurrencies.get(0));
-
-            tradeCurrencies.forEach(tradeCurrency -> {
-                if (tradeCurrency instanceof FiatCurrency)
-                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
-                else
-                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
-            });
-        }
-
-        accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
+        paymentAccountManager.addPaymentAccount(paymentAccount);
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {

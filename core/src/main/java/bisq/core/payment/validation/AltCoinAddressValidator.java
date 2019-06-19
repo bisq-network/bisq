@@ -22,6 +22,10 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.asset.AddressValidationResult;
+import bisq.asset.Asset;
+import bisq.asset.AssetRegistry;
+
 import bisq.common.app.DevEnv;
 
 import com.google.inject.Inject;
@@ -30,14 +34,8 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Asset;
-import bisq.asset.AssetRegistry;
-
 @Slf4j
-public final class AltCoinAddressValidator extends InputValidator {
+public class AltCoinAddressValidator extends InputValidator {
 
     private final AssetRegistry assetRegistry;
     private String currencyCode;
