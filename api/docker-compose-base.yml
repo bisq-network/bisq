@@ -1,0 +1,34 @@
+version: '2.1'
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: api/docker/dev/Dockerfile
+    image: bisq/api
+    environment:
+      - LOG_LEVEL=debug
+      - USE_LOCALHOST_FOR_P2P=true
+      - USE_DEV_PRIVILEGE_KEYS=true
+      - SEED_NODES=seed:8000
+      - BTC_NODES=bitcoin:18444
+      - BASE_CURRENCY_NETWORK=BTC_REGTEST
+      - BITCOIN_REGTEST_HOST=NONE
+      - HTTP_API_HOST=0.0.0.0
+      - ENABLE_HTTP_API_EXPERIMENTAL_FEATURES=true
+  seed:
+    image: bisq/seednode
+    environment:
+      - MY_ADDRESS=seed:8000
+      - SEED_NODES=seed:8000
+      - BTC_NODES=bitcoin:18444
+      - USE_LOCALHOST_FOR_P2P=true
+      - BASE_CURRENCY_NETWORK=BTC_REGTEST
+      - BITCOIN_REGTEST_HOST=NONE
+  bitcoin:
+    image: kylemanna/bitcoind:latest
+    command: -logips -rpcallowip=::/0 -regtest -printtoconsole
+    environment:
+      - DISABLEWALLET=0
+      - RPCUSER=user
+      - RPCPASSWORD=password
