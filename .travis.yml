@@ -1,10 +1,29 @@
 language: java
 jdk: openjdk10
-before_install:
-  grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+sudo: required
+services:
+- docker
+jobs:
+    include:
+    - stage: asset ordering
+      install: echo No installation needed
+      script: grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+    - stage: build
+    - stage: integration
+      env:
+      - CUBE_LOGGER_ENABLE=true
+      install: cd api; docker-compose build;
+      script: ../gradlew testIntegration;
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+    directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
 notifications:
-  slack:
-    on_success: change
-    on_failure: always
-    rooms:
-      - secure: EzlqWTBuhb3FCfApjUXaShWgsWOVDwMXI7ISMiVBkcl2VFISYs/lc/7Qjr7rdy4iqQOQXMcUPHdwMUp0diX+GxiSjLARjUpKIvNOPswZWBL+3Z1h28jyOwtHRviZbM1EU0BZROrr+ODyTNz2lf+L1iXTkpSvk50o5JAnAkumsPw=
+    slack:
+        on_success: change
+        on_failure: always
+        rooms:
+        - secure: EzlqWTBuhb3FCfApjUXaShWgsWOVDwMXI7ISMiVBkcl2VFISYs/lc/7Qjr7rdy4iqQOQXMcUPHdwMUp0diX+GxiSjLARjUpKIvNOPswZWBL+3Z1h28jyOwtHRviZbM1EU0BZROrr+ODyTNz2lf+L1iXTkpSvk50o5JAnAkumsPw=

@@ -1,0 +1,51 @@
+version: '2.1'
+
+services:
+    alice:
+      extends:
+        file: docker-compose-base.yml
+        service: api
+      ports:
+        - 8080:8080
+      environment:
+        - NODE_PORT=8003
+      links:
+        - seed
+        - bitcoin
+    bob:
+      extends:
+        file: docker-compose-base.yml
+        service: api
+      ports:
+        - 8081:8080
+      environment:
+        - NODE_PORT=8004
+      links:
+        - seed
+        - bitcoin
+    arbitrator:
+      extends:
+        file: docker-compose-base.yml
+        service: api
+      ports:
+        - 8082:8080
+      environment:
+        - NODE_PORT=8005
+      links:
+        - seed
+        - bitcoin
+    seed:
+      extends:
+        file: docker-compose-base.yml
+        service: seed
+      ports:
+        - 8000:8000
+      links:
+        - bitcoin
+    bitcoin:
+      extends:
+        file: docker-compose-base.yml
+        service: bitcoin
+      ports:
+#      If it is default regtest port (18444) then bisq ignores btcNodes param and uses localhost
+        - 18445:18444

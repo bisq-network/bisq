@@ -473,6 +473,15 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 "Optional Referral ID (e.g. for API users or pro market makers)")
                 .withRequiredArg();
 
+        parser.accepts(AppOptionKeys.HTTP_API_EXPERIMENTAL_FEATURES_ENABLED, "Enable experimental features of HTTP API (disabled by default)");
+        parser.accepts(AppOptionKeys.HTTP_API_HOST, "Optional HTTP API host")
+                .withRequiredArg()
+                .defaultsTo("127.0.0.1");
+        parser.accepts(AppOptionKeys.HTTP_API_PORT, "Optional HTTP API port")
+                .withRequiredArg()
+                .ofType(int.class)
+                .defaultsTo(8080);
+
         parser.accepts(CommonOptionKeys.USE_DEV_MODE,
                 format("Enables dev mode which is used for convenience for developer testing (default: %s)", "false"))
                 .withRequiredArg()
