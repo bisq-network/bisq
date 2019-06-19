@@ -267,6 +267,47 @@ configure(project(':core')) {
 }
 
 
+configure(project(':api')) {
+
+    apply plugin: 'application'
+
+    mainClassName = 'bisq.api.http.app.HttpApiMain'
+
+    dependencies {
+        compile project(':desktop')
+
+        compile('org.eclipse.jetty:jetty-servlet:9.4.14.v20181114') {
+            exclude(module: 'jersey-client')
+        }
+        compile 'javax.activation:activation:1.1.1'
+        compile 'javax.ws.rs:javax.ws.rs-api:2.1'
+        compile('org.glassfish.jersey.containers:jersey-container-servlet:2.27') {
+            exclude(module: 'osgi-resource-locator')
+        }
+        compile('org.glassfish.jersey.inject:jersey-hk2:2.27') {
+            exclude(module: 'aopalliance-repackaged')
+        }
+        compile 'org.glassfish.jersey.media:jersey-media-json-jackson:2.27'
+        compile 'org.glassfish.jersey.media:jersey-media-multipart:2.27'
+        compile 'org.glassfish.jersey.ext:jersey-bean-validation:2.27'
+
+        compile 'io.swagger.core.v3:swagger-annotations:2.0.6'
+        compile 'javax.xml.bind:jaxb-api:2.3.0'
+
+        compileOnly 'org.projectlombok:lombok:1.18.2'
+        annotationProcessor 'org.projectlombok:lombok:1.18.2'
+
+        testCompile 'junit:junit:4.12'
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
+        testCompileOnly 'org.projectlombok:lombok:1.18.2'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
+        testCompile "com.github.javafaker:javafaker:0.14"
+        testCompile "org.apache.commons:commons-lang3:$langVersion"
+        testCompile 'io.swagger.core.v3:swagger-jaxrs2:2.0.6' //needed to generate documentation using SwaggerGenerator
+    }
+}
+
+
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'witness'

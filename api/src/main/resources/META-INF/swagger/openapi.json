@@ -1,0 +1,114 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Bisq HTTP API",
+        "version": "0.0.1"
+    },
+    "security": [
+        {
+            "authorization": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "user"
+        },
+        {
+            "name": "version"
+        }
+    ],
+    "paths": {
+        "/api/v1/user/password": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Change password",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePassword"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "default response",
+                        "content": {
+                            "application/json": {}
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/version": {
+            "get": {
+                "tags": [
+                    "version"
+                ],
+                "summary": "Get version details",
+                "operationId": "getVersionDetails",
+                "responses": {
+                    "default": {
+                        "description": "default response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VersionDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ChangePassword": {
+                "type": "object",
+                "properties": {
+                    "newPassword": {
+                        "type": "string"
+                    },
+                    "oldPassword": {
+                        "type": "string"
+                    }
+                }
+            },
+            "VersionDetails": {
+                "type": "object",
+                "properties": {
+                    "application": {
+                        "type": "string"
+                    },
+                    "network": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "p2PMessage": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "localDB": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "tradeProtocol": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "authorization": {
+                "type": "http",
+                "scheme": "basic"
+            }
+        }
+    }
+}
