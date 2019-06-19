@@ -9,17 +9,19 @@ You can run it either as the desktop application or as a headless application.
 On that branch we start to implement feature by feature starting with the most simple one - `version`.
 
 
-_**Known issues**: Wallet password protection is not supported at the moment for the headless version. So if you have set 
+**Known issues**: Wallet password protection is not supported at the moment for the headless version. So if you have set 
  a wallet password when running the Desktop version and afterwards run the headless version it will get stuck at startup 
  expecting the wallet password. This feature will be implemented soon._
 
-_**Note**: 
-If you have a Bisq application with BTC already set up it is recommended to use the optional `appName` argument to 
+**Note**: If you have a Bisq application with BTC already set up it is recommended to use the optional `appName` argument to 
 provide a different name and data directory so that the default Bisq application is not exposed via the API. That way 
 your data and wallet from your default Bisq application are completely isolated from the API application. In the below 
 commands we use the argument `--appName=bisq-API` to ensure you are not mixing up your default Bisq setup when 
 experimenting with the API branch. You cannot run the desktop and the headless version in parallel as they would access 
 the same data.
+
+**Security**: Api uses HTTP transport which is not encrypted. Use the API only locally and do not expose it over 
+public network interfaces.
 
 ## Run the API as Desktop application
 
@@ -39,6 +41,31 @@ Documentation is available at http://localhost:8080/docs/
 Sample call:
 
     curl http://localhost:8080/api/v1/version
+    
+#### Authentication
+
+By default there is no password required for the API. We recommend that you set password as soon as possible: 
+
+    curl -X POST "http://localhost:8080/api/v1/user/password" -H "Content-Type: application/json" -d "{\"newPassword\":\"string\"}"
+    
+Password digest and salt are stored in a `apipasswd` in Bisq data directory.
+If you forget your password, just delete that file and restart Bisq.
+
+Once you set the password you need to trade it for access token.
+
+    curl -X POST "http://localhost:8080/api/v1/user/authenticate" -H "Content-Type: application/json" -d "{\"password\":\"string\"}"
+    
+You should get the token in response looking like this:
+
+    {
+      "token": "5130bcb6-bee5-47ae-ac78-ee31d6557ed5"
+    }
+    
+Now you can access other endpoints by adding `Authorization` header to the request:
+
+    curl -X GET "http://localhost:8080/api/v1/version" -H "authorization: 5130bcb6-bee5-47ae-ac78-ee31d6557ed5"
+    
+**NOTE**: Tokens expire after 30 minutes.
 
 ## Run the API as headless application
 

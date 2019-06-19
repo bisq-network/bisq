@@ -299,14 +299,11 @@ configure(project(':api')) {
         annotationProcessor 'org.projectlombok:lombok:1.18.2'
 
         testCompile 'junit:junit:4.12'
-        testCompile('org.mockito:mockito-core:2.8.9') {
-            exclude(module: 'objenesis')
-        }
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
         testCompileOnly 'org.projectlombok:lombok:1.18.2'
         testAnnotationProcessor 'org.projectlombok:lombok:1.18.2'
-        testCompile "junit:junit:4.12"
-        testCompile "org.mockito:mockito-core:2.7.5"
         testCompile "com.github.javafaker:javafaker:0.14"
+        testCompile "org.apache.commons:commons-lang3:$langVersion"
         testCompile "org.arquillian.universe:arquillian-junit:1.2.0.1"
         testCompile "org.arquillian.universe:arquillian-cube-docker:1.2.0.1"
         testCompile "org.arquillian.cube:arquillian-cube-docker:1.15.3"
