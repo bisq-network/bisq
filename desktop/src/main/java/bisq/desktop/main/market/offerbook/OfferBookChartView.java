@@ -53,7 +53,6 @@ import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SingleSelectionModel;
@@ -63,18 +62,15 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.geometry.VPos;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -98,7 +94,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static bisq.desktop.util.FormBuilder.addCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 
@@ -134,7 +129,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + ((extraRows + 1) * pixelsPerOfferTableRow));
     };
     private ChangeListener<Number> bisqWindowVerticalSizeListener;
-    private CheckBox hideExtremes;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -165,16 +159,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         this.currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"), model.preferences));
         topGrid.getChildren().add(currencyComboBoxTuple.first);
-
-        // Extreme value checkbox
-        hideExtremes = addCheckBox(topGrid, 0, 1, Res.get("shared.hideExtremes"),0);
-        GridPane.setValignment(hideExtremes, VPos.BOTTOM);
-        GridPane.setHalignment(hideExtremes, HPos.RIGHT);
-        ColumnConstraints column1 = new ColumnConstraints();
-        column1.setPercentWidth(50);
-        ColumnConstraints column2 = new ColumnConstraints();
-        column2.setPercentWidth(50);
-        topGrid.getColumnConstraints().addAll(column1, column2);
 
         // Chart
         createChart();
@@ -227,8 +211,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 updateChartData();
             }
         });
-
-        hideExtremes.setOnAction(e -> updateChartData());
 
         model.currencyListItems.getObservableList().addListener(currencyListItemsListener);
 
@@ -339,7 +321,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         model.currencyListItems.getObservableList().removeListener(currencyListItemsListener);
         tradeCurrencySubscriber.unsubscribe();
         currencyComboBox.setOnAction(null);
-        hideExtremes.setOnAction(null);
         buyOfferTableView.getSelectionModel().selectedItemProperty().removeListener(buyTableRowSelectionListener);
         sellOfferTableView.getSelectionModel().selectedItemProperty().removeListener(sellTableRowSelectionListener);
     }
@@ -402,8 +383,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         // Hide buy offers that are more than a factor 5 higher than the lowest buy offer
         final Optional<XYChart.Data> buyMaxOptional = model.getBuyData().stream()
-                .filter(o -> !hideExtremes.isSelected() ||
-                        (double) o.getXValue() < (double) buyMinOptional.get().getXValue() * 3)
+                .filter(o -> (double) o.getXValue() < (double) buyMinOptional.get().getXValue() * 3)
                 .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
                 .or(optionalMinSupplier);
 
@@ -412,8 +392,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 .or(optionalMinSupplier);
 
         final Optional<XYChart.Data> sellMinOptional = model.getSellData().stream()
-                .filter(o -> !hideExtremes.isSelected() ||
-                        (double) o.getXValue() > (double) sellMaxOptional.get().getXValue() / 3)
+                .filter(o -> (double) o.getXValue() > (double) sellMaxOptional.get().getXValue() / 3)
                 .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
                 .or(optionalMaxSupplier);
 
