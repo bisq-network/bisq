@@ -62,7 +62,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -147,10 +146,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     public void initialize() {
         createListener();
 
-        // Header with currency combobox and checkbox to show extreme values
-        GridPane topGrid = new GridPane();
-
-        // Currency combobox
         final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
                 Res.get("list.currency.select"), 0);
         this.currencyComboBox = currencyComboBoxTuple.third;
@@ -158,9 +153,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 Res.get("shared.multipleOffers"), model.preferences));
         this.currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"), model.preferences));
-        topGrid.getChildren().add(currencyComboBoxTuple.first);
 
-        // Chart
         createChart();
 
         VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
@@ -186,7 +179,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-        root.getChildren().addAll(topGrid, chartPane, bottomHBox);
+        root.getChildren().addAll(currencyComboBoxTuple.first, chartPane, bottomHBox);
     }
 
     @Override
