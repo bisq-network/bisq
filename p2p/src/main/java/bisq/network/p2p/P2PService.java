@@ -628,7 +628,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 log.warn("We don't send the message because the peer does not support the required capability. " +
                         "peersNodeAddress={}", peersNodeAddress);
 
-            return result;
+            return !result;
         }
 
         log.warn("We don't have the peer in our persisted peers so we don't know his capabilities. " +
