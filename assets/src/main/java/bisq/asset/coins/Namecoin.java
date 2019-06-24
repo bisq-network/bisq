@@ -17,12 +17,20 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.NetworkParametersAdapter;
 
 public class Namecoin extends Coin {
 
     public Namecoin() {
-        super("Namecoin", "NMC", new DefaultAddressValidator());
+        super("Namecoin", "NMC", new Base58BitcoinAddressValidator(new NamecoinChainParams()));
+    }
+
+    public static class NamecoinChainParams extends NetworkParametersAdapter {
+        public NamecoinChainParams() {
+            addressHeader = 52;
+            acceptableAddressCodes = new int[]{addressHeader};
+        }
     }
 }
