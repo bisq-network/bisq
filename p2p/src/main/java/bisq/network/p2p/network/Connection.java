@@ -18,6 +18,7 @@
 package bisq.network.p2p.network;
 
 import bisq.network.p2p.CloseConnectionMessage;
+import bisq.network.p2p.EnvelopeOfEnvelopes;
 import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
@@ -76,6 +77,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -233,6 +235,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         return capabilities;
     }
 
+    EnvelopeOfEnvelopes envelopeOfEnvelopes = null;
+    ScheduledExecutorService envelopeOfEnvelopesSender = Executors.newSingleThreadScheduledExecutor();
+
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
         log.debug(">> Send networkEnvelope of type: " + networkEnvelope.getClass().getSimpleName());
@@ -281,9 +286,25 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         // check if EnvelopeOfEnvelopes is supported
                         if(getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
                             // check if a bucket is already there
-                            // - no? create a bucket
-                            // - and schedule it for sending
-                            // - yes? add to bucket
+                            synchronized (envelopeOfEnvelopes) {
+                                if(envelopeOfEnvelopes == null) {
+                                    // - no? create a bucket
+                                    envelopeOfEnvelopes = new EnvelopeOfEnvelopes();
+                                    // - and schedule it for sending
+                                    envelopeOfEnvelopesSender.schedule(() -> {
+                                        if (!stopped) {
+                                            synchronized (envelopeOfEnvelopes) {
+                                                lastSendTimeStamp = System.currentTimeMillis();
+                                                protoOutputStream.writeEnvelope(envelopeOfEnvelopes);
+                                                envelopeOfEnvelopes = null;
+                                            }
+                                        }
+                                    }, sendMsgThrottleSleep, TimeUnit.MILLISECONDS);
+                                }
+
+                                // - yes? add to bucket
+                                envelopeOfEnvelopes.add(networkEnvelope);
+                            }
                             return;
                         }
 
@@ -405,7 +426,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-        UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
+
+        if(networkEnvelope instanceof EnvelopeOfEnvelopes)
+            for(NetworkEnvelope current : ((EnvelopeOfEnvelopes) networkEnvelope).getEnvelopes()) {
+                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
+            }
+        else
+            UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
     }
 
 
