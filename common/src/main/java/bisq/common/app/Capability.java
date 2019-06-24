@@ -32,5 +32,6 @@ public enum Capability {
     BLIND_VOTE,
     ACK_MSG,
     BSQ_BLOCK,
-    DAO_STATE
+    DAO_STATE,
+    ENVELOPE_OF_ENVELOPES
 }

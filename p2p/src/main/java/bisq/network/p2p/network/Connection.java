@@ -38,6 +38,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.Proto;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.HasCapabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
@@ -239,18 +240,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         if (!stopped) {
             if (noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
                 try {
-                    // Throttle outbound network_messages
-                    long now = System.currentTimeMillis();
-                    long elapsed = now - lastSendTimeStamp;
-                    if (elapsed < sendMsgThrottleTrigger) {
-                        log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
-                                        "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
-                                sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
-                                networkEnvelope.getClass().getSimpleName());
-                        Thread.sleep(sendMsgThrottleSleep);
-                    }
-
-                    lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
                     PB.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
@@ -279,6 +268,29 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), proto.getSerializedSize());
                     }
+
+                    // Throttle outbound network_messages
+                    long now = System.currentTimeMillis();
+                    long elapsed = now - lastSendTimeStamp;
+                    if (elapsed < sendMsgThrottleTrigger) {
+                        log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
+                                        "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
+                                sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
+                                networkEnvelope.getClass().getSimpleName());
+
+                        // check if EnvelopeOfEnvelopes is supported
+                        if(getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
+                            // check if a bucket is already there
+                            // - no? create a bucket
+                            // - and schedule it for sending
+                            // - yes? add to bucket
+                            return;
+                        }
+
+                        Thread.sleep(sendMsgThrottleSleep);
+                    }
+
+                    lastSendTimeStamp = now;
 
                     if (!stopped) {
                         protoOutputStream.writeEnvelope(networkEnvelope);
