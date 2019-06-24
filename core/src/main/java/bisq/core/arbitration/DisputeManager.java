@@ -262,19 +262,16 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     private boolean isReadyForTxBroadcast() {
-        return p2PService.isBootstrapped() &&
-                walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast();
-    }
-
-    private void applyMessages() {
         // Some messages can't be handled until all the services are properly initialized.
         // In particular it's not possible to complete the signing of a dispute payout
         // by an encrypted wallet until after it's been decrypted.
-        if (!servicesInitialized) {
-            return;
-        }
+        return p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
+                walletsSetup.hasSufficientPeersForBroadcast() &&
+                servicesInitialized;
+    }
 
+    private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             if (networkEnvelope instanceof DisputeMessage) {
