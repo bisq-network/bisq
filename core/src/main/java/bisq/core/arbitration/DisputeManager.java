@@ -120,6 +120,7 @@ public class DisputeManager implements PersistedDataHost {
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
+    private boolean servicesInitialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +178,7 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
+        servicesInitialized = true;
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {
@@ -260,9 +262,13 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     private boolean isReadyForTxBroadcast() {
+        // Some messages can't be handled until all the services are properly initialized.
+        // In particular it's not possible to complete the signing of a dispute payout
+        // by an encrypted wallet until after it's been decrypted.
         return p2PService.isBootstrapped() &&
                 walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast();
+                walletsSetup.hasSufficientPeersForBroadcast() &&
+                servicesInitialized;
     }
 
     private void applyMessages() {
