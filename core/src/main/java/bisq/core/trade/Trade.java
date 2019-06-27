@@ -716,7 +716,8 @@ public abstract class Trade implements Tradable, Model {
 
     @Nullable
     public Volume getTradeVolume() {
-        if (getTradeAmount() != null && getTradePrice() != null) {
+        if (getTradeAmount() != null && getTradePrice() != null &&
+                getTradePrice().getMonetary().getValue() > 0) {
             Volume volumeByAmount = getTradePrice().getVolumeByAmount(getTradeAmount());
             if (offer != null) {
                 if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
