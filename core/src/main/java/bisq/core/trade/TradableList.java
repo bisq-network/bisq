@@ -107,6 +107,16 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                     }
                 })
+                .filter(tradable -> {
+                    if (tradable instanceof Trade) {
+                        Trade trade = (Trade) tradable;
+                        boolean toPurge = trade.getErrorMessage() != null &&
+                                trade.getErrorMessage().startsWith("An error occurred at task: MakerProcessPayDepositRequest\n" +
+                                        "Taker's trade price is too far away from our calculated price based on the market price.");
+                        return !toPurge;
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
 
         return new TradableList<>(storage, list);
