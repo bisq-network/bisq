@@ -71,6 +71,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
     private TradableList(Storage<TradableList<T>> storage, List<T> list) {
         this.storage = storage;
         this.list.addAll(list);
+        storage.queueUpForSave();
     }
 
     @Override
@@ -107,6 +108,8 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                             throw new ProtobufferRuntimeException("Unknown messageCase. tradable.getMessageCase() = " + tradable.getMessageCase());
                     }
                 })
+                // This is a fix for saved failed trades that shouldn't have been saved. The usage of the error message
+                // is was the only way I know to make sure not to remove any trades that should remain.
                 .filter(tradable -> {
                     if (tradable instanceof Trade) {
                         Trade trade = (Trade) tradable;
