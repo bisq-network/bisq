@@ -161,7 +161,7 @@ public class BisqSetup {
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
-            wrongOSArchitectureHandler;
+            wrongOSArchitectureHandler, cleanupDone;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -283,6 +283,9 @@ public class BisqSetup {
     }
 
     public void start() {
+        if (cleanupDone != null)
+            cleanupDone.accept("Cleanup done, shutting down");
+
         maybeReSyncSPVChain();
         maybeShowTac();
     }

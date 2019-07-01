@@ -282,6 +282,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void setupHandlers() {
+        bisqSetup.setCleanupDone(msg -> {
+            UserThread.execute(() -> new Popup<>().warning(msg)
+                    .useShutDownButton()
+                    .hideCloseButton()
+                    .show());
+        });
+
         bisqSetup.setDisplayTacHandler(acceptedHandler -> UserThread.runAfter(() -> {
             //noinspection FunctionalExpressionCanBeFolded
             tacWindow.onAction(acceptedHandler::run).show();

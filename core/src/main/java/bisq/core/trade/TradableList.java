@@ -116,6 +116,8 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                         boolean toPurge = trade.getErrorMessage() != null &&
                                 trade.getErrorMessage().startsWith("An error occurred at task: MakerProcessPayDepositRequest\n" +
                                         "Taker's trade price is too far away from our calculated price based on the market price.");
+                        if (toPurge)
+                            log.info("Purging bad trade record id={}", trade.getId());
                         return !toPurge;
                     }
                     return true;
