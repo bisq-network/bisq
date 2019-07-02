@@ -39,6 +39,7 @@ import bisq.desktop.components.paymentmethods.PromptPayForm;
 import bisq.desktop.components.paymentmethods.RevolutForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
+import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
@@ -231,6 +232,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.SEPA_ID:
                 gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.SEPA_INSTANT_ID:
+                gridRow = SepaInstantForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 gridRow = FasterPaymentsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
