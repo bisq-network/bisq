@@ -239,6 +239,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             Set<ByteBuffer> states = new HashSet<>();
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> states.add(ByteBuffer.wrap(tuple.hash)));
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
+
+            //   - report reference head
+            daoreport.put(type + ".referenceHead", Integer.toString(head));
         });
 
         daoData.clear();
