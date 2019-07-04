@@ -42,6 +42,7 @@ import java.nio.ByteBuffer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +53,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -222,7 +224,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         //   - process dao data
         perType.forEach((type, nodeAddressTupleMap) -> {
             //   - find head
-            int head = (int) nodeAddressTupleMap.values().stream().sorted((o1, o2) -> Long.compare(o1.height, o2.height)).findFirst().get().height;
+            int head = (int) nodeAddressTupleMap.values().stream().max(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
             if(type.contains("DaoState"))
@@ -251,6 +253,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     }
 
     private class Tuple {
+        @Getter
         private final long height;
         private final byte[] hash;
 
