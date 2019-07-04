@@ -225,14 +225,15 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         perType.forEach((type, nodeAddressTupleMap) -> {
             //   - find head
             int head = (int) nodeAddressTupleMap.values().stream().max(Comparator.comparingLong(Tuple::getHeight)).get().height;
+            int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
             if(type.contains("DaoState"))
-                daostateheight = head - 20;
+                daostateheight = oldest - 20;
             else if(type.contains("Proposal"))
-                proposalheight = head - 20;
+                proposalheight = oldest - 20;
             else
-                blindvoteheight = head - 20;
+                blindvoteheight = oldest - 20;
 
             //   - calculate diffs
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".head", Long.toString(tuple.height - head)));
