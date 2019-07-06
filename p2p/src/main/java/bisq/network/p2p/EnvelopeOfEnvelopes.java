@@ -34,7 +34,7 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class EnvelopeOfEnvelopes extends NetworkEnvelope {
+public final class EnvelopeOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission {
 
     private final List<NetworkEnvelope> envelopes;
 
