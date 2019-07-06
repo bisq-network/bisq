@@ -295,15 +295,17 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     // - no? create a bucket
                                     envelopeOfEnvelopes.add(new EnvelopeOfEnvelopes());
                                     System.err.println("added fresh container");
+
                                     // - and schedule it for sending
+                                    lastSendTimeStamp += sendMsgThrottleSleep;
+
                                     envelopeOfEnvelopesSender.schedule(() -> {
                                         if (!stopped) {
                                             synchronized (lock) {
-                                                lastSendTimeStamp = System.currentTimeMillis();
                                                 protoOutputStream.writeEnvelope(envelopeOfEnvelopes.poll());
                                             }
                                         }
-                                    }, sendMsgThrottleSleep, TimeUnit.MILLISECONDS);
+                                    }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
                                 }
 
                                 // - yes? add to bucket
