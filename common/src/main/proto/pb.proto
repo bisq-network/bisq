@@ -67,7 +67,7 @@ message NetworkEnvelope {
         GetBlindVoteStateHashesRequest get_blind_vote_state_hashes_request = 41;
         GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
 
-        EnvelopeOfEnvelopes envelope_of_envelopes = 43;
+        BundleOfEnvelopes bundle_of_envelopes = 43;
     }
 }
 
@@ -75,7 +75,7 @@ message NetworkEnvelope {
 // Implementations of NetworkEnvelope
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message EnvelopeOfEnvelopes {
+message BundleOfEnvelopes {
     repeated NetworkEnvelope envelopes = 1;
 }
 

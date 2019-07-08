@@ -34,11 +34,11 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class EnvelopeOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission {
+public final class BundleOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission {
 
     private final List<NetworkEnvelope> envelopes;
 
-    public EnvelopeOfEnvelopes() {
+    public BundleOfEnvelopes() {
         this(new ArrayList<>(), Version.getP2PMessageVersion());
     }
 
@@ -50,7 +50,7 @@ public final class EnvelopeOfEnvelopes extends NetworkEnvelope implements Extend
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private EnvelopeOfEnvelopes(List<NetworkEnvelope> envelopes, int messageVersion) {
+    private BundleOfEnvelopes(List<NetworkEnvelope> envelopes, int messageVersion) {
         super(messageVersion);
         this.envelopes = envelopes;
     }
@@ -59,13 +59,13 @@ public final class EnvelopeOfEnvelopes extends NetworkEnvelope implements Extend
     @Override
     public PB.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setEnvelopeOfEnvelopes(PB.EnvelopeOfEnvelopes.newBuilder().addAllEnvelopes(envelopes.stream()
+                .setBundleOfEnvelopes(PB.BundleOfEnvelopes.newBuilder().addAllEnvelopes(envelopes.stream()
                         .map(NetworkEnvelope::toProtoNetworkEnvelope)
                         .collect(Collectors.toList())))
                 .build();
     }
 
-    public static EnvelopeOfEnvelopes fromProto(PB.EnvelopeOfEnvelopes proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static BundleOfEnvelopes fromProto(PB.BundleOfEnvelopes proto, NetworkProtoResolver resolver, int messageVersion) {
         List<NetworkEnvelope> envelopes = proto.getEnvelopesList()
                 .stream()
                 .map(envelope -> {
@@ -78,6 +78,6 @@ public final class EnvelopeOfEnvelopes extends NetworkEnvelope implements Extend
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return new EnvelopeOfEnvelopes(envelopes, messageVersion);
+        return new BundleOfEnvelopes(envelopes, messageVersion);
     }
 }

@@ -54,7 +54,7 @@ import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.CloseConnectionMessage;
-import bisq.network.p2p.EnvelopeOfEnvelopes;
+import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
@@ -191,8 +191,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case GET_BLIND_VOTE_STATE_HASHES_RESPONSE:
                     return GetBlindVoteStateHashesResponse.fromProto(proto.getGetBlindVoteStateHashesResponse(), messageVersion);
 
-                case ENVELOPE_OF_ENVELOPES:
-                    return EnvelopeOfEnvelopes.fromProto(proto.getEnvelopeOfEnvelopes(), this, messageVersion);
+                case BUNDLE_OF_ENVELOPES:
+                    return BundleOfEnvelopes.fromProto(proto.getBundleOfEnvelopes(), this, messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +

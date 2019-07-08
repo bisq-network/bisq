@@ -17,8 +17,8 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
-import bisq.network.p2p.EnvelopeOfEnvelopes;
 import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
@@ -238,8 +238,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     Object lock = new Object();
-    Queue<EnvelopeOfEnvelopes> envelopeOfEnvelopes = new ConcurrentLinkedQueue<>();
-    ScheduledExecutorService envelopeOfEnvelopesSender = Executors.newSingleThreadScheduledExecutor();
+    Queue<BundleOfEnvelopes> queueOfBundles = new ConcurrentLinkedQueue<>();
+    ScheduledExecutorService bundleSender = Executors.newSingleThreadScheduledExecutor();
 
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
@@ -286,30 +286,30 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
                                 networkEnvelope.getClass().getSimpleName());
 
-                        // check if EnvelopeOfEnvelopes is supported
+                        // check if BundleOfEnvelopes is supported
                         if(getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
                             synchronized (lock) {
                                 // check if current envelope fits size
                                 // - no? create new envelope
-                                if(envelopeOfEnvelopes.isEmpty() || envelopeOfEnvelopes.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
+                                if(queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
                                     // - no? create a bucket
-                                    envelopeOfEnvelopes.add(new EnvelopeOfEnvelopes());
+                                    queueOfBundles.add(new BundleOfEnvelopes());
                                     System.err.println("added fresh container");
 
                                     // - and schedule it for sending
                                     lastSendTimeStamp += sendMsgThrottleSleep;
 
-                                    envelopeOfEnvelopesSender.schedule(() -> {
+                                    bundleSender.schedule(() -> {
                                         if (!stopped) {
                                             synchronized (lock) {
-                                                protoOutputStream.writeEnvelope(envelopeOfEnvelopes.poll());
+                                                protoOutputStream.writeEnvelope(queueOfBundles.poll());
                                             }
                                         }
                                     }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
                                 }
 
                                 // - yes? add to bucket
-                                envelopeOfEnvelopes.element().add(networkEnvelope);
+                                queueOfBundles.element().add(networkEnvelope);
                             }
                             return;
                         }
@@ -433,8 +433,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
 
-        if(networkEnvelope instanceof EnvelopeOfEnvelopes)
-            for(NetworkEnvelope current : ((EnvelopeOfEnvelopes) networkEnvelope).getEnvelopes()) {
+        if(networkEnvelope instanceof BundleOfEnvelopes)
+            for(NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
                 UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
             }
         else
