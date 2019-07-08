@@ -123,6 +123,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                 Futures.addCallback(future, new FutureCallback<>() {
                     @Override
                     public void onSuccess(Connection connection) {
+                        connection.removeMessageListener(P2PSeedNodeSnapshotBase.this);
                         connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
                     }
 

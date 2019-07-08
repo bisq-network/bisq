@@ -42,6 +42,7 @@ import java.nio.ByteBuffer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +53,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -222,15 +224,16 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         //   - process dao data
         perType.forEach((type, nodeAddressTupleMap) -> {
             //   - find head
-            int head = (int) nodeAddressTupleMap.values().stream().sorted((o1, o2) -> Long.compare(o1.height, o2.height)).findFirst().get().height;
+            int head = (int) nodeAddressTupleMap.values().stream().max(Comparator.comparingLong(Tuple::getHeight)).get().height;
+            int oldest = (int) nodeAddressTupleMap.values().stream().min(Comparator.comparingLong(Tuple::getHeight)).get().height;
 
             //   - update queried height
             if(type.contains("DaoState"))
-                daostateheight = head - 20;
+                daostateheight = oldest - 20;
             else if(type.contains("Proposal"))
-                proposalheight = head - 20;
+                proposalheight = oldest - 20;
             else
-                blindvoteheight = head - 20;
+                blindvoteheight = oldest - 20;
 
             //   - calculate diffs
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".head", Long.toString(tuple.height - head)));
@@ -239,6 +242,9 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             Set<ByteBuffer> states = new HashSet<>();
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> states.add(ByteBuffer.wrap(tuple.hash)));
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
+
+            //   - report reference head
+            daoreport.put(type + ".referenceHead", Integer.toString(head));
         });
 
         daoData.clear();
@@ -248,6 +254,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     }
 
     private class Tuple {
+        @Getter
         private final long height;
         private final byte[] hash;
 
