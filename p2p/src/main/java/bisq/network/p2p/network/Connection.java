@@ -193,7 +193,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
 
-        if(connectionConfig == null)
+        if (connectionConfig == null)
             connectionConfig = new ConnectionConfig(MSG_THROTTLE_PER_SEC, MSG_THROTTLE_PER_10_SEC, SEND_MSG_THROTTLE_TRIGGER, SEND_MSG_THROTTLE_SLEEP);
         msgThrottlePerSec = connectionConfig.getMsgThrottlePerSec();
         msgThrottlePer10Sec = connectionConfig.getMsgThrottlePer10Sec();
@@ -287,11 +287,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 networkEnvelope.getClass().getSimpleName());
 
                         // check if BundleOfEnvelopes is supported
-                        if(getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
+                        if (getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
                             synchronized (lock) {
                                 // check if current envelope fits size
                                 // - no? create new envelope
-                                if(queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
+                                if (queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
                                     // - no? create a bucket
                                     queueOfBundles.add(new BundleOfEnvelopes());
 
@@ -432,8 +432,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
 
-        if(networkEnvelope instanceof BundleOfEnvelopes)
-            for(NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
+        if (networkEnvelope instanceof BundleOfEnvelopes)
+            for (NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
                 UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
             }
         else
