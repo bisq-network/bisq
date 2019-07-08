@@ -53,7 +53,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void doExecute(OptionSet options) {
         super.doExecute(options);
 
-        checkMemory(bisqEnvironment, this);
         CommonSetup.setup(this);
 
         keepRunning();
