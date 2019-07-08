@@ -294,7 +294,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 if(queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
                                     // - no? create a bucket
                                     queueOfBundles.add(new BundleOfEnvelopes());
-                                    System.err.println("added fresh container");
 
                                     // - and schedule it for sending
                                     lastSendTimeStamp += sendMsgThrottleSleep;
