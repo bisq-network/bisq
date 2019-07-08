@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.network;
 
+import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.network.p2p.NodeAddress;
@@ -38,6 +39,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.common.Proto;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.HasCapabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
@@ -69,11 +71,14 @@ import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -186,7 +191,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         uid = UUID.randomUUID().toString();
         statistic = new Statistic();
 
-        if(connectionConfig == null)
+        if (connectionConfig == null)
             connectionConfig = new ConnectionConfig(MSG_THROTTLE_PER_SEC, MSG_THROTTLE_PER_10_SEC, SEND_MSG_THROTTLE_TRIGGER, SEND_MSG_THROTTLE_SLEEP);
         msgThrottlePerSec = connectionConfig.getMsgThrottlePerSec();
         msgThrottlePer10Sec = connectionConfig.getMsgThrottlePer10Sec();
@@ -230,6 +235,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         return capabilities;
     }
 
+    Object lock = new Object();
+    Queue<BundleOfEnvelopes> queueOfBundles = new ConcurrentLinkedQueue<>();
+    ScheduledExecutorService bundleSender = Executors.newSingleThreadScheduledExecutor();
+
     // Called from various threads
     public void sendMessage(NetworkEnvelope networkEnvelope) {
         log.debug(">> Send networkEnvelope of type: " + networkEnvelope.getClass().getSimpleName());
@@ -237,18 +246,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         if (!stopped) {
             if (noCapabilityRequiredOrCapabilityIsSupported(networkEnvelope)) {
                 try {
-                    // Throttle outbound network_messages
-                    long now = System.currentTimeMillis();
-                    long elapsed = now - lastSendTimeStamp;
-                    if (elapsed < sendMsgThrottleTrigger) {
-                        log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
-                                        "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
-                                sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
-                                networkEnvelope.getClass().getSimpleName());
-                        Thread.sleep(sendMsgThrottleSleep);
-                    }
-
-                    lastSendTimeStamp = now;
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
                     PB.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
@@ -277,6 +274,47 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                         "\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n",
                                 peersNodeAddress, uid, Utilities.toTruncatedString(networkEnvelope), proto.getSerializedSize());
                     }
+
+                    // Throttle outbound network_messages
+                    long now = System.currentTimeMillis();
+                    long elapsed = now - lastSendTimeStamp;
+                    if (elapsed < sendMsgThrottleTrigger) {
+                        log.debug("We got 2 sendMessage requests in less than {} ms. We set the thread to sleep " +
+                                        "for {} ms to avoid flooding our peer. lastSendTimeStamp={}, now={}, elapsed={}, networkEnvelope={}",
+                                sendMsgThrottleTrigger, sendMsgThrottleSleep, lastSendTimeStamp, now, elapsed,
+                                networkEnvelope.getClass().getSimpleName());
+
+                        // check if BundleOfEnvelopes is supported
+                        if (getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
+                            synchronized (lock) {
+                                // check if current envelope fits size
+                                // - no? create new envelope
+                                if (queueOfBundles.isEmpty() || queueOfBundles.element().toProtoNetworkEnvelope().getSerializedSize() + networkEnvelope.toProtoNetworkEnvelope().getSerializedSize() > MAX_PERMITTED_MESSAGE_SIZE * 0.9) {
+                                    // - no? create a bucket
+                                    queueOfBundles.add(new BundleOfEnvelopes());
+
+                                    // - and schedule it for sending
+                                    lastSendTimeStamp += sendMsgThrottleSleep;
+
+                                    bundleSender.schedule(() -> {
+                                        if (!stopped) {
+                                            synchronized (lock) {
+                                                protoOutputStream.writeEnvelope(queueOfBundles.poll());
+                                            }
+                                        }
+                                    }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
+                                }
+
+                                // - yes? add to bucket
+                                queueOfBundles.element().add(networkEnvelope);
+                            }
+                            return;
+                        }
+
+                        Thread.sleep(sendMsgThrottleSleep);
+                    }
+
+                    lastSendTimeStamp = now;
 
                     if (!stopped) {
                         protoOutputStream.writeEnvelope(networkEnvelope);
@@ -377,7 +415,13 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkArgument(connection.equals(this));
-        UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
+
+        if (networkEnvelope instanceof BundleOfEnvelopes)
+            for (NetworkEnvelope current : ((BundleOfEnvelopes) networkEnvelope).getEnvelopes()) {
+                UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(current, connection)));
+            }
+        else
+            UserThread.execute(() -> messageListeners.forEach(e -> e.onMessage(networkEnvelope, connection)));
     }
 
 
