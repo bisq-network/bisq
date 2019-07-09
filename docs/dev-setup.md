@@ -28,10 +28,11 @@ You can find more information about the Bitcoin regtest mode [here](https://bitc
 
 Navigate to the [bitcoin.conf](https://en.bitcoin.it/wiki/Running_Bitcoin#Bitcoin.conf_Configuration_File) file and set `regtest=1`, or add `-regtest` as a program argument when starting Bitcoin Core.
 
-At first startup you need to create 101 blocks using the command `generate 101` from the terminal inside Bitcoin Core. 101 blocks are required because of the coin maturity (100 blocks) so you need one more to have at least 50 BTC available for spending.
+At first startup you need to create 101 blocks using the command `generate 101`* from the terminal inside Bitcoin Core. 101 blocks are required because of the coin maturity (100 blocks) so you need one more to have at least 50 BTC available for spending.
 
-Later you can create new blocks with `generate 1`.
+Later you can create new blocks with `generate 1`*. 
 
+*This method is deprecated in Bitcoin Core's v.0.18 and will be fully removed in v.0.19. Use instead `generatetoaddress amount address`.
 
 ## Understand Bisq P2P network options
 
