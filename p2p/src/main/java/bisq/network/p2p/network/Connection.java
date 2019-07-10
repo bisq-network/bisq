@@ -301,7 +301,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     bundleSender.schedule(() -> {
                                         if (!stopped) {
                                             synchronized (lock) {
-                                                protoOutputStream.writeEnvelope(queueOfBundles.poll());
+                                                BundleOfEnvelopes current = queueOfBundles.poll();
+                                                if(current.getEnvelopes().size() == 1)
+                                                    protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
+                                                else
+                                                    protoOutputStream.writeEnvelope(current);
                                             }
                                         }
                                     }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
