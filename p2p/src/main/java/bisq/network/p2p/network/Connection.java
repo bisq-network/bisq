@@ -287,7 +287,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 networkEnvelope.getClass().getSimpleName());
 
                         // check if BundleOfEnvelopes is supported
-                        if (getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
+                        if (getCapabilities().containsAll(new Capabilities(Capability.BUNDLE_OF_ENVELOPES))) {
                             synchronized (lock) {
                                 // check if current envelope fits size
                                 // - no? create new envelope
