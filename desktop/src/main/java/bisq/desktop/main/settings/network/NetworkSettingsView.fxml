@@ -103,12 +103,19 @@
         </GridPane.margin>
     </TitledGroupBg>
 
-    <BisqTextField fx:id="onionAddress" GridPane.rowIndex="5"
-                   editable="false" focusTraversable="false" labelFloat="true">
+    <HBox spacing="10" GridPane.rowIndex="5">
         <GridPane.margin>
             <Insets top="60.0"/>
         </GridPane.margin>
-    </BisqTextField>
+        <BisqTextField fx:id="onionAddress" HBox.hgrow="ALWAYS"
+                       editable="false" focusTraversable="false" labelFloat="true"/>
+
+        <AutoTooltipButton fx:id="renewIdButton"/>
+
+        <AutoTooltipButton fx:id="exportIdButton"/>
+
+        <AutoTooltipButton fx:id="importIdButton"/>
+    </HBox>
 
     <VBox GridPane.rowIndex="6" GridPane.hgrow="ALWAYS" GridPane.vgrow="SOMETIMES">
         <AutoTooltipLabel fx:id="p2PPeersLabel" styleClass="small-text"/>

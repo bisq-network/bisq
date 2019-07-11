@@ -103,7 +103,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
     @FXML
     Label reSyncSPVChainLabel;
     @FXML
-    AutoTooltipButton reSyncSPVChainButton, openTorSettingsButton;
+    AutoTooltipButton reSyncSPVChainButton, renewIdButton, exportIdButton, importIdButton, openTorSettingsButton;
 
     private final Preferences preferences;
     private final BtcNodes btcNodes;
@@ -177,6 +177,9 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         usePublicNodesRadio.setText(Res.get("settings.net.usePublicNodesRadio"));
         reSyncSPVChainLabel.setText(Res.get("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
+        renewIdButton.updateText("Renew ID");
+        exportIdButton.updateText("Export ID");
+        importIdButton.updateText("Import ID");
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
         onionAddressColumn.getStyleClass().add("first-column");
