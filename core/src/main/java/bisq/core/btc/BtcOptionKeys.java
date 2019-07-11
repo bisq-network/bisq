@@ -27,4 +27,5 @@ public class BtcOptionKeys {
     public static final String USE_ALL_PROVIDED_NODES = "useAllProvidedNodes"; // We only use onion nodes if tor is enabled. That flag overrides that default behavior.
     public static final String NUM_CONNECTIONS_FOR_BTC = "numConnectionForBtc";
     public static final String REG_TEST_HOST = "bitcoinRegtestHost";
+    public static final String IGNORE_LOCAL_BTC_NODE = "ignoreLocalBtcNode";
 }
