@@ -57,4 +57,15 @@ fi
 
 #JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS >/dev/null 2>./error.log
 #JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS
-JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS 2>./error.log
+
+while true
+do
+
+    echo `date` “(Re)-starting node”
+
+    JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS 2>./error.log
+
+    echo `date` “node terminated unexpectedly!!”
+
+    sleep 10
+done
