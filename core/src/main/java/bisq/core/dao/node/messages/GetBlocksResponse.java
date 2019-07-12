@@ -33,9 +33,11 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
+@Slf4j
 public final class GetBlocksResponse extends NetworkEnvelope implements DirectMessage, ExtendedDataSizePermission {
     private final List<RawBlock> blocks;
     private final int requestNonce;
@@ -67,11 +69,13 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
     }
 
     public static NetworkEnvelope fromProto(PB.GetBlocksResponse proto, int messageVersion) {
+        List<RawBlock> list = proto.getRawBlocksList().stream()
+                .map(RawBlock::fromProto)
+                .collect(Collectors.toList());
+        log.info("Received a GetBlocksResponse with {} blocks and {} kB size", list.size(), proto.getSerializedSize() / 1000d);
         return new GetBlocksResponse(proto.getRawBlocksList().isEmpty() ?
                 new ArrayList<>() :
-                proto.getRawBlocksList().stream()
-                        .map(RawBlock::fromProto)
-                        .collect(Collectors.toList()),
+                list,
                 proto.getRequestNonce(),
                 messageVersion);
     }
