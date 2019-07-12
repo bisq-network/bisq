@@ -33,5 +33,5 @@ public enum Capability {
     ACK_MSG,
     BSQ_BLOCK,
     DAO_STATE,
-    ENVELOPE_OF_ENVELOPES
+    BUNDLE_OF_ENVELOPES
 }

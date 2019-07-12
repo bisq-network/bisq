@@ -285,7 +285,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                 networkEnvelope.getClass().getSimpleName());
 
                         // check if BundleOfEnvelopes is supported
-                        if (getCapabilities().containsAll(new Capabilities(Capability.ENVELOPE_OF_ENVELOPES))) {
+                        if (getCapabilities().containsAll(new Capabilities(Capability.BUNDLE_OF_ENVELOPES))) {
                             synchronized (lock) {
                                 // check if current envelope fits size
                                 // - no? create new envelope
@@ -299,7 +299,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     bundleSender.schedule(() -> {
                                         if (!stopped) {
                                             synchronized (lock) {
-                                                protoOutputStream.writeEnvelope(queueOfBundles.poll());
+                                                BundleOfEnvelopes current = queueOfBundles.poll();
+                                                if(current.getEnvelopes().size() == 1)
+                                                    protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
+                                                else
+                                                    protoOutputStream.writeEnvelope(current);
                                             }
                                         }
                                     }, lastSendTimeStamp - now, TimeUnit.MILLISECONDS);
