@@ -61,11 +61,11 @@ fi
 while true
 do
 
-    echo `date` “(Re)-starting node”
+    echo `date` "(Re)-starting node"
 
     JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS 2>./error.log
 
-    echo `date` “node terminated unexpectedly!!”
+    echo `date` "node terminated unexpectedly!!"
 
     sleep 10
 done
