@@ -198,7 +198,9 @@ public abstract class TradeProtocol {
                 tradeId,
                 result,
                 errorMessage);
-        final NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
+        // If there was an error during offer verification, the tradingPeerNodeAddress of the trade might not be set yet.
+        // We can find the peer's node address in the processModel's tempTradingPeerNodeAddress in that case.
+        final NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress() != null ? trade.getTradingPeerNodeAddress() : processModel.getTempTradingPeerNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, sourceUid={}",
                 ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, sourceUid);
         String finalSourceUid = sourceUid;

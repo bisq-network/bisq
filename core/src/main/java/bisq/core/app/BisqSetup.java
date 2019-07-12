@@ -418,7 +418,9 @@ public class BisqSetup {
 
     private void checkIfLocalHostNodeIsRunning() {
         // For DAO testnet we ignore local btc node
-        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() || BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet()) {
+        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ||
+                BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ||
+                bisqEnvironment.getIgnoreLocalBtcNode()) {
             step3();
         } else {
             Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {

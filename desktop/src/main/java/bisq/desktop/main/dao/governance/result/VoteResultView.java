@@ -143,6 +143,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ChangeListener<CycleListItem> selectedVoteResultListItemListener;
     private ResultsOfCycle resultsOfCycle;
     private ProposalListItem selectedProposalListItem;
+    private boolean isVoteIncludedInResult;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -253,6 +254,18 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         if (item != null) {
             resultsOfCycle = item.getResultsOfCycle();
 
+            // Check if my vote is included in result
+            isVoteIncludedInResult = false;
+            resultsOfCycle.getEvaluatedProposals().forEach(evProposal -> resultsOfCycle.getDecryptedVotesForCycle()
+                    .forEach(decryptedBallotsWithMerits -> {
+                        // Iterate through all included votes to see if any of those are ours
+                        if (!isVoteIncludedInResult) {
+                            isVoteIncludedInResult = bsqWalletService.isWalletTransaction(decryptedBallotsWithMerits
+                                    .getVoteRevealTxId()).isPresent();
+                        }
+                    }));
+
+
             maybeShowVoteResultErrors(item.getResultsOfCycle().getCycle());
             createProposalsTable();
 
@@ -327,10 +340,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                     .findAny();
 
             Ballot ballot = optionalBallot.orElse(null);
-            // Check if my vote is included in result
-            boolean isVoteIncludedInResult = voteListItemList.stream()
-                    .anyMatch(voteListItem -> bsqWalletService.getTransaction(voteListItem.getBlindVoteTxId()) != null);
-
             voteListItemList.clear();
             resultsOfCycle.getEvaluatedProposals().stream()
                     .filter(evProposal -> evProposal.getProposal().equals(selectedProposalListItem.getEvaluatedProposal().getProposal()))
@@ -460,6 +469,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 })
                 .map(evaluatedProposal -> new ProposalListItem(evaluatedProposal,
                         ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId()),
+                        isVoteIncludedInResult,
                         bsqFormatter))
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 6);

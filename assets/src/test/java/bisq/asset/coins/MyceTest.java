@@ -17,12 +17,26 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
-import bisq.asset.Coin;
+import org.junit.Test;
+import bisq.asset.AbstractAssetTest;
 
-public class Starwels extends Coin {
+public class MyceTest extends AbstractAssetTest {
 
-    public Starwels() {
-        super("Starwels", "USDH", new Base58BitcoinAddressValidator());
+    public MyceTest() {
+        super(new Myce());
+    }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("MCgtattGUWUBAV8n2JAa4uDWCRvbZeVcaD");
+        assertValidAddress("MRV2dtuxwo8b1JSkwBXN3uGypJxp85Hbqn");
+        assertValidAddress("MEUvfCySnAqzuNvbRh2SZCbSro8e2dxLYK");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("MCgtattGUWUBAV8n2JAa4uDWCRvbZeVcaDx"); 
+        assertInvalidAddress("AUV2dtuxwo8b1JSkwBXN3uGypJxp85Hbqn"); 
+        assertInvalidAddress("SEUvfCySnAqzuNvbRh2SZCbSro8e2dxLYK"); 
     }
 }

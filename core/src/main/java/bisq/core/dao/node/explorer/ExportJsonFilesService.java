@@ -134,7 +134,8 @@ public class ExportJsonFilesService implements DaoSetupService {
     }
 
     public void maybeExportToJson() {
-        if (dumpBlockchainData) {
+        if (dumpBlockchainData &&
+                daoStateService.isParseBlockChainComplete()) {
             // We store the data we need once we write the data to disk (in the thread) locally.
             // Access to daoStateService is single threaded, we must not access daoStateService from the thread.
             List<JsonTxOutput> allJsonTxOutputs = new ArrayList<>();

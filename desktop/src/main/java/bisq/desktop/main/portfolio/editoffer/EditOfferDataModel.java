@@ -23,6 +23,7 @@ import bisq.desktop.main.offer.MutableOfferDataModel;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
@@ -114,7 +115,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
         CurrencyUtil.getTradeCurrency(offer.getCurrencyCode())
                 .ifPresent(c -> this.tradeCurrency = c);
         tradeCurrencyCode.set(offer.getCurrencyCode());
-        buyerSecurityDeposit.set(CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount()));
 
         this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
@@ -127,6 +127,16 @@ class EditOfferDataModel extends MutableOfferDataModel {
             else
                 paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
         }
+
+        // If the security deposit got bounded because it was below the coin amount limit, it can be bigger
+        // by percentage than the restriction. We can't determine the percentage originally entered at offer
+        // creation, so just use the default value as it doesn't matter anyway.
+        double buyerSecurityDepositPercent = CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount());
+        if (buyerSecurityDepositPercent > Restrictions.getMaxBuyerSecurityDepositAsPercent(this.paymentAccount)
+                && offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().value)
+            buyerSecurityDeposit.set(Restrictions.getDefaultBuyerSecurityDepositAsPercent(this.paymentAccount));
+        else
+            buyerSecurityDeposit.set(buyerSecurityDepositPercent);
 
         allowAmountUpdate = false;
     }

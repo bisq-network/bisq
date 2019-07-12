@@ -1,0 +1,14 @@
+[Unit]
+Description=Bisq Seed Node
+After=network.target
+
+[Service]
+Environment="JAVA_OPTS=-Xms800M -Xmx800M"
+ExecStart=/home/bisq/bisq/bisq-seednode --appName=seed_BTC_MAINNET --nodePort=8000 --userDataDir=/home/bisq/ --maxConnections=50 --baseCurrencyNetwork=BTC_MAINNET
+Restart=on-failure
+
+User=bisq
+Group=bisq
+
+[Install]
+WantedBy=multi-user.target

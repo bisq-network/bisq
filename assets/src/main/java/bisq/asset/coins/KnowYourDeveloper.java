@@ -19,10 +19,18 @@ package bisq.asset.coins;
 
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
+import bisq.asset.NetworkParametersAdapter;
 
-public class Starwels extends Coin {
+public class KnowYourDeveloper extends Coin {
+    public KnowYourDeveloper() {
+        super("Know Your Developer", "KYD", new Base58BitcoinAddressValidator(new KydMainNetParams()));
+    }
 
-    public Starwels() {
-        super("Starwels", "USDH", new Base58BitcoinAddressValidator());
+    public static class KydMainNetParams extends NetworkParametersAdapter {
+        public KydMainNetParams() {
+            this.addressHeader = 78;
+            this.p2shHeader = 85;
+            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
+        }
     }
 }

@@ -745,9 +745,14 @@ public class FormBuilder {
     }
 
     public static CheckBox addCheckBox(GridPane gridPane, int rowIndex, String checkBoxTitle, double top) {
+        return addCheckBox(gridPane, rowIndex, 0, checkBoxTitle, 0);
+    }
+
+    public static CheckBox addCheckBox(GridPane gridPane, int rowIndex, int colIndex, String checkBoxTitle, double top) {
         CheckBox checkBox = new AutoTooltipCheckBox(checkBoxTitle);
         GridPane.setMargin(checkBox, new Insets(top, 0, 0, 0));
         GridPane.setRowIndex(checkBox, rowIndex);
+        GridPane.setColumnIndex(checkBox, colIndex);
         gridPane.getChildren().add(checkBox);
         return checkBox;
     }
