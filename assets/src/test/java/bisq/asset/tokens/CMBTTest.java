@@ -24,7 +24,7 @@ import org.junit.Test;
 public class CMBTTest extends AbstractAssetTest {
 
     public CMBTTest () {
-        super(new EtherStone());
+        super(new CMBT());
     }
 
     @Test
