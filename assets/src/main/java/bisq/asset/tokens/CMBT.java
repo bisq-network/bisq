@@ -21,7 +21,7 @@ import bisq.asset.Erc20Token;
 
 public class CMBT extends Erc20Token {
 
-    public EtherStone() {
+    public CMBT() {
         super("CMB Token", "CMBT");
     }
 }
