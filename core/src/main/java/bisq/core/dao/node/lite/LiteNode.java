@@ -131,8 +131,9 @@ public class LiteNode extends BsqNode {
 
         liteNodeNetworkService.addListener(new LiteNodeNetworkService.Listener() {
             @Override
-            public void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse) {
-                LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBlocksResponse.getBlocks()));
+            public void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse, Runnable onParsingComplete) {
+                LiteNode.this.onRequestedBlocksReceived(new ArrayList<>(getBlocksResponse.getBlocks()),
+                        onParsingComplete);
             }
 
             @Override
@@ -175,7 +176,7 @@ public class LiteNode extends BsqNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We received the missing blocks
-    private void onRequestedBlocksReceived(List<RawBlock> blockList) {
+    private void onRequestedBlocksReceived(List<RawBlock> blockList, Runnable onParsingComplete) {
         if (!blockList.isEmpty()) {
             chainTipHeight = blockList.get(blockList.size() - 1).getHeight();
             log.info("We received blocks from height {} to {}", blockList.get(0).getHeight(), chainTipHeight);
@@ -199,7 +200,11 @@ public class LiteNode extends BsqNode {
         runDelayedBatchProcessing(new ArrayList<>(blockList),
                 () -> {
                     log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
-                    onParseBlockChainComplete();
+                    if (daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight())
+                        liteNodeNetworkService.requestBlocks(getStartBlockHeight());
+                    else
+                        onParsingComplete.run();
+                        onParseBlockChainComplete();
                 });
     }
 
