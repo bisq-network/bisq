@@ -239,7 +239,9 @@ public abstract class BsqNode implements DaoSetupService {
                 // We take only first element after sorting (so it is the block with the next height) to avoid that
                 // we would repeat calls in recursions in case we  would iterate the list.
                 pendingBlocks.sort(Comparator.comparing(RawBlock::getHeight));
-                doParseBlock(pendingBlocks.get(0));
+                RawBlock nextPending = pendingBlocks.get(0);
+                if (nextPending.getHeight() == daoStateService.getChainHeight() + 1)
+                    doParseBlock(nextPending);
             }
 
             return Optional.of(block);
