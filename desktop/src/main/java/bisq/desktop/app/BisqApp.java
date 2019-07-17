@@ -315,7 +315,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     else
                         new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
-                    // dev ode only
+                    // dev mode only
                     if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
                         showFPSWindow(scene);
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
