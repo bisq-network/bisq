@@ -39,7 +39,9 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
         try {
             runInterceptHook();
 
-            log.error("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}", OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade));
+            log.debug("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}",
+                    OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(
+                            processModel.getAccountAgeWitnessService(), trade));
             if (OfferRestrictions.isTradeRisky(trade) &&
                     AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
                 failed("Violation of security restrictions:\n" +
