@@ -28,6 +28,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.SignPaymentAccountsWindow;
 
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
@@ -38,15 +39,21 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
+import javafx.scene.Scene;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import javafx.beans.value.ChangeListener;
+
+import javafx.event.EventHandler;
 
 import javafx.collections.MapChangeListener;
 
@@ -63,22 +70,28 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final ArbitratorManager arbitratorManager;
     private final DisputeManager disputeManager;
     private final KeyRing keyRing;
+    private final SignPaymentAccountsWindow signPaymentAccountsWindow;
 
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
+    private EventHandler<KeyEvent> keyEventEventHandler;
+
     private Tab currentTab;
     private final ViewLoader viewLoader;
     private MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
+    private Scene scene;
 
     @Inject
     public DisputesView(CachingViewLoader viewLoader, Navigation navigation,
                         ArbitratorManager arbitratorManager, DisputeManager disputeManager,
-                        KeyRing keyRing) {
+                        KeyRing keyRing,
+                        SignPaymentAccountsWindow signPaymentAccountsWindow) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
+        this.signPaymentAccountsWindow = signPaymentAccountsWindow;
     }
 
     @Override
@@ -97,17 +110,20 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         };
 
+        keyEventEventHandler = event -> {
+            if (Utilities.isAltOrCtrlPressed(KeyCode.S, event)) {
+                signPaymentAccountsWindow.show();
+            }
+        };
+
         arbitratorMapChangeListener = change -> updateArbitratorsDisputesTabDisableState();
     }
 
     private void updateArbitratorsDisputesTabDisableState() {
-        boolean isActiveArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
-                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()));
-
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
                 .anyMatch(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
 
-        if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
+        if (arbitratorsDisputesTab == null && (isActiveArbitrator() || hasDisputesAsArbitrator)) {
             arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets").toUpperCase());
             arbitratorsDisputesTab.setClosable(false);
             root.getTabs().add(arbitratorsDisputesTab);
@@ -115,12 +131,24 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         }
     }
 
+    private boolean isActiveArbitrator() {
+        return arbitratorManager.getArbitratorsObservableMap().values().stream()
+                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()));
+    }
+
+
+
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
         arbitratorManager.updateArbitratorMap();
         arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
         updateArbitratorsDisputesTabDisableState();
+
+        scene = root.getScene();
+
+        if (isActiveArbitrator() && scene != null)
+            scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
@@ -143,6 +171,10 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     protected void deactivate() {
         arbitratorManager.getArbitratorsObservableMap().removeListener(arbitratorMapChangeListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
+
+        if (scene != null)
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
         navigation.removeListener(navigationListener);
         currentTab = null;
     }

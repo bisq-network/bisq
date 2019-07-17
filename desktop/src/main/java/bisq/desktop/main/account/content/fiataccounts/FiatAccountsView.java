@@ -337,8 +337,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
+        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.selectPaymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
