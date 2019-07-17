@@ -69,7 +69,6 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     public void show() {
 
         createGridPane();
-        gridPane.setGridLinesVisible(true);
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.NEVER);
 
 
