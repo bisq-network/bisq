@@ -21,10 +21,10 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class NeosTest extends AbstractAssetTest {
+public class DonuTest extends AbstractAssetTest {
 
-    public NeosTest() {
-        super(new Neos());
+    public DonuTest() {
+        super(new Donu());
     }
 
     @Test

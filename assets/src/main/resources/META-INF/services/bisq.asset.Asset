@@ -36,6 +36,7 @@ bisq.asset.coins.DeepOnion
 bisq.asset.coins.Dextro
 bisq.asset.coins.Dogecoin
 bisq.asset.coins.Doichain
+bisq.asset.coins.Donu
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.DSTRA
 bisq.asset.coins.Ether
@@ -68,7 +69,6 @@ bisq.asset.coins.MoX
 bisq.asset.coins.Myce
 bisq.asset.coins.Namecoin
 bisq.asset.coins.Navcoin
-bisq.asset.coins.Neos
 bisq.asset.coins.Noir
 bisq.asset.coins.ParsiCoin
 bisq.asset.coins.Particl

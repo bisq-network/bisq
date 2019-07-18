@@ -22,17 +22,17 @@ import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
-public class Neos extends Coin {
+public class Donu extends Coin {
 
-    public Neos() {
-        super("Neos", "NEOS", new NeosAddressValidator());
+    public Donu() {
+        super("Donu", "DONU", new DonuAddressValidator());
     }
 
 
-    public static class NeosAddressValidator extends Base58BitcoinAddressValidator {
+    public static class DonuAddressValidator extends Base58BitcoinAddressValidator {
 
-        public NeosAddressValidator() {
-            super(new NeosParams());
+        public DonuAddressValidator() {
+            super(new DonuParams());
         }
 
         @Override
@@ -45,9 +45,9 @@ public class Neos extends Coin {
     }
 
 
-    public static class NeosParams extends NetworkParametersAdapter {
+    public static class DonuParams extends NetworkParametersAdapter {
 
-        public NeosParams() {
+        public DonuParams() {
             addressHeader = 53;
             p2shHeader = 5;
             acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
