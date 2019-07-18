@@ -143,6 +143,7 @@ public class TradesChartsViewModelTest {
         long close = Fiat.parseFiat("EUR", "580").value;
         long high = Fiat.parseFiat("EUR", "600").value;
         long average = Fiat.parseFiat("EUR", "550").value;
+        long median = Fiat.parseFiat("EUR", "550").value;
         long amount = Coin.parseCoin("4").value;
         long volume = Fiat.parseFiat("EUR", "2200").value;
         boolean isBullish = true;
@@ -161,6 +162,7 @@ public class TradesChartsViewModelTest {
         assertEquals(high, candleData.high);
         assertEquals(low, candleData.low);
         assertEquals(average, candleData.average);
+        assertEquals(median, candleData.median);
         assertEquals(amount, candleData.accumulatedAmount);
         assertEquals(volume, candleData.accumulatedVolume);
         assertEquals(isBullish, candleData.isBullish);
