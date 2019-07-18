@@ -118,6 +118,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                 NodeAddress target = OnionParser.getNodeAddress(current);
 
                 // do the data request
+                aboutToSend(message);
                 SettableFuture<Connection> future = networkNode.sendMessage(target, message);
 
                 Futures.addCallback(future, new FutureCallback<>() {
@@ -152,6 +153,8 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
 
         gate.await();
     }
+
+    protected void aboutToSend(NetworkEnvelope message) { };
 
     /**
      * Report all the stuff. Uses the configured reporter directly.
