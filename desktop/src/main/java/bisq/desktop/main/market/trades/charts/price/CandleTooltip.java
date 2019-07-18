@@ -68,56 +68,62 @@ import javafx.util.StringConverter;
  * The content for Candle tool tips
  */
 public class CandleTooltip extends GridPane {
-    private final StringConverter<Number> priceStringConverter;
-    private final Label openValue = new AutoTooltipLabel();
-    private final Label closeValue = new AutoTooltipLabel();
-    private final Label highValue = new AutoTooltipLabel();
-    private final Label lowValue = new AutoTooltipLabel();
-    private final Label averageValue = new AutoTooltipLabel();
-    private final Label dateValue = new AutoTooltipLabel();
+	private final StringConverter<Number> priceStringConverter;
+	private final Label openValue = new AutoTooltipLabel();
+	private final Label closeValue = new AutoTooltipLabel();
+	private final Label highValue = new AutoTooltipLabel();
+	private final Label lowValue = new AutoTooltipLabel();
+	private final Label averageValue = new AutoTooltipLabel();
+	private final Label medianValue = new AutoTooltipLabel();
+	private final Label dateValue = new AutoTooltipLabel();
 
-    CandleTooltip(StringConverter<Number> priceStringConverter) {
-        this.priceStringConverter = priceStringConverter;
+	CandleTooltip(StringConverter<Number> priceStringConverter) {
+		this.priceStringConverter = priceStringConverter;
 
-        setHgap(Layout.GRID_GAP);
+		setHgap(Layout.GRID_GAP);
 
-        setVgap(2);
+		setVgap(2);
 
-        Label open = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.open"));
-        Label close = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.close"));
-        Label high = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.high"));
-        Label low = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.low"));
-        Label average = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.average"));
-        Label date = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.date"));
-        setConstraints(open, 0, 0);
-        setConstraints(openValue, 1, 0);
-        setConstraints(close, 0, 1);
-        setConstraints(closeValue, 1, 1);
-        setConstraints(high, 0, 2);
-        setConstraints(highValue, 1, 2);
-        setConstraints(low, 0, 3);
-        setConstraints(lowValue, 1, 3);
-        setConstraints(average, 0, 4);
-        setConstraints(averageValue, 1, 4);
-        setConstraints(date, 0, 5);
-        setConstraints(dateValue, 1, 5);
+		Label open = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.open"));
+		Label close = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.close"));
+		Label high = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.high"));
+		Label low = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.low"));
+		Label average = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.average"));
+		Label median = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.median"));
+		Label date = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.date"));
+		setConstraints(open, 0, 0);
+		setConstraints(openValue, 1, 0);
+		setConstraints(close, 0, 1);
+		setConstraints(closeValue, 1, 1);
+		setConstraints(high, 0, 2);
+		setConstraints(highValue, 1, 2);
+		setConstraints(low, 0, 3);
+		setConstraints(lowValue, 1, 3);
+		setConstraints(average, 0, 4);
+		setConstraints(averageValue, 1, 4);
+		setConstraints(median, 0, 5);
+		setConstraints(medianValue, 1, 5);
+		setConstraints(date, 0, 6);
+		setConstraints(dateValue, 1, 6);
 
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.NEVER);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+		ColumnConstraints columnConstraints1 = new ColumnConstraints();
+		columnConstraints1.setHalignment(HPos.RIGHT);
+		columnConstraints1.setHgrow(Priority.NEVER);
+		ColumnConstraints columnConstraints2 = new ColumnConstraints();
+		columnConstraints2.setHgrow(Priority.ALWAYS);
+		getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
 
-        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue, date, dateValue);
-    }
+		getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue,
+				median, medianValue, date, dateValue);
+	}
 
-    public void update(CandleData candleData) {
-        openValue.setText(priceStringConverter.toString(candleData.open));
-        closeValue.setText(priceStringConverter.toString(candleData.close));
-        highValue.setText(priceStringConverter.toString(candleData.high));
-        lowValue.setText(priceStringConverter.toString(candleData.low));
-        averageValue.setText(priceStringConverter.toString(candleData.average));
-        dateValue.setText(candleData.date);
-    }
+	public void update(CandleData candleData) {
+		openValue.setText(priceStringConverter.toString(candleData.open));
+		closeValue.setText(priceStringConverter.toString(candleData.close));
+		highValue.setText(priceStringConverter.toString(candleData.high));
+		lowValue.setText(priceStringConverter.toString(candleData.low));
+		averageValue.setText(priceStringConverter.toString(candleData.average));
+		medianValue.setText(priceStringConverter.toString(candleData.median));
+		dateValue.setText(candleData.date);
+	}
 }
