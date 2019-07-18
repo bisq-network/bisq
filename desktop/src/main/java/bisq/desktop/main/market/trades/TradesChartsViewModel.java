@@ -307,13 +307,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
         for (TradeStatistics2 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
-            if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-                low = (low != 0) ? Math.max(low, tradePriceAsLong) : tradePriceAsLong;
-                high = (high != 0) ? Math.min(high, tradePriceAsLong) : tradePriceAsLong;
-            } else {
-                low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
-                high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
-            }
+			// Previously a check was done which inverted the low and high for
+			// crytocurrencies.
+			low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
+			high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
 
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().getValue() : 0;
             accumulatedAmount += item.getTradeAmount().getValue();
