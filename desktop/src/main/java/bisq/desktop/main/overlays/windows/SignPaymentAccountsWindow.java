@@ -18,17 +18,25 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
-import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.components.InputTextField;
 
+import bisq.core.arbitration.BuyerDataItem;
+import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.main.overlays.popups.Popup;
+
+import bisq.core.account.sign.SignedWitness;
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
-import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.user.User;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
 
@@ -47,27 +55,38 @@ import javafx.collections.FXCollections;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.time.ZoneOffset;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 import static bisq.desktop.util.FormBuilder.*;
 
+@Slf4j
 public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow> {
 
     private Label descriptionLabel;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private ComboBox<FiatCurrency> currencyComboBox;
     private DatePicker datePicker;
-    private User user;
+    private InputTextField privateKey;
+    private ListView<BuyerDataItem> selectedPaymentAccountsList = new ListView<>();
+    private final SignedWitnessService signedWitnessService;
+    private final ArbitratorManager arbitratorManager;
+
 
     @Inject
-    public SignPaymentAccountsWindow(User user) {
-        this.user = user;
+    public SignPaymentAccountsWindow(SignedWitnessService signedWitnessService,
+                                     ArbitratorManager arbitratorManager) {
+        this.signedWitnessService = signedWitnessService;
+        this.arbitratorManager = arbitratorManager;
     }
 
     @Override
     public void show() {
-
+        rowIndex = -1;
         createGridPane();
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.NEVER);
 
@@ -130,7 +149,10 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                 Res.get("popup.accountSigning.selectAccounts.datePicker"),
                 0).second;
         datePicker.setOnAction(e -> updateAccountSelectionState());
+    }
 
+    private void addECKeyField() {
+        privateKey = addInputTextField(gridPane, ++rowIndex, Res.get("popup.accountSigning.signAccounts.ECKey"));
     }
 
     private void updateAccountSelectionState() {
@@ -148,37 +170,60 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     private void addAccountsToSignContent() {
         removeContent();
 
+        // Add payment accounts to sign
+        Tuple3<Label, ListView<BuyerDataItem>, VBox> selectedPaymentAccountsTuple =
+                addTopLabelListView(gridPane,
+                        ++rowIndex,
+                        Res.get("popup.accountSigning.selectAccounts.headline"));
+        GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 3);
+        selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
+        selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(
+                signedWitnessService.getBuyerPaymentAccounts(
+                        datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000)));
+
         headLineLabel.setText(Res.get("popup.accountSigning.signAccounts.headline"));
-        //TODO: fill in number of payment accounts
-        descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description", 23));
+        descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description",
+                selectedPaymentAccountsList.getItems().size()));
         ((AutoTooltipButton) actionButton).updateText(Res.get("popup.accountSigning.signAccounts.button"));
 
         actionButton.setOnAction(e -> {
-            //TODO: sign selected accounts
+            removeContent();
+            addECKeyField();
             headLineLabel.setText(Res.get("popup.accountSigning.success.headline"));
-            //TODO: fill in number of payment accounts
-            descriptionLabel.setText(Res.get("popup.accountSigning.success.description", 23));
+            descriptionLabel.setText(Res.get("popup.accountSigning.success.description",
+                    selectedPaymentAccountsList.getItems().size()));
             ((AutoTooltipButton) actionButton).updateText(Res.get("shared.ok"));
-            actionButton.setOnAction(a -> hide());
+            actionButton.setOnAction(a -> {
+                ECKey arbitratorKey = arbitratorManager.getRegistrationKey(privateKey.getText());
+                if (arbitratorKey != null) {
+                    String arbitratorPubKeyAsHex = Utils.HEX.encode(arbitratorKey.getPubKey());
+                    boolean isKeyValid = arbitratorManager.isPublicKeyInList(arbitratorPubKeyAsHex);
+                    if (isKeyValid) {
+                        selectedPaymentAccountsList.getItems().forEach(item -> {
+                            // Sign accounts
+                            SignedWitness signedWitness = signedWitnessService.signAccountAgeWitness(
+                                    item.getTradeAmount(),
+                                    item.getAccountAgeWitness(),
+                                    arbitratorKey,
+                                    item.getSellerPubKey());
+                            log.info("Signed witness {}", signedWitness.toString());
+                        });
+                        hide();
+                    }
+                } else {
+                    new Popup<>().error("Bad arbitrator ECKey").show();
+                }
+
+            });
         });
-
-        Tuple3<Label, ListView<PaymentAccount>, VBox> selectedPaymentAccountsTuple = addTopLabelListView(gridPane,
-                ++rowIndex,
-                Res.get("popup.accountSigning.selectAccounts.headline"));
-        GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 3);
-
-        ListView<PaymentAccount> selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
-
-        //TODO: Fill with selected payment accounts
-        // I added all accounts from user for testing display
-        selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(user.getPaymentAccounts()));
 
         selectedPaymentAccountsList.setCellFactory(new Callback<>() {
             @Override
-            public ListCell<PaymentAccount> call(ListView<PaymentAccount> param) {
+            public ListCell<BuyerDataItem> call(
+                    ListView<BuyerDataItem> param) {
                 return new ListCell<>() {
                     @Override
-                    protected void updateItem(PaymentAccount item, boolean empty) {
+                    protected void updateItem(BuyerDataItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
