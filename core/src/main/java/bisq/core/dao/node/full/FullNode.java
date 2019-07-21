@@ -74,6 +74,7 @@ public class FullNode extends BsqNode {
                     FullNodeNetworkService fullNodeNetworkService) {
         super(blockParser, daoStateService, daoStateSnapshotService, p2PService, exportJsonFilesService);
         this.rpcService = rpcService;
+
         this.fullNodeNetworkService = fullNodeNetworkService;
     }
 
