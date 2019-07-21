@@ -76,7 +76,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public interface Listener {
         void onNoSeedNodeAvailable();
 
-        void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse);
+        void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse, Runnable onParsingComplete);
 
         void onNewBlockReceived(NewBlockBroadcastMessage newBlockBroadcastMessage);
 
@@ -269,11 +269,12 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                                     if (startBlockHeight >= lastReceivedBlockHeight) {
                                         lastReceivedBlockHeight = startBlockHeight;
 
-                                        // After we received the blocks we allow to disconnect seed nodes.
-                                        // We delay 20 seconds to allow multiple requests to finish.
-                                        UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
-
-                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse));
+                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
+                                                () -> {
+                                                    // After we received the blocks we allow to disconnect seed nodes.
+                                                    // We delay 20 seconds to allow multiple requests to finish.
+                                                    UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
+                                                }));
                                     } else {
                                         log.warn("We got a response which is already obsolete because we receive a " +
                                                 "response from a request with a higher block height. " +

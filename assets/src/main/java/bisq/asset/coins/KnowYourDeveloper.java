@@ -23,7 +23,7 @@ import bisq.asset.NetworkParametersAdapter;
 
 public class KnowYourDeveloper extends Coin {
     public KnowYourDeveloper() {
-        super("Know Your Developer", "KYD", new Base58BitcoinAddressValidator(new KydMainNetParams()));
+        super("Know Your Developer", "KYDC", new Base58BitcoinAddressValidator(new KydMainNetParams()));
     }
 
     public static class KydMainNetParams extends NetworkParametersAdapter {
