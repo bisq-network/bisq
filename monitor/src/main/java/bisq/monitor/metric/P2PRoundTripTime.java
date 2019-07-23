@@ -57,7 +57,8 @@ public class P2PRoundTripTime extends P2PSeedNodeSnapshotBase {
         public synchronized void log(Object message) {
             Pong pong = (Pong) message;
             Long start = sentAt.get(pong.getRequestNonce());
-            samples.add(System.currentTimeMillis() - start);
+            if(start != null)
+                samples.add(System.currentTimeMillis() - start);
         }
 
         public List<Long> values() {
