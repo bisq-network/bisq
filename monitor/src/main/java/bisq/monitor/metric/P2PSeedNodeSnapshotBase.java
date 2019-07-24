@@ -124,7 +124,6 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                 Futures.addCallback(future, new FutureCallback<>() {
                     @Override
                     public void onSuccess(Connection connection) {
-                        connection.removeMessageListener(P2PSeedNodeSnapshotBase.this);
                         connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
                     }
 
@@ -171,6 +170,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
             log.warn("Got an unexpected message of type <{}>",
                     networkEnvelope.getClass().getSimpleName());
         }
+        connection.removeMessageListener(this);
     }
 
     abstract protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection);
