@@ -131,8 +131,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                     public void onFailure(@NotNull Throwable throwable) {
                         gate.proceed();
                         log.error(
-                                "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
-                                        + throwable.getMessage());
+                                "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
                     }
                 });
 
