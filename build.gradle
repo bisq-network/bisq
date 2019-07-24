@@ -310,6 +310,7 @@ configure(project(':api')) {
         testCompile "org.arquillian.universe:arquillian-cube-docker:1.2.0.1"
         testCompile "org.arquillian.cube:arquillian-cube-docker:1.15.3"
         testCompile "io.rest-assured:rest-assured:3.0.2"
+        testCompile 'io.swagger.core.v3:swagger-jaxrs2:2.0.6' //needed to generate documentation using SwaggerGenerator
     }
 
     sourceSets {

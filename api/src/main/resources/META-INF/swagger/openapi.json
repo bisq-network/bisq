@@ -1,0 +1,163 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "Bisq HTTP API",
+        "version": "0.0.1"
+    },
+    "security": [
+        {
+            "authorization": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "user"
+        },
+        {
+            "name": "version"
+        }
+    ],
+    "paths": {
+        "/api/v1/user/authenticate": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Exchange password for access token",
+                "operationId": "authenticate",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuthForm"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/password": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Change password",
+                "operationId": "changePassword",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChangePassword"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/version": {
+            "get": {
+                "tags": [
+                    "version"
+                ],
+                "summary": "Get version details",
+                "operationId": "getVersionDetails",
+                "responses": {
+                    "default": {
+                        "description": "default response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VersionDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AuthResult": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    }
+                }
+            },
+            "AuthForm": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ChangePassword": {
+                "type": "object",
+                "properties": {
+                    "newPassword": {
+                        "type": "string"
+                    },
+                    "oldPassword": {
+                        "type": "string"
+                    }
+                }
+            },
+            "VersionDetails": {
+                "type": "object",
+                "properties": {
+                    "application": {
+                        "type": "string"
+                    },
+                    "network": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "p2PMessage": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "localDB": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "tradeProtocol": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "authorization": {
+                "type": "apiKey",
+                "name": "authorization",
+                "in": "header"
+            }
+        }
+    }
+}
