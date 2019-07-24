@@ -17,12 +17,33 @@
 
 package bisq.asset.coins;
 
+import org.bitcoinj.core.NetworkParameters;
+
+import bisq.asset.AddressValidationResult;
+import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
 
 public class Counterparty extends Coin {
 
-    public Counterparty() {
-        super("Counterparty", "XCP", new DefaultAddressValidator());
+    public Counterparty(Network network, NetworkParameters networkParameters) {
+        super("Counterparty", "XCP", new XcpAddressValidator(networkParameters), network);
+    }
+    
+    public static class XcpAddressValidator extends Base58BitcoinAddressValidator {
+
+        public XcpAddressValidator(NetworkParameters networkParameters) {
+            super(networkParameters);
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (address == null || address.length() != 34 || !address.startsWith("1")) {
+                return AddressValidationResult.invalidAddress("XCP address must start with '1' and must have 34 characters.");
+            }
+
+            String addressAsBtc = address.substring(1, address.length());
+
+            return super.validate(addressAsBtc);
+        }
     }
 }
