@@ -17,36 +17,19 @@
 
 package bisq.monitor.metric;
 
-import java.io.File;
+import bisq.monitor.AvailableTor;
+import bisq.monitor.Metric;
+import bisq.monitor.Monitor;
+import bisq.monitor.Reporter;
+import bisq.monitor.ThreadGate;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.core.env.PropertySource;
-
-import bisq.common.Clock;
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
-import bisq.common.proto.network.NetworkEnvelope;
-import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BaseCurrencyNetwork;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.monitor.AvailableTor;
-import bisq.monitor.Metric;
-import bisq.monitor.Monitor;
-import bisq.monitor.Reporter;
-import bisq.monitor.ThreadGate;
+
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
@@ -56,6 +39,26 @@ import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
+
+import bisq.common.Clock;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
+import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.proto.network.NetworkProtoResolver;
+
+import org.springframework.core.env.PropertySource;
+
+import java.io.File;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -63,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
  * answers are then compiled into buckets of message types. Based on these
  * buckets, the Metric reports (for each host) the message types observed and
  * their number along with a relative comparison between all hosts.
- * 
+ *
  * @author Florian Reimair
  *
  */
@@ -86,11 +89,20 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     private Map<Integer, Object> history;
     private long lastRun = 0;
 
+    @Override
+    public void configure(Properties properties) {
+        super.configure(properties);
+
+        history = Collections.synchronizedMap(new FixedSizeHistoryTracker<>(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
+
+        Capabilities.app.addAll(Capability.DAO_FULL_NODE);
+    }
+
     /**
      * History implementation using a {@link LinkedHashMap} and its
      * {@link LinkedHashMap#removeEldestEntry(Map.Entry)} option.
      */
-    private class FixedSizeHistoryTracker extends LinkedHashMap {
+    private class FixedSizeHistoryTracker<K, V> extends LinkedHashMap<K, V> {
         final int historySize;
 
         FixedSizeHistoryTracker(int historySize) {
@@ -104,6 +116,10 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         }
     }
 
+    public P2PNetworkLoad(Reporter reporter) {
+        super(reporter);
+    }
+
     /**
      * Efficient way to count message occurrences.
      */
@@ -112,7 +128,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
         /**
          * atomic get and reset
-         * 
+         *
          * @return the current value
          */
         synchronized int getAndReset() {
@@ -126,19 +142,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         synchronized void increment() {
             value++;
         }
-    }
-
-    public P2PNetworkLoad(Reporter reporter) {
-        super(reporter);
-    }
-
-    @Override
-    public void configure(Properties properties) {
-        super.configure(properties);
-
-        history = Collections.synchronizedMap(new FixedSizeHistoryTracker(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
-
-        Capabilities.app.addAll(Capability.DAO_FULL_NODE);
     }
 
     @Override
