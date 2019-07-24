@@ -19,6 +19,7 @@ package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.param.ParamType;
 import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
@@ -26,7 +27,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Address;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BsqFormatter extends BSFormatter {
     @SuppressWarnings("PointlessBooleanExpression")
-    private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
+    private static final boolean useBsqAddressFormat = true; // || !DevEnv.isDevMode();
     private final String prefix = "B";
     private DecimalFormat amountFormat;
     private DecimalFormat marketCapFormat;
@@ -98,7 +98,7 @@ public class BsqFormatter extends BSFormatter {
 
     public Address getAddressFromBsqAddress(String encoded) {
         if (useBsqAddressFormat)
-            encoded = encoded.substring(prefix.length(), encoded.length());
+            encoded = encoded.substring(prefix.length());
 
         try {
             return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
@@ -197,12 +197,10 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public int parseParamValueToBlocks(Param param, String inputValue) {
-        switch (param.getParamType()) {
-            case BLOCK:
-                return Integer.parseInt(inputValue);
-            default:
-                throw new IllegalArgumentException("Unsupported paramType. param: " + param);
+        if (param.getParamType() == ParamType.BLOCK) {
+            return Integer.parseInt(inputValue);
         }
+        throw new IllegalArgumentException("Unsupported paramType. param: " + param);
     }
 
     public String parseParamValueToString(Param param, String inputValue) throws ProposalValidationException {

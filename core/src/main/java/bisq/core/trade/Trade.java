@@ -581,8 +581,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void removeDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey))
-            decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
+        decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
 
@@ -920,7 +919,7 @@ public abstract class Trade implements Tradable, Model {
                 setConfirmedState();
             } else {
                 ListenableFuture<TransactionConfidence> future = transactionConfidence.getDepthFuture(1);
-                Futures.addCallback(future, new FutureCallback<TransactionConfidence>() {
+                Futures.addCallback(future, new FutureCallback<>() {
                     @Override
                     public void onSuccess(TransactionConfidence result) {
                         setConfirmedState();

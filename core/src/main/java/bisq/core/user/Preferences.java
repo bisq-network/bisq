@@ -32,8 +32,8 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.setup.CoreNetworkCapabilities;
 import bisq.core.payment.PaymentAccountUtil;
+import bisq.core.setup.CoreNetworkCapabilities;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
 
@@ -337,8 +337,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void removeFiatCurrency(FiatCurrency tradeCurrency) {
         if (tradeCurrenciesAsObservable.size() > 1) {
-            if (fiatCurrenciesAsObservable.contains(tradeCurrency))
-                fiatCurrenciesAsObservable.remove(tradeCurrency);
+            fiatCurrenciesAsObservable.remove(tradeCurrency);
 
             if (prefPayload.getPreferredTradeCurrency() != null &&
                     prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))
@@ -355,8 +354,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void removeCryptoCurrency(CryptoCurrency tradeCurrency) {
         if (tradeCurrenciesAsObservable.size() > 1) {
-            if (cryptoCurrenciesAsObservable.contains(tradeCurrency))
-                cryptoCurrenciesAsObservable.remove(tradeCurrency);
+            cryptoCurrenciesAsObservable.remove(tradeCurrency);
 
             if (prefPayload.getPreferredTradeCurrency() != null &&
                     prefPayload.getPreferredTradeCurrency().equals(tradeCurrency))

@@ -35,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -63,9 +62,8 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
 
     public SepaInstantAccountPayload(String paymentMethod, String id, List<Country> acceptedCountries) {
         super(paymentMethod, id);
-        Set<String> acceptedCountryCodesAsSet = acceptedCountries.stream()
-                .map(e -> e.code).collect(Collectors.toSet());
-        acceptedCountryCodes = new ArrayList<>(acceptedCountryCodesAsSet);
+        acceptedCountryCodes = acceptedCountries.stream()
+                .map(e -> e.code).distinct().collect(Collectors.toList());
         acceptedCountryCodes.sort(String::compareTo);
     }
 
@@ -136,8 +134,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
     }
 
     public void removeAcceptedCountry(String countryCode) {
-        if (acceptedCountryCodes.contains(countryCode))
-            acceptedCountryCodes.remove(countryCode);
+        acceptedCountryCodes.remove(countryCode);
     }
 
     @Override

@@ -230,8 +230,7 @@ public abstract class BsqNode implements DaoSetupService {
         try {
             Block block = blockParser.parseBlock(rawBlock);
 
-            if (pendingBlocks.contains(rawBlock))
-                pendingBlocks.remove(rawBlock);
+            pendingBlocks.remove(rawBlock);
 
             // After parsing we check if we have pending blocks we might have received earlier but which have been
             // not connecting from the latest height we had. The list is sorted by height

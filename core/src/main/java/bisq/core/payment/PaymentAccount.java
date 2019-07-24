@@ -93,7 +93,7 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setCreationDate(creationDate)
                 .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
                 .setAccountName(accountName)
-                .addAllTradeCurrencies(ProtoUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
+                .addAllTradeCurrencies(ProtoUtil.collectionToProto(tradeCurrencies));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
         return builder.build();
     }
@@ -128,8 +128,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     }
 
     public void removeCurrency(TradeCurrency tradeCurrency) {
-        if (tradeCurrencies.contains(tradeCurrency))
-            tradeCurrencies.remove(tradeCurrency);
+        tradeCurrencies.remove(tradeCurrency);
     }
 
     public boolean hasMultipleCurrencies() {

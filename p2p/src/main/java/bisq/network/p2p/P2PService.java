@@ -843,8 +843,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void removeP2PServiceListener(P2PServiceListener listener) {
-        if (p2pServiceListeners.contains(listener))
-            p2pServiceListeners.remove(listener);
+        p2pServiceListeners.remove(listener);
     }
 
     public void addHashSetChangedListener(HashMapChangedListener hashMapChangedListener) {

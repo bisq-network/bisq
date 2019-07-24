@@ -122,7 +122,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
 
     public Address getAddress() throws AddressFormatException {
         // Remove leading 'B'
-        String underlyingBtcAddress = bsqAddress.substring(1, bsqAddress.length());
+        String underlyingBtcAddress = bsqAddress.substring(1);
         return Address.fromBase58(BisqEnvironment.getParameters(), underlyingBtcAddress);
     }
 

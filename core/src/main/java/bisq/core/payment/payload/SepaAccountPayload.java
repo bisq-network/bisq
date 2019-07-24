@@ -141,8 +141,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
     }
 
     public void removeAcceptedCountry(String countryCode) {
-        if (acceptedCountryCodes.contains(countryCode))
-            acceptedCountryCodes.remove(countryCode);
+        acceptedCountryCodes.remove(countryCode);
     }
 
     @Override

@@ -834,7 +834,7 @@ public class BtcWalletService extends WalletService {
                         }
                         if (sendResult != null) {
                             log.info("Broadcasting double spending transaction. " + sendResult.tx);
-                            Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<Transaction>() {
+                            Futures.addCallback(sendResult.broadcastComplete, new FutureCallback<>() {
                                 @Override
                                 public void onSuccess(Transaction result) {
                                     log.info("Double spending transaction published. " + result);
@@ -1096,7 +1096,7 @@ public class BtcWalletService extends WalletService {
 
         sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesFromAddressEntries(addressEntries),
                 preferences.getIgnoreDustThreshold());
-        Optional<AddressEntry> addressEntryOptional = Optional.<AddressEntry>empty();
+        Optional<AddressEntry> addressEntryOptional = Optional.empty();
         AddressEntry changeAddressAddressEntry = null;
         if (changeAddress != null)
             addressEntryOptional = findAddressEntry(changeAddress, AddressEntry.Context.AVAILABLE);

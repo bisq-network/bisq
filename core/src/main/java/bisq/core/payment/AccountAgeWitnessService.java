@@ -178,7 +178,7 @@ public class AccountAgeWitnessService {
         if (!containsKey)
             log.debug("hash not found in accountAgeWitnessMap");
 
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
