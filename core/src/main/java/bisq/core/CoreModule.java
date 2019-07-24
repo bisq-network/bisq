@@ -53,7 +53,7 @@ import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
 import bisq.common.crypto.KeyRing;
@@ -92,7 +92,7 @@ public class CoreModule extends AppModule {
         bind(KeyStorage.class).in(Singleton.class);
         bind(KeyRing.class).in(Singleton.class);
         bind(User.class).in(Singleton.class);
-        bind(Clock.class).in(Singleton.class);
+        bind(ClockWatcher.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
         bind(CorruptedDatabaseFilesHandler.class).in(Singleton.class);
