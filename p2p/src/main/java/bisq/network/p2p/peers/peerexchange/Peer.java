@@ -25,8 +25,6 @@ import bisq.common.app.HasCapabilities;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Date;
 
 import lombok.EqualsAndHashCode;

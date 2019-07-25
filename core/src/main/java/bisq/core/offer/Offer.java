@@ -40,8 +40,6 @@ import bisq.common.util.JsonExclude;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 

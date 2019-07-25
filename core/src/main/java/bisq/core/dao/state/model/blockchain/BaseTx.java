@@ -19,8 +19,6 @@ package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.collect.ImmutableList;
 
 import java.util.stream.Collectors;

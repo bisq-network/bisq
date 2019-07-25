@@ -47,8 +47,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import javax.inject.Inject;
 
 import com.google.common.util.concurrent.MoreExecutors;

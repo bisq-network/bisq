@@ -20,8 +20,6 @@ package bisq.network.p2p.storage.payload;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.security.PublicKey;
 
 import java.util.Map;

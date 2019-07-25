@@ -17,7 +17,6 @@
 
 package bisq.core.payment.payload;
 
-import io.bisq.generated.protobuffer.PB;
 
 import org.apache.commons.lang3.ArrayUtils;
 

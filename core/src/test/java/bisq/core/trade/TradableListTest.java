@@ -23,13 +23,11 @@ import bisq.core.offer.OpenOffer;
 
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import mockit.Mocked;
 
 import org.junit.Test;
 
-import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
+import static PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 

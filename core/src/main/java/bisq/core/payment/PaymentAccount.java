@@ -26,8 +26,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

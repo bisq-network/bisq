@@ -17,7 +17,6 @@
 
 package bisq.common.proto.persistable;
 
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 

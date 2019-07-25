@@ -21,8 +21,6 @@ import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.io.IOException;
 import java.io.OutputStream;
 

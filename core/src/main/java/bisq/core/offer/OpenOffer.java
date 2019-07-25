@@ -27,8 +27,6 @@ import bisq.common.UserThread;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Date;
 import java.util.Optional;
 

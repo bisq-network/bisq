@@ -20,7 +20,6 @@ package bisq.common.proto.network;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufferException;
 
-import io.bisq.generated.protobuffer.PB;
 
 public interface NetworkProtoResolver extends ProtoResolver {
     NetworkEnvelope fromProto(PB.NetworkEnvelope proto) throws ProtobufferException;

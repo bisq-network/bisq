@@ -24,8 +24,6 @@ import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkPayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;

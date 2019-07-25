@@ -22,8 +22,6 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.List;
 

@@ -25,8 +25,6 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;

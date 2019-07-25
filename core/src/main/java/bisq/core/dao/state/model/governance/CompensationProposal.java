@@ -26,8 +26,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;

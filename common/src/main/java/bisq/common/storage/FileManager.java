@@ -22,8 +22,6 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.util.concurrent.CycleDetectingLockFactory;
 
 import java.nio.file.Paths;

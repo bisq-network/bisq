@@ -24,8 +24,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.storage.FileUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;

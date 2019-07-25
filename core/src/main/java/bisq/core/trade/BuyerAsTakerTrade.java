@@ -27,8 +27,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;

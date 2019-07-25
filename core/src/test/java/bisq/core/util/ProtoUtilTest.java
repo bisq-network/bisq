@@ -21,13 +21,14 @@ import bisq.core.offer.OpenOffer;
 
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-import io.bisq.generated.protobuffer.PB.OfferPayload;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+
+
+import PB.OfferPayload;
 
 @SuppressWarnings("UnusedAssignment")
 public class ProtoUtilTest {

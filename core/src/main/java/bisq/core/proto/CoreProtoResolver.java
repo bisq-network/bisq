@@ -57,8 +57,6 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

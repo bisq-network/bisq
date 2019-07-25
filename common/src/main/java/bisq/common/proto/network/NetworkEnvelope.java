@@ -19,8 +19,6 @@ package bisq.common.proto.network;
 
 import bisq.common.Envelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import lombok.EqualsAndHashCode;

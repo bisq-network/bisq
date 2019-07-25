@@ -22,8 +22,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

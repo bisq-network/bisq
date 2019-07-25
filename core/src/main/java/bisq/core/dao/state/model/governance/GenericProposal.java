@@ -24,8 +24,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.springframework.util.CollectionUtils;
 
 import java.util.Date;

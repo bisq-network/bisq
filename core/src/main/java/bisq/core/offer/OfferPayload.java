@@ -27,8 +27,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;

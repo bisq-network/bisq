@@ -23,8 +23,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.HashMap;

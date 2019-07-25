@@ -19,8 +19,6 @@ package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 
 import lombok.Data;

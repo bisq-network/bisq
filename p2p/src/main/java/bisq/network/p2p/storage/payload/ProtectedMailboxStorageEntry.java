@@ -21,8 +21,6 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;

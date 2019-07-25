@@ -21,8 +21,6 @@ import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import com.google.common.annotations.VisibleForTesting;

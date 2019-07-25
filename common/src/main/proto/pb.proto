@@ -5,9 +5,9 @@ package io.bisq.protobuffer;
 // Protobuffer v3 definitions of network messages and persisted objects.
 //
 
-option java_package = "io.bisq.generated.protobuffer";
-option java_outer_classname = "PB";
 
+option java_package = "PB";
+option java_multiple_files = true;
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Network messages
 ///////////////////////////////////////////////////////////////////////////////////////////

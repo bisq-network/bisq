@@ -23,8 +23,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.Charset;

@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.ArrayList;

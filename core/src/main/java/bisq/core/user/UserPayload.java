@@ -29,8 +29,6 @@ import bisq.core.proto.CoreProtoResolver;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

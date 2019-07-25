@@ -21,8 +21,6 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.nio.charset.Charset;
 
 import java.util.Map;

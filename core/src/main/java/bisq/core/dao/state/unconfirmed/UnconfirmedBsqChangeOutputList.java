@@ -20,8 +20,6 @@ package bisq.core.dao.state.unconfirmed;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.ArrayList;

@@ -19,8 +19,6 @@ package bisq.core.notifications.alerts.price;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Value;
 
 @Value

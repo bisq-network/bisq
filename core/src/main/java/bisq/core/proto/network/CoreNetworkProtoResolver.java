@@ -53,8 +53,8 @@ import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
+import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
@@ -77,8 +77,6 @@ import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
-
-import io.bisq.generated.protobuffer.PB;
 
 import javax.inject.Inject;
 

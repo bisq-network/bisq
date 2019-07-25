@@ -22,8 +22,6 @@ import bisq.core.payment.TradeLimits;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 
 import java.util.ArrayList;

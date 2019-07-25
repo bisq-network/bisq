@@ -22,8 +22,6 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 

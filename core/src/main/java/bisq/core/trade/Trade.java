@@ -51,8 +51,6 @@ import bisq.common.storage.Storage;
 import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 

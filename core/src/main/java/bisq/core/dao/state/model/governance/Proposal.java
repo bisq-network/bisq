@@ -28,8 +28,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;

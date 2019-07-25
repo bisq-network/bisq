@@ -17,7 +17,6 @@
 
 package bisq.core.locale;
 
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 

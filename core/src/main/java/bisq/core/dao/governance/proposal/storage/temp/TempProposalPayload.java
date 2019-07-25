@@ -30,8 +30,6 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.springframework.util.CollectionUtils;

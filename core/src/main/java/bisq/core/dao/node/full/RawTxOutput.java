@@ -23,8 +23,6 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import bisq.common.proto.network.NetworkPayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;

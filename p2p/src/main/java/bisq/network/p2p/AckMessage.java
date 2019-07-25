@@ -27,8 +27,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;

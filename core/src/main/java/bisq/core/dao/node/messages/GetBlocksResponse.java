@@ -25,8 +25,6 @@ import bisq.network.p2p.ExtendedDataSizePermission;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

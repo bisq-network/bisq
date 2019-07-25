@@ -22,8 +22,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.List;

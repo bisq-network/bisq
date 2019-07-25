@@ -20,8 +20,6 @@ package bisq.network.p2p.storage.mocks;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.security.PublicKey;

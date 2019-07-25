@@ -17,7 +17,6 @@
 
 package bisq.core.message;
 
-import io.bisq.generated.protobuffer.PB;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

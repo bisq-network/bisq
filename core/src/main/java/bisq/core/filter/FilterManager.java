@@ -38,8 +38,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 

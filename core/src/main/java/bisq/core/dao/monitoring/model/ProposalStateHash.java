@@ -18,8 +18,6 @@
 package bisq.core.dao.monitoring.model;
 
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;

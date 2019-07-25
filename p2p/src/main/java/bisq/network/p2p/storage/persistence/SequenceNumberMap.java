@@ -21,8 +21,6 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

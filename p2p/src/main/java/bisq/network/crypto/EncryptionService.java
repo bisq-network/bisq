@@ -30,8 +30,6 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import javax.inject.Inject;

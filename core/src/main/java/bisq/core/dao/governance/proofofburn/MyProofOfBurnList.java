@@ -19,8 +19,6 @@ package bisq.core.dao.governance.proofofburn;
 
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

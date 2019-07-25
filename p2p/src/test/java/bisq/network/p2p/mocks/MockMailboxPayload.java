@@ -24,8 +24,6 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.UUID;

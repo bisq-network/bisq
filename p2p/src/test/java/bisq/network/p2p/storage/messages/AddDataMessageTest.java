@@ -28,8 +28,6 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.crypto.SealedAndSigned;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.RandomUtils;
 
 import java.security.InvalidKeyException;

@@ -32,8 +32,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;

@@ -29,8 +29,6 @@ import bisq.core.dao.state.model.governance.ParamChange;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import javax.inject.Inject;
