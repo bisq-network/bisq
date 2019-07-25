@@ -17,12 +17,35 @@
 
 package bisq.asset.coins;
 
+import org.bitcoinj.core.NetworkParameters;
+
+import bisq.asset.AddressValidationResult;
+import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+
+import bisq.core.locale.Res;
 
 public class Unobtanium extends Coin {
 
-    public Unobtanium() {
-        super("Unobtanium", "UNO", new DefaultAddressValidator());
+    public Unobtanium(Network network, NetworkParameters networkParameters) {
+        super("Unobtanium", "UNO", new UnoAddressValidator(networkParameters), network);
+    }
+    
+    public static class UnoAddressValidator extends Base58BitcoinAddressValidator {
+
+        public UnoAddressValidator(NetworkParameters networkParameters) {
+            super(networkParameters);
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (address == null || address.length() != 34 || !address.startsWith("u")) {
+                return AddressValidationResult.invalidAddress(Res.get("account.altcoin.popup.validation.UNO"));
+            }
+
+            String addressAsBtc = address.substring(1, address.length());
+
+            return super.validate(addressAsBtc);
+        }
     }
 }

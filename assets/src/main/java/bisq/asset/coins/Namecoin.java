@@ -17,20 +17,34 @@
 
 package bisq.asset.coins;
 
+import org.bitcoinj.core.NetworkParameters;
+
+import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.NetworkParametersAdapter;
+
+import bisq.core.locale.Res;
 
 public class Namecoin extends Coin {
 
-    public Namecoin() {
-        super("Namecoin", "NMC", new Base58BitcoinAddressValidator(new NamecoinChainParams()));
+    public Namecoin(Network network, NetworkParameters networkParameters) {
+        super("Namecoin", "NMC", new NmcAddressValidator(networkParameters), network);
     }
 
-    public static class NamecoinChainParams extends NetworkParametersAdapter {
-        public NamecoinChainParams() {
-            addressHeader = 52;
-            acceptableAddressCodes = new int[]{addressHeader};
+    public static class NmcAddressValidator extends Base58BitcoinAddressValidator {
+
+        public NmcAddressValidator(NetworkParameters networkParameters) {
+            super(networkParameters);
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (address == null || address.length() != 34 || !address.startsWith("N") || !address.startsWith("M"))
+                return AddressValidationResult.invalidAddress(Res.get("account.altcoin.popup.validation.NMC"));
+
+            String addressAsBtc = address.substring(1, address.length());
+
+            return super.validate(addressAsBtc);
         }
     }
 }

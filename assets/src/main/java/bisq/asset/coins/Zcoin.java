@@ -17,14 +17,38 @@
 
 package bisq.asset.coins;
 
+import org.bitcoinj.core.NetworkParameters;
+
+import bisq.asset.AddressValidationResult;
 import bisq.asset.AltCoinAccountDisclaimer;
+import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+
+import bisq.core.locale.Res;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.XZC.msg")
 public class Zcoin extends Coin {
 
-    public Zcoin() {
-        super("Zcoin", "XZC", new DefaultAddressValidator());
+    public Zcoin(Network network, NetworkParameters networkParameters) {
+        super("Zcoin", "XZC", new XzcAddressValidator(networkParameters), network);
     }
+    
+    public static class XzcAddressValidator extends Base58BitcoinAddressValidator {
+
+        public XzcAddressValidator(NetworkParameters networkParameters) {
+            super(networkParameters);
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (address == null || address.length() != 34 || !address.startsWith("a")) {
+                return AddressValidationResult.invalidAddress(Res.get("account.altcoin.popup.validation.XZC"));
+            }
+
+            String addressAsBtc = address.substring(1, address.length());
+
+            return super.validate(addressAsBtc);
+        }
+    }
+
 }
