@@ -14,7 +14,7 @@ public class I18n extends Properties {
 
 	static {
 		try {
-			DISPLAY_STRINGS.load(I18n.class.getResourceAsStream("/resources/i18n/displayStrings.properties"));
+			DISPLAY_STRINGS.load(I18n.class.getResourceAsStream("/i18n/displayStrings.properties"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
