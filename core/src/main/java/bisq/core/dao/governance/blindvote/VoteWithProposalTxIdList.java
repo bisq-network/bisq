@@ -50,22 +50,22 @@ public class VoteWithProposalTxIdList extends PersistableList<VoteWithProposalTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static VoteWithProposalTxIdList getVoteWithProposalTxIdListFromBytes(byte[] bytes) throws InvalidProtocolBufferException {
-        return VoteWithProposalTxIdList.fromProto(PB.VoteWithProposalTxIdList.parseFrom(bytes));
+        return VoteWithProposalTxIdList.fromProto(protobuf.VoteWithProposalTxIdList.parseFrom(bytes));
     }
 
     @Override
-    public PB.VoteWithProposalTxIdList toProtoMessage() {
+    public protobuf.VoteWithProposalTxIdList toProtoMessage() {
         return getBuilder().build();
     }
 
-    private PB.VoteWithProposalTxIdList.Builder getBuilder() {
-        return PB.VoteWithProposalTxIdList.newBuilder()
+    private protobuf.VoteWithProposalTxIdList.Builder getBuilder() {
+        return protobuf.VoteWithProposalTxIdList.newBuilder()
                 .addAllItem(getList().stream()
                         .map(VoteWithProposalTxId::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    private static VoteWithProposalTxIdList fromProto(PB.VoteWithProposalTxIdList proto) {
+    private static VoteWithProposalTxIdList fromProto(protobuf.VoteWithProposalTxIdList proto) {
         final ArrayList<VoteWithProposalTxId> list = proto.getItemList().stream()
                 .map(VoteWithProposalTxId::fromProto).collect(Collectors.toCollection(ArrayList::new));
         return new VoteWithProposalTxIdList(list);

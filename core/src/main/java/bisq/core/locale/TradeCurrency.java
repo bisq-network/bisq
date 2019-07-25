@@ -45,7 +45,7 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static TradeCurrency fromProto(PB.TradeCurrency proto) {
+    public static TradeCurrency fromProto(protobuf.TradeCurrency proto) {
         switch (proto.getMessageCase()) {
             case FIAT_CURRENCY:
                 return FiatCurrency.fromProto(proto);
@@ -56,8 +56,8 @@ public abstract class TradeCurrency implements PersistablePayload, Comparable<Tr
         }
     }
 
-    public PB.TradeCurrency.Builder getTradeCurrencyBuilder() {
-        return PB.TradeCurrency.newBuilder()
+    public protobuf.TradeCurrency.Builder getTradeCurrencyBuilder() {
+        return protobuf.TradeCurrency.newBuilder()
                 .setCode(code)
                 .setName(name);
     }

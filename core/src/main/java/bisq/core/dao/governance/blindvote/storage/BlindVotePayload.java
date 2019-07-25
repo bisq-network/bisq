@@ -65,23 +65,23 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Persis
         this.hash = hash;
     }
 
-    private PB.BlindVotePayload.Builder getBlindVoteBuilder() {
-        return PB.BlindVotePayload.newBuilder()
+    private protobuf.BlindVotePayload.Builder getBlindVoteBuilder() {
+        return protobuf.BlindVotePayload.newBuilder()
                 .setBlindVote(blindVote.toProtoMessage())
                 .setHash(ByteString.copyFrom(hash));
     }
 
     @Override
-    public PB.PersistableNetworkPayload toProtoMessage() {
-        return PB.PersistableNetworkPayload.newBuilder().setBlindVotePayload(getBlindVoteBuilder()).build();
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        return protobuf.PersistableNetworkPayload.newBuilder().setBlindVotePayload(getBlindVoteBuilder()).build();
     }
 
-    public PB.BlindVotePayload toProtoBlindVotePayload() {
+    public protobuf.BlindVotePayload toProtoBlindVotePayload() {
         return getBlindVoteBuilder().build();
     }
 
 
-    public static BlindVotePayload fromProto(PB.BlindVotePayload proto) {
+    public static BlindVotePayload fromProto(protobuf.BlindVotePayload proto) {
         return new BlindVotePayload(BlindVote.fromProto(proto.getBlindVote()),
                 proto.getHash().toByteArray());
     }

@@ -69,12 +69,12 @@ public final class OKPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setOKPayAccountPayload(PB.OKPayAccountPayload.newBuilder()
+                .setOKPayAccountPayload(protobuf.OKPayAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static OKPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static OKPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new OKPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getOKPayAccountPayload().getAccountNr(),

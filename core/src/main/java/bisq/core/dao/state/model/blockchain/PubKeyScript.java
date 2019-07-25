@@ -56,8 +56,8 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.PubKeyScript toProtoMessage() {
-        final PB.PubKeyScript.Builder builder = PB.PubKeyScript.newBuilder()
+    public protobuf.PubKeyScript toProtoMessage() {
+        final protobuf.PubKeyScript.Builder builder = protobuf.PubKeyScript.newBuilder()
                 .setReqSigs(reqSigs)
                 .setScriptType(scriptType.toProtoMessage())
                 .setAsm(asm)
@@ -66,7 +66,7 @@ public class PubKeyScript implements PersistablePayload, ImmutableDaoStateModel 
         return builder.build();
     }
 
-    public static PubKeyScript fromProto(PB.PubKeyScript proto) {
+    public static PubKeyScript fromProto(protobuf.PubKeyScript proto) {
         return new PubKeyScript(proto.getReqSigs(),
                 ScriptType.fromProto(proto.getScriptType()),
                 proto.getAddressesList().isEmpty() ? null : ImmutableList.copyOf(proto.getAddressesList()),

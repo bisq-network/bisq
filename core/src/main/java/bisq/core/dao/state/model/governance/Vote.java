@@ -44,12 +44,12 @@ public class Vote implements PersistablePayload, NetworkPayload, ConsensusCritic
 
     @Override
     public Message toProtoMessage() {
-        return PB.Vote.newBuilder()
+        return protobuf.Vote.newBuilder()
                 .setAccepted(accepted)
                 .build();
     }
 
-    public static Vote fromProto(PB.Vote proto) {
+    public static Vote fromProto(protobuf.Vote proto) {
         return new Vote(proto.getAccepted());
     }
 }

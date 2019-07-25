@@ -131,8 +131,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.DisputeCommunicationMessage.Builder builder = PB.DisputeCommunicationMessage.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
@@ -152,7 +152,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto, int messageVersion) {
+    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto, int messageVersion) {
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 proto.getTradeId(),
                 proto.getTraderId(),
@@ -172,7 +172,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         return disputeCommunicationMessage;
     }
 
-    public static DisputeCommunicationMessage fromPayloadProto(PB.DisputeCommunicationMessage proto) {
+    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence

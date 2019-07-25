@@ -91,7 +91,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
     }
 
     @Override
-    public NetworkEnvelope fromProto(PB.NetworkEnvelope proto) throws ProtobufferException {
+    public NetworkEnvelope fromProto(protobuf.NetworkEnvelope proto) throws ProtobufferException {
         if (proto != null) {
             final int messageVersion = proto.getMessageVersion();
             switch (proto.getMessageCase()) {
@@ -202,7 +202,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
         }
     }
 
-    public NetworkPayload fromProto(PB.StorageEntryWrapper proto) {
+    public NetworkPayload fromProto(protobuf.StorageEntryWrapper proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case PROTECTED_MAILBOX_STORAGE_ENTRY:
@@ -219,7 +219,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
         }
     }
 
-    public NetworkPayload fromProto(PB.StoragePayload proto) {
+    public NetworkPayload fromProto(protobuf.StoragePayload proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case ALERT:

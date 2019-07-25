@@ -108,17 +108,17 @@ public final class AckMessage extends NetworkEnvelope implements MailboxMessage,
         this.errorMessage = errorMessage;
     }
 
-    public PB.AckMessage toProtoMessage() {
+    public protobuf.AckMessage toProtoMessage() {
         return getBuilder().build();
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder().setAckMessage(getBuilder()).build();
     }
 
-    public PB.AckMessage.Builder getBuilder() {
-        PB.AckMessage.Builder builder = PB.AckMessage.newBuilder()
+    public protobuf.AckMessage.Builder getBuilder() {
+        protobuf.AckMessage.Builder builder = protobuf.AckMessage.newBuilder()
                 .setUid(uid)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setSourceType(sourceType.name())
@@ -130,7 +130,7 @@ public final class AckMessage extends NetworkEnvelope implements MailboxMessage,
         return builder;
     }
 
-    public static AckMessage fromProto(PB.AckMessage proto, int messageVersion) {
+    public static AckMessage fromProto(protobuf.AckMessage proto, int messageVersion) {
         AckMessageSourceType sourceType = ProtoUtil.enumFromProto(AckMessageSourceType.class, proto.getSourceType());
         return new AckMessage(proto.getUid(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

@@ -237,7 +237,7 @@ public enum Param {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Param fromProto(PB.ChangeParamProposal proposalProto) {
+    public static Param fromProto(protobuf.ChangeParamProposal proposalProto) {
         Param param;
         try {
             param = ProtoUtil.enumFromProto(Param.class, proposalProto.getParam());

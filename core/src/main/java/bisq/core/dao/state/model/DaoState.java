@@ -152,14 +152,14 @@ public class DaoState implements PersistablePayload {
         return getBsqStateBuilder().build();
     }
 
-    public PB.DaoState.Builder getBsqStateBuilder() {
+    public protobuf.DaoState.Builder getBsqStateBuilder() {
         return getBsqStateBuilderExcludingBlocks().addAllBlocks(blocks.stream()
                 .map(Block::toProtoMessage)
                 .collect(Collectors.toList()));
     }
 
-    private PB.DaoState.Builder getBsqStateBuilderExcludingBlocks() {
-        PB.DaoState.Builder builder = PB.DaoState.newBuilder();
+    private protobuf.DaoState.Builder getBsqStateBuilderExcludingBlocks() {
+        protobuf.DaoState.Builder builder = protobuf.DaoState.newBuilder();
         builder.setChainHeight(chainHeight)
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
                 .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
@@ -175,7 +175,7 @@ public class DaoState implements PersistablePayload {
         return builder;
     }
 
-    public static DaoState fromProto(PB.DaoState proto) {
+    public static DaoState fromProto(protobuf.DaoState proto) {
         LinkedList<Block> blocks = proto.getBlocksList().stream()
                 .map(Block::fromProto)
                 .collect(Collectors.toCollection(LinkedList::new));

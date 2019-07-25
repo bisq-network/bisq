@@ -74,7 +74,7 @@ public class AddDataMessageTest {
         ProtectedStorageEntry protectedStorageEntry = new ProtectedMailboxStorageEntry(mailboxStoragePayload,
                 keyRing1.getSignatureKeyPair().getPublic(), 1, RandomUtils.nextBytes(10), keyRing1.getPubKeyRing().getSignaturePubKey());
         AddDataMessage dataMessage1 = new AddDataMessage(protectedStorageEntry);
-        PB.NetworkEnvelope envelope = dataMessage1.toProtoNetworkEnvelope();
+        protobuf.NetworkEnvelope envelope = dataMessage1.toProtoNetworkEnvelope();
 
         //TODO Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common.
       /*  AddDataMessage dataMessage2 = (AddDataMessage) ProtoBufferUtilities.getAddDataMessage(envelope);

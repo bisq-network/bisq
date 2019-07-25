@@ -45,18 +45,18 @@ public class MyProofOfBurnList extends PersistableList<MyProofOfBurn> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setMyProofOfBurnList(getBuilder()).build();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder().setMyProofOfBurnList(getBuilder()).build();
     }
 
-    private PB.MyProofOfBurnList.Builder getBuilder() {
-        return PB.MyProofOfBurnList.newBuilder()
+    private protobuf.MyProofOfBurnList.Builder getBuilder() {
+        return protobuf.MyProofOfBurnList.newBuilder()
                 .addAllMyProofOfBurn(getList().stream()
                         .map(MyProofOfBurn::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static MyProofOfBurnList fromProto(PB.MyProofOfBurnList proto) {
+    public static MyProofOfBurnList fromProto(protobuf.MyProofOfBurnList proto) {
         return new MyProofOfBurnList(new ArrayList<>(proto.getMyProofOfBurnList().stream()
                 .map(MyProofOfBurn::fromProto)
                 .collect(Collectors.toList())));

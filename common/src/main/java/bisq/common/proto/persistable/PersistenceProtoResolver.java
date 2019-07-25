@@ -21,5 +21,5 @@ import bisq.common.proto.ProtoResolver;
 
 
 public interface PersistenceProtoResolver extends ProtoResolver {
-    PersistableEnvelope fromProto(PB.PersistableEnvelope persistable);
+    PersistableEnvelope fromProto(protobuf.PersistableEnvelope persistable);
 }

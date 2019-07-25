@@ -96,20 +96,20 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
+    public protobuf.StoragePayload toProtoMessage() {
         checkNotNull(ownerPubKeyBytes, "storagePublicKeyBytes must not be null");
         checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
-        final PB.Alert.Builder builder = PB.Alert.newBuilder()
+        final protobuf.Alert.Builder builder = protobuf.Alert.newBuilder()
                 .setMessage(message)
                 .setIsUpdateInfo(isUpdateInfo)
                 .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignatureAsBase64(signatureAsBase64);
         Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setAlert(builder).build();
+        return protobuf.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
-    public static Alert fromProto(PB.Alert proto) {
+    public static Alert fromProto(protobuf.Alert proto) {
         return new Alert(proto.getMessage(),
                 proto.getIsUpdateInfo(),
                 proto.getVersion(),

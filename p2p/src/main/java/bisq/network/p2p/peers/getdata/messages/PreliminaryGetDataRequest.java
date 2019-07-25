@@ -63,8 +63,8 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.PreliminaryGetDataRequest.Builder builder = PB.PreliminaryGetDataRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.PreliminaryGetDataRequest.Builder builder = protobuf.PreliminaryGetDataRequest.newBuilder()
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
                         .map(ByteString::copyFrom)
@@ -77,7 +77,7 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
                 .build();
     }
 
-    public static PreliminaryGetDataRequest fromProto(PB.PreliminaryGetDataRequest proto, int messageVersion) {
+    public static PreliminaryGetDataRequest fromProto(protobuf.PreliminaryGetDataRequest proto, int messageVersion) {
         Capabilities supportedCapabilities = proto.getSupportedCapabilitiesList().isEmpty() ?
                 null :
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList());

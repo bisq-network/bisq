@@ -66,12 +66,12 @@ public final class AliPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setAliPayAccountPayload(PB.AliPayAccountPayload.newBuilder()
+                .setAliPayAccountPayload(protobuf.AliPayAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static AliPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static AliPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new AliPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getAliPayAccountPayload().getAccountNr(),

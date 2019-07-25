@@ -69,12 +69,12 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
+                .setPerfectMoneyAccountPayload(protobuf.PerfectMoneyAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static PerfectMoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static PerfectMoneyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getPerfectMoneyAccountPayload().getAccountNr(),

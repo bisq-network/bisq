@@ -39,15 +39,15 @@ public final class ProposalStateHash extends StateHash {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.ProposalStateHash toProtoMessage() {
-        return PB.ProposalStateHash.newBuilder()
+    public protobuf.ProposalStateHash toProtoMessage() {
+        return protobuf.ProposalStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
                 .setPrevHash(ByteString.copyFrom(prevHash))
                 .setNumProposals(numProposals).build();
     }
 
-    public static ProposalStateHash fromProto(PB.ProposalStateHash proto) {
+    public static ProposalStateHash fromProto(protobuf.ProposalStateHash proto) {
         return new ProposalStateHash(proto.getHeight(),
                 proto.getHash().toByteArray(),
                 proto.getPrevHash().toByteArray(),

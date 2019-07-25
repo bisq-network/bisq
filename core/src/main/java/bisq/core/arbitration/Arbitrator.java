@@ -98,8 +98,8 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        final PB.Arbitrator.Builder builder = PB.Arbitrator.newBuilder()
+    public protobuf.StoragePayload toProtoMessage() {
+        final protobuf.Arbitrator.Builder builder = protobuf.Arbitrator.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
                 .setBtcAddress(btcAddress)
@@ -111,10 +111,10 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setArbitrator(builder).build();
+        return protobuf.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
-    public static Arbitrator fromProto(PB.Arbitrator proto) {
+    public static Arbitrator fromProto(protobuf.Arbitrator proto) {
         return new Arbitrator(NodeAddress.fromProto(proto.getNodeAddress()),
                 proto.getBtcPubKey().toByteArray(),
                 proto.getBtcAddress(),

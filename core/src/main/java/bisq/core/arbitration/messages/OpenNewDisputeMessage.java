@@ -57,16 +57,16 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setOpenNewDisputeMessage(PB.OpenNewDisputeMessage.newBuilder()
+                .setOpenNewDisputeMessage(protobuf.OpenNewDisputeMessage.newBuilder()
                         .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
 
-    public static OpenNewDisputeMessage fromProto(PB.OpenNewDisputeMessage proto,
+    public static OpenNewDisputeMessage fromProto(protobuf.OpenNewDisputeMessage proto,
                                                   CoreProtoResolver coreProtoResolver,
                                                   int messageVersion) {
         return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),

@@ -51,8 +51,8 @@ public abstract class BaseBlock implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected PB.BaseBlock.Builder getBaseBlockBuilder() {
-        PB.BaseBlock.Builder builder = PB.BaseBlock.newBuilder()
+    protected protobuf.BaseBlock.Builder getBaseBlockBuilder() {
+        protobuf.BaseBlock.Builder builder = protobuf.BaseBlock.newBuilder()
                 .setHeight(height)
                 .setTime(time)
                 .setHash(hash);

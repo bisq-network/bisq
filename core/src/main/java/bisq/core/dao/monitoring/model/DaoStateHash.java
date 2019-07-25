@@ -34,14 +34,14 @@ public final class DaoStateHash extends StateHash {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.DaoStateHash toProtoMessage() {
-        return PB.DaoStateHash.newBuilder()
+    public protobuf.DaoStateHash toProtoMessage() {
+        return protobuf.DaoStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
                 .setPrevHash(ByteString.copyFrom(prevHash)).build();
     }
 
-    public static DaoStateHash fromProto(PB.DaoStateHash proto) {
+    public static DaoStateHash fromProto(protobuf.DaoStateHash proto) {
         return new DaoStateHash(proto.getHeight(),
                 proto.getHash().toByteArray(),
                 proto.getPrevHash().toByteArray());

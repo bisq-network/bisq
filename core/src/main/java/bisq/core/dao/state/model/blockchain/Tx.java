@@ -91,8 +91,8 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
     }
 
     @Override
-    public PB.BaseTx toProtoMessage() {
-        final PB.Tx.Builder builder = PB.Tx.newBuilder()
+    public protobuf.BaseTx toProtoMessage() {
+        final protobuf.Tx.Builder builder = protobuf.Tx.newBuilder()
                 .addAllTxOutputs(txOutputs.stream()
                         .map(TxOutput::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -101,13 +101,13 @@ public final class Tx extends BaseTx implements PersistablePayload, ImmutableDao
         return getBaseTxBuilder().setTx(builder).build();
     }
 
-    public static Tx fromProto(PB.BaseTx protoBaseTx) {
+    public static Tx fromProto(protobuf.BaseTx protoBaseTx) {
         ImmutableList<TxInput> txInputs = protoBaseTx.getTxInputsList().isEmpty() ?
                 ImmutableList.copyOf(new ArrayList<>()) :
                 ImmutableList.copyOf(protoBaseTx.getTxInputsList().stream()
                         .map(TxInput::fromProto)
                         .collect(Collectors.toList()));
-        PB.Tx protoTx = protoBaseTx.getTx();
+        protobuf.Tx protoTx = protoBaseTx.getTx();
         ImmutableList<TxOutput> outputs = protoTx.getTxOutputsList().isEmpty() ?
                 ImmutableList.copyOf(new ArrayList<>()) :
                 ImmutableList.copyOf(protoTx.getTxOutputsList().stream()

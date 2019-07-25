@@ -48,9 +48,9 @@ public final class GetDaoStateHashesResponse extends GetStateHashesResponse<DaoS
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetDaoStateHashesResponse(PB.GetDaoStateHashesResponse.newBuilder()
+                .setGetDaoStateHashesResponse(protobuf.GetDaoStateHashesResponse.newBuilder()
                         .addAllStateHashes(stateHashes.stream()
                                 .map(DaoStateHash::toProtoMessage)
                                 .collect(Collectors.toList()))
@@ -58,7 +58,7 @@ public final class GetDaoStateHashesResponse extends GetStateHashesResponse<DaoS
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetDaoStateHashesResponse proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.GetDaoStateHashesResponse proto, int messageVersion) {
         return new GetDaoStateHashesResponse(proto.getStateHashesList().isEmpty() ?
                 new ArrayList<>() :
                 proto.getStateHashesList().stream()

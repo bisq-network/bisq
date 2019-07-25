@@ -64,15 +64,15 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
     }
 
     @Override
-    public PB.Peer toProtoMessage() {
-        return PB.Peer.newBuilder()
+    public protobuf.Peer toProtoMessage() {
+        return protobuf.Peer.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
                 .setDate(date)
                 .addAllSupportedCapabilities(Capabilities.toIntList(getCapabilities()))
                 .build();
     }
 
-    public static Peer fromProto(PB.Peer proto) {
+    public static Peer fromProto(protobuf.Peer proto) {
         return new Peer(NodeAddress.fromProto(proto.getNodeAddress()),
                 proto.getDate(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()));

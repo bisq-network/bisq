@@ -41,7 +41,7 @@ public final class MockPayload extends NetworkEnvelope implements ExpirablePaylo
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException("toProtoNetworkEnvelope not impl.");
     }
 

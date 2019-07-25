@@ -89,15 +89,15 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.CompensationProposal.Builder builder = PB.CompensationProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.CompensationProposal.Builder builder = protobuf.CompensationProposal.newBuilder()
                 .setBsqAddress(bsqAddress)
                 .setRequestedBsq(requestedBsq);
         return super.getProposalBuilder().setCompensationProposal(builder);
     }
 
-    public static CompensationProposal fromProto(PB.Proposal proto) {
-        final PB.CompensationProposal proposalProto = proto.getCompensationProposal();
+    public static CompensationProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.CompensationProposal proposalProto = proto.getCompensationProposal();
         return new CompensationProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getBsqAddress(),

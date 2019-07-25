@@ -799,8 +799,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // Used only for calculating hash of byte array from PB object
         @Override
         public com.google.protobuf.Message toProtoMessage() {
-            return PB.DataAndSeqNrPair.newBuilder()
-                    .setPayload((PB.StoragePayload) protectedStoragePayload.toProtoMessage())
+            return protobuf.DataAndSeqNrPair.newBuilder()
+                    .setPayload((protobuf.StoragePayload) protectedStoragePayload.toProtoMessage())
                     .setSequenceNumber(sequenceNumber)
                     .build();
         }
@@ -837,11 +837,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         @Override
-        public PB.ByteArray toProtoMessage() {
-            return PB.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
+        public protobuf.ByteArray toProtoMessage() {
+            return protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
         }
 
-        public static ByteArray fromProto(PB.ByteArray proto) {
+        public static ByteArray fromProto(protobuf.ByteArray proto) {
             return new ByteArray(proto.getBytes().toByteArray());
         }
 
@@ -874,11 +874,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         @Override
-        public PB.MapValue toProtoMessage() {
-            return PB.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
+        public protobuf.MapValue toProtoMessage() {
+            return protobuf.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
         }
 
-        public static MapValue fromProto(PB.MapValue proto) {
+        public static MapValue fromProto(protobuf.MapValue proto) {
             return new MapValue(proto.getSequenceNr(), proto.getTimeStamp());
         }
     }

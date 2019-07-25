@@ -124,10 +124,10 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.PublishDepositTxRequest.Builder builder = PB.PublishDepositTxRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.PublishDepositTxRequest.Builder builder = protobuf.PublishDepositTxRequest.newBuilder()
                 .setTradeId(tradeId)
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                .setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
                 .setMakerAccountId(makerAccountId)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setMakerContractAsJson(makerContractAsJson)
@@ -146,7 +146,7 @@ public final class PublishDepositTxRequest extends TradeMessage implements Mailb
                 .build();
     }
 
-    public static PublishDepositTxRequest fromProto(PB.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static PublishDepositTxRequest fromProto(protobuf.PublishDepositTxRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());

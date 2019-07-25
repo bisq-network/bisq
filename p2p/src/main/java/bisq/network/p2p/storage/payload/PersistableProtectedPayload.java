@@ -26,7 +26,7 @@ import bisq.common.proto.persistable.PersistablePayload;
  */
 public interface PersistableProtectedPayload extends ProtectedStoragePayload, PersistablePayload {
 
-    static PersistableProtectedPayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
+    static PersistableProtectedPayload fromProto(protobuf.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
         return (PersistableProtectedPayload) networkProtoResolver.fromProto(storagePayload);
     }
 }

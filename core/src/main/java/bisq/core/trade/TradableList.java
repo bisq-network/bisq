@@ -74,14 +74,14 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
     @Override
     public Message toProtoMessage() {
         ArrayList<T> clonedList = new ArrayList<>(this.list);
-        return PB.PersistableEnvelope.newBuilder()
-                .setTradableList(PB.TradableList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setTradableList(protobuf.TradableList.newBuilder()
                         .addAllTradable(ProtoUtil.collectionToProto(clonedList)))
                 .build();
     }
 
     @Nullable
-    public static TradableList fromProto(PB.TradableList proto,
+    public static TradableList fromProto(protobuf.TradableList proto,
                                          CoreProtoResolver coreProtoResolver,
                                          Storage<TradableList<Tradable>> storage,
                                          BtcWalletService btcWalletService) {

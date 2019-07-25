@@ -69,14 +69,14 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.DaoPhase toProtoMessage() {
-        return PB.DaoPhase.newBuilder()
+    public protobuf.DaoPhase toProtoMessage() {
+        return protobuf.DaoPhase.newBuilder()
                 .setPhaseOrdinal(phase.ordinal())
                 .setDuration(duration)
                 .build();
     }
 
-    public static DaoPhase fromProto(PB.DaoPhase proto) {
+    public static DaoPhase fromProto(protobuf.DaoPhase proto) {
         int ordinal = proto.getPhaseOrdinal();
         if (ordinal >= Phase.values().length) {
             log.warn("We tried to access a ordinal outside of the DaoPhase.Phase enum bounds and set it to " +

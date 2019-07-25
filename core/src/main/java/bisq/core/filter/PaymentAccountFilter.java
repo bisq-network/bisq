@@ -36,15 +36,15 @@ public class PaymentAccountFilter implements NetworkPayload {
     }
 
     @Override
-    public PB.PaymentAccountFilter toProtoMessage() {
-        return PB.PaymentAccountFilter.newBuilder()
+    public protobuf.PaymentAccountFilter toProtoMessage() {
+        return protobuf.PaymentAccountFilter.newBuilder()
                 .setPaymentMethodId(paymentMethodId)
                 .setGetMethodName(getMethodName)
                 .setValue(value)
                 .build();
     }
 
-    public static PaymentAccountFilter fromProto(PB.PaymentAccountFilter proto) {
+    public static PaymentAccountFilter fromProto(protobuf.PaymentAccountFilter proto) {
         return new PaymentAccountFilter(proto.getPaymentMethodId(),
                 proto.getGetMethodName(),
                 proto.getValue());

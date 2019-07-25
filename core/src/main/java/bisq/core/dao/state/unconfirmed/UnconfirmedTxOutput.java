@@ -78,14 +78,14 @@ public final class UnconfirmedTxOutput implements PersistablePayload, ImmutableD
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.UnconfirmedTxOutput toProtoMessage() {
-        return PB.UnconfirmedTxOutput.newBuilder()
+    public protobuf.UnconfirmedTxOutput toProtoMessage() {
+        return protobuf.UnconfirmedTxOutput.newBuilder()
                 .setIndex(index)
                 .setValue(value)
                 .setTxId(txId).build();
     }
 
-    public static UnconfirmedTxOutput fromProto(PB.UnconfirmedTxOutput proto) {
+    public static UnconfirmedTxOutput fromProto(protobuf.UnconfirmedTxOutput proto) {
         return new UnconfirmedTxOutput(proto.getIndex(),
                 proto.getValue(),
                 proto.getTxId());

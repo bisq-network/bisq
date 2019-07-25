@@ -55,16 +55,16 @@ public class PrivateNotificationMessage extends NetworkEnvelope implements Mailb
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPrivateNotificationMessage(PB.PrivateNotificationMessage.newBuilder()
+                .setPrivateNotificationMessage(protobuf.PrivateNotificationMessage.newBuilder()
                         .setPrivateNotificationPayload(privateNotificationPayload.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static PrivateNotificationMessage fromProto(PB.PrivateNotificationMessage proto, int messageVersion) {
+    public static PrivateNotificationMessage fromProto(protobuf.PrivateNotificationMessage proto, int messageVersion) {
         return new PrivateNotificationMessage(PrivateNotificationPayload.fromProto(proto.getPrivateNotificationPayload()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),

@@ -62,11 +62,11 @@ public enum TxType implements ImmutableDaoStateModel {
     }
 
     @Nullable
-    public static TxType fromProto(PB.TxType txType) {
+    public static TxType fromProto(protobuf.TxType txType) {
         return ProtoUtil.enumFromProto(TxType.class, txType.name());
     }
 
-    public PB.TxType toProtoMessage() {
-        return PB.TxType.valueOf(name());
+    public protobuf.TxType toProtoMessage() {
+        return protobuf.TxType.valueOf(name());
     }
 }

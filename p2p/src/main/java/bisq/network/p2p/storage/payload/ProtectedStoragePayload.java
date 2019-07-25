@@ -50,7 +50,7 @@ public interface ProtectedStoragePayload extends NetworkPayload {
     @Nullable
     Map<String, String> getExtraDataMap();
 
-    static ProtectedStoragePayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
+    static ProtectedStoragePayload fromProto(protobuf.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
         return (ProtectedStoragePayload) networkProtoResolver.fromProto(storagePayload);
     }
 }

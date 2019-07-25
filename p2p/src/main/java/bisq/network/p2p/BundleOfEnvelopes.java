@@ -55,15 +55,15 @@ public final class BundleOfEnvelopes extends NetworkEnvelope implements Extended
 
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setBundleOfEnvelopes(PB.BundleOfEnvelopes.newBuilder().addAllEnvelopes(envelopes.stream()
+                .setBundleOfEnvelopes(protobuf.BundleOfEnvelopes.newBuilder().addAllEnvelopes(envelopes.stream()
                         .map(NetworkEnvelope::toProtoNetworkEnvelope)
                         .collect(Collectors.toList())))
                 .build();
     }
 
-    public static BundleOfEnvelopes fromProto(PB.BundleOfEnvelopes proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static BundleOfEnvelopes fromProto(protobuf.BundleOfEnvelopes proto, NetworkProtoResolver resolver, int messageVersion) {
         List<NetworkEnvelope> envelopes = proto.getEnvelopesList()
                 .stream()
                 .map(envelope -> {

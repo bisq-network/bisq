@@ -120,7 +120,7 @@ public class FileManager<T extends PersistableEnvelope> {
         log.debug("Read from disc: {}", file.getName());
 
         try (final FileInputStream fileInputStream = new FileInputStream(file)) {
-            PB.PersistableEnvelope persistable = PB.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
+            protobuf.PersistableEnvelope persistable = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
             return (T) persistenceProtoResolver.fromProto(persistable);
         } catch (Throwable t) {
             String errorMsg = "Exception at proto read: " + t.getMessage() + " file:" + file.getAbsolutePath();
@@ -196,9 +196,9 @@ public class FileManager<T extends PersistableEnvelope> {
 
         try {
             log.debug("Write to disc: {}", storageFile.getName());
-            PB.PersistableEnvelope protoPersistable;
+            protobuf.PersistableEnvelope protoPersistable;
             try {
-                protoPersistable = (PB.PersistableEnvelope) persistable.toProtoMessage();
+                protoPersistable = (protobuf.PersistableEnvelope) persistable.toProtoMessage();
                 if (protoPersistable.toByteArray().length == 0)
                     log.error("protoPersistable is empty. persistable=" + persistable.getClass().getSimpleName());
             } catch (Throwable e) {

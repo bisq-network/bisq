@@ -71,11 +71,11 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.BaseTxOutput toProtoMessage() {
-        return getRawTxOutputBuilder().setRawTxOutput(PB.RawTxOutput.newBuilder()).build();
+    public protobuf.BaseTxOutput toProtoMessage() {
+        return getRawTxOutputBuilder().setRawTxOutput(protobuf.RawTxOutput.newBuilder()).build();
     }
 
-    public static RawTxOutput fromProto(PB.BaseTxOutput proto) {
+    public static RawTxOutput fromProto(protobuf.BaseTxOutput proto) {
         return new RawTxOutput(proto.getIndex(),
                 proto.getValue(),
                 proto.getTxId(),

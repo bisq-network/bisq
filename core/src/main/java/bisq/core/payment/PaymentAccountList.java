@@ -39,13 +39,13 @@ public class PaymentAccountList extends PersistableList<PaymentAccount> {
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
-                .setPaymentAccountList(PB.PaymentAccountList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setPaymentAccountList(protobuf.PaymentAccountList.newBuilder()
                         .addAllPaymentAccount(getList().stream().map(PaymentAccount::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
+    public static PersistableEnvelope fromProto(protobuf.PaymentAccountList proto, CoreProtoResolver coreProtoResolver) {
         return new PaymentAccountList(new ArrayList<>(proto.getPaymentAccountList().stream()
                 .map(e -> PaymentAccount.fromProto(e, coreProtoResolver))
                 .collect(Collectors.toList())));

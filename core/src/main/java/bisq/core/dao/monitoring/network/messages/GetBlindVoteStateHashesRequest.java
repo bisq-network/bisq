@@ -40,15 +40,15 @@ public final class GetBlindVoteStateHashesRequest extends GetStateHashesRequest 
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetBlindVoteStateHashesRequest(PB.GetBlindVoteStateHashesRequest.newBuilder()
+                .setGetBlindVoteStateHashesRequest(protobuf.GetBlindVoteStateHashesRequest.newBuilder()
                         .setHeight(height)
                         .setNonce(nonce))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetBlindVoteStateHashesRequest proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.GetBlindVoteStateHashesRequest proto, int messageVersion) {
         return new GetBlindVoteStateHashesRequest(proto.getHeight(), proto.getNonce(), messageVersion);
     }
 }

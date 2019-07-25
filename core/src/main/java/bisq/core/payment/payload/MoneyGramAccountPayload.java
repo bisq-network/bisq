@@ -78,8 +78,8 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        PB.MoneyGramAccountPayload.Builder builder =
-                PB.MoneyGramAccountPayload.newBuilder()
+        protobuf.MoneyGramAccountPayload.Builder builder =
+                protobuf.MoneyGramAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setCountryCode(countryCode)
                         .setState(state)
@@ -90,8 +90,8 @@ public class MoneyGramAccountPayload extends PaymentAccountPayload {
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.MoneyGramAccountPayload moneyGramAccountPayload = proto.getMoneyGramAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.MoneyGramAccountPayload moneyGramAccountPayload = proto.getMoneyGramAccountPayload();
         return new MoneyGramAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 moneyGramAccountPayload.getCountryCode(),

@@ -22,9 +22,9 @@ import bisq.common.proto.ProtobufferException;
 
 
 public interface NetworkProtoResolver extends ProtoResolver {
-    NetworkEnvelope fromProto(PB.NetworkEnvelope proto) throws ProtobufferException;
+    NetworkEnvelope fromProto(protobuf.NetworkEnvelope proto) throws ProtobufferException;
 
-    NetworkPayload fromProto(PB.StoragePayload proto);
+    NetworkPayload fromProto(protobuf.StoragePayload proto);
 
-    NetworkPayload fromProto(PB.StorageEntryWrapper proto);
+    NetworkPayload fromProto(protobuf.StorageEntryWrapper proto);
 }

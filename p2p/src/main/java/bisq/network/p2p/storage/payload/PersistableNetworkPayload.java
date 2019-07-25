@@ -32,11 +32,11 @@ import bisq.common.proto.persistable.PersistablePayload;
  */
 public interface PersistableNetworkPayload extends NetworkPayload, PersistablePayload {
 
-    static PersistableNetworkPayload fromProto(PB.PersistableNetworkPayload payload, ProtoResolver resolver) {
+    static PersistableNetworkPayload fromProto(protobuf.PersistableNetworkPayload payload, ProtoResolver resolver) {
         return (PersistableNetworkPayload) resolver.fromProto(payload);
     }
 
-    PB.PersistableNetworkPayload toProtoMessage();
+    protobuf.PersistableNetworkPayload toProtoMessage();
 
     // Hash which will be used as key in the in-memory hashMap
     byte[] getHash();

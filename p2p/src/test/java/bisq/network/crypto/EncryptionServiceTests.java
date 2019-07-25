@@ -130,8 +130,8 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-            return PB.NetworkEnvelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
+        public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+            return protobuf.NetworkEnvelope.newBuilder().setPing(protobuf.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }

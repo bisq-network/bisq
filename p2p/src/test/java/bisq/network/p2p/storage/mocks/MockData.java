@@ -82,7 +82,7 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     @Override
-    public PB.ProtectedMailboxStorageEntry toProtoMessage() {
+    public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
         throw new NotImplementedException("toProtoMessage not impl.");
     }
 }

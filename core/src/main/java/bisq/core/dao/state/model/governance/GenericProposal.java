@@ -72,12 +72,12 @@ public final class GenericProposal extends Proposal implements ImmutableDaoState
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.GenericProposal.Builder builder = PB.GenericProposal.newBuilder();
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.GenericProposal.Builder builder = protobuf.GenericProposal.newBuilder();
         return super.getProposalBuilder().setGenericProposal(builder);
     }
 
-    public static GenericProposal fromProto(PB.Proposal proto) {
+    public static GenericProposal fromProto(protobuf.Proposal proto) {
         return new GenericProposal(proto.getName(),
                 proto.getLink(),
                 (byte) proto.getVersion(),

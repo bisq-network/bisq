@@ -304,7 +304,7 @@ public class FilterManager {
 
     // We dont use full data from Filter as we are only interested in the filter data not the sig and keys
     private String getHexFromData(Filter filter) {
-        PB.Filter.Builder builder = PB.Filter.newBuilder()
+        protobuf.Filter.Builder builder = protobuf.Filter.newBuilder()
                 .addAllBannedOfferIds(filter.getBannedOfferIds())
                 .addAllBannedNodeAddress(filter.getBannedNodeAddress())
                 .addAllBannedPaymentAccounts(filter.getBannedPaymentAccounts().stream()

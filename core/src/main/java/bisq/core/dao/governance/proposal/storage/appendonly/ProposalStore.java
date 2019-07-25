@@ -56,20 +56,20 @@ public class ProposalStore implements PersistableEnvelope {
     }
 
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
                 .setProposalStore(getBuilder())
                 .build();
     }
 
-    private PB.ProposalStore.Builder getBuilder() {
-        final List<PB.ProposalPayload> protoList = map.values().stream()
+    private protobuf.ProposalStore.Builder getBuilder() {
+        final List<protobuf.ProposalPayload> protoList = map.values().stream()
                 .map(payload -> (ProposalPayload) payload)
                 .map(ProposalPayload::toProtoProposalPayload)
                 .collect(Collectors.toList());
-        return PB.ProposalStore.newBuilder().addAllItems(protoList);
+        return protobuf.ProposalStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(PB.ProposalStore proto) {
+    public static PersistableEnvelope fromProto(protobuf.ProposalStore proto) {
         List<ProposalPayload> list = proto.getItemsList().stream()
                 .map(ProposalPayload::fromProto).collect(Collectors.toList());
         return new ProposalStore(list);

@@ -78,7 +78,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     }
 
     @Override
-    public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
+    public PersistableEnvelope fromProto(protobuf.PersistableEnvelope proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case SEQUENCE_NUMBER_MAP:

@@ -70,12 +70,12 @@ public final class CashAppAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setCashAppAccountPayload(PB.CashAppAccountPayload.newBuilder()
+                .setCashAppAccountPayload(protobuf.CashAppAccountPayload.newBuilder()
                         .setCashTag(cashTag))
                 .build();
     }
 
-    public static CashAppAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static CashAppAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CashAppAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getCashAppAccountPayload().getCashTag(),

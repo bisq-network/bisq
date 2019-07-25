@@ -44,14 +44,14 @@ public final class NewProposalStateHashMessage extends NewStateHashMessage<Propo
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setNewProposalStateHashMessage(PB.NewProposalStateHashMessage.newBuilder()
+                .setNewProposalStateHashMessage(protobuf.NewProposalStateHashMessage.newBuilder()
                         .setStateHash(stateHash.toProtoMessage()))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NewProposalStateHashMessage proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.NewProposalStateHashMessage proto, int messageVersion) {
         return new NewProposalStateHashMessage(ProposalStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 

@@ -62,9 +62,9 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPeerPublishedDisputePayoutTxMessage(PB.PeerPublishedDisputePayoutTxMessage.newBuilder()
+                .setPeerPublishedDisputePayoutTxMessage(protobuf.PeerPublishedDisputePayoutTxMessage.newBuilder()
                         .setTransaction(ByteString.copyFrom(transaction))
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -72,7 +72,7 @@ public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
                 .build();
     }
 
-    public static PeerPublishedDisputePayoutTxMessage fromProto(PB.PeerPublishedDisputePayoutTxMessage proto, int messageVersion) {
+    public static PeerPublishedDisputePayoutTxMessage fromProto(protobuf.PeerPublishedDisputePayoutTxMessage proto, int messageVersion) {
         return new PeerPublishedDisputePayoutTxMessage(proto.getTransaction().toByteArray(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

@@ -42,14 +42,14 @@ public class EvaluatedProposal implements PersistablePayload, ImmutableDaoStateM
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.EvaluatedProposal toProtoMessage() {
-        PB.EvaluatedProposal.Builder builder = PB.EvaluatedProposal.newBuilder()
+    public protobuf.EvaluatedProposal toProtoMessage() {
+        protobuf.EvaluatedProposal.Builder builder = protobuf.EvaluatedProposal.newBuilder()
                 .setIsAccepted(isAccepted)
                 .setProposalVoteResult(proposalVoteResult.toProtoMessage());
         return builder.build();
     }
 
-    public static EvaluatedProposal fromProto(PB.EvaluatedProposal proto) {
+    public static EvaluatedProposal fromProto(protobuf.EvaluatedProposal proto) {
         return new EvaluatedProposal(proto.getIsAccepted(),
                 ProposalVoteResult.fromProto(proto.getProposalVoteResult()));
     }

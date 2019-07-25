@@ -129,7 +129,7 @@ public final class DisputeResult implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static DisputeResult fromProto(PB.DisputeResult proto) {
+    public static DisputeResult fromProto(protobuf.DisputeResult proto) {
         return new DisputeResult(proto.getTradeId(),
                 proto.getTraderId(),
                 ProtoUtil.enumFromProto(DisputeResult.Winner.class, proto.getWinner().name()),
@@ -148,8 +148,8 @@ public final class DisputeResult implements NetworkPayload {
     }
 
     @Override
-    public PB.DisputeResult toProtoMessage() {
-        final PB.DisputeResult.Builder builder = PB.DisputeResult.newBuilder()
+    public protobuf.DisputeResult toProtoMessage() {
+        final protobuf.DisputeResult.Builder builder = protobuf.DisputeResult.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setReasonOrdinal(reasonOrdinal)
@@ -164,7 +164,7 @@ public final class DisputeResult implements NetworkPayload {
 
         Optional.ofNullable(arbitratorSignature).ifPresent(arbitratorSignature -> builder.setArbitratorSignature(ByteString.copyFrom(arbitratorSignature)));
         Optional.ofNullable(arbitratorPubKey).ifPresent(arbitratorPubKey -> builder.setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey)));
-        Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(PB.DisputeResult.Winner.valueOf(winner.name())));
+        Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(protobuf.DisputeResult.Winner.valueOf(winner.name())));
         Optional.ofNullable(disputeCommunicationMessage).ifPresent(disputeCommunicationMessage ->
                 builder.setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
 

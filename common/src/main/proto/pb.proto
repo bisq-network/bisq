@@ -6,7 +6,7 @@ package io.bisq.protobuffer;
 //
 
 
-option java_package = "PB";
+option java_package = "protobuf";
 option java_multiple_files = true;
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Network messages

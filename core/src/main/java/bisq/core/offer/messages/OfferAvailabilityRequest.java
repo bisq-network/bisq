@@ -70,8 +70,8 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.OfferAvailabilityRequest.Builder builder = PB.OfferAvailabilityRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.OfferAvailabilityRequest.Builder builder = protobuf.OfferAvailabilityRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakersTradePrice(takersTradePrice);
@@ -84,7 +84,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 .build();
     }
 
-    public static OfferAvailabilityRequest fromProto(PB.OfferAvailabilityRequest proto, int messageVersion) {
+    public static OfferAvailabilityRequest fromProto(protobuf.OfferAvailabilityRequest proto, int messageVersion) {
         return new OfferAvailabilityRequest(proto.getOfferId(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),

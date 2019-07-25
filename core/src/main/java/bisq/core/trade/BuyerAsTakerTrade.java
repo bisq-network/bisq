@@ -62,18 +62,18 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.Tradable toProtoMessage() {
-        return PB.Tradable.newBuilder()
-                .setBuyerAsTakerTrade(PB.BuyerAsTakerTrade.newBuilder()
-                        .setTrade((PB.Trade) super.toProtoMessage()))
+    public protobuf.Tradable toProtoMessage() {
+        return protobuf.Tradable.newBuilder()
+                .setBuyerAsTakerTrade(protobuf.BuyerAsTakerTrade.newBuilder()
+                        .setTrade((protobuf.Trade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsTakerTrade buyerAsTakerTradeProto,
+    public static Tradable fromProto(protobuf.BuyerAsTakerTrade buyerAsTakerTradeProto,
                                      Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
-        PB.Trade proto = buyerAsTakerTradeProto.getTrade();
+        protobuf.Trade proto = buyerAsTakerTradeProto.getTrade();
         return fromProto(new BuyerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),

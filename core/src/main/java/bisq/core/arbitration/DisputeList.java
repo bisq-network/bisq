@@ -72,11 +72,11 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setDisputeList(PB.DisputeList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder().setDisputeList(protobuf.DisputeList.newBuilder()
                 .addAllDispute(ProtoUtil.collectionToProto(list))).build();
     }
 
-    public static DisputeList fromProto(PB.DisputeList proto,
+    public static DisputeList fromProto(protobuf.DisputeList proto,
                                         CoreProtoResolver coreProtoResolver,
                                         Storage<DisputeList> storage) {
         log.debug("DisputeList fromProto of {} ", proto);

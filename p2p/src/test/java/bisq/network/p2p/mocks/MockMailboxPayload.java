@@ -47,7 +47,7 @@ public final class MockMailboxPayload extends NetworkEnvelope implements Mailbox
 
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException("toProtoNetworkEnvelope not impl.");
     }
 

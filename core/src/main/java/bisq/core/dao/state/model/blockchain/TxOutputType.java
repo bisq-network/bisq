@@ -51,11 +51,11 @@ public enum TxOutputType implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static TxOutputType fromProto(PB.TxOutputType txOutputType) {
+    public static TxOutputType fromProto(protobuf.TxOutputType txOutputType) {
         return ProtoUtil.enumFromProto(TxOutputType.class, txOutputType.name());
     }
 
-    public PB.TxOutputType toProtoMessage() {
-        return PB.TxOutputType.valueOf(name());
+    public protobuf.TxOutputType toProtoMessage() {
+        return protobuf.TxOutputType.valueOf(name());
     }
 }

@@ -67,14 +67,14 @@ public final class MyReputation implements PersistablePayload, NetworkPayload, B
     }
 
     @Override
-    public PB.MyReputation toProtoMessage() {
-        return PB.MyReputation.newBuilder()
+    public protobuf.MyReputation toProtoMessage() {
+        return protobuf.MyReputation.newBuilder()
                 .setUid(uid)
                 .setSalt(ByteString.copyFrom(salt))
                 .build();
     }
 
-    public static MyReputation fromProto(PB.MyReputation proto) {
+    public static MyReputation fromProto(protobuf.MyReputation proto) {
         return new MyReputation(proto.getUid(), proto.getSalt().toByteArray());
     }
 

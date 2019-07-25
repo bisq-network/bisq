@@ -77,8 +77,8 @@ public class UserPayload implements PersistableEnvelope {
     }
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        PB.UserPayload.Builder builder = PB.UserPayload.newBuilder();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        protobuf.UserPayload.Builder builder = protobuf.UserPayload.newBuilder();
         Optional.ofNullable(accountId).ifPresent(e -> builder.setAccountId(accountId));
         Optional.ofNullable(paymentAccounts)
                 .ifPresent(e -> builder.addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts)));
@@ -98,17 +98,17 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
         Optional.ofNullable(acceptedArbitrators)
                 .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
-                        message -> ((PB.StoragePayload) message).getArbitrator())));
+                        message -> ((protobuf.StoragePayload) message).getArbitrator())));
         Optional.ofNullable(acceptedMediators)
                 .ifPresent(e -> builder.addAllAcceptedMediators(ProtoUtil.collectionToProto(acceptedMediators,
-                        message -> ((PB.StoragePayload) message).getMediator())));
+                        message -> ((protobuf.StoragePayload) message).getMediator())));
         Optional.ofNullable(priceAlertFilter).ifPresent(priceAlertFilter -> builder.setPriceAlertFilter(priceAlertFilter.toProtoMessage()));
         Optional.ofNullable(marketAlertFilters)
                 .ifPresent(e -> builder.addAllMarketAlertFilters(ProtoUtil.collectionToProto(marketAlertFilters)));
-        return PB.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
+        return protobuf.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
-    public static UserPayload fromProto(PB.UserPayload proto, CoreProtoResolver coreProtoResolver) {
+    public static UserPayload fromProto(protobuf.UserPayload proto, CoreProtoResolver coreProtoResolver) {
         return new UserPayload(
                 ProtoUtil.stringOrNullFromProto(proto.getAccountId()),
                 proto.getPaymentAccountsList().isEmpty() ? new HashSet<>() : new HashSet<>(proto.getPaymentAccountsList().stream()

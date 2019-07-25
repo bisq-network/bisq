@@ -62,8 +62,8 @@ public final class SealedAndSigned implements NetworkPayload {
         sigPublicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
-    public PB.SealedAndSigned toProtoMessage() {
-        return PB.SealedAndSigned.newBuilder()
+    public protobuf.SealedAndSigned toProtoMessage() {
+        return protobuf.SealedAndSigned.newBuilder()
                 .setEncryptedSecretKey(ByteString.copyFrom(encryptedSecretKey))
                 .setEncryptedPayloadWithHmac(ByteString.copyFrom(encryptedPayloadWithHmac))
                 .setSignature(ByteString.copyFrom(signature))
@@ -71,7 +71,7 @@ public final class SealedAndSigned implements NetworkPayload {
                 .build();
     }
 
-    public static SealedAndSigned fromProto(PB.SealedAndSigned proto) {
+    public static SealedAndSigned fromProto(protobuf.SealedAndSigned proto) {
         return new SealedAndSigned(proto.getEncryptedSecretKey().toByteArray(),
                 proto.getEncryptedPayloadWithHmac().toByteArray(),
                 proto.getSignature().toByteArray(),

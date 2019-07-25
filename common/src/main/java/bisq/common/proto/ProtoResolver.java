@@ -22,7 +22,7 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 
 
 public interface ProtoResolver {
-    Payload fromProto(PB.PaymentAccountPayload proto);
+    Payload fromProto(protobuf.PaymentAccountPayload proto);
 
-    PersistableEnvelope fromProto(PB.PersistableNetworkPayload proto);
+    PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload proto);
 }

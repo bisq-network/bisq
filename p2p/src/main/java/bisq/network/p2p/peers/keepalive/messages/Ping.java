@@ -45,15 +45,15 @@ public final class Ping extends NetworkEnvelope implements KeepAliveMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPing(PB.Ping.newBuilder()
+                .setPing(protobuf.Ping.newBuilder()
                         .setNonce(nonce)
                         .setLastRoundTripTime(lastRoundTripTime))
                 .build();
     }
 
-    public static Ping fromProto(PB.Ping proto, int messageVersion) {
+    public static Ping fromProto(protobuf.Ping proto, int messageVersion) {
         return new Ping(proto.getNonce(), proto.getLastRoundTripTime(), messageVersion);
     }
 }

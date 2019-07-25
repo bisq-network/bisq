@@ -45,18 +45,18 @@ public class MyReputationList extends PersistableList<MyReputation> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setMyReputationList(getBuilder()).build();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder().setMyReputationList(getBuilder()).build();
     }
 
-    private PB.MyReputationList.Builder getBuilder() {
-        return PB.MyReputationList.newBuilder()
+    private protobuf.MyReputationList.Builder getBuilder() {
+        return protobuf.MyReputationList.newBuilder()
                 .addAllMyReputation(getList().stream()
                         .map(MyReputation::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static MyReputationList fromProto(PB.MyReputationList proto) {
+    public static MyReputationList fromProto(protobuf.MyReputationList proto) {
         return new MyReputationList(new ArrayList<>(proto.getMyReputationList().stream()
                 .map(MyReputation::fromProto)
                 .collect(Collectors.toList())));

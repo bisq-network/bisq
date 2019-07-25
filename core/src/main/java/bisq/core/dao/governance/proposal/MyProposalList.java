@@ -48,18 +48,18 @@ public class MyProposalList extends PersistableList<Proposal> implements Consens
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setMyProposalList(getBuilder()).build();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder().setMyProposalList(getBuilder()).build();
     }
 
-    private PB.MyProposalList.Builder getBuilder() {
-        return PB.MyProposalList.newBuilder()
+    private protobuf.MyProposalList.Builder getBuilder() {
+        return protobuf.MyProposalList.newBuilder()
                 .addAllProposal(getList().stream()
                         .map(Proposal::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static MyProposalList fromProto(PB.MyProposalList proto) {
+    public static MyProposalList fromProto(protobuf.MyProposalList proto) {
         return new MyProposalList(new ArrayList<>(proto.getProposalList().stream()
                 .map(Proposal::fromProto)
                 .collect(Collectors.toList())));

@@ -71,16 +71,16 @@ public final class Block extends BaseBlock implements PersistablePayload, Immuta
 
 
     @Override
-    public PB.BaseBlock toProtoMessage() {
-        PB.Block.Builder builder = PB.Block.newBuilder()
+    public protobuf.BaseBlock toProtoMessage() {
+        protobuf.Block.Builder builder = protobuf.Block.newBuilder()
                 .addAllTxs(txs.stream()
                         .map(Tx::toProtoMessage)
                         .collect(Collectors.toList()));
         return getBaseBlockBuilder().setBlock(builder).build();
     }
 
-    public static Block fromProto(PB.BaseBlock proto) {
-        PB.Block blockProto = proto.getBlock();
+    public static Block fromProto(protobuf.BaseBlock proto) {
+        protobuf.Block blockProto = proto.getBlock();
         ImmutableList<Tx> txs = blockProto.getTxsList().isEmpty() ?
                 ImmutableList.copyOf(new ArrayList<>()) :
                 ImmutableList.copyOf(blockProto.getTxsList().stream()

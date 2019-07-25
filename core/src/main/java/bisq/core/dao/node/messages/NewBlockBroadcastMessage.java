@@ -50,14 +50,14 @@ public final class NewBlockBroadcastMessage extends BroadcastMessage implements 
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setNewBlockBroadcastMessage(PB.NewBlockBroadcastMessage.newBuilder()
+                .setNewBlockBroadcastMessage(protobuf.NewBlockBroadcastMessage.newBuilder()
                         .setRawBlock(block.toProtoMessage()))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NewBlockBroadcastMessage proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.NewBlockBroadcastMessage proto, int messageVersion) {
         return new NewBlockBroadcastMessage(RawBlock.fromProto(proto.getRawBlock()),
                 messageVersion);
     }

@@ -64,12 +64,12 @@ public final class InstantCryptoCurrencyPayload extends AssetsAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setInstantCryptoCurrencyAccountPayload(PB.InstantCryptoCurrencyAccountPayload.newBuilder()
+                .setInstantCryptoCurrencyAccountPayload(protobuf.InstantCryptoCurrencyAccountPayload.newBuilder()
                         .setAddress(address))
                 .build();
     }
 
-    public static InstantCryptoCurrencyPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static InstantCryptoCurrencyPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new InstantCryptoCurrencyPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getInstantCryptoCurrencyAccountPayload().getAddress(),

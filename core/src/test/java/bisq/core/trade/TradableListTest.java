@@ -27,9 +27,9 @@ import mockit.Mocked;
 
 import org.junit.Test;
 
-import static PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 
 //TODO cannot be run in IntelliJ IDE as parameter is not supported. OfferPayload is final so it is not so trivial to
 // replace that.
@@ -39,7 +39,7 @@ public class TradableListTest {
     public void protoTesting(@Mocked OfferPayload offerPayload) {
         Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null);
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
-        PB.PersistableEnvelope message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
+        protobuf.PersistableEnvelope message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
         assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
 
         // test adding an OpenOffer and convert toProto
@@ -47,7 +47,7 @@ public class TradableListTest {
         OpenOffer openOffer = new OpenOffer(offer, storage);
         //openOfferTradableList = new TradableList<OpenOffer>(storage,Lists.newArrayList(openOffer));
         openOfferTradableList.add(openOffer);
-        message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
+        message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
         assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
         assertEquals(1, message.getTradableList().getTradableList().size());
     }

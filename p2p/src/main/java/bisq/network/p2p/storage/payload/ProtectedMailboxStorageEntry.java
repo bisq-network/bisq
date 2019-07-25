@@ -74,14 +74,14 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         maybeAdjustCreationTimeStamp();
     }
 
-    public PB.ProtectedMailboxStorageEntry toProtoMessage() {
-        return PB.ProtectedMailboxStorageEntry.newBuilder()
-                .setEntry((PB.ProtectedStorageEntry) super.toProtoMessage())
+    public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
+        return protobuf.ProtectedMailboxStorageEntry.newBuilder()
+                .setEntry((protobuf.ProtectedStorageEntry) super.toProtoMessage())
                 .setReceiversPubKeyBytes(ByteString.copyFrom(receiversPubKeyBytes))
                 .build();
     }
 
-    public static ProtectedMailboxStorageEntry fromProto(PB.ProtectedMailboxStorageEntry proto,
+    public static ProtectedMailboxStorageEntry fromProto(protobuf.ProtectedMailboxStorageEntry proto,
                                                          NetworkProtoResolver resolver) {
         ProtectedStorageEntry entry = ProtectedStorageEntry.fromProto(proto.getEntry(), resolver);
         return new ProtectedMailboxStorageEntry(

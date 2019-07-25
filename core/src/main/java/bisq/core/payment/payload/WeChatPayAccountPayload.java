@@ -66,12 +66,12 @@ public final class WeChatPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setWeChatPayAccountPayload(PB.WeChatPayAccountPayload.newBuilder()
+                .setWeChatPayAccountPayload(protobuf.WeChatPayAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static WeChatPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static WeChatPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new WeChatPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getWeChatPayAccountPayload().getAccountNr(),

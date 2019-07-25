@@ -42,15 +42,15 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
     }
 
     @Override
-    public PB.RawTransactionInput toProtoMessage() {
-        return PB.RawTransactionInput.newBuilder()
+    public protobuf.RawTransactionInput toProtoMessage() {
+        return protobuf.RawTransactionInput.newBuilder()
                 .setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))
                 .setValue(value)
                 .build();
     }
 
-    public static RawTransactionInput fromProto(PB.RawTransactionInput proto) {
+    public static RawTransactionInput fromProto(protobuf.RawTransactionInput proto) {
         return new RawTransactionInput(proto.getIndex(), proto.getParentTransaction().toByteArray(), proto.getValue());
     }
 

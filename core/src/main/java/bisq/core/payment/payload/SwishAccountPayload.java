@@ -70,13 +70,13 @@ public final class SwishAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setSwishAccountPayload(PB.SwishAccountPayload.newBuilder()
+                .setSwishAccountPayload(protobuf.SwishAccountPayload.newBuilder()
                         .setMobileNr(mobileNr)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static SwishAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static SwishAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new SwishAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getSwishAccountPayload().getMobileNr(),

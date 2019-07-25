@@ -92,8 +92,8 @@ public final class Mediator implements ProtectedStoragePayload, ExpirablePayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        final PB.Mediator.Builder builder = PB.Mediator.newBuilder()
+    public protobuf.StoragePayload toProtoMessage() {
+        final protobuf.Mediator.Builder builder = protobuf.Mediator.newBuilder()
                 .setNodeAddress(nodeAddress.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .addAllLanguageCodes(languageCodes)
@@ -103,10 +103,10 @@ public final class Mediator implements ProtectedStoragePayload, ExpirablePayload
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setMediator(builder).build();
+        return protobuf.StoragePayload.newBuilder().setMediator(builder).build();
     }
 
-    public static Mediator fromProto(PB.Mediator proto) {
+    public static Mediator fromProto(protobuf.Mediator proto) {
         return new Mediator(NodeAddress.fromProto(proto.getNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getLanguageCodesList().stream().collect(Collectors.toList()),

@@ -40,15 +40,15 @@ public final class GetDaoStateHashesRequest extends GetStateHashesRequest {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetDaoStateHashesRequest(PB.GetDaoStateHashesRequest.newBuilder()
+                .setGetDaoStateHashesRequest(protobuf.GetDaoStateHashesRequest.newBuilder()
                         .setHeight(height)
                         .setNonce(nonce))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetDaoStateHashesRequest proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.GetDaoStateHashesRequest proto, int messageVersion) {
         return new GetDaoStateHashesRequest(proto.getHeight(), proto.getNonce(), messageVersion);
     }
 }

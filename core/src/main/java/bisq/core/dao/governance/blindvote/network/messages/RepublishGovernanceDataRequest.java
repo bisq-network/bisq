@@ -46,13 +46,13 @@ public final class RepublishGovernanceDataRequest extends NetworkEnvelope implem
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRepublishGovernanceDataRequest(PB.RepublishGovernanceDataRequest.newBuilder())
+                .setRepublishGovernanceDataRequest(protobuf.RepublishGovernanceDataRequest.newBuilder())
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.RepublishGovernanceDataRequest proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.RepublishGovernanceDataRequest proto, int messageVersion) {
         return new RepublishGovernanceDataRequest(messageVersion);
     }
 

@@ -48,21 +48,21 @@ public final class AddDataMessage extends BroadcastMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.StorageEntryWrapper.Builder builder = PB.StorageEntryWrapper.newBuilder();
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.StorageEntryWrapper.Builder builder = protobuf.StorageEntryWrapper.newBuilder();
         final Message message = protectedStorageEntry.toProtoMessage();
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            builder.setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) message);
+            builder.setProtectedMailboxStorageEntry((protobuf.ProtectedMailboxStorageEntry) message);
         else
-            builder.setProtectedStorageEntry((PB.ProtectedStorageEntry) message);
+            builder.setProtectedStorageEntry((protobuf.ProtectedStorageEntry) message);
 
         return getNetworkEnvelopeBuilder()
-                .setAddDataMessage(PB.AddDataMessage.newBuilder()
+                .setAddDataMessage(protobuf.AddDataMessage.newBuilder()
                         .setEntry(builder))
                 .build();
     }
 
-    public static AddDataMessage fromProto(PB.AddDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static AddDataMessage fromProto(protobuf.AddDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
         return new AddDataMessage((ProtectedStorageEntry) resolver.fromProto(proto.getEntry()), messageVersion);
     }
 }

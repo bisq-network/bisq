@@ -61,8 +61,8 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.Issuance toProtoMessage() {
-        final PB.Issuance.Builder builder = PB.Issuance.newBuilder()
+    public protobuf.Issuance toProtoMessage() {
+        final protobuf.Issuance.Builder builder = protobuf.Issuance.newBuilder()
                 .setTxId(txId)
                 .setChainHeight(chainHeight)
                 .setAmount(amount)
@@ -71,7 +71,7 @@ public class Issuance implements PersistablePayload, NetworkPayload, ImmutableDa
         return builder.build();
     }
 
-    public static Issuance fromProto(PB.Issuance proto) {
+    public static Issuance fromProto(protobuf.Issuance proto) {
         return new Issuance(proto.getTxId(),
                 proto.getChainHeight(),
                 proto.getAmount(),

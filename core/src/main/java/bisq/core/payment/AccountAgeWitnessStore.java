@@ -56,20 +56,20 @@ public class AccountAgeWitnessStore implements PersistableEnvelope {
     }
 
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
                 .setAccountAgeWitnessStore(getBuilder())
                 .build();
     }
 
-    private PB.AccountAgeWitnessStore.Builder getBuilder() {
-        final List<PB.AccountAgeWitness> protoList = map.values().stream()
+    private protobuf.AccountAgeWitnessStore.Builder getBuilder() {
+        final List<protobuf.AccountAgeWitness> protoList = map.values().stream()
                 .map(payload -> (AccountAgeWitness) payload)
                 .map(AccountAgeWitness::toProtoAccountAgeWitness)
                 .collect(Collectors.toList());
-        return PB.AccountAgeWitnessStore.newBuilder().addAllItems(protoList);
+        return protobuf.AccountAgeWitnessStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(PB.AccountAgeWitnessStore proto) {
+    public static PersistableEnvelope fromProto(protobuf.AccountAgeWitnessStore proto) {
         List<AccountAgeWitness> list = proto.getItemsList().stream()
                 .map(AccountAgeWitness::fromProto).collect(Collectors.toList());
         return new AccountAgeWitnessStore(list);

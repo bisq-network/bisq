@@ -58,8 +58,8 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
     }
 
     @Override
-    protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
-        PB.CountryBasedPaymentAccountPayload.Builder builder = PB.CountryBasedPaymentAccountPayload.newBuilder()
+    protected protobuf.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
+        protobuf.CountryBasedPaymentAccountPayload.Builder builder = protobuf.CountryBasedPaymentAccountPayload.newBuilder()
                 .setCountryCode(countryCode);
         return super.getPaymentAccountPayloadBuilder()
                 .setCountryBasedPaymentAccountPayload(builder);

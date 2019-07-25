@@ -165,13 +165,13 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
+    public protobuf.StoragePayload toProtoMessage() {
         checkNotNull(signatureAsBase64, "signatureAsBase64 must nto be null");
         checkNotNull(ownerPubKeyBytes, "ownerPubKeyBytes must nto be null");
-        List<PB.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
+        List<protobuf.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoMessage)
                 .collect(Collectors.toList());
-        final PB.Filter.Builder builder = PB.Filter.newBuilder()
+        final protobuf.Filter.Builder builder = protobuf.Filter.newBuilder()
                 .addAllBannedOfferIds(bannedOfferIds)
                 .addAllBannedNodeAddress(bannedNodeAddress)
                 .addAllBannedPaymentAccounts(paymentAccountFilterList)
@@ -190,10 +190,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         Optional.ofNullable(disableTradeBelowVersion).ifPresent(builder::setDisableTradeBelowVersion);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
-        return PB.StoragePayload.newBuilder().setFilter(builder).build();
+        return protobuf.StoragePayload.newBuilder().setFilter(builder).build();
     }
 
-    public static Filter fromProto(PB.Filter proto) {
+    public static Filter fromProto(protobuf.Filter proto) {
         return new Filter(new ArrayList<>(proto.getBannedOfferIdsList()),
                 new ArrayList<>(proto.getBannedNodeAddressList()),
                 proto.getBannedPaymentAccountsList().stream()

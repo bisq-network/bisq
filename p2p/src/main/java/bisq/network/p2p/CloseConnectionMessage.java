@@ -44,14 +44,14 @@ public final class CloseConnectionMessage extends NetworkEnvelope {
 
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setCloseConnectionMessage(PB.CloseConnectionMessage.newBuilder()
+                .setCloseConnectionMessage(protobuf.CloseConnectionMessage.newBuilder()
                         .setReason(reason))
                 .build();
     }
 
-    public static CloseConnectionMessage fromProto(PB.CloseConnectionMessage proto, int messageVersion) {
+    public static CloseConnectionMessage fromProto(protobuf.CloseConnectionMessage proto, int messageVersion) {
         return new CloseConnectionMessage(proto.getReason(), messageVersion);
     }
 }

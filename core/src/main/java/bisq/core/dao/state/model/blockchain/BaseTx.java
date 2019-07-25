@@ -67,8 +67,8 @@ public abstract class BaseTx implements ImmutableDaoStateModel {
         this.txInputs = txInputs;
     }
 
-    protected PB.BaseTx.Builder getBaseTxBuilder() {
-        return PB.BaseTx.newBuilder()
+    protected protobuf.BaseTx.Builder getBaseTxBuilder() {
+        return protobuf.BaseTx.newBuilder()
                 .setTxVersion(txVersion)
                 .setId(id)
                 .setBlockHeight(blockHeight)

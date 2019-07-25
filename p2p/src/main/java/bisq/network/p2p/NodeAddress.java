@@ -58,11 +58,11 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload, Us
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.NodeAddress toProtoMessage() {
-        return PB.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
+    public protobuf.NodeAddress toProtoMessage() {
+        return protobuf.NodeAddress.newBuilder().setHostName(hostName).setPort(port).build();
     }
 
-    public static NodeAddress fromProto(PB.NodeAddress proto) {
+    public static NodeAddress fromProto(protobuf.NodeAddress proto) {
         return new NodeAddress(proto.getHostName(), proto.getPort());
     }
 

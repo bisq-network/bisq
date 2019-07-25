@@ -75,10 +75,10 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.OfferAvailabilityResponse.Builder builder = PB.OfferAvailabilityResponse.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.OfferAvailabilityResponse.Builder builder = protobuf.OfferAvailabilityResponse.newBuilder()
                 .setOfferId(offerId)
-                .setAvailabilityResult(PB.AvailabilityResult.valueOf(availabilityResult.name()));
+                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()));
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
@@ -89,7 +89,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 .build();
     }
 
-    public static OfferAvailabilityResponse fromProto(PB.OfferAvailabilityResponse proto, int messageVersion) {
+    public static OfferAvailabilityResponse fromProto(protobuf.OfferAvailabilityResponse proto, int messageVersion) {
         return new OfferAvailabilityResponse(proto.getOfferId(),
                 ProtoUtil.enumFromProto(AvailabilityResult.class, proto.getAvailabilityResult().name()),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),

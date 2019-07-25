@@ -89,15 +89,15 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.ReimbursementProposal.Builder builder = PB.ReimbursementProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.ReimbursementProposal.Builder builder = protobuf.ReimbursementProposal.newBuilder()
                 .setBsqAddress(bsqAddress)
                 .setRequestedBsq(requestedBsq);
         return super.getProposalBuilder().setReimbursementProposal(builder);
     }
 
-    public static ReimbursementProposal fromProto(PB.Proposal proto) {
-        final PB.ReimbursementProposal proposalProto = proto.getReimbursementProposal();
+    public static ReimbursementProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.ReimbursementProposal proposalProto = proto.getReimbursementProposal();
         return new ReimbursementProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getBsqAddress(),

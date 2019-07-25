@@ -83,20 +83,20 @@ public abstract class PaymentAccount implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PaymentAccount toProtoMessage() {
+    public protobuf.PaymentAccount toProtoMessage() {
         checkNotNull(accountName, "accountName must not be null");
-        PB.PaymentAccount.Builder builder = PB.PaymentAccount.newBuilder()
+        protobuf.PaymentAccount.Builder builder = protobuf.PaymentAccount.newBuilder()
                 .setPaymentMethod(paymentMethod.toProtoMessage())
                 .setId(id)
                 .setCreationDate(creationDate)
-                .setPaymentAccountPayload((PB.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
+                .setPaymentAccountPayload((protobuf.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
                 .setAccountName(accountName)
-                .addAllTradeCurrencies(ProtoUtil.<PB.TradeCurrency>collectionToProto(tradeCurrencies));
-        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((PB.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
+                .addAllTradeCurrencies(ProtoUtil.<protobuf.TradeCurrency>collectionToProto(tradeCurrencies));
+        Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((protobuf.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
         return builder.build();
     }
 
-    public static PaymentAccount fromProto(PB.PaymentAccount proto, CoreProtoResolver coreProtoResolver) {
+    public static PaymentAccount fromProto(protobuf.PaymentAccount proto, CoreProtoResolver coreProtoResolver) {
         PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethodById(proto.getPaymentMethod().getId()));
         account.getTradeCurrencies().clear();
         account.setId(proto.getId());

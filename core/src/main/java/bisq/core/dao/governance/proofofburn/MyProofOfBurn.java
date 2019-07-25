@@ -54,14 +54,14 @@ public final class MyProofOfBurn implements PersistablePayload, NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.MyProofOfBurn toProtoMessage() {
-        return PB.MyProofOfBurn.newBuilder()
+    public protobuf.MyProofOfBurn toProtoMessage() {
+        return protobuf.MyProofOfBurn.newBuilder()
                 .setTxId(txId)
                 .setPreImage(preImage)
                 .build();
     }
 
-    public static MyProofOfBurn fromProto(PB.MyProofOfBurn proto) {
+    public static MyProofOfBurn fromProto(protobuf.MyProofOfBurn proto) {
         return new MyProofOfBurn(proto.getTxId(), proto.getPreImage());
     }
 

@@ -88,16 +88,16 @@ public class TxOutput extends BaseTxOutput implements PersistablePayload, Immuta
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.BaseTxOutput toProtoMessage() {
-        PB.TxOutput.Builder builder = PB.TxOutput.newBuilder()
+    public protobuf.BaseTxOutput toProtoMessage() {
+        protobuf.TxOutput.Builder builder = protobuf.TxOutput.newBuilder()
                 .setTxOutputType(txOutputType.toProtoMessage())
                 .setLockTime(lockTime)
                 .setUnlockBlockHeight(unlockBlockHeight);
         return getRawTxOutputBuilder().setTxOutput(builder).build();
     }
 
-    public static TxOutput fromProto(PB.BaseTxOutput proto) {
-        PB.TxOutput protoTxOutput = proto.getTxOutput();
+    public static TxOutput fromProto(protobuf.BaseTxOutput proto) {
+        protobuf.TxOutput protoTxOutput = proto.getTxOutput();
         return new TxOutput(proto.getIndex(),
                 proto.getValue(),
                 proto.getTxId(),

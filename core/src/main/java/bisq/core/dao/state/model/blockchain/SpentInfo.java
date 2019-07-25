@@ -38,14 +38,14 @@ public final class SpentInfo implements PersistablePayload, ImmutableDaoStateMod
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static SpentInfo fromProto(PB.SpentInfo proto) {
+    public static SpentInfo fromProto(protobuf.SpentInfo proto) {
         return new SpentInfo(proto.getBlockHeight(),
                 proto.getTxId(),
                 proto.getInputIndex());
     }
 
-    public PB.SpentInfo toProtoMessage() {
-        return PB.SpentInfo.newBuilder()
+    public protobuf.SpentInfo toProtoMessage() {
+        return protobuf.SpentInfo.newBuilder()
                 .setBlockHeight(blockHeight)
                 .setTxId(txId)
                 .setInputIndex(inputIndex)

@@ -81,15 +81,15 @@ public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJso
     }
 
     @Override
-    public PB.PubKeyRing toProtoMessage() {
-        return PB.PubKeyRing.newBuilder()
+    public protobuf.PubKeyRing toProtoMessage() {
+        return protobuf.PubKeyRing.newBuilder()
                 .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes))
                 .setEncryptionPubKeyBytes(ByteString.copyFrom(encryptionPubKeyBytes))
                 .setPgpPubKeyAsPem(pgpPubKeyAsPem)
                 .build();
     }
 
-    public static PubKeyRing fromProto(PB.PubKeyRing proto) {
+    public static PubKeyRing fromProto(protobuf.PubKeyRing proto) {
         return new PubKeyRing(proto.getSignaturePubKeyBytes().toByteArray(),
                 proto.getEncryptionPubKeyBytes().toByteArray(),
                 proto.getPgpPubKeyAsPem());

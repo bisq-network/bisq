@@ -46,14 +46,14 @@ public final class RemoveMailboxDataMessage extends BroadcastMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRemoveMailboxDataMessage(PB.RemoveMailboxDataMessage.newBuilder()
+                .setRemoveMailboxDataMessage(protobuf.RemoveMailboxDataMessage.newBuilder()
                         .setProtectedStorageEntry(protectedMailboxStorageEntry.toProtoMessage()))
                 .build();
     }
 
-    public static RemoveMailboxDataMessage fromProto(PB.RemoveMailboxDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static RemoveMailboxDataMessage fromProto(protobuf.RemoveMailboxDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
         return new RemoveMailboxDataMessage(ProtectedMailboxStorageEntry.fromProto(proto.getProtectedStorageEntry(), resolver), messageVersion);
     }
 }

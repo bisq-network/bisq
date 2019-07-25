@@ -77,8 +77,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     }
 
     public Message toProtoMessage() {
-        return PB.ProtectedStorageEntry.newBuilder()
-                .setStoragePayload((PB.StoragePayload) protectedStoragePayload.toProtoMessage())
+        return protobuf.ProtectedStorageEntry.newBuilder()
+                .setStoragePayload((protobuf.StoragePayload) protectedStoragePayload.toProtoMessage())
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSequenceNumber(sequenceNumber)
                 .setSignature(ByteString.copyFrom(signature))
@@ -86,12 +86,12 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 .build();
     }
 
-    public PB.ProtectedStorageEntry toProtectedStorageEntry() {
-        return (PB.ProtectedStorageEntry) toProtoMessage();
+    public protobuf.ProtectedStorageEntry toProtectedStorageEntry() {
+        return (protobuf.ProtectedStorageEntry) toProtoMessage();
 
     }
 
-    public static ProtectedStorageEntry fromProto(PB.ProtectedStorageEntry proto,
+    public static ProtectedStorageEntry fromProto(protobuf.ProtectedStorageEntry proto,
                                                   NetworkProtoResolver resolver) {
         return new ProtectedStorageEntry(proto.getCreationTimeStamp(),
                 ProtectedStoragePayload.fromProto(proto.getStoragePayload(), resolver),

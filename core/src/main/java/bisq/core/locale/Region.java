@@ -40,10 +40,10 @@ public final class Region implements PersistablePayload {
 
     @Override
     public Message toProtoMessage() {
-        return PB.Region.newBuilder().setCode(code).setName(name).build();
+        return protobuf.Region.newBuilder().setCode(code).setName(name).build();
     }
 
-    public static Region fromProto(PB.Region proto) {
+    public static Region fromProto(protobuf.Region proto) {
         return new Region(proto.getCode(), proto.getName());
     }
 }

@@ -75,11 +75,11 @@ public enum ScriptType implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static ScriptType fromProto(PB.ScriptType scriptType) {
+    public static ScriptType fromProto(protobuf.ScriptType scriptType) {
         return ProtoUtil.enumFromProto(ScriptType.class, scriptType.name());
     }
 
-    public PB.ScriptType toProtoMessage() {
-        return PB.ScriptType.valueOf(name());
+    public protobuf.ScriptType toProtoMessage() {
+        return protobuf.ScriptType.valueOf(name());
     }
 }

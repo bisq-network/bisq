@@ -62,25 +62,25 @@ public class ProposalPayload implements PersistableNetworkPayload, PersistableEn
         this.hash = hash;
     }
 
-    private PB.ProposalPayload.Builder getProposalBuilder() {
-        return PB.ProposalPayload.newBuilder()
+    private protobuf.ProposalPayload.Builder getProposalBuilder() {
+        return protobuf.ProposalPayload.newBuilder()
                 .setProposal(proposal.toProtoMessage())
                 .setHash(ByteString.copyFrom(hash));
     }
 
     @Override
-    public PB.PersistableNetworkPayload toProtoMessage() {
-        return PB.PersistableNetworkPayload.newBuilder()
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        return protobuf.PersistableNetworkPayload.newBuilder()
                 .setProposalPayload(getProposalBuilder())
                 .build();
     }
 
-    public PB.ProposalPayload toProtoProposalPayload() {
+    public protobuf.ProposalPayload toProtoProposalPayload() {
         return getProposalBuilder().build();
     }
 
 
-    public static ProposalPayload fromProto(PB.ProposalPayload proto) {
+    public static ProposalPayload fromProto(protobuf.ProposalPayload proto) {
         return new ProposalPayload(Proposal.fromProto(proto.getProposal()),
                 proto.getHash().toByteArray());
     }
