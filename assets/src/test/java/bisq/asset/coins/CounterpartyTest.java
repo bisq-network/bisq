@@ -17,11 +17,26 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
 
-public class CounterpartyTest extends AbstractAssetWithDefaultValidatorTest {
+public class CounterpartyTest extends AbstractAssetTest {
 
     public CounterpartyTest() {
-        super(new Counterparty());
+        super(new Counterparty.Mainnet());
     }
+
+	@Override
+	public void testValidAddresses() {
+		// TODO Auto-generated method stub
+		assertValidAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
+		assertValidAddress("111111111112ZkE8UvCp8JCNRhfuBoo");
+		assertValidAddress("1234567891234567891234567891wBd7RE");		
+	}
+
+	@Override
+	public void testInvalidAddresses() {
+		assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+		assertValidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
+		assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
+	}
 }

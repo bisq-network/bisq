@@ -17,11 +17,25 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
 
-public class UnobtaniumTest extends AbstractAssetWithDefaultValidatorTest {
+public class UnobtaniumTest extends AbstractAssetTest {
 
     public UnobtaniumTest() {
-        super(new Unobtanium());
+        super(new Unobtanium.Mainnet());
     }
+
+	@Override
+	public void testValidAddresses() {
+		assertValidAddress("uXN2S9Soj4dSL7fPAuQi9twdaFmtwYndVP");
+		assertValidAddress("uZymbhuxhfvxzc5EDdqRWrrZKvabZibBu1");
+		assertValidAddress("uKdudT6DwojHYsBE9JWM43hRV28Rmp1Zm1");		
+	}
+
+	@Override
+	public void testInvalidAddresses() {
+		assertValidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
+		assertValidAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
+		assertValidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");		
+	}
 }

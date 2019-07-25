@@ -18,18 +18,43 @@
 package bisq.asset.coins;
 
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 
 import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-
-import bisq.core.locale.Res;
+import bisq.asset.I18n;
 
 public class Decred extends Coin {
 
 	public Decred(Network network, NetworkParameters networkParameters) {
 		super("Decred", "DCR", new DcrAddressValidator(networkParameters), network);
 	}
+
+    public static class Mainnet extends BSQ {
+
+        public Mainnet() {
+            super(Network.MAINNET, MainNetParams.get());
+        }
+    }
+
+
+    public static class Testnet extends BSQ {
+
+        public Testnet() {
+            super(Network.TESTNET, TestNet3Params.get());
+        }
+    }
+
+
+    public static class Regtest extends BSQ {
+
+        public Regtest() {
+            super(Network.REGTEST, RegTestParams.get());
+        }
+    }
 
 	public static class DcrAddressValidator extends Base58BitcoinAddressValidator {
 
@@ -43,7 +68,7 @@ public class Decred extends Coin {
 					|| !address.startsWith("Ds") || !address.startsWith("De") || !address.startsWith("DS")
 					|| !address.startsWith("Dc") || !address.startsWith("Pm")) {
 				return AddressValidationResult
-						.invalidAddress(Res.get("account.altcoin.popup.validation.DCR"));
+						.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.DCR"));
 			}
 
 			String addressAsBtc = address.substring(1, address.length());

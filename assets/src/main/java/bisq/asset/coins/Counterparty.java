@@ -18,17 +18,42 @@
 package bisq.asset.coins;
 
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 
 import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-
-import bisq.core.locale.Res;
+import bisq.asset.I18n;
 
 public class Counterparty extends Coin {
 
     public Counterparty(Network network, NetworkParameters networkParameters) {
         super("Counterparty", "XCP", new XcpAddressValidator(networkParameters), network);
+    }
+
+    public static class Mainnet extends BSQ {
+
+        public Mainnet() {
+            super(Network.MAINNET, MainNetParams.get());
+        }
+    }
+
+
+    public static class Testnet extends BSQ {
+
+        public Testnet() {
+            super(Network.TESTNET, TestNet3Params.get());
+        }
+    }
+
+
+    public static class Regtest extends BSQ {
+
+        public Regtest() {
+            super(Network.REGTEST, RegTestParams.get());
+        }
     }
     
     public static class XcpAddressValidator extends Base58BitcoinAddressValidator {
@@ -40,7 +65,7 @@ public class Counterparty extends Coin {
         @Override
         public AddressValidationResult validate(String address) {
             if (address == null || address.length() != 34 || !address.startsWith("1")) {
-                return AddressValidationResult.invalidAddress(Res.get("account.altcoin.popup.validation.XCP"));
+                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.XCP"));
             }
 
             String addressAsBtc = address.substring(1, address.length());

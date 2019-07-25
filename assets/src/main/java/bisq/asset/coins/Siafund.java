@@ -18,9 +18,8 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
+import bisq.asset.I18n;
 import bisq.asset.RegexAddressValidator;
-
-import bisq.core.locale.Res;
 
 public class Siafund extends Coin {
 
@@ -31,7 +30,7 @@ public class Siafund extends Coin {
     public static class SfAddressValidator extends RegexAddressValidator {
 
         public SfAddressValidator() {
-            super("^[0-9a-fA-F]{76}$", Res.get("account.altcoin.popup.validation.XCP"));
+            super("^[0-9a-fA-F]{76}$", I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.XCP"));
         }
     }
 

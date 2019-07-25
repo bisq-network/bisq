@@ -18,17 +18,42 @@
 package bisq.asset.coins;
 
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.params.RegTestParams;
+import org.bitcoinj.params.TestNet3Params;
 
 import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-
-import bisq.core.locale.Res;
+import bisq.asset.I18n;
 
 public class Unobtanium extends Coin {
 
     public Unobtanium(Network network, NetworkParameters networkParameters) {
         super("Unobtanium", "UNO", new UnoAddressValidator(networkParameters), network);
+    }
+
+    public static class Mainnet extends BSQ {
+
+        public Mainnet() {
+            super(Network.MAINNET, MainNetParams.get());
+        }
+    }
+
+
+    public static class Testnet extends BSQ {
+
+        public Testnet() {
+            super(Network.TESTNET, TestNet3Params.get());
+        }
+    }
+
+
+    public static class Regtest extends BSQ {
+
+        public Regtest() {
+            super(Network.REGTEST, RegTestParams.get());
+        }
     }
     
     public static class UnoAddressValidator extends Base58BitcoinAddressValidator {
@@ -40,7 +65,7 @@ public class Unobtanium extends Coin {
         @Override
         public AddressValidationResult validate(String address) {
             if (address == null || address.length() != 34 || !address.startsWith("u")) {
-                return AddressValidationResult.invalidAddress(Res.get("account.altcoin.popup.validation.UNO"));
+                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.UNO"));
             }
 
             String addressAsBtc = address.substring(1, address.length());
