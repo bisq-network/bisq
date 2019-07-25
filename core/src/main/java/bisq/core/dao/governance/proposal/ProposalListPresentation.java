@@ -114,7 +114,8 @@ public class ProposalListPresentation implements DaoStateListener, MyProposalLis
         List<Proposal> tempProposals = proposalService.getTempProposals();
         Set<Proposal> verifiedProposals = proposalService.getProposalPayloads().stream()
                 .map(ProposalPayload::getProposal)
-                .filter(proposal -> validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
+                .filter(proposal -> !daoStateService.isParseBlockChainComplete() ||
+                        validatorProvider.getValidator(proposal).isValidAndConfirmed(proposal))
                 .collect(Collectors.toSet());
         Set<Proposal> set = new HashSet<>(tempProposals);
         set.addAll(verifiedProposals);

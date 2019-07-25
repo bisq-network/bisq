@@ -200,11 +200,12 @@ public class LiteNode extends BsqNode {
         runDelayedBatchProcessing(new ArrayList<>(blockList),
                 () -> {
                     log.info("Parsing {} blocks took {} seconds.", blockList.size(), (System.currentTimeMillis() - ts) / 1000d);
-                    if (daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight())
+                    if (daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight()) {
                         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
-                    else
+                    } else {
                         onParsingComplete.run();
                         onParseBlockChainComplete();
+                    }
                 });
     }
 
