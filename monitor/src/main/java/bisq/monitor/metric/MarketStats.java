@@ -103,7 +103,6 @@ public class MarketStats extends Metric {
                 }
                 amount.find();
                 timestamp.find();
-                System.err.println(getName() + ".volume." + market.group(1) + " " + amount.group(1) + " " + timestamp.group(1).substring(0, timestamp.group(1).length() - 3));
                 reporter.report("volume." + market.group(1), amount.group(1), timestamp.group(1), getName());
             });
         } catch (IllegalStateException ignore) {
