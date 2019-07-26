@@ -50,7 +50,9 @@ import java.net.Socket;
 import java.io.File;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -121,11 +123,19 @@ public class TorNetworkNode extends NetworkNode {
             // find hidden service candidates
             File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles();
 
+            // sort in ascending order
+            Arrays.sort(hiddenServiceDirs, Comparator.comparing(File::getName));
+
             // start
             CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
+            NodeAddress nodeAddress = null;
             for(File current : hiddenServiceDirs)
                 if(current.isDirectory())
-                    createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
+                    nodeAddress = createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
+
+            // use newest HS as for NodeAddress
+            nodeAddressProperty.set(nodeAddress);
+            UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
 
             // only report HiddenServicePublished once all are published
             gate.await(90, TimeUnit.SECONDS);
@@ -284,7 +294,6 @@ public class TorNetworkNode extends NetworkNode {
     private void createTor(TorMode torMode) {
         try {
             Tor.setDefault(torMode.getTor());
-            UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
         } catch (TorCtlException e) {
             String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
             log.error("Tor node creation failed: {}", msg);
@@ -305,12 +314,11 @@ public class TorNetworkNode extends NetworkNode {
         }
     }
 
-    private void createHiddenService(String hiddenServiceDirectory, int localPort, int servicePort, CountDownLatch onHSReady) {
-            try {
+    private NodeAddress createHiddenService(String hiddenServiceDirectory, int localPort, int servicePort, CountDownLatch onHSReady) {
                 // start hidden service
                 long ts2 = new Date().getTime();
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, hiddenServiceDirectory, servicePort);
-                nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
+                NodeAddress nodeAddress = new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort());
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
                         log.info("\n################################################################\n" +
@@ -336,7 +344,6 @@ public class TorNetworkNode extends NetworkNode {
                 });
                 hiddenServiceSocket.addReadyListener(hiddenServiceSocket1 -> { onHSReady.countDown(); return null;} );
                 log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
-            } catch (Throwable ignore) {
-            }
+                return nodeAddress;
     }
 }
