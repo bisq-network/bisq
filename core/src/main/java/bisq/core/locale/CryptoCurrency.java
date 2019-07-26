@@ -17,7 +17,6 @@
 
 package bisq.core.locale;
 
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
@@ -51,12 +50,12 @@ public final class CryptoCurrency extends TradeCurrency {
     @Override
     public Message toProtoMessage() {
         return getTradeCurrencyBuilder()
-                .setCryptoCurrency(PB.CryptoCurrency.newBuilder()
+                .setCryptoCurrency(protobuf.CryptoCurrency.newBuilder()
                         .setIsAsset(isAsset))
                 .build();
     }
 
-    public static CryptoCurrency fromProto(PB.TradeCurrency proto) {
+    public static CryptoCurrency fromProto(protobuf.TradeCurrency proto) {
         return new CryptoCurrency(proto.getCode(),
                 proto.getName(),
                 proto.getCryptoCurrency().getIsAsset());

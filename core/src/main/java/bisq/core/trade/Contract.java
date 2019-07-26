@@ -33,8 +33,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
@@ -131,7 +129,7 @@ public final class Contract implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public static Contract fromProto(PB.Contract proto, CoreProtoResolver coreProtoResolver) {
+    public static Contract fromProto(protobuf.Contract proto, CoreProtoResolver coreProtoResolver) {
         return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
                 proto.getTradeAmount(),
                 proto.getTradePrice(),
@@ -154,8 +152,8 @@ public final class Contract implements NetworkPayload {
     }
 
     @Override
-    public PB.Contract toProtoMessage() {
-        return PB.Contract.newBuilder()
+    public protobuf.Contract toProtoMessage() {
+        return protobuf.Contract.newBuilder()
                 .setOfferPayload(offerPayload.toProtoMessage().getOfferPayload())
                 .setTradeAmount(tradeAmount)
                 .setTradePrice(tradePrice)
@@ -167,8 +165,8 @@ public final class Contract implements NetworkPayload {
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
                 .setMakerAccountId(makerAccountId)
                 .setTakerAccountId(takerAccountId)
-                .setMakerPaymentAccountPayload((PB.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
-                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
+                .setMakerPaymentAccountPayload((protobuf.PaymentAccountPayload) makerPaymentAccountPayload.toProtoMessage())
+                .setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
                 .setMakerPubKeyRing(makerPubKeyRing.toProtoMessage())
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
                 .setMakerPayoutAddressString(makerPayoutAddressString)

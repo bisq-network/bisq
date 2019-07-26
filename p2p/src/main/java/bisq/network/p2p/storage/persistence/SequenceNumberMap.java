@@ -21,8 +21,6 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,11 +56,11 @@ public class SequenceNumberMap implements PersistableEnvelope {
     }
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
-                .setSequenceNumberMap(PB.SequenceNumberMap.newBuilder()
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setSequenceNumberMap(protobuf.SequenceNumberMap.newBuilder()
                         .addAllSequenceNumberEntries(map.entrySet().stream()
-                                .map(entry -> PB.SequenceNumberEntry.newBuilder()
+                                .map(entry -> protobuf.SequenceNumberEntry.newBuilder()
                                         .setBytes(entry.getKey().toProtoMessage())
                                         .setMapValue(entry.getValue().toProtoMessage())
                                         .build())
@@ -70,7 +68,7 @@ public class SequenceNumberMap implements PersistableEnvelope {
                 .build();
     }
 
-    public static SequenceNumberMap fromProto(PB.SequenceNumberMap proto) {
+    public static SequenceNumberMap fromProto(protobuf.SequenceNumberMap proto) {
         HashMap<P2PDataStorage.ByteArray, P2PDataStorage.MapValue> map = new HashMap<>();
         proto.getSequenceNumberEntriesList().stream()
                 .forEach(e -> map.put(P2PDataStorage.ByteArray.fromProto(e.getBytes()), P2PDataStorage.MapValue.fromProto(e.getMapValue())));

@@ -50,8 +50,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.taskrunner.Model;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
@@ -158,9 +156,9 @@ public class ProcessModel implements Model, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.ProcessModel toProtoMessage() {
-        final PB.ProcessModel.Builder builder = PB.ProcessModel.newBuilder()
-                .setTradingPeer((PB.TradingPeer) tradingPeer.toProtoMessage())
+    public protobuf.ProcessModel toProtoMessage() {
+        final protobuf.ProcessModel.Builder builder = protobuf.ProcessModel.newBuilder()
+                .setTradingPeer((protobuf.TradingPeer) tradingPeer.toProtoMessage())
                 .setOfferId(offerId)
                 .setAccountId(accountId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
@@ -181,7 +179,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return builder.build();
     }
 
-    public static ProcessModel fromProto(PB.ProcessModel proto, CoreProtoResolver coreProtoResolver) {
+    public static ProcessModel fromProto(protobuf.ProcessModel proto, CoreProtoResolver coreProtoResolver) {
         ProcessModel processModel = new ProcessModel();
         processModel.setTradingPeer(proto.hasTradingPeer() ? TradingPeer.fromProto(proto.getTradingPeer(), coreProtoResolver) : null);
         processModel.setOfferId(proto.getOfferId());

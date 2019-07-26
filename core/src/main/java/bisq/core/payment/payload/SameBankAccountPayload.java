@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -79,12 +77,12 @@ public final class SameBankAccountPayload extends BankAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        PB.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+        protobuf.BankAccountPayload.Builder bankAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .getBankAccountPayloadBuilder()
-                .setSameBankAccontPayload(PB.SameBankAccountPayload.newBuilder());
+                .setSameBankAccontPayload(protobuf.SameBankAccountPayload.newBuilder());
 
-        PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
+        protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setBankAccountPayload(bankAccountPayloadBuilder);
 
@@ -93,9 +91,9 @@ public final class SameBankAccountPayload extends BankAccountPayload {
                 .build();
     }
 
-    public static SameBankAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+    public static SameBankAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.BankAccountPayload bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
         return new SameBankAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),

@@ -21,8 +21,6 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -100,14 +98,14 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     @Override
     public Message toProtoMessage() {
-        PB.SepaAccountPayload.Builder builder =
-                PB.SepaAccountPayload.newBuilder()
+        protobuf.SepaAccountPayload.Builder builder =
+                protobuf.SepaAccountPayload.newBuilder()
                         .setHolderName(holderName)
                         .setIban(iban)
                         .setBic(bic)
                         .setEmail(email)
                         .addAllAcceptedCountryCodes(acceptedCountryCodes);
-        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
+        final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setSepaAccountPayload(builder);
         return getPaymentAccountPayloadBuilder()
@@ -115,9 +113,9 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.SepaAccountPayload sepaAccountPayloadPB = countryBasedPaymentAccountPayload.getSepaAccountPayload();
         return new SepaAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),

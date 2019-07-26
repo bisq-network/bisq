@@ -24,8 +24,6 @@ import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -164,27 +162,27 @@ public class TestUtils {
     public static NetworkProtoResolver getNetworkProtoResolver() {
         return new NetworkProtoResolver() {
             @Override
-            public Payload fromProto(PB.PaymentAccountPayload proto) {
+            public Payload fromProto(protobuf.PaymentAccountPayload proto) {
                 return null;
             }
 
             @Override
-            public PersistableEnvelope fromProto(PB.PersistableNetworkPayload persistable) {
+            public PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload persistable) {
                 return null;
             }
 
             @Override
-            public NetworkEnvelope fromProto(PB.NetworkEnvelope envelope) {
+            public NetworkEnvelope fromProto(protobuf.NetworkEnvelope envelope) {
                 return null;
             }
 
             @Override
-            public NetworkPayload fromProto(PB.StoragePayload proto) {
+            public NetworkPayload fromProto(protobuf.StoragePayload proto) {
                 return null;
             }
 
             @Override
-            public NetworkPayload fromProto(PB.StorageEntryWrapper proto) {
+            public NetworkPayload fromProto(protobuf.StorageEntryWrapper proto) {
                 return null;
             }
         };
@@ -193,17 +191,17 @@ public class TestUtils {
     public static PersistenceProtoResolver getPersistenceProtoResolver() {
         return new PersistenceProtoResolver() {
             @Override
-            public Payload fromProto(PB.PaymentAccountPayload proto) {
+            public Payload fromProto(protobuf.PaymentAccountPayload proto) {
                 return null;
             }
 
             @Override
-            public PersistableEnvelope fromProto(PB.PersistableEnvelope persistable) {
+            public PersistableEnvelope fromProto(protobuf.PersistableEnvelope persistable) {
                 return null;
             }
 
             @Override
-            public PersistableEnvelope fromProto(PB.PersistableNetworkPayload persistable) {
+            public PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload persistable) {
                 return null;
             }
         };

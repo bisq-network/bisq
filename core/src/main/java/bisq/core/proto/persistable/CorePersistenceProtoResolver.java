@@ -51,8 +51,6 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.inject.Provider;
 
 import javax.inject.Inject;
@@ -80,7 +78,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     }
 
     @Override
-    public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
+    public PersistableEnvelope fromProto(protobuf.PersistableEnvelope proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case SEQUENCE_NUMBER_MAP:

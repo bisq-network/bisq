@@ -24,8 +24,6 @@ import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkPayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -102,21 +100,21 @@ public final class RawTx extends BaseTx implements NetworkPayload {
     }
 
     @Override
-    public PB.BaseTx toProtoMessage() {
-        final PB.RawTx.Builder builder = PB.RawTx.newBuilder()
+    public protobuf.BaseTx toProtoMessage() {
+        final protobuf.RawTx.Builder builder = protobuf.RawTx.newBuilder()
                 .addAllRawTxOutputs(rawTxOutputs.stream()
                         .map(RawTxOutput::toProtoMessage)
                         .collect(Collectors.toList()));
         return getBaseTxBuilder().setRawTx(builder).build();
     }
 
-    public static RawTx fromProto(PB.BaseTx protoBaseTx) {
+    public static RawTx fromProto(protobuf.BaseTx protoBaseTx) {
         ImmutableList<TxInput> txInputs = protoBaseTx.getTxInputsList().isEmpty() ?
                 ImmutableList.copyOf(new ArrayList<>()) :
                 ImmutableList.copyOf(protoBaseTx.getTxInputsList().stream()
                         .map(TxInput::fromProto)
                         .collect(Collectors.toList()));
-        PB.RawTx protoRawTx = protoBaseTx.getRawTx();
+        protobuf.RawTx protoRawTx = protoBaseTx.getRawTx();
         ImmutableList<RawTxOutput> outputs = protoRawTx.getRawTxOutputsList().isEmpty() ?
                 ImmutableList.copyOf(new ArrayList<>()) :
                 ImmutableList.copyOf(protoRawTx.getRawTxOutputsList().stream()

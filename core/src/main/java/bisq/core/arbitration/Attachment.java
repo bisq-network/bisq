@@ -19,8 +19,6 @@ package bisq.core.arbitration;
 
 import bisq.common.proto.network.NetworkPayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.Value;
@@ -36,14 +34,14 @@ public final class Attachment implements NetworkPayload {
     }
 
     @Override
-    public PB.Attachment toProtoMessage() {
-        return PB.Attachment.newBuilder()
+    public protobuf.Attachment toProtoMessage() {
+        return protobuf.Attachment.newBuilder()
                 .setFileName(fileName)
                 .setBytes(ByteString.copyFrom(bytes))
                 .build();
     }
 
-    public static Attachment fromProto(PB.Attachment proto) {
+    public static Attachment fromProto(protobuf.Attachment proto) {
         return new Attachment(proto.getFileName(), proto.getBytes().toByteArray());
     }
 }

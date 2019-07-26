@@ -23,8 +23,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.HashMap;
@@ -62,16 +60,16 @@ public class PersistableNetworkPayloadList implements PersistableEnvelope {
 
     public Message toProtoMessage() {
         // Protobuffer maps don't support bytes as key so we use a hex string
-        Set<PB.PersistableNetworkPayload> values = map.values().stream()
+        Set<protobuf.PersistableNetworkPayload> values = map.values().stream()
                 .map(PersistableNetworkPayload::toProtoMessage)
                 .collect(Collectors.toSet());
-        return PB.PersistableEnvelope.newBuilder()
-                .setPersistableNetworkPayloadList(PB.PersistableNetworkPayloadList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setPersistableNetworkPayloadList(protobuf.PersistableNetworkPayloadList.newBuilder()
                         .addAllItems(values))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.PersistableNetworkPayloadList proto,
+    public static PersistableEnvelope fromProto(protobuf.PersistableNetworkPayloadList proto,
                                                 PersistenceProtoResolver resolver) {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         proto.getItemsList()

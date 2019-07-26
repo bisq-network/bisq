@@ -21,8 +21,6 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -110,8 +108,8 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
 
     @Override
     public Message toProtoMessage() {
-        PB.CashDepositAccountPayload.Builder builder =
-                PB.CashDepositAccountPayload.newBuilder()
+        protobuf.CashDepositAccountPayload.Builder builder =
+                protobuf.CashDepositAccountPayload.newBuilder()
                         .setHolderName(holderName);
         Optional.ofNullable(holderEmail).ifPresent(builder::setHolderEmail);
         Optional.ofNullable(bankName).ifPresent(builder::setBankName);
@@ -123,7 +121,7 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
         Optional.ofNullable(bankId).ifPresent(builder::setBankId);
         Optional.ofNullable(nationalAccountId).ifPresent(builder::setNationalAccountId);
 
-        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
+        final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setCashDepositAccountPayload(builder);
         return getPaymentAccountPayloadBuilder()
@@ -131,9 +129,9 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.CashDepositAccountPayload cashDepositAccountPayload = countryBasedPaymentAccountPayload.getCashDepositAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.CashDepositAccountPayload cashDepositAccountPayload = countryBasedPaymentAccountPayload.getCashDepositAccountPayload();
         return new CashDepositAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),

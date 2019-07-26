@@ -38,8 +38,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
@@ -306,7 +304,7 @@ public class FilterManager {
 
     // We dont use full data from Filter as we are only interested in the filter data not the sig and keys
     private String getHexFromData(Filter filter) {
-        PB.Filter.Builder builder = PB.Filter.newBuilder()
+        protobuf.Filter.Builder builder = protobuf.Filter.newBuilder()
                 .addAllBannedOfferIds(filter.getBannedOfferIds())
                 .addAllBannedNodeAddress(filter.getBannedNodeAddress())
                 .addAllBannedPaymentAccounts(filter.getBannedPaymentAccounts().stream()

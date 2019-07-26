@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Optional;
@@ -77,8 +75,8 @@ public abstract class BaseTxOutput implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected PB.BaseTxOutput.Builder getRawTxOutputBuilder() {
-        final PB.BaseTxOutput.Builder builder = PB.BaseTxOutput.newBuilder()
+    protected protobuf.BaseTxOutput.Builder getRawTxOutputBuilder() {
+        final protobuf.BaseTxOutput.Builder builder = protobuf.BaseTxOutput.newBuilder()
                 .setIndex(index)
                 .setValue(value)
                 .setTxId(txId)

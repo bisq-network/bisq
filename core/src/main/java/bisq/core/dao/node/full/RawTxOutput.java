@@ -23,8 +23,6 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import bisq.common.proto.network.NetworkPayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -73,11 +71,11 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.BaseTxOutput toProtoMessage() {
-        return getRawTxOutputBuilder().setRawTxOutput(PB.RawTxOutput.newBuilder()).build();
+    public protobuf.BaseTxOutput toProtoMessage() {
+        return getRawTxOutputBuilder().setRawTxOutput(protobuf.RawTxOutput.newBuilder()).build();
     }
 
-    public static RawTxOutput fromProto(PB.BaseTxOutput proto) {
+    public static RawTxOutput fromProto(protobuf.BaseTxOutput proto) {
         return new RawTxOutput(proto.getIndex(),
                 proto.getValue(),
                 proto.getTxId(),

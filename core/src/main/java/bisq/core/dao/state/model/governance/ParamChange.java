@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Value;
 
 import javax.annotation.concurrent.Immutable;
@@ -50,15 +48,15 @@ public class ParamChange implements PersistablePayload, ImmutableDaoStateModel {
 
 
     @Override
-    public PB.ParamChange toProtoMessage() {
-        return PB.ParamChange.newBuilder()
+    public protobuf.ParamChange toProtoMessage() {
+        return protobuf.ParamChange.newBuilder()
                 .setParamName(paramName)
                 .setParamValue(value)
                 .setActivationHeight(activationHeight)
                 .build();
     }
 
-    public static ParamChange fromProto(PB.ParamChange proto) {
+    public static ParamChange fromProto(protobuf.ParamChange proto) {
         return new ParamChange(proto.getParamName(),
                 proto.getParamValue(),
                 proto.getActivationHeight());

@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -69,12 +67,12 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setRevolutAccountPayload(PB.RevolutAccountPayload.newBuilder()
+                .setRevolutAccountPayload(protobuf.RevolutAccountPayload.newBuilder()
                         .setAccountId(accountId))
                 .build();
     }
 
-    public static RevolutAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static RevolutAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new RevolutAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getRevolutAccountPayload().getAccountId(),

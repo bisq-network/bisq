@@ -21,8 +21,6 @@ import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.bitcoinj.core.Transaction;
@@ -73,7 +71,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         this.list = list;
     }
 
-    public static AddressEntryList fromProto(PB.AddressEntryList proto) {
+    public static AddressEntryList fromProto(protobuf.AddressEntryList proto) {
         return new AddressEntryList(new ArrayList<>(proto.getAddressEntryList().stream().map(AddressEntry::fromProto).collect(Collectors.toList())));
     }
 
@@ -81,12 +79,12 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
     public Message toProtoMessage() {
         // We clone list as we got ConcurrentModificationExceptions
         List<AddressEntry> clone = new ArrayList<>(list);
-        List<PB.AddressEntry> addressEntries = clone.stream()
+        List<protobuf.AddressEntry> addressEntries = clone.stream()
                 .map(AddressEntry::toProtoMessage)
                 .collect(Collectors.toList());
 
-        return PB.PersistableEnvelope.newBuilder()
-                .setAddressEntryList(PB.AddressEntryList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setAddressEntryList(protobuf.AddressEntryList.newBuilder()
                         .addAllAddressEntry(addressEntries))
                 .build();
     }

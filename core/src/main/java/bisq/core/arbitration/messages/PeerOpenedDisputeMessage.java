@@ -24,8 +24,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -59,16 +57,16 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPeerOpenedDisputeMessage(PB.PeerOpenedDisputeMessage.newBuilder()
+                .setPeerOpenedDisputeMessage(protobuf.PeerOpenedDisputeMessage.newBuilder()
                         .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
 
-    public static PeerOpenedDisputeMessage fromProto(PB.PeerOpenedDisputeMessage proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static PeerOpenedDisputeMessage fromProto(protobuf.PeerOpenedDisputeMessage proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         return new PeerOpenedDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),

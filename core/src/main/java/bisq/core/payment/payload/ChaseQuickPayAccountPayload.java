@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -74,13 +72,13 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setChaseQuickPayAccountPayload(PB.ChaseQuickPayAccountPayload.newBuilder()
+                .setChaseQuickPayAccountPayload(protobuf.ChaseQuickPayAccountPayload.newBuilder()
                         .setEmail(email)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static ChaseQuickPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static ChaseQuickPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new ChaseQuickPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getChaseQuickPayAccountPayload().getEmail(),

@@ -23,8 +23,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -60,16 +58,16 @@ public final class DisputeResultMessage extends DisputeMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDisputeResultMessage(PB.DisputeResultMessage.newBuilder()
+                .setDisputeResultMessage(protobuf.DisputeResultMessage.newBuilder()
                         .setDisputeResult(disputeResult.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setUid(uid))
                 .build();
     }
 
-    public static DisputeResultMessage fromProto(PB.DisputeResultMessage proto, int messageVersion) {
+    public static DisputeResultMessage fromProto(protobuf.DisputeResultMessage proto, int messageVersion) {
         checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
         return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

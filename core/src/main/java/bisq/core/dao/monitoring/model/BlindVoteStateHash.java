@@ -18,8 +18,6 @@
 package bisq.core.dao.monitoring.model;
 
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
@@ -41,15 +39,15 @@ public final class BlindVoteStateHash extends StateHash {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.BlindVoteStateHash toProtoMessage() {
-        return PB.BlindVoteStateHash.newBuilder()
+    public protobuf.BlindVoteStateHash toProtoMessage() {
+        return protobuf.BlindVoteStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
                 .setPrevHash(ByteString.copyFrom(prevHash))
                 .setNumBlindVotes(numBlindVotes).build();
     }
 
-    public static BlindVoteStateHash fromProto(PB.BlindVoteStateHash proto) {
+    public static BlindVoteStateHash fromProto(protobuf.BlindVoteStateHash proto) {
         return new BlindVoteStateHash(proto.getHeight(),
                 proto.getHash().toByteArray(),
                 proto.getPrevHash().toByteArray(),

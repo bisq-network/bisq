@@ -24,8 +24,6 @@ import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -46,14 +44,14 @@ public final class NewProposalStateHashMessage extends NewStateHashMessage<Propo
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setNewProposalStateHashMessage(PB.NewProposalStateHashMessage.newBuilder()
+                .setNewProposalStateHashMessage(protobuf.NewProposalStateHashMessage.newBuilder()
                         .setStateHash(stateHash.toProtoMessage()))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NewProposalStateHashMessage proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.NewProposalStateHashMessage proto, int messageVersion) {
         return new NewProposalStateHashMessage(ProposalStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 

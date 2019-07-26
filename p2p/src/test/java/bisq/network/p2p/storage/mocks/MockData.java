@@ -20,8 +20,6 @@ package bisq.network.p2p.storage.mocks;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.security.PublicKey;
@@ -84,7 +82,7 @@ public class MockData implements ProtectedStoragePayload, ExpirablePayload {
     }
 
     @Override
-    public PB.ProtectedMailboxStorageEntry toProtoMessage() {
+    public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
         throw new NotImplementedException("toProtoMessage not impl.");
     }
 }

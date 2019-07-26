@@ -24,8 +24,6 @@ import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -46,14 +44,14 @@ public final class NewDaoStateHashMessage extends NewStateHashMessage<DaoStateHa
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setNewDaoStateHashMessage(PB.NewDaoStateHashMessage.newBuilder()
+                .setNewDaoStateHashMessage(protobuf.NewDaoStateHashMessage.newBuilder()
                         .setStateHash(stateHash.toProtoMessage()))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NewDaoStateHashMessage proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.NewDaoStateHashMessage proto, int messageVersion) {
         return new NewDaoStateHashMessage(DaoStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 

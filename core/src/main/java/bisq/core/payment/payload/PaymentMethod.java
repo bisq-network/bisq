@@ -22,8 +22,6 @@ import bisq.core.payment.TradeLimits;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 
 import java.util.ArrayList;
@@ -255,15 +253,15 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PaymentMethod toProtoMessage() {
-        return PB.PaymentMethod.newBuilder()
+    public protobuf.PaymentMethod toProtoMessage() {
+        return protobuf.PaymentMethod.newBuilder()
                 .setId(id)
                 .setMaxTradePeriod(maxTradePeriod)
                 .setMaxTradeLimit(maxTradeLimit)
                 .build();
     }
 
-    public static PaymentMethod fromProto(PB.PaymentMethod proto) {
+    public static PaymentMethod fromProto(protobuf.PaymentMethod proto) {
         return new PaymentMethod(proto.getId(),
                 proto.getMaxTradePeriod(),
                 Coin.valueOf(proto.getMaxTradeLimit()));

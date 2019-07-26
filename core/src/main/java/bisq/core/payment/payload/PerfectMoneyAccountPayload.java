@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -71,12 +69,12 @@ public final class PerfectMoneyAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setPerfectMoneyAccountPayload(PB.PerfectMoneyAccountPayload.newBuilder()
+                .setPerfectMoneyAccountPayload(protobuf.PerfectMoneyAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static PerfectMoneyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static PerfectMoneyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PerfectMoneyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getPerfectMoneyAccountPayload().getAccountNr(),
