@@ -52,6 +52,7 @@ import java.io.IOException;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -119,9 +120,16 @@ public class TorNetworkNode extends NetworkNode {
 
             // find hidden service candidates
             File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles();
+
+            // start
+            CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
             for(File current : hiddenServiceDirs)
                 if(current.isDirectory())
-                    createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort);
+                    createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
+
+            // only report HiddenServicePublished once all are published
+            gate.await(90, TimeUnit.SECONDS);
+            UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));
 
             return null;
         });
@@ -297,7 +305,7 @@ public class TorNetworkNode extends NetworkNode {
         }
     }
 
-    private void createHiddenService(String hiddenServiceDirectory, int localPort, int servicePort) {
+    private void createHiddenService(String hiddenServiceDirectory, int localPort, int servicePort, CountDownLatch onHSReady) {
             try {
                 // start hidden service
                 long ts2 = new Date().getTime();
@@ -314,7 +322,6 @@ public class TorNetworkNode extends NetworkNode {
                             public void run() {
                                 try {
                                     startServer(socket);
-                                    UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));
                                 } catch (final Exception e1) {
                                     log.error(e1.toString());
                                     e1.printStackTrace();
@@ -327,6 +334,7 @@ public class TorNetworkNode extends NetworkNode {
                     }
                     return null;
                 });
+                hiddenServiceSocket.addReadyListener(hiddenServiceSocket1 -> { onHSReady.countDown(); return null;} );
                 log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
             } catch (Throwable ignore) {
             }
