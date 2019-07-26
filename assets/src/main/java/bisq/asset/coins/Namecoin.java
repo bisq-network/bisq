@@ -65,7 +65,7 @@ public class Namecoin extends Coin {
         @Override
         public AddressValidationResult validate(String address) {
             if (address == null || address.length() != 34 || !address.startsWith("N") || !address.startsWith("M"))
-                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.NMC"));
+                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.NMC"));
 
             String addressAsBtc = address.substring(1, address.length());
 

@@ -67,7 +67,7 @@ public class Zcoin extends Coin {
         @Override
         public AddressValidationResult validate(String address) {
             if (address == null || address.length() != 34 || !address.startsWith("a")) {
-                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.XZC"));
+                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.XZC"));
             }
 
             String addressAsBtc = address.substring(1, address.length());

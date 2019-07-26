@@ -24,6 +24,6 @@ import bisq.asset.I18n;
 public class EtherClassic extends Coin {
 
     public EtherClassic() {
-        super("Ether Classic", "ETC", new EtherAddressValidator(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.ETC")));
+        super("Ether Classic", "ETC", new EtherAddressValidator(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.ETC")));
     }
 }

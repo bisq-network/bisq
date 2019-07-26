@@ -68,7 +68,7 @@ public class Decred extends Coin {
 					|| !address.startsWith("Ds") || !address.startsWith("De") || !address.startsWith("DS")
 					|| !address.startsWith("Dc") || !address.startsWith("Pm")) {
 				return AddressValidationResult
-						.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.DCR"));
+						.invalidAddress(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.DCR"));
 			}
 
 			String addressAsBtc = address.substring(1, address.length());

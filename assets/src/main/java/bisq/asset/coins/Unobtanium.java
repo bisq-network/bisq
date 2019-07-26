@@ -65,7 +65,7 @@ public class Unobtanium extends Coin {
         @Override
         public AddressValidationResult validate(String address) {
             if (address == null || address.length() != 34 || !address.startsWith("u")) {
-                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getProperty("account.altcoin.popup.validation.UNO"));
+                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.UNO"));
             }
 
             String addressAsBtc = address.substring(1, address.length());
