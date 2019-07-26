@@ -113,10 +113,10 @@ public class TorNetworkNode extends NetworkNode {
             createTor(torMode);
 
             // see if we have to migrate the old file structure
-            if(torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.equals("hostname")).length > 0) {
+            if (torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.equals("hostname")).length > 0) {
                 File newHiddenServiceDirectory = new File(torMode.getHiddenServiceBaseDirectory(), "0");
                 newHiddenServiceDirectory.mkdir();
-                for(File current : torMode.getHiddenServiceBaseDirectory().listFiles())
+                for (File current : torMode.getHiddenServiceBaseDirectory().listFiles())
                     current.renameTo(new File(newHiddenServiceDirectory, current.getName()));
             }
 
@@ -129,8 +129,8 @@ public class TorNetworkNode extends NetworkNode {
             // start
             CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
             NodeAddress nodeAddress = null;
-            for(File current : hiddenServiceDirs)
-                if(current.isDirectory())
+            for (File current : hiddenServiceDirs)
+                if (current.isDirectory())
                     nodeAddress = createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
 
             // use newest HS as for NodeAddress
@@ -315,35 +315,37 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     private NodeAddress createHiddenService(String hiddenServiceDirectory, int localPort, int servicePort, CountDownLatch onHSReady) {
-                // start hidden service
-                long ts2 = new Date().getTime();
-                hiddenServiceSocket = new HiddenServiceSocket(localPort, hiddenServiceDirectory, servicePort);
-                NodeAddress nodeAddress = new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort());
-                hiddenServiceSocket.addReadyListener(socket -> {
-                    try {
-                        log.info("\n################################################################\n" +
-                                        "Tor hidden service published after {} ms. Socked={}\n" +
-                                        "################################################################",
-                                (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    startServer(socket);
-                                } catch (final Exception e1) {
-                                    log.error(e1.toString());
-                                    e1.printStackTrace();
-                                }
-                            }
-                        }.start();
-                    } catch (final Exception e) {
-                        log.error(e.toString());
-                        e.printStackTrace();
+        long ts2 = new Date().getTime();
+        hiddenServiceSocket = new HiddenServiceSocket(localPort, hiddenServiceDirectory, servicePort);
+        NodeAddress nodeAddress = new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort());
+        hiddenServiceSocket.addReadyListener(socket -> {
+            try {
+                log.info("\n################################################################\n" +
+                                "Tor hidden service published after {} ms. Socked={}\n" +
+                                "################################################################",
+                        (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
+                new Thread() {
+                    @Override
+                    public void run() {
+                        try {
+                            startServer(socket);
+                        } catch (final Exception e1) {
+                            log.error(e1.toString());
+                            e1.printStackTrace();
+                        }
                     }
-                    return null;
-                });
-                hiddenServiceSocket.addReadyListener(hiddenServiceSocket1 -> { onHSReady.countDown(); return null;} );
-                log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
-                return nodeAddress;
+                }.start();
+            } catch (final Exception e) {
+                log.error(e.toString());
+                e.printStackTrace();
+            }
+            return null;
+        });
+        hiddenServiceSocket.addReadyListener(hiddenServiceSocket1 -> {
+            onHSReady.countDown();
+            return null;
+        });
+        log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
+        return nodeAddress;
     }
 }
