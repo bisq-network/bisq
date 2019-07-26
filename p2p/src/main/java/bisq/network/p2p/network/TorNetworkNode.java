@@ -47,6 +47,7 @@ import java.security.SecureRandom;
 
 import java.net.Socket;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.Base64;
@@ -101,8 +102,6 @@ public class TorNetworkNode extends NetworkNode {
 
     @Override
     public void start(@Nullable SetupListener setupListener) {
-        torMode.doRollingBackup();
-
         if (setupListener != null)
             addSetupListener(setupListener);
 
@@ -110,7 +109,19 @@ public class TorNetworkNode extends NetworkNode {
             // Create the tor node (takes about 6 sec.)
             createTor(torMode);
 
-            createHiddenService(Utils.findFreeSystemPort(), servicePort);
+            // see if we have to migrate the old file structure
+            if(torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.equals("hostname")).length > 0) {
+                File newHiddenServiceDirectory = new File(torMode.getHiddenServiceBaseDirectory(), "0");
+                newHiddenServiceDirectory.mkdir();
+                for(File current : torMode.getHiddenServiceBaseDirectory().listFiles())
+                    current.renameTo(new File(newHiddenServiceDirectory, current.getName()));
+            }
+
+            // find hidden service candidates
+            File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles();
+            for(File current : hiddenServiceDirs)
+                if(current.isDirectory())
+                    createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort);
 
             return null;
         });
@@ -286,11 +297,11 @@ public class TorNetworkNode extends NetworkNode {
         }
     }
 
-    private void createHiddenService(int localPort, int servicePort) {
+    private void createHiddenService(String hiddenServiceDirectory, int localPort, int servicePort) {
             try {
                 // start hidden service
                 long ts2 = new Date().getTime();
-                hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
+                hiddenServiceSocket = new HiddenServiceSocket(localPort, hiddenServiceDirectory, servicePort);
                 nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
@@ -319,6 +330,5 @@ public class TorNetworkNode extends NetworkNode {
                 log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
             } catch (Throwable ignore) {
             }
-
     }
 }

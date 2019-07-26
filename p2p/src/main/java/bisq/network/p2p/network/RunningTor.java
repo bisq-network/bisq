@@ -79,8 +79,8 @@ public class RunningTor extends TorMode {
     }
 
     @Override
-    public String getHiddenServiceDirectory() {
-        return new File(torDir, HIDDEN_SERVICE_DIRECTORY).getAbsolutePath();
+    public File getHiddenServiceBaseDirectory() {
+        return new File(torDir, HIDDEN_SERVICE_DIRECTORY);
     }
 
 }

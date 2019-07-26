@@ -43,8 +43,8 @@ public class AvailableTor extends TorMode {
     }
 
     @Override
-    public String getHiddenServiceDirectory() {
-        return hiddenServiceDirectory;
+    public File getHiddenServiceBaseDirectory() {
+        return new File(hiddenServiceDirectory);
     }
 
 }

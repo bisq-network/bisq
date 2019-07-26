@@ -112,8 +112,8 @@ public class NewTor extends TorMode {
     }
 
     @Override
-    public String getHiddenServiceDirectory() {
-        return "";
+    public File getHiddenServiceBaseDirectory() {
+        return new File(torDir, "hiddenservice");
     }
 
 }

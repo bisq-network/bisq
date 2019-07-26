@@ -49,7 +49,7 @@ public abstract class TorMode {
      *                         sits in. Note that, due to the inner workings of the
      *                         <code>Netlayer</code> dependency, it does not
      *                         necessarily equal
-     *                         {@link TorMode#getHiddenServiceDirectory()}.
+     *                         {@link TorMode#getHiddenServiceBaseDirectory()}.
      */
     public TorMode(File torDir) {
         this.torDir = torDir;
@@ -77,7 +77,7 @@ public abstract class TorMode {
      *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
      *         mode
      */
-    public abstract String getHiddenServiceDirectory();
+    public abstract File getHiddenServiceBaseDirectory();
 
     /**
      * Do a rolling backup of the "private_key" file.
