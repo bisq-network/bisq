@@ -27,6 +27,7 @@ import java.net.Socket;
 
 import java.io.IOException;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -93,5 +94,10 @@ public class LocalhostNetworkNode extends NetworkNode {
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         return new Socket(peerNodeAddress.getHostName(), peerNodeAddress.getPort());
+    }
+
+    @Override
+    public void clearHiddenServices(Set<NodeAddress> nodeAddressList) {
+
     }
 }

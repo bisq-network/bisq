@@ -88,7 +88,9 @@ import org.spongycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -265,6 +267,7 @@ public class TradeManager implements PersistedDataHost {
     }
 
     public void shutDown() {
+        reportActiveHiddenServices();
     }
 
     private void initPendingTrades() {
@@ -584,6 +587,21 @@ public class TradeManager implements PersistedDataHost {
 
     private void removeTrade(Trade trade) {
         tradableList.remove(trade);
+
+        reportActiveHiddenServices();
+    }
+
+    /**
+     * Collect all node addresses (hidden services) we still need for active offers/trades
+     * and report them to the P2P Service. The P2PService will report to the NetworkNode
+     * for cleaning up unnecessary hidden services.
+     */
+    private void reportActiveHiddenServices() {
+        Set<NodeAddress> result = new HashSet<>();
+        result.addAll(openOfferManager.getObservableList().stream().map(openOffer -> openOffer.getOffer().getOfferPayload().getOwnerNodeAddress()).collect(Collectors.toSet()));
+        result.addAll(getTradableList().stream().map(Trade::getContract).filter(Objects::nonNull).map(contract -> contract.getMyNodeAddress(keyRing.getPubKeyRing())).collect(Collectors.toSet()));
+
+        p2PService.reportRequiredHiddenServices(result);
     }
 
 

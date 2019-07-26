@@ -56,7 +56,10 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -87,6 +90,8 @@ public class TorNetworkNode extends NetworkNode {
     private boolean streamIsolation;
 
     private Socks5Proxy socksProxy;
+
+    private Map<NodeAddress, File> nodeAddressToHSDirectory = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -123,6 +128,25 @@ public class TorNetworkNode extends NetworkNode {
         newDir.mkdirs();
     }
 
+    /**
+     * only marks the folders of the hidden services that are not to be retained for deletion.
+     * Once the application shuts down, the folders are deleted so that on app restart,
+     * the unnecessary hidden services are gone.
+     */
+    @Override
+    public void clearHiddenServices(Set<NodeAddress> retain) {
+        // first and foremost, we always retain the newest HS.
+        retain.add(nodeAddressProperty.getValue());
+
+        // then, we clean the hidden service directory accordingly
+        // so they are gone after an app restart
+        nodeAddressToHSDirectory.entrySet().stream().filter(nodeAddressFileEntry -> !retain.contains(nodeAddressFileEntry.getKey()))
+                .forEach(nodeAddressFileEntry -> {
+                    nodeAddressFileEntry.getValue().deleteOnExit();
+                    Arrays.stream(nodeAddressFileEntry.getValue().listFiles()).forEach(file -> file.deleteOnExit());
+                });
+    }
+
     @Override
     public void start(@Nullable SetupListener setupListener) {
         if (setupListener != null)
@@ -152,10 +176,13 @@ public class TorNetworkNode extends NetworkNode {
 
             // start
             CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
+            nodeAddressToHSDirectory.clear();
             NodeAddress nodeAddress = null;
             for (File current : hiddenServiceDirs)
-                if (current.isDirectory())
+                if (current.isDirectory()) {
                     nodeAddress = createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
+                    nodeAddressToHSDirectory.put(nodeAddress, current);
+                }
 
             // use newest HS as for NodeAddress
             nodeAddressProperty.set(nodeAddress);

@@ -916,4 +916,26 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
             return false;
         }
     }
+
+    /**
+     * Reporting hidden services that are still needed has the following background:
+     * <p><ul>
+     * <li> when we only report a hidden service if it is no longer used, we have that
+     *   one chance of shutting it down. If for whatever reason we fail on doing so, we
+     *   are stuck with this particular HS forever (without additional code)
+     * <li> we do not need to find our exact node address by complex queries to the trade
+     *   and offers, we just add all node address to the list. If we report
+     *   a HS that is not ours, well, then we cannot retain it as we do not have it
+     *   and that is it. No harm done. On the other hand, if we select the wrong HS as
+     *   being ours, we probably remove a HS that is still in use.
+     * <li> the code is much more compact and therefore, less error prone
+     * <li> by reporting the stuff we need to keep, our code is more robust in terms of
+     *   missing one
+     * </ul></p>
+     *
+     * @param nodeAddressList the list of node addresses we need to retain
+     */
+    public void reportRequiredHiddenServices(Set<NodeAddress> nodeAddressList) {
+        networkNode.clearHiddenServices(nodeAddressList);
+    }
 }

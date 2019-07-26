@@ -233,6 +233,14 @@ public abstract class NetworkNode implements MessageListener {
 
     public abstract void renewHiddenService();
 
+    /**
+     * Gets rid of all hidden services except those given in the retain
+     * parameter.
+     *
+     * @param retain contains the hidden services that are still in use
+     */
+    public abstract void clearHiddenServices(Set<NodeAddress> retain);
+
     @Nullable
     private InboundConnection getInboundConnection(@NotNull NodeAddress peersNodeAddress) {
         Optional<InboundConnection> inboundConnectionOptional = lookupInBoundConnection(peersNodeAddress);
