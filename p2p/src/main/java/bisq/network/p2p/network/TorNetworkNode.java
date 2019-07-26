@@ -75,7 +75,6 @@ public class TorNetworkNode extends NetworkNode {
     private int restartCounter;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> allShutDown;
-    private Tor tor;
 
     private TorMode torMode;
 
@@ -107,8 +106,22 @@ public class TorNetworkNode extends NetworkNode {
         if (setupListener != null)
             addSetupListener(setupListener);
 
-        // Create the tor node (takes about 6 sec.)
-        createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort);
+        ListenableFuture<Void> future = executorService.submit(() -> {
+            // Create the tor node (takes about 6 sec.)
+            createTor(torMode);
+
+            createHiddenService(Utils.findFreeSystemPort(), servicePort);
+
+            return null;
+        });
+        Futures.addCallback(future, new FutureCallback<Void>() {
+            public void onSuccess(Void ignore) {
+            }
+
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable));
+            }
+        });
     }
 
     @Override
@@ -131,7 +144,7 @@ public class TorNetworkNode extends NetworkNode {
             }
 
             if (socksProxy == null || streamIsolation) {
-                tor = Tor.getDefault();
+                Tor tor = Tor.getDefault();
 
                 // ask for the connection
                 socksProxy = tor != null ? tor.getProxy(stream) : null;
@@ -185,8 +198,8 @@ public class TorNetworkNode extends NetworkNode {
                 long ts = System.currentTimeMillis();
                 log.debug("Shutdown torNetworkNode");
                 try {
-                    if (tor != null)
-                        tor.shutdown();
+                    if (Tor.getDefault() != null)
+                        Tor.getDefault().shutdown();
                     log.debug("Shutdown torNetworkNode done after " + (System.currentTimeMillis() - ts) + " ms.");
                 } catch (Throwable e) {
                     log.error("Shutdown torNetworkNode failed with exception: " + e.getMessage());
@@ -244,17 +257,41 @@ public class TorNetworkNode extends NetworkNode {
     // create tor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createTorAndHiddenService(int localPort, int servicePort) {
-        ListenableFuture<Void> future = executorService.submit(() -> {
-            try {
-                // get tor
-                Tor.setDefault(torMode.getTor());
+    /**
+     * Attempt to create tor. Handles all exceptions and tries to restart Tor if necessary.
+     *
+     * @param torMode
+     */
+    private void createTor(TorMode torMode) {
+        try {
+            Tor.setDefault(torMode.getTor());
+            UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
+        } catch (TorCtlException e) {
+            String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
+            log.error("Tor node creation failed: {}", msg);
+            if (e.getCause() instanceof IOException) {
+                // Since we cannot connect to Tor, we cannot do nothing.
+                // Furthermore, we have no hidden services started yet, so there is no graceful
+                // shutdown needed either
+                UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(msg))));
+            } else {
+                restartTor(e.getMessage());
+            }
+        } catch (IOException e) {
+            log.error("Could not connect to running Tor: {}", e.getMessage());
+            // Since we cannot connect to Tor, we cannot do nothing.
+            // Furthermore, we have no hidden services started yet, so there is no graceful
+            // shutdown needed either
+            UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
+        }
+    }
 
+    private void createHiddenService(int localPort, int servicePort) {
+            try {
                 // start hidden service
                 long ts2 = new Date().getTime();
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
                 nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
-                UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
                 hiddenServiceSocket.addReadyListener(socket -> {
                     try {
                         log.info("\n################################################################\n" +
@@ -265,7 +302,6 @@ public class TorNetworkNode extends NetworkNode {
                             @Override
                             public void run() {
                                 try {
-                                    nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                                     startServer(socket);
                                     UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));
                                 } catch (final Exception e1) {
@@ -281,35 +317,8 @@ public class TorNetworkNode extends NetworkNode {
                     return null;
                 });
                 log.info("It will take some time for the HS to be reachable (~40 seconds). You will be notified about this");
-            } catch (TorCtlException e) {
-                String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
-                log.error("Tor node creation failed: {}", msg);
-                if (e.getCause() instanceof IOException) {
-                    // Since we cannot connect to Tor, we cannot do nothing.
-                    // Furthermore, we have no hidden services started yet, so there is no graceful
-                    // shutdown needed either
-                    UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(msg))));
-                } else {
-                    restartTor(e.getMessage());
-                }
-            } catch (IOException e) {
-                log.error("Could not connect to running Tor: {}", e.getMessage());
-                // Since we cannot connect to Tor, we cannot do nothing.
-                // Furthermore, we have no hidden services started yet, so there is no graceful
-                // shutdown needed either
-                UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
             } catch (Throwable ignore) {
             }
 
-            return null;
-        });
-        Futures.addCallback(future, new FutureCallback<Void>() {
-            public void onSuccess(Void ignore) {
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable));
-            }
-        });
     }
 }
