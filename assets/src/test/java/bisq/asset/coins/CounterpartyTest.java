@@ -22,21 +22,20 @@ import bisq.asset.AbstractAssetTest;
 public class CounterpartyTest extends AbstractAssetTest {
 
     public CounterpartyTest() {
-        super(new Counterparty.Mainnet());
+        super(new Counterparty());
     }
 
 	@Override
 	public void testValidAddresses() {
-		// TODO Auto-generated method stub
 		assertValidAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
-		assertValidAddress("111111111112ZkE8UvCp8JCNRhfuBoo");
-		assertValidAddress("1234567891234567891234567891wBd7RE");		
+		assertValidAddress("1KBbojKRf1YnJKp1YK5eEz9TWlS4pFEbwS");
+		assertValidAddress("1AtLN6BMlW0Rwj800LNcBBR2o0k0sYVuIN");		
 	}
 
 	@Override
 	public void testInvalidAddresses() {
-		assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
-		assertValidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
-		assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+		assertInvalidAddress("122FRU9f3fx7Hty641DRK6S3sbf3");
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
 	}
 }

@@ -22,7 +22,7 @@ import bisq.asset.AbstractAssetTest;
 public class ZcoinTest extends AbstractAssetTest {
 
     public ZcoinTest() {
-        super(new Zcoin.Mainnet());
+        super(new Zcoin());
     }
 
 	@Override
@@ -34,8 +34,8 @@ public class ZcoinTest extends AbstractAssetTest {
 
 	@Override
 	public void testInvalidAddresses() {
-		assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
-		assertValidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
-		assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+		assertInvalidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
 	}
 }

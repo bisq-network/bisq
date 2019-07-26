@@ -22,7 +22,7 @@ import bisq.asset.AbstractAssetTest;
 public class DecredTest extends AbstractAssetTest {
 
     public DecredTest() {
-        super(new Decred.Mainnet());
+        super(new Decred());
     }
 
 	@Override
@@ -36,8 +36,8 @@ public class DecredTest extends AbstractAssetTest {
 	@Override
 	public void testInvalidAddresses() {
 		// TODO Auto-generated method stub
-		assertValidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
-		assertValidAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
-		assertValidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");				
+		assertInvalidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
+		assertInvalidAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
+		assertInvalidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");				
 	}
 }

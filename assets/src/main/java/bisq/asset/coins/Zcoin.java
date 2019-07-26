@@ -17,63 +17,22 @@
 
 package bisq.asset.coins;
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
-
-import bisq.asset.AddressValidationResult;
 import bisq.asset.AltCoinAccountDisclaimer;
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.XZC.msg")
 public class Zcoin extends Coin {
 
-    public Zcoin(Network network, NetworkParameters networkParameters) {
-        super("Zcoin", "XZC", new XzcAddressValidator(networkParameters), network);
-    }
-
-    public static class Mainnet extends BSQ {
-
-        public Mainnet() {
-            super(Network.MAINNET, MainNetParams.get());
-        }
-    }
-
-
-    public static class Testnet extends BSQ {
-
-        public Testnet() {
-            super(Network.TESTNET, TestNet3Params.get());
-        }
-    }
-
-
-    public static class Regtest extends BSQ {
-
-        public Regtest() {
-            super(Network.REGTEST, RegTestParams.get());
-        }
+	public Zcoin() {
+		super("Zcoin", "XZC", new XzcAddressValidator());
     }
     
-    public static class XzcAddressValidator extends Base58BitcoinAddressValidator {
+    public static class XzcAddressValidator extends RegexAddressValidator {
 
-        public XzcAddressValidator(NetworkParameters networkParameters) {
-            super(networkParameters);
-        }
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            if (address == null || address.length() != 34 || !address.startsWith("a")) {
-                return AddressValidationResult.invalidAddress(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.XZC"));
-            }
-
-            String addressAsBtc = address.substring(1, address.length());
-
-            return super.validate(addressAsBtc);
+        public XzcAddressValidator() {
+            super("^a?[a-zA-Z0-9]{33}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.XZC"));
         }
     }
-
 }

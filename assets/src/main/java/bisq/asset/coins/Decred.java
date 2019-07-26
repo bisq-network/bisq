@@ -17,63 +17,20 @@
 
 package bisq.asset.coins;
 
-import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 public class Decred extends Coin {
 
-	public Decred(Network network, NetworkParameters networkParameters) {
-		super("Decred", "DCR", new DcrAddressValidator(networkParameters), network);
-	}
+	public Decred() {
+		super("Decred", "DCR", new DcrAddressValidator());
+    }
+    
+    public static class DcrAddressValidator extends RegexAddressValidator {
 
-    public static class Mainnet extends BSQ {
-
-        public Mainnet() {
-            super(Network.MAINNET, MainNetParams.get());
+        public DcrAddressValidator() {
+            super("^[Dk|Ds|De|DS|Dc|Pm][a-zA-Z0-9]{24,34}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.DCR"));
         }
     }
-
-
-    public static class Testnet extends BSQ {
-
-        public Testnet() {
-            super(Network.TESTNET, TestNet3Params.get());
-        }
-    }
-
-
-    public static class Regtest extends BSQ {
-
-        public Regtest() {
-            super(Network.REGTEST, RegTestParams.get());
-        }
-    }
-
-	public static class DcrAddressValidator extends Base58BitcoinAddressValidator {
-
-		public DcrAddressValidator(NetworkParameters networkParameters) {
-			super(networkParameters);
-		}
-
-		@Override
-		public AddressValidationResult validate(String address) {
-			if (address == null || address.length() < 26 || address.length() > 36 || !address.startsWith("Dk")
-					|| !address.startsWith("Ds") || !address.startsWith("De") || !address.startsWith("DS")
-					|| !address.startsWith("Dc") || !address.startsWith("Pm")) {
-				return AddressValidationResult
-						.invalidAddress(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.DCR"));
-			}
-
-			String addressAsBtc = address.substring(1, address.length());
-
-			return super.validate(addressAsBtc);
-		}
-	}
 }

@@ -23,7 +23,7 @@ import bisq.asset.AbstractAssetTest;
 public class NamecoinTest extends AbstractAssetTest {
 
     public NamecoinTest() {
-        super(new Namecoin.Mainnet());
+        super(new Namecoin());
     }
 
     @Test

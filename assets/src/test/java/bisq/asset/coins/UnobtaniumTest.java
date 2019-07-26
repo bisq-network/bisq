@@ -22,7 +22,7 @@ import bisq.asset.AbstractAssetTest;
 public class UnobtaniumTest extends AbstractAssetTest {
 
     public UnobtaniumTest() {
-        super(new Unobtanium.Mainnet());
+        super(new Unobtanium());
     }
 
 	@Override
@@ -34,8 +34,8 @@ public class UnobtaniumTest extends AbstractAssetTest {
 
 	@Override
 	public void testInvalidAddresses() {
-		assertValidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
-		assertValidAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
-		assertValidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");		
+		assertInvalidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
+		assertInvalidAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
+		assertInvalidAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD");		
 	}
 }
