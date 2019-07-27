@@ -231,6 +231,8 @@ public abstract class NetworkNode implements MessageListener {
         }
     }
 
+    public abstract void renewHiddenService();
+
     @Nullable
     private InboundConnection getInboundConnection(@NotNull NodeAddress peersNodeAddress) {
         Optional<InboundConnection> inboundConnectionOptional = lookupInBoundConnection(peersNodeAddress);

@@ -84,6 +84,11 @@ public class LocalhostNetworkNode extends NetworkNode {
         }, simulateTorDelayHiddenService, TimeUnit.MILLISECONDS);
     }
 
+    @Override
+    public void renewHiddenService() {
+
+    }
+
     // Called from NetworkNode thread
     @Override
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {

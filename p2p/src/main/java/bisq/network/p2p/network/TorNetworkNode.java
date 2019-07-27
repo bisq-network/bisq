@@ -45,6 +45,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 import java.security.SecureRandom;
 
+import java.text.SimpleDateFormat;
+
 import java.net.Socket;
 
 import java.io.File;
@@ -103,6 +105,24 @@ public class TorNetworkNode extends NetworkNode {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * only prepares a fresh hidden service folder. The actual HS is only established and
+     * started on Bisq restart!
+     */
+    @Override
+    public void renewHiddenService() {
+        // find suitable folder name
+        int seed = 0;
+        File newDir = null;
+        do {
+            String newHiddenServiceDirectory = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + seed;
+            newDir = new File(torMode.getHiddenServiceBaseDirectory(), newHiddenServiceDirectory);
+            seed += 1;
+        } while (newDir.exists());
+
+        newDir.mkdirs();
+    }
+
     @Override
     public void start(@Nullable SetupListener setupListener) {
         if (setupListener != null)
@@ -111,6 +131,10 @@ public class TorNetworkNode extends NetworkNode {
         ListenableFuture<Void> future = executorService.submit(() -> {
             // Create the tor node (takes about 6 sec.)
             createTor(torMode);
+
+            // check if we start our client for the first time
+            if (!torMode.getHiddenServiceBaseDirectory().exists())
+                renewHiddenService();
 
             // see if we have to migrate the old file structure
             if (torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.equals("hostname")).length > 0) {

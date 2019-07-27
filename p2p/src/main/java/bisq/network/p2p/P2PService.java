@@ -204,6 +204,10 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
     }
 
+    public void renewHiddenService() {
+        networkNode.renewHiddenService();
+    }
+
     public void shutDown(Runnable shutDownCompleteHandler) {
         if (!shutDownInProgress) {
             shutDownInProgress = true;

@@ -291,6 +291,11 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
         reSyncSPVChainButton.setOnAction(event -> GUIUtil.reSyncSPVChain(preferences));
 
+        renewIdButton.setOnAction(event -> {
+            p2PService.renewHiddenService();
+            showShutDownPopup();
+        });
+
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTable());
 
@@ -332,6 +337,8 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         filterManager.filterProperty().removeListener(filterPropertyListener);
 
         useTorForBtcJCheckBox.setOnAction(null);
+
+        renewIdButton.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();
