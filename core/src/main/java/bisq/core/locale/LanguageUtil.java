@@ -39,6 +39,7 @@ public class LanguageUtil {
             "fr", // French
             "vi", // Vietnamese
             "th", // Thai
+            "ja", // Japanese
             "fa" // Persian
             /*
             // not translated yet
@@ -47,7 +48,6 @@ public class LanguageUtil {
             "ro", // Romanian
             "tr" // Turkish
             "it", // Italian
-            "ja", // Japanese
             "iw", // Hebrew
             "hi", // Hindi
             "ko", // Korean
