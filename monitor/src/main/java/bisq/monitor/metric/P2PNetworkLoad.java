@@ -93,7 +93,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
      * History implementation using a {@link LinkedHashMap} and its
      * {@link LinkedHashMap#removeEldestEntry(Map.Entry)} option.
      */
-    private class FixedSizeHistoryTracker extends LinkedHashMap {
+    private class FixedSizeHistoryTracker<K, V> extends LinkedHashMap<K, V> {
         final int historySize;
 
         FixedSizeHistoryTracker(int historySize) {
@@ -197,7 +197,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
     public void configure(Properties properties) {
         super.configure(properties);
 
-        history = Collections.synchronizedMap(new FixedSizeHistoryTracker(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
+        history = Collections.synchronizedMap(new FixedSizeHistoryTracker<>(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
 
         Capabilities.app.addAll(Capability.DAO_FULL_NODE);
     }
