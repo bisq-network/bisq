@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.proto.network.NetworkPayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -75,16 +73,16 @@ public final class RawBlock extends BaseBlock implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.BaseBlock toProtoMessage() {
-        PB.RawBlock.Builder builder = PB.RawBlock.newBuilder()
+    public protobuf.BaseBlock toProtoMessage() {
+        protobuf.RawBlock.Builder builder = protobuf.RawBlock.newBuilder()
                 .addAllRawTxs(rawTxs.stream()
                         .map(RawTx::toProtoMessage)
                         .collect(Collectors.toList()));
         return getBaseBlockBuilder().setRawBlock(builder).build();
     }
 
-    public static RawBlock fromProto(PB.BaseBlock proto) {
-        PB.RawBlock rawBlockProto = proto.getRawBlock();
+    public static RawBlock fromProto(protobuf.BaseBlock proto) {
+        protobuf.RawBlock rawBlockProto = proto.getRawBlock();
         ImmutableList<RawTx> rawTxs = rawBlockProto.getRawTxsList().isEmpty() ?
                 ImmutableList.copyOf(new ArrayList<>()) :
                 ImmutableList.copyOf(rawBlockProto.getRawTxsList().stream()

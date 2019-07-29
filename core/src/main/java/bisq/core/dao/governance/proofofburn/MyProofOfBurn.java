@@ -22,8 +22,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.base.Charsets;
 
 import java.util.Objects;
@@ -56,14 +54,14 @@ public final class MyProofOfBurn implements PersistablePayload, NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.MyProofOfBurn toProtoMessage() {
-        return PB.MyProofOfBurn.newBuilder()
+    public protobuf.MyProofOfBurn toProtoMessage() {
+        return protobuf.MyProofOfBurn.newBuilder()
                 .setTxId(txId)
                 .setPreImage(preImage)
                 .build();
     }
 
-    public static MyProofOfBurn fromProto(PB.MyProofOfBurn proto) {
+    public static MyProofOfBurn fromProto(protobuf.MyProofOfBurn proto) {
         return new MyProofOfBurn(proto.getTxId(), proto.getPreImage());
     }
 

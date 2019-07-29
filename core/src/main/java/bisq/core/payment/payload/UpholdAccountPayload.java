@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -69,12 +67,12 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setUpholdAccountPayload(PB.UpholdAccountPayload.newBuilder()
+                .setUpholdAccountPayload(protobuf.UpholdAccountPayload.newBuilder()
                         .setAccountId(accountId))
                 .build();
     }
 
-    public static UpholdAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static UpholdAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new UpholdAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getUpholdAccountPayload().getAccountId(),

@@ -22,8 +22,6 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
@@ -48,14 +46,14 @@ public final class RemoveDataMessage extends BroadcastMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRemoveDataMessage(PB.RemoveDataMessage.newBuilder()
-                        .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage()))
+                .setRemoveDataMessage(protobuf.RemoveDataMessage.newBuilder()
+                        .setProtectedStorageEntry((protobuf.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage()))
                 .build();
     }
 
-    public static RemoveDataMessage fromProto(PB.RemoveDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static RemoveDataMessage fromProto(protobuf.RemoveDataMessage proto, NetworkProtoResolver resolver, int messageVersion) {
         return new RemoveDataMessage(ProtectedStorageEntry.fromProto(proto.getProtectedStorageEntry(), resolver), messageVersion);
     }
 }

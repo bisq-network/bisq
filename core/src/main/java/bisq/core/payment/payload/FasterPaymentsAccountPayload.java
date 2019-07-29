@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -79,14 +77,14 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setFasterPaymentsAccountPayload(PB.FasterPaymentsAccountPayload.newBuilder()
+                .setFasterPaymentsAccountPayload(protobuf.FasterPaymentsAccountPayload.newBuilder()
                         .setSortCode(sortCode)
                         .setAccountNr(accountNr)
                         .setEmail(email))
                 .build();
     }
 
-    public static FasterPaymentsAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static FasterPaymentsAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new FasterPaymentsAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getFasterPaymentsAccountPayload().getSortCode(),

@@ -24,8 +24,6 @@ import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
@@ -64,9 +62,9 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPayoutTxPublishedMessage(PB.PayoutTxPublishedMessage.newBuilder()
+                .setPayoutTxPublishedMessage(protobuf.PayoutTxPublishedMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setPayoutTx(ByteString.copyFrom(payoutTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -74,7 +72,7 @@ public final class PayoutTxPublishedMessage extends TradeMessage implements Mail
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.PayoutTxPublishedMessage proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.PayoutTxPublishedMessage proto, int messageVersion) {
         return new PayoutTxPublishedMessage(proto.getTradeId(),
                 proto.getPayoutTx().toByteArray(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

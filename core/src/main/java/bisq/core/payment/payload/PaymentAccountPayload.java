@@ -23,8 +23,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.Charset;
@@ -104,8 +102,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
             this.excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(CryptoUtils.getRandomBytes(32)));
     }
 
-    protected PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
-        final PB.PaymentAccountPayload.Builder builder = PB.PaymentAccountPayload.newBuilder()
+    protected protobuf.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
+        final protobuf.PaymentAccountPayload.Builder builder = protobuf.PaymentAccountPayload.newBuilder()
                 .setPaymentMethodId(paymentMethodId)
                 .setMaxTradePeriod(maxTradePeriod)
                 .setId(id);

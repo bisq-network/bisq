@@ -28,8 +28,6 @@ import bisq.common.app.Capability;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Date;
@@ -61,18 +59,18 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableNetworkPayload toProtoMessage() {
-        final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        final protobuf.AccountAgeWitness.Builder builder = protobuf.AccountAgeWitness.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
                 .setDate(date);
-        return PB.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
+        return protobuf.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
     }
 
-    public PB.AccountAgeWitness toProtoAccountAgeWitness() {
+    public protobuf.AccountAgeWitness toProtoAccountAgeWitness() {
         return toProtoMessage().getAccountAgeWitness();
     }
 
-    public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
+    public static AccountAgeWitness fromProto(protobuf.AccountAgeWitness proto) {
         byte[] hash = proto.getHash().toByteArray();
         if (hash.length != 20) {
             log.warn("We got a a hash which is not 20 bytes");

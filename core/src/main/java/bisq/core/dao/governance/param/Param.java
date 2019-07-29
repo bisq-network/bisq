@@ -22,8 +22,6 @@ import bisq.core.locale.Res;
 
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -239,7 +237,7 @@ public enum Param {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Param fromProto(PB.ChangeParamProposal proposalProto) {
+    public static Param fromProto(protobuf.ChangeParamProposal proposalProto) {
         Param param;
         try {
             param = ProtoUtil.enumFromProto(Param.class, proposalProto.getParam());

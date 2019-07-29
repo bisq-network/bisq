@@ -21,13 +21,14 @@ import bisq.core.offer.OpenOffer;
 
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-import io.bisq.generated.protobuffer.PB.OfferPayload;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+
+
+
+import protobuf.OfferPayload;
 
 @SuppressWarnings("UnusedAssignment")
 public class ProtoUtilTest {
@@ -45,7 +46,7 @@ public class ProtoUtilTest {
 
     @Test
     public void testUnknownEnum() {
-        PB.OpenOffer.State result = PB.OpenOffer.State.PB_ERROR;
+        protobuf.OpenOffer.State result = protobuf.OpenOffer.State.PB_ERROR;
         try {
             OpenOffer.State finalResult = OpenOffer.State.valueOf(result.name());
             fail();
@@ -55,7 +56,7 @@ public class ProtoUtilTest {
 
     @Test
     public void testUnknownEnumFix() {
-        PB.OpenOffer.State result = PB.OpenOffer.State.PB_ERROR;
+        protobuf.OpenOffer.State result = protobuf.OpenOffer.State.PB_ERROR;
         try {
             OpenOffer.State finalResult = ProtoUtil.enumFromProto(OpenOffer.State.class, result.name());
             assertEquals(OpenOffer.State.AVAILABLE, ProtoUtil.enumFromProto(OpenOffer.State.class, "AVAILABLE"));

@@ -20,8 +20,6 @@ package bisq.core.dao.monitoring.network.messages;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -42,15 +40,15 @@ public final class GetBlindVoteStateHashesRequest extends GetStateHashesRequest 
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setGetBlindVoteStateHashesRequest(PB.GetBlindVoteStateHashesRequest.newBuilder()
+                .setGetBlindVoteStateHashesRequest(protobuf.GetBlindVoteStateHashesRequest.newBuilder()
                         .setHeight(height)
                         .setNonce(nonce))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetBlindVoteStateHashesRequest proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.GetBlindVoteStateHashesRequest proto, int messageVersion) {
         return new GetBlindVoteStateHashesRequest(proto.getHeight(), proto.getNonce(), messageVersion);
     }
 }

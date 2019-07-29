@@ -21,8 +21,6 @@ import bisq.common.app.Version;
 import bisq.common.crypto.SealedAndSigned;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
@@ -63,9 +61,9 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPrefixedSealedAndSignedMessage(PB.PrefixedSealedAndSignedMessage.newBuilder()
+                .setPrefixedSealedAndSignedMessage(protobuf.PrefixedSealedAndSignedMessage.newBuilder()
                         .setNodeAddress(senderNodeAddress.toProtoMessage())
                         .setSealedAndSigned(sealedAndSigned.toProtoMessage())
                         .setAddressPrefixHash(ByteString.copyFrom(addressPrefixHash))
@@ -73,7 +71,7 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
                 .build();
     }
 
-    public static PrefixedSealedAndSignedMessage fromProto(PB.PrefixedSealedAndSignedMessage proto, int messageVersion) {
+    public static PrefixedSealedAndSignedMessage fromProto(protobuf.PrefixedSealedAndSignedMessage proto, int messageVersion) {
         return new PrefixedSealedAndSignedMessage(NodeAddress.fromProto(proto.getNodeAddress()),
                 SealedAndSigned.fromProto(proto.getSealedAndSigned()),
                 proto.getAddressPrefixHash().toByteArray(),
@@ -81,7 +79,7 @@ public final class PrefixedSealedAndSignedMessage extends NetworkEnvelope implem
                 messageVersion);
     }
 
-    public static PrefixedSealedAndSignedMessage fromPayloadProto(PB.PrefixedSealedAndSignedMessage proto) {
+    public static PrefixedSealedAndSignedMessage fromPayloadProto(protobuf.PrefixedSealedAndSignedMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads dont have a message version and are also used for persistence

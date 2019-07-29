@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -75,13 +73,13 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setVenmoAccountPayload(PB.VenmoAccountPayload.newBuilder()
+                .setVenmoAccountPayload(protobuf.VenmoAccountPayload.newBuilder()
                         .setVenmoUserName(venmoUserName)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static VenmoAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static VenmoAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new VenmoAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getVenmoAccountPayload().getVenmoUserName(),

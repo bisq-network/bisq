@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -70,12 +68,12 @@ public final class PromptPayAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setPromptPayAccountPayload(PB.PromptPayAccountPayload.newBuilder()
+                .setPromptPayAccountPayload(protobuf.PromptPayAccountPayload.newBuilder()
                         .setPromptPayId(promptPayId))
                 .build();
     }
 
-    public static PromptPayAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static PromptPayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new PromptPayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getPromptPayAccountPayload().getPromptPayId(),

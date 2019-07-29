@@ -191,13 +191,12 @@ public class BisqEnvironment extends StandardEnvironment {
     @Getter
     protected List<String> bannedSeedNodes, bannedBtcNodes, bannedPriceRelayNodes;
 
-    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser,
-            rpcPassword, rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
+    protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
+            rpcHost, rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
-            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight,
-            genesisTotalSupply, referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger,
-            sendMsgThrottleSleep, ignoreLocalBtcNode;
+            socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
+            referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep, ignoreLocalBtcNode;
 
     protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
 
@@ -305,6 +304,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         rpcPassword = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PASSWORD) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PASSWORD) :
+                "";
+        rpcHost = commandLineProperties.containsProperty(DaoOptionKeys.RPC_HOST) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_HOST) :
                 "";
         rpcPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PORT) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PORT) :
@@ -504,6 +506,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
                 setProperty(DaoOptionKeys.RPC_USER, rpcUser);
                 setProperty(DaoOptionKeys.RPC_PASSWORD, rpcPassword);
+                setProperty(DaoOptionKeys.RPC_HOST, rpcHost);
                 setProperty(DaoOptionKeys.RPC_PORT, rpcPort);
                 setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
                 setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);

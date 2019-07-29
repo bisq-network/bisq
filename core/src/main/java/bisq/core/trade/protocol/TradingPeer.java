@@ -25,8 +25,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
@@ -78,10 +76,10 @@ public final class TradingPeer implements PersistablePayload {
 
     @Override
     public Message toProtoMessage() {
-        final PB.TradingPeer.Builder builder = PB.TradingPeer.newBuilder()
+        final protobuf.TradingPeer.Builder builder = protobuf.TradingPeer.newBuilder()
                 .setChangeOutputValue(changeOutputValue);
         Optional.ofNullable(accountId).ifPresent(builder::setAccountId);
-        Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((PB.PaymentAccountPayload) e.toProtoMessage()));
+        Optional.ofNullable(paymentAccountPayload).ifPresent(e -> builder.setPaymentAccountPayload((protobuf.PaymentAccountPayload) e.toProtoMessage()));
         Optional.ofNullable(payoutAddressString).ifPresent(builder::setPayoutAddressString);
         Optional.ofNullable(contractAsJson).ifPresent(builder::setContractAsJson);
         Optional.ofNullable(contractSignature).ifPresent(builder::setContractSignature);
@@ -96,7 +94,7 @@ public final class TradingPeer implements PersistablePayload {
         return builder.build();
     }
 
-    public static TradingPeer fromProto(PB.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
+    public static TradingPeer fromProto(protobuf.TradingPeer proto, CoreProtoResolver coreProtoResolver) {
         if (proto.getDefaultInstanceForType().equals(proto)) {
             return null;
         } else {

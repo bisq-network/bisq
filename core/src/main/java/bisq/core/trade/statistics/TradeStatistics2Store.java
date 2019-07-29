@@ -22,8 +22,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.List;
@@ -57,20 +55,20 @@ public class TradeStatistics2Store implements PersistableEnvelope {
     }
 
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
                 .setTradeStatistics2Store(getBuilder())
                 .build();
     }
 
-    private PB.TradeStatistics2Store.Builder getBuilder() {
-        final List<PB.TradeStatistics2> protoList = map.values().stream()
+    private protobuf.TradeStatistics2Store.Builder getBuilder() {
+        final List<protobuf.TradeStatistics2> protoList = map.values().stream()
                 .map(payload -> (TradeStatistics2) payload)
                 .map(TradeStatistics2::toProtoTradeStatistics2)
                 .collect(Collectors.toList());
-        return PB.TradeStatistics2Store.newBuilder().addAllItems(protoList);
+        return protobuf.TradeStatistics2Store.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(PB.TradeStatistics2Store proto) {
+    public static PersistableEnvelope fromProto(protobuf.TradeStatistics2Store proto) {
         List<TradeStatistics2> list = proto.getItemsList().stream()
                 .map(TradeStatistics2::fromProto).collect(Collectors.toList());
         return new TradeStatistics2Store(list);

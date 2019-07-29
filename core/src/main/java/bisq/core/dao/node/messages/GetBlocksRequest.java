@@ -28,8 +28,6 @@ import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -82,8 +80,8 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.GetBlocksRequest.Builder builder = PB.GetBlocksRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.GetBlocksRequest.Builder builder = protobuf.GetBlocksRequest.newBuilder()
                 .setFromBlockHeight(fromBlockHeight)
                 .setNonce(nonce);
         Optional.ofNullable(senderNodeAddress).ifPresent(e -> builder.setSenderNodeAddress(e.toProtoMessage()));
@@ -91,8 +89,8 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
         return getNetworkEnvelopeBuilder().setGetBlocksRequest(builder).build();
     }
 
-    public static NetworkEnvelope fromProto(PB.GetBlocksRequest proto, int messageVersion) {
-        PB.NodeAddress protoNodeAddress = proto.getSenderNodeAddress();
+    public static NetworkEnvelope fromProto(protobuf.GetBlocksRequest proto, int messageVersion) {
+        protobuf.NodeAddress protoNodeAddress = proto.getSenderNodeAddress();
         NodeAddress senderNodeAddress = protoNodeAddress.getHostName().isEmpty() ?
                 null :
                 NodeAddress.fromProto(protoNodeAddress);

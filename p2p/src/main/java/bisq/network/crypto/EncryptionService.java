@@ -30,8 +30,6 @@ import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import javax.inject.Inject;
@@ -78,7 +76,7 @@ public class EncryptionService {
 
         try {
             final byte[] bytes = Encryption.decryptPayloadWithHmac(sealedAndSigned.getEncryptedPayloadWithHmac(), secretKey);
-            final PB.NetworkEnvelope envelope = PB.NetworkEnvelope.parseFrom(bytes);
+            final protobuf.NetworkEnvelope envelope = protobuf.NetworkEnvelope.parseFrom(bytes);
             NetworkEnvelope decryptedPayload = networkProtoResolver.fromProto(envelope);
             return new DecryptedDataTuple(decryptedPayload, sealedAndSigned.getSigPublicKey());
         } catch (InvalidProtocolBufferException e) {

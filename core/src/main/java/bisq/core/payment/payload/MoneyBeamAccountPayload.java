@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -69,12 +67,12 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setMoneyBeamAccountPayload(PB.MoneyBeamAccountPayload.newBuilder()
+                .setMoneyBeamAccountPayload(protobuf.MoneyBeamAccountPayload.newBuilder()
                         .setAccountId(accountId))
                 .build();
     }
 
-    public static MoneyBeamAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static MoneyBeamAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new MoneyBeamAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMoneyBeamAccountPayload().getAccountId(),
