@@ -35,7 +35,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
@@ -89,7 +89,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
     private final ClosedTradableManager closedTradableManager;
-    public final Clock clock;
+    public final ClockWatcher clockWatcher;
     @Getter
     private final User user;
 
@@ -113,7 +113,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   P2PService p2PService,
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
-                                  Clock clock,
+                                  ClockWatcher clockWatcher,
                                   User user) {
         super(dataModel);
 
@@ -123,7 +123,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.p2PService = p2PService;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.clock = clock;
+        this.clockWatcher = clockWatcher;
         this.user = user;
     }
 

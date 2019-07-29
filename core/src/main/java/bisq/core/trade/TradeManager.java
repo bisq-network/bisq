@@ -47,7 +47,7 @@ import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -117,7 +117,7 @@ public class TradeManager implements PersistedDataHost {
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private final Clock clock;
+    private final ClockWatcher clockWatcher;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private TradableList<Trade> tradableList;
@@ -151,7 +151,7 @@ public class TradeManager implements PersistedDataHost {
                         PersistenceProtoResolver persistenceProtoResolver,
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
-                        Clock clock,
+                        ClockWatcher clockWatcher,
                         @Named(Storage.STORAGE_DIR) File storageDir) {
         this.user = user;
         this.keyRing = keyRing;
@@ -168,7 +168,7 @@ public class TradeManager implements PersistedDataHost {
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
-        this.clock = clock;
+        this.clockWatcher = clockWatcher;
 
         tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
 
@@ -623,7 +623,7 @@ public class TradeManager implements PersistedDataHost {
 
     public void applyTradePeriodState() {
         updateTradePeriodState();
-        clock.addListener(new Clock.Listener() {
+        clockWatcher.addListener(new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
             }
