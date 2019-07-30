@@ -133,25 +133,29 @@ public class SignedWitnessService {
     public SignedWitness signAccountAgeWitness(Coin tradeAmount, AccountAgeWitness accountAgeWitness, ECKey key, PublicKey peersPubKey) {
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
         String signatureBase64 = key.signMessage(accountAgeWitnessHashAsHex);
-        return new SignedWitness(true,
+        SignedWitness signedWitness = new SignedWitness(true,
                 accountAgeWitness.getHash(),
                 signatureBase64.getBytes(Charsets.UTF_8),
                 key.getPubKey(),
                 peersPubKey.getEncoded(),
                 new Date().getTime(),
                 tradeAmount.value);
+        publishSignedWitness(signedWitness);
+        return signedWitness;
     }
 
     // Any peer can sign with DSA key
     public SignedWitness signAccountAgeWitness(Coin tradeAmount, AccountAgeWitness accountAgeWitness, PublicKey peersPubKey) throws CryptoException {
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
-        return new SignedWitness(false,
+        SignedWitness signedWitness = new SignedWitness(false,
                 accountAgeWitness.getHash(),
                 signature,
                 keyRing.getSignatureKeyPair().getPublic().getEncoded(),
                 peersPubKey.getEncoded(),
                 new Date().getTime(),
                 tradeAmount.value);
+        publishSignedWitness(signedWitness);
+        return signedWitness;
     }
 
     public boolean verifySignature(SignedWitness signedWitness) {
@@ -286,7 +290,6 @@ public class SignedWitnessService {
         return signedWitnessDateMillis <= childSignedWitnessDateMinusChargebackPeriodMillis;
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -295,4 +298,11 @@ public class SignedWitnessService {
     void addToMap(SignedWitness signedWitness) {
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
     }
+
+    private void publishSignedWitness(SignedWitness signedWitness) {
+        if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
+            p2PService.addPersistableNetworkPayload(signedWitness, false);
+        }
+    }
+
 }
