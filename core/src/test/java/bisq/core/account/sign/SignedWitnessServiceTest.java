@@ -37,7 +37,6 @@ import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,20 +51,9 @@ public class SignedWitnessServiceTest {
     private byte[] account1DataHash;
     private byte[] account2DataHash;
     private byte[] account3DataHash;
-    private long account1CreationTime;
-    private long account2CreationTime;
-    private long account3CreationTime;
     private AccountAgeWitness aew1;
     private AccountAgeWitness aew2;
     private AccountAgeWitness aew3;
-    private ECKey arbitrator1Key;
-    private KeyPair peer1KeyPair;
-    private KeyPair peer2KeyPair;
-    private KeyPair peer3KeyPair;
-    private String account1DataHashAsHexString;
-    private String account2DataHashAsHexString;
-    private String account3DataHashAsHexString;
-    private String signature1String;
     private byte[] signature1;
     private byte[] signature2;
     private byte[] signature3;
@@ -91,26 +79,26 @@ public class SignedWitnessServiceTest {
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
-        account1CreationTime = getTodayMinusNDays(96);
-        account2CreationTime = getTodayMinusNDays(66);
-        account3CreationTime = getTodayMinusNDays(36);
+        long account1CreationTime = getTodayMinusNDays(96);
+        long account2CreationTime = getTodayMinusNDays(66);
+        long account3CreationTime = getTodayMinusNDays(36);
         aew1 = new AccountAgeWitness(account1DataHash, account1CreationTime);
         aew2 = new AccountAgeWitness(account2DataHash, account2CreationTime);
         aew3 = new AccountAgeWitness(account3DataHash, account3CreationTime);
-        arbitrator1Key = new ECKey();
-        peer1KeyPair = Sig.generateKeyPair();
-        peer2KeyPair = Sig.generateKeyPair();
-        peer3KeyPair = Sig.generateKeyPair();
-        account1DataHashAsHexString = Utilities.encodeToHex(account1DataHash);
-        account2DataHashAsHexString = Utilities.encodeToHex(account2DataHash);
-        account3DataHashAsHexString = Utilities.encodeToHex(account3DataHash);
-        signature1String = arbitrator1Key.signMessage(account1DataHashAsHexString);
+        ECKey arbitrator1Key = new ECKey();
+        KeyPair peer1KeyPair = Sig.generateKeyPair();
+        KeyPair peer2KeyPair = Sig.generateKeyPair();
+        KeyPair peer3KeyPair = Sig.generateKeyPair();
+        String account1DataHashAsHexString = Utilities.encodeToHex(account1DataHash);
+        String account2DataHashAsHexString = Utilities.encodeToHex(account2DataHash);
+        String account3DataHashAsHexString = Utilities.encodeToHex(account3DataHash);
+        String signature1String = arbitrator1Key.signMessage(account1DataHashAsHexString);
         signature1 = signature1String.getBytes(Charsets.UTF_8);
         signature2 = Sig.sign(peer1KeyPair.getPrivate(), account2DataHashAsHexString.getBytes(Charsets.UTF_8));
+        signature3 = Sig.sign(peer2KeyPair.getPrivate(), account3DataHashAsHexString.getBytes(Charsets.UTF_8));
         date1 = getTodayMinusNDays(95);
         date2 = getTodayMinusNDays(64);
         date3 = getTodayMinusNDays(33);
-        signature3 = Sig.sign(peer2KeyPair.getPrivate(), account3DataHashAsHexString.getBytes(Charsets.UTF_8));
         signer1PubKey = arbitrator1Key.getPubKey();
         signer2PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
         signer3PubKey = Sig.getPublicKeyBytes(peer2KeyPair.getPublic());
@@ -120,10 +108,6 @@ public class SignedWitnessServiceTest {
         tradeAmount1 = 1000;
         tradeAmount2 = 1001;
         tradeAmount3 = 1001;
-    }
-
-    @After
-    public void tearDown() {
     }
 
     @Test
@@ -299,8 +283,7 @@ public class SignedWitnessServiceTest {
             }
             byte[] witnessOwnerPubKey = Sig.getPublicKeyBytes(signedKeyPair.getPublic());
             long date = getTodayMinusNDays((iterations - i) * (SignedWitnessService.CHARGEBACK_SAFETY_DAYS + 1));
-            long tradeAmount = 1000;
-            SignedWitness sw = new SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount);
+            SignedWitness sw = new SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount1);
             service.addToMap(sw);
         }
         assertFalse(service.isValidAccountAgeWitness(aew));
