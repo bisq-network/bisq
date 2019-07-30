@@ -23,6 +23,7 @@ import bisq.network.p2p.Utils;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.storage.FileUtil;
 import bisq.common.util.Utilities;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
@@ -48,6 +49,9 @@ import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 
 import java.net.Socket;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.io.File;
 import java.io.IOException;
@@ -142,8 +146,14 @@ public class TorNetworkNode extends NetworkNode {
         // so they are gone after an app restart
         nodeAddressToHSDirectory.entrySet().stream().filter(nodeAddressFileEntry -> !retain.contains(nodeAddressFileEntry.getKey()))
                 .forEach(nodeAddressFileEntry -> {
-                    nodeAddressFileEntry.getValue().deleteOnExit();
-                    Arrays.stream(nodeAddressFileEntry.getValue().listFiles()).forEach(file -> file.deleteOnExit());
+                    try {
+                        Files.walk(nodeAddressFileEntry.getValue().toPath())
+                                .sorted()
+                                .map(Path::toFile)
+                                .forEach(File::deleteOnExit);
+                    } catch (IOException e) {
+                        log.error("Error while trying to delete deprecated hidden service directory", e);
+                    }
                 });
     }
 
@@ -181,6 +191,9 @@ public class TorNetworkNode extends NetworkNode {
             for (File current : hiddenServiceDirs)
                 if (current.isDirectory()) {
                     nodeAddress = createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
+
+                    FileUtil.rollingBackup(current, "private_key", 20);
+
                     nodeAddressToHSDirectory.put(nodeAddress, current);
                 }
 
