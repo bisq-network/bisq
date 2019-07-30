@@ -38,10 +38,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -127,43 +128,7 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testIsValidAccountAgeWitnessOk() {
-        testIsValidAccountAgeWitness(false, false, false, false);
-    }
 
-    @Test
-    public void testIsValidAccountAgeWitnessArbitratorSignatureProblem() {
-        testIsValidAccountAgeWitness(true, false, false, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessPeerSignatureProblem() {
-        testIsValidAccountAgeWitness(false, true, false, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessDateTooSoonProblem() {
-        testIsValidAccountAgeWitness(false, false, true, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessDateTooLateProblem() {
-        testIsValidAccountAgeWitness(false, false, false, true);
-    }
-
-    private void testIsValidAccountAgeWitness(boolean signature1Problem, boolean signature2Problem, boolean date3TooSoonProblem, boolean date3TooLateProblem) {
-
-
-        if (signature1Problem) {
-            signature1 = new byte[]{1, 2, 3};
-        }
-        if (signature2Problem) {
-            signature2 = new byte[]{1, 2, 3};
-        }
-        if (date3TooSoonProblem) {
-            date3 = getTodayMinusNDays(63);
-        } else if (date3TooLateProblem) {
-            date3 = getTodayMinusNDays(3);
-        }
 
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
@@ -173,9 +138,85 @@ public class SignedWitnessServiceTest {
         service.addToMap(sw2);
         service.addToMap(sw3);
 
-        Assert.assertEquals(!signature1Problem, service.isValidAccountAgeWitness(aew1));
-        Assert.assertEquals(!signature1Problem && !signature2Problem, service.isValidAccountAgeWitness(aew2));
-        Assert.assertEquals(!signature1Problem && !signature2Problem && !date3TooSoonProblem && !date3TooLateProblem, service.isValidAccountAgeWitness(aew3));
+        assertTrue(service.isValidAccountAgeWitness(aew1));
+        assertTrue(service.isValidAccountAgeWitness(aew2));
+        assertTrue(service.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessArbitratorSignatureProblem() {
+
+
+        signature1 = new byte[]{1, 2, 3};
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        service.addToMap(sw1);
+        service.addToMap(sw2);
+        service.addToMap(sw3);
+
+        assertFalse(service.isValidAccountAgeWitness(aew1));
+        assertFalse(service.isValidAccountAgeWitness(aew2));
+        assertFalse(service.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessPeerSignatureProblem() {
+
+
+        signature2 = new byte[]{1, 2, 3};
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        service.addToMap(sw1);
+        service.addToMap(sw2);
+        service.addToMap(sw3);
+
+        assertTrue(service.isValidAccountAgeWitness(aew1));
+        assertFalse(service.isValidAccountAgeWitness(aew2));
+        assertFalse(service.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessDateTooSoonProblem() {
+
+
+        date3 = getTodayMinusNDays(63);
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        service.addToMap(sw1);
+        service.addToMap(sw2);
+        service.addToMap(sw3);
+
+        assertTrue(service.isValidAccountAgeWitness(aew1));
+        assertTrue(service.isValidAccountAgeWitness(aew2));
+        assertFalse(service.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessDateTooLateProblem() {
+
+
+        date3 = getTodayMinusNDays(3);
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        service.addToMap(sw1);
+        service.addToMap(sw2);
+        service.addToMap(sw3);
+
+        assertTrue(service.isValidAccountAgeWitness(aew1));
+        assertTrue(service.isValidAccountAgeWitness(aew2));
+        assertFalse(service.isValidAccountAgeWitness(aew3));
     }
 
 
@@ -226,14 +267,14 @@ public class SignedWitnessServiceTest {
         service.addToMap(sw2);
         service.addToMap(sw3);
 
-        Assert.assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertFalse(service.isValidAccountAgeWitness(aew3));
     }
 
 
     @Test
     public void testIsValidAccountAgeWitnessLongLoop() throws Exception {
         AccountAgeWitness aew = null;
-        KeyPair signerKeyPair = Sig.generateKeyPair();
+        KeyPair signerKeyPair;
         KeyPair signedKeyPair = Sig.generateKeyPair();
         int iterations = 1002;
         for (int i = 0; i < iterations; i++) {
@@ -262,7 +303,7 @@ public class SignedWitnessServiceTest {
             SignedWitness sw = new SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount);
             service.addToMap(sw);
         }
-        Assert.assertFalse(service.isValidAccountAgeWitness(aew));
+        assertFalse(service.isValidAccountAgeWitness(aew));
     }
 
 
