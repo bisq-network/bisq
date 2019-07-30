@@ -29,10 +29,11 @@ import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
+
+import java.time.Clock;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -122,7 +123,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean isDateInTolerance() {
+    public boolean isDateInTolerance(Clock clock) {
         // We don't allow older or newer then 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;
