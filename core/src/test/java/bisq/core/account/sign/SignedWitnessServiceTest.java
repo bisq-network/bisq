@@ -37,114 +37,156 @@ import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
 
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SignedWitnessServiceTest {
-    private SignedWitnessService service;
+    private SignedWitnessService signedWitnessService;
+    private byte[] account1DataHash;
+    private byte[] account2DataHash;
+    private byte[] account3DataHash;
+    private AccountAgeWitness aew1;
+    private AccountAgeWitness aew2;
+    private AccountAgeWitness aew3;
+    private byte[] signature1;
+    private byte[] signature2;
+    private byte[] signature3;
+    private byte[] signer1PubKey;
+    private byte[] signer2PubKey;
+    private byte[] signer3PubKey;
+    private byte[] witnessOwner1PubKey;
+    private byte[] witnessOwner2PubKey;
+    private byte[] witnessOwner3PubKey;
+    private long date1;
+    private long date2;
+    private long date3;
+    private long tradeAmount1;
+    private long tradeAmount2;
+    private long tradeAmount3;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
-        service = new SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService);
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessOk() throws Exception {
-        testIsValidAccountAgeWitness(false, false, false, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessArbitratorSignatureProblem() throws Exception {
-        testIsValidAccountAgeWitness(true, false, false, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessPeerSignatureProblem() throws Exception {
-        testIsValidAccountAgeWitness(false, true, false, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessDateTooSoonProblem() throws Exception {
-        testIsValidAccountAgeWitness(false, false, true, false);
-    }
-
-    @Test
-    public void testIsValidAccountAgeWitnessDateTooLateProblem() throws Exception {
-        testIsValidAccountAgeWitness(false, false, false, true);
-    }
-
-    private void testIsValidAccountAgeWitness(boolean signature1Problem, boolean signature2Problem, boolean date3TooSoonProblem, boolean date3TooLateProblem) throws Exception {
-        byte[] account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
-        byte[] account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
-        byte[] account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
+        signedWitnessService = new SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService);
+        account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
+        account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
+        account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
         long account1CreationTime = getTodayMinusNDays(96);
         long account2CreationTime = getTodayMinusNDays(66);
         long account3CreationTime = getTodayMinusNDays(36);
-        AccountAgeWitness aew1 = new AccountAgeWitness(account1DataHash, account1CreationTime);
-        AccountAgeWitness aew2 = new AccountAgeWitness(account2DataHash, account2CreationTime);
-        AccountAgeWitness aew3 = new AccountAgeWitness(account3DataHash, account3CreationTime);
-
+        aew1 = new AccountAgeWitness(account1DataHash, account1CreationTime);
+        aew2 = new AccountAgeWitness(account2DataHash, account2CreationTime);
+        aew3 = new AccountAgeWitness(account3DataHash, account3CreationTime);
         ECKey arbitrator1Key = new ECKey();
         KeyPair peer1KeyPair = Sig.generateKeyPair();
         KeyPair peer2KeyPair = Sig.generateKeyPair();
         KeyPair peer3KeyPair = Sig.generateKeyPair();
+        signature1 = arbitrator1Key.signMessage(Utilities.encodeToHex(account1DataHash)).getBytes(Charsets.UTF_8);
+        signature2 = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account2DataHash).getBytes(Charsets.UTF_8));
+        signature3 = Sig.sign(peer2KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
+        date1 = getTodayMinusNDays(95);
+        date2 = getTodayMinusNDays(64);
+        date3 = getTodayMinusNDays(33);
+        signer1PubKey = arbitrator1Key.getPubKey();
+        signer2PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
+        signer3PubKey = Sig.getPublicKeyBytes(peer2KeyPair.getPublic());
+        witnessOwner1PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
+        witnessOwner2PubKey = Sig.getPublicKeyBytes(peer2KeyPair.getPublic());
+        witnessOwner3PubKey = Sig.getPublicKeyBytes(peer3KeyPair.getPublic());
+        tradeAmount1 = 1000;
+        tradeAmount2 = 1001;
+        tradeAmount3 = 1001;
+    }
 
+    @Test
+    public void testIsValidAccountAgeWitnessOk() {
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        String account1DataHashAsHexString = Utilities.encodeToHex(account1DataHash);
-        String account2DataHashAsHexString = Utilities.encodeToHex(account2DataHash);
-        String account3DataHashAsHexString = Utilities.encodeToHex(account3DataHash);
-        String signature1String = arbitrator1Key.signMessage(account1DataHashAsHexString);
-        byte[] signature1 = signature1String.getBytes(Charsets.UTF_8);
-        if (signature1Problem) {
-            signature1 = new byte[]{1, 2, 3};
-        }
-        byte[] signature2 = Sig.sign(peer1KeyPair.getPrivate(), account2DataHashAsHexString.getBytes(Charsets.UTF_8));
-        if (signature2Problem) {
-            signature2 = new byte[]{1, 2, 3};
-        }
-        byte[] signature3 = Sig.sign(peer2KeyPair.getPrivate(), account3DataHashAsHexString.getBytes(Charsets.UTF_8));
-        byte[] signer1PubKey = arbitrator1Key.getPubKey();
-        byte[] signer2PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
-        byte[] signer3PubKey = Sig.getPublicKeyBytes(peer2KeyPair.getPublic());
-        byte[] witnessOwner1PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
-        byte[] witnessOwner2PubKey = Sig.getPublicKeyBytes(peer2KeyPair.getPublic());
-        byte[] witnessOwner3PubKey = Sig.getPublicKeyBytes(peer3KeyPair.getPublic());
-        long date1 = getTodayMinusNDays(95);
-        long date2 = getTodayMinusNDays(64);
-        long date3 = getTodayMinusNDays(33);
-        if (date3TooSoonProblem) {
-            date3 = getTodayMinusNDays(63);
-        } else if (date3TooLateProblem) {
-            date3 = getTodayMinusNDays(3);
-        }
-        long tradeAmount1 = 1000;
-        long tradeAmount2 = 1001;
-        long tradeAmount3 = 1001;
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessArbitratorSignatureProblem() {
+        signature1 = new byte[]{1, 2, 3};
 
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        Assert.assertEquals(!signature1Problem, service.isValidAccountAgeWitness(aew1));
-        Assert.assertEquals(!signature1Problem && !signature2Problem, service.isValidAccountAgeWitness(aew2));
-        Assert.assertEquals(!signature1Problem && !signature2Problem && !date3TooSoonProblem && !date3TooLateProblem, service.isValidAccountAgeWitness(aew3));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessPeerSignatureProblem() {
+        signature2 = new byte[]{1, 2, 3};
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessDateTooSoonProblem() {
+        date3 = getTodayMinusNDays(63);
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidAccountAgeWitnessDateTooLateProblem() {
+        date3 = getTodayMinusNDays(3);
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
 
@@ -191,18 +233,18 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        Assert.assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
 
     @Test
     public void testIsValidAccountAgeWitnessLongLoop() throws Exception {
         AccountAgeWitness aew = null;
-        KeyPair signerKeyPair = Sig.generateKeyPair();
+        KeyPair signerKeyPair;
         KeyPair signedKeyPair = Sig.generateKeyPair();
         int iterations = 1002;
         for (int i = 0; i < iterations; i++) {
@@ -227,11 +269,10 @@ public class SignedWitnessServiceTest {
             }
             byte[] witnessOwnerPubKey = Sig.getPublicKeyBytes(signedKeyPair.getPublic());
             long date = getTodayMinusNDays((iterations - i) * (SignedWitnessService.CHARGEBACK_SAFETY_DAYS + 1));
-            long tradeAmount = 1000;
-            SignedWitness sw = new SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount);
-            service.addToMap(sw);
+            SignedWitness sw = new SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount1);
+            signedWitnessService.addToMap(sw);
         }
-        Assert.assertFalse(service.isValidAccountAgeWitness(aew));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew));
     }
 
 

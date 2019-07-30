@@ -29,7 +29,6 @@ import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
@@ -72,8 +71,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         this.date = date;
         this.tradeAmount = tradeAmount;
 
-        // The hash is only using the data which do not change in repeated trades between same users (no date or amount).
-        // We only want to store the first and oldest one and will ignore others. That will help also to protect privacy
+        // The hash is only using the data which does not change in repeated trades between identical users (no date or amount).
+        // We only want to store the first and oldest one and will ignore others. That will also help to protect privacy
         // so that the total number of trades is not revealed. We use putIfAbsent when we store the data so first
         // object will win. We consider one signed trade with one peer enough and do not consider repeated trades with
         // same peer to add more security as if that one would be colluding it would be not detected anyway. The total
@@ -86,7 +85,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
+    // PROTOBUF
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -102,7 +101,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         return protobuf.PersistableNetworkPayload.newBuilder().setSignedWitness(builder).build();
     }
 
-    public protobuf.SignedWitness toProtoSignedWitness() {
+    protobuf.SignedWitness toProtoSignedWitness() {
         return toProtoMessage().getSignedWitness();
     }
 
@@ -149,7 +148,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public P2PDataStorage.ByteArray getHashAsByteArray() {
+    P2PDataStorage.ByteArray getHashAsByteArray() {
         return new P2PDataStorage.ByteArray(hash);
     }
 

@@ -40,6 +40,7 @@ public class AppendOnlyDataStoreService {
 
     // We do not add PersistableNetworkPayloadListService to the services list as it it deprecated and used only to
     // transfer old persisted data to the new data structure.
+    @SuppressWarnings("deprecation")
     private PersistableNetworkPayloadListService persistableNetworkPayloadListService;
 
 
@@ -47,6 +48,7 @@ public class AppendOnlyDataStoreService {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation")
     @Inject
     public AppendOnlyDataStoreService(PersistableNetworkPayloadListService persistableNetworkPayloadListService) {
         this.persistableNetworkPayloadListService = persistableNetworkPayloadListService;
@@ -82,8 +84,6 @@ public class AppendOnlyDataStoreService {
     public void put(P2PDataStorage.ByteArray hashAsByteArray, PersistableNetworkPayload payload) {
         services.stream()
                 .filter(service -> service.canHandle(payload))
-                .forEach(service -> {
-                    service.putIfAbsent(hashAsByteArray, payload);
-                });
+                .forEach(service -> service.putIfAbsent(hashAsByteArray, payload));
     }
 }
