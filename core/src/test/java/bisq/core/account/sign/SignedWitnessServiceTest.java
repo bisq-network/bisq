@@ -89,13 +89,9 @@ public class SignedWitnessServiceTest {
         KeyPair peer1KeyPair = Sig.generateKeyPair();
         KeyPair peer2KeyPair = Sig.generateKeyPair();
         KeyPair peer3KeyPair = Sig.generateKeyPair();
-        String account1DataHashAsHexString = Utilities.encodeToHex(account1DataHash);
-        String account2DataHashAsHexString = Utilities.encodeToHex(account2DataHash);
-        String account3DataHashAsHexString = Utilities.encodeToHex(account3DataHash);
-        String signature1String = arbitrator1Key.signMessage(account1DataHashAsHexString);
-        signature1 = signature1String.getBytes(Charsets.UTF_8);
-        signature2 = Sig.sign(peer1KeyPair.getPrivate(), account2DataHashAsHexString.getBytes(Charsets.UTF_8));
-        signature3 = Sig.sign(peer2KeyPair.getPrivate(), account3DataHashAsHexString.getBytes(Charsets.UTF_8));
+        signature1 = arbitrator1Key.signMessage(Utilities.encodeToHex(account1DataHash)).getBytes(Charsets.UTF_8);
+        signature2 = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account2DataHash).getBytes(Charsets.UTF_8));
+        signature3 = Sig.sign(peer2KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
         date1 = getTodayMinusNDays(95);
         date2 = getTodayMinusNDays(64);
         date3 = getTodayMinusNDays(33);
