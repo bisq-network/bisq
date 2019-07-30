@@ -18,3 +18,11 @@ Follow the step-by-step instructions at https://bisq.network/get-started.
 ## Contribute to Bisq
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer docs](docs#readme).
+
+## Build from source
+
+For instructions on how to build from source, see [docs/build.md](docs/build.md)
+
+## Run with Docker
+
+To run Bisq using Docker, see [docker/](docker#readme).
