@@ -47,7 +47,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SignedWitnessServiceTest {
-    private SignedWitnessService service;
+    private SignedWitnessService signedWitnessService;
     private byte[] account1DataHash;
     private byte[] account2DataHash;
     private byte[] account3DataHash;
@@ -75,7 +75,7 @@ public class SignedWitnessServiceTest {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
-        service = new SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService);
+        signedWitnessService = new SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
@@ -118,13 +118,13 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        assertTrue(service.isValidAccountAgeWitness(aew1));
-        assertTrue(service.isValidAccountAgeWitness(aew2));
-        assertTrue(service.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
     @Test
@@ -137,13 +137,13 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        assertFalse(service.isValidAccountAgeWitness(aew1));
-        assertFalse(service.isValidAccountAgeWitness(aew2));
-        assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
     @Test
@@ -156,13 +156,13 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        assertTrue(service.isValidAccountAgeWitness(aew1));
-        assertFalse(service.isValidAccountAgeWitness(aew2));
-        assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
     @Test
@@ -175,13 +175,13 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        assertTrue(service.isValidAccountAgeWitness(aew1));
-        assertTrue(service.isValidAccountAgeWitness(aew2));
-        assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
     @Test
@@ -194,13 +194,13 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        assertTrue(service.isValidAccountAgeWitness(aew1));
-        assertTrue(service.isValidAccountAgeWitness(aew2));
-        assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
 
@@ -247,11 +247,11 @@ public class SignedWitnessServiceTest {
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
 
-        service.addToMap(sw1);
-        service.addToMap(sw2);
-        service.addToMap(sw3);
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
 
-        assertFalse(service.isValidAccountAgeWitness(aew3));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
     }
 
 
@@ -284,9 +284,9 @@ public class SignedWitnessServiceTest {
             byte[] witnessOwnerPubKey = Sig.getPublicKeyBytes(signedKeyPair.getPublic());
             long date = getTodayMinusNDays((iterations - i) * (SignedWitnessService.CHARGEBACK_SAFETY_DAYS + 1));
             SignedWitness sw = new SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount1);
-            service.addToMap(sw);
+            signedWitnessService.addToMap(sw);
         }
-        assertFalse(service.isValidAccountAgeWitness(aew));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew));
     }
 
 
