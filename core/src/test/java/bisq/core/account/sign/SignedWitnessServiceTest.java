@@ -108,8 +108,6 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testIsValidAccountAgeWitnessOk() {
-
-
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
         SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2);
         SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3);
@@ -125,8 +123,6 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testIsValidAccountAgeWitnessArbitratorSignatureProblem() {
-
-
         signature1 = new byte[]{1, 2, 3};
 
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
@@ -144,8 +140,6 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testIsValidAccountAgeWitnessPeerSignatureProblem() {
-
-
         signature2 = new byte[]{1, 2, 3};
 
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
@@ -163,8 +157,6 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testIsValidAccountAgeWitnessDateTooSoonProblem() {
-
-
         date3 = getTodayMinusNDays(63);
 
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
@@ -182,8 +174,6 @@ public class SignedWitnessServiceTest {
 
     @Test
     public void testIsValidAccountAgeWitnessDateTooLateProblem() {
-
-
         date3 = getTodayMinusNDays(3);
 
         SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, witnessOwner1PubKey, date1, tradeAmount1);
