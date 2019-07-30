@@ -30,6 +30,8 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import java.time.Clock;
+
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -87,7 +89,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean isDateInTolerance() {
+    public boolean isDateInTolerance(Clock clock) {
         // We don't allow older or newer then 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;

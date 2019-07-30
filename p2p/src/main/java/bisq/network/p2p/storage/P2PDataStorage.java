@@ -73,6 +73,8 @@ import org.bouncycastle.util.encoders.Hex;
 import java.security.KeyPair;
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -118,7 +120,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();
-
+    private final Clock clock;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -130,11 +132,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           AppendOnlyDataStoreService appendOnlyDataStoreService,
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
-                          Storage<SequenceNumberMap> sequenceNumberMapStorage) {
+                          Storage<SequenceNumberMap> sequenceNumberMapStorage,
+                          Clock clock) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
+        this.clock = clock;
+
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -309,7 +314,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             final ByteArray hashAsByteArray = new ByteArray(hash);
             boolean containsKey = getAppendOnlyDataStoreMap().containsKey(hashAsByteArray);
             if (!containsKey || reBroadcast) {
-                if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance()) {
+                if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance(clock)) {
                     if (!containsKey) {
                         appendOnlyDataStoreService.put(hashAsByteArray, payload);
                         appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
