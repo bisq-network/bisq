@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.payment;
+package bisq.core.account.sign;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
@@ -36,8 +36,8 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeWitnessStore, PersistableNetworkPayload> {
-    private static final String FILE_NAME = "AccountAgeWitnessStore";
+public class SignedWitnessStorageService extends MapStoreService<SignedWitnessStore, PersistableNetworkPayload> {
+    private static final String FILE_NAME = "SignedWitnessStore";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -45,8 +45,8 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public AccountAgeWitnessStorageService(@Named(Storage.STORAGE_DIR) File storageDir,
-                                           Storage<AccountAgeWitnessStore> persistableNetworkPayloadMapStorage) {
+    public SignedWitnessStorageService(@Named(Storage.STORAGE_DIR) File storageDir,
+                                       Storage<SignedWitnessStore> persistableNetworkPayloadMapStorage) {
         super(storageDir, persistableNetworkPayloadMapStorage);
     }
 
@@ -66,7 +66,7 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
 
     @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
-        return payload instanceof AccountAgeWitness;
+        return payload instanceof SignedWitness;
     }
 
 
@@ -75,15 +75,15 @@ public class AccountAgeWitnessStorageService extends MapStoreService<AccountAgeW
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected AccountAgeWitnessStore createStore() {
-        return new AccountAgeWitnessStore();
+    protected SignedWitnessStore createStore() {
+        return new SignedWitnessStore();
     }
 
     @Override
     protected void readStore() {
         super.readStore();
-        checkArgument(store instanceof AccountAgeWitnessStore,
-                "Store is not instance of AccountAgeWitnessStore. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
+        checkArgument(store instanceof SignedWitnessStore,
+                "Store is not instance of SignedWitnessStore. That can happen if the ProtoBuffer " +
+                        "file got changed. We cleared the data store and recreated it again.");
     }
 }

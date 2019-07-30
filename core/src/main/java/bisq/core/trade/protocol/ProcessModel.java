@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -26,7 +27,6 @@ import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;

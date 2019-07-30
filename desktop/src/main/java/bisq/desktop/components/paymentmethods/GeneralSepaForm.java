@@ -3,11 +3,11 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.util.BSFormatter;

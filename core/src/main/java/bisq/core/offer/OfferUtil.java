@@ -17,6 +17,7 @@
 
 package bisq.core.offer;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.filter.FilterManager;
@@ -24,7 +25,6 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;

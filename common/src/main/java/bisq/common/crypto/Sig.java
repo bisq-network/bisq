@@ -111,7 +111,7 @@ public class Sig {
             sig.update(data);
             return sig.verify(signature);
         } catch (SignatureException | InvalidKeyException | NoSuchAlgorithmException e) {
-            throw new CryptoException("Signature verification failed. " + e.getMessage());
+            throw new CryptoException("Signature verification failed", e);
         }
     }
 

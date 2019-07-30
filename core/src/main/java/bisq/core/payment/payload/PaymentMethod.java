@@ -51,8 +51,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
 
     // Default trade limits.
-    // We initialize very early before reading persisted data. We will apply later the limit from the DAO param
-    // but that can be only done after the dao is initialized. The default values will be used for deriving the
+    // We initialize very early before reading persisted data. We will apply later the limit from
+    // the DAO param (Param.MAX_TRADE_LIMIT) but that can be only done after the dao is initialized.
+    // The default values will be used for deriving the
     // risk factor so the relation between the risk categories stays the same as with the default values.
     // We must not change those values as it could lead to invalid offers if amount becomes lower then new trade limit.
     // Increasing might be ok, but needs more thought as well...
