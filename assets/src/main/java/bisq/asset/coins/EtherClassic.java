@@ -18,11 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.EtherAddressValidator;
+import bisq.asset.DefaultAddressValidator;
 
 public class EtherClassic extends Coin {
 
     public EtherClassic() {
-        super("Ether Classic", "ETC", new EtherAddressValidator());
+        super("Ether Classic", "ETC", new DefaultAddressValidator());
     }
 }

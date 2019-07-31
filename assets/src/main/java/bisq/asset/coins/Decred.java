@@ -17,36 +17,12 @@
 
 package bisq.asset.coins;
 
-import org.bitcoinj.core.NetworkParameters;
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
+import bisq.asset.DefaultAddressValidator;
 
 public class Decred extends Coin {
 
-	public Decred(Network network, NetworkParameters networkParameters) {
-		super("Decred", "DCR", new DcrAddressValidator(networkParameters), network);
-	}
-
-	public static class DcrAddressValidator extends Base58BitcoinAddressValidator {
-
-		public DcrAddressValidator(NetworkParameters networkParameters) {
-			super(networkParameters);
-		}
-
-		@Override
-		public AddressValidationResult validate(String address) {
-			if (address == null || address.length() < 26 || address.length() > 36 || !address.startsWith("Dk")
-					|| !address.startsWith("Ds") || !address.startsWith("De") || !address.startsWith("DS")
-					|| !address.startsWith("Dc") || !address.startsWith("Pm")) {
-				return AddressValidationResult
-						.invalidAddress("DCR address must start with 'Dk' or 'Ds' or 'De' or 'DS' or 'Dc' or 'Pm' and must have 34 characters.");
-			}
-
-			String addressAsBtc = address.substring(1, address.length());
-
-			return super.validate(addressAsBtc);
-		}
-	}
+    public Decred() {
+        super("Decred", "DCR", new DefaultAddressValidator());
+    }
 }

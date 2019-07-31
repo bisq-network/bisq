@@ -17,32 +17,12 @@
 
 package bisq.asset.coins;
 
-import org.bitcoinj.core.NetworkParameters;
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
+import bisq.asset.DefaultAddressValidator;
 
 public class Namecoin extends Coin {
 
-    public Namecoin(Network network, NetworkParameters networkParameters) {
-        super("Namecoin", "NMC", new NmcAddressValidator(networkParameters), network);
-    }
-
-    public static class NmcAddressValidator extends Base58BitcoinAddressValidator {
-
-        public NmcAddressValidator(NetworkParameters networkParameters) {
-            super(networkParameters);
-        }
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            if (address == null || address.length() != 34 || !address.startsWith("N") || !address.startsWith("M"))
-                return AddressValidationResult.invalidAddress("NMC address must start with 'N' or 'M' and must be 33 characters long.");
-
-            String addressAsBtc = address.substring(1, address.length());
-
-            return super.validate(addressAsBtc);
-        }
+    public Namecoin() {
+        super("Namecoin", "NMC", new DefaultAddressValidator());
     }
 }

@@ -18,19 +18,11 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.RegexAddressValidator;
+import bisq.asset.DefaultAddressValidator;
 
 public class Siafund extends Coin {
 
     public Siafund() {
-        super("Siafund", "SF", new SfAddressValidator());
+        super("Siafund", "SF", new DefaultAddressValidator());
     }
-    
-    public static class SfAddressValidator extends RegexAddressValidator {
-
-        public SfAddressValidator() {
-            super("^[0-9a-fA-F]{76}$");
-        }
-    }
-
 }

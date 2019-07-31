@@ -17,33 +17,12 @@
 
 package bisq.asset.coins;
 
-import org.bitcoinj.core.NetworkParameters;
-
-import bisq.asset.AddressValidationResult;
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
+import bisq.asset.DefaultAddressValidator;
 
 public class Unobtanium extends Coin {
 
-    public Unobtanium(Network network, NetworkParameters networkParameters) {
-        super("Unobtanium", "UNO", new UnoAddressValidator(networkParameters), network);
-    }
-    
-    public static class UnoAddressValidator extends Base58BitcoinAddressValidator {
-
-        public UnoAddressValidator(NetworkParameters networkParameters) {
-            super(networkParameters);
-        }
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            if (address == null || address.length() != 34 || !address.startsWith("u")) {
-                return AddressValidationResult.invalidAddress("UNO address must start with 'u' and must have 34 characters.");
-            }
-
-            String addressAsBtc = address.substring(1, address.length());
-
-            return super.validate(addressAsBtc);
-        }
+    public Unobtanium() {
+        super("Unobtanium", "UNO", new DefaultAddressValidator());
     }
 }
