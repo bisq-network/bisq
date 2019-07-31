@@ -22,7 +22,7 @@ dependencyVerification {
         'de.jensd:fontawesomefx-commons:5539bb3335ecb822dbf928546f57766eeb9f1516cc1417a064b5709629612149',
         'com.googlecode.jcsv:jcsv:73ca7d715e90c8d2c2635cc284543b038245a34f70790660ed590e157b8714a2',
         'com.github.sarxos:webcam-capture:d960b7ea8ec3ddf2df0725ef214c3fccc9699ea7772df37f544e1f8e4fd665f6',
-        'com.jfoenix:jfoenix:4739e37a05e67c3bc9d5b391a1b93717b5a48fa872992616b0964d3f827f8fe6',
+        'com.jfoenix:jfoenix:b5f689f97aeadf82ef908675ee3807d9979bcc012e1812d2f4c8497267a0bca4',
         'com.github.JesusMcCloud.netlayer:tor.native:d9a51d0559d0207ca75c33968972d62178b9bd4b2965c1cc0cb76eea252ba059',
         'com.github.JesusMcCloud.netlayer:tor.external:0639eea1532cb0cfae421e851753146c63b7627d4e367e8845fcc4b807f44e28',
         'org.apache.httpcomponents:httpclient:db3d1b6c2d6a5e5ad47577ad61854e2f0e0936199b8e05eb541ed52349263135',
