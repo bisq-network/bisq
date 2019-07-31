@@ -82,6 +82,46 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
     }
 
+    String getTxFee(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        if (tradable instanceof Trade)
+            return formatter.formatCoin(((Trade) tradable).getTxFee());
+        else
+            return formatter.formatCoin(tradable.getOffer().getTxFee());
+    }
+
+    String getMakerFee(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        if (tradable instanceof Trade)
+            return formatter.formatCoin(((Trade) tradable).getTakerFee());
+        else
+            return formatter.formatCoin(tradable.getOffer().getMakerFee());
+    }
+
+    String getBuyerSecurityDeposit(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        if (tradable.getOffer() != null)
+            return formatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
+        else
+        	return "";
+    }
+
+    String getSellerSecurityDeposit(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        if (tradable.getOffer() != null)
+            return formatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
+        else
+        	return "";
+    }
+
     String getDirectionLabel(ClosedTradableListItem item) {
         return (item != null) ? formatter.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
     }
