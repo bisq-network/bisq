@@ -54,6 +54,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.util.Arrays;
@@ -65,6 +67,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,6 +159,46 @@ public class TorNetworkNode extends NetworkNode {
                         log.error("Error while trying to delete deprecated hidden service directory", e);
                     }
                 });
+    }
+
+    @Override
+    public void exportHiddenService(File target) {
+        // is directory?
+        if (target.isDirectory())
+            target = new File(target, nodeAddressProperty.getValue().getHostName());
+
+        if (!target.getName().endsWith(".bisq"))
+            target = new File(target.getAbsolutePath() + ".bisq");
+
+        // create zip
+        File hiddenServiceDir = nodeAddressToHSDirectory.get(nodeAddressProperty.getValue());
+        // write to file
+        try {
+            FileOutputStream fos = new FileOutputStream(target);
+            ZipOutputStream zipOut = new ZipOutputStream(fos);
+
+            Arrays.stream(hiddenServiceDir.listFiles()).filter(file -> !file.isDirectory())
+                    .forEach(file -> {
+                                try {
+                                    zipOut.putNextEntry(new ZipEntry(file.getName()));
+
+                                    FileInputStream fis = new FileInputStream(file);
+                                    byte[] bytes = new byte[1024];
+                                    int length;
+                                    while ((length = fis.read(bytes)) >= 0) {
+                                        zipOut.write(bytes, 0, length);
+                                    }
+                                    fis.close();
+                                } catch (IOException e) {
+                                    log.error("Error while exporting hidden service.", e);
+                                }
+                            }
+                    );
+            zipOut.close();
+            fos.close();
+        } catch (IOException | NullPointerException e) {
+            log.error("Error while exporting hidden service.", e);
+        }
     }
 
     @Override

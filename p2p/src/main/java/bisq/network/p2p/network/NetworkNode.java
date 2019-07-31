@@ -40,6 +40,7 @@ import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.HashSet;
@@ -240,6 +241,8 @@ public abstract class NetworkNode implements MessageListener {
      * @param retain contains the hidden services that are still in use
      */
     public abstract void clearHiddenServices(Set<NodeAddress> retain);
+
+    public abstract void exportHiddenService(File target);
 
     @Nullable
     private InboundConnection getInboundConnection(@NotNull NodeAddress peersNodeAddress) {

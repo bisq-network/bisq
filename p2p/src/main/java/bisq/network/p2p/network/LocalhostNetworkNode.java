@@ -25,6 +25,7 @@ import bisq.common.proto.network.NetworkProtoResolver;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import java.io.File;
 import java.io.IOException;
 
 import java.util.Set;
@@ -98,6 +99,11 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     @Override
     public void clearHiddenServices(Set<NodeAddress> nodeAddressList) {
+
+    }
+
+    @Override
+    public void exportHiddenService(File file) {
 
     }
 }

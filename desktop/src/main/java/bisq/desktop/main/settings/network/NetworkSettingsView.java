@@ -48,6 +48,8 @@ import javax.inject.Inject;
 
 import javafx.fxml.FXML;
 
+import javafx.stage.FileChooser;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -69,6 +71,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+
+import java.io.File;
 
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -178,7 +182,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         reSyncSPVChainLabel.setText(Res.get("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
         renewIdButton.updateText(Res.get("settings.net.renewAddressButton"));
-        exportIdButton.updateText("Export ID");
+        exportIdButton.updateText(Res.get("settings.net.exportAddressButton"));
         importIdButton.updateText("Import ID");
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
@@ -302,6 +306,15 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                     .show();
         });
 
+        exportIdButton.setOnAction(event -> {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle(Res.get("settings.net.exportAddressFileDialog"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Res.get("settings.net.exportAddressFileEnding"), "*.bisq"));
+            File file = fileChooser.showSaveDialog(root.getScene().getWindow());
+            if (file != null)
+                p2PService.exportHiddenService(file);
+        });
+
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTable());
 
@@ -345,6 +358,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         useTorForBtcJCheckBox.setOnAction(null);
 
         renewIdButton.setOnAction(null);
+        exportIdButton.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();

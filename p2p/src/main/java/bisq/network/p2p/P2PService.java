@@ -74,6 +74,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import java.security.PublicKey;
 
+import java.io.File;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -937,5 +939,9 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
      */
     public void reportRequiredHiddenServices(Set<NodeAddress> nodeAddressList) {
         networkNode.clearHiddenServices(nodeAddressList);
+    }
+
+    public void exportHiddenService(File file) {
+        networkNode.exportHiddenService(file);
     }
 }
