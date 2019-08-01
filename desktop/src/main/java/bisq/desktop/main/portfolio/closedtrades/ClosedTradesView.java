@@ -80,45 +80,49 @@ import java.util.Comparator;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
-	private final boolean useDevPrivilegeKeys;
+    private final boolean useDevPrivilegeKeys;
 
-	@FXML
-	TableView<ClosedTradableListItem> tableView;
-	@FXML
-	TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn, 
-			marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
-	@FXML
-	HBox footerBox;
-	@FXML
-	AutoTooltipLabel filterLabel;
-	@FXML
-	InputTextField filterTextField;
-	@FXML
-	Pane spacer;
-	@FXML
-	AutoTooltipButton exportButton;
+    @FXML
+    TableView<ClosedTradableListItem> tableView;
+    @FXML
+    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,  
+            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
+    @FXML
+    HBox footerBox;
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
+    @FXML
+    Pane spacer;
+    @FXML
+    AutoTooltipButton exportButton;
 
-	private final OfferDetailsWindow offerDetailsWindow;
-	private Preferences preferences;
-	private final BSFormatter formatter;
-	private final TradeDetailsWindow tradeDetailsWindow;
-	private final PrivateNotificationManager privateNotificationManager;
-	private SortedList<ClosedTradableListItem> sortedList;
-	private FilteredList<ClosedTradableListItem> filteredList;
-	private ChangeListener<String> filterTextFieldListener;
+    private final OfferDetailsWindow offerDetailsWindow;
+    private Preferences preferences;
+    private final BSFormatter formatter;
+    private final TradeDetailsWindow tradeDetailsWindow;
+    private final PrivateNotificationManager privateNotificationManager;
+    private SortedList<ClosedTradableListItem> sortedList;
+    private FilteredList<ClosedTradableListItem> filteredList;
+    private ChangeListener<String> filterTextFieldListener;
 
-	@Inject
-	public ClosedTradesView(ClosedTradesViewModel model, OfferDetailsWindow offerDetailsWindow, Preferences preferences,
-			TradeDetailsWindow tradeDetailsWindow, PrivateNotificationManager privateNotificationManager,
-			BSFormatter formatter, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-		super(model);
-		this.offerDetailsWindow = offerDetailsWindow;
-		this.preferences = preferences;
-		this.tradeDetailsWindow = tradeDetailsWindow;
-		this.privateNotificationManager = privateNotificationManager;
-		this.formatter = formatter;
-		this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-	}
+    @Inject
+    public ClosedTradesView(ClosedTradesViewModel model,
+                            OfferDetailsWindow offerDetailsWindow,
+                            Preferences preferences,
+                            TradeDetailsWindow tradeDetailsWindow,
+                            PrivateNotificationManager privateNotificationManager,
+                            BSFormatter formatter,
+                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+        super(model);
+        this.offerDetailsWindow = offerDetailsWindow;
+        this.preferences = preferences;
+        this.tradeDetailsWindow = tradeDetailsWindow;
+        this.privateNotificationManager = privateNotificationManager;
+        this.formatter = formatter;
+        this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+    }
 
 	@Override
 	public void initialize() {
@@ -126,39 +130,76 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 		makerFeeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.makerFee")));
 		buyerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.buyerSecurityDeposit")));
 		sellerSecurityDepositColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.sellerSecurityDeposit")));
-		priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
-		amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
-		volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
-		marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
-		directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
-		dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
-		tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
-		stateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.state")));
-		avatarColumn.setText("");
+        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
+        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
+        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
+        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
+        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
+        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
+        stateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.state")));
+        avatarColumn.setText("");
 
-		tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-		tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.trades"))));
 
-		setTradeIdColumnCellFactory();
-		setDirectionColumnCellFactory();
-		setAmountColumnCellFactory();
+        setTradeIdColumnCellFactory();
+        setDirectionColumnCellFactory();
+        setAmountColumnCellFactory();
 		setTxFeeColumnCellFactory();
 		setMakerFeeColumnCellFactory();
 		setBuyerSecurityDepositColumnCellFactory();
 		setSellerSecurityDepositColumnCellFactory();
-		setPriceColumnCellFactory();
-		setVolumeColumnCellFactory();
-		setDateColumnCellFactory();
-		setMarketColumnCellFactory();
-		setStateColumnCellFactory();
-		setAvatarColumnCellFactory();
+        setPriceColumnCellFactory();
+        setVolumeColumnCellFactory();
+        setDateColumnCellFactory();
+        setMarketColumnCellFactory();
+        setStateColumnCellFactory();
+        setAvatarColumnCellFactory();
 
-		tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable().getId()));
-		dateColumn.setComparator(Comparator.comparing(o -> o.getTradable().getDate()));
-		directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
-		marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable().getId()));
+        dateColumn.setComparator(Comparator.comparing(o -> o.getTradable().getDate()));
+        directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
+        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
-		txFeeColumn.setComparator((o1, o2) -> {
+        priceColumn.setComparator((o1, o2) -> {
+            final Tradable tradable1 = o1.getTradable();
+            final Tradable tradable2 = o2.getTradable();
+            Price price1 = null;
+            Price price2 = null;
+            if (tradable1 != null)
+                price1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTradePrice() : tradable1.getOffer().getPrice();
+            if (tradable2 != null)
+                price2 = tradable2 instanceof Trade ? ((Trade) tradable2).getTradePrice() : tradable2.getOffer().getPrice();
+            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
+        });
+        volumeColumn.setComparator((o1, o2) -> {
+            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
+                Volume tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();
+                Volume tradeVolume2 = ((Trade) o2.getTradable()).getTradeVolume();
+                return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
+            } else
+                return 0;
+        });
+        amountColumn.setComparator((o1, o2) -> {
+            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
+                Coin amount1 = ((Trade) o1.getTradable()).getTradeAmount();
+                Coin amount2 = ((Trade) o2.getTradable()).getTradeAmount();
+                return amount1 != null && amount2 != null ? amount1.compareTo(amount2) : 0;
+            } else
+                return 0;
+        });
+        avatarColumn.setComparator((o1, o2) -> {
+            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
+                NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
+                NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
+                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getFullAddress() : "";
+                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getFullAddress() : "";
+                return address1.compareTo(address2);
+            } else
+                return 0;
+        });
+        txFeeColumn.setComparator((o1, o2) -> {
 			final Tradable tradable1 = o1.getTradable();
 			final Tradable tradable2 = o2.getTradable();
 			Coin txFee1 = null;
@@ -204,409 +245,387 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 				txFee2 = tradable2.getOffer().getSellerSecurityDeposit();
 			return txFee1 != null && txFee2 != null ? txFee1.compareTo(txFee2) : 0;
 		});
-		priceColumn.setComparator((o1, o2) -> {
-			final Tradable tradable1 = o1.getTradable();
-			final Tradable tradable2 = o2.getTradable();
-			Price price1 = null;
-			Price price2 = null;
-			if (tradable1 != null)
-				price1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTradePrice()
-						: tradable1.getOffer().getPrice();
-			if (tradable2 != null)
-				price2 = tradable2 instanceof Trade ? ((Trade) tradable2).getTradePrice()
-						: tradable2.getOffer().getPrice();
-			return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
-		});
-		volumeColumn.setComparator((o1, o2) -> {
-			if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-				Volume tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();
-				Volume tradeVolume2 = ((Trade) o2.getTradable()).getTradeVolume();
-				return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
-			} else
-				return 0;
-		});
-		amountColumn.setComparator((o1, o2) -> {
-			if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-				Coin amount1 = ((Trade) o1.getTradable()).getTradeAmount();
-				Coin amount2 = ((Trade) o2.getTradable()).getTradeAmount();
-				return amount1 != null && amount2 != null ? amount1.compareTo(amount2) : 0;
-			} else
-				return 0;
-		});
-		avatarColumn.setComparator((o1, o2) -> {
-			if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-				NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
-				NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
-				String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getFullAddress() : "";
-				String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getFullAddress() : "";
-				return address1.compareTo(address2);
-			} else
-				return 0;
-		});
-		stateColumn.setComparator(Comparator.comparing(model::getState));
+        stateColumn.setComparator(Comparator.comparing(model::getState));
 
-		dateColumn.setSortType(TableColumn.SortType.DESCENDING);
-		tableView.getSortOrder().add(dateColumn);
+        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        tableView.getSortOrder().add(dateColumn);
 
-		filterLabel.setText(Res.getWithCol("support.filter"));
-		filterTextField.setPromptText(Res.get("support.filter.prompt"));
-		HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
-		filterTextFieldListener = (observable, oldValue,
-				newValue) -> applyFilteredListPredicate(filterTextField.getText());
-		footerBox.setSpacing(5);
-		HBox.setHgrow(spacer, Priority.ALWAYS);
-		exportButton.updateText(Res.get("shared.exportCSV"));
-		HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
-	}
+        filterLabel.setText(Res.getWithCol("support.filter"));
+        filterTextField.setPromptText(Res.get("support.filter.prompt"));
+        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
+        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
+        footerBox.setSpacing(5);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        exportButton.updateText(Res.get("shared.exportCSV"));
+        HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
+    }
 
-	@Override
-	protected void activate() {
-		filteredList = new FilteredList<>(model.getList());
+    @Override
+    protected void activate() {
+        filteredList = new FilteredList<>(model.getList());
 
-		sortedList = new SortedList<>(filteredList);
-		sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        sortedList = new SortedList<>(filteredList);
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
-		tableView.setItems(sortedList);
+        tableView.setItems(sortedList);
 
-		exportButton.setOnAction(event -> {
-			final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
-			CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
-				String[] columns = new String[11];
-				for (int i = 0; i < columns.length; i++)
-					columns[i] = tableColumns.get(i).getText();
+        exportButton.setOnAction(event -> {
+            final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
+            CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
+                String[] columns = new String[11];
+                for (int i = 0; i < columns.length; i++)
+                    columns[i] = tableColumns.get(i).getText();
 
-				return columns;
-			};
-			CSVEntryConverter<ClosedTradableListItem> contentConverter = item -> {
-				String[] columns = new String[7];
-				columns[0] = model.getTradeId(item);
-				columns[1] = model.getDate(item);
-				columns[2] = model.getAmount(item);
-				columns[3] = model.getPrice(item);
-				columns[4] = model.getVolume(item);
+                return columns;
+            };
+            CSVEntryConverter<ClosedTradableListItem> contentConverter = item -> {
+                String[] columns = new String[11];
+                columns[0] = model.getTradeId(item);
+                columns[1] = model.getDate(item);
+                columns[2] = model.getAmount(item);
+                columns[3] = model.getPrice(item);
+                columns[4] = model.getVolume(item);
 				columns[5] = model.getTxFee(item);
 				columns[6] = model.getMakerFee(item);
 				columns[7] = model.getBuyerSecurityDeposit(item);
 				columns[8] = model.getSellerSecurityDeposit(item);
-				columns[9] = model.getDirectionLabel(item);
-				columns[10] = model.getState(item);
-				return columns;
-			};
+                columns[5] = model.getDirectionLabel(item);
+                columns[6] = model.getState(item);
+                return columns;
+            };
 
-			GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter, new ClosedTradableListItem(null),
-					sortedList, (Stage) root.getScene().getWindow());
-		});
+            GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
+                    new ClosedTradableListItem(null), sortedList, (Stage) root.getScene().getWindow());
+        });
 
-		filterTextField.textProperty().addListener(filterTextFieldListener);
-		applyFilteredListPredicate(filterTextField.getText());
-	}
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
+    }
 
-	@Override
-	protected void deactivate() {
-		sortedList.comparatorProperty().unbind();
-		exportButton.setOnAction(null);
+    @Override
+    protected void deactivate() {
+        sortedList.comparatorProperty().unbind();
+        exportButton.setOnAction(null);
 
-		filterTextField.textProperty().removeListener(filterTextFieldListener);
-	}
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
+    }
 
-	private void applyFilteredListPredicate(String filterString) {
-		filteredList.setPredicate(item -> {
-			if (filterString.isEmpty())
-				return true;
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
 
-			Offer offer = item.getTradable().getOffer();
-			boolean matchesId = offer.getId().contains(filterString);
-			boolean matchesOfferDate = formatter.formatDate(offer.getDate()).contains(filterString);
-			boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
+            Offer offer = item.getTradable().getOffer();
+            boolean matchesId = offer.getId().contains(filterString);
+            boolean matchesOfferDate = formatter.formatDate(offer.getDate()).contains(filterString);
+            boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
 
-			if (item.getTradable() instanceof Trade) {
-				boolean isBuyerOnion = false;
-				boolean isSellerOnion = false;
-				boolean matchesBuyersPaymentAccountData = false;
-				boolean matchesSellersPaymentAccountData = false;
+            if (item.getTradable() instanceof Trade) {
+                boolean isBuyerOnion = false;
+                boolean isSellerOnion = false;
+                boolean matchesBuyersPaymentAccountData = false;
+                boolean matchesSellersPaymentAccountData = false;
 
-				Trade trade = (Trade) item.getTradable();
-				boolean matchesTradeDate = formatter.formatDate(trade.getTakeOfferDate()).contains(filterString);
-				Contract contract = trade.getContract();
-				if (contract != null) {
-					isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
-					isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
-					matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails()
-							.contains(filterString);
-					matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails()
-							.contains(filterString);
-				}
-				return matchesId || matchesOfferDate || isMakerOnion || matchesTradeDate || isBuyerOnion
-						|| isSellerOnion || matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
-			} else {
-				return matchesId || matchesOfferDate || isMakerOnion;
-			}
-		});
-	}
+                Trade trade = (Trade) item.getTradable();
+                boolean matchesTradeDate = formatter.formatDate(trade.getTakeOfferDate()).contains(filterString);
+                Contract contract = trade.getContract();
+                if (contract != null) {
+                    isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
+                    isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
+                    matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                    matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                }
+                return matchesId || matchesOfferDate || isMakerOnion ||
+                        matchesTradeDate || isBuyerOnion || isSellerOnion ||
+                        matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+            } else {
+                return matchesId || matchesOfferDate || isMakerOnion;
+            }
+        });
+    }
 
-	private void setTradeIdColumnCellFactory() {
-		tradeIdColumn.getStyleClass().add("first-column");
-		tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
-		tradeIdColumn.setCellFactory(new Callback<>() {
+    private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.getStyleClass().add("first-column");
+        tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        tradeIdColumn.setCellFactory(
+                new Callback<>() {
 
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					private HyperlinkWithIcon field;
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem,
+                            ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            private HyperlinkWithIcon field;
 
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						if (item != null && !empty) {
-							field = new HyperlinkWithIcon(model.getTradeId(item));
-							field.setOnAction(event -> {
-								Tradable tradable = item.getTradable();
-								if (tradable instanceof Trade)
-									tradeDetailsWindow.show((Trade) tradable);
-								else if (tradable instanceof OpenOffer)
-									offerDetailsWindow.show(tradable.getOffer());
-							});
-							field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
-							setGraphic(field);
-						} else {
-							setGraphic(null);
-							if (field != null)
-								field.setOnAction(null);
-						}
-					}
-				};
-			}
-		});
-	}
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null && !empty) {
+                                    field = new HyperlinkWithIcon(model.getTradeId(item));
+                                    field.setOnAction(event -> {
+                                        Tradable tradable = item.getTradable();
+                                        if (tradable instanceof Trade)
+                                            tradeDetailsWindow.show((Trade) tradable);
+                                        else if (tradable instanceof OpenOffer)
+                                            offerDetailsWindow.show(tradable.getOffer());
+                                    });
+                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                    setGraphic(field);
+                                } else {
+                                    setGraphic(null);
+                                    if (field != null)
+                                        field.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
 
-	private void setDateColumnCellFactory() {
-		dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		dateColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						if (item != null)
-							setGraphic(new AutoTooltipLabel(model.getDate(item)));
-						else
-							setGraphic(null);
-					}
-				};
-			}
-		});
-	}
+    private void setDateColumnCellFactory() {
+        dateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        dateColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
+                                else
+                                    setGraphic(null);
+                            }
+                        };
+                    }
+                });
+    }
 
-	private void setMarketColumnCellFactory() {
-		marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		marketColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
-					}
-				};
-			}
-		});
-	}
+    private void setMarketColumnCellFactory() {
+        marketColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        marketColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+                            }
+                        };
+                    }
+                });
+    }
 
-	private void setStateColumnCellFactory() {
-		stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		stateColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						if (item != null)
-							setGraphic(new AutoTooltipLabel(model.getState(item)));
-						else
-							setGraphic(null);
-					}
-				};
-			}
-		});
-	}
+    private void setStateColumnCellFactory() {
+        stateColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        stateColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setGraphic(new AutoTooltipLabel(model.getState(item)));
+                                else
+                                    setGraphic(null);
+                            }
+                        };
+                    }
+                });
+    }
 
-	@SuppressWarnings("UnusedReturnValue")
-	private TableColumn<ClosedTradableListItem, ClosedTradableListItem> setAvatarColumnCellFactory() {
-		avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
-		avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		avatarColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
+    @SuppressWarnings("UnusedReturnValue")
+    private TableColumn<ClosedTradableListItem, ClosedTradableListItem> setAvatarColumnCellFactory() {
+        avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
+        avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        avatarColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
 
-					@Override
-					public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
-						super.updateItem(newItem, empty);
+                            @Override
+                            public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
 
-						if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
-							Trade trade = (Trade) newItem.getTradable();
-							int numPastTrades = model.getNumPastTrades(trade);
-							final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
-							String role = Res.get("peerInfoIcon.tooltip.tradePeer");
-							Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress, role, numPastTrades,
-									privateNotificationManager, trade, preferences, model.accountAgeWitnessService,
-									formatter, useDevPrivilegeKeys);
-							setPadding(new Insets(1, 15, 0, 0));
-							setGraphic(peerInfoIcon);
-						} else {
-							setGraphic(null);
-						}
-					}
-				};
-			}
-		});
-		return avatarColumn;
-	}
+                                if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
+                                    Trade trade = (Trade) newItem.getTradable();
+                                    int numPastTrades = model.getNumPastTrades(trade);
+                                    final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                                    String role = Res.get("peerInfoIcon.tooltip.tradePeer");
+                                    Node peerInfoIcon = new PeerInfoIcon(tradingPeerNodeAddress,
+                                            role,
+                                            numPastTrades,
+                                            privateNotificationManager,
+                                            trade,
+                                            preferences,
+                                            model.accountAgeWitnessService,
+                                            formatter,
+                                            useDevPrivilegeKeys);
+                                    setPadding(new Insets(1, 15, 0, 0));
+                                    setGraphic(peerInfoIcon);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return avatarColumn;
+    }
 
-	private void setAmountColumnCellFactory() {
-		amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		amountColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getAmount(item)));
-					}
-				};
-			}
-		});
-	}
+    private void setAmountColumnCellFactory() {
+        amountColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        amountColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
+                            }
+                        };
+                    }
+                });
+    }
 
-	private void setPriceColumnCellFactory() {
-		priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		priceColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getPrice(item)));
-					}
-				};
-			}
-		});
-	}
+    private void setPriceColumnCellFactory() {
+        priceColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        priceColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setVolumeColumnCellFactory() {
+        volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        volumeColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
+                                else
+                                    setGraphic(null);
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setDirectionColumnCellFactory() {
+        directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        directionColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
+                            }
+                        };
+                    }
+                });
+    }
 
 	private void setTxFeeColumnCellFactory() {
 		txFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		txFeeColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getTxFee(item)));
-					}
-				};
-			}
-		});
+		txFeeColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getTxFee(item)));
+                            }
+                        };
+                    }
+                });
 	}
 
 	private void setMakerFeeColumnCellFactory() {
 		makerFeeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		makerFeeColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getMakerFee(item)));
-					}
-				};
-			}
-		});
+		makerFeeColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getMakerFee(item)));
+                            }
+                        };
+                    }
+                });
 	}
 
 	private void setBuyerSecurityDepositColumnCellFactory() {
 		buyerSecurityDepositColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		buyerSecurityDepositColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getBuyerSecurityDeposit(item)));
-					}
-				};
-			}
-		});
+		buyerSecurityDepositColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getBuyerSecurityDeposit(item)));
+                            }
+                        };
+                    }
+                });
 	}
 
 	private void setSellerSecurityDepositColumnCellFactory() {
 		sellerSecurityDepositColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		sellerSecurityDepositColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getSellerSecurityDeposit(item)));
-					}
-				};
-			}
-		});
+		sellerSecurityDepositColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
+                            TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                setGraphic(new AutoTooltipLabel(model.getSellerSecurityDeposit(item)));
+                            }
+                        };
+                    }
+                });
 	}
-
-	private void setVolumeColumnCellFactory() {
-		volumeColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		volumeColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						if (item != null)
-							setGraphic(new AutoTooltipLabel(model.getVolume(item)));
-						else
-							setGraphic(null);
-					}
-				};
-			}
-		});
-	}
-
-	private void setDirectionColumnCellFactory() {
-		directionColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
-		directionColumn.setCellFactory(new Callback<>() {
-			@Override
-			public TableCell<ClosedTradableListItem, ClosedTradableListItem> call(
-					TableColumn<ClosedTradableListItem, ClosedTradableListItem> column) {
-				return new TableCell<>() {
-					@Override
-					public void updateItem(final ClosedTradableListItem item, boolean empty) {
-						super.updateItem(item, empty);
-						setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
-					}
-				};
-			}
-		});
-	}
+	
 }
