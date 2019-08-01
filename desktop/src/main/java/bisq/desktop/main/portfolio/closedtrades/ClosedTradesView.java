@@ -85,9 +85,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 	@FXML
 	TableView<ClosedTradableListItem> tableView;
 	@FXML
-	TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn,
-			makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn, marketColumn, directionColumn,
-			dateColumn, tradeIdColumn, stateColumn, avatarColumn;
+	TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn, 
+			marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
 	@FXML
 	HBox footerBox;
 	@FXML
