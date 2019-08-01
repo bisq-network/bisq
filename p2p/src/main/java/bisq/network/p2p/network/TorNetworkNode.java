@@ -154,15 +154,19 @@ public class TorNetworkNode extends NetworkNode {
         // so they are gone after an app restart
         nodeAddressToHSDirectory.entrySet().stream().filter(nodeAddressFileEntry -> !retain.contains(nodeAddressFileEntry.getKey()))
                 .forEach(nodeAddressFileEntry -> {
-                    try {
-                        Files.walk(nodeAddressFileEntry.getValue().toPath())
-                                .sorted()
-                                .map(Path::toFile)
-                                .forEach(File::deleteOnExit);
-                    } catch (IOException e) {
-                        log.error("Error while trying to delete deprecated hidden service directory", e);
-                    }
+                    deleteHiddenServiceDir(nodeAddressFileEntry.getValue());
                 });
+    }
+
+    private void deleteHiddenServiceDir(File dir) {
+        try {
+            Files.walk(dir.toPath())
+                    .sorted()
+                    .map(Path::toFile)
+                    .forEach(File::deleteOnExit);
+        } catch (IOException e) {
+            log.error("Error while trying to delete deprecated hidden service directory", e);
+        }
     }
 
     @Override
@@ -261,24 +265,31 @@ public class TorNetworkNode extends NetworkNode {
             // find hidden service candidates
             File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles();
 
-            // sort in ascending order
-            Arrays.sort(hiddenServiceDirs, Comparator.comparing(File::getName));
-
             // start
             CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
             nodeAddressToHSDirectory.clear();
-            NodeAddress nodeAddress = null;
-            for (File current : hiddenServiceDirs)
-                if (current.isDirectory()) {
-                    nodeAddress = createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
 
-                    FileUtil.rollingBackup(current, "private_key", 20);
+            // sort newest first, so we can just mark duplicate services for deletion
+            Arrays.stream(hiddenServiceDirs).sorted(Comparator.comparing(File::getName).reversed())
+                    .forEachOrdered(current -> {
+                        try {
+                            NodeAddress nodeAddress = createHiddenService(current.getName(), Utils.findFreeSystemPort(), servicePort, gate);
 
-                    nodeAddressToHSDirectory.put(nodeAddress, current);
-                }
+                            // use newest HS as for NodeAddress
+                            if (nodeAddressProperty.get() == null)
+                                nodeAddressProperty.set(nodeAddress);
 
-            // use newest HS as for NodeAddress
-            nodeAddressProperty.set(nodeAddress);
+                            FileUtil.rollingBackup(current, "private_key", 20);
+
+                            nodeAddressToHSDirectory.put(nodeAddress, current);
+                        } catch (Exception e) {
+                            if (e instanceof IOException && e.getMessage().contains("collision"))
+                                deleteHiddenServiceDir(current);
+                            else
+                                throw e;
+                        }
+                    });
+
             UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
 
             // only report HiddenServicePublished once all are published
