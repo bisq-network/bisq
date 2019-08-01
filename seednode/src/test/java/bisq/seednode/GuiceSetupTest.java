@@ -1,6 +1,7 @@
 package bisq.seednode;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.app.misc.ModuleForAppWithP2p;
 
 import org.springframework.mock.env.MockPropertySource;
@@ -13,6 +14,6 @@ public class GuiceSetupTest {
     @Test
     public void testGuiceSetup() {
         ModuleForAppWithP2p module = new ModuleForAppWithP2p(new BisqEnvironment(new MockPropertySource()));
-        Guice.createInjector(module);
+        Guice.createInjector(module).getInstance(AppSetupWithP2PAndDAO.class);
     }
 }
