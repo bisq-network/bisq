@@ -73,6 +73,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -183,7 +184,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
         renewIdButton.updateText(Res.get("settings.net.renewAddressButton"));
         exportIdButton.updateText(Res.get("settings.net.exportAddressButton"));
-        importIdButton.updateText("Import ID");
+        importIdButton.updateText(Res.get("settings.net.importAddressButton"));
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
         onionAddressColumn.setGraphic(new AutoTooltipLabel(Res.get("settings.net.onionAddressColumn")));
         onionAddressColumn.getStyleClass().add("first-column");
@@ -315,6 +316,27 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                 p2PService.exportHiddenService(file);
         });
 
+        importIdButton.setOnAction(event -> {
+            new Popup<>().information(Res.get("settings.net.importAddress"))
+                    .actionButtonText(Res.get("shared.applyAndShutDown"))
+                    .onAction(() -> {
+                        FileChooser fileChooser = new FileChooser();
+                        fileChooser.setTitle(Res.get("settings.net.importAddressFileDialog"));
+                        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(Res.get("settings.net.exportAddressFileEnding"), "*.bisq"));
+                        File file = fileChooser.showOpenDialog(root.getScene().getWindow());
+                        if (file == null)
+                            return;
+                        try {
+                            p2PService.importHiddenService(file);
+                            UserThread.runAfter(BisqApp.getShutDownHandler()::run, 500, TimeUnit.MILLISECONDS);
+                        } catch (IOException e) {
+                            new Popup<>().error(Res.get("settings.net.importAddressError")).show();
+                        }
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        });
+
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTable());
 
@@ -359,6 +381,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
         renewIdButton.setOnAction(null);
         exportIdButton.setOnAction(null);
+        importIdButton.setOnAction(null);
 
         if (nodeAddressSubscription != null)
             nodeAddressSubscription.unsubscribe();

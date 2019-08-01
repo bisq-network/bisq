@@ -87,8 +87,8 @@ public class LocalhostNetworkNode extends NetworkNode {
     }
 
     @Override
-    public void renewHiddenService() {
-
+    public File renewHiddenService() {
+        return null;
     }
 
     // Called from NetworkNode thread
@@ -104,6 +104,11 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     @Override
     public void exportHiddenService(File file) {
+
+    }
+
+    @Override
+    public void importHiddenService(File source) {
 
     }
 }

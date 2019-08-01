@@ -68,6 +68,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
@@ -121,9 +122,10 @@ public class TorNetworkNode extends NetworkNode {
     /**
      * only prepares a fresh hidden service folder. The actual HS is only established and
      * started on Bisq restart!
+     * @return
      */
     @Override
-    public void renewHiddenService() {
+    public File renewHiddenService() {
         // find suitable folder name
         int seed = 0;
         File newDir = null;
@@ -134,6 +136,8 @@ public class TorNetworkNode extends NetworkNode {
         } while (newDir.exists());
 
         newDir.mkdirs();
+
+        return newDir;
     }
 
     /**
@@ -198,6 +202,38 @@ public class TorNetworkNode extends NetworkNode {
             fos.close();
         } catch (IOException | NullPointerException e) {
             log.error("Error while exporting hidden service.", e);
+        }
+    }
+
+    @Override
+    public void importHiddenService(File source) throws IOException {
+        if (!source.getName().endsWith(".bisq")) {
+            log.error("Tried to import from a file not ending in '.bisq'");
+            throw new IOException("Cannot read backup file.");
+        }
+
+        try {
+            // create hidden service directory
+            File newHiddenServiceDir = renewHiddenService();
+
+            // unzip contents of source
+            byte[] buffer = new byte[1024];
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(source));
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                File destination = new File(newHiddenServiceDir, zipEntry.getName());
+                FileOutputStream fos = new FileOutputStream(destination);
+                int len;
+                while ((len = zis.read(buffer)) > 0)
+                    fos.write(buffer, 0, len);
+                fos.close();
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+            zis.close();
+        } catch (IOException e) {
+            log.error("Importing a hidden service failed. ", e);
+            throw e;
         }
     }
 

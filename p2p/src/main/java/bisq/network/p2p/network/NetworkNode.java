@@ -232,7 +232,7 @@ public abstract class NetworkNode implements MessageListener {
         }
     }
 
-    public abstract void renewHiddenService();
+    public abstract File renewHiddenService();
 
     /**
      * Gets rid of all hidden services except those given in the retain
@@ -243,6 +243,8 @@ public abstract class NetworkNode implements MessageListener {
     public abstract void clearHiddenServices(Set<NodeAddress> retain);
 
     public abstract void exportHiddenService(File target);
+
+    public abstract void importHiddenService(File source) throws IOException;
 
     @Nullable
     private InboundConnection getInboundConnection(@NotNull NodeAddress peersNodeAddress) {
