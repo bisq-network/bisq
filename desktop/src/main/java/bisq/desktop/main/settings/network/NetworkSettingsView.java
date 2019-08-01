@@ -177,7 +177,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         usePublicNodesRadio.setText(Res.get("settings.net.usePublicNodesRadio"));
         reSyncSPVChainLabel.setText(Res.get("settings.net.reSyncSPVChainLabel"));
         reSyncSPVChainButton.updateText(Res.get("settings.net.reSyncSPVChainButton"));
-        renewIdButton.updateText("Renew ID");
+        renewIdButton.updateText(Res.get("settings.net.renewAddressButton"));
         exportIdButton.updateText("Export ID");
         importIdButton.updateText("Import ID");
         p2PPeersLabel.setText(Res.get("settings.net.p2PPeersLabel"));
@@ -292,8 +292,14 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         reSyncSPVChainButton.setOnAction(event -> GUIUtil.reSyncSPVChain(preferences));
 
         renewIdButton.setOnAction(event -> {
-            p2PService.renewHiddenService();
-            showShutDownPopup();
+            new Popup<>().information(Res.get("settings.net.renewAddress"))
+                    .actionButtonText(Res.get("shared.applyAndShutDown"))
+                    .onAction(() -> {
+                        p2PService.renewHiddenService();
+                        UserThread.runAfter(BisqApp.getShutDownHandler()::run, 500, TimeUnit.MILLISECONDS);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
         });
 
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
