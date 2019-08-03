@@ -1,0 +1,280 @@
+<?xml version='1.0' encoding='utf-8'?>
+<dependency-verification version='1'>
+  <trust-requirement pgp='GROUP' checksum='NONE' />
+  <ignored-keys />
+  <trusted-keys>
+    <trusted-key id='2c7b12f2a511e325' group='ch.qos.logback' />
+    <trusted-key id='5216d78789719faf' group='com.eatthepath' />
+    <trusted-key id='9cd8549acf9bd0ce' group='com.fasterxml' />
+    <trusted-key id='c9fbaa83a8753994' group='com.fasterxml' />
+    <trusted-key id='9cd8549acf9bd0ce' group='com.fasterxml.jackson' />
+    <trusted-key id='c9fbaa83a8753994' group='com.fasterxml.jackson' />
+    <trusted-key id='2d1f2506c6ecedf4' group='com.fasterxml.jackson.core' />
+    <trusted-key id='9cd8549acf9bd0ce' group='com.fasterxml.jackson.core' />
+    <trusted-key id='c9fbaa83a8753994' group='com.fasterxml.jackson.core' />
+    <trusted-key id='839b0d3b6fd564fa' group='com.github.mmazi' />
+    <trusted-key id='52d84435919970b9' group='com.github.sarxos' />
+    <trusted-key id='6ccc36cc6c69fc17' group='com.google' />
+    <trusted-key id='d57506cd188fd842' group='com.google.api' />
+    <trusted-key id='9f4ece65148e76ab' group='com.google.api-client' />
+    <trusted-key id='70f2d462f20f15a6' group='com.google.api.grpc' />
+    <trusted-key id='e16ab52d79fd224f' group='com.google.apis' />
+    <trusted-key id='7a2328faebf60822' group='com.google.auth' />
+    <trusted-key id='b0f3710fa64900e7' group='com.google.auto.value' />
+    <trusted-key id='70f2d462f20f15a6' group='com.google.cloud' />
+    <trusted-key id='59a252fb1199d873' group='com.google.code.findbugs' />
+    <trusted-key id='7a01b0f236e5430f' group='com.google.code.gson' />
+    <trusted-key id='8e3f0de7ae354651' group='com.google.code.gson' />
+    <trusted-key id='9a259c7ee636c5ed' group='com.google.errorprone' />
+    <trusted-key id='7f98d6d50605cf6d' group='com.google.firebase' />
+    <trusted-key id='5d67bffcba1f9a39' group='com.google.gradle' />
+    <trusted-key id='abe9f3126bb741c1' group='com.google.guava' />
+    <trusted-key id='9f4ece65148e76ab' group='com.google.http-client' />
+    <trusted-key id='f0df21d1d0a3c384' group='com.google.inject' />
+    <trusted-key id='9f4ece65148e76ab' group='com.google.oauth-client' />
+    <trusted-key id='5d67bffcba1f9a39' group='com.google.protobuf' />
+    <trusted-key id='8a97894ac41b3ecf' group='com.google.protobuf' />
+    <trusted-key id='a7764f502a938c99' group='com.google.protobuf' />
+    <trusted-key id='d5e0a69c0cbaae9f' group='com.google.zxing' />
+    <trusted-key id='107c8e67a79f79da' group='com.googlecode.jcsv' />
+    <trusted-key id='c5175c1e88879011' group='com.jfoenix' />
+    <trusted-key id='74595844d67bf316' group='com.lambdaworks' />
+    <trusted-key id='5c3d8c061e28bea3' group='com.madgag.spongycastle' />
+    <trusted-key id='c6e12d4ac4337240' group='com.nativelibs4java' />
+    <trusted-key id='08d10fd8bad264c9' group='com.natpryce' />
+    <trusted-key id='3c1bf9e969c7b2a2' group='com.sparkjava' />
+    <trusted-key id='8e3f0de7ae354651' group='com.squareup.okhttp' />
+    <trusted-key id='8e3f0de7ae354651' group='com.squareup.okio' />
+    <trusted-key id='5216d78789719faf' group='com.turo' />
+    <trusted-key id='86fdc7e2a11262cb' group='commons-codec' />
+    <trusted-key id='86fdc7e2a11262cb' group='commons-io' />
+    <trusted-key id='9daadc1c9fcc82d0' group='commons-io' />
+    <trusted-key id='1861c322c56014b2' group='commons-lang' />
+    <trusted-key id='a41f13c999945293' group='commons-logging' />
+    <trusted-key id='0f64f95cef5f0629' group='de.jensd' />
+    <trusted-key id='2c3097c79005ff30' group='de.jensd' />
+    <trusted-key id='6449005f96bc97a3' group='de.undercouch' />
+    <trusted-key id='67631bc0568801c3' group='io.github.microutils' />
+    <trusted-key id='024fc1610ede0ac5' group='io.grpc' />
+    <trusted-key id='056aca74d46000bf' group='io.netty' />
+    <trusted-key id='2884264f1c58119a' group='io.opencensus' />
+    <trusted-key id='c3bab45f4af71fab' group='io.opencensus' />
+    <trusted-key id='9a2c7a98e457c53d' group='io.spring.gradle' />
+    <trusted-key id='6425559c47cc79c4' group='javax.servlet' />
+    <trusted-key id='6425559c47cc79c4' group='javax.ws.rs' />
+    <trusted-key id='72385ff0af338d52' group='joda-time' />
+    <trusted-key id='efe8086f9e93774e' group='junit' />
+    <trusted-key id='96fb9db219f3338d' group='kr.motd.maven' />
+    <trusted-key id='bb2914c1fa0811c3' group='net.bytebuddy' />
+    <trusted-key id='0f97219ea9eea989' group='net.glxn' />
+    <trusted-key id='1209e7f13d0c92b9' group='net.iharder' />
+    <trusted-key id='0da8a5ec02d11ead' group='net.sf.jopt-simple' />
+    <trusted-key id='bd9affb4c0a2151b' group='oauth.signpost' />
+    <trusted-key id='012579464d01c06a' group='org.apache' />
+    <trusted-key id='205c8673dc742c7c' group='org.apache' />
+    <trusted-key id='21a24b3f8b0f594a' group='org.apache' />
+    <trusted-key id='873a8e86b4372146' group='org.apache' />
+    <trusted-key id='9c4f7e9d98b1cc53' group='org.apache' />
+    <trusted-key id='c92c5fec70161c62' group='org.apache' />
+    <trusted-key id='3faad2cd5ecbb314' group='org.apache.commons' />
+    <trusted-key id='7a8860944fad5f62' group='org.apache.commons' />
+    <trusted-key id='86fdc7e2a11262cb' group='org.apache.commons' />
+    <trusted-key id='9daadc1c9fcc82d0' group='org.apache.commons' />
+    <trusted-key id='a2115ae15f6b8b72' group='org.apache.commons' />
+    <trusted-key id='7c25280eae63ebe5' group='org.apache.httpcomponents' />
+    <trusted-key id='86fdc7e2a11262cb' group='org.apache.httpcomponents' />
+    <trusted-key id='3595395eb3d8e1ba' group='org.apache.logging.log4j' />
+    <trusted-key id='6fb21e8933c60243' group='org.apache.tomcat' />
+    <trusted-key id='6fb21e8933c60243' group='org.apache.tomcat.embed' />
+    <trusted-key id='164bd2247b936711' group='org.apiguardian' />
+    <trusted-key id='ca662be18b877a60' group='org.bitcoinj' />
+    <trusted-key id='b341ddb020fcb6ab' group='org.bouncycastle' />
+    <trusted-key id='41321490758aad6f' group='org.codehaus.groovy' />
+    <trusted-key id='0818d9d68fb67bac' group='org.eclipse.jetty' />
+    <trusted-key id='0818d9d68fb67bac' group='org.eclipse.jetty.websocket' />
+    <trusted-key id='4a23006a8e767508' group='org.fxmisc.easybind' />
+    <trusted-key id='a6adfc93ef34893e' group='org.hamcrest' />
+    <trusted-key id='bcf4173966770193' group='org.jetbrains' />
+    <trusted-key id='379ce192d401ab61' group='org.jetbrains.intellij.deps' />
+    <trusted-key id='98fe03a974ce0a0b' group='org.jetbrains.kotlin' />
+    <trusted-key id='379ce192d401ab61' group='org.jetbrains.kotlinx' />
+    <trusted-key id='99ce9d9f22dc5c99' group='org.json' />
+    <trusted-key id='85911f425ec61b51' group='org.junit.jupiter' />
+    <trusted-key id='85911f425ec61b51' group='org.junit.platform' />
+    <trusted-key id='a3f9322595482dc1' group='org.knowm.xchange' />
+    <trusted-key id='a1b4460d8ba7b9af' group='org.mockito' />
+    <trusted-key id='7c7d8456294423ba' group='org.objenesis' />
+    <trusted-key id='6a9fbe152d4c64d1' group='org.openjfx' />
+    <trusted-key id='85911f425ec61b51' group='org.opentest4j' />
+    <trusted-key id='2be5d98f751f4136' group='org.pcollections' />
+    <trusted-key id='f95add0a28d2f139' group='org.projectlombok' />
+    <trusted-key id='2c7b12f2a511e325' group='org.slf4j' />
+    <trusted-key id='9a2c7a98e457c53d' group='org.springframework' />
+    <trusted-key id='9a2c7a98e457c53d' group='org.springframework.boot' />
+    <trusted-key id='5e7f97dda07a415b' group='org.springframework.data' />
+    <trusted-key id='5e7f97dda07a415b' group='org.springframework.data.build' />
+    <trusted-key id='9a2c7a98e457c53d' group='org.springframework.integration' />
+    <trusted-key id='9a2c7a98e457c53d' group='org.springframework.security' />
+    <trusted-key id='72385ff0af338d52' group='org.threeten' />
+    <trusted-key id='38ee757d69184620' group='org.tukaani' />
+    <trusted-key id='55c7e5e701832382' group='org.yaml' />
+  </trusted-keys>
+  <dependencies>
+    <dependency group='aopalliance' module='aopalliance' version='1.0'>
+      <sha512>3F44A932D8C00CFEEE2EB057BCD7C301A2D029063E0A916E1E20B3AEC4877D19D67A2FD8AAF58FA2D5A00133D1602128A7F50912FFB6CABC7B0FDC7FBDA3F8A1</sha512>
+    </dependency>
+    <dependency group='aopalliance' module='aopalliance' version='1.0' extension='pom'>
+      <sha512>E15970E4DFE9A5DF2D105A5F220F9950B0932E3E3D50534098E21BA2A602DA375ECC17E5C0E54AF8CF120DA50C9148E749ED87E5153353B53BF92F8FCED47425</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='parent' version='0.6.5.2' extension='pom'>
+      <sha512>7489105D0BC1D9AB2B88193DB189F647DB93D2B1A07E9B5ABC747BAEB4B6401967A5DB6A01E171B76927B33642BB60369AD67F34D41D4CC9FB9BF23D7D6CA757</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='tor.external' version='0.6.5.2'>
+      <sha512>C661A009865E85E39AC72DB437FE324F97CC064DFF3B284240A84DA94AA7F1AE91603545A537032B9317EB642ADB95CBEF4B3FCACCD1A4E353D71E9D69F0CF16</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='tor.external' version='0.6.5.2' extension='pom'>
+      <sha512>71622D0A80B3A6CE672889FB8EF890890859D75D3E2C5A2AC70572D99FDFE98434E92B2E055CCAFDE439B52E38EAD57F6E8AF8C8FAE2FBE967CF945AF6AA690D</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='tor.native' version='0.6.5.2'>
+      <sha512>887106F41F1621DA85A8BD3E7EFF7DD9D455BBD433D1ACD473399F91C0F954E94BA3DF606AB87106F62129FA5D1277220EC17F032C7FA819DE114C7FF9B20754</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='tor.native' version='0.6.5.2' extension='pom'>
+      <sha512>C36336A2535CF209BDC9B2DD20B3B2E984A54654DD3AC2FFF3AFC17B29D7FC7ED7B60041E1E4EA32C0A195F566B91FD7E765AB6DCE249C93A72BE2A4D0997E8</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='tor' version='0.6.5.2'>
+      <sha512>343439AF7844BA86696657309BA89189590406FA26D2B64818CB6916D646B5B6374C877B2351D6FFEB8A75D98EAE3E1E353B36673290600E752DE04DFB201A11</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.netlayer' module='tor' version='0.6.5.2' extension='pom'>
+      <sha512>8EEC8231624E8F7B5772C640AB4C9E163997C81750A55A2CECA91B255BBA77E2912CB86A0712A528380CFBB14F9FDF7974AE10A2D3AEF0373A288923124C4D49</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-geoip' version='0.4.1.5'>
+      <sha512>4E8E6800865BAF74F4CCFA50C1922919B8B30A11F69BF3ED3BB11E0A75AAFF54A3F7BE887A4E15427B662DA805779326D9D8E7BD5218DBF487C9B6DF75D7610B</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-geoip' version='0.4.1.5' extension='pom'>
+      <sha512>EA444F41232E8E23B3C0268EB037BA6F403AA69DDF6DCBF2BBBC3BF2151B7A84B89D0399687CCB580C3B28376A503BD9C8D12EC70ADD7F64CA3CA9B73D82ECD9</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-linux32' version='0.4.1.5'>
+      <sha512>618BC9A234F4BBAA75A73F6173E140EA67E65C6596A7FFA596E1139C9A29E3D0ED6CFD61CBA0B18157CFB8B9AE582FBFCDF330E9FC3861AE027733B99685E7B2</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-linux32' version='0.4.1.5' extension='pom'>
+      <sha512>99E06474B5B8E4110CA3AFE083631A77F576EB5016097A2F28CD6A153F84DD7F5AE3511DE8321856C8D78AF4A5A887C8103FE7D2E0C43F7069A74C6A26D5E56</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-linux64' version='0.4.1.5'>
+      <sha512>DCACCB9B2FE9B9ECCBA1A0BB1CB2538E1DC6AEB1E68956526D49C9FFDCCFA82BE9688E5EDDD9F088D39E63E9640C7487FC52DBA60FEF2B5D045883262A1324BD</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-linux64' version='0.4.1.5' extension='pom'>
+      <sha512>59A66A629DB5B39576052877007A12FFA3F7D4521B355CD8B93CBD4F81007D28AE4E91B21BAC440BB825C68BE270CD3593AFA5B47FB6E5B26019185D55ED76</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-macos' version='0.4.1.5'>
+      <sha512>340AAECD9B769CA6F412FBA487785C40A0C5EA44CF4D7C02D971B599F0190F26FD4FCC23ECFC451CAD6BF00666E1E7AD13CACAA7205E4085CB8C729B22A7017E</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-macos' version='0.4.1.5' extension='pom'>
+      <sha512>305074CC391DAFC8546F8AA7A8C47EE5D58F677806D51549B4E976EF854DA3A5C59E3136A2C634A31517375AB7843B20567B83269178CC74B4A7108C861965E7</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-windows' version='0.4.1.5'>
+      <sha512>F64B7DF1E7EF6CA4F9A11DCB2ACA6546580796712617F4B958E6132DE8E3DD534444B2122333DFC86564181EA211CDAB4CB5DC325A762D5CA39C06EBDBE3A86E</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary-windows' version='0.4.1.5' extension='pom'>
+      <sha512>8946304D4EA137AB0A15191CF4B1CCD43E7991A1293FBE95BB981AFDDB1CF17487A7DBF8E94A4AB8EF00853A0E7E51B71E55559F26D1531BBF0A3788D458F29D</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud.tor-binary' module='tor-binary' version='0.4.1.5' extension='pom'>
+      <sha512>F33B91D6AC1E9F7B64EAAC9FF5AF55A91268A6D2C40A36FC5B26570630251A2317F4CAAD7E7977B71BC430BBC77C1E9CA7343C7E6CE607AAE336881E1E3FA0F7</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud' module='jtorctl' version='1.3'>
+      <sha512>C1783CAA1C34A00AE50EEF3243EC3B430BB8BCEF0ADC875B0F84C02D431BF04A9C33A61A97442D8F0DFF5D8718EB4DD69DEE7F53D593271BF79575598A1C205C</sha512>
+    </dependency>
+    <dependency group='com.github.JesusMcCloud' module='jtorctl' version='1.3' extension='pom'>
+      <sha512>54653776BCE6DC191BC3D742172A8F3CB4DEBD7072B5D108C7F8CF5A5E9527D73932A4808DAB7C7C0F0D3A0CBD3B81FF3FE209F3B7CA6AD16238ADE62DC28395</sha512>
+    </dependency>
+    <dependency group='com.github.bisq-network.bitcoinj' module='bitcoinj-core' version='a88d36d'>
+      <sha512>39516E8ADB523382EC628F932D44B700C11CC1861A3F1AA5C96AD83C564ED95E75690B52CCFBA10B055A13E1A90E2BBDDED8197559E84EE25E06D17FD5A771D8</sha512>
+    </dependency>
+    <dependency group='com.github.bisq-network.bitcoinj' module='bitcoinj-core' version='a88d36d' extension='pom'>
+      <sha512>DDCE60937E4F7AB584DBE8157B8BC34F70FC4095B39BEE18C45F53C76A9D68FF1DCEA77EB751ECAFB533840D4D077C8FD2E69DC23296233E77405700D8DF93FD</sha512>
+    </dependency>
+    <dependency group='com.github.bisq-network.bitcoinj' module='bitcoinj-parent' version='a88d36d' extension='pom'>
+      <sha512>F1DC195C3598829D62D44D5D257F897DB57392B1D1A657FEF1D1B795D795C5285AF87A38BA6DFBED331FDF8BFD447E26FCA19EC05CB789B89F751CA552E7CE5B</sha512>
+    </dependency>
+    <dependency group='com.github.jengelman.gradle.plugins' module='shadow' version='5.2.0'>
+      <sha512>39308A31635C2B4728354CC79A1EA2F0DE10F7F80BAE0205E3D960A92A42A25E55E0B4ABD18960502B22E5467474DCC8E35079A6866742773D47A3D2D1A206FB</sha512>
+    </dependency>
+    <dependency group='com.github.ravn' module='jsocks' version='567e1cd'>
+      <sha512>E59D451492961D705C1311A0C0818D3D170534509FD6EDFAC0784435583C01037A29E6B9A437B3BEF5E9C77A2D796D4F1A815E9741736CB8492F98B7CACC785</sha512>
+    </dependency>
+    <dependency group='com.github.ravn' module='jsocks' version='567e1cd' extension='pom'>
+      <sha512>10EC38A1EC2BAB5A627A866EF5144267699C503CEDFAA7EFF2E909FE36D6178666B69C20FA81527D63A4B3398F06D0FC148F936586FB1E104601270D6FCF6D3E</sha512>
+    </dependency>
+    <dependency group='javax.inject' module='javax.inject' version='1'>
+      <sha512>E126B7CCF3E42FD1984A0BEEF1004A7269A337C202E59E04E8E2AF714280D2F2D8D2BA5E6F59481B8DCD34AAF35C966A688D0B48EC7E96F102C274DC0D3B381E</sha512>
+    </dependency>
+    <dependency group='javax.inject' module='javax.inject' version='1' extension='pom'>
+      <sha512>2F0C773BA24B74F45F6519C653CB118395F81389C7E73A034F82074A3E277F793D77783D794143236B05FC5247AF5F69D9B2605D0929B742A5673A55E51F880</sha512>
+    </dependency>
+    <dependency group='javax.validation' module='validation-api' version='1.1.0.Final'>
+      <sha512>BC137C5F7FA6B7092F9FC233D8BE7D21D6767F8AA51C2E934B73692C82D28DBB410F55674D7B5A0E1523B514654339277B535B7F5BB01D457A11ABA2ECA3BBED</sha512>
+    </dependency>
+    <dependency group='javax.validation' module='validation-api' version='1.1.0.Final' extension='pom'>
+      <sha512>3B1E69F5B7AB0161509BEF87DC441BB263B9A97A835ADAFABC3B1FEB33EF732BD2AEB3FA37314FD0EF67BD111144CC6CFC2F41091AC206AA98F0E6F3D220E05D</sha512>
+    </dependency>
+    <dependency group='net.java' module='jvnet-parent' version='5' extension='pom'>
+      <sha512>E8CE64D5697C3A282CF84E250F9586FFAAB10EBE9F2E17817EC7C0931CD7C0CF0B03425D914A59F87AB145D49027EEB845345F9F4DA037844BD9D90D1E735D7</sha512>
+    </dependency>
+    <dependency group='net.jcip' module='jcip-annotations' version='1.0'>
+      <sha512>CB312B3F571D91EF183C119D878F50464FFD97F853B7311CBA386463F295E8B7B3A5A89ED4269A045CACD5AA7CB4C803D4882854A0FDDEFA9BBC28C72AA6C786</sha512>
+    </dependency>
+    <dependency group='net.jcip' module='jcip-annotations' version='1.0' extension='pom'>
+      <sha512>DFE1A3946E9381CC9B3619BA3149615DC63CB6790CCF0518D56242F4B74D0E6105DCE24A40642BB8A79AB6ECDBE42EABC3EE51F752421DAD5DB9C894256BDF41</sha512>
+    </dependency>
+    <dependency group='network.bisq.btcd-cli4j' module='btcd-cli4j-core' version='975ff5d4'>
+      <sha512>C943349B0A54F8355651DFB72DAECC2F7CA2731FEAAA73BCB76BC0893394A3F4C6B506D71E00E091B2A0EE695DB60EB6A1EBABBDEF5310239753282740AEC3BD</sha512>
+    </dependency>
+    <dependency group='network.bisq.btcd-cli4j' module='btcd-cli4j-core' version='975ff5d4' extension='pom'>
+      <sha512>7D4521AB522DF82F34A0EE205E2D64DA105DDBC71EAAC5AFBE3B2A2F4A25F3ED410411E9431C0A40C9ED4FE27728654AA8CD4EB7B2730434F7773DAC57BFBB68</sha512>
+    </dependency>
+    <dependency group='network.bisq.btcd-cli4j' module='btcd-cli4j-daemon' version='975ff5d4'>
+      <sha512>715666928A600DE5F3214404032A10EC9F681BB7821FCBCEE136D5D8102EE005EA8FB3C212EA315AEC9F25CA722FC9B871BF7E966D27008C31D7F4721944C99E</sha512>
+    </dependency>
+    <dependency group='network.bisq.btcd-cli4j' module='btcd-cli4j-daemon' version='975ff5d4' extension='pom'>
+      <sha512>93FE9D3EF4031FC7663806FEA79F652421C339BCFAD63B4489F3B9CF20FA1F048747D15E485B15C3E25E581023A76413802314A57C09B33B9C0BA9EE83AED70A</sha512>
+    </dependency>
+    <dependency group='network.bisq.btcd-cli4j' module='btcd-cli4j-parent' version='975ff5d4' extension='pom'>
+      <sha512>2A258E3C80B4D478B3ACA77EAF884088154D70A3569FCF1B2DDE8D3CB0E8E8E7B0F9E4D82834F5971283390DD3D13425E283BDBC8C55B008B27BEC568A69544E</sha512>
+    </dependency>
+    <dependency group='org.codehaus.jackson' module='jackson-core-asl' version='1.9.11'>
+      <sha512>20AA9BCDDDF4FC7EA4E63F5E376D4335328608583DC2402FBDA70608A1954381710CFE331B1083FD263180F4FBFF2A44D07B066355101AB68892011569DB2EAA</sha512>
+    </dependency>
+    <dependency group='org.hibernate' module='hibernate-validator-parent' version='5.3.6.Final' extension='pom'>
+      <sha512>A5FDBA08F3C7C14D2DAB72023B8D52DE94655AE3FD7F368034A4B1A809C370DCD0BDFAB6B72CF436C0345AC41EC7446552B1A96F75CC53501DDC829FAAA9128C</sha512>
+    </dependency>
+    <dependency group='org.hibernate' module='hibernate-validator' version='5.3.6.Final'>
+      <sha512>2CE205F04D96523DA24A34FF79F1D398C4AFB1AC3FBDC444F2E7065783E10038B956307BE3568155879F89CC7B31CD2FD6C8B2A21C47F23E43E39E2E18C28713</sha512>
+    </dependency>
+    <dependency group='org.hibernate' module='hibernate-validator' version='5.3.6.Final' extension='pom'>
+      <sha512>712EED3BF7EBADDEA2D88E5E5998A4016BA1B80D99185742C2AAB7DC90387D6C2C459A2D5E577A1033618A3E6A79B65DE1C6ABAF41871B435649E7121986747F</sha512>
+    </dependency>
+    <dependency group='org.jboss.arquillian' module='arquillian-bom' version='1.1.11.Final' extension='pom'>
+      <sha512>CAA8797B5AC78B1DB17BA92EE7BC3D81DE45F9F84DBB89AEDD8BF0E82575155D38D2806BF64AEBE7AAB1DB1FC581766934A51D0D2A18ECFF1B4C3312D25A5C87</sha512>
+    </dependency>
+    <dependency group='org.jboss.logging' module='jboss-logging' version='3.3.1.Final'>
+      <sha512>E887BA7BC5BD0CCCB0AD8FA9D6CED29F2097914797444C8EA5CEB3D0A92B07933D37C4E714AF3C87069BF5858FB52ED4FDD0DA7DE0559A74F1AD82ABC09385F9</sha512>
+    </dependency>
+    <dependency group='org.jboss.logging' module='jboss-logging' version='3.3.1.Final' extension='pom'>
+      <sha512>2CB7FC5B1431D889FC5311114734174FCA076A44A1870FBC110E0E54EE1E160DAC3B171A6BB724EE0607FCAAB5ADC2D67B0C7F5FE5C8E1D4ED4AFC8423B46D28</sha512>
+    </dependency>
+    <dependency group='org.jboss.shrinkwrap.descriptors' module='shrinkwrap-descriptors-bom' version='2.0.0-alpha-8' extension='pom'>
+      <sha512>D6C8F2A4701571E9FD761F38AF820BF7CDC8B47D8E9379213E0846B5FBB55717F3CE072EA7CC193E2572534D834F068EE4ACC94A185C706858823D2146A1BA69</sha512>
+    </dependency>
+    <dependency group='org.jboss.shrinkwrap.resolver' module='shrinkwrap-resolver-bom' version='2.2.0' extension='pom'>
+      <sha512>29276DAD72649A662850070B3EED475AA6D3696ECF24E25D77816AD722983B1A2F09708F5ED17585697315A5820A5302D175EDACF4AC9303011E5D1E10C6DD6D</sha512>
+    </dependency>
+    <dependency group='org.jboss.shrinkwrap' module='shrinkwrap-bom' version='1.2.3' extension='pom'>
+      <sha512>667E4B3810A4F46909548CB8157B86A375550CFF0C1E161186585FFCF569C979C80A44D6D0C28B67F80D2E02506DD12BC8CAE14F5B329869B37D921DFE718F84</sha512>
+    </dependency>
+    <dependency group='org.jboss' module='jboss-parent' version='15' extension='pom'>
+      <sha512>D4653E7E948BFDBB0EBA42305247F51878AD2BC5B6CFB0E8A5E6BB873D5B69A2C3AB8A0505B41E1F9701CF6EA301B4E2AC9E9B729963C23ABC56B4AFDC59DEA0</sha512>
+    </dependency>
+    <dependency group='org.sonatype.oss' module='oss-parent' version='7' extension='pom'>
+      <sha512>63B0951F793EE9D25239EE44760E4D51DE3B8503E438E567862306F2D175019D8617EB854BC4EE2374C39F385E0A1094C3C7097F899B2074E4ACDA14FE6030FB</sha512>
+    </dependency>
+  </dependencies>
+</dependency-verification>

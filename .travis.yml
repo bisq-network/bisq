@@ -5,6 +5,12 @@ jdk:
 
 before_install:
     grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+
+env:
+    global:
+        - ORG_GRADLE_PROJECT_checksumFailOn=build_finish
+        - ORG_GRADLE_PROJECT_checksumPrint=true
+
 notifications:
     slack:
         on_success: change
