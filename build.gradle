@@ -1,6 +1,6 @@
-if(JavaVersion.current() != JavaVersion.VERSION_1_10){
-// feel free to delete this if you know what you are doing
-    throw new GradleException("This build must be run with java 10. see docs/build.md")
+if (JavaVersion.current() != JavaVersion.VERSION_1_10) {
+    // feel free to delete this if you know what you are doing
+    throw new GradleException("This build must be run with java 10. See docs/build.md")
 }
 buildscript {
     repositories {
@@ -32,19 +32,43 @@ configure(subprojects) {
 
     ext {
         bcVersion = '1.56'
+        bitcoinjVersion = 'a88d36d'
+        btcdCli4jVersion = '065d3786'
         codecVersion = '1.9'
+        controlsfxVersion = '8.0.6_20'
+        easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
+        findbugsVersion = '3.0.2'
+        firebaseVersion = '6.2.0'
+        guavaVersion = '20.0'
+        guiceVersion = '4.1.0'
+        hamcrestVersion = '1.3'
+        httpclientVersion = '4.5.3'
+        ioVersion = '2.4'
+        jacksonVersion = '2.8.10'
+        jcsvVersion = '1.4.0'
+        jetbrainsAnnotationsVersion = '13.0'
+        jfoenixVersion = '9.0.6'
         jmockitVersion = '1.42'
         joptVersion = '5.0.3'
+        jsonsimpleVersion = '1.1.1'
+        junitVersion = '4.12'
+        jupiterVersion = '5.3.2'
+        knowmXchangeVersion = '4.3.3'
         langVersion = '3.4'
-        bitcoinjVersion = 'a88d36d'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '2.21.0'
+        netlayerVersion = '0.6.5'
         powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
+        pushyVersion = '0.13.2'
+        qrgenVersion = '1.3'
+        reactfxVersion = '2.0-M3'
+        sarxosVersion = '0.3.12'
         slf4jVersion = '1.7.22'
         sparkVersion = '2.5.2'
+        springBootVersion = '1.5.10.RELEASE'
         springVersion = '4.3.6.RELEASE'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
@@ -56,7 +80,7 @@ configure(subprojects) {
     }
 
     dependencies {
-        testCompile 'junit:junit:4.12'
+        testCompile "junit:junit:$junitVersion"
     }
 
     tasks.withType(JavaCompile) {
@@ -142,7 +166,7 @@ configure(project(':assets')) {
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
         }
-        compile 'com.google.guava:guava:20.0'
+        compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "commons-codec:commons-codec:$codecVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
@@ -167,16 +191,16 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
-        compile('com.googlecode.json-simple:json-simple:1.1.1') {
+        compile("com.googlecode.json-simple:json-simple:$jsonsimpleVersion") {
             exclude(module: 'junit')
         }
         compile "org.springframework:spring-core:$springVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
         compile "ch.qos.logback:logback-classic:$logbackVersion"
-        compile 'com.google.code.findbugs:jsr305:3.0.2'
-        compile 'com.google.guava:guava:20.0'
-        compile('com.google.inject:guice:4.1.0') {
+        compile "com.google.code.findbugs:jsr305:$findbugsVersion"
+        compile "com.google.guava:guava:$guavaVersion"
+        compile("com.google.inject:guice:$guiceVersion") {
             exclude(module: 'guava')
         }
         compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
@@ -185,10 +209,10 @@ configure(project(':common')) {
             exclude(module: 'guava')
             exclude(module: 'protobuf-java')
         }
-        compile 'org.jetbrains:annotations:13.0'
+        compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
-        compile 'commons-io:commons-io:2.4'
+        compile "commons-io:commons-io:$ioVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -199,17 +223,17 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.5') {
+        compile("com.github.JesusMcCloud.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6.5') {
+        compile("com.github.JesusMcCloud.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile('org.apache.httpcomponents:httpclient:4.5.3') {
+        compile("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-logging')
         }
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
-        compile 'org.fxmisc.easybind:easybind:1.0.3'
+        compile "org.fxmisc.easybind:easybind:$easybindVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile 'org.jmockit:jmockit:1.30' // must not use current $jmockitVersion
@@ -224,7 +248,7 @@ configure(project(':core')) {
         compile project(':assets')
         compile project(':p2p')
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
-        compile('network.bisq.btcd-cli4j:btcd-cli4j-core:065d3786') {
+        compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
@@ -232,7 +256,7 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
             exclude(module: 'jackson-databind')
         }
-        compile('network.bisq.btcd-cli4j:btcd-cli4j-daemon:065d3786') {
+        compile("network.bisq.btcd-cli4j:btcd-cli4j-daemon:$btcdCli4jVersion") {
             exclude(module: 'slf4j-api')
             exclude(module: 'httpclient')
             exclude(module: 'commons-lang3')
@@ -240,9 +264,9 @@ configure(project(':core')) {
             exclude(module: 'jackson-annotations')
             exclude(module: 'jackson-databind')
         }
-        compile 'com.fasterxml.jackson.core:jackson-core:2.8.10'
-        compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.10'
-        compile('com.fasterxml.jackson.core:jackson-databind:2.8.10') {
+        compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+        compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+        compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
             exclude(module: 'jackson-annotations')
         }
 
@@ -257,7 +281,7 @@ configure(project(':core')) {
         testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
-        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
+        testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: "$hamcrestVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
@@ -291,18 +315,18 @@ configure(project(':desktop')) {
         compile project(':p2p')
         compile project(':core')
         compile project(':common')
-        compile 'org.controlsfx:controlsfx:8.0.6_20'
-        compile 'org.reactfx:reactfx:2.0-M3'
-        compile 'net.glxn:qrgen:1.3'
+        compile "org.controlsfx:controlsfx:$controlsfxVersion"
+        compile "org.reactfx:reactfx:$reactfxVersion"
+        compile "net.glxn:qrgen:$qrgenVersion"
         compile 'de.jensd:fontawesomefx:8.0.0'
         compile 'de.jensd:fontawesomefx-commons:9.1.2'
         compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
-        compile 'com.googlecode.jcsv:jcsv:1.4.0'
-        compile 'com.github.sarxos:webcam-capture:0.3.12'
+        compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
+        compile "com.github.sarxos:webcam-capture:$sarxosVersion"
         compile "org.openjfx:javafx-controls:11:$os"
         compile "org.openjfx:javafx-fxml:11:$os"
         compile "org.openjfx:javafx-swing:11:$os"
-        compile 'com.jfoenix:jfoenix:9.0.6'
+        compile "com.jfoenix:jfoenix:$jfoenixVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -343,16 +367,16 @@ configure(project(':monitor')) {
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
         compile "ch.qos.logback:logback-classic:$logbackVersion"
-        compile 'com.google.guava:guava:20.0'
+        compile "com.google.guava:guava:$guavaVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.2'
-        testCompile 'org.junit.jupiter:junit-jupiter-params:5.3.2'
+        testCompile "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testCompile "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testRuntime('org.junit.jupiter:junit-jupiter-engine:5.3.2')
+        testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 }
 
@@ -368,10 +392,10 @@ configure(project(':pricenode')) {
 
     dependencies {
         compile project(":core")
-        compile("org.knowm.xchange:xchange-bitcoinaverage:4.3.3")
-        compile("org.knowm.xchange:xchange-coinmarketcap:4.3.3")
-        compile("org.knowm.xchange:xchange-poloniex:4.3.3")
-        compile("org.springframework.boot:spring-boot-starter-web:1.5.10.RELEASE")
+        compile("org.knowm.xchange:xchange-bitcoinaverage:$knowmXchangeVersion")
+        compile("org.knowm.xchange:xchange-coinmarketcap:$knowmXchangeVersion")
+        compile("org.knowm.xchange:xchange-poloniex:$knowmXchangeVersion")
+        compile("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
         compile("org.springframework.boot:spring-boot-starter-actuator")
     }
 
@@ -387,8 +411,8 @@ configure(project(':relay')) {
     dependencies {
         compile project(':common')
         compile "com.sparkjava:spark-core:$sparkVersion"
-        compile 'com.turo:pushy:0.13.2'
-        compile 'com.google.firebase:firebase-admin:6.2.0'
+        compile "com.turo:pushy:$pushyVersion"
+        compile "com.google.firebase:firebase-admin:$firebaseVersion"
         compile "commons-codec:commons-codec:$codecVersion"
     }
 }
