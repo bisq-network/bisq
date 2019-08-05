@@ -176,7 +176,7 @@ configure(project(':common')) {
         compile "ch.qos.logback:logback-classic:$logbackVersion"
         compile 'com.google.code.findbugs:jsr305:3.0.2'
         compile 'com.google.guava:guava:20.0'
-        compile('com.google.inject:guice:4.1.0') {
+        compile('com.google.inject:guice:4.2.2') {
             exclude(module: 'guava')
         }
         compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
