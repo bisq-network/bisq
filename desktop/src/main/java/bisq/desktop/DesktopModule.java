@@ -27,7 +27,6 @@ import bisq.desktop.main.funds.transactions.DisplayedTransactionsFactory;
 import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
 import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
-import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.presentation.DaoPresentation;
@@ -68,7 +67,7 @@ public class DesktopModule extends AppModule {
         bind(Navigation.class).in(Singleton.class);
         bind(NotificationCenter.class).in(Singleton.class);
 
-        bind(OfferBook.class).in(Singleton.class);
+//        bind(OfferBook.class).in(Singleton.class);
         bind(BSFormatter.class).in(Singleton.class);
         bind(BsqFormatter.class).in(Singleton.class);
         bind(TorNetworkSettingsWindow.class).in(Singleton.class);
