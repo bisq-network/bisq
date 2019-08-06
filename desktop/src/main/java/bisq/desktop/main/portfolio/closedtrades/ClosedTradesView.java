@@ -289,8 +289,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 				columns[6] = model.getMakerFee(item);
 				columns[7] = model.getBuyerSecurityDeposit(item);
 				columns[8] = model.getSellerSecurityDeposit(item);
-                columns[5] = model.getDirectionLabel(item);
-                columns[6] = model.getState(item);
+                columns[9] = model.getDirectionLabel(item);
+                columns[10] = model.getState(item);
                 return columns;
             };
 
