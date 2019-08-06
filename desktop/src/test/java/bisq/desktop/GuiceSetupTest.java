@@ -24,8 +24,12 @@ import bisq.core.app.WalletAppSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.TradeLimits;
+import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+
+import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.KeyStorage;
 
 import org.springframework.mock.env.MockPropertySource;
 
@@ -77,6 +81,9 @@ public class GuiceSetupTest {
         assertSingleton(P2PNetworkSetup.class);
         assertSingleton(WalletAppSetup.class);
         assertSingleton(TradeLimits.class);
+        assertSingleton(KeyStorage.class);
+        assertSingleton(KeyRing.class);
+        assertSingleton(User.class);
     }
 
     private void assertSingleton(Class type) {

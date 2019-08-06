@@ -41,7 +41,6 @@ import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.trade.TradeModule;
 import bisq.core.user.Preferences;
-import bisq.core.user.User;
 
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
@@ -51,7 +50,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.ClockWatcher;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
-import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
@@ -77,9 +75,6 @@ public class CoreModule extends AppModule {
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 
-        bind(KeyStorage.class).in(Singleton.class);
-        bind(KeyRing.class).in(Singleton.class);
-        bind(User.class).in(Singleton.class);
         bind(ClockWatcher.class).in(Singleton.class);
         bind(Preferences.class).in(Singleton.class);
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);

@@ -34,6 +34,7 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -64,6 +65,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 @AllArgsConstructor
+@Singleton
 public class User implements PersistedDataHost {
     final private Storage<UserPayload> storage;
     final private KeyRing keyRing;
