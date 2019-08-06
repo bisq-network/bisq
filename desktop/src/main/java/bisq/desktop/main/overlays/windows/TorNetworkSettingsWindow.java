@@ -38,6 +38,7 @@ import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -72,6 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
+@Singleton
 public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> {
 
     public enum BridgeOption {

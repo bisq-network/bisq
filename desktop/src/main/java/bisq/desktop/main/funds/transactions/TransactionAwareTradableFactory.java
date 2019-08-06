@@ -23,7 +23,9 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class TransactionAwareTradableFactory {
     private final DisputeManager disputeManager;
 
