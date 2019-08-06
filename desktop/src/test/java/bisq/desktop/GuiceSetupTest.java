@@ -18,8 +18,12 @@ import bisq.desktop.util.Transitions;
 
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.P2PNetworkSetup;
+import bisq.core.app.TorSetup;
+import bisq.core.app.WalletAppSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.payment.TradeLimits;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
@@ -48,6 +52,7 @@ public class GuiceSetupTest {
     @Test
     public void testGuiceSetup() {
         injector.getInstance(AvoidStandbyModeService.class);
+        // desktop module
         assertSingleton(OfferBook.class);
         assertSingleton(CachingViewLoader.class);
         assertSingleton(Navigation.class);
@@ -65,6 +70,13 @@ public class GuiceSetupTest {
         assertSingleton(TransactionAwareTradableFactory.class);
         assertSingleton(DisplayedTransactionsFactory.class);
         assertSingleton(BondingViewUtils.class);
+
+        // core module
+//        assertSingleton(BisqSetup.class); // this is a can of worms
+        assertSingleton(TorSetup.class);
+        assertSingleton(P2PNetworkSetup.class);
+        assertSingleton(WalletAppSetup.class);
+        assertSingleton(TradeLimits.class);
     }
 
     private void assertSingleton(Class type) {
