@@ -68,8 +68,6 @@ import org.springframework.core.env.Environment;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
-import java.time.Clock;
-
 import java.io.File;
 
 import static com.google.inject.name.Names.named;
@@ -99,7 +97,6 @@ public class CoreModule extends AppModule {
         bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
         bind(CorruptedDatabaseFilesHandler.class).in(Singleton.class);
         bind(AvoidStandbyModeService.class).in(Singleton.class);
-        bind(Clock.class).toInstance(Clock.systemDefaultZone());
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
 

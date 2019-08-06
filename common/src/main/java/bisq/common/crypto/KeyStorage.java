@@ -97,6 +97,7 @@ public class KeyStorage {
 
     @Inject
     public KeyStorage(@Named(KEY_STORAGE_DIR) File storageDir) {
+        storageDir.mkdirs();
         this.storageDir = storageDir;
     }
 
