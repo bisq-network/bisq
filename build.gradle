@@ -1,3 +1,7 @@
+if(JavaVersion.current() != JavaVersion.VERSION_1_10){
+// feel free to delete this if you know what you are doing
+    throw new GradleException("This build must be run with java 10. see docs/build.md")
+}
 buildscript {
     repositories {
         jcenter()
@@ -272,7 +276,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.1.3-SNAPSHOT'
+    version = '1.1.4-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
@@ -400,6 +404,7 @@ configure(project(':seednode')) {
         runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
     }
 }
 

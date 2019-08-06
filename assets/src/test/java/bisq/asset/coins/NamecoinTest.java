@@ -17,11 +17,29 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import org.junit.Test;
+import bisq.asset.AbstractAssetTest;
 
-public class NamecoinTest extends AbstractAssetWithDefaultValidatorTest {
+public class NamecoinTest extends AbstractAssetTest {
 
     public NamecoinTest() {
         super(new Namecoin());
     }
+
+    @Test
+    public void testValidAddresses() {
+        assertValidAddress("N7yhcPhzFduWXPc11AUK9zvtnsL6sgxmRs");
+        assertValidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
+        assertValidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+    }
+
+    @Test
+    public void testInvalidAddresses() {
+        assertInvalidAddress("N7yhcPhzFduWXPc11AUK9zvtnsL6sgxmRsx");
+        assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQer"); 
+        assertInvalidAddress("bc1qus65zpte6qa2408qu3540lfcyj9cx7dphfcspn"); 
+        assertInvalidAddress("3GyEtTwXhxbjBtmAR3CtzeayAyshtvd44P");
+        assertInvalidAddress("1CnXYrivw7pJy3asKftp41wRPgBggF9fBw");
+    }
 }
+

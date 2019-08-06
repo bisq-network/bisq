@@ -32,8 +32,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
@@ -154,8 +152,8 @@ public final class TradeStatistics implements LazyProcessedPayload, ProtectedSto
     }
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        final PB.TradeStatistics.Builder builder = PB.TradeStatistics.newBuilder()
+    public protobuf.StoragePayload toProtoMessage() {
+        final protobuf.TradeStatistics.Builder builder = protobuf.TradeStatistics.newBuilder()
                 .setDirection(OfferPayload.Direction.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
@@ -172,14 +170,14 @@ public final class TradeStatistics implements LazyProcessedPayload, ProtectedSto
                 .setDepositTxId(depositTxId)
                 .setSignaturePubKeyBytes(ByteString.copyFrom(signaturePubKeyBytes));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.StoragePayload.newBuilder().setTradeStatistics(builder).build();
+        return protobuf.StoragePayload.newBuilder().setTradeStatistics(builder).build();
     }
 
-    public PB.TradeStatistics toProtoTradeStatistics() {
+    public protobuf.TradeStatistics toProtoTradeStatistics() {
         return toProtoMessage().getTradeStatistics();
     }
 
-    public static TradeStatistics fromProto(PB.TradeStatistics proto) {
+    public static TradeStatistics fromProto(protobuf.TradeStatistics proto) {
         return new TradeStatistics(
                 OfferPayload.Direction.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),

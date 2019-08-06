@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
+import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.offer.OfferRestrictions;
-import bisq.core.payment.AccountAgeRestrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 

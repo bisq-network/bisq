@@ -40,8 +40,6 @@ import bisq.common.util.JsonExclude;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
@@ -124,11 +122,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.Offer toProtoMessage() {
-        return PB.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
+    public protobuf.Offer toProtoMessage() {
+        return protobuf.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
     }
 
-    public static Offer fromProto(PB.Offer proto) {
+    public static Offer fromProto(protobuf.Offer proto) {
         return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
     }
 

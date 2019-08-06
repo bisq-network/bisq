@@ -20,8 +20,6 @@ package bisq.network.p2p.storage.payload;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.security.PublicKey;
 
 import java.util.Map;
@@ -52,7 +50,7 @@ public interface ProtectedStoragePayload extends NetworkPayload {
     @Nullable
     Map<String, String> getExtraDataMap();
 
-    static ProtectedStoragePayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
+    static ProtectedStoragePayload fromProto(protobuf.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
         return (ProtectedStoragePayload) networkProtoResolver.fromProto(storagePayload);
     }
 }

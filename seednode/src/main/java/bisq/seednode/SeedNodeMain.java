@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.1.3";
+    private static final String VERSION = "1.1.4";
     private SeedNode seedNode;
 
     public SeedNodeMain() {

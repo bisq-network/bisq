@@ -27,8 +27,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
@@ -63,12 +61,12 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         BUY,
         SELL;
 
-        public static OfferPayload.Direction fromProto(PB.OfferPayload.Direction direction) {
+        public static OfferPayload.Direction fromProto(protobuf.OfferPayload.Direction direction) {
             return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
         }
 
-        public static PB.OfferPayload.Direction toProtoMessage(Direction direction) {
-            return PB.OfferPayload.Direction.valueOf(direction.name());
+        public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
+            return protobuf.OfferPayload.Direction.valueOf(direction.name());
         }
     }
 
@@ -246,8 +244,8 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.StoragePayload toProtoMessage() {
-        PB.OfferPayload.Builder builder = PB.OfferPayload.newBuilder()
+    public protobuf.StoragePayload toProtoMessage() {
+        protobuf.OfferPayload.Builder builder = protobuf.OfferPayload.newBuilder()
                 .setId(id)
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
@@ -294,10 +292,10 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         Optional.ofNullable(hashOfChallenge).ifPresent(builder::setHashOfChallenge);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
-        return PB.StoragePayload.newBuilder().setOfferPayload(builder).build();
+        return protobuf.StoragePayload.newBuilder().setOfferPayload(builder).build();
     }
 
-    public static OfferPayload fromProto(PB.OfferPayload proto) {
+    public static OfferPayload fromProto(protobuf.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
                 null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());

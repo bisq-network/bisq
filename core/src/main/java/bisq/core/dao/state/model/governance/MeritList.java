@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.ArrayList;
@@ -50,24 +48,24 @@ public class MeritList extends PersistableList<Merit> implements ConsensusCritic
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.MeritList toProtoMessage() {
+    public protobuf.MeritList toProtoMessage() {
         return getBuilder().build();
     }
 
-    public PB.MeritList.Builder getBuilder() {
-        return PB.MeritList.newBuilder()
+    public protobuf.MeritList.Builder getBuilder() {
+        return protobuf.MeritList.newBuilder()
                 .addAllMerit(getList().stream()
                         .map(Merit::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static MeritList fromProto(PB.MeritList proto) {
+    public static MeritList fromProto(protobuf.MeritList proto) {
         return new MeritList(new ArrayList<>(proto.getMeritList().stream()
                 .map(Merit::fromProto)
                 .collect(Collectors.toList())));
     }
 
     public static MeritList getMeritListFromBytes(byte[] bytes) throws InvalidProtocolBufferException {
-        return MeritList.fromProto(PB.MeritList.parseFrom(bytes));
+        return MeritList.fromProto(protobuf.MeritList.parseFrom(bytes));
     }
 }

@@ -20,8 +20,6 @@ package bisq.network.p2p.peers.peerexchange;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.ArrayList;
@@ -39,13 +37,13 @@ public class PeerList extends PersistableList<Peer> {
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
-                .setPeerList(PB.PeerList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setPeerList(protobuf.PeerList.newBuilder()
                         .addAllPeer(getList().stream().map(Peer::toProtoMessage).collect(Collectors.toList())))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.PeerList proto) {
+    public static PersistableEnvelope fromProto(protobuf.PeerList proto) {
         return new PeerList(new ArrayList<>(proto.getPeerList().stream()
                 .map(Peer::fromProto)
                 .collect(Collectors.toList())));

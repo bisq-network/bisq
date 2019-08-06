@@ -19,8 +19,6 @@ package bisq.network.p2p.storage.messages;
 
 import bisq.common.app.Version;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
@@ -59,9 +57,9 @@ public final class RefreshOfferMessage extends BroadcastMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setRefreshOfferMessage(PB.RefreshOfferMessage.newBuilder()
+                .setRefreshOfferMessage(protobuf.RefreshOfferMessage.newBuilder()
                         .setHashOfDataAndSeqNr(ByteString.copyFrom(hashOfDataAndSeqNr))
                         .setSignature(ByteString.copyFrom(signature))
                         .setHashOfPayload(ByteString.copyFrom(hashOfPayload))
@@ -69,7 +67,7 @@ public final class RefreshOfferMessage extends BroadcastMessage {
                 .build();
     }
 
-    public static RefreshOfferMessage fromProto(PB.RefreshOfferMessage proto, int messageVersion) {
+    public static RefreshOfferMessage fromProto(protobuf.RefreshOfferMessage proto, int messageVersion) {
         return new RefreshOfferMessage(proto.getHashOfDataAndSeqNr().toByteArray(),
                 proto.getSignature().toByteArray(),
                 proto.getHashOfPayload().toByteArray(),

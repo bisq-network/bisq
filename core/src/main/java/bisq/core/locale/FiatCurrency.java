@@ -17,7 +17,6 @@
 
 package bisq.core.locale;
 
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
@@ -59,14 +58,14 @@ public final class FiatCurrency extends TradeCurrency {
 
     @Override
     public Message toProtoMessage() {
-        PB.Currency.Builder currencyBuilder = PB.Currency.newBuilder().setCurrencyCode(currency.getCurrencyCode());
-        PB.FiatCurrency.Builder fiatCurrencyBuilder = PB.FiatCurrency.newBuilder().setCurrency(currencyBuilder);
+        protobuf.Currency.Builder currencyBuilder = protobuf.Currency.newBuilder().setCurrencyCode(currency.getCurrencyCode());
+        protobuf.FiatCurrency.Builder fiatCurrencyBuilder = protobuf.FiatCurrency.newBuilder().setCurrency(currencyBuilder);
         return getTradeCurrencyBuilder()
                 .setFiatCurrency(fiatCurrencyBuilder)
                 .build();
     }
 
-    public static FiatCurrency fromProto(PB.TradeCurrency proto) {
+    public static FiatCurrency fromProto(protobuf.TradeCurrency proto) {
         return new FiatCurrency(proto.getCode());
     }
 

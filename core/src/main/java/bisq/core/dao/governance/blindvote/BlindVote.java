@@ -24,8 +24,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.springframework.util.CollectionUtils;
@@ -87,13 +85,13 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
 
     // Used for sending over the network
     @Override
-    public PB.BlindVote toProtoMessage() {
+    public protobuf.BlindVote toProtoMessage() {
         return getBuilder().build();
     }
 
     @NotNull
-    public PB.BlindVote.Builder getBuilder() {
-        PB.BlindVote.Builder builder = PB.BlindVote.newBuilder();
+    public protobuf.BlindVote.Builder getBuilder() {
+        protobuf.BlindVote.Builder builder = protobuf.BlindVote.newBuilder();
         builder.setEncryptedVotes(ByteString.copyFrom(encryptedVotes))
                 .setTxId(txId)
                 .setStake(stake)
@@ -103,7 +101,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
         return builder;
     }
 
-    public static BlindVote fromProto(PB.BlindVote proto) {
+    public static BlindVote fromProto(protobuf.BlindVote proto) {
         return new BlindVote(proto.getEncryptedVotes().toByteArray(),
                 proto.getTxId(),
                 proto.getStake(),

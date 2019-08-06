@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -53,11 +51,11 @@ public enum TxOutputType implements ImmutableDaoStateModel {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static TxOutputType fromProto(PB.TxOutputType txOutputType) {
+    public static TxOutputType fromProto(protobuf.TxOutputType txOutputType) {
         return ProtoUtil.enumFromProto(TxOutputType.class, txOutputType.name());
     }
 
-    public PB.TxOutputType toProtoMessage() {
-        return PB.TxOutputType.valueOf(name());
+    public protobuf.TxOutputType toProtoMessage() {
+        return protobuf.TxOutputType.valueOf(name());
     }
 }

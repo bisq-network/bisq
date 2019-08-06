@@ -248,15 +248,18 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             if (periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL) ||
                     periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.BREAK1)) {
                 if (!tempProposals.contains(proposal)) {
-                    if (validatorProvider.getValidator(proposal).areDataFieldsValid(proposal)) {
+                    // We only validate in case the blocks are parsed as otherwise some validators like param validator
+                    // might fail as Dao state is not complete.
+                    if (!daoStateService.isParseBlockChainComplete() ||
+                            validatorProvider.getValidator(proposal).areDataFieldsValid(proposal)) {
                         if (fromBroadcastMessage) {
                             log.info("We received a TempProposalPayload and store it to our protectedStoreList. proposalTxId={}",
                                     proposal.getTxId());
                         }
                         tempProposals.add(proposal);
                     } else {
-                        log.debug("We received an invalid proposal from the P2P network. Proposal.txId={}, blockHeight={}",
-                                proposal.getTxId(), daoStateService.getChainHeight());
+                        log.debug("We received an invalid proposal from the P2P network. Proposal={}, blockHeight={}",
+                                proposal, daoStateService.getChainHeight());
                     }
                 }
             }
@@ -298,7 +301,11 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                 // We don't validate phase and cycle as we might receive proposals from other cycles or phases at startup.
                 // Beside that we might receive payloads we requested at the vote result phase in case we missed some
                 // payloads. We prefer here resilience over protection against late publishing attacks.
-                if (validatorProvider.getValidator(proposal).areDataFieldsValid(proposal)) {
+
+                // We only validate in case the blocks are parsed as otherwise some validators like param validator
+                // might fail as Dao state is not complete.
+                if (!daoStateService.isParseBlockChainComplete() ||
+                        validatorProvider.getValidator(proposal).areDataFieldsValid(proposal)) {
                     if (fromBroadcastMessage) {
                         log.info("We received a ProposalPayload and store it to our appendOnlyStoreList. proposalTxId={}",
                                 proposal.getTxId());
@@ -306,8 +313,8 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                     proposalPayloads.add(proposalPayload);
                 } else {
                     log.warn("We received a invalid append-only proposal from the P2P network. " +
-                                    "Proposal.txId={}, blockHeight={}",
-                            proposal.getTxId(), daoStateService.getChainHeight());
+                                    "Proposal={}, blockHeight={}",
+                            proposal, daoStateService.getChainHeight());
                 }
             }
         }

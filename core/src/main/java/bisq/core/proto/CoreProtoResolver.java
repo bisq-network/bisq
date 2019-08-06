@@ -17,9 +17,10 @@
 
 package bisq.core.proto;
 
+import bisq.core.account.sign.SignedWitness;
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
-import bisq.core.payment.AccountAgeWitness;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.CashAppAccountPayload;
@@ -57,16 +58,14 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CoreProtoResolver implements ProtoResolver {
     @Override
-    public PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         if (proto != null) {
-            final PB.PaymentAccountPayload.MessageCase messageCase = proto.getMessageCase();
+            final protobuf.PaymentAccountPayload.MessageCase messageCase = proto.getMessageCase();
             switch (messageCase) {
                 case ALI_PAY_ACCOUNT_PAYLOAD:
                     return AliPayAccountPayload.fromProto(proto);
@@ -77,10 +76,10 @@ public class CoreProtoResolver implements ProtoResolver {
                 case CLEAR_XCHANGE_ACCOUNT_PAYLOAD:
                     return ClearXchangeAccountPayload.fromProto(proto);
                 case COUNTRY_BASED_PAYMENT_ACCOUNT_PAYLOAD:
-                    final PB.CountryBasedPaymentAccountPayload.MessageCase messageCaseCountry = proto.getCountryBasedPaymentAccountPayload().getMessageCase();
+                    final protobuf.CountryBasedPaymentAccountPayload.MessageCase messageCaseCountry = proto.getCountryBasedPaymentAccountPayload().getMessageCase();
                     switch (messageCaseCountry) {
                         case BANK_ACCOUNT_PAYLOAD:
-                            final PB.BankAccountPayload.MessageCase messageCaseBank = proto.getCountryBasedPaymentAccountPayload().getBankAccountPayload().getMessageCase();
+                            final protobuf.BankAccountPayload.MessageCase messageCaseBank = proto.getCountryBasedPaymentAccountPayload().getBankAccountPayload().getMessageCase();
                             switch (messageCaseBank) {
                                 case NATIONAL_BANK_ACCOUNT_PAYLOAD:
                                     return NationalBankAccountPayload.fromProto(proto);
@@ -157,7 +156,7 @@ public class CoreProtoResolver implements ProtoResolver {
     }
 
     @Override
-    public PersistableEnvelope fromProto(PB.PersistableNetworkPayload proto) {
+    public PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case ACCOUNT_AGE_WITNESS:
@@ -168,6 +167,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return ProposalPayload.fromProto(proto.getProposalPayload());
                 case BLIND_VOTE_PAYLOAD:
                     return BlindVotePayload.fromProto(proto.getBlindVotePayload());
+                case SIGNED_WITNESS:
+                    return SignedWitness.fromProto(proto.getSignedWitness());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case (PB.PersistableNetworkPayload). messageCase=" + proto.getMessageCase());
             }

@@ -21,8 +21,6 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.nio.charset.Charset;
 
 import java.util.Map;
@@ -97,9 +95,9 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
     }
 
     @Override
-    public PB.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
-        PB.BankAccountPayload.Builder builder =
-                PB.BankAccountPayload.newBuilder()
+    public protobuf.PaymentAccountPayload.Builder getPaymentAccountPayloadBuilder() {
+        protobuf.BankAccountPayload.Builder builder =
+                protobuf.BankAccountPayload.newBuilder()
                         .setHolderName(holderName);
         Optional.ofNullable(holderTaxId).ifPresent(builder::setHolderTaxId);
         Optional.ofNullable(bankName).ifPresent(builder::setBankName);
@@ -108,7 +106,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         Optional.ofNullable(accountType).ifPresent(builder::setAccountType);
         Optional.ofNullable(bankId).ifPresent(builder::setBankId);
         Optional.ofNullable(nationalAccountId).ifPresent(builder::setNationalAccountId);
-        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = super.getPaymentAccountPayloadBuilder()
+        final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayloadBuilder = super.getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setBankAccountPayload(builder);
         return super.getPaymentAccountPayloadBuilder()

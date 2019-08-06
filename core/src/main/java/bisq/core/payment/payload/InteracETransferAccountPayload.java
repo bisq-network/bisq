@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -81,7 +79,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setInteracETransferAccountPayload(PB.InteracETransferAccountPayload.newBuilder()
+                .setInteracETransferAccountPayload(protobuf.InteracETransferAccountPayload.newBuilder()
                         .setEmail(email)
                         .setHolderName(holderName)
                         .setQuestion(question)
@@ -89,7 +87,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 .build();
     }
 
-    public static InteracETransferAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static InteracETransferAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new InteracETransferAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getInteracETransferAccountPayload().getEmail(),

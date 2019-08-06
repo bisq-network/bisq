@@ -22,8 +22,6 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.apache.commons.lang3.NotImplementedException;
 
 @SuppressWarnings("ALL")
@@ -43,7 +41,7 @@ public final class MockPayload extends NetworkEnvelope implements ExpirablePaylo
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         throw new NotImplementedException("toProtoNetworkEnvelope not impl.");
     }
 

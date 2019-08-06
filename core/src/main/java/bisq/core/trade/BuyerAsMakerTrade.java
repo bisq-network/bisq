@@ -29,8 +29,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,18 +57,18 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.Tradable toProtoMessage() {
-        return PB.Tradable.newBuilder()
-                .setBuyerAsMakerTrade(PB.BuyerAsMakerTrade.newBuilder()
-                        .setTrade((PB.Trade) super.toProtoMessage()))
+    public protobuf.Tradable toProtoMessage() {
+        return protobuf.Tradable.newBuilder()
+                .setBuyerAsMakerTrade(protobuf.BuyerAsMakerTrade.newBuilder()
+                        .setTrade((protobuf.Trade) super.toProtoMessage()))
                 .build();
     }
 
-    public static Tradable fromProto(PB.BuyerAsMakerTrade buyerAsMakerTradeProto,
+    public static Tradable fromProto(protobuf.BuyerAsMakerTrade buyerAsMakerTradeProto,
                                      Storage<? extends TradableList> storage,
                                      BtcWalletService btcWalletService,
                                      CoreProtoResolver coreProtoResolver) {
-        PB.Trade proto = buyerAsMakerTradeProto.getTrade();
+        protobuf.Trade proto = buyerAsMakerTradeProto.getTrade();
         BuyerAsMakerTrade trade = new BuyerAsMakerTrade(
                 Offer.fromProto(proto.getOffer()),
                 Coin.valueOf(proto.getTxFeeAsLong()),

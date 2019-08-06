@@ -23,8 +23,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import lombok.Value;
@@ -46,12 +44,12 @@ public class Vote implements PersistablePayload, NetworkPayload, ConsensusCritic
 
     @Override
     public Message toProtoMessage() {
-        return PB.Vote.newBuilder()
+        return protobuf.Vote.newBuilder()
                 .setAccepted(accepted)
                 .build();
     }
 
-    public static Vote fromProto(PB.Vote proto) {
+    public static Vote fromProto(protobuf.Vote proto) {
         return new Vote(proto.getAccepted());
     }
 }

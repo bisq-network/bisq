@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -79,11 +77,11 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
 
     @Override
     public Message toProtoMessage() {
-        PB.F2FAccountPayload.Builder builder = PB.F2FAccountPayload.newBuilder()
+        protobuf.F2FAccountPayload.Builder builder = protobuf.F2FAccountPayload.newBuilder()
                 .setContact(contact)
                 .setCity(city)
                 .setExtraInfo(extraInfo);
-        final PB.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
+        final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
                 .setF2FAccountPayload(builder);
         return getPaymentAccountPayloadBuilder()
@@ -91,9 +89,9 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
                 .build();
     }
 
-    public static PaymentAccountPayload fromProto(PB.PaymentAccountPayload proto) {
-        PB.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        PB.F2FAccountPayload f2fAccountPayloadPB = countryBasedPaymentAccountPayload.getF2FAccountPayload();
+    public static PaymentAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
+        protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
+        protobuf.F2FAccountPayload f2fAccountPayloadPB = countryBasedPaymentAccountPayload.getF2FAccountPayload();
         return new F2FAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),

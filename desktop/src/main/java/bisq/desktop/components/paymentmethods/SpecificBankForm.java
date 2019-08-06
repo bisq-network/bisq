@@ -19,8 +19,8 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;

@@ -17,6 +17,8 @@
 
 package bisq.core.proto.persistable;
 
+import bisq.core.account.sign.SignedWitnessStore;
+import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.arbitration.DisputeList;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -32,7 +34,6 @@ import bisq.core.dao.state.DaoStateStore;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
-import bisq.core.payment.AccountAgeWitnessStore;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradableList;
@@ -50,8 +51,6 @@ import bisq.common.proto.persistable.NavigationPath;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
-
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.inject.Provider;
 
@@ -80,7 +79,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     }
 
     @Override
-    public PersistableEnvelope fromProto(PB.PersistableEnvelope proto) {
+    public PersistableEnvelope fromProto(protobuf.PersistableEnvelope proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case SEQUENCE_NUMBER_MAP:
@@ -138,6 +137,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return MyProofOfBurnList.fromProto(proto.getMyProofOfBurnList());
                 case UNCONFIRMED_BSQ_CHANGE_OUTPUT_LIST:
                     return UnconfirmedBsqChangeOutputList.fromProto(proto.getUnconfirmedBsqChangeOutputList());
+                case SIGNED_WITNESS_STORE:
+                    return SignedWitnessStore.fromProto(proto.getSignedWitnessStore());
 
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +

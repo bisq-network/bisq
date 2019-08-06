@@ -26,8 +26,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Objects;
 import java.util.UUID;
 
@@ -79,8 +77,8 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
     }
 
     @Override
-    public PB.Role toProtoMessage() {
-        PB.Role.Builder builder = PB.Role.newBuilder()
+    public protobuf.Role toProtoMessage() {
+        protobuf.Role.Builder builder = protobuf.Role.newBuilder()
                 .setUid(uid)
                 .setName(name)
                 .setLink(link)
@@ -88,7 +86,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
         return builder.build();
     }
 
-    public static Role fromProto(PB.Role proto) {
+    public static Role fromProto(protobuf.Role proto) {
         return new Role(proto.getUid(),
                 proto.getName(),
                 proto.getLink(),

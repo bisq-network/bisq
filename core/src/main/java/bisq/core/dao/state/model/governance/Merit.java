@@ -24,8 +24,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
@@ -52,14 +50,14 @@ public class Merit implements PersistablePayload, NetworkPayload, ConsensusCriti
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.Merit toProtoMessage() {
-        final PB.Merit.Builder builder = PB.Merit.newBuilder()
+    public protobuf.Merit toProtoMessage() {
+        final protobuf.Merit.Builder builder = protobuf.Merit.newBuilder()
                 .setIssuance(issuance.toProtoMessage())
                 .setSignature(ByteString.copyFrom(signature));
         return builder.build();
     }
 
-    public static Merit fromProto(PB.Merit proto) {
+    public static Merit fromProto(protobuf.Merit proto) {
         return new Merit(Issuance.fromProto(proto.getIssuance()),
                 proto.getSignature().toByteArray());
     }

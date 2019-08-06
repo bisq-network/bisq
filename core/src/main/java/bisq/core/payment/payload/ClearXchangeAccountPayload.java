@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -74,13 +72,13 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setClearXchangeAccountPayload(PB.ClearXchangeAccountPayload.newBuilder()
+                .setClearXchangeAccountPayload(protobuf.ClearXchangeAccountPayload.newBuilder()
                         .setEmailOrMobileNr(emailOrMobileNr)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static ClearXchangeAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static ClearXchangeAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new ClearXchangeAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getClearXchangeAccountPayload().getEmailOrMobileNr(),

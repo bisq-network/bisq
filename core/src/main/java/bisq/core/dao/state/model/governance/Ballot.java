@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -70,14 +68,14 @@ public final class Ballot implements PersistablePayload, ConsensusCritical, Immu
     }
 
     @Override
-    public PB.Ballot toProtoMessage() {
-        final PB.Ballot.Builder builder = PB.Ballot.newBuilder()
+    public protobuf.Ballot toProtoMessage() {
+        final protobuf.Ballot.Builder builder = protobuf.Ballot.newBuilder()
                 .setProposal(proposal.getProposalBuilder());
-        Optional.ofNullable(vote).ifPresent(e -> builder.setVote((PB.Vote) e.toProtoMessage()));
+        Optional.ofNullable(vote).ifPresent(e -> builder.setVote((protobuf.Vote) e.toProtoMessage()));
         return builder.build();
     }
 
-    public static Ballot fromProto(PB.Ballot proto) {
+    public static Ballot fromProto(protobuf.Ballot proto) {
         return new Ballot(Proposal.fromProto(proto.getProposal()),
                 proto.hasVote() ? Vote.fromProto(proto.getVote()) : null);
     }

@@ -17,7 +17,6 @@
 
 package bisq.core.message;
 
-import io.bisq.generated.protobuffer.PB;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,10 +33,10 @@ public class MarshallerTest {
 
     @Test
     public void getBaseEnvelopeTest() {
-        PB.Ping Ping = PB.Ping.newBuilder().setNonce(100).build();
-        PB.Pong Pong = PB.Pong.newBuilder().setRequestNonce(1000).build();
-        PB.NetworkEnvelope envelope1 = PB.NetworkEnvelope.newBuilder().setPing(Ping).build();
-        PB.NetworkEnvelope envelope2 = PB.NetworkEnvelope.newBuilder().setPong(Pong).build();
+        protobuf.Ping Ping = protobuf.Ping.newBuilder().setNonce(100).build();
+        protobuf.Pong Pong = protobuf.Pong.newBuilder().setRequestNonce(1000).build();
+        protobuf.NetworkEnvelope envelope1 = protobuf.NetworkEnvelope.newBuilder().setPing(Ping).build();
+        protobuf.NetworkEnvelope envelope2 = protobuf.NetworkEnvelope.newBuilder().setPong(Pong).build();
         log.info(Ping.toString());
         log.info(Pong.toString());
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -45,8 +44,8 @@ public class MarshallerTest {
             envelope1.writeDelimitedTo(outputStream);
             envelope2.writeDelimitedTo(outputStream);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            PB.NetworkEnvelope envelope3 = PB.NetworkEnvelope.parseDelimitedFrom(inputStream);
-            PB.NetworkEnvelope envelope4 = PB.NetworkEnvelope.parseDelimitedFrom(inputStream);
+            protobuf.NetworkEnvelope envelope3 = protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
+            protobuf.NetworkEnvelope envelope4 = protobuf.NetworkEnvelope.parseDelimitedFrom(inputStream);
 
 
             log.info("message: {}", envelope3.getPing());
@@ -64,7 +63,7 @@ public class MarshallerTest {
 
     }
 
-    public boolean isPing(PB.NetworkEnvelope envelope) {
+    public boolean isPing(protobuf.NetworkEnvelope envelope) {
         return !envelope.getPing().getDefaultInstanceForType().equals(envelope.getPing());
     }
 }

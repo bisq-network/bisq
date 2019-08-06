@@ -5,9 +5,9 @@ package io.bisq.protobuffer;
 // Protobuffer v3 definitions of network messages and persisted objects.
 //
 
-option java_package = "io.bisq.generated.protobuffer";
-option java_outer_classname = "PB";
 
+option java_package = "protobuf";
+option java_multiple_files = true;
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Network messages
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -424,7 +424,7 @@ message StoragePayload {
 
         // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
         // versions and convert it to TradeStatistics2 objects.
-        TradeStatistics trade_statistics = 5;
+        TradeStatistics trade_statistics = 5 [deprecated = true];
 
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
@@ -438,6 +438,7 @@ message PersistableNetworkPayload {
         TradeStatistics2 trade_statistics2 = 2;
         ProposalPayload proposal_payload = 3;
         BlindVotePayload blind_vote_payload = 4;
+        SignedWitness signed_witness = 5;
     }
 }
 
@@ -639,6 +640,16 @@ message AccountAgeWitness {
     int64 date = 2;
 }
 
+message SignedWitness {
+    bool signed_by_arbitrator = 1;
+    bytes witness_hash = 2;
+    bytes signature = 3;
+    bytes signer_pub_key = 4;
+    bytes witness_owner_pub_key = 5;
+    int64 date = 6;
+    int64 trade_amount = 7;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Dispute payload
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -762,7 +773,7 @@ enum AvailabilityResult {
 message PaymentAccountPayload {
     string id = 1;
     string payment_method_id = 2;
-    int64 max_trade_period = 3; // not used anymore but we need to keep it in PB for backward compatibility
+    int64 max_trade_period = 3 [deprecated = true]; // not used anymore but we need to keep it in PB for backward compatibility
     oneof message {
         AliPayAccountPayload ali_pay_account_payload = 4;
         ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
@@ -771,14 +782,14 @@ message PaymentAccountPayload {
         CryptoCurrencyAccountPayload crypto_currency_account_payload = 8;
         FasterPaymentsAccountPayload faster_payments_account_payload = 9;
         InteracETransferAccountPayload interac_e_transfer_account_payload = 10;
-        OKPayAccountPayload o_k_pay_account_payload = 11; // Deprecated, not used anymore
+        OKPayAccountPayload o_k_pay_account_payload = 11 [deprecated = true];
         PerfectMoneyAccountPayload perfect_money_account_payload = 12;
         SwishAccountPayload swish_account_payload = 13;
         USPostalMoneyOrderAccountPayload u_s_postal_money_order_account_payload = 14;
         UpholdAccountPayload uphold_account_payload = 16;
-        CashAppAccountPayload cash_app_account_payload = 17; // Deprecated, not used anymore
+        CashAppAccountPayload cash_app_account_payload = 17 [deprecated = true];
         MoneyBeamAccountPayload money_beam_account_payload = 18;
-        VenmoAccountPayload venmo_account_payload = 19; // Deprecated, not used anymore
+        VenmoAccountPayload venmo_account_payload = 19 [deprecated = true];
         PopmoneyAccountPayload popmoney_account_payload = 20;
         RevolutAccountPayload revolut_account_payload = 21;
         WeChatPayAccountPayload we_chat_pay_account_payload = 22;
@@ -829,7 +840,7 @@ message BankAccountPayload {
     string account_nr = 5;
     string account_type = 6;
     string holder_tax_id = 7;
-    string email = 8; // not used anymore but keep for backward compatibility
+    string email = 8 [deprecated = true];
     oneof message {
         NationalBankAccountPayload national_bank_account_payload = 9;
         SameBankAccountPayload same_bank_accont_payload = 10;
@@ -883,7 +894,7 @@ message SepaAccountPayload {
     string holder_name = 1;
     string iban = 2;
     string bic = 3;
-    string email = 4; // not used anymore but keep for backward compatibility
+    string email = 4 [deprecated = true];
     repeated string accepted_country_codes = 5;
 }
 
@@ -905,7 +916,7 @@ message InstantCryptoCurrencyAccountPayload {
 message FasterPaymentsAccountPayload {
     string sort_code = 1;
     string account_nr = 2;
-    string email = 3; // not used anymore but keep for backward compatibility
+    string email = 3 [deprecated = true];
 }
 
 message InteracETransferAccountPayload {
@@ -984,13 +995,13 @@ message AdvancedCashAccountPayload {
 message PersistableEnvelope {
     oneof message {
         SequenceNumberMap sequence_number_map = 1;
-        PersistedEntryMap persisted_entry_map = 2; // deprecated. Not used anymore.
+        PersistedEntryMap persisted_entry_map = 2 [deprecated = true];
         PeerList peer_list = 3;
         AddressEntryList address_entry_list = 4;
         NavigationPath navigation_path = 5;
 
         TradableList tradable_list = 6;
-        TradeStatisticsList trade_statistics_list = 7; // deprecated  Was used in pre v0.6.0 version. Not used anymore.
+        TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
         DisputeList dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
@@ -1006,7 +1017,7 @@ message PersistableEnvelope {
         // we need to keep id 15 here otherwise the reading of the old data structure would not work anymore.
         // can be removed after most people have updated as the reading of the PersistableNetworkPayloadList
         // is not mandatory.
-        PersistableNetworkPayloadList persistable_network_payload_list = 15; // deprecated. Not used anymore.
+        PersistableNetworkPayloadList persistable_network_payload_list = 15 [deprecated = true];
 
         ProposalStore proposal_store = 16;
         TempProposalStore temp_proposal_store = 17;
@@ -1020,6 +1031,7 @@ message PersistableEnvelope {
         MyReputationList my_reputation_list = 25;
         MyProofOfBurnList my_proof_of_burn_list = 26;
         UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
+        SignedWitnessStore signed_witness_store = 28;
     }
 }
 
@@ -1058,6 +1070,10 @@ message PersistableNetworkPayloadList {
 // We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
 message AccountAgeWitnessStore {
     repeated AccountAgeWitness items = 1;
+}
+
+message SignedWitnessStore {
+    repeated SignedWitness items = 1;
 }
 
 // We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
@@ -1338,7 +1354,7 @@ message PreferencesPayload {
     string bitcoin_nodes = 27;
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
-    int64 buyer_security_deposit_as_long = 30; // Deprectated: Superseded by buyerSecurityDepositAsPercent
+    int64 buyer_security_deposit_as_long = 30 [deprecated = true]; // Superseded by buyerSecurityDepositAsPercent
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;

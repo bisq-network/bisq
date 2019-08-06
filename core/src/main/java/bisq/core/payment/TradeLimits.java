@@ -56,6 +56,14 @@ public class TradeLimits {
         // guice.
     }
 
+
+    /**
+     * The default trade limits defined as statics in PaymentMethod are only used until the DAO
+     * is fully synchronized.
+     *
+     * @see bisq.core.payment.payload.PaymentMethod
+     * @return the maximum trade limit set by the DAO.
+     */
     public Coin getMaxTradeLimit() {
         return daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
     }

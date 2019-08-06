@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.offer;
 
+import bisq.core.account.witness.AccountAgeRestrictions;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
@@ -35,8 +37,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeRestrictions;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;

@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -69,12 +67,12 @@ public final class HalCashAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setHalCashAccountPayload(PB.HalCashAccountPayload.newBuilder()
+                .setHalCashAccountPayload(protobuf.HalCashAccountPayload.newBuilder()
                         .setMobileNr(mobileNr))
                 .build();
     }
 
-    public static HalCashAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static HalCashAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new HalCashAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getHalCashAccountPayload().getMobileNr(),

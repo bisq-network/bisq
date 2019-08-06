@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,8 +55,8 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.ProposalVoteResult toProtoMessage() {
-        PB.ProposalVoteResult.Builder builder = PB.ProposalVoteResult.newBuilder()
+    public protobuf.ProposalVoteResult toProtoMessage() {
+        protobuf.ProposalVoteResult.Builder builder = protobuf.ProposalVoteResult.newBuilder()
                 .setProposal(proposal.toProtoMessage())
                 .setStakeOfAcceptedVotes(stakeOfAcceptedVotes)
                 .setStakeOfRejectedVotes(stakeOfRejectedVotes)
@@ -68,7 +66,7 @@ public class ProposalVoteResult implements PersistablePayload, ImmutableDaoState
         return builder.build();
     }
 
-    public static ProposalVoteResult fromProto(PB.ProposalVoteResult proto) {
+    public static ProposalVoteResult fromProto(protobuf.ProposalVoteResult proto) {
         return new ProposalVoteResult(Proposal.fromProto(proto.getProposal()),
                 proto.getStakeOfAcceptedVotes(),
                 proto.getStakeOfRejectedVotes(),
