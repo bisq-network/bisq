@@ -19,7 +19,6 @@ package bisq.core;
 
 import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.arbitration.ArbitratorModule;
 import bisq.core.btc.BitcoinModule;
@@ -47,13 +46,11 @@ import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.ClockWatcher;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.springframework.core.env.Environment;
@@ -75,13 +72,9 @@ public class CoreModule extends AppModule {
     protected void configure() {
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 
-        bind(ClockWatcher.class).in(Singleton.class);
-        bind(Preferences.class).in(Singleton.class);
-        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
-        bind(CorruptedDatabaseFilesHandler.class).in(Singleton.class);
-        bind(AvoidStandbyModeService.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class);
 
-        bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
+        bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);

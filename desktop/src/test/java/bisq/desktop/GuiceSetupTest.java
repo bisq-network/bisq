@@ -23,13 +23,20 @@ import bisq.core.app.TorSetup;
 import bisq.core.app.WalletAppSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.payment.TradeLimits;
+import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.network.p2p.network.BridgeAddressProvider;
+import bisq.network.p2p.seed.SeedNodeRepository;
+
+import bisq.common.ClockWatcher;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import org.springframework.mock.env.MockPropertySource;
 
@@ -84,9 +91,16 @@ public class GuiceSetupTest {
         assertSingleton(KeyStorage.class);
         assertSingleton(KeyRing.class);
         assertSingleton(User.class);
+        assertSingleton(ClockWatcher.class);
+        assertSingleton(Preferences.class);
+        assertSingleton(BridgeAddressProvider.class);
+        assertSingleton(CorruptedDatabaseFilesHandler.class);
+        assertSingleton(AvoidStandbyModeService.class);
+        assertSingleton(DefaultSeedNodeRepository.class);
+        assertSingleton(SeedNodeRepository.class);
     }
 
-    private void assertSingleton(Class type) {
+    private void assertSingleton(Class<?> type) {
         assertSame(injector.getInstance(type), injector.getInstance(type));
     }
 }

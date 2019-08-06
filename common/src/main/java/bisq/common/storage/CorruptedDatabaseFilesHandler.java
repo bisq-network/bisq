@@ -18,6 +18,7 @@
 package bisq.common.storage;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class CorruptedDatabaseFilesHandler {
     private List<String> corruptedDatabaseFiles = new ArrayList<>();
 
