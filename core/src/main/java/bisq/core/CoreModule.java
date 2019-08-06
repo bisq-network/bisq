@@ -25,15 +25,6 @@ import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
-import bisq.core.notifications.MobileMessageEncryption;
-import bisq.core.notifications.MobileModel;
-import bisq.core.notifications.MobileNotificationService;
-import bisq.core.notifications.MobileNotificationValidator;
-import bisq.core.notifications.alerts.DisputeMsgEvents;
-import bisq.core.notifications.alerts.MyOfferTakenEvents;
-import bisq.core.notifications.alerts.TradeEvents;
-import bisq.core.notifications.alerts.market.MarketAlerts;
-import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OfferModule;
 import bisq.core.presentation.CorePresentationModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
@@ -55,7 +46,6 @@ import bisq.common.storage.Storage;
 
 import org.springframework.core.env.Environment;
 
-import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import java.io.File;
@@ -82,8 +72,8 @@ public class CoreModule extends AppModule {
         File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
-        bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
-        bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
+        bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class);
+        bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class);
 
         Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
@@ -94,15 +84,6 @@ public class CoreModule extends AppModule {
         String referralId = environment.getProperty(AppOptionKeys.REFERRAL_ID, String.class, "");
         bind(String.class).annotatedWith(Names.named(AppOptionKeys.REFERRAL_ID)).toInstance(referralId);
 
-        bind(MobileNotificationService.class).in(Singleton.class);
-        bind(MobileMessageEncryption.class).in(Singleton.class);
-        bind(MobileNotificationValidator.class).in(Singleton.class);
-        bind(MobileModel.class).in(Singleton.class);
-        bind(MyOfferTakenEvents.class).in(Singleton.class);
-        bind(TradeEvents.class).in(Singleton.class);
-        bind(DisputeMsgEvents.class).in(Singleton.class);
-        bind(PriceAlert.class).in(Singleton.class);
-        bind(MarketAlerts.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());

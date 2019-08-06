@@ -56,6 +56,7 @@ import com.google.inject.Provider;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.io.File;
 
@@ -63,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 
 // TODO Use ProtobufferException instead of ProtobufferRuntimeException
 @Slf4j
+@Singleton
 public class CorePersistenceProtoResolver extends CoreProtoResolver implements PersistenceProtoResolver {
     private final Provider<BtcWalletService> btcWalletService;
     private final NetworkProtoResolver networkProtoResolver;

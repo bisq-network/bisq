@@ -79,11 +79,13 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 
 // TODO Use ProtobufferException instead of ProtobufferRuntimeException
 @Slf4j
+@Singleton
 public class CoreNetworkProtoResolver extends CoreProtoResolver implements NetworkProtoResolver {
 
     @Inject
