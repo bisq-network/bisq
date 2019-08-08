@@ -17,6 +17,8 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
 
 import java.util.Comparator;

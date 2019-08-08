@@ -30,6 +30,7 @@ bisq.asset.coins.Counterparty
 bisq.asset.coins.Credits
 bisq.asset.coins.Croat
 bisq.asset.coins.CRowdCLassic
+bisq.asset.coins.DarkPay
 bisq.asset.coins.Dash
 bisq.asset.coins.Decred
 bisq.asset.coins.DeepOnion
@@ -38,6 +39,7 @@ bisq.asset.coins.Dogecoin
 bisq.asset.coins.Doichain
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.DSTRA
+bisq.asset.coins.Emercoin
 bisq.asset.coins.Ether
 bisq.asset.coins.EtherClassic
 bisq.asset.coins.FourtyTwo
@@ -53,6 +55,7 @@ bisq.asset.coins.IdaPay
 bisq.asset.coins.Iridium
 bisq.asset.coins.Kekcoin
 bisq.asset.coins.KnowYourDeveloper
+bisq.asset.coins.Kore
 bisq.asset.coins.Litecoin
 bisq.asset.coins.LitecoinPlus
 bisq.asset.coins.LitecoinZ
@@ -70,6 +73,8 @@ bisq.asset.coins.Navcoin
 bisq.asset.coins.Neos
 bisq.asset.coins.Noir
 bisq.asset.coins.ParsiCoin
+bisq.asset.coins.Particl
+bisq.asset.coins.PENG
 bisq.asset.coins.Persona
 bisq.asset.coins.Pinkcoin
 bisq.asset.coins.PIVX
@@ -83,6 +88,7 @@ bisq.asset.coins.Remix
 bisq.asset.coins.Ryo
 bisq.asset.coins.Siafund
 bisq.asset.coins.SiaPrimeCoin
+bisq.asset.coins.SixEleven
 bisq.asset.coins.SpaceCash
 bisq.asset.coins.Spectrecoin
 bisq.asset.coins.Starwels
@@ -92,6 +98,7 @@ bisq.asset.coins.TurtleCoin
 bisq.asset.coins.UnitedCommunityCoin
 bisq.asset.coins.Unobtanium
 bisq.asset.coins.Veil
+bisq.asset.coins.Vertcoin
 bisq.asset.coins.Webchain
 bisq.asset.coins.WrkzCoin
 bisq.asset.coins.XDR

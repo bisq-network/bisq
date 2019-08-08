@@ -30,7 +30,7 @@ import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.util.Tuple3;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -85,7 +85,7 @@ public abstract class TradeStepView extends AnchorPane {
     private TxIdTextField txIdTextField;
     protected TradeSubView.NotificationGroup notificationGroup;
     private Subscription txIdSubscription;
-    private Clock.Listener clockListener;
+    private ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
 
@@ -139,7 +139,7 @@ public abstract class TradeStepView extends AnchorPane {
                 showSupportFields();
         };
 
-        clockListener = new Clock.Listener() {
+        clockListener = new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
             }
@@ -175,7 +175,7 @@ public abstract class TradeStepView extends AnchorPane {
                 updateTradePeriodState(newValue);
         });
 
-        model.clock.addListener(clockListener);
+        model.clockWatcher.addListener(clockListener);
 
         if (infoLabel != null)
             infoLabel.setText(getInfoText());
@@ -198,7 +198,7 @@ public abstract class TradeStepView extends AnchorPane {
             tradePeriodStateSubscription.unsubscribe();
 
         if (clockListener != null)
-            model.clock.removeListener(clockListener);
+            model.clockWatcher.removeListener(clockListener);
 
         if (notificationGroup != null)
             notificationGroup.button.setOnAction(null);

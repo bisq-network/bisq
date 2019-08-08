@@ -15,7 +15,7 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.payment;
+package bisq.core.account.witness;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
@@ -28,9 +28,9 @@ import bisq.common.app.Capability;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
+
+import java.time.Clock;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -61,18 +61,18 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableNetworkPayload toProtoMessage() {
-        final PB.AccountAgeWitness.Builder builder = PB.AccountAgeWitness.newBuilder()
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        final protobuf.AccountAgeWitness.Builder builder = protobuf.AccountAgeWitness.newBuilder()
                 .setHash(ByteString.copyFrom(hash))
                 .setDate(date);
-        return PB.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
+        return protobuf.PersistableNetworkPayload.newBuilder().setAccountAgeWitness(builder).build();
     }
 
-    public PB.AccountAgeWitness toProtoAccountAgeWitness() {
+    public protobuf.AccountAgeWitness toProtoAccountAgeWitness() {
         return toProtoMessage().getAccountAgeWitness();
     }
 
-    public static AccountAgeWitness fromProto(PB.AccountAgeWitness proto) {
+    public static AccountAgeWitness fromProto(protobuf.AccountAgeWitness proto) {
         byte[] hash = proto.getHash().toByteArray();
         if (hash.length != 20) {
             log.warn("We got a a hash which is not 20 bytes");
@@ -89,7 +89,7 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean isDateInTolerance() {
+    public boolean isDateInTolerance(Clock clock) {
         // We don't allow older or newer then 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;

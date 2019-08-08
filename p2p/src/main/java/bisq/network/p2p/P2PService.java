@@ -527,7 +527,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                                 e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, senderNodeAddress));
                     } else {
                         log.warn("tryDecryptMailboxData: Expected MailboxMessage but got other type. " +
-                                "decryptedMsgWithPubKey.message=", decryptedMessageWithPubKey.getNetworkEnvelope());
+                                "decryptedMsgWithPubKey.message={}", decryptedMessageWithPubKey.getNetworkEnvelope());
                     }
                 } catch (CryptoException e) {
                     log.debug(e.toString());

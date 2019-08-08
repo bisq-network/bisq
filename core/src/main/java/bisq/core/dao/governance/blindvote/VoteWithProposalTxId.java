@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.governance.Vote;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 
 import lombok.Value;
@@ -50,19 +48,19 @@ public class VoteWithProposalTxId implements PersistablePayload {
 
     // Used for sending over the network
     @Override
-    public PB.VoteWithProposalTxId toProtoMessage() {
+    public protobuf.VoteWithProposalTxId toProtoMessage() {
         return getBuilder().build();
     }
 
     @NotNull
-    private PB.VoteWithProposalTxId.Builder getBuilder() {
-        final PB.VoteWithProposalTxId.Builder builder = PB.VoteWithProposalTxId.newBuilder()
+    private protobuf.VoteWithProposalTxId.Builder getBuilder() {
+        final protobuf.VoteWithProposalTxId.Builder builder = protobuf.VoteWithProposalTxId.newBuilder()
                 .setProposalTxId(proposalTxId);
-        Optional.ofNullable(vote).ifPresent(e -> builder.setVote((PB.Vote) e.toProtoMessage()));
+        Optional.ofNullable(vote).ifPresent(e -> builder.setVote((protobuf.Vote) e.toProtoMessage()));
         return builder;
     }
 
-    public static VoteWithProposalTxId fromProto(PB.VoteWithProposalTxId proto) {
+    public static VoteWithProposalTxId fromProto(protobuf.VoteWithProposalTxId proto) {
         return new VoteWithProposalTxId(proto.getProposalTxId(),
                 proto.hasVote() ? Vote.fromProto(proto.getVote()) : null);
     }

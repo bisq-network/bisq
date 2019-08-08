@@ -28,8 +28,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -79,8 +77,8 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.Proposal.Builder builder = PB.Proposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.Proposal.Builder builder = protobuf.Proposal.newBuilder()
                 .setName(name)
                 .setLink(link)
                 .setVersion(version)
@@ -91,11 +89,11 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
     }
 
     @Override
-    public PB.Proposal toProtoMessage() {
+    public protobuf.Proposal toProtoMessage() {
         return getProposalBuilder().build();
     }
 
-    public static Proposal fromProto(PB.Proposal proto) {
+    public static Proposal fromProto(protobuf.Proposal proto) {
         switch (proto.getMessageCase()) {
             case COMPENSATION_PROPOSAL:
                 return CompensationProposal.fromProto(proto);

@@ -22,8 +22,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.List;
@@ -58,20 +56,20 @@ public class BlindVoteStore implements PersistableEnvelope {
     }
 
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
                 .setBlindVoteStore(getBuilder())
                 .build();
     }
 
-    private PB.BlindVoteStore.Builder getBuilder() {
-        final List<PB.BlindVotePayload> protoList = map.values().stream()
+    private protobuf.BlindVoteStore.Builder getBuilder() {
+        final List<protobuf.BlindVotePayload> protoList = map.values().stream()
                 .map(payload -> (BlindVotePayload) payload)
                 .map(BlindVotePayload::toProtoBlindVotePayload)
                 .collect(Collectors.toList());
-        return PB.BlindVoteStore.newBuilder().addAllItems(protoList);
+        return protobuf.BlindVoteStore.newBuilder().addAllItems(protoList);
     }
 
-    public static PersistableEnvelope fromProto(PB.BlindVoteStore proto) {
+    public static PersistableEnvelope fromProto(protobuf.BlindVoteStore proto) {
         List<BlindVotePayload> list = proto.getItemsList().stream()
                 .map(BlindVotePayload::fromProto).collect(Collectors.toList());
         return new BlindVoteStore(list);

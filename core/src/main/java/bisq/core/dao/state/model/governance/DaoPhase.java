@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Objects;
 
 import lombok.Value;
@@ -71,14 +69,14 @@ public class DaoPhase implements PersistablePayload, ImmutableDaoStateModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.DaoPhase toProtoMessage() {
-        return PB.DaoPhase.newBuilder()
+    public protobuf.DaoPhase toProtoMessage() {
+        return protobuf.DaoPhase.newBuilder()
                 .setPhaseOrdinal(phase.ordinal())
                 .setDuration(duration)
                 .build();
     }
 
-    public static DaoPhase fromProto(PB.DaoPhase proto) {
+    public static DaoPhase fromProto(protobuf.DaoPhase proto) {
         int ordinal = proto.getPhaseOrdinal();
         if (ordinal >= Phase.values().length) {
             log.warn("We tried to access a ordinal outside of the DaoPhase.Phase enum bounds and set it to " +

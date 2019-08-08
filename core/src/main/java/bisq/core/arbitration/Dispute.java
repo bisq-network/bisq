@@ -27,8 +27,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import javafx.beans.property.BooleanProperty;
@@ -180,8 +178,8 @@ public final class Dispute implements NetworkPayload {
     }
 
     @Override
-    public PB.Dispute toProtoMessage() {
-        PB.Dispute.Builder builder = PB.Dispute.newBuilder()
+    public protobuf.Dispute toProtoMessage() {
+        protobuf.Dispute.Builder builder = protobuf.Dispute.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setDisputeOpenerIsBuyer(disputeOpenerIsBuyer)
@@ -211,7 +209,7 @@ public final class Dispute implements NetworkPayload {
         return builder.build();
     }
 
-    public static Dispute fromProto(PB.Dispute proto, CoreProtoResolver coreProtoResolver) {
+    public static Dispute fromProto(protobuf.Dispute proto, CoreProtoResolver coreProtoResolver) {
         final Dispute dispute = new Dispute(proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getDisputeOpenerIsBuyer(),

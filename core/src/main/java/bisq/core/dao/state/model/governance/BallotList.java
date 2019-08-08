@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,18 +51,18 @@ public class BallotList extends PersistableList<Ballot> implements ConsensusCrit
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PersistableEnvelope toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder().setBallotList(getBuilder()).build();
+    public protobuf.PersistableEnvelope toProtoMessage() {
+        return protobuf.PersistableEnvelope.newBuilder().setBallotList(getBuilder()).build();
     }
 
-    public PB.BallotList.Builder getBuilder() {
-        return PB.BallotList.newBuilder()
+    public protobuf.BallotList.Builder getBuilder() {
+        return protobuf.BallotList.newBuilder()
                 .addAllBallot(getList().stream()
                         .map(Ballot::toProtoMessage)
                         .collect(Collectors.toList()));
     }
 
-    public static BallotList fromProto(PB.BallotList proto) {
+    public static BallotList fromProto(protobuf.BallotList proto) {
         return new BallotList(new ArrayList<>(proto.getBallotList().stream()
                 .map(Ballot::fromProto)
                 .collect(Collectors.toList())));

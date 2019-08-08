@@ -47,8 +47,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import javax.inject.Inject;
 
 import com.google.common.util.concurrent.MoreExecutors;
@@ -248,7 +246,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 try {
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
-                    PB.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
+                    protobuf.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
                     log.debug("Sending message: {}", Utilities.toTruncatedString(proto.toString(), 10000));
 
                     if (networkEnvelope instanceof Ping | networkEnvelope instanceof RefreshOfferMessage) {
@@ -708,7 +706,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     }
 
                     // Reading the protobuffer message from the inputstream
-                    PB.NetworkEnvelope proto = PB.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
+                    protobuf.NetworkEnvelope proto = protobuf.NetworkEnvelope.parseDelimitedFrom(protoInputStream);
 
                     if (proto == null) {
                         if (protoInputStream.read() == -1)

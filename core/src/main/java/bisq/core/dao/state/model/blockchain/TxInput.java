@@ -21,8 +21,6 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -57,8 +55,8 @@ public final class TxInput implements PersistablePayload, ImmutableDaoStateModel
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public PB.TxInput toProtoMessage() {
-        final PB.TxInput.Builder builder = PB.TxInput.newBuilder()
+    public protobuf.TxInput toProtoMessage() {
+        final protobuf.TxInput.Builder builder = protobuf.TxInput.newBuilder()
                 .setConnectedTxOutputTxId(connectedTxOutputTxId)
                 .setConnectedTxOutputIndex(connectedTxOutputIndex);
 
@@ -67,7 +65,7 @@ public final class TxInput implements PersistablePayload, ImmutableDaoStateModel
         return builder.build();
     }
 
-    public static TxInput fromProto(PB.TxInput proto) {
+    public static TxInput fromProto(protobuf.TxInput proto) {
         return new TxInput(proto.getConnectedTxOutputTxId(),
                 proto.getConnectedTxOutputIndex(),
                 proto.getPubKey().isEmpty() ? null : proto.getPubKey());

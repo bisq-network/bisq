@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.payment;
+package bisq.core.account.witness;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 
@@ -32,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AccountAgeRestrictions {
-    public static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.MARCH, 1).getTime();
+    private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.MARCH, 1).getTime();
 
     public static boolean isMakersAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, Offer offer) {
         long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMakersAccountAge(offer, new Date());
@@ -76,6 +77,7 @@ public class AccountAgeRestrictions {
             // Taker is buyer
             return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
         } else {
+            // Offers with no chargeback risk or mature buyer accounts
             return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode);
         }
     }

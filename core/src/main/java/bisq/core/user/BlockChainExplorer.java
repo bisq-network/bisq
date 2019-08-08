@@ -19,8 +19,6 @@ package bisq.core.user;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 public final class BlockChainExplorer implements PersistablePayload {
@@ -36,10 +34,10 @@ public final class BlockChainExplorer implements PersistablePayload {
 
     @Override
     public Message toProtoMessage() {
-        return PB.BlockChainExplorer.newBuilder().setName(name).setTxUrl(txUrl).setAddressUrl(addressUrl).build();
+        return protobuf.BlockChainExplorer.newBuilder().setName(name).setTxUrl(txUrl).setAddressUrl(addressUrl).build();
     }
 
-    public static BlockChainExplorer fromProto(PB.BlockChainExplorer proto) {
+    public static BlockChainExplorer fromProto(protobuf.BlockChainExplorer proto) {
         return new BlockChainExplorer(proto.getName(),
                 proto.getTxUrl(),
                 proto.getAddressUrl());

@@ -23,8 +23,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
@@ -63,9 +61,9 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
 
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDepositTxPublishedMessage(PB.DepositTxPublishedMessage.newBuilder()
+                .setDepositTxPublishedMessage(protobuf.DepositTxPublishedMessage.newBuilder()
                         .setTradeId(tradeId)
                         .setDepositTx(ByteString.copyFrom(depositTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -73,7 +71,7 @@ public final class DepositTxPublishedMessage extends TradeMessage implements Mai
                 .build();
     }
 
-    public static DepositTxPublishedMessage fromProto(PB.DepositTxPublishedMessage proto, int messageVersion) {
+    public static DepositTxPublishedMessage fromProto(protobuf.DepositTxPublishedMessage proto, int messageVersion) {
         return new DepositTxPublishedMessage(proto.getTradeId(),
                 proto.getDepositTx().toByteArray(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),

@@ -19,8 +19,6 @@ package bisq.core.dao.state.model.blockchain;
 
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.common.collect.ImmutableList;
 
 import java.util.stream.Collectors;
@@ -69,8 +67,8 @@ public abstract class BaseTx implements ImmutableDaoStateModel {
         this.txInputs = txInputs;
     }
 
-    protected PB.BaseTx.Builder getBaseTxBuilder() {
-        return PB.BaseTx.newBuilder()
+    protected protobuf.BaseTx.Builder getBaseTxBuilder() {
+        return protobuf.BaseTx.newBuilder()
                 .setTxVersion(txVersion)
                 .setId(id)
                 .setBlockHeight(blockHeight)

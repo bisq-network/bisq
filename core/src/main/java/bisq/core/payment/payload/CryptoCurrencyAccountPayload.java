@@ -17,7 +17,6 @@
 
 package bisq.core.payment.payload;
 
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
@@ -65,12 +64,12 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setCryptoCurrencyAccountPayload(PB.CryptoCurrencyAccountPayload.newBuilder()
+                .setCryptoCurrencyAccountPayload(protobuf.CryptoCurrencyAccountPayload.newBuilder()
                         .setAddress(address))
                 .build();
     }
 
-    public static CryptoCurrencyAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static CryptoCurrencyAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new CryptoCurrencyAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getCryptoCurrencyAccountPayload().getAddress(),

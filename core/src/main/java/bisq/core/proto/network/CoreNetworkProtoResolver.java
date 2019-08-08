@@ -53,8 +53,8 @@ import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
+import bisq.network.p2p.CloseConnectionMessage;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
@@ -78,8 +78,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +91,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
     }
 
     @Override
-    public NetworkEnvelope fromProto(PB.NetworkEnvelope proto) throws ProtobufferException {
+    public NetworkEnvelope fromProto(protobuf.NetworkEnvelope proto) throws ProtobufferException {
         if (proto != null) {
             final int messageVersion = proto.getMessageVersion();
             switch (proto.getMessageCase()) {
@@ -204,7 +202,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
         }
     }
 
-    public NetworkPayload fromProto(PB.StorageEntryWrapper proto) {
+    public NetworkPayload fromProto(protobuf.StorageEntryWrapper proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case PROTECTED_MAILBOX_STORAGE_ENTRY:
@@ -221,7 +219,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
         }
     }
 
-    public NetworkPayload fromProto(PB.StoragePayload proto) {
+    public NetworkPayload fromProto(protobuf.StoragePayload proto) {
         if (proto != null) {
             switch (proto.getMessageCase()) {
                 case ALERT:

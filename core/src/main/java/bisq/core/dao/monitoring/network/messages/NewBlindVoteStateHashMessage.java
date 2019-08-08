@@ -24,8 +24,6 @@ import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -46,14 +44,14 @@ public final class NewBlindVoteStateHashMessage extends NewStateHashMessage<Blin
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setNewBlindVoteStateHashMessage(PB.NewBlindVoteStateHashMessage.newBuilder()
+                .setNewBlindVoteStateHashMessage(protobuf.NewBlindVoteStateHashMessage.newBuilder()
                         .setStateHash(stateHash.toProtoMessage()))
                 .build();
     }
 
-    public static NetworkEnvelope fromProto(PB.NewBlindVoteStateHashMessage proto, int messageVersion) {
+    public static NetworkEnvelope fromProto(protobuf.NewBlindVoteStateHashMessage proto, int messageVersion) {
         return new NewBlindVoteStateHashMessage(BlindVoteStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 

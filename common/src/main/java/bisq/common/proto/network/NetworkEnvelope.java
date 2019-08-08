@@ -19,8 +19,6 @@ package bisq.common.proto.network;
 
 import bisq.common.Envelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import lombok.EqualsAndHashCode;
@@ -41,8 +39,8 @@ public abstract class NetworkEnvelope implements Envelope {
         this.messageVersion = messageVersion;
     }
 
-    public PB.NetworkEnvelope.Builder getNetworkEnvelopeBuilder() {
-        return PB.NetworkEnvelope.newBuilder().setMessageVersion(messageVersion);
+    public protobuf.NetworkEnvelope.Builder getNetworkEnvelopeBuilder() {
+        return protobuf.NetworkEnvelope.newBuilder().setMessageVersion(messageVersion);
     }
 
     @Override
@@ -51,7 +49,7 @@ public abstract class NetworkEnvelope implements Envelope {
     }
 
     // todo remove
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder().build();
     }
 

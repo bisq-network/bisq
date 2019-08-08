@@ -1,3 +1,7 @@
+if(JavaVersion.current() != JavaVersion.VERSION_1_10){
+// feel free to delete this if you know what you are doing
+    throw new GradleException("This build must be run with java 10. see docs/build.md")
+}
 buildscript {
     repositories {
         jcenter()
@@ -400,6 +404,7 @@ configure(project(':seednode')) {
         runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
     }
 }
 

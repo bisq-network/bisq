@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
 import bisq.core.alert.PrivateNotificationManager;
@@ -41,7 +42,6 @@ import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
@@ -58,7 +58,7 @@ import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -134,7 +134,7 @@ public class BisqSetup {
     private final PrivateNotificationManager privateNotificationManager;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final Clock clock;
+    private final ClockWatcher clockWatcher;
     private final FeeService feeService;
     private final DaoSetup daoSetup;
     private final EncryptionService encryptionService;
@@ -212,7 +212,7 @@ public class BisqSetup {
                      PrivateNotificationManager privateNotificationManager,
                      FilterManager filterManager,
                      TradeStatisticsManager tradeStatisticsManager,
-                     Clock clock,
+                     ClockWatcher clockWatcher,
                      FeeService feeService,
                      DaoSetup daoSetup,
                      EncryptionService encryptionService,
@@ -252,7 +252,7 @@ public class BisqSetup {
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.clock = clock;
+        this.clockWatcher = clockWatcher;
         this.feeService = feeService;
         this.daoSetup = daoSetup;
         this.encryptionService = encryptionService;
@@ -599,7 +599,7 @@ public class BisqSetup {
     private void initDomainServices() {
         log.info("initDomainServices");
 
-        clock.start();
+        clockWatcher.start();
 
         tradeLimits.onAllServicesInitialized();
 

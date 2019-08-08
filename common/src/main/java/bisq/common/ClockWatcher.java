@@ -24,9 +24,9 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 // Helps configure listener objects that are run by the `UserThread` each second
-// and can do per second, per minute and delayed second actions.
+// and can do per second, per minute and delayed second actions. Also detects when we were in standby, and logs it.
 @Slf4j
-public class Clock {
+public class ClockWatcher {
     public static final int IDLE_TOLERANCE_MS = 20000;
 
     public interface Listener {
@@ -46,7 +46,7 @@ public class Clock {
     private long counter = 0;
     private long lastSecondTick;
 
-    public Clock() {
+    public ClockWatcher() {
     }
 
     public void start() {
@@ -66,7 +66,7 @@ public class Clock {
                     long missedMs = diff - 1000;
                     listeners.forEach(listener -> listener.onMissedSecondTick(missedMs));
 
-                    if (missedMs > Clock.IDLE_TOLERANCE_MS) {
+                    if (missedMs > ClockWatcher.IDLE_TOLERANCE_MS) {
                         log.info("We have been in standby mode for {} sec", missedMs / 1000);
                         listeners.forEach(listener -> listener.onAwakeFromStandby(missedMs));
                     }

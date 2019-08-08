@@ -20,14 +20,13 @@ package bisq.network.p2p.storage.payload;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
 
 /**
  * ProtectedStoragePayload which are persistable and removable
  */
 public interface PersistableProtectedPayload extends ProtectedStoragePayload, PersistablePayload {
 
-    static PersistableProtectedPayload fromProto(PB.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
+    static PersistableProtectedPayload fromProto(protobuf.StoragePayload storagePayload, NetworkProtoResolver networkProtoResolver) {
         return (PersistableProtectedPayload) networkProtoResolver.fromProto(storagePayload);
     }
 }

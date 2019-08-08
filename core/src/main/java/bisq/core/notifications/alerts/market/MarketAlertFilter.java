@@ -22,8 +22,6 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,8 +61,8 @@ public class MarketAlertFilter implements PersistablePayload {
     }
 
     @Override
-    public PB.MarketAlertFilter toProtoMessage() {
-        return PB.MarketAlertFilter.newBuilder()
+    public protobuf.MarketAlertFilter toProtoMessage() {
+        return protobuf.MarketAlertFilter.newBuilder()
                 .setPaymentAccount(paymentAccount.toProtoMessage())
                 .setTriggerValue(triggerValue)
                 .setIsBuyOffer(isBuyOffer)
@@ -72,7 +70,7 @@ public class MarketAlertFilter implements PersistablePayload {
                 .build();
     }
 
-    public static MarketAlertFilter fromProto(PB.MarketAlertFilter proto, CoreProtoResolver coreProtoResolver) {
+    public static MarketAlertFilter fromProto(protobuf.MarketAlertFilter proto, CoreProtoResolver coreProtoResolver) {
         List<String> list = proto.getAlertIdsList().isEmpty() ?
                 new ArrayList<>() : new ArrayList<>(proto.getAlertIdsList());
         return new MarketAlertFilter(PaymentAccount.fromProto(proto.getPaymentAccount(), coreProtoResolver),
