@@ -59,7 +59,7 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '2.21.0'
-        netlayerVersion = '0.6.5'
+        netlayerVersion = '0.6.5.1'
         powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
         pushyVersion = '0.13.2'
@@ -223,10 +223,17 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
+<<<<<<< HEAD
         compile("com.github.JesusMcCloud.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         compile("com.github.JesusMcCloud.netlayer:tor.external:$netlayerVersion") {
+=======
+        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.5.1') {
+            exclude(module: 'slf4j-api')
+        }
+        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6.5.1') {
+>>>>>>> upstream/master
             exclude(module: 'slf4j-api')
         }
         compile("org.apache.httpcomponents:httpclient:$httpclientVersion") {
@@ -300,7 +307,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.1.4-SNAPSHOT'
+    version = '1.1.5-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 

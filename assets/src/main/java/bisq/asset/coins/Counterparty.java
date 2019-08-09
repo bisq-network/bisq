@@ -18,11 +18,19 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 public class Counterparty extends Coin {
-
+	
     public Counterparty() {
-        super("Counterparty", "XCP", new DefaultAddressValidator());
+        super("Counterparty", "XCP", new XcpAddressValidator());
+    }
+    
+    public static class XcpAddressValidator extends RegexAddressValidator {
+
+        public XcpAddressValidator() {
+            super("^[1][a-zA-Z0-9]{33}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.XCP"));
+        }
     }
 }

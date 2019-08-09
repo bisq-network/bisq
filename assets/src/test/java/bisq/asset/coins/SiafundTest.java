@@ -17,11 +17,26 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
 
-public class SiafundTest extends AbstractAssetWithDefaultValidatorTest {
+public class SiafundTest extends AbstractAssetTest {
 
     public SiafundTest() {
         super(new Siafund());
     }
+
+	@Override
+	public void testValidAddresses() {
+		assertValidAddress("949f35966a9b5f329f7419f91a02301b71b9f776568b2c767842af22b408eb8662203a02ec53");
+		assertValidAddress("4daae3005456559972f4902217ee8394a890e2afede6f0b49015e5cfaecdcb13f466f5543346");
+		assertValidAddress("da4f7fdc0fa047851a9860b09bc9b1e7424333c977e53a5d8aad74f5843a20b7cfa77a7794ae");		
+		
+	}
+
+	@Override
+	public void testInvalidAddresses() {
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+		assertInvalidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
+	}
 }

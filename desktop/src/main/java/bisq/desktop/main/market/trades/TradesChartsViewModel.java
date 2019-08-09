@@ -65,6 +65,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -304,20 +305,20 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
         long numTrades = set.size();
+        List<Long> tradePrices = new ArrayList<>(set.size());
 
         for (TradeStatistics2 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
-            if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-                low = (low != 0) ? Math.max(low, tradePriceAsLong) : tradePriceAsLong;
-                high = (high != 0) ? Math.min(high, tradePriceAsLong) : tradePriceAsLong;
-            } else {
-                low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
-                high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
-            }
+			// Previously a check was done which inverted the low and high for
+			// crytocurrencies.
+			low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
+			high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
 
             accumulatedVolume += (item.getTradeVolume() != null) ? item.getTradeVolume().getValue() : 0;
             accumulatedAmount += item.getTradeAmount().getValue();
+            tradePrices.add(item.getTradePrice().getValue());
         }
+        Collections.sort(tradePrices);
 
         List<TradeStatistics2> list = new ArrayList<>(set);
         list.sort((o1, o2) -> (o1.getTradeDate().getTime() < o2.getTradeDate().getTime() ? -1 : (o1.getTradeDate().getTime() == o2.getTradeDate().getTime() ? 0 : 1)));
@@ -327,6 +328,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
 
         long averagePrice;
+        Long[] prices = new Long[tradePrices.size()];
+        tradePrices.toArray(prices);
+        long medianPrice = findMedian(prices);
         boolean isBullish;
         if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
             isBullish = close < open;
@@ -343,9 +347,20 @@ class TradesChartsViewModel extends ActivatableViewModel {
         String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
                 formatter.formatDateTimeSpan(dateFrom, dateTo) :
                 formatter.formatDate(dateFrom) + " - " + formatter.formatDate(dateTo);
-        return new CandleData(tick, open, close, high, low, averagePrice, accumulatedAmount, accumulatedVolume,
+        return new CandleData(tick, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
                 numTrades, isBullish, dateString);
     }
+    
+	Long findMedian(Long[] prices) {
+		int middle = prices.length / 2;
+		long median;
+		if (prices.length % 2 == 1) {
+			median = prices[middle];
+		} else {
+			median = MathUtils.roundDoubleToLong((prices[middle - 1] + prices[middle]) / 2.0);
+		}
+		return median;
+	}
 
     Date roundToTick(Date time, TickUnit tickUnit) {
         ZonedDateTime zdt = time.toInstant().atZone(ZoneId.systemDefault());

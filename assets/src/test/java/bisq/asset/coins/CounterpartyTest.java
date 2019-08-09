@@ -17,11 +17,25 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
 
-public class CounterpartyTest extends AbstractAssetWithDefaultValidatorTest {
+public class CounterpartyTest extends AbstractAssetTest {
 
     public CounterpartyTest() {
         super(new Counterparty());
     }
+
+	@Override
+	public void testValidAddresses() {
+		assertValidAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
+		assertValidAddress("1KBbojKRf1YnJKp1YK5eEz9TWlS4pFEbwS");
+		assertValidAddress("1AtLN6BMlW0Rwj800LNcBBR2o0k0sYVuIN");		
+	}
+
+	@Override
+	public void testInvalidAddresses() {
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
+		assertInvalidAddress("122FRU9f3fx7Hty641DRK6S3sbf3");
+		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
+	}
 }

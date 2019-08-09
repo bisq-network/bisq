@@ -33,4 +33,8 @@ public class EtherAddressValidator extends RegexAddressValidator {
     public EtherAddressValidator() {
         super("^(0x)?[0-9a-fA-F]{40}$");
     }
+
+    public EtherAddressValidator(String errorMessageI18nKey) {
+        super("^(0x)?[0-9a-fA-F]{40}$", errorMessageI18nKey);
+    }
 }
