@@ -17,20 +17,20 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
-import bisq.asset.NetworkParametersAdapter;
+import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 public class Namecoin extends Coin {
 
-    public Namecoin() {
-        super("Namecoin", "NMC", new Base58BitcoinAddressValidator(new NamecoinChainParams()));
+	public Namecoin() {
+		super("Namecoin", "NMC", new NmcAddressValidator());
     }
+    
+    public static class NmcAddressValidator extends RegexAddressValidator {
 
-    public static class NamecoinChainParams extends NetworkParametersAdapter {
-        public NamecoinChainParams() {
-            addressHeader = 52;
-            acceptableAddressCodes = new int[]{addressHeader};
+        public NmcAddressValidator() {
+            super("^[NM][a-zA-Z0-9]{33}$", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.NMC"));
         }
     }
 }
