@@ -223,17 +223,10 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
-<<<<<<< HEAD
         compile("com.github.JesusMcCloud.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         compile("com.github.JesusMcCloud.netlayer:tor.external:$netlayerVersion") {
-=======
-        compile('com.github.JesusMcCloud.netlayer:tor.native:0.6.5.1') {
-            exclude(module: 'slf4j-api')
-        }
-        compile('com.github.JesusMcCloud.netlayer:tor.external:0.6.5.1') {
->>>>>>> upstream/master
             exclude(module: 'slf4j-api')
         }
         compile("org.apache.httpcomponents:httpclient:$httpclientVersion") {
