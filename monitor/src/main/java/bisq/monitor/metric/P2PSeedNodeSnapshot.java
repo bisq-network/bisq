@@ -190,10 +190,8 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                     try {
                         report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
                                 String.valueOf(((Counter) count).value() - referenceValues.get(messageType).value()));
-                    } catch (MalformedURLException ignore) {
-                        log.error("we should never got here");
-                    } catch (NullPointerException e) {
-                        // we got no reference-Value if we got here. strange.
+                    } catch (MalformedURLException | NullPointerException ignore) {
+                        log.error("we should never have gotten here", ignore);
                     }
                 });
                 try {
