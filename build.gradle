@@ -209,7 +209,6 @@ configure(project(':p2p')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion")
-
     }
 }
 
