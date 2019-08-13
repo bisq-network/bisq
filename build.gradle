@@ -41,7 +41,6 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
         slf4jVersion = '1.7.22'
         sparkVersion = '2.5.2'
@@ -307,8 +306,6 @@ configure(project(':desktop')) {
         testCompile "org.jmockit:jmockit:$jmockitVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion") {
         }
-        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
-        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
