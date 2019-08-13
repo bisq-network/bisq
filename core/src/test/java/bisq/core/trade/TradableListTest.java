@@ -23,20 +23,19 @@ import bisq.core.offer.OpenOffer;
 
 import bisq.common.storage.Storage;
 
-import mockit.Mocked;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 
-//TODO cannot be run in IntelliJ IDE as parameter is not supported. OfferPayload is final so it is not so trivial to
-// replace that.
 public class TradableListTest {
 
     @Test
-    public void protoTesting(@Mocked OfferPayload offerPayload) {
+    public void protoTesting() {
+        OfferPayload offerPayload = mock(OfferPayload.class, RETURNS_DEEP_STUBS);
         Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null);
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
         protobuf.PersistableEnvelope message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();

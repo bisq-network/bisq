@@ -40,7 +40,7 @@ configure(subprojects) {
         bitcoinjVersion = 'a88d36d'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
-        mockitoVersion = '2.21.0'
+        mockitoVersion = '3.0.0'
         powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
         slf4jVersion = '1.7.22'
@@ -251,7 +251,6 @@ configure(project(':core')) {
 
         testCompile "org.jmockit:jmockit:$jmockitVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion") {
-            exclude(module: 'objenesis')
         }
         testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
         testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"

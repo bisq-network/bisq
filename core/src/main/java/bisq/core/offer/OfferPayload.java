@@ -51,7 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode
 @Getter
 @Slf4j
-public final class OfferPayload implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
+public class OfferPayload implements ProtectedStoragePayload, ExpirablePayload, RequiresOwnerIsOnlinePayload {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
