@@ -34,7 +34,6 @@ configure(subprojects) {
         bcVersion = '1.56'
         codecVersion = '1.9'
         easyVersion = '4.0.1'
-        jmockitVersion = '1.42'
         joptVersion = '5.0.3'
         langVersion = '3.4'
         bitcoinjVersion = 'a88d36d'
@@ -211,9 +210,10 @@ configure(project(':p2p')) {
         compile 'org.fxmisc.easybind:easybind:1.0.3'
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile 'org.jmockit:jmockit:1.30' // must not use current $jmockitVersion
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion")
+
     }
 }
 
@@ -248,9 +248,7 @@ configure(project(':core')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.jmockit:jmockit:$jmockitVersion"
-        testCompile("org.mockito:mockito-core:$mockitoVersion") {
-        }
+        testCompile("org.mockito:mockito-core:$mockitoVersion") 
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
@@ -260,9 +258,6 @@ configure(project(':core')) {
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
-
-        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
-        jvmArgs "-javaagent:$jmockit"
     }
 }
 
@@ -303,7 +298,6 @@ configure(project(':desktop')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.jmockit:jmockit:$jmockitVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion") {
         }
         testCompile "org.springframework:spring-test:$springVersion"
@@ -314,9 +308,6 @@ configure(project(':desktop')) {
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
-
-        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
-        jvmArgs "-javaagent:$jmockit"
     }
 }
 
