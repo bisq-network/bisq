@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class PubKeyRing implements NetworkPayload, UsedForTradeContractJson {
+public class PubKeyRing implements NetworkPayload, UsedForTradeContractJson {
     private final byte[] signaturePubKeyBytes;
     private final byte[] encryptionPubKeyBytes;
     @Nullable
