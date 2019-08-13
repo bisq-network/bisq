@@ -24,6 +24,7 @@ import bisq.core.app.WalletAppSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
+import bisq.core.notifications.MobileMessageEncryption;
 import bisq.core.notifications.MobileModel;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.notifications.MobileNotificationValidator;
@@ -118,6 +119,7 @@ public class GuiceSetupTest {
         assertSingleton(PersistenceProtoResolver.class);
         assertSingleton(CorePersistenceProtoResolver.class);
         assertTrue(injector.getInstance(PersistenceProtoResolver.class) instanceof CorePersistenceProtoResolver);
+        assertSingleton(MobileMessageEncryption.class);
         assertSingleton(MobileNotificationService.class);
         assertSingleton(MobileNotificationValidator.class);
         assertSingleton(MobileModel.class);
