@@ -46,6 +46,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.ClockWatcher;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
@@ -104,6 +105,7 @@ public class GuiceSetupTest {
         assertSingleton(TradeLimits.class);
         assertSingleton(KeyStorage.class);
         assertSingleton(KeyRing.class);
+        assertSingleton(PubKeyRing.class);
         assertSingleton(User.class);
         assertSingleton(ClockWatcher.class);
         assertSingleton(Preferences.class);
