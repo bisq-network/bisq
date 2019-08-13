@@ -41,7 +41,7 @@ configure(subprojects) {
         findbugsVersion = '3.0.2'
         firebaseVersion = '6.2.0'
         guavaVersion = '20.0'
-        guiceVersion = '4.1.0'
+        guiceVersion = '4.2.2'
         hamcrestVersion = '1.3'
         httpclientVersion = '4.5.3'
         ioVersion = '2.4'
@@ -201,7 +201,7 @@ configure(project(':common')) {
         compile "com.google.code.findbugs:jsr305:$findbugsVersion"
         compile "com.google.guava:guava:$guavaVersion"
         compile("com.google.inject:guice:$guiceVersion") {
-            exclude(module: 'guava')
+            exclude (module: 'guava')
         }
         compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
             exclude(module: 'jsr305')

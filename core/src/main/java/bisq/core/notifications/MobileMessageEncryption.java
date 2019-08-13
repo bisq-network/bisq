@@ -18,6 +18,7 @@
 package bisq.core.notifications;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.base.Charsets;
 
@@ -33,6 +34,7 @@ import java.security.NoSuchAlgorithmException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class MobileMessageEncryption {
     private SecretKeySpec keySpec;
     private Cipher cipher;

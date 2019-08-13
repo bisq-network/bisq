@@ -18,6 +18,7 @@
 package bisq.common.crypto;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -34,6 +35,7 @@ import javax.annotation.Nullable;
 @Getter
 @EqualsAndHashCode
 @Slf4j
+@Singleton
 public class KeyRing {
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;

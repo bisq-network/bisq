@@ -25,6 +25,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -43,6 +44,7 @@ import javax.annotation.Nullable;
 
 // If a new BaseCurrencyNetwork type gets added we need to add the resource file for it as well!
 @Slf4j
+@Singleton
 public class DefaultSeedNodeRepository implements SeedNodeRepository {
     //TODO add support for localhost addresses
     private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");

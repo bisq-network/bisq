@@ -28,6 +28,7 @@ import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.ConnectionListener;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+@Singleton
 @Slf4j
 public class P2PNetworkSetup {
     private final PriceFeedService priceFeedService;
