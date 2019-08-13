@@ -252,8 +252,6 @@ configure(project(':core')) {
         testCompile "org.jmockit:jmockit:$jmockitVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion") {
         }
-        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
-        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.3'
