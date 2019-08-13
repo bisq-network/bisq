@@ -1,7 +1,7 @@
-if(JavaVersion.current() != JavaVersion.VERSION_1_10){
+/*if(JavaVersion.current() != JavaVersion.VERSION_1_10){
 // feel free to delete this if you know what you are doing
     throw new GradleException("This build must be run with java 10. see docs/build.md")
-}
+}*/
 buildscript {
     repositories {
         jcenter()
@@ -306,7 +306,6 @@ configure(project(':desktop')) {
 
         testCompile "org.jmockit:jmockit:$jmockitVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion") {
-            exclude(module: 'objenesis')
         }
         testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
         testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
