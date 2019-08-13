@@ -17,6 +17,7 @@ Follow the step-by-step instructions at https://bisq.network/get-started.
 
 ## Contribute to Bisq
 
+<<<<<<< Updated upstream
 Bisq currently requires JDK 10 . See the scripts directory for scripts that can be used to install and configure the JDK automatically.
 
 TIP: If you are on MacOS, run the script with this command . scripts/install_java.sh.
@@ -25,4 +26,4 @@ If you prefer not to run scripts or change your default java, you can use Adopto
 
 
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer docs](docs#readme).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer docs](docs/README.md).
