@@ -17,4 +17,12 @@ Follow the step-by-step instructions at https://bisq.network/get-started.
 
 ## Contribute to Bisq
 
+Bisq currently requires JDK 10 . See the scripts directory for scripts that can be used to install and configure the JDK automatically.
+
+TIP: If you are on MacOS, run the script with this command . scripts/install_java.sh.
+
+If you prefer not to run scripts or change your default java, you can use Adoptopenjdk https://adoptopenjdk.net/archive.html. Just untar it where you like, and set java home when running gradle. for example: `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-10.0.2+13/Contents/Home ./gradlew clean build
+
+
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer docs](docs#readme).
