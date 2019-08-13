@@ -18,6 +18,7 @@
 package bisq.core.notifications;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -29,6 +30,7 @@ import javax.annotation.Nullable;
 
 @Data
 @Slf4j
+@Singleton
 public class MobileModel {
     public static final String PHONE_SEPARATOR_ESCAPED = "\\|"; // see https://stackoverflow.com/questions/5675704/java-string-split-not-returning-the-right-values
     public static final String PHONE_SEPARATOR_WRITING = "|";
