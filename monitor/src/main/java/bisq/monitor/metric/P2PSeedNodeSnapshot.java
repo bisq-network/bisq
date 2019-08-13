@@ -52,6 +52,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -239,8 +240,18 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".head", Long.toString(tuple.height - head)));
 
             //   - memorize hashes
-            Set<ByteBuffer> states = new HashSet<>();
-            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> states.add(ByteBuffer.wrap(tuple.hash)));
+            Map<ByteBuffer, Integer> hitcount = new HashMap<>();
+            nodeAddressTupleMap.forEach((nodeAddress, tuple) -> {
+                ByteBuffer hash = ByteBuffer.wrap(tuple.hash);
+                if (hitcount.containsKey(hash)) {
+                    hitcount.put(hash, hitcount.get(hash) + 1);
+                } else
+                    hitcount.put(hash, 1);
+            });
+
+            List<ByteBuffer> states = hitcount.entrySet().stream().sorted((o1, o2) -> o2.getValue().compareTo(o1.getValue())).map(byteBufferIntegerEntry -> byteBufferIntegerEntry.getKey()).collect(Collectors.toList());
+            hitcount.clear();
+
             nodeAddressTupleMap.forEach((nodeAddress, tuple) -> daoreport.put(type + "." + OnionParser.prettyPrint(nodeAddress) + ".hash", Integer.toString(Arrays.asList(states.toArray()).indexOf(ByteBuffer.wrap(tuple.hash)))));
 
             //   - report reference head
