@@ -12,6 +12,7 @@ import bisq.core.user.Preferences;
 import bisq.common.app.DevEnv;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -25,6 +26,7 @@ import javafx.collections.MapChangeListener;
 
 import lombok.Getter;
 
+@Singleton
 public class DaoPresentation implements DaoStateListener {
 
     public static final String DAO_NEWS = "daoNewsVersion1.0.0";

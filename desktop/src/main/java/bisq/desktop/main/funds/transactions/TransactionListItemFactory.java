@@ -27,11 +27,13 @@ import bisq.core.util.BSFormatter;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+@Singleton
 public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;

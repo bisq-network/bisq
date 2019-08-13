@@ -47,6 +47,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -56,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
+@Singleton
 public class BondingViewUtils {
     private final P2PService p2PService;
     private final MyReputationListService myReputationListService;

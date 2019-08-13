@@ -22,6 +22,7 @@ import bisq.core.user.Preferences;
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
@@ -39,6 +40,7 @@ import javafx.event.EventHandler;
 
 import javafx.util.Duration;
 
+@Singleton
 public class Transitions {
 
     public final static int DEFAULT_DURATION = 600;

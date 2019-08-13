@@ -38,6 +38,8 @@ import bisq.common.UserThread;
 
 import com.google.inject.Inject;
 
+import javax.inject.Singleton;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -54,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
+@Singleton
 public class NotificationCenter {
 
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -173,7 +173,7 @@ public abstract class Overlay<T extends Overlay> {
     private HPos buttonAlignment = HPos.RIGHT;
 
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
-    protected Optional<Runnable> actionHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> actionHandlerOptional = Optional.empty();
     protected Optional<Runnable> secondaryActionHandlerOptional = Optional.<Runnable>empty();
     protected ChangeListener<Number> positionListener;
 
@@ -438,7 +438,7 @@ public abstract class Overlay<T extends Overlay> {
 
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
-        this.actionHandlerOptional = Optional.of(BisqApp.getShutDownHandler());
+        this.actionHandlerOptional = Optional.ofNullable(BisqApp.getShutDownHandler());
         //noinspection unchecked
         return (T) this;
     }
