@@ -47,7 +47,7 @@ public class TradableListTest {
         //openOfferTradableList = new TradableList<OpenOffer>(storage,Lists.newArrayList(openOffer));
         openOfferTradableList.add(openOffer);
         message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
+        assertEquals(message.getMessageCase(), TRADABLE_LIST);
         assertEquals(1, message.getTradableList().getTradableList().size());
     }
 }
