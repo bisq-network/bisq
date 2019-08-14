@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Slf4j
 @Singleton
-public class KeyRing {
+public final class KeyRing {
     private final KeyPair signatureKeyPair;
     private final KeyPair encryptionKeyPair;
     private final PubKeyRing pubKeyRing;
