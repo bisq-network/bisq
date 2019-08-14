@@ -21,19 +21,9 @@ import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
-import java.security.Security;
-
 import java.util.ArrayList;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
@@ -42,9 +32,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({User.class, ArbitratorService.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class ArbitratorManagerTest {
 
 

@@ -9,12 +9,7 @@ import bisq.common.storage.Storage;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static bisq.core.offer.OfferMaker.btcUsdOffer;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
@@ -22,9 +17,6 @@ import static junit.framework.TestCase.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({P2PService.class, PeerManager.class, OfferBookService.class, Storage.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class OpenOfferManagerTest {
 
     @Test

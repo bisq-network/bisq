@@ -47,19 +47,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import lombok.extern.slf4j.Slf4j;
-
-import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
-
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
 
-@Slf4j
-@RunWith(JMockit.class)
-@Ignore("Use NetworkProtoResolver, PersistenceProtoResolver or ProtoResolver which are all in io.bisq.common.")
+import static org.mockito.Mockito.mock;
+
 public class P2PDataStorageTest {
     private final Set<NodeAddress> seedNodes = new HashSet<>();
     private EncryptionService encryptionService1, encryptionService2;
@@ -70,14 +62,10 @@ public class P2PDataStorageTest {
     private File dir1;
     private File dir2;
 
-    @Mocked
-    Broadcaster broadcaster;
-    @Mocked
-    NetworkNode networkNode;
-    @Mocked
-    NetworkProtoResolver networkProtoResolver;
-    @Mocked
-    PersistenceProtoResolver persistenceProtoResolver;
+    Broadcaster broadcaster = mock(Broadcaster.class);
+    NetworkNode networkNode = mock(NetworkNode.class);
+    NetworkProtoResolver networkProtoResolver = mock(NetworkProtoResolver.class);
+    PersistenceProtoResolver persistenceProtoResolver = mock(PersistenceProtoResolver.class);
 
     @Before
     public void setup() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException {

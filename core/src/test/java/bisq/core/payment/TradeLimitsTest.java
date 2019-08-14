@@ -20,17 +20,11 @@ package bisq.core.payment;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DaoStateService.class, PeriodService.class})
 public class TradeLimitsTest {
     @Test
     public void testGetFirstMonthRiskBasedTradeLimit() {
