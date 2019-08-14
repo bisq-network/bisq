@@ -293,7 +293,11 @@ public class TorNetworkNode extends NetworkNode {
             UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
 
             // only report HiddenServicePublished once all are published
-            gate.await(90, TimeUnit.SECONDS);
+            if (!gate.await(90, TimeUnit.SECONDS)) {
+                log.error("{} hidden services failed to start in time.", gate.getCount());
+                String msg = "Some hidden services failed to start in time.";
+                UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(msg))));
+            }
             UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));
 
             return null;
