@@ -263,7 +263,7 @@ public class TorNetworkNode extends NetworkNode {
             }
 
             // find hidden service candidates
-            File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles();
+            File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.matches("\\d+"));
 
             // start
             CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
