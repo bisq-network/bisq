@@ -62,7 +62,7 @@ import static org.mockito.Mockito.mock;
 
 public class TradesChartsViewModelTest {
     TradesChartsViewModel model;
-    TradeStatisticsManager tsm;
+    TradeStatisticsManager tradeStatisticsManager;
 
     private static final Logger log = LoggerFactory.getLogger(TradesChartsViewModelTest.class);
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -109,8 +109,8 @@ public class TradesChartsViewModelTest {
     );
     @Before
     public void setup() throws IOException {
-        tsm = mock(TradeStatisticsManager.class);
-        model = new TradesChartsViewModel(tsm, mock(Preferences.class), mock(PriceFeedService.class),
+        tradeStatisticsManager = mock(TradeStatisticsManager.class);
+        model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
                 mock(Navigation.class), mock(BSFormatter.class));
         dir = File.createTempFile("temp_tests1", "");
         //noinspection ResultOfMethodCallIgnored
@@ -206,7 +206,7 @@ public class TradesChartsViewModelTest {
         // Run test for each tick type
         for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
 /*            new Expectations() {{
-                tsm.getObservableTradeStatisticsSet();
+                tradeStatisticsManager.getObservableTradeStatisticsSet();
                 result = tradeStats;
             }};*/
 
