@@ -85,7 +85,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     TableView<ClosedTradableListItem> tableView;
     @FXML
-    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,  
+    TableColumn<ClosedTradableListItem, ClosedTradableListItem> priceColumn, amountColumn, volumeColumn, txFeeColumn, makerFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
     @FXML
     HBox footerBox;
@@ -272,25 +272,25 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<ClosedTradableListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<ClosedTradableListItem> headerConverter = transactionsListItem -> {
-                String[] columns = new String[11];
+                String[] columns = new String[12];
                 for (int i = 0; i < columns.length; i++)
-                    columns[i] = tableColumns.get(i).getText();
-
+                    columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
                 return columns;
             };
             CSVEntryConverter<ClosedTradableListItem> contentConverter = item -> {
-                String[] columns = new String[11];
+                String[] columns = new String[12];
                 columns[0] = model.getTradeId(item);
                 columns[1] = model.getDate(item);
-                columns[2] = model.getAmount(item);
+                columns[2] = model.getMarketLabel(item);
                 columns[3] = model.getPrice(item);
-                columns[4] = model.getVolume(item);
-				columns[5] = model.getTxFee(item);
-				columns[6] = model.getMakerFee(item);
-				columns[7] = model.getBuyerSecurityDeposit(item);
-				columns[8] = model.getSellerSecurityDeposit(item);
-                columns[9] = model.getDirectionLabel(item);
-                columns[10] = model.getState(item);
+                columns[4] = model.getAmount(item);
+				columns[5] = model.getVolume(item);
+                columns[6] = model.getTxFee(item);
+				columns[7] = model.getMakerFee(item);
+				columns[8] = model.getBuyerSecurityDeposit(item);
+				columns[9] = model.getSellerSecurityDeposit(item);
+                columns[10] = model.getDirectionLabel(item);
+                columns[11] = model.getState(item);
                 return columns;
             };
 
@@ -627,5 +627,5 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     }
                 });
 	}
-	
+
 }

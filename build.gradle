@@ -1,7 +1,3 @@
-if (JavaVersion.current() != JavaVersion.VERSION_1_10) {
-    // feel free to delete this if you know what you are doing
-    throw new GradleException("This build must be run with java 10. See docs/build.md")
-}
 buildscript {
     repositories {
         jcenter()
@@ -49,7 +45,6 @@ configure(subprojects) {
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.6'
-        jmockitVersion = '1.42'
         joptVersion = '5.0.3'
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
@@ -58,9 +53,8 @@ configure(subprojects) {
         langVersion = '3.4'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
-        mockitoVersion = '2.21.0'
+        mockitoVersion = '3.0.0'
         netlayerVersion = '0.6.5.1'
-        powermockVersion = '2.0.0-beta.5'
         protobufVersion = '3.5.1'
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
@@ -111,17 +105,6 @@ configure([project(':desktop'),
         doLast {
             // copy generated shell scripts, e.g. `bisq-desktop` directly to the project
             // root directory for discoverability and ease of use
-
-            // TODO @cbeams The copy task below fails because the copied files are conflicting with the project
-            // folder name. I temporarily delete those files as I think they are duplicated anyway (bisq-* are probably
-            // the one to use). Would be good if those files don't get created in the first place.
-            // The .bat files are also deleted.
-            delete fileTree(dir: "$destinationDir/bin", include: 'desktop*')
-            delete fileTree(dir: "$destinationDir/bin", include: 'monitor*')
-            delete fileTree(dir: "$destinationDir/bin", include: 'seednode*')
-            delete fileTree(dir: "$destinationDir/bin", include: 'pricenode*')
-            delete fileTree(dir: "$destinationDir/bin", include: 'statsnode*')
-            delete fileTree(dir: "$destinationDir/bin", include: 'relay*')
 
             copy {
                 from "$destinationDir/bin"
@@ -236,9 +219,10 @@ configure(project(':p2p')) {
         compile "org.fxmisc.easybind:easybind:$easybindVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile 'org.jmockit:jmockit:1.30' // must not use current $jmockitVersion
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion")
+
     }
 }
 
@@ -273,12 +257,7 @@ configure(project(':core')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.jmockit:jmockit:$jmockitVersion"
-        testCompile("org.mockito:mockito-core:$mockitoVersion") {
-            exclude(module: 'objenesis')
-        }
-        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
-        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
+        testCompile("org.mockito:mockito-core:$mockitoVersion")
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: "$hamcrestVersion"
@@ -288,9 +267,6 @@ configure(project(':core')) {
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
-
-        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
-        jvmArgs "-javaagent:$jmockit"
     }
 }
 
@@ -331,12 +307,8 @@ configure(project(':desktop')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.jmockit:jmockit:$jmockitVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion") {
-            exclude(module: 'objenesis')
         }
-        testCompile "org.powermock:powermock-module-junit4:$powermockVersion"
-        testCompile "org.powermock:powermock-api-mockito2:$powermockVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
@@ -345,9 +317,6 @@ configure(project(':desktop')) {
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
-
-        def jmockit = configurations.testCompile.files.find { it.name.contains("jmockit") }.absolutePath
-        jvmArgs "-javaagent:$jmockit"
     }
 }
 

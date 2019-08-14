@@ -17,44 +17,10 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.dao.node.parser.BlockParser;
-import bisq.core.dao.node.parser.TxParser;
-import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.TxInput;
-import bisq.core.dao.state.model.blockchain.TxOutputKey;
-
-import bisq.common.proto.persistable.PersistenceProtoResolver;
-
-import org.bitcoinj.core.Coin;
-
-import com.neemre.btcdcli4j.core.domain.RawBlock;
-import com.neemre.btcdcli4j.core.domain.RawTransaction;
-
-import com.google.common.collect.ImmutableList;
-
-import java.io.File;
-
-import java.math.BigDecimal;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import mockit.Expectations;
-import mockit.Injectable;
-import mockit.Tested;
-
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-
+// not converting this test because it is already ignored.
 // Intro to jmockit can be found at http://jmockit.github.io/tutorial/Mocking.html
-@Ignore
+//@Ignore
+/*
 public class BlockParserTest {
     // @Tested classes are instantiated automatically when needed in a test case,
     // using injection where possible, see http://jmockit.github.io/tutorial/Mocking.html#tested
@@ -213,7 +179,7 @@ public class BlockParserTest {
         });
 */
 
-        // Verify that the genesis tx has been added to the bsq blockchain with the correct issuance amount
+// Verify that the genesis tx has been added to the bsq blockchain with the correct issuance amount
     /*    assertTrue(daoStateService.getGenesisTx().get() == genesisTx);
         assertTrue(daoStateService.getGenesisTotalSupply().getValue() == issuance.getValue());
 
@@ -232,7 +198,8 @@ public class BlockParserTest {
         assertTrue(bsqOut2.getValue() == bsqTx1Value2);
         assertFalse(daoStateService.isTxOutputSpendable(genesisTxId, 0));
         assertTrue(daoStateService.isTxOutputSpendable(bsqTx1Id, 0));
-        assertTrue(daoStateService.isTxOutputSpendable(bsqTx1Id, 1));*/
+        assertTrue(daoStateService.isTxOutputSpendable(bsqTx1Id, 1));
 
     }
-}
+            }
+            */

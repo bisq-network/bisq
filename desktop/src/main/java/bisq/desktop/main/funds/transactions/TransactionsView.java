@@ -247,8 +247,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             CSVEntryConverter<TransactionsListItem> headerConverter = transactionsListItem -> {
                 String[] columns = new String[6];
                 for (int i = 0; i < columns.length; i++)
-                    columns[i] = tableColumns.get(i).getText();
-
+                    columns[i] = ((AutoTooltipLabel) tableColumns.get(i).getGraphic()).getText();
                 return columns;
             };
             CSVEntryConverter<TransactionsListItem> contentConverter = item -> {
