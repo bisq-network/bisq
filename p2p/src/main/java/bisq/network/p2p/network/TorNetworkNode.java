@@ -283,9 +283,10 @@ public class TorNetworkNode extends NetworkNode {
 
                             nodeAddressToHSDirectory.put(nodeAddress, current);
                         } catch (Exception e) {
-                            if (e instanceof IOException && e.getMessage().contains("collision"))
+                            if (e instanceof IOException && e.getMessage().contains("collision")) {
                                 deleteHiddenServiceDir(current);
-                            else
+                                gate.countDown();
+                            } else
                                 throw e;
                         }
                     });
