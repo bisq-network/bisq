@@ -24,9 +24,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import java.util.List;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,8 +33,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@PrepareForTest(BtcWalletService.class)
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class TxFeeEstimationServiceTest {
 
     @Test

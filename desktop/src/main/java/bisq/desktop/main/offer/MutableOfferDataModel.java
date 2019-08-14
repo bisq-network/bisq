@@ -106,6 +106,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final TxFeeEstimationService txFeeEstimationService;
     private final ReferralIdService referralIdService;
     private final BSFormatter btcFormatter;
+    private MakerFeeMaker makerFeeMaker;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
@@ -157,7 +158,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  FeeService feeService,
                                  TxFeeEstimationService txFeeEstimationService,
                                  ReferralIdService referralIdService,
-                                 BSFormatter btcFormatter) {
+                                 BSFormatter btcFormatter,
+                                 MakerFeeMaker makerFeeMaker) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -173,6 +175,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.txFeeEstimationService = txFeeEstimationService;
         this.referralIdService = referralIdService;
         this.btcFormatter = btcFormatter;
+        this.makerFeeMaker = makerFeeMaker;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
                 UUID.randomUUID().toString() + "-" +
@@ -802,7 +805,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     public Coin getMakerFee() {
-        return OfferUtil.getMakerFee(bsqWalletService, preferences, amount.get());
+        return makerFeeMaker.getMakerFee(bsqWalletService, preferences, amount.get());
     }
 
     public Coin getMakerFeeInBtc() {

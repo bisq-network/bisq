@@ -20,22 +20,14 @@ package bisq.core.dao.state;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.mockito.Mockito.mock;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DaoStateService.class, GenesisTxInfo.class, CycleService.class, DaoStateStorageService.class, DaoStateMonitoringService.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class DaoStateSnapshotServiceTest {
 
     private DaoStateSnapshotService daoStateSnapshotService;

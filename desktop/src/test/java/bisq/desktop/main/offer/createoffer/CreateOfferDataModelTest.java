@@ -1,5 +1,7 @@
 package bisq.desktop.main.offer.createoffer;
 
+import bisq.desktop.main.offer.MakerFeeMaker;
+
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -8,7 +10,6 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferUtil;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
@@ -21,14 +22,8 @@ import org.bitcoinj.core.Coin;
 
 import java.util.HashSet;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,19 +31,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
-
-import org.mockito.BDDMockito;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({BtcWalletService.class, AddressEntry.class, Preferences.class, User.class,
-        PriceFeedService.class, OfferUtil.class, FeeService.class, TxFeeEstimationService.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class CreateOfferDataModelTest {
 
     private CreateOfferDataModel model;
     private User user;
     private Preferences preferences;
+    private MakerFeeMaker makerFeeMaker;
 
     @Before
     public void setUp() {
@@ -68,11 +56,12 @@ public class CreateOfferDataModelTest {
         when(preferences.isUsePercentageBasedPrice()).thenReturn(true);
         when(preferences.getBuyerSecurityDepositAsPercent(null)).thenReturn(0.01);
 
+        makerFeeMaker = mock(MakerFeeMaker.class);
         model = new CreateOfferDataModel(null, btcWalletService,
                 null, preferences, user, null,
                 null, priceFeedService, null,
                 null, feeService, feeEstimationService,
-                null, null);
+                null, null, makerFeeMaker);
     }
 
     @Test
@@ -89,8 +78,7 @@ public class CreateOfferDataModelTest {
 
         when(user.getPaymentAccounts()).thenReturn(paymentAccounts);
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
-        PowerMockito.mockStatic(OfferUtil.class);
-        BDDMockito.given(OfferUtil.getMakerFee(any(), any(), any())).willReturn(Coin.ZERO);
+        when(makerFeeMaker.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
 
         model.initWithData(OfferPayload.Direction.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
@@ -110,8 +98,7 @@ public class CreateOfferDataModelTest {
         when(user.getPaymentAccounts()).thenReturn(paymentAccounts);
         when(user.findFirstPaymentAccountWithCurrency(new FiatCurrency("USD"))).thenReturn(zelleAccount);
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
-        PowerMockito.mockStatic(OfferUtil.class);
-        BDDMockito.given(OfferUtil.getMakerFee(any(), any(), any())).willReturn(Coin.ZERO);
+        when(makerFeeMaker.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
 
         model.initWithData(OfferPayload.Direction.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
