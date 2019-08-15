@@ -1,4 +1,4 @@
-FROM ruimarinho/bitcoin-core:0.17.1
+FROM ruimarinho/bitcoin-core:0.18
 
 RUN apt-get update && apt-get install -y netcat
 

@@ -58,6 +58,8 @@ the seednode once btcd is running will fix this. (note: this is a bug in the see
 
 ### TODO
 
+- use jdk10
 - fix startup bug
 - cleaner working dir solution
 - publish image
+- remove hardcoded docker ip addresses (it works, but can be done prettier)
