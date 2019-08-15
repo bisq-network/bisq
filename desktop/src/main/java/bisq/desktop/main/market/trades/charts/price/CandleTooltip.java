@@ -74,6 +74,7 @@ public class CandleTooltip extends GridPane {
     private final Label highValue = new AutoTooltipLabel();
     private final Label lowValue = new AutoTooltipLabel();
     private final Label averageValue = new AutoTooltipLabel();
+    private final Label medianValue = new AutoTooltipLabel();
     private final Label dateValue = new AutoTooltipLabel();
 
     CandleTooltip(StringConverter<Number> priceStringConverter) {
@@ -88,6 +89,7 @@ public class CandleTooltip extends GridPane {
         Label high = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.high"));
         Label low = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.low"));
         Label average = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.average"));
+        Label median = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.median"));
         Label date = new AutoTooltipLabel(Res.get("market.trades.tooltip.candle.date"));
         setConstraints(open, 0, 0);
         setConstraints(openValue, 1, 0);
@@ -99,8 +101,10 @@ public class CandleTooltip extends GridPane {
         setConstraints(lowValue, 1, 3);
         setConstraints(average, 0, 4);
         setConstraints(averageValue, 1, 4);
-        setConstraints(date, 0, 5);
-        setConstraints(dateValue, 1, 5);
+        setConstraints(median, 0, 5);
+        setConstraints(medianValue, 1, 5);
+        setConstraints(date, 0, 6);
+        setConstraints(dateValue, 1, 6);
 
         ColumnConstraints columnConstraints1 = new ColumnConstraints();
         columnConstraints1.setHalignment(HPos.RIGHT);
@@ -109,7 +113,7 @@ public class CandleTooltip extends GridPane {
         columnConstraints2.setHgrow(Priority.ALWAYS);
         getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
 
-        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue, date, dateValue);
+        getChildren().addAll(open, openValue, close, closeValue, high, highValue, low, lowValue, average, averageValue, median, medianValue, date, dateValue);
     }
 
     public void update(CandleData candleData) {
@@ -118,6 +122,7 @@ public class CandleTooltip extends GridPane {
         highValue.setText(priceStringConverter.toString(candleData.high));
         lowValue.setText(priceStringConverter.toString(candleData.low));
         averageValue.setText(priceStringConverter.toString(candleData.average));
+        medianValue.setText(priceStringConverter.toString(candleData.median));
         dateValue.setText(candleData.date);
     }
 }

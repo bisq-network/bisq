@@ -18,6 +18,7 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 
+import bisq.desktop.main.offer.MakerFeeMaker;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -73,7 +74,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        TxFeeEstimationService txFeeEstimationService,
                        ReferralIdService referralIdService,
                        BSFormatter btcFormatter,
-                       CorePersistenceProtoResolver corePersistenceProtoResolver) {
+                       CorePersistenceProtoResolver corePersistenceProtoResolver,
+                       MakerFeeMaker makerFeeMaker) {
         super(openOfferManager,
                 btcWalletService,
                 bsqWalletService,
@@ -87,7 +89,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 feeService,
                 txFeeEstimationService,
                 referralIdService,
-                btcFormatter);
+                btcFormatter,
+                makerFeeMaker);
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
     }
 

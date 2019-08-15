@@ -22,6 +22,7 @@ import bisq.core.offer.OfferBookService;
 import bisq.core.trade.TradeManager;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -42,6 +43,7 @@ import static bisq.core.offer.OfferPayload.Direction.BUY;
  * It also use OfferRepository.Listener as the lists items class and we don't want to get any dependency out of the
  * package for that.
  */
+@Singleton
 @Slf4j
 public class OfferBook {
     private final OfferBookService offerBookService;

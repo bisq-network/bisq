@@ -38,6 +38,7 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.List;
 import java.util.UUID;
@@ -45,6 +46,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class MarketAlerts {
     private final OfferBookService offerBookService;
     private final MobileNotificationService mobileNotificationService;

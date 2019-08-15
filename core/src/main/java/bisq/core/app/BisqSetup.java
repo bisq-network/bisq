@@ -72,6 +72,7 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.net.InetAddresses;
 
@@ -109,6 +110,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
+@Singleton
 public class BisqSetup {
     public interface BisqSetupCompleteListener {
         void onSetupComplete();

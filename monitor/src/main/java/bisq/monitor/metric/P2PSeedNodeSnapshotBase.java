@@ -118,12 +118,12 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                 NodeAddress target = OnionParser.getNodeAddress(current);
 
                 // do the data request
+                aboutToSend(message);
                 SettableFuture<Connection> future = networkNode.sendMessage(target, message);
 
                 Futures.addCallback(future, new FutureCallback<>() {
                     @Override
                     public void onSuccess(Connection connection) {
-                        connection.removeMessageListener(P2PSeedNodeSnapshotBase.this);
                         connection.addMessageListener(P2PSeedNodeSnapshotBase.this);
                     }
 
@@ -131,8 +131,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
                     public void onFailure(@NotNull Throwable throwable) {
                         gate.proceed();
                         log.error(
-                                "Sending PreliminaryDataRequest failed. That is expected if the peer is offline.\n\tException="
-                                        + throwable.getMessage());
+                                "Sending {} failed. That is expected if the peer is offline.\n\tException={}", message.getClass().getSimpleName(), throwable.getMessage());
                     }
                 });
 
@@ -153,6 +152,8 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         gate.await();
     }
 
+    protected void aboutToSend(NetworkEnvelope message) { };
+
     /**
      * Report all the stuff. Uses the configured reporter directly.
      */
@@ -168,6 +169,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
             log.warn("Got an unexpected message of type <{}>",
                     networkEnvelope.getClass().getSimpleName());
         }
+        connection.removeMessageListener(this);
     }
 
     abstract protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection);

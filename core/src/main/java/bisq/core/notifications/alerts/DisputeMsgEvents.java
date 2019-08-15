@@ -28,6 +28,7 @@ import bisq.core.notifications.MobileNotificationService;
 import bisq.network.p2p.P2PService;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.collections.ListChangeListener;
 
@@ -36,6 +37,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class DisputeMsgEvents {
     private final P2PService p2PService;
     private final MobileNotificationService mobileNotificationService;

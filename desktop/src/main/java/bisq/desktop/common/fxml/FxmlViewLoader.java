@@ -26,6 +26,7 @@ import bisq.desktop.common.view.ViewLoader;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.fxml.FXMLLoader;
 
@@ -38,6 +39,7 @@ import java.util.ResourceBundle;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.springframework.core.annotation.AnnotationUtils.getDefaultValue;
 
+@Singleton
 public class FxmlViewLoader implements ViewLoader {
 
     private final ViewFactory viewFactory;

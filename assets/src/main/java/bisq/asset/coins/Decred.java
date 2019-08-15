@@ -18,11 +18,19 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 public class Decred extends Coin {
 
-    public Decred() {
-        super("Decred", "DCR", new DefaultAddressValidator());
+	public Decred() {
+		super("Decred", "DCR", new DcrAddressValidator());
+    }
+    
+    public static class DcrAddressValidator extends RegexAddressValidator {
+
+        public DcrAddressValidator() {
+            super("^[Dk|Ds|De|DS|Dc|Pm][a-zA-Z0-9]{24,34}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.DCR"));
+        }
     }
 }
