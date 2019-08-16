@@ -33,7 +33,7 @@ dependencyVerification {
         'com.fasterxml.jackson.core:jackson-databind:fcf3c2b0c332f5f54604f7e27fa7ee502378a2cc5df6a944bbfae391872c32ff',
         'com.fasterxml.jackson.core:jackson-core:39a74610521d7fb9eb3f437bb8739bbf47f6435be12d17bf954c731a0c6352bb',
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
-        'com.google.protobuf:protobuf-java:b5e2d91812d183c9f053ffeebcbcda034d4de6679521940a19064714966c2cd4',
+        'com.google.protobuf:protobuf-java:5a1e5c225791eccd3d67a598922e637406190c90155fb97f38e4eab29719324d',
         'com.google.code.gson:gson:2d43eb5ea9e133d2ee2405cc14f5ee08951b8361302fdd93494a3a997b508d32',
         'com.googlecode.json-simple:json-simple:4e69696892b88b41c55d49ab2fdcc21eead92bf54acc588c0050596c3b75199c',
         'org.springframework:spring-core:c451e8417adb2ffb2445636da5e44a2f59307c4100037a1fe387c3fba4f29b52',
