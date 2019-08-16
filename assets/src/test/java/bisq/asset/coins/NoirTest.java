@@ -17,11 +17,11 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetWithDefaultValidatorTest;
+import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class NoirTest extends AbstractAssetWithDefaultValidatorTest {
+public class NoirTest extends AbstractAssetTest {
 
     public NoirTest() {
         super(new Noir());
