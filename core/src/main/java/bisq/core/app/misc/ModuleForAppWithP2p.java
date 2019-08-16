@@ -43,6 +43,8 @@ import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
@@ -103,6 +105,8 @@ public class ModuleForAppWithP2p extends AppModule {
         install(daoModule());
         install(alertModule());
         install(filterModule());
+        bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
+
     }
 
     protected void configEnvironment() {

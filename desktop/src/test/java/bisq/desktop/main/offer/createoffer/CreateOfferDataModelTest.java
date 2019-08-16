@@ -1,6 +1,6 @@
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.desktop.main.offer.MakerFeeMaker;
+import bisq.desktop.main.offer.MakerFeeProvider;
 
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.model.AddressEntry;
@@ -36,7 +36,7 @@ public class CreateOfferDataModelTest {
     private CreateOfferDataModel model;
     private User user;
     private Preferences preferences;
-    private MakerFeeMaker makerFeeMaker;
+    private MakerFeeProvider makerFeeProvider;
 
     @Before
     public void setUp() {
@@ -56,12 +56,12 @@ public class CreateOfferDataModelTest {
         when(preferences.isUsePercentageBasedPrice()).thenReturn(true);
         when(preferences.getBuyerSecurityDepositAsPercent(null)).thenReturn(0.01);
 
-        makerFeeMaker = mock(MakerFeeMaker.class);
+        makerFeeProvider = mock(MakerFeeProvider.class);
         model = new CreateOfferDataModel(null, btcWalletService,
                 null, preferences, user, null,
                 null, priceFeedService, null,
                 null, feeService, feeEstimationService,
-                null, null, makerFeeMaker);
+                null, null, makerFeeProvider);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class CreateOfferDataModelTest {
 
         when(user.getPaymentAccounts()).thenReturn(paymentAccounts);
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
-        when(makerFeeMaker.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
+        when(makerFeeProvider.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
 
         model.initWithData(OfferPayload.Direction.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
@@ -98,7 +98,7 @@ public class CreateOfferDataModelTest {
         when(user.getPaymentAccounts()).thenReturn(paymentAccounts);
         when(user.findFirstPaymentAccountWithCurrency(new FiatCurrency("USD"))).thenReturn(zelleAccount);
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
-        when(makerFeeMaker.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
+        when(makerFeeProvider.getMakerFee(any(), any(), any())).thenReturn(Coin.ZERO);
 
         model.initWithData(OfferPayload.Direction.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
