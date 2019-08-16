@@ -54,6 +54,7 @@ configure(subprojects) {
         jupiterVersion = '5.3.2'
         knowmXchangeVersion = '4.3.3'
         langVersion = '3.4'
+        libphonenumberVersion = '8.10.16'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
@@ -305,6 +306,7 @@ configure(project(':desktop')) {
         compile "org.openjfx:javafx-fxml:11:$os"
         compile "org.openjfx:javafx-swing:11:$os"
         compile "com.jfoenix:jfoenix:$jfoenixVersion"
+        compile "com.googlecode.libphonenumber:libphonenumber:$libphonenumberVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
