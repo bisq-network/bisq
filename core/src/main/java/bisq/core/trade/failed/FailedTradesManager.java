@@ -26,6 +26,7 @@ import bisq.core.trade.Trade;
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
@@ -54,11 +55,11 @@ public class FailedTradesManager implements PersistedDataHost {
     public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService,
                                PersistenceProtoResolver persistenceProtoResolver,
                                BtcWalletService btcWalletService,
-                               @Named(Storage.STORAGE_DIR) File storageDir) {
+                               @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
 
     }
 

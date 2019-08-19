@@ -56,6 +56,7 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -152,7 +153,7 @@ public class TradeManager implements PersistedDataHost {
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
                         ClockWatcher clockWatcher,
-                        @Named(Storage.STORAGE_DIR) File storageDir) {
+                        @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
@@ -170,7 +171,7 @@ public class TradeManager implements PersistedDataHost {
         this.arbitratorManager = arbitratorManager;
         this.clockWatcher = clockWatcher;
 
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();

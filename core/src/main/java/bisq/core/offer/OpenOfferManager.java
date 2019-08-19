@@ -55,6 +55,7 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.Coin;
@@ -130,7 +131,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PersistenceProtoResolver persistenceProtoResolver,
                             TradeStatisticsManager tradeStatisticsManager,
                             ArbitratorManager arbitratorManager,
-                            @Named(Storage.STORAGE_DIR) File storageDir) {
+                            @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.keyRing = keyRing;
         this.user = user;
         this.p2PService = p2PService;
@@ -144,7 +145,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
 
-        openOfferTradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        openOfferTradableListStorage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
 
         // In case the app did get killed the shutDown from the modules is not called, so we use a shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

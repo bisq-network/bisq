@@ -57,6 +57,7 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
@@ -137,7 +138,7 @@ public class DisputeManager implements PersistedDataHost {
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
                           PersistenceProtoResolver persistenceProtoResolver,
-                          @Named(Storage.STORAGE_DIR) File storageDir) {
+                          @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -147,7 +148,7 @@ public class DisputeManager implements PersistedDataHost {
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        disputeStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        disputeStorage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();

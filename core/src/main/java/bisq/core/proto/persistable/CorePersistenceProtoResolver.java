@@ -50,6 +50,7 @@ import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.NavigationPath;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import com.google.inject.Provider;
@@ -69,15 +70,18 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
     private final Provider<BtcWalletService> btcWalletService;
     private final NetworkProtoResolver networkProtoResolver;
     private final File storageDir;
+    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
 
     @Inject
     public CorePersistenceProtoResolver(Provider<BtcWalletService> btcWalletService,
                                         NetworkProtoResolver networkProtoResolver,
-                                        @Named(Storage.STORAGE_DIR) File storageDir) {
+                                        @Named(Storage.STORAGE_DIR) File storageDir,
+                                        CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.btcWalletService = btcWalletService;
         this.networkProtoResolver = networkProtoResolver;
         this.storageDir = storageDir;
 
+        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
     }
 
     @Override
@@ -93,14 +97,14 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case TRADABLE_LIST:
                     return TradableList.fromProto(proto.getTradableList(),
                             this,
-                            new Storage<>(storageDir, this),
+                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler),
                             btcWalletService.get());
                 case TRADE_STATISTICS_LIST:
                     throw new ProtobufferRuntimeException("TRADE_STATISTICS_LIST is not used anymore");
                 case DISPUTE_LIST:
                     return DisputeList.fromProto(proto.getDisputeList(),
                             this,
-                            new Storage<>(storageDir, this));
+                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
                 case PREFERENCES_PAYLOAD:
                     return PreferencesPayload.fromProto(proto.getPreferencesPayload(), this);
                 case USER_PAYLOAD:

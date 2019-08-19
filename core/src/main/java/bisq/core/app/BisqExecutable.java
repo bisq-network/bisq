@@ -42,8 +42,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 
@@ -232,19 +230,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected void applyInjector() {
         setupDevEnv();
 
-        setCorruptedDataBaseFilesHandler();
-
         setupPersistedDataHosts(injector);
     }
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
         DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated(bisqEnvironment));
-    }
-
-    private void setCorruptedDataBaseFilesHandler() {
-        CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
-        Storage.setCorruptedDatabaseFilesHandler(corruptedDatabaseFilesHandler);
     }
 
     protected void setupPersistedDataHosts(Injector injector) {
