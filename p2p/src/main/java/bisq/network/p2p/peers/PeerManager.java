@@ -34,15 +34,11 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import com.google.inject.name.Named;
 
 import javax.inject.Inject;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -134,13 +130,11 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public PeerManager(NetworkNode networkNode,
                        SeedNodeRepository seedNodeRepository,
                        ClockWatcher clockWatcher,
-                       PersistenceProtoResolver persistenceProtoResolver,
-                       @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
-                       @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                       @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections, Storage<PeerList> storage) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         this.clockWatcher = clockWatcher;
-        storage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
+        this.storage = storage;
 
         this.networkNode.addConnectionListener(this);
 
