@@ -124,7 +124,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             PriceFeedService priceFeedService,
                             Preferences preferences,
                             TradeStatisticsManager tradeStatisticsManager,
-                            ArbitratorManager arbitratorManager, Storage<TradableList<OpenOffer>> storage) {
+                            ArbitratorManager arbitratorManager,
+                            Storage<TradableList<OpenOffer>> storage) {
         this.keyRing = keyRing;
         this.user = user;
         this.p2PService = p2PService;

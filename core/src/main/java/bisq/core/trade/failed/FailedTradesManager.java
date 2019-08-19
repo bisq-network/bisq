@@ -46,8 +46,10 @@ public class FailedTradesManager implements PersistedDataHost {
     private final Storage<TradableList<Trade>> tradableListStorage;
 
     @Inject
-    public FailedTradesManager(KeyRing keyRing, PriceFeedService priceFeedService,
-                               BtcWalletService btcWalletService, Storage<TradableList<Trade>> storage) {
+    public FailedTradesManager(KeyRing keyRing,
+                               PriceFeedService priceFeedService,
+                               BtcWalletService btcWalletService,
+                               Storage<TradableList<Trade>> storage) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;

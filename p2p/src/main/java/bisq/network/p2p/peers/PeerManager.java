@@ -81,7 +81,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private Set<Peer> latestLivePeers = new HashSet<>();
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +129,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public PeerManager(NetworkNode networkNode,
                        SeedNodeRepository seedNodeRepository,
                        ClockWatcher clockWatcher,
-                       @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections, Storage<PeerList> storage) {
+                       @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
+                       Storage<PeerList> storage) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         this.clockWatcher = clockWatcher;

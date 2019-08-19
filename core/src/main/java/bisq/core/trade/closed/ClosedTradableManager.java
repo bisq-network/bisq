@@ -47,8 +47,10 @@ public class ClosedTradableManager implements PersistedDataHost {
     private final BtcWalletService btcWalletService;
 
     @Inject
-    public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,
-                                 BtcWalletService btcWalletService, Storage<TradableList<Tradable>> storage) {
+    public ClosedTradableManager(KeyRing keyRing,
+                                 PriceFeedService priceFeedService,
+                                 BtcWalletService btcWalletService,
+                                 Storage<TradableList<Tradable>> storage) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
