@@ -130,7 +130,8 @@ public class DisputeManager implements PersistedDataHost {
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          KeyRing keyRing, Storage<DisputeList> storage) {
+                          KeyRing keyRing,
+                          Storage<DisputeList> storage) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -200,7 +201,8 @@ public class DisputeManager implements PersistedDataHost {
         onDisputesChangeListener(disputes.getList(), null);
     }
 
-    private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
+    private void onDisputesChangeListener(List<? extends Dispute> addedList,
+                                          @Nullable List<? extends Dispute> removedList) {
         if (removedList != null) {
             removedList.forEach(dispute -> {
                 String id = dispute.getId();
@@ -288,7 +290,8 @@ public class DisputeManager implements PersistedDataHost {
         decryptedMailboxMessageWithPubKeys.clear();
     }
 
-    private void processAckMessage(AckMessage ackMessage, @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    private void processAckMessage(AckMessage ackMessage,
+                                   @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (ackMessage.getSourceType() == AckMessageSourceType.DISPUTE_MESSAGE) {
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
@@ -332,7 +335,10 @@ public class DisputeManager implements PersistedDataHost {
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
     }
 
-    public void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void sendOpenNewDisputeMessage(Dispute dispute,
+                                          boolean reOpen,
+                                          ResultHandler resultHandler,
+                                          FaultHandler faultHandler) {
         if (!disputes.contains(dispute)) {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
             if (!storedDisputeOptional.isPresent() || reOpen) {
@@ -426,7 +432,9 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     // arbitrator sends that to trading peer when he received openDispute request
-    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
+    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
+                                                Contract contractFromOpener,
+                                                PubKeyRing pubKeyRing) {
         Dispute dispute = new Dispute(
                 disputeStorage,
                 disputeFromOpener.getTradeId(),
@@ -532,7 +540,9 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
-    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
+    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute,
+                                                                String text,
+                                                                ArrayList<Attachment> attachments) {
         DisputeCommunicationMessage message = new DisputeCommunicationMessage(
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),

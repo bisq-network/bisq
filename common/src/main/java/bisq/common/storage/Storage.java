@@ -68,7 +68,9 @@ public class Storage<T extends PersistableEnvelope> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Storage(@Named(STORAGE_DIR) File dir, PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+    public Storage(@Named(STORAGE_DIR) File dir,
+                   PersistenceProtoResolver persistenceProtoResolver,
+                   CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.dir = dir;
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
