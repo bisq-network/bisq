@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class ExecutableForAppWithP2p extends BisqExecutable implements UncaughtExceptionHandler {
     private static final long MAX_MEMORY_MB_DEFAULT = 1200;
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
-    private static final long CHECK_SHUTDOWN = TimeUnit.HOURS.toMillis(1);
+    private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
     private volatile boolean stopped;
     private final long startTime = System.currentTimeMillis();
@@ -135,7 +135,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable implements 
                 shutDown(gracefulShutDownHandler);
             }
 
-        }, CHECK_SHUTDOWN);
+        }, CHECK_SHUTDOWN_SEC);
     }
 
     protected void checkMemory(BisqEnvironment environment, GracefulShutDownHandler gracefulShutDownHandler) {
