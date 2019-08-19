@@ -55,8 +55,6 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -65,7 +63,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -78,8 +75,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -149,11 +144,10 @@ public class TradeManager implements PersistedDataHost {
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
-                        PersistenceProtoResolver persistenceProtoResolver,
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
                         ClockWatcher clockWatcher,
-                        @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                        Storage<TradableList<Trade>> storage) {
         this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
@@ -171,7 +165,7 @@ public class TradeManager implements PersistedDataHost {
         this.arbitratorManager = arbitratorManager;
         this.clockWatcher = clockWatcher;
 
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
+        tradableListStorage = storage;
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();

@@ -56,8 +56,6 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
@@ -67,8 +65,6 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import com.google.inject.Inject;
 
-import javax.inject.Named;
-
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -77,8 +73,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -136,9 +130,7 @@ public class DisputeManager implements PersistedDataHost {
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          KeyRing keyRing,
-                          PersistenceProtoResolver persistenceProtoResolver,
-                          @Named(Storage.STORAGE_DIR) File storageDir, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                          KeyRing keyRing, Storage<DisputeList> storage) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -148,7 +140,7 @@ public class DisputeManager implements PersistedDataHost {
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        disputeStorage = new Storage<>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler);
+        disputeStorage = storage;
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();

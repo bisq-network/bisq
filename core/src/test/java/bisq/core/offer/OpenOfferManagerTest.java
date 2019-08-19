@@ -1,5 +1,7 @@
 package bisq.core.offer;
 
+import bisq.core.trade.TradableList;
+
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
 
@@ -37,8 +39,8 @@ public class OpenOfferManagerTest {
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
-                null, null, null, null,
-                null, null, null, corruptedDatabaseFilesHandler);
+                null, null, null,
+                null, null, new Storage<TradableList<OpenOffer>>(null, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -72,8 +74,8 @@ public class OpenOfferManagerTest {
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
-                null, null, null, null,
-                null, null, null, corruptedDatabaseFilesHandler);
+                null, null, null,
+                null, null, new Storage<TradableList<OpenOffer>>(null, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -99,8 +101,8 @@ public class OpenOfferManagerTest {
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
-                null, null, null, null,
-                null, null, null, corruptedDatabaseFilesHandler);
+                null, null, null,
+                null, null, new Storage<TradableList<OpenOffer>>(null, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
