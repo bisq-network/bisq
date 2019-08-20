@@ -77,10 +77,4 @@ public class RunningTor extends TorMode {
 
         return result;
     }
-
-    @Override
-    public File getHiddenServiceBaseDirectory() {
-        return new File(torDir, HIDDEN_SERVICE_DIRECTORY);
-    }
-
 }

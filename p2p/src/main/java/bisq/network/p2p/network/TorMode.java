@@ -28,28 +28,17 @@ import bisq.common.storage.FileUtil;
 /**
  * Holds information on how tor should be created and delivers a respective
  * {@link Tor} object when asked.
- * 
+ *
  * @author Florian Reimair
  *
  */
 public abstract class TorMode {
-
-    /**
-     * The sub-directory where the <code>private_key</code> file sits in. Kept
-     * private, because it only concerns implementations of {@link TorMode}.
-     */
-    protected static final String HIDDEN_SERVICE_DIRECTORY = "hiddenservice";
 
     protected final File torDir;
 
     /**
      * @param torDir           points to the place, where we will persist private
      *                         key and address data
-     * @param hiddenServiceDir The directory where the <code>private_key</code> file
-     *                         sits in. Note that, due to the inner workings of the
-     *                         <code>Netlayer</code> dependency, it does not
-     *                         necessarily equal
-     *                         {@link TorMode#getHiddenServiceBaseDirectory()}.
      */
     public TorMode(File torDir) {
         this.torDir = torDir;
@@ -57,33 +46,14 @@ public abstract class TorMode {
 
     /**
      * Returns a fresh {@link Tor} object.
-     * 
+     *
      * @return a fresh instance of {@link Tor}
      * @throws IOException
      * @throws TorCtlException
      */
     public abstract Tor getTor() throws IOException, TorCtlException;
 
-    /**
-     * {@link NativeTor}'s inner workings prepend its Tor installation path and some
-     * other stuff to the hiddenServiceDir, thus, selecting nothing (i.e.
-     * <code>""</code>) as a hidden service directory is fine. {@link ExternalTor},
-     * however, does not have a Tor installation path and thus, takes the hidden
-     * service path literally. Hence, we set <code>"torDir/hiddenservice"</code> as
-     * the hidden service directory. By doing so, we use the same
-     * <code>private_key</code> file as in {@link NewTor} mode.
-     * 
-     * @return <code>""</code> in {@link NewTor} Mode,
-     *         <code>"torDir/externalTorHiddenService"</code> in {@link RunningTor}
-     *         mode
-     */
-    public abstract File getHiddenServiceBaseDirectory();
-
-    /**
-     * Do a rolling backup of the "private_key" file.
-     */
-    protected void doRollingBackup() {
-        FileUtil.rollingBackup(new File(torDir, HIDDEN_SERVICE_DIRECTORY), "private_key", 20);
+    public File getHiddenServiceBaseDirectory() {
+        return new File(torDir, "hiddenservice");
     }
-
 }
