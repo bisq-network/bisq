@@ -41,20 +41,20 @@ public class SignedWitnessTest {
     public void isImmutable() {
         byte[] signerPubkey = arbitrator1Key.getPubKey();
         SignedWitness signedWitness = new SignedWitness(true, witnessHash, witnessHashSignature, signerPubkey, witnessOwner1PubKey, Instant.now().getEpochSecond(), 100);
-        byte[] witnessHash = signedWitness.getWitnessHash().clone();
-        this.witnessHash[0] += 1;
-        assertArrayEquals(witnessHash, signedWitness.getWitnessHash());
+        byte[] originalWitnessHash = signedWitness.getWitnessHash().clone();
+        witnessHash[0] += 1;
+        assertArrayEquals(originalWitnessHash, signedWitness.getWitnessHash());
 
-        byte[] witnessHashSignature = signedWitness.getSignature().clone();
-        this.witnessHashSignature[0] += 1;
-        assertArrayEquals(witnessHashSignature, signedWitness.getSignature());
+        byte[] originalWitnessHashSignature = signedWitness.getSignature().clone();
+        witnessHashSignature[0] += 1;
+        assertArrayEquals(originalWitnessHashSignature, signedWitness.getSignature());
 
-        byte[] witnessSignerPubkey = signedWitness.getSignerPubKey().clone();
+        byte[] originalSignerPubkey = signedWitness.getSignerPubKey().clone();
         signerPubkey[0] += 1;
-        assertArrayEquals(witnessSignerPubkey, signedWitness.getSignerPubKey());
-        byte[] witnessOwnerPubkey = signedWitness.getWitnessOwnerPubKey().clone();
-        this.witnessOwner1PubKey[0] += 1;
-        assertArrayEquals(witnessOwnerPubkey, signedWitness.getWitnessOwnerPubKey());
+        assertArrayEquals(originalSignerPubkey, signedWitness.getSignerPubKey());
+        byte[] originalwitnessOwner1PubKey = signedWitness.getWitnessOwnerPubKey().clone();
+        witnessOwner1PubKey[0] += 1;
+        assertArrayEquals(originalwitnessOwner1PubKey, signedWitness.getWitnessOwnerPubKey());
     }
 
 }
