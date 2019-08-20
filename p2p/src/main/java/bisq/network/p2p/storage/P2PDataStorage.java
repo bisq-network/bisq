@@ -338,6 +338,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
+    // When we receive initial data we skip several checks to improve performance. We requested only missing entries so we
+    // do not need to check again if the item is contained in the map, which is a bit slow as the map can be very large.
+    // Overwriting an entry would be also no issue. We also skip notifying listeners as we get called before the domain
+    // is ready so no listeners are set anyway. We might get called twice from a redundant call later, so listeners
+    // might be added then but as we have the data already added calling them would be irrelevant as well.
+    // TODO find a way to avoid the second call...
+    public boolean addPersistableNetworkPayloadFromInitialRequest(PersistableNetworkPayload payload) {
+        final byte[] hash = payload.getHash();
+        if (payload.verifyHashSize()) {
+            final ByteArray hashAsByteArray = new ByteArray(hash);
+            appendOnlyDataStoreService.put(hashAsByteArray, payload);
+            return true;
+        } else {
+            log.warn("We got a hash exceeding our permitted size");
+            return false;
+        }
+    }
+
     public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
                                             @Nullable BroadcastHandler.Listener listener, boolean isDataOwner) {
         return addProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner, true);

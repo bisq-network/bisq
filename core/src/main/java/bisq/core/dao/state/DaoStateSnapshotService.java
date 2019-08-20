@@ -98,7 +98,7 @@ public class DaoStateSnapshotService {
                 LinkedList<DaoStateHash> clonedDaoStateHashChain = new LinkedList<>(daoStateHashChainSnapshotCandidate);
                 daoStateStorageService.persist(clonedDaoState, clonedDaoStateHashChain);
 
-                log.info("Saved snapshotCandidate with height {} to Disc at height {} took {} ms",
+                log.debug("Saved snapshotCandidate with height {} to Disc at height {} took {} ms",
                         daoStateSnapshotCandidate.getChainHeight(), chainHeight, System.currentTimeMillis() - ts);
             }
 
@@ -107,7 +107,7 @@ public class DaoStateSnapshotService {
             daoStateSnapshotCandidate = daoStateService.getClone();
             daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
 
-            log.info("Cloned new snapshotCandidate at height {} took {} ms", chainHeight, System.currentTimeMillis() - ts);
+            log.debug("Cloned new snapshotCandidate at height {} took {} ms", chainHeight, System.currentTimeMillis() - ts);
         }
     }
 
@@ -119,7 +119,7 @@ public class DaoStateSnapshotService {
             int chainHeightOfPersisted = persistedBsqState.getChainHeight();
             if (!blocks.isEmpty()) {
                 int heightOfLastBlock = blocks.getLast().getHeight();
-                log.info("applySnapshot from persistedBsqState daoState with height of last block {}", heightOfLastBlock);
+                log.debug("applySnapshot from persistedBsqState daoState with height of last block {}", heightOfLastBlock);
                 if (isValidHeight(heightOfLastBlock)) {
                     if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {
                         chainHeightOfLastApplySnapshot = chainHeightOfPersisted;

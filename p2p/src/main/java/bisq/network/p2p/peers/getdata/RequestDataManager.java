@@ -39,11 +39,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -87,7 +85,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final NetworkNode networkNode;
     private final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
-    private final Set<NodeAddress> seedNodeAddresses;
+    private final List<NodeAddress> seedNodeAddresses;
     private Listener listener;
 
     private final Map<NodeAddress, RequestDataHandler> handlerMap = new HashMap<>();
@@ -115,7 +113,9 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         this.networkNode.addConnectionListener(this);
         this.peerManager.addListener(this);
 
-        this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
+        this.seedNodeAddresses = new ArrayList<>(seedNodeRepository.getSeedNodeAddresses());
+        // We shuffle only once so that we use the same seed nodes for preliminary and updated data requests.
+        Collections.shuffle(seedNodeAddresses);
 
         this.networkNode.nodeAddressProperty().addListener((observable, oldValue, myAddress) -> {
             if (myAddress != null) {
@@ -149,7 +149,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     public boolean requestPreliminaryData() {
         ArrayList<NodeAddress> nodeAddresses = new ArrayList<>(seedNodeAddresses);
         if (!nodeAddresses.isEmpty()) {
-            Collections.shuffle(nodeAddresses);
             ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
             final int size = Math.min(NUM_SEEDS_FOR_PRELIMINARY_REQUEST, finalNodeAddresses.size());
             for (int i = 0; i < size; i++) {
@@ -178,8 +177,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 nodeAddresses.remove(candidate);
                 requestData(candidate, nodeAddresses);
 
-                // For more redundancy we request as well from other random nodes.
-                Collections.shuffle(nodeAddresses);
                 ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
                 int numRequests = 0;
                 for (int i = 0; i < finalNodeAddresses.size() && numRequests < NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST; i++) {

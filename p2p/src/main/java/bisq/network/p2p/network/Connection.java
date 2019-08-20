@@ -355,7 +355,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     data = ((AddDataMessage) msg).getProtectedStorageEntry().getProtectedStoragePayload();
                 }
                 // Monitoring nodes have only one capability set, we don't want to log those
-                log.info("We did not send the message because the peer does not support our required capabilities. " +
+                log.debug("We did not send the message because the peer does not support our required capabilities. " +
                                 "messageClass={}, peer={}, peers supportedCapabilities={}",
                         data.getClass().getSimpleName(), peersNodeAddressOptional, capabilities);
             }
@@ -710,7 +710,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     if (proto == null) {
                         if (protoInputStream.read() == -1)
-                            log.info("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
+                            log.debug("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
                         else
                             log.warn("proto is null. protoInputStream.read()=" + protoInputStream.read());
                         shutDown(CloseConnectionReason.NO_PROTO_BUFFER_ENV);
@@ -799,7 +799,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
                         // If we get a CloseConnectionMessage we shut down
-                        log.info("CloseConnectionMessage received. Reason={}\n\t" +
+                        log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                 "connection={}", proto.getCloseConnectionMessage().getReason(), this);
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                             log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");

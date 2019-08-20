@@ -139,10 +139,10 @@ public class PriceFeedService {
 
     private void request(boolean repeatRequests) {
         if (requestTs == 0)
-            log.info("request from provider {}",
+            log.debug("request from provider {}",
                     providersRepository.getBaseUrl());
         else
-            log.info("request from provider {} {} sec. after last request",
+            log.debug("request from provider {} {} sec. after last request",
                     providersRepository.getBaseUrl(),
                     (System.currentTimeMillis() - requestTs) / 1000d);
 
@@ -158,12 +158,12 @@ public class PriceFeedService {
             if (success) {
                 final MarketPrice marketPrice = cache.get(currencyCode);
                 if (marketPrice != null)
-                    log.info("Received new {} from provider {} after {} sec.",
+                    log.debug("Received new {} from provider {} after {} sec.",
                             marketPrice,
                             baseUrlOfRespondingProvider,
                             (System.currentTimeMillis() - requestTs) / 1000d);
                 else
-                    log.info("Received new data from provider {} after {} sec. " +
+                    log.debug("Received new data from provider {} after {} sec. " +
                                     "Requested market price for currency {} was not provided. " +
                                     "That is expected if currency is not listed at provider.",
                             baseUrlOfRespondingProvider,
@@ -182,7 +182,7 @@ public class PriceFeedService {
                             baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
                     retryWithNewProvider();
                 } else {
-                    log.info("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
+                    log.debug("We received an error from an earlier request. We have started a new request already so we ignore that error. " +
                                     "baseUrlOfCurrentRequest={}, baseUrlOfFaultyRequest={}",
                             baseUrlOfCurrentRequest, baseUrlOfFaultyRequest);
                 }
@@ -360,10 +360,10 @@ public class PriceFeedService {
                         }
                     } else {
                         if (baseUrlOfRespondingProvider == null)
-                            log.info("Market price for currency " + currencyCode + " was not delivered by provider " +
+                            log.debug("Market price for currency " + currencyCode + " was not delivered by provider " +
                                     baseUrl + ". That is expected at startup.");
                         else
-                            log.info("Market price for currency " + currencyCode + " is not provided by the provider " +
+                            log.debug("Market price for currency " + currencyCode + " is not provided by the provider " +
                                     baseUrl + ". That is expected for currencies not listed at providers.");
                         result = true;
                     }
@@ -372,7 +372,7 @@ public class PriceFeedService {
                             ". priceProvider=" + baseUrl + ". Exception=" + t;
                 }
             } else {
-                log.info("We don't have a price for currency " + currencyCode + ". priceProvider=" + baseUrl +
+                log.debug("We don't have a price for currency " + currencyCode + ". priceProvider=" + baseUrl +
                         ". That is expected for currencies not listed at providers.");
                 result = true;
             }

@@ -37,6 +37,7 @@ class ResultsOfCycle {
     private final int numVotes;
     private final int numAcceptedVotes;
     private final int numRejectedVotes;
+    private final long meritAndStake;
     private final DaoStateService daoStateService;
     private long cycleStartTime;
 
@@ -54,6 +55,7 @@ class ResultsOfCycle {
                    List<Proposal> proposals,
                    List<EvaluatedProposal> evaluatedProposals,
                    List<DecryptedBallotsWithMerits> decryptedVotesForCycle,
+                   long meritAndStake,
                    DaoStateService daoStateService) {
         this.cycle = cycle;
         this.cycleIndex = cycleIndex;
@@ -71,6 +73,7 @@ class ResultsOfCycle {
         numRejectedVotes = evaluatedProposals.stream()
                 .mapToInt(e -> e.getProposalVoteResult().getNumRejectedVotes())
                 .sum();
+        this.meritAndStake = meritAndStake;
         this.daoStateService = daoStateService;
     }
 
