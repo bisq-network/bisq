@@ -256,14 +256,13 @@ public class TorNetworkNode extends NetworkNode {
 
             // see if we have to migrate the old file structure
             if (torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.equals("hostname")).length > 0) {
-                File newHiddenServiceDirectory = new File(torMode.getHiddenServiceBaseDirectory(), "0");
-                newHiddenServiceDirectory.mkdir();
+                File newHiddenServiceDirectory = renewHiddenService();
                 for (File current : torMode.getHiddenServiceBaseDirectory().listFiles())
                     current.renameTo(new File(newHiddenServiceDirectory, current.getName()));
             }
 
             // find hidden service candidates
-            File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.matches("\\d+"));
+            File[] hiddenServiceDirs = torMode.getHiddenServiceBaseDirectory().listFiles((dir, name) -> name.matches("\\d{15,}"));
 
             // start
             CountDownLatch gate = new CountDownLatch(hiddenServiceDirs.length);
