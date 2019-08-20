@@ -318,7 +318,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
         importIdButton.setOnAction(event -> {
             new Popup<>().information(Res.get("settings.net.importAddress"))
-                    .actionButtonText(Res.get("shared.applyAndShutDown"))
+                    .actionButtonText(Res.get("settings.net.importAddressFileDialog"))
                     .onAction(() -> {
                         FileChooser fileChooser = new FileChooser();
                         fileChooser.setTitle(Res.get("settings.net.importAddressFileDialog"));
