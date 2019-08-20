@@ -22,7 +22,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -183,25 +182,6 @@ public class TestUtils {
 
             @Override
             public NetworkPayload fromProto(protobuf.StorageEntryWrapper proto) {
-                return null;
-            }
-        };
-    }
-
-    public static PersistenceProtoResolver getPersistenceProtoResolver() {
-        return new PersistenceProtoResolver() {
-            @Override
-            public Payload fromProto(protobuf.PaymentAccountPayload proto) {
-                return null;
-            }
-
-            @Override
-            public PersistableEnvelope fromProto(protobuf.PersistableEnvelope persistable) {
-                return null;
-            }
-
-            @Override
-            public PersistableEnvelope fromProto(protobuf.PersistableNetworkPayload persistable) {
                 return null;
             }
         };

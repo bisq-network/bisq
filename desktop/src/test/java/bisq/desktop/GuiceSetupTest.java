@@ -50,6 +50,7 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
+import bisq.common.storage.Storage;
 
 import org.springframework.mock.env.MockPropertySource;
 
@@ -59,6 +60,7 @@ import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -129,9 +131,15 @@ public class GuiceSetupTest {
         assertSingleton(TradeEvents.class);
         assertSingleton(PriceAlert.class);
         assertSingleton(MarketAlerts.class);
+
+        assertNotSingleton(Storage.class);
     }
 
     private void assertSingleton(Class<?> type) {
         assertSame(injector.getInstance(type), injector.getInstance(type));
+    }
+
+    private void assertNotSingleton(Class<?> type) {
+        assertNotSame(injector.getInstance(type), injector.getInstance(type));
     }
 }
