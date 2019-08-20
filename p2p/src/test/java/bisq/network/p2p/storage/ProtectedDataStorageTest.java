@@ -149,7 +149,7 @@ public class ProtectedDataStorageTest {
 
     // @Test
     public void testTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
+        mockData.setTtl((int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5));
         ProtectedStorageEntry data = dataStorage1.getProtectedStorageEntry(mockData, storageSignatureKeyPair1);
         log.debug("data.date " + data.getCreationTimeStamp());
         Assert.assertTrue(dataStorage1.addProtectedStorageEntry(data, null, null, true));
@@ -198,7 +198,7 @@ public class ProtectedDataStorageTest {
  */
     @Test
     public void testRefreshTTL() throws InterruptedException, NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, CryptoException, SignatureException, InvalidKeyException, NoSuchProviderException {
-        mockData.ttl = (int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5);
+        mockData.setTtl((int) (P2PDataStorage.CHECK_TTL_INTERVAL_SEC * 1.5));
         ProtectedStorageEntry data = dataStorage1.getProtectedStorageEntry(mockData, storageSignatureKeyPair1);
         Assert.assertTrue(dataStorage1.addProtectedStorageEntry(data, null, null, true));
         Assert.assertEquals(1, dataStorage1.getMap().size());
