@@ -269,23 +269,21 @@ class RequestDataHandler implements MessageListener {
                             });
                         }
 
-                        // We changed the earlier behaviour with delayed execution of chunks of the list as it caused
-                        // worse results as if it is processed in one go.
-                        // Main reason is probably that listeners trigger more code and if that is called early at
-                        // startup we have better chances that the user has not already navigated to a screen where the
-                        // trade statistics are used for UI rendering.
-                        // We need to take care that the update period between releases stay short as with the current
-                        // situation before 0.9 release we receive 4000 objects with a newly installed client, which
-                        // causes the application to stay stuck for quite a while at startup.
-                        log.info("Start processing {} items.", processDelayedItems.size());
+                        long ts = System.currentTimeMillis();
                         processDelayedItems.forEach(item -> {
                             if (item instanceof ProtectedStorageEntry)
                                 dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null,
                                         false, false);
-                            else if (item instanceof PersistableNetworkPayload)
-                                dataStorage.addPersistableNetworkPayload((PersistableNetworkPayload) item, sender,
-                                        false, false, false, false);
+                            else if (item instanceof PersistableNetworkPayload) {
+                                // We use an optimized method as many checks are not required in that case to avoid
+                                // performance issues.
+                                // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
+                                // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
+                                // trade stats stats and all account age witness data.
+                                dataStorage.addPersistableNetworkPayloadFromInitialRequest((PersistableNetworkPayload) item);
+                            }
                         });
+                        log.info("Processing {} items took {} ms.", processDelayedItems.size(), System.currentTimeMillis() - ts);
 
                         cleanup();
                         listener.onComplete();
