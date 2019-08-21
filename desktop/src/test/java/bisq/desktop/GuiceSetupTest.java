@@ -16,6 +16,10 @@ import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.sign.SignedWitnessStorageService;
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessStorageService;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.P2PNetworkSetup;
@@ -131,6 +135,11 @@ public class GuiceSetupTest {
         assertSingleton(TradeEvents.class);
         assertSingleton(PriceAlert.class);
         assertSingleton(MarketAlerts.class);
+
+        assertSingleton(SignedWitnessStorageService.class);
+        assertSingleton(SignedWitnessService.class);
+        assertSingleton(AccountAgeWitnessService.class);
+        assertSingleton(AccountAgeWitnessStorageService.class);
 
         assertNotSingleton(Storage.class);
     }
