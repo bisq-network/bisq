@@ -22,7 +22,6 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.payment.payload.PaymentAccountPayload;
 
-import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
@@ -61,10 +60,10 @@ public class SignedWitnessService {
     public static final long CHARGEBACK_SAFETY_DAYS = 30;
 
     private final KeyRing keyRing;
-    private final P2PService p2PService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
+    private final P2PDataStorage p2PDataStorage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -73,18 +72,18 @@ public class SignedWitnessService {
 
     @Inject
     public SignedWitnessService(KeyRing keyRing,
-                                P2PService p2PService,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
-                                AppendOnlyDataStoreService appendOnlyDataStoreService) {
+                                AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                P2PDataStorage p2PDataStorage) {
         this.keyRing = keyRing;
-        this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
+        this.p2PDataStorage = p2PDataStorage;
     }
 
 
@@ -93,13 +92,13 @@ public class SignedWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
+        p2PDataStorage.addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof SignedWitness)
                 addToMap((SignedWitness) payload);
         });
 
         // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
+        p2PDataStorage.getAppendOnlyDataStoreMap().values().forEach(e -> {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);
         });

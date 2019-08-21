@@ -24,6 +24,7 @@ import bisq.core.account.witness.AccountAgeWitness
 import bisq.core.arbitration.ArbitratorManager
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService
 import com.google.common.base.Charsets
+import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.whenever
 import org.bitcoinj.core.ECKey
 import org.junit.Assert.assertFalse
@@ -40,7 +41,7 @@ import java.util.*
 class SignedWitnessServiceTest {
     val appendOnlyDataStoreService = mock(AppendOnlyDataStoreService::class.java)
     val arbitratorManager = mock(ArbitratorManager::class.java)
-    val signedWitnessService = SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService)
+    val signedWitnessService = SignedWitnessService(null, null, arbitratorManager, null, appendOnlyDataStoreService, mock())
     private var account1DataHash: ByteArray? = null
     private var account2DataHash: ByteArray? = null
     private var account3DataHash: ByteArray? = null

@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-// Object has 28 raw bytes (33 bytes is size of ProtoBuffer object in storage list, 5 byte extra for list -> totalBytes = 5 + n*33)
+// Object has 28 raw bytes (33 bytes is size of Protobuf object in storage list, 5 byte extra for list -> totalBytes = 5 + n*33)
 // With 1 000 000 entries we get about 33 MB of data. Old entries will be shipped with the resource file,
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
