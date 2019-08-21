@@ -22,6 +22,7 @@ import bisq.monitor.Reporter;
 
 import bisq.core.offer.OfferPayload;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,12 +48,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Demo Stats metric derived from the OfferPayload messages we get from the seed nodes
- * 
+ *
  * @author Florian Reimair
  */
 @Slf4j
 public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
+
+    final Map<NodeAddress, Statistics> versionBucketsPerHost = new ConcurrentHashMap<>();
 
     /**
      * Efficient way to count occurrences.
@@ -100,6 +104,38 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         }
     }
 
+    private class VersionsStatistics implements Statistics<Counter> {
+        private final Map<String, Counter> buckets = new HashMap<>();
+
+        @Override
+        public Statistics create() {
+            return new VersionsStatistics();
+        }
+
+        @Override
+        public void log(Object message) {
+
+            if (message instanceof OfferPayload) {
+                OfferPayload currentMessage = (OfferPayload) message;
+
+                String version = "v" + currentMessage.getId().substring(currentMessage.getId().lastIndexOf("-") + 1);
+
+                buckets.putIfAbsent(version, new Counter());
+                buckets.get(version).increment();
+            }
+        }
+
+        @Override
+        public Map<String, Counter> values() {
+            return buckets;
+        }
+
+        @Override
+        public void reset() {
+            buckets.clear();
+        }
+    }
+
     public P2PMarketStats(Reporter graphiteReporter) {
         super(graphiteReporter);
 
@@ -122,6 +158,11 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((market, numberOfOffers) -> report.put(OnionParser.prettyPrint(host) + "." + market.toString(), String.valueOf(((Counter) numberOfOffers).value()))));
 
         reporter.report(report, getName());
+
+        // do version statistics
+        report.clear();
+        versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version.toString(), String.valueOf(((Counter) numberOfOccurrences).value())));
+        reporter.report(report, "versions");
     }
 
     protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
@@ -131,6 +172,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         if (networkEnvelope instanceof GetDataResponse) {
 
             Statistics result = this.statistics.create();
+            VersionsStatistics versions = new VersionsStatistics();
 
             GetDataResponse dataResponse = (GetDataResponse) networkEnvelope;
             final Set<ProtectedStorageEntry> dataSet = dataResponse.getDataSet();
@@ -142,6 +184,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
                 }
 
                 result.log(protectedStoragePayload);
+                versions.log(protectedStoragePayload);
             });
 
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = dataResponse
@@ -160,6 +203,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
             }
 
             bucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), result);
+            versionBucketsPerHost.put(connection.getPeersNodeAddressProperty().getValue(), versions);
             return true;
         }
         return false;
