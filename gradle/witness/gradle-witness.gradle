@@ -45,10 +45,10 @@ dependencyVerification {
         'com.google.inject:guice:d258ff1bd9b8b527872f8402648226658ad3149f1f40e74b0566d69e7e042fbc',
         'com.github.bisq-network.bitcoinj:bitcoinj-core:f979c2187e61ee3b08dd4cbfc49a149734cff64c045d29ed112f2e12f34068a3',
         'com.github.JesusMcCloud.netlayer:tor:7950f8b44609eba2524941cb6517f43ade34e53c820aea849006e22eee93a83d',
-        'org.jetbrains.kotlin:kotlin-stdlib-jdk8:193ab7813e4d249f2ea4fc1b968fea8c2126bcbeeb5d6127050ce1b93dbaa7c2',
+        'org.jetbrains.kotlin:kotlin-stdlib-jdk8:f7dbbaee3e0841758187a213c052388a4e619e11c87ab16f4bc229cfe7ce5fed',
         'io.github.microutils:kotlin-logging:4992504fd3c6ecdf9ed10874b9508e758bb908af9e9d7af19a61e9afb6b7e27a',
-        'org.jetbrains.kotlin:kotlin-stdlib-jdk7:877b59bbe466b24a88275a71fd06cd97359d2085420f6f1ac1d766afa8116001',
-        'org.jetbrains.kotlin:kotlin-stdlib:4ff0fcb97f4983b4aaba12668c24ad21b08460915db1b021d8f1d8bee687f21c',
+        'org.jetbrains.kotlin:kotlin-stdlib-jdk7:25e2409aba0ec37d2fd7c77727d7835b511879de8d9bf4862af0b493aabbe39e',
+        'org.jetbrains.kotlin:kotlin-stdlib:6ea3d0921b26919b286f05cbdb906266666a36f9a7c096197114f7495708ffbc',
         'org.jetbrains:annotations:ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478',
         'org.bouncycastle:bcpg-jdk15on:de3355b821fc81dd32e1f3f560d5b3eca1c678fd2400011d0bfc69fb91bcde85',
         'commons-io:commons-io:cc6a41dc3eaacc9e440a6bd0d2890b20d36b4ee408fe2d67122f328bb6e01581',
@@ -77,6 +77,6 @@ dependencyVerification {
         'org.apache.commons:commons-compress:5f2df1e467825e4cac5996d44890c4201c000b43c0b23cffc0782d28a0beb9b0',
         'org.tukaani:xz:a594643d73cc01928cf6ca5ce100e094ea9d73af760a5d4fb6b75fa673ecec96',
         'com.squareup.okio:okio:114bdc1f47338a68bcbc95abf2f5cdc72beeec91812f2fcd7b521c1937876266',
-        'org.jetbrains.kotlin:kotlin-stdlib-common:4b161ef619eee0d1a49b1c4f0c4a8e46f4e342573efd8e0106a765f47475fe39',
+        'org.jetbrains.kotlin:kotlin-stdlib-common:6c91dea17d7dce5f0b550c3de3305767e5fb46247b6d1eb7eca0ca1fe18458de',
     ]
 }
