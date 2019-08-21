@@ -38,7 +38,9 @@ import java.time.temporal.ChronoUnit
 import java.util.*
 
 class SignedWitnessServiceTest {
-    private var signedWitnessService: SignedWitnessService? = null
+    val appendOnlyDataStoreService = mock(AppendOnlyDataStoreService::class.java)
+    val arbitratorManager = mock(ArbitratorManager::class.java)
+    val signedWitnessService = SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService)
     private var account1DataHash: ByteArray? = null
     private var account2DataHash: ByteArray? = null
     private var account3DataHash: ByteArray? = null
@@ -64,10 +66,7 @@ class SignedWitnessServiceTest {
     @Before
     @Throws(Exception::class)
     fun setup() {
-        val appendOnlyDataStoreService = mock(AppendOnlyDataStoreService::class.java)
-        val arbitratorManager = mock(ArbitratorManager::class.java)
         whenever(arbitratorManager.isPublicKeyInList(ArgumentMatchers.any())).thenReturn(true)
-        signedWitnessService = SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService)
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(byteArrayOf(1))
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(byteArrayOf(2))
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(byteArrayOf(3))
@@ -104,13 +103,13 @@ class SignedWitnessServiceTest {
         val sw2 = SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2)
         val sw3 = SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3)
 
-        signedWitnessService!!.addToMap(sw1)
-        signedWitnessService!!.addToMap(sw2)
-        signedWitnessService!!.addToMap(sw3)
+        signedWitnessService.addToMap(sw1)
+        signedWitnessService.addToMap(sw2)
+        signedWitnessService.addToMap(sw3)
 
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew1))
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew2))
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew3))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew3))
     }
 
     @Test
@@ -121,13 +120,13 @@ class SignedWitnessServiceTest {
         val sw2 = SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2)
         val sw3 = SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3)
 
-        signedWitnessService!!.addToMap(sw1)
-        signedWitnessService!!.addToMap(sw2)
-        signedWitnessService!!.addToMap(sw3)
+        signedWitnessService.addToMap(sw1)
+        signedWitnessService.addToMap(sw2)
+        signedWitnessService.addToMap(sw3)
 
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew1))
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew2))
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew3))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew1))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3))
     }
 
     @Test
@@ -138,13 +137,13 @@ class SignedWitnessServiceTest {
         val sw2 = SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2)
         val sw3 = SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3)
 
-        signedWitnessService!!.addToMap(sw1)
-        signedWitnessService!!.addToMap(sw2)
-        signedWitnessService!!.addToMap(sw3)
+        signedWitnessService.addToMap(sw1)
+        signedWitnessService.addToMap(sw2)
+        signedWitnessService.addToMap(sw3)
 
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew1))
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew2))
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew3))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3))
     }
 
     @Test
@@ -155,13 +154,13 @@ class SignedWitnessServiceTest {
         val sw2 = SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2)
         val sw3 = SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3)
 
-        signedWitnessService!!.addToMap(sw1)
-        signedWitnessService!!.addToMap(sw2)
-        signedWitnessService!!.addToMap(sw3)
+        signedWitnessService.addToMap(sw1)
+        signedWitnessService.addToMap(sw2)
+        signedWitnessService.addToMap(sw3)
 
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew1))
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew2))
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew3))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3))
     }
 
     @Test
@@ -172,18 +171,17 @@ class SignedWitnessServiceTest {
         val sw2 = SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2)
         val sw3 = SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3)
 
-        signedWitnessService!!.addToMap(sw1)
-        signedWitnessService!!.addToMap(sw2)
-        signedWitnessService!!.addToMap(sw3)
+        signedWitnessService.addToMap(sw1)
+        signedWitnessService.addToMap(sw2)
+        signedWitnessService.addToMap(sw3)
 
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew1))
-        assertTrue(signedWitnessService!!.isValidAccountAgeWitness(aew2))
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew3))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1))
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3))
     }
 
 
     @Test
-    @Throws(Exception::class)
     fun testIsValidAccountAgeWitnessEndlessLoop() {
         val account1DataHash = org.bitcoinj.core.Utils.sha256hash160(byteArrayOf(1))
         val account2DataHash = org.bitcoinj.core.Utils.sha256hash160(byteArrayOf(2))
@@ -226,11 +224,11 @@ class SignedWitnessServiceTest {
         val sw2 = SignedWitness(false, account2DataHash, signature2, signer2PubKey, witnessOwner2PubKey, date2, tradeAmount2)
         val sw3 = SignedWitness(false, account3DataHash, signature3, signer3PubKey, witnessOwner3PubKey, date3, tradeAmount3)
 
-        signedWitnessService!!.addToMap(sw1)
-        signedWitnessService!!.addToMap(sw2)
-        signedWitnessService!!.addToMap(sw3)
+        signedWitnessService.addToMap(sw1)
+        signedWitnessService.addToMap(sw2)
+        signedWitnessService.addToMap(sw3)
 
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew3))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3))
     }
 
 
@@ -264,9 +262,9 @@ class SignedWitnessServiceTest {
             val witnessOwnerPubKey = Sig.getPublicKeyBytes(signedKeyPair.public)
             val date = getTodayMinusNDays((iterations - i) * (SignedWitnessService.CHARGEBACK_SAFETY_DAYS + 1))
             val sw = SignedWitness(i == 0, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount1)
-            signedWitnessService!!.addToMap(sw)
+            signedWitnessService.addToMap(sw)
         }
-        assertFalse(signedWitnessService!!.isValidAccountAgeWitness(aew))
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew))
     }
 
 
