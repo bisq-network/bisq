@@ -5,6 +5,6 @@ RUN apt-get update && apt-get install -y \
   openjdk-11-jre
 COPY collectd.conf /etc/collectd/collectd.conf
 COPY openjdk.conf /etc/ld.so.conf.d/openjdk.conf
-#RUN systemctl --now enable collectd
-CMD /bin/bash -c "trap : TERM INT; sleep infinity & wait"
-#CMD /usr/sbin/collectd
+RUN ldconfig
+CMD /bin/bash -c "/usr/sbin/collectd && trap : TERM INT; sleep infinity & wait"
+
