@@ -834,8 +834,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         String rpcPw = preferences.getRpcPw();
         int blockNotifyPort = preferences.getBlockNotifyPort();
         if (daoFullNode && (rpcUser == null || rpcUser.isEmpty() ||
-                rpcPw == null || rpcPw.isEmpty()) ||
-                blockNotifyPort <= 0) {
+                rpcPw == null || rpcPw.isEmpty() ||
+                blockNotifyPort <= 0)) {
             log.warn("You have full DAO node selected but have not provided the rpc username, password and " +
                     "block notify port. We reset daoFullNode to false");
             isDaoFullNodeToggleButton.setSelected(false);
