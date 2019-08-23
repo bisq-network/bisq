@@ -804,6 +804,10 @@ bg color of non edit textFields: fafafa
     -fx-fill: -bs-rd-nav-deselected;
 }
 
+.nav-button-large .text {
+    -fx-font-size: 1em;
+}
+
 .nav-button:selected {
     -fx-background-color: -bs-rd-white;
     -fx-border-radius: 4;
