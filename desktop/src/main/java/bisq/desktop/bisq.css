@@ -804,7 +804,7 @@ bg color of non edit textFields: fafafa
     -fx-fill: -bs-rd-nav-deselected;
 }
 
-.nav-button-large .text {
+.nav-button-japanese .text {
     -fx-font-size: 1em;
 }
 
