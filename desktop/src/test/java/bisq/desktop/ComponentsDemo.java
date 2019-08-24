@@ -75,7 +75,7 @@ public class ComponentsDemo extends Application {
         button.setDisable(true);
         button.getStyleClass().add("action-button");
 
-        Label label = new Label("PORTFOLIO");
+        Label label = new Label("ORDERS");
         label.setStyle("-fx-background-color: green");
 
         final JFXBadge jfxBadge = new JFXBadge(label);
