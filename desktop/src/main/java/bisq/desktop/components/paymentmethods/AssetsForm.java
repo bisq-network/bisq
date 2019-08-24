@@ -19,7 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.NewBadge;
-import bisq.desktop.components.SearchComboBox;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -55,11 +55,7 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
-import javafx.collections.FXCollections;
-
 import javafx.util.StringConverter;
-
-import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
@@ -219,7 +215,7 @@ public class AssetsForm extends PaymentMethodForm {
 
     @Override
     protected void addTradeCurrencyComboBox() {
-        currencyComboBox = FormBuilder.<TradeCurrency>addLabelSearchComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
+        currencyComboBox = FormBuilder.<TradeCurrency>addLabelAutocompleteComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
                 Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
         currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
         currencyComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.altcoin"), currencyComboBox));
@@ -228,8 +224,9 @@ public class AssetsForm extends PaymentMethodForm {
             currencyComboBox.setPromptText("");
         });
 
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager)));
+        ((AutocompleteComboBox) currencyComboBox).setAutocompleteItems(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
+
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
@@ -238,14 +235,13 @@ public class AssetsForm extends PaymentMethodForm {
 
             @Override
             public TradeCurrency fromString(String s) {
-                Optional<TradeCurrency> tradeCurrencyOptional = currencyComboBox.getItems().stream().
-                        filter(tradeCurrency -> tradeCurrency.getNameAndCode().equals(s)).
-                        findAny();
-                return tradeCurrencyOptional.orElse(null);
+                return currencyComboBox.getItems().stream().
+                       filter(item -> item.getNameAndCode().equals(s)).
+                       findAny().orElse(null);
             }
         });
 
-        ((SearchComboBox) currencyComboBox).setOnChangeConfirmed(e -> {
+        ((AutocompleteComboBox) currencyComboBox).setOnChangeConfirmed(e -> {
             addressInputTextField.resetValidation();
             addressInputTextField.validate();
             paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());

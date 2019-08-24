@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutoTooltipToggleButton;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
@@ -91,7 +92,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
+import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
 import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
 @FxmlView
@@ -100,7 +101,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private final BSFormatter formatter;
 
     private TableView<TradeStatistics2> tableView;
-    private ComboBox<CurrencyListItem> currencyComboBox;
+    private AutocompleteComboBox<CurrencyListItem> currencyComboBox;
     private VolumeChart volumeChart;
     private CandleStickChart priceChart;
     private NumberAxis priceAxisX, priceAxisY, volumeAxisY, volumeAxisX;
@@ -128,6 +129,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private Pane rootParent;
     private ChangeListener<String> priceColumnLabelListener;
     private AnchorPane priceChartPane, volumeChartPane;
+    private static final int SHOW_ALL = 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -186,20 +188,25 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
-        currencyComboBox.setItems(model.getCurrencyListItems());
-        currencyComboBox.setVisibleRowCount(12);
+        currencyComboBox.setConverter(new CurrencyStringConverter(currencyComboBox));
+        currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
+
+        currencyComboBox.setAutocompleteItems(model.getCurrencyListItems());
+        currencyComboBox.setVisibleRowCount(10);
 
         if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(0);
+            currencyComboBox.getSelectionModel().select(SHOW_ALL);
         else if (model.getSelectedCurrencyListItem().isPresent())
             currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+        currencyComboBox.getEditor().setText(new CurrencyStringConverter(currencyComboBox).toString(currencyComboBox.getSelectionModel().getSelectedItem()));
 
-        currencyComboBox.setOnAction(e -> {
+        currencyComboBox.setOnChangeConfirmed(e -> {
+            if (currencyComboBox.getEditor().getText().isEmpty())
+                currencyComboBox.getSelectionModel().select(SHOW_ALL);
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
                 model.onSetTradeCurrency(selectedItem.tradeCurrency);
         });
-
 
         toggleGroup.getToggles().get(model.tickUnit.ordinal()).setSelected(true);
 
@@ -240,8 +247,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     return null;
                 });
 
-        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
-        });
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {});
 
         sortedList = new SortedList<>(model.tradeStatisticsByCurrency);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -266,8 +272,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @Override
     protected void deactivate() {
-        currencyComboBox.setOnAction(null);
-
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.priceItems.removeListener(itemsChangeListener);
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
@@ -287,6 +291,34 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         if (rootParent != null)
             rootParent.heightProperty().removeListener(parentHeightListener);
+    }
+
+    static class CurrencyStringConverter extends StringConverter<CurrencyListItem> {
+        private ComboBox<CurrencyListItem> comboBox;
+
+        CurrencyStringConverter(ComboBox<CurrencyListItem> comboBox) {
+            this.comboBox = comboBox;
+        }
+
+        @Override
+        public String toString(CurrencyListItem currencyItem) {
+            return currencyItem != null ? currencyItem.codeDashNameString() : "";
+        }
+
+        @Override
+        public CurrencyListItem fromString(String query) {
+            if (comboBox.getItems().isEmpty())
+                return null;
+            if (query.isEmpty())
+                return specialShowAllItem();
+            return comboBox.getItems().stream().
+                    filter(currencyItem -> currencyItem.codeDashNameString().equals(query)).
+                    findAny().orElse(null);
+        }
+
+        private CurrencyListItem specialShowAllItem() {
+            return comboBox.getItems().get(0);
+        }
     }
 
 
@@ -467,15 +499,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private HBox getToolBox() {
 
-        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
-                Res.get("list.currency.select"));
+        final Tuple3<VBox, Label, AutocompleteComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelAutocompleteComboBox(
+                Res.get("shared.currency"));
         currencyComboBox = currencyComboBoxTuple.third;
-        currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.trade"),
-                Res.get("shared.trades"), model.preferences));
         currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.trade"),
                 Res.get("shared.trades"), model.preferences));
-
-        currencyComboBox.setPromptText(Res.get("list.currency.select"));
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
