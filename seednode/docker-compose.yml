@@ -31,7 +31,7 @@ services:
             - NODE_PORT=8000
             - DAO_ACTIVATED=true
             - FULL_DAO_NODE=true
-            - RPC_HOST=172.28.1.4
+            - RPC_HOST=172.28.1.1
             - RPC_PORT=8332
             - RPC_USER=${RPC_USER}
             - RPC_PASSWORD=${RPC_PASSWORD}
