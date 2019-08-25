@@ -809,6 +809,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
             this.setToggleGroup(navButtons);
             this.getStyleClass().add("nav-button");
+            // Japanese fonts are dense, increase top nav button text size
+            if (model.getPreferences().getUserLanguage().equals("ja")) {
+                this.getStyleClass().add("nav-button-japanese");
+            }
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> this.setMouseTransparent(newValue));
 
