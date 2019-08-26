@@ -24,8 +24,8 @@ import bisq.core.arbitration.BuyerDataItem;
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.DisputeResult;
+import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -62,7 +62,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
@@ -76,6 +75,7 @@ public class SignedWitnessService {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final DisputeManager disputeManager;
+    private final ChargeBackRisk chargeBackRisk;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
@@ -91,12 +91,14 @@ public class SignedWitnessService {
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                DisputeManager disputeManager) {
+                                DisputeManager disputeManager,
+                                ChargeBackRisk chargeBackRisk) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.disputeManager = disputeManager;
+        this.chargeBackRisk = chargeBackRisk;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -333,7 +335,7 @@ public class SignedWitnessService {
     }
 
     private boolean hasChargebackRisk(Dispute dispute) {
-        return PaymentMethod.hasChargebackRisk(dispute.getContract().getPaymentMethodId());
+        return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId());
     }
 
     private boolean isBuyerWinner(Dispute dispute) {
