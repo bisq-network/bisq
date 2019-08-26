@@ -46,8 +46,10 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 
 import javafx.collections.FXCollections;
@@ -122,6 +124,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     @Getter
     private final BooleanProperty useAnimationsProperty = new SimpleBooleanProperty(prefPayload.isUseAnimations());
     @Getter
+    private final IntegerProperty cssThemeProperty = new SimpleIntegerProperty(prefPayload.getCssTheme());
+    @Getter
     private final BooleanProperty useCustomWithdrawalTxFeeProperty = new SimpleBooleanProperty(prefPayload.isUseCustomWithdrawalTxFee());
     @Getter
     private final LongProperty withdrawalTxFeeInBytesProperty = new SimpleLongProperty(prefPayload.getWithdrawalTxFeeInBytes());
@@ -170,6 +174,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
             GlobalSettings.setUseAnimations(prefPayload.isUseAnimations());
+            persist();
+        });
+
+        cssThemeProperty.addListener((ov) -> {
+            prefPayload.setCssTheme(cssThemeProperty.get());
             persist();
         });
 
@@ -330,6 +339,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setUseAnimations(boolean useAnimations) {
         this.useAnimationsProperty.set(useAnimations);
+    }
+
+    public void setCssTheme(boolean useDarkMode) {
+        this.cssThemeProperty.set(useDarkMode == true ? 1 : 0);
     }
 
     public void addFiatCurrency(FiatCurrency tradeCurrency) {
@@ -821,6 +834,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setTacAccepted(boolean tacAccepted);
 
         void setUseAnimations(boolean useAnimations);
+
+        void setCssTheme(int cssTheme);
 
         void setUserLanguage(@NotNull String userLanguageCode);
 
