@@ -24,13 +24,14 @@ import org.bitcoinj.core.Coin;
 
 import java.security.PublicKey;
 
-import java.util.Objects;
-
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BuyerDataItem {
     private final PaymentAccountPayload paymentAccountPayload;
+    @EqualsAndHashCode.Include
     private final AccountAgeWitness accountAgeWitness;
     private final Coin tradeAmount;
     private final PublicKey sellerPubKey;
@@ -43,18 +44,5 @@ public class BuyerDataItem {
         this.accountAgeWitness = accountAgeWitness;
         this.tradeAmount = tradeAmount;
         this.sellerPubKey = sellerPubKey;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BuyerDataItem)) return false;
-        // Only distinguish data by AccountAgeWitness. Other details are irrelevant
-        return accountAgeWitness.equals(((BuyerDataItem) o).accountAgeWitness);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(accountAgeWitness);
     }
 }
