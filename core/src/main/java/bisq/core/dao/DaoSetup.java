@@ -27,6 +27,7 @@ import bisq.core.dao.governance.bond.reputation.MyReputationListService;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
+import bisq.core.dao.governance.proposal.ProposalListPresentation;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.dao.governance.voteresult.VoteResultService;
@@ -59,6 +60,7 @@ public class DaoSetup {
                     CycleService cycleService,
                     BallotListService ballotListService,
                     ProposalService proposalService,
+                    ProposalListPresentation proposalListPresentation,
                     BlindVoteListService blindVoteListService,
                     MyBlindVoteListService myBlindVoteListService,
                     VoteRevealService voteRevealService,
@@ -90,6 +92,7 @@ public class DaoSetup {
         daoSetupServices.add(cycleService);
         daoSetupServices.add(ballotListService);
         daoSetupServices.add(proposalService);
+        daoSetupServices.add(proposalListPresentation);
         daoSetupServices.add(blindVoteListService);
         daoSetupServices.add(myBlindVoteListService);
         daoSetupServices.add(voteRevealService);

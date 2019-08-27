@@ -198,9 +198,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         }
                     });
 
-            toRemoveSet.forEach(
-                    protectedDataToRemove -> hashMapChangedListeners.forEach(
+            // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
+            // about start and end of iteration.
+            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
+            toRemoveSet.forEach(protectedDataToRemove -> hashMapChangedListeners.forEach(
                             listener -> listener.onRemoved(protectedDataToRemove)));
+            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
 
             if (sequenceNumberMap.size() > 1000)
                 sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
