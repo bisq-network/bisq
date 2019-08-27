@@ -298,10 +298,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                         if (!stopped) {
                                             synchronized (lock) {
                                                 BundleOfEnvelopes current = queueOfBundles.poll();
-                                                if (current != null && current.getEnvelopes().size() == 1) {
-                                                    protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
-                                                } else {
-                                                    protoOutputStream.writeEnvelope(current);
+                                                if (current != null) {
+                                                    if (current.getEnvelopes().size() == 1) {
+                                                        protoOutputStream.writeEnvelope(current.getEnvelopes().get(0));
+                                                    } else {
+                                                        protoOutputStream.writeEnvelope(current);
+                                                    }
                                                 }
                                             }
                                         }
@@ -796,13 +798,15 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     if (networkEnvelope instanceof SupportedCapabilitiesMessage) {
                         Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
                         if (supportedCapabilities != null) {
-                            capabilities.set(supportedCapabilities);
-                            capabilitiesListeners.forEach(weakListener -> {
-                                SupportedCapabilitiesListener supportedCapabilitiesListener = weakListener.get();
-                                if (supportedCapabilitiesListener != null) {
-                                    supportedCapabilitiesListener.onChanged(supportedCapabilities);
-                                }
-                            });
+                            if (!capabilities.equals(supportedCapabilities)) {
+                                capabilities.set(supportedCapabilities);
+                                capabilitiesListeners.forEach(weakListener -> {
+                                    SupportedCapabilitiesListener supportedCapabilitiesListener = weakListener.get();
+                                    if (supportedCapabilitiesListener != null) {
+                                        UserThread.execute(() -> supportedCapabilitiesListener.onChanged(supportedCapabilities));
+                                    }
+                                });
+                            }
                         }
                     }
 
