@@ -103,7 +103,6 @@ public class RpcService {
         boolean isMainnet = BisqEnvironment.getBaseCurrencyNetwork().isMainnet();
         boolean isTestnet = BisqEnvironment.getBaseCurrencyNetwork().isTestnet();
         boolean isDaoBetaNet = BisqEnvironment.getBaseCurrencyNetwork().isDaoBetaNet();
-        log.info("The value of rpchost is {}", rpcHost);
         this.rpcHost = isHostSet ? rpcHost : "127.0.0.1";
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? "8332" :
@@ -111,8 +110,6 @@ public class RpcService {
                                         "18443"; // regtest
         this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
 
-        log.info("Starting RPCService with btcd-cli4j version {} on {}:{} with user {}", BtcdCli4jVersion.VERSION,
-                this.rpcHost, this.rpcPort, this.rpcUser);
     }
 
 
@@ -123,6 +120,9 @@ public class RpcService {
     void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = executor.submit(() -> {
             try {
+                log.info("Starting RPCService with btcd-cli4j version {} on {}:{} with user {}, listening for blocknotify on port {}",
+                        BtcdCli4jVersion.VERSION, this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort);
+
                 long startTs = System.currentTimeMillis();
                 PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
                 CloseableHttpClient httpProvider = HttpClients.custom().setConnectionManager(cm).build();
