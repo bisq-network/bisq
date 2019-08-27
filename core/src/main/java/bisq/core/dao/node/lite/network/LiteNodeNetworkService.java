@@ -232,7 +232,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
             if (!receivedBlocks.contains(extBlockId)) {
                 log.debug("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
-                        connection.getPeersNodeAddressOptional(), extBlockId);
+                        connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
                 receivedBlocks.add(extBlockId);
                 broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null, false);
                 listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
