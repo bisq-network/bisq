@@ -4,11 +4,12 @@ services:
     seednode:
         container_name: seednode
         restart: unless-stopped
-        env_file:
-            - .env
         build:
             context: .
             dockerfile: docker/prod/Dockerfile
+            args:
+                SEEDNODE_URL: ${SEEDNODE_URL}
+                SEEDNODE_BRANCH: ${SEEDNODE_BRANCH}
         image: seednode
         depends_on:
             - bitcoin-core
