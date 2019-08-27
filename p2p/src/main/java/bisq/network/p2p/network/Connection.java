@@ -355,7 +355,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     data = ((AddDataMessage) msg).getProtectedStorageEntry().getProtectedStoragePayload();
                 }
                 // Monitoring nodes have only one capability set, we don't want to log those
-                log.debug("We did not send the message because the peer does not support our required capabilities. " +
+                log.info("We did not send the message because the peer does not support our required capabilities. " +
                                 "messageClass={}, peer={}, peers supportedCapabilities={}",
                         data.getClass().getSimpleName(), peersNodeAddressOptional, capabilities);
             }
