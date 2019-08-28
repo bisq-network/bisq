@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
@@ -143,6 +144,7 @@ public class BisqSetup {
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final SignedWitnessService signedWitnessService;
     private final MobileNotificationService mobileNotificationService;
     private final MyOfferTakenEvents myOfferTakenEvents;
     private final TradeEvents tradeEvents;
@@ -221,6 +223,7 @@ public class BisqSetup {
                      KeyRing keyRing,
                      BisqEnvironment bisqEnvironment,
                      AccountAgeWitnessService accountAgeWitnessService,
+                     SignedWitnessService signedWitnessService,
                      MobileNotificationService mobileNotificationService,
                      MyOfferTakenEvents myOfferTakenEvents,
                      TradeEvents tradeEvents,
@@ -261,6 +264,7 @@ public class BisqSetup {
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.signedWitnessService = signedWitnessService;
         this.mobileNotificationService = mobileNotificationService;
         this.myOfferTakenEvents = myOfferTakenEvents;
         this.tradeEvents = tradeEvents;
@@ -647,6 +651,7 @@ public class BisqSetup {
         assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
+        signedWitnessService.onAllServicesInitialized();
 
         priceFeedService.setCurrencyCodeOnInit();
 

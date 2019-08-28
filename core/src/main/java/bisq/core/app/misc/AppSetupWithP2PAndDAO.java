@@ -17,6 +17,7 @@
 
 package bisq.core.app.misc;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.TorSetup;
 import bisq.core.dao.DaoOptionKeys;
@@ -50,6 +51,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  P2PService p2PService,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
+                                 SignedWitnessService signedWitnessService,
                                  FilterManager filterManager,
                                  DaoSetup daoSetup,
                                  MyVoteListService myVoteListService,
@@ -65,6 +67,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                 p2PService,
                 tradeStatisticsManager,
                 accountAgeWitnessService,
+                signedWitnessService,
                 filterManager,
                 torSetup);
 
