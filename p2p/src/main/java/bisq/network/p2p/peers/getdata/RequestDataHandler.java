@@ -194,49 +194,10 @@ class RequestDataHandler implements MessageListener {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-                    Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    dataSet.forEach(e -> {
-                        final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-                        if (protectedStoragePayload == null) {
-                            log.warn("StoragePayload was null: {}", networkEnvelope.toString());
-                            return;
-                        }
-
-                        // For logging different data types
-                        String className = protectedStoragePayload.getClass().getSimpleName();
-                        if (!payloadByClassName.containsKey(className))
-                            payloadByClassName.put(className, new HashSet<>());
-
-                        payloadByClassName.get(className).add(protectedStoragePayload);
-                    });
-
-
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-                    if (persistableNetworkPayloadSet != null) {
-                        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
-                            // For logging different data types
-                            String className = persistableNetworkPayload.getClass().getSimpleName();
-                            if (!payloadByClassName.containsKey(className))
-                                payloadByClassName.put(className, new HashSet<>());
 
-                            payloadByClassName.get(className).add(persistableNetworkPayload);
-                        });
-                    }
-
-                    // Log different data types
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("\n#################################################################\n");
-                    sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
-                    final int items = dataSet.size() +
-                            (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
-                    sb.append("Received ").append(items).append(" instances\n");
-                    payloadByClassName.forEach((key, value) -> sb.append(key)
-                            .append(": ")
-                            .append(value.size())
-                            .append("\n"));
-                    sb.append("#################################################################");
-                    log.info(sb.toString());
+                    if (log.isDebugEnabled()) logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
@@ -304,6 +265,51 @@ class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void logContents(NetworkEnvelope networkEnvelope,
+                             Set<ProtectedStorageEntry> dataSet,
+                             Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
+        Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
+        dataSet.stream().forEach(e -> {
+            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload == null) {
+                log.warn("StoragePayload was null: {}", networkEnvelope.toString());
+                return;
+            }
+
+            // For logging different data types
+            String className = protectedStoragePayload.getClass().getSimpleName();
+            if (!payloadByClassName.containsKey(className))
+                payloadByClassName.put(className, new HashSet<>());
+
+            payloadByClassName.get(className).add(protectedStoragePayload);
+        });
+
+
+        if (persistableNetworkPayloadSet != null) {
+            persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+                // For logging different data types
+                String className = persistableNetworkPayload.getClass().getSimpleName();
+                if (!payloadByClassName.containsKey(className))
+                    payloadByClassName.put(className, new HashSet<>());
+
+                payloadByClassName.get(className).add(persistableNetworkPayload);
+            });
+        }
+
+        // Log different data types
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n#################################################################\n");
+        sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
+        final int items = dataSet.size() +
+                (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
+        sb.append("Received ").append(items).append(" instances\n");
+        payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
+                .append(": ")
+                .append(e.getValue().size())
+                .append("\n"));
+        sb.append("#################################################################");
+        log.info(sb.toString());
+    }
 
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage,
