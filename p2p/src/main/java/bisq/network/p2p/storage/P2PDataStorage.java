@@ -26,6 +26,7 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.storage.messages.AddDataMessage;
+import bisq.network.p2p.storage.messages.AddOncePayload;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.messages.RefreshOfferMessage;
@@ -112,6 +113,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @Getter
     private final Map<ByteArray, ProtectedStorageEntry> map = new ConcurrentHashMap<>();
+    private final Set<ByteArray> removedAddOncePayloads = new HashSet<>();
     private final Set<HashMapChangedListener> hashMapChangedListeners = new CopyOnWriteArraySet<>();
     private Timer removeExpiredEntriesTimer;
 
@@ -366,18 +368,30 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return addProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner, true);
     }
 
-    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender,
-                                            @Nullable BroadcastHandler.Listener listener, boolean isDataOwner, boolean allowBroadcast) {
-        final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+    public boolean addProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
+                                            @Nullable NodeAddress sender,
+                                            @Nullable BroadcastHandler.Listener listener,
+                                            boolean isDataOwner,
+                                            boolean allowBroadcast) {
+        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
+
+        if (protectedStoragePayload instanceof AddOncePayload &&
+                removedAddOncePayloads.contains(hashOfPayload)) {
+            log.warn("We have already removed that AddOncePayload by a previous removeDataMessage. " +
+                    "We ignore that message. ProtectedStoragePayload: {}", protectedStoragePayload.toString());
+            return false;
+        }
+
         boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
         boolean result = checkPublicKeys(protectedStorageEntry, true)
                 && checkSignature(protectedStorageEntry)
                 && sequenceNrValid;
 
         boolean containsKey = map.containsKey(hashOfPayload);
-        if (containsKey)
+        if (containsKey) {
             result = result && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload);
+        }
 
         // printData("before add");
         if (result) {
@@ -422,7 +436,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         broadcast(new AddDataMessage(protectedStorageEntry), sender, broadcastListener, isDataOwner);
     }
 
-    public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage, @Nullable NodeAddress sender, boolean isDataOwner) {
+    public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
+                              @Nullable NodeAddress sender,
+                              boolean isDataOwner) {
         byte[] hashOfDataAndSeqNr = refreshTTLMessage.getHashOfDataAndSeqNr();
         byte[] signature = refreshTTLMessage.getSignature();
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
@@ -464,7 +480,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
     }
 
-    public boolean remove(ProtectedStorageEntry protectedStorageEntry, @Nullable NodeAddress sender, boolean isDataOwner) {
+    public boolean remove(ProtectedStorageEntry protectedStorageEntry,
+                          @Nullable NodeAddress sender,
+                          boolean isDataOwner) {
         final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
@@ -482,6 +500,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             printData("after remove");
             sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
             sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
+
+            maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
 
@@ -506,24 +526,30 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public boolean removeMailboxData(ProtectedMailboxStorageEntry protectedMailboxStorageEntry, @Nullable NodeAddress sender, boolean isDataOwner) {
-        ByteArray hashOfData = get32ByteHashAsByteArray(protectedMailboxStorageEntry.getProtectedStoragePayload());
-        boolean containsKey = map.containsKey(hashOfData);
+    public boolean removeMailboxData(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
+                                     @Nullable NodeAddress sender,
+                                     boolean isDataOwner) {
+        ProtectedStoragePayload protectedStoragePayload = protectedMailboxStorageEntry.getProtectedStoragePayload();
+        ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
+        boolean containsKey = map.containsKey(hashOfPayload);
         if (!containsKey)
             log.debug("Remove data ignored as we don't have an entry for that data.");
+
         boolean result = containsKey
                 && checkPublicKeys(protectedMailboxStorageEntry, false)
-                && isSequenceNrValid(protectedMailboxStorageEntry.getSequenceNumber(), hashOfData)
+                && isSequenceNrValid(protectedMailboxStorageEntry.getSequenceNumber(), hashOfPayload)
                 && protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(protectedMailboxStorageEntry.getReceiversPubKey()) // at remove both keys are the same (only receiver is able to remove data)
                 && checkSignature(protectedMailboxStorageEntry)
-                && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxStorageEntry.getReceiversPubKey(), hashOfData);
+                && checkIfStoredMailboxDataMatchesNewMailboxData(protectedMailboxStorageEntry.getReceiversPubKey(), hashOfPayload);
 
         // printData("before removeMailboxData");
         if (result) {
-            doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfData);
+            doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfPayload);
             printData("after removeMailboxData");
-            sequenceNumberMap.put(hashOfData, new MapValue(protectedMailboxStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+            sequenceNumberMap.put(hashOfPayload, new MapValue(protectedMailboxStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
             sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
+
+            maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
 
             broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
         } else {
@@ -532,7 +558,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return result;
     }
 
-    public ProtectedStorageEntry getProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload, KeyPair ownerStoragePubKey)
+    private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
+                                                 ByteArray hashOfData) {
+        if (protectedStoragePayload instanceof AddOncePayload) {
+            removedAddOncePayloads.add(hashOfData);
+        }
+    }
+
+    public ProtectedStorageEntry getProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+                                                          KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfData = get32ByteHashAsByteArray(protectedStoragePayload);
         int sequenceNumber;
@@ -546,7 +580,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return new ProtectedStorageEntry(protectedStoragePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
     }
 
-    public RefreshOfferMessage getRefreshTTLMessage(ProtectedStoragePayload protectedStoragePayload, KeyPair ownerStoragePubKey)
+    public RefreshOfferMessage getRefreshTTLMessage(ProtectedStoragePayload protectedStoragePayload,
+                                                    KeyPair ownerStoragePubKey)
             throws CryptoException {
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         int sequenceNumber;
@@ -561,7 +596,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     public ProtectedMailboxStorageEntry getMailboxDataWithSignedSeqNr(MailboxStoragePayload expirableMailboxStoragePayload,
-                                                                      KeyPair storageSignaturePubKey, PublicKey receiversPublicKey)
+                                                                      KeyPair storageSignaturePubKey,
+                                                                      PublicKey receiversPublicKey)
             throws CryptoException {
         ByteArray hashOfData = get32ByteHashAsByteArray(expirableMailboxStoragePayload);
         int sequenceNumber;
