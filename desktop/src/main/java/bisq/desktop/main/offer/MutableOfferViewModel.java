@@ -807,12 +807,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
         inputIsMarketBasedPrice = !oldValue && newValue;
-        if (oldValue && !newValue)
+        if (oldValue && !newValue) {
             if (marketPriceMargin.get() == null) {
                 // field wasn't set manually
                 inputIsMarketBasedPrice = true;
             }
-        marketPriceMargin.set(btcFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
+            marketPriceMargin.set(btcFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
+        }
 
         // We want to trigger a recalculation of the volume
         UserThread.execute(() -> {
