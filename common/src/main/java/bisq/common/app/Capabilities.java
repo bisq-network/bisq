@@ -39,6 +39,10 @@ public class Capabilities {
      */
     public static final Capabilities app = new Capabilities();
 
+    // Defines which most recent capability any node need to support.
+    // This helps to clean network from very old inactive but still running nodes.
+    private static final Capability mandatoryCapability = Capability.DAO_STATE;
+
     protected final Set<Capability> capabilities = new HashSet<>();
 
     public Capabilities(Capability... capabilities) {
@@ -71,7 +75,7 @@ public class Capabilities {
     }
 
     public void addAll(Capabilities capabilities) {
-        if(capabilities != null)
+        if (capabilities != null)
             this.capabilities.addAll(capabilities.capabilities);
     }
 
@@ -109,6 +113,10 @@ public class Capabilities {
                 .filter(integer -> integer < Capability.values().length)
                 .map(integer -> Capability.values()[integer])
                 .collect(Collectors.toSet()));
+    }
+
+    public static boolean hasMandatoryCapability(Capabilities capabilities) {
+        return capabilities.capabilities.stream().anyMatch(c -> c == mandatoryCapability);
     }
 
     @Override

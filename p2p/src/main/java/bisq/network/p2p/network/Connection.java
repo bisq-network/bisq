@@ -799,6 +799,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
                         if (supportedCapabilities != null) {
                             if (!capabilities.equals(supportedCapabilities)) {
+                                if (!Capabilities.hasMandatoryCapability(capabilities)) {
+                                    shutDown(CloseConnectionReason.RULE_VIOLATION);
+                                    return;
+                                }
+
                                 capabilities.set(supportedCapabilities);
                                 capabilitiesListeners.forEach(weakListener -> {
                                     SupportedCapabilitiesListener supportedCapabilitiesListener = weakListener.get();
