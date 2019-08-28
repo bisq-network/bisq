@@ -32,7 +32,7 @@ public class CoreNetworkCapabilities {
         Capabilities.app.addAll(Capability.BUNDLE_OF_ENVELOPES);
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
-            Capabilities.app.addAll(Capability.PROPOSAL, Capability.BLIND_VOTE, Capability.BSQ_BLOCK, Capability.DAO_STATE);
+            Capabilities.app.addAll(Capability.PROPOSAL, Capability.BLIND_VOTE, Capability.DAO_STATE);
 
             maybeApplyDaoFullMode(bisqEnvironment);
         }
@@ -46,6 +46,10 @@ public class CoreNetworkCapabilities {
         if (isFullDaoNode != null && !isFullDaoNode.isEmpty() && isFullDaoNode.toLowerCase().equals("true")) {
             log.info("Set Capability.DAO_FULL_NODE");
             Capabilities.app.addAll(Capability.DAO_FULL_NODE);
+        } else {
+            // A lite node has the capability to receive bsq blocks. We do not want to send BSQ blocks to full nodes
+            // as they ignore them anyway.
+            Capabilities.app.addAll(Capability.RECEIVE_BSQ_BLOCK);
         }
     }
 }

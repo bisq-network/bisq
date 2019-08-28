@@ -195,9 +195,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         }
                     });
 
-            toRemoveSet.forEach(
-                    protectedDataToRemove -> hashMapChangedListeners.forEach(
-                            listener -> listener.onRemoved(protectedDataToRemove)));
+            // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
+            // about start and end of iteration.
+            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
+            toRemoveSet.forEach(protectedStorageEntry -> {
+                hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
+                removeFromProtectedDataStore(protectedStorageEntry);
+            });
+            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
 
             if (sequenceNumberMap.size() > 1000)
                 sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
@@ -459,19 +464,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
 
-            if (protectedStoragePayload instanceof PersistablePayload) {
-                ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
-                ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
-                if (previous != null) {
-                    protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
-                } else {
-                    log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
-                }
-            }
+            removeFromProtectedDataStore(protectedStorageEntry);
         } else {
             log.debug("remove failed");
         }
         return result;
+    }
+
+    private void removeFromProtectedDataStore(ProtectedStorageEntry protectedStorageEntry) {
+        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+        if (protectedStoragePayload instanceof PersistablePayload) {
+            ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
+            ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
+            if (previous != null) {
+                protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
+            } else {
+                log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
+            }
+        }
     }
 
     @SuppressWarnings("UnusedReturnValue")

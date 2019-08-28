@@ -279,7 +279,7 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
             if (inPhase || txInPastCycle || unconfirmedOrNonBsqTx) {
                 if (tempProposals.contains(proposal)) {
                     tempProposals.remove(proposal);
-                    log.info("We received a remove request for a TempProposalPayload and have removed the proposal " +
+                    log.debug("We received a remove request for a TempProposalPayload and have removed the proposal " +
                                     "from our list. proposal creation date={}, proposalTxId={}, inPhase={}, " +
                                     "txInPastCycle={}, unconfirmedOrNonBsqTx={}",
                             proposal.getCreationDateAsDate(), proposal.getTxId(), inPhase, txInPastCycle, unconfirmedOrNonBsqTx);
