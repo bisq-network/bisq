@@ -23,6 +23,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.Chat.Chat;
+import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
@@ -43,17 +44,28 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.fxml.FXML;
+
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
@@ -81,7 +93,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
-    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn, marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn;
+    TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn,
+            marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn;
 
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
@@ -90,7 +103,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedTableItemSubscription;
     private Subscription selectedItemSubscription;
     private final Preferences preferences;
-    private Chat tradeChat;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +135,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
         paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
         avatarColumn.setText("");
+        chatColumn.setText("");
 
         setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
@@ -133,6 +146,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         setMarketColumnCellFactory();
         setRoleColumnCellFactory();
         setAvatarColumnCellFactory();
+        setChatColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openTrades"))));
@@ -185,11 +199,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .show();
             }
         };
-
-        tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
-        tradeChat.setAllowAttachments(false);
-        tradeChat.setDisplayHeader(false);
-        tradeChat.initialize();
     }
 
     @Override
@@ -229,19 +238,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);
                     if (root.getChildren().size() == 1)
                         root.getChildren().add(selectedSubView);
-                    else if (root.getChildren().size() > 1)
+                    else if (root.getChildren().size() == 2)
                         root.getChildren().set(1, selectedSubView);
-
-                    boolean isTaker = !model.dataModel.isMaker(selectedItem.getTrade().getOffer());
-                    boolean isBuyer = model.dataModel.isBuyer();
-                    if (tradeChat != null)
-                        tradeChat.display(new TradeChatSession(selectedItem.getTrade(), isTaker, isBuyer,
-                                        model.dataModel.tradeManager,
-                                        model.dataModel.tradeManager.getChatManager()),
-                                null,
-                                selectedSubView.getLeftVBox().widthProperty());
-
-                    selectedSubView.setChat(tradeChat);
                 }
 
                 updateTableSelection();
@@ -262,10 +260,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 });
 
         updateTableSelection();
-        if (tradeChat != null) {
-            tradeChat.activate();
-            tradeChat.scrollToBottom();
-        }
     }
 
     @Override
@@ -278,9 +272,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
-
-        if (tradeChat != null)
-            tradeChat.deactivate();
     }
 
     private void removeSelectedSubView() {
@@ -530,6 +521,104 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     }
                 });
         return avatarColumn;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    private TableColumn<PendingTradesListItem, PendingTradesListItem> setChatColumnCellFactory() {
+        chatColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        //TODO
+        chatColumn.getStyleClass().addAll("last-column", "avatar-column");
+        chatColumn.setSortable(false);
+        chatColumn.setCellFactory(
+                new Callback<>() {
+
+                    @Override
+                    public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
+                        return new TableCell<>() {
+
+                            @Override
+                            public void updateItem(final PendingTradesListItem newItem, boolean empty) {
+                                super.updateItem(newItem, empty);
+                                if (!empty && newItem != null) {
+                                    Trade trade = newItem.getTrade();
+
+                                    Label label = new Label();
+                                    //todo
+                                    // label.setLayoutY(-5);
+                                    //label.setLayoutX(10);
+                                    label.getStyleClass().addAll("icon", "highlight");
+                                    Tooltip.install(label, new Tooltip(Res.get("portfolio.pending.openChat")));
+                                    AwesomeDude.setIcon(label, AwesomeIcon.COMMENTS_ALT);
+                                    label.setOnMouseClicked(e -> openChat(trade));
+                                    setPadding(new Insets(-20, 0, 0, 20));
+                                    setGraphic(label);
+                                } else {
+                                    setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+        return chatColumn;
+    }
+
+    private void openChat(Trade trade) {
+        Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
+        tradeChat.setAllowAttachments(false);
+        tradeChat.setDisplayHeader(false);
+        tradeChat.initialize();
+
+        AnchorPane pane = new AnchorPane(tradeChat);
+        pane.setPrefSize(600, 400);
+        AnchorPane.setLeftAnchor(tradeChat, 10d);
+        AnchorPane.setRightAnchor(tradeChat, 10d);
+        AnchorPane.setTopAnchor(tradeChat, -20d);
+        AnchorPane.setBottomAnchor(tradeChat, 10d);
+
+        boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
+        boolean isBuyer = model.dataModel.isBuyer();
+        tradeChat.display(new TradeChatSession(trade, isTaker, isBuyer,
+                        model.dataModel.tradeManager,
+                        model.dataModel.tradeManager.getChatManager()),
+                null,
+                pane.widthProperty());
+
+        tradeChat.activate();
+        tradeChat.scrollToBottom();
+
+        Stage stage = new Stage();
+        stage.setTitle(Res.get("portfolio.pending.chatWindowTitle", trade.getShortId()));
+        StackPane owner = MainView.getRootContainer();
+        Scene rootScene = owner.getScene();
+        stage.initOwner(rootScene.getWindow());
+        stage.initModality(Modality.NONE);
+        stage.initStyle(StageStyle.DECORATED);
+
+        Scene scene = new Scene(pane);
+        scene.getStylesheets().setAll(
+                "/bisq/desktop/bisq.css",
+                "/bisq/desktop/images.css");
+        scene.setOnKeyPressed(ev -> {
+            if (ev.getCode() == KeyCode.ESCAPE) {
+                ev.consume();
+                stage.hide();
+            }
+        });
+        stage.setScene(scene);
+
+        stage.setOpacity(0);
+        stage.show();
+
+        //todo exit listener
+
+        Window window = rootScene.getWindow();
+        double titleBarHeight = window.getHeight() - rootScene.getHeight();
+        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth() / 4 * 3)));
+        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight() / 4 * 3)));
+
+        // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
+        // and after a short moment in the correct position
+        UserThread.execute(() -> stage.setOpacity(1));
     }
 }
 

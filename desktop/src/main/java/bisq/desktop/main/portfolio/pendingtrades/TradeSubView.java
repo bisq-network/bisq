@@ -19,7 +19,6 @@ package bisq.desktop.main.portfolio.pendingtrades;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.Chat.Chat;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.util.Layout;
@@ -29,7 +28,6 @@ import bisq.core.locale.Res;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -44,8 +42,6 @@ import org.fxmisc.easybind.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import lombok.Getter;
-
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
@@ -54,7 +50,6 @@ public abstract class TradeSubView extends HBox {
     protected final Logger log = LoggerFactory.getLogger(this.getClass());
 
     protected final PendingTradesViewModel model;
-    @Getter
     protected VBox leftVBox;
     private AnchorPane contentPane;
     private TradeStepView tradeStepView;
@@ -63,8 +58,7 @@ public abstract class TradeSubView extends HBox {
     private GridPane leftGridPane;
     private TitledGroupBg tradeProcessTitledGroupBg;
     private int leftGridPaneRowIndex = 0;
-    Subscription viewStateSubscription;
-    private Chat chat;
+    private Subscription viewStateSubscription;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -98,15 +92,6 @@ public abstract class TradeSubView extends HBox {
         addLeftBox();
         addContentPane();
 
-        GridPane titleGridPane = new GridPane();
-        leftVBox.getChildren().add(titleGridPane);
-        leftVBox.setPrefWidth(340);
-        ColumnConstraints cc1 = new ColumnConstraints();
-        cc1.setPrefWidth(150);
-        ColumnConstraints cc2 = new ColumnConstraints();
-        cc2.setPrefWidth(150);
-        titleGridPane.getColumnConstraints().addAll(cc1, cc2);
-
         leftGridPane = new GridPane();
         leftGridPane.setPrefWidth(340);
         leftGridPane.setHgap(Layout.GRID_GAP);
@@ -114,23 +99,10 @@ public abstract class TradeSubView extends HBox {
         VBox.setMargin(leftGridPane, new Insets(0, 10, 10, 10));
         leftVBox.getChildren().add(leftGridPane);
 
-        tradeProcessTitledGroupBg = addTitledGroupBg(titleGridPane, 0, 0, 1, Res.get("portfolio.pending.tradeProcess"));
-        tradeProcessTitledGroupBg.getStyleClass().addAll("last", "show-hand");
-        tradeProcessTitledGroupBg.setOnMouseClicked(e -> {
-            leftVBox.setPrefWidth(340);
-            leftVBox.getChildren().set(1, leftGridPane);
-        });
-        TitledGroupBg chatTitleGroupBg = addTitledGroupBg(titleGridPane, 0, 1, 1, "Chat");
-        chatTitleGroupBg.getStyleClass().addAll("last", "show-hand");
-        chatTitleGroupBg.setOnMouseClicked(e -> {
-            if (chat == null)
-                return;
-            VBox.setMargin(chat, new Insets(11, 10, 10, 10));
-            leftVBox.setPrefWidth(640);
-            leftVBox.getChildren().set(1, chat);
-        });
-
         leftGridPaneRowIndex = 0;
+        tradeProcessTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, Res.get("portfolio.pending.tradeProcess"));
+        tradeProcessTitledGroupBg.getStyleClass().add("last");
+
         addWizards();
 
         TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
@@ -217,10 +189,6 @@ public abstract class TradeSubView extends HBox {
             log.error("Creating viewClass {} caused an error {}", viewClass, e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    public void setChat(Chat chat) {
-        this.chat = chat;
     }
 
     private void addLeftBox() {
