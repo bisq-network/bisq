@@ -1,7 +1,7 @@
 .root {
     -bs-color-primary: #25b135;
     -bs-color-primary-dark: #2ea33c;
-    -bs-text-color: #afaeb0;
+    -bs-text-color: #cfcecf;
     -bs-background-color: #2e2e31;
     -bs-background-gray: #1d1d21;
     -bs-content-background-gray: #242424;
@@ -36,6 +36,7 @@
     -bs-turquoise: #2cacaf;
     -bs-yellow: #ffb60f;
     -bs-yellow-light: derive(-bs-yellow, 81%);
+    -bs-blue-transparent: #0f87c344;
     -bs-bg-green: #99ba9c;
     -bs-rd-green: #25B135;
     -bs-rd-green-dark: #3EA34A;
@@ -129,6 +130,9 @@
 .table-view {
     -fx-background-color: -bs-background-color;
 }
+.table-view .table-cell {
+    -fx-background-color: -bs-background-color;
+}
 
 .jfx-tab-pane .tab-content-area {
     -fx-background-color: -bs-tab-content-area;
@@ -138,10 +142,14 @@
     -fx-background-color: -bs-viewport-background;
 }
 
-#address-text-field:hover {
-    -fx-background: -bs-color-gray-0;
-}
-
 .scroll-pane {
     -fx-background-color: -bs-scroll-pane-background;
+}
+
+#sell-button, #sell-button-big {
+    -fx-background-color: #660000 !important;
+}
+
+#buy-button, #buy-button-big {
+    -fx-background-color: #006600 !important;
 }

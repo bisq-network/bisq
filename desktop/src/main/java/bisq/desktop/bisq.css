@@ -1404,7 +1404,7 @@ textfield */
 
 /* TableGroupHeadline */
 #table-group-headline {
-    -fx-background-color: -bs-color-gray-1;
+    -fx-background-color: -bs-content-background-gray;
     -fx-background-insets: 10 0 -1 0, 0, 1, 2;
     -fx-background-radius: 3px, 3px, 2px, 1px;
 }
