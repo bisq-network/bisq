@@ -18,7 +18,6 @@
 package bisq.network.p2p.storage.payload;
 
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
-import bisq.network.p2p.storage.messages.AddOncePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.util.ExtraDataMapValidator;
@@ -50,7 +49,7 @@ import javax.annotation.Nullable;
 @Getter
 @EqualsAndHashCode
 @Slf4j
-public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload, AddOncePayload {
+public final class MailboxStoragePayload implements ProtectedStoragePayload, ExpirablePayload {
     private final PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage;
     private PublicKey senderPubKeyForAddOperation;
     private final byte[] senderPubKeyForAddOperationBytes;

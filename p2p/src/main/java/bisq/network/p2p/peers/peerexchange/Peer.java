@@ -97,9 +97,8 @@ public final class Peer implements HasCapabilities, NetworkPayload, PersistableP
 
     @Override
     public void onChanged(Capabilities supportedCapabilities) {
-        if (!supportedCapabilities.isEmpty()) {
+        if (!supportedCapabilities.isEmpty())
             capabilities.set(supportedCapabilities);
-        }
     }
 
 
