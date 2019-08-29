@@ -19,14 +19,13 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
-
-import bisq.core.arbitration.BuyerDataItem;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.arbitration.BuyerDataItem;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -179,7 +178,8 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
         selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(
                 signedWitnessService.getBuyerPaymentAccounts(
-                        datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000)));
+                        datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
+                        paymentMethodComboBox.getSelectionModel().getSelectedItem())));
 
         headLineLabel.setText(Res.get("popup.accountSigning.signAccounts.headline"));
         descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description",
