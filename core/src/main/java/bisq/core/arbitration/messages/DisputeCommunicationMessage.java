@@ -182,7 +182,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .setStoredInMailbox(storedInMailboxProperty.get())
                 .setIsSystemMessage(isSystemMessage)
                 .setUid(uid)
-                .setAcknowledged(acknowledgedProperty.get());
+                .setAcknowledged(acknowledgedProperty.get())
+                .setWasDisplayed(wasDisplayed);
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
