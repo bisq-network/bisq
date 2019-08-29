@@ -35,25 +35,26 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 /* Makers are considered as servers and takers as clients for trader to trader chat
  * sessions. This is only to make it easier to understand who's who, there is no real
  * server/client relationship */
 public class TradeChatSession extends ChatSession {
     private static final Logger log = LoggerFactory.getLogger(TradeChatSession.class);
 
+    @Nullable
     private Trade trade;
     private boolean isClient;
     private boolean isBuyer;
     private TradeManager tradeManager;
     private ChatManager chatManager;
 
-    public TradeChatSession(
-            Trade trade,
-            boolean isClient,
-            boolean isBuyer,
-            TradeManager tradeManager,
-            ChatManager chatManager
-    ) {
+    public TradeChatSession(@Nullable Trade trade,
+                            boolean isClient,
+                            boolean isBuyer,
+                            TradeManager tradeManager,
+                            ChatManager chatManager) {
         super(DisputeCommunicationMessage.Type.TRADE);
         this.trade = trade;
         this.isClient = isClient;
@@ -118,10 +119,14 @@ public class TradeChatSession extends ChatSession {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade t = tradeOptional.get();
-            if (t.getContract() != null)
-                return isClient ?
-                        t.getContract().getMakerPubKeyRing() :
-                        t.getContract().getTakerPubKeyRing();
+            if (t.getContract() != null && t.getOffer() != null) {
+                if (t.getOffer().getOwnerPubKey().equals(tradeManager.getKeyRing().getPubKeyRing().getSignaturePubKey())) {
+                    // I am maker
+                    return t.getContract().getTakerPubKeyRing();
+                } else {
+                    return t.getContract().getMakerPubKeyRing();
+                }
+            }
         }
         return null;
     }
