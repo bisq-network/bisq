@@ -64,7 +64,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.Insets;
@@ -465,8 +464,8 @@ public class Chat extends AnchorPane {
                         boolean visible;
                         AwesomeIcon icon = null;
                         String text = null;
-                        statusIcon.setTextFill(Paint.valueOf("#0f87c3"));
-                        statusInfoLabel.setTextFill(Paint.valueOf("#0f87c3"));
+                        statusIcon.getStyleClass().add("status-icon");
+                        statusInfoLabel.getStyleClass().add("status-icon");
                         statusHBox.setOpacity(1);
                         log.debug("updateMsgState msg-{}, ack={}, arrived={}", message.getMessage(),
                                 message.acknowledgedProperty().get(), message.arrivedProperty().get());
@@ -479,8 +478,8 @@ public class Chat extends AnchorPane {
                             visible = true;
                             icon = AwesomeIcon.EXCLAMATION_SIGN;
                             text = Res.get("support.error", message.ackErrorProperty().get());
-                            statusIcon.setTextFill(Paint.valueOf("#dd0000"));
-                            statusInfoLabel.setTextFill(Paint.valueOf("#dd0000"));
+                            statusIcon.getStyleClass().add("error-text");
+                            statusInfoLabel.getStyleClass().add("error-text");
                         } else if (message.arrivedProperty().get()) {
                             visible = true;
                             icon = AwesomeIcon.OK;
