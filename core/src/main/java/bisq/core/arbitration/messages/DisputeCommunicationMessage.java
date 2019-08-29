@@ -65,12 +65,12 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         TRADE;
 
         public static DisputeCommunicationMessage.Type fromProto(
-                proto.DisputeCommunicationMessage.Type type) {
+                protobuf.DisputeCommunicationMessage.Type type) {
             return ProtoUtil.enumFromProto(DisputeCommunicationMessage.Type.class, type.name());
         }
 
-        public static proto.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
-            return proto.DisputeCommunicationMessage.Type.valueOf(type.name());
+        public static protobuf.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
+            return protobuf.DisputeCommunicationMessage.Type.valueOf(type.name());
         }
     }
 
@@ -160,10 +160,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     @Override
-    public proto.NetworkEnvelope toProtoNetworkEnvelope() {
-        proto.DisputeCommunicationMessage.Builder builder = proto.DisputeCommunicationMessage.newBuilder()
-    public proto.NetworkEnvelope toProtoNetworkEnvelope() {
-        proto.DisputeCommunicationMessage.Builder builder = proto.DisputeCommunicationMessage.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
                 .setType(DisputeCommunicationMessage.Type.toProtoMessage(type))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
@@ -184,33 +182,34 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto, int messageVersion) {
+    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage protobuf,
+                                                        int messageVersion) {
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                DisputeCommunicationMessage.Type.fromProto(proto.getType()),
-                proto.getTradeId(),
-                proto.getTraderId(),
-                proto.getSenderIsTrader(),
-                proto.getMessage(),
-                new ArrayList<>(proto.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList())),
-                NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getDate(),
-                proto.getArrived(),
-                proto.getStoredInMailbox(),
-                proto.getUid(),
+                DisputeCommunicationMessage.Type.fromProto(protobuf.getType()),
+                protobuf.getTradeId(),
+                protobuf.getTraderId(),
+                protobuf.getSenderIsTrader(),
+                protobuf.getMessage(),
+                new ArrayList<>(protobuf.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList())),
+                NodeAddress.fromProto(protobuf.getSenderNodeAddress()),
+                protobuf.getDate(),
+                protobuf.getArrived(),
+                protobuf.getStoredInMailbox(),
+                protobuf.getUid(),
                 messageVersion,
-                proto.getAcknowledged(),
-                proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
-                proto.getAckError().isEmpty() ? null : proto.getAckError());
-        disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
+                protobuf.getAcknowledged(),
+                protobuf.getSendMessageError().isEmpty() ? null : protobuf.getSendMessageError(),
+                protobuf.getAckError().isEmpty() ? null : protobuf.getAckError());
+        disputeCommunicationMessage.setSystemMessage(protobuf.getIsSystemMessage());
         return disputeCommunicationMessage;
     }
 
-    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
+    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage protobuf) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence
         // We set the value to -1 to indicate it is set but irrelevant
-        return fromProto(proto, -1);
+        return fromProto(protobuf, -1);
     }
 
 
