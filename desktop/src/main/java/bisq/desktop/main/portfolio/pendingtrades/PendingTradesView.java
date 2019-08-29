@@ -77,11 +77,14 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 @FxmlView
 public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTradesViewModel> {
@@ -103,6 +106,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Subscription selectedTableItemSubscription;
     private Subscription selectedItemSubscription;
     private Stage chatPopupStage;
+    private ListChangeListener<PendingTradesListItem> tradesListChangeListener;
+    private Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +204,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .show();
             }
         };
+
+        tradesListChangeListener = c -> updateNewChatMessagesByTradeMap();
     }
 
     @Override
@@ -260,6 +267,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 });
 
         updateTableSelection();
+
+        model.dataModel.list.addListener(tradesListChangeListener);
+        updateNewChatMessagesByTradeMap();
     }
 
     @Override
@@ -269,6 +279,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         selectedTableItemSubscription.unsubscribe();
 
         removeSelectedSubView();
+
+        model.dataModel.list.removeListener(tradesListChangeListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
@@ -280,6 +292,84 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             root.getChildren().remove(selectedSubView);
             selectedSubView = null;
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Chat
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void updateNewChatMessagesByTradeMap() {
+        model.dataModel.list.forEach(t -> {
+            Trade trade = t.getTrade();
+            newChatMessagesByTradeMap.put(trade.getId(),
+                    trade.getCommunicationMessages().stream().filter(m -> !m.isWasDisplayed()).count());
+        });
+
+        log.error(newChatMessagesByTradeMap.toString());
+    }
+
+    private void openChat(Trade trade) {
+        if (chatPopupStage != null)
+            chatPopupStage.close();
+
+        Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
+        tradeChat.setAllowAttachments(false);
+        tradeChat.setDisplayHeader(false);
+        tradeChat.initialize();
+
+        trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+        trade.persist();
+
+        AnchorPane pane = new AnchorPane(tradeChat);
+        pane.setPrefSize(600, 400);
+        AnchorPane.setLeftAnchor(tradeChat, 10d);
+        AnchorPane.setRightAnchor(tradeChat, 10d);
+        AnchorPane.setTopAnchor(tradeChat, -20d);
+        AnchorPane.setBottomAnchor(tradeChat, 10d);
+
+        boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
+        boolean isBuyer = model.dataModel.isBuyer();
+        tradeChat.display(new TradeChatSession(trade, isTaker, isBuyer,
+                        model.dataModel.tradeManager,
+                        model.dataModel.tradeManager.getChatManager()),
+                null,
+                pane.widthProperty());
+
+        tradeChat.activate();
+        tradeChat.scrollToBottom();
+
+        chatPopupStage = new Stage();
+        chatPopupStage.setTitle(Res.get("portfolio.pending.chatWindowTitle", trade.getShortId()));
+        StackPane owner = MainView.getRootContainer();
+        Scene rootScene = owner.getScene();
+        chatPopupStage.initOwner(rootScene.getWindow());
+        chatPopupStage.initModality(Modality.NONE);
+        chatPopupStage.initStyle(StageStyle.DECORATED);
+        chatPopupStage.setOnHiding(event -> tradeChat.deactivate());
+
+        Scene scene = new Scene(pane);
+        scene.getStylesheets().setAll("/bisq/desktop/theme-light.css",
+                "/bisq/desktop/bisq.css",
+                "/bisq/desktop/images.css");
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, ev -> {
+            if (ev.getCode() == KeyCode.ESCAPE) {
+                ev.consume();
+                chatPopupStage.hide();
+            }
+        });
+        chatPopupStage.setScene(scene);
+
+        chatPopupStage.setOpacity(0);
+        chatPopupStage.show();
+
+        Window rootSceneWindow = rootScene.getWindow();
+        double titleBarHeight = rootSceneWindow.getHeight() - rootScene.getHeight();
+        chatPopupStage.setX(Math.round(rootSceneWindow.getX() + (owner.getWidth() - chatPopupStage.getWidth() / 4 * 3)));
+        chatPopupStage.setY(Math.round(rootSceneWindow.getY() + titleBarHeight + (owner.getHeight() - chatPopupStage.getHeight() / 4 * 3)));
+
+        // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
+        // and after a short moment in the correct position
+        UserThread.execute(() -> chatPopupStage.setOpacity(1));
     }
 
 
@@ -560,67 +650,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     }
                 });
         return chatColumn;
-    }
-
-    private void openChat(Trade trade) {
-        if (chatPopupStage != null)
-            chatPopupStage.close();
-
-        Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
-        tradeChat.setAllowAttachments(false);
-        tradeChat.setDisplayHeader(false);
-        tradeChat.initialize();
-
-        AnchorPane pane = new AnchorPane(tradeChat);
-        pane.setPrefSize(600, 400);
-        AnchorPane.setLeftAnchor(tradeChat, 10d);
-        AnchorPane.setRightAnchor(tradeChat, 10d);
-        AnchorPane.setTopAnchor(tradeChat, -20d);
-        AnchorPane.setBottomAnchor(tradeChat, 10d);
-
-        boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
-        boolean isBuyer = model.dataModel.isBuyer();
-        tradeChat.display(new TradeChatSession(trade, isTaker, isBuyer,
-                        model.dataModel.tradeManager,
-                        model.dataModel.tradeManager.getChatManager()),
-                null,
-                pane.widthProperty());
-
-        tradeChat.activate();
-        tradeChat.scrollToBottom();
-
-        chatPopupStage = new Stage();
-        chatPopupStage.setTitle(Res.get("portfolio.pending.chatWindowTitle", trade.getShortId()));
-        StackPane owner = MainView.getRootContainer();
-        Scene rootScene = owner.getScene();
-        chatPopupStage.initOwner(rootScene.getWindow());
-        chatPopupStage.initModality(Modality.NONE);
-        chatPopupStage.initStyle(StageStyle.DECORATED);
-        chatPopupStage.setOnHiding(event -> tradeChat.deactivate());
-
-        Scene scene = new Scene(pane);
-        scene.getStylesheets().setAll(
-                "/bisq/desktop/bisq.css",
-                "/bisq/desktop/images.css");
-        scene.addEventHandler(KeyEvent.KEY_RELEASED, ev -> {
-            if (ev.getCode() == KeyCode.ESCAPE) {
-                ev.consume();
-                chatPopupStage.hide();
-            }
-        });
-        chatPopupStage.setScene(scene);
-
-        chatPopupStage.setOpacity(0);
-        chatPopupStage.show();
-
-        Window rootSceneWindow = rootScene.getWindow();
-        double titleBarHeight = rootSceneWindow.getHeight() - rootScene.getHeight();
-        chatPopupStage.setX(Math.round(rootSceneWindow.getX() + (owner.getWidth() - chatPopupStage.getWidth() / 4 * 3)));
-        chatPopupStage.setY(Math.round(rootSceneWindow.getY() + titleBarHeight + (owner.getHeight() - chatPopupStage.getHeight() / 4 * 3)));
-
-        // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
-        // and after a short moment in the correct position
-        UserThread.execute(() -> chatPopupStage.setOpacity(1));
     }
 }
 

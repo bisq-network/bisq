@@ -17,7 +17,6 @@
 
 package bisq.core.chat;
 
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.arbitration.messages.DisputeMessage;
 import bisq.core.btc.setup.WalletsSetup;
@@ -47,7 +46,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class ChatManager {
-    private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ChatManager.class);
 
     @Getter
     private final P2PService p2PService;

@@ -92,6 +92,10 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Setter
     private boolean isSystemMessage;
 
+    // Added in v1.1.6.
+    @Setter
+    private boolean wasDisplayed;
+
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
     private final BooleanProperty acknowledgedProperty;
@@ -120,7 +124,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 Version.getP2PMessageVersion(),
                 false,
                 null,
-                null);
+                null,
+                false);
     }
 
 
@@ -142,13 +147,15 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                         int messageVersion,
                                         boolean acknowledged,
                                         @Nullable String sendMessageError,
-                                        @Nullable String ackError) {
+                                        @Nullable String ackError,
+                                        boolean wasDisplayed) {
         super(messageVersion, uid);
         this.type = type;
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
+        this.wasDisplayed = wasDisplayed;
         Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         this.senderNodeAddress = senderNodeAddress;
         this.date = date;
@@ -203,7 +210,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 messageVersion,
                 proto.getAcknowledged(),
                 proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
-                proto.getAckError().isEmpty() ? null : proto.getAckError());
+                proto.getAckError().isEmpty() ? null : proto.getAckError(),
+                proto.getWasDisplayed());
         disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
         return disputeCommunicationMessage;
     }

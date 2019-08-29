@@ -301,6 +301,7 @@ message DisputeCommunicationMessage {
     bool acknowledged = 13;
     string ack_error = 14;
     Type type = 15;
+    bool was_displayed = 16;
 }
 
 message DisputeResultMessage {

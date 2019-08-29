@@ -17,7 +17,6 @@
 
 package bisq.core.trade;
 
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.arbitration.messages.DisputeMessage;
 import bisq.core.chat.ChatManager;
@@ -40,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * sessions. This is only to make it easier to understand who's who, there is no real
  * server/client relationship */
 public class TradeChatSession extends ChatSession {
-    private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
+    private static final Logger log = LoggerFactory.getLogger(TradeChatSession.class);
 
     private Trade trade;
     private boolean isClient;
@@ -159,11 +158,12 @@ public class TradeChatSession extends ChatSession {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             if (tradeOptional.get().getCommunicationMessages().stream()
-                    .noneMatch(m -> m.getUid().equals(message.getUid())))
+                    .noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 tradeOptional.get().addCommunicationMessage(message);
-            else
+            } else {
                 log.warn("Trade got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
+            }
         }
     }
 }

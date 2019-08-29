@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 
 public class DisputeChatSession extends ChatSession {
-    private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
+    private static final Logger log = LoggerFactory.getLogger(DisputeChatSession.class);
 
     private Dispute dispute;
     private DisputeManager disputeManager;
