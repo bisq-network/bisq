@@ -250,6 +250,8 @@ public class TradeManager implements PersistedDataHost {
                     log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
+
+        chatManager.onAllServicesInitialized();
     }
 
     public void shutDown() {

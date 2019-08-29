@@ -82,11 +82,11 @@ public class ChatManager {
     }
 
     public void tryApplyMessages() {
-        if (isReadyForTxBroadcast())
+        if (isReady())
             applyMessages();
     }
 
-    private boolean isReadyForTxBroadcast() {
+    private boolean isReady() {
         return allServicesInitialized &&
                 p2PService.isBootstrapped() &&
                 walletsSetup.isDownloadComplete() &&
