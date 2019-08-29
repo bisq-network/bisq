@@ -86,6 +86,7 @@ public class BitcoinModule extends AppModule {
         bindConstant().annotatedWith(named(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_ALL_PROVIDED_NODES)).to(environment.getRequiredProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES));
         bindConstant().annotatedWith(named(BtcOptionKeys.USE_TOR_FOR_BTC)).to(environment.getRequiredProperty(BtcOptionKeys.USE_TOR_FOR_BTC));
+        bindConstant().annotatedWith(named(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE)).to(environment.getRequiredProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE));
         String socks5DiscoverMode = environment.getProperty(BtcOptionKeys.SOCKS5_DISCOVER_MODE, String.class, "ALL");
         bind(String.class).annotatedWith(Names.named(BtcOptionKeys.SOCKS5_DISCOVER_MODE)).toInstance(socks5DiscoverMode);
         bindConstant().annotatedWith(named(AppOptionKeys.PROVIDERS)).to(environment.getRequiredProperty(AppOptionKeys.PROVIDERS));

@@ -20,12 +20,12 @@ package bisq.desktop.main.account.content.fiataccounts;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.TradeManager;
@@ -33,6 +33,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
 
@@ -58,6 +59,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "FiatPaymentAccounts";
     private final PersistenceProtoResolver persistenceProtoResolver;
+    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
 
     @Inject
     public FiatAccountsDataModel(User user,
@@ -65,13 +67,15 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                                  OpenOfferManager openOfferManager,
                                  TradeManager tradeManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 PersistenceProtoResolver persistenceProtoResolver) {
+                                 PersistenceProtoResolver persistenceProtoResolver,
+                                 CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
+        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -147,11 +151,11 @@ class FiatAccountsDataModel extends ActivatableDataModel {
             ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
                     .collect(Collectors.toList()));
-            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
+            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
         }
     }
 
     public void importAccounts(Stage stage) {
-        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver);
+        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
     }
 }

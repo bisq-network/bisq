@@ -20,8 +20,6 @@ package bisq.core.dao.governance.myvote;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistableList;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.ArrayList;
@@ -47,15 +45,15 @@ public class MyVoteList extends PersistableList<MyVote> {
 
     @Override
     public Message toProtoMessage() {
-        return PB.PersistableEnvelope.newBuilder()
-                .setMyVoteList(PB.MyVoteList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
+                .setMyVoteList(protobuf.MyVoteList.newBuilder()
                         .addAllMyVote(getList().stream()
                                 .map(MyVote::toProtoMessage)
                                 .collect(Collectors.toList())))
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.MyVoteList proto) {
+    public static PersistableEnvelope fromProto(protobuf.MyVoteList proto) {
         return new MyVoteList(new ArrayList<>(proto.getMyVoteList().stream()
                 .map(MyVote::fromProto)
                 .collect(Collectors.toList())));

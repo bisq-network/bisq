@@ -60,8 +60,6 @@ import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import javax.inject.Inject;
@@ -74,6 +72,8 @@ import org.bouncycastle.util.encoders.Hex;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
+
+import java.time.Clock;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -120,7 +120,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();
-
+    private final Clock clock;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -132,11 +132,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           AppendOnlyDataStoreService appendOnlyDataStoreService,
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
-                          Storage<SequenceNumberMap> sequenceNumberMapStorage) {
+                          Storage<SequenceNumberMap> sequenceNumberMapStorage,
+                          Clock clock) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
+        this.clock = clock;
+
 
         networkNode.addMessageListener(this);
         networkNode.addConnectionListener(this);
@@ -195,9 +198,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         }
                     });
 
-            toRemoveSet.forEach(
-                    protectedDataToRemove -> hashMapChangedListeners.forEach(
-                            listener -> listener.onRemoved(protectedDataToRemove)));
+            // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
+            // about start and end of iteration.
+            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
+            toRemoveSet.forEach(protectedStorageEntry -> {
+                hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
+                removeFromProtectedDataStore(protectedStorageEntry);
+            });
+            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
 
             if (sequenceNumberMap.size() > 1000)
                 sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
@@ -311,7 +319,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             final ByteArray hashAsByteArray = new ByteArray(hash);
             boolean containsKey = getAppendOnlyDataStoreMap().containsKey(hashAsByteArray);
             if (!containsKey || reBroadcast) {
-                if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance()) {
+                if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance(clock)) {
                     if (!containsKey) {
                         appendOnlyDataStoreService.put(hashAsByteArray, payload);
                         appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
@@ -329,6 +337,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 log.trace("We have that payload already in our map.");
                 return false;
             }
+        } else {
+            log.warn("We got a hash exceeding our permitted size");
+            return false;
+        }
+    }
+
+    // When we receive initial data we skip several checks to improve performance. We requested only missing entries so we
+    // do not need to check again if the item is contained in the map, which is a bit slow as the map can be very large.
+    // Overwriting an entry would be also no issue. We also skip notifying listeners as we get called before the domain
+    // is ready so no listeners are set anyway. We might get called twice from a redundant call later, so listeners
+    // might be added then but as we have the data already added calling them would be irrelevant as well.
+    // TODO find a way to avoid the second call...
+    public boolean addPersistableNetworkPayloadFromInitialRequest(PersistableNetworkPayload payload) {
+        final byte[] hash = payload.getHash();
+        if (payload.verifyHashSize()) {
+            final ByteArray hashAsByteArray = new ByteArray(hash);
+            appendOnlyDataStoreService.put(hashAsByteArray, payload);
+            return true;
         } else {
             log.warn("We got a hash exceeding our permitted size");
             return false;
@@ -459,19 +485,24 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
 
-            if (protectedStoragePayload instanceof PersistablePayload) {
-                ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
-                ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
-                if (previous != null) {
-                    protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
-                } else {
-                    log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
-                }
-            }
+            removeFromProtectedDataStore(protectedStorageEntry);
         } else {
             log.debug("remove failed");
         }
         return result;
+    }
+
+    private void removeFromProtectedDataStore(ProtectedStorageEntry protectedStorageEntry) {
+        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+        if (protectedStoragePayload instanceof PersistablePayload) {
+            ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
+            ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
+            if (previous != null) {
+                protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
+            } else {
+                log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
+            }
+        }
     }
 
     @SuppressWarnings("UnusedReturnValue")
@@ -801,8 +832,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // Used only for calculating hash of byte array from PB object
         @Override
         public com.google.protobuf.Message toProtoMessage() {
-            return PB.DataAndSeqNrPair.newBuilder()
-                    .setPayload((PB.StoragePayload) protectedStoragePayload.toProtoMessage())
+            return protobuf.DataAndSeqNrPair.newBuilder()
+                    .setPayload((protobuf.StoragePayload) protectedStoragePayload.toProtoMessage())
                     .setSequenceNumber(sequenceNumber)
                     .build();
         }
@@ -839,11 +870,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         @Override
-        public PB.ByteArray toProtoMessage() {
-            return PB.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
+        public protobuf.ByteArray toProtoMessage() {
+            return protobuf.ByteArray.newBuilder().setBytes(ByteString.copyFrom(bytes)).build();
         }
 
-        public static ByteArray fromProto(PB.ByteArray proto) {
+        public static ByteArray fromProto(protobuf.ByteArray proto) {
             return new ByteArray(proto.getBytes().toByteArray());
         }
 
@@ -876,11 +907,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         @Override
-        public PB.MapValue toProtoMessage() {
-            return PB.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
+        public protobuf.MapValue toProtoMessage() {
+            return protobuf.MapValue.newBuilder().setSequenceNr(sequenceNr).setTimeStamp(timeStamp).build();
         }
 
-        public static MapValue fromProto(PB.MapValue proto) {
+        public static MapValue fromProto(protobuf.MapValue proto) {
             return new MapValue(proto.getSequenceNr(), proto.getTimeStamp());
         }
     }

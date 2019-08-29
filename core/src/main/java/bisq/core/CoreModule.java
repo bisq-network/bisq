@@ -19,53 +19,35 @@ package bisq.core;
 
 import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.app.BisqSetup;
-import bisq.core.app.P2PNetworkSetup;
-import bisq.core.app.TorSetup;
-import bisq.core.app.WalletAppSetup;
 import bisq.core.arbitration.ArbitratorModule;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
-import bisq.core.notifications.MobileMessageEncryption;
-import bisq.core.notifications.MobileModel;
-import bisq.core.notifications.MobileNotificationService;
-import bisq.core.notifications.MobileNotificationValidator;
-import bisq.core.notifications.alerts.DisputeMsgEvents;
-import bisq.core.notifications.alerts.MyOfferTakenEvents;
-import bisq.core.notifications.alerts.TradeEvents;
-import bisq.core.notifications.alerts.market.MarketAlerts;
-import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OfferModule;
-import bisq.core.payment.TradeLimits;
 import bisq.core.presentation.CorePresentationModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.trade.TradeModule;
 import bisq.core.user.Preferences;
-import bisq.core.user.User;
 
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.Clock;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
-import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import org.springframework.core.env.Environment;
 
-import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 
 import java.io.File;
@@ -80,25 +62,11 @@ public class CoreModule extends AppModule {
 
     @Override
     protected void configure() {
-        bind(BisqSetup.class).in(Singleton.class);
-        bind(TorSetup.class).in(Singleton.class);
-        bind(P2PNetworkSetup.class).in(Singleton.class);
-        bind(WalletAppSetup.class).in(Singleton.class);
-
         bind(BisqEnvironment.class).toInstance((BisqEnvironment) environment);
 
-        bind(TradeLimits.class).in(Singleton.class);
+        bind(BridgeAddressProvider.class).to(Preferences.class);
 
-        bind(KeyStorage.class).in(Singleton.class);
-        bind(KeyRing.class).in(Singleton.class);
-        bind(User.class).in(Singleton.class);
-        bind(Clock.class).in(Singleton.class);
-        bind(Preferences.class).in(Singleton.class);
-        bind(BridgeAddressProvider.class).to(Preferences.class).in(Singleton.class);
-        bind(CorruptedDatabaseFilesHandler.class).in(Singleton.class);
-        bind(AvoidStandbyModeService.class).in(Singleton.class);
-
-        bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
+        bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
 
         File storageDir = new File(environment.getRequiredProperty(Storage.STORAGE_DIR));
         bind(File.class).annotatedWith(named(Storage.STORAGE_DIR)).toInstance(storageDir);
@@ -106,8 +74,8 @@ public class CoreModule extends AppModule {
         File keyStorageDir = new File(environment.getRequiredProperty(KeyStorage.KEY_STORAGE_DIR));
         bind(File.class).annotatedWith(named(KeyStorage.KEY_STORAGE_DIR)).toInstance(keyStorageDir);
 
-        bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class).in(Singleton.class);
-        bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class).in(Singleton.class);
+        bind(NetworkProtoResolver.class).to(CoreNetworkProtoResolver.class);
+        bind(PersistenceProtoResolver.class).to(CorePersistenceProtoResolver.class);
 
         Boolean useDevPrivilegeKeys = environment.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, Boolean.class, false);
         bind(boolean.class).annotatedWith(Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)).toInstance(useDevPrivilegeKeys);
@@ -118,15 +86,6 @@ public class CoreModule extends AppModule {
         String referralId = environment.getProperty(AppOptionKeys.REFERRAL_ID, String.class, "");
         bind(String.class).annotatedWith(Names.named(AppOptionKeys.REFERRAL_ID)).toInstance(referralId);
 
-        bind(MobileNotificationService.class).in(Singleton.class);
-        bind(MobileMessageEncryption.class).in(Singleton.class);
-        bind(MobileNotificationValidator.class).in(Singleton.class);
-        bind(MobileModel.class).in(Singleton.class);
-        bind(MyOfferTakenEvents.class).in(Singleton.class);
-        bind(TradeEvents.class).in(Singleton.class);
-        bind(DisputeMsgEvents.class).in(Singleton.class);
-        bind(PriceAlert.class).in(Singleton.class);
-        bind(MarketAlerts.class).in(Singleton.class);
 
         // ordering is used for shut down sequence
         install(tradeModule());
@@ -139,6 +98,7 @@ public class CoreModule extends AppModule {
         install(alertModule());
         install(filterModule());
         install(corePresentationModule());
+        bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
     }
 
     private TradeModule tradeModule() {

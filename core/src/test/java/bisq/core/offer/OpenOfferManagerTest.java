@@ -1,20 +1,19 @@
 package bisq.core.offer;
 
+import bisq.core.trade.TradableList;
+
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static bisq.core.offer.OfferMaker.btcUsdOffer;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
@@ -22,10 +21,14 @@ import static junit.framework.TestCase.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({P2PService.class, PeerManager.class, OfferBookService.class, Storage.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class OpenOfferManagerTest {
+
+    private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
+
+    @Before
+    public void setUp() throws Exception {
+        corruptedDatabaseFilesHandler = mock(CorruptedDatabaseFilesHandler.class);
+    }
 
     @Test
     public void testStartEditOfferForActiveOffer() {
@@ -36,8 +39,8 @@ public class OpenOfferManagerTest {
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
-                null, null, null, null,
-                null, null, null);
+                null, null, null,
+                null, null, new Storage<TradableList<OpenOffer>>(null, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -71,8 +74,8 @@ public class OpenOfferManagerTest {
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
-                null, null, null, null,
-                null, null, null);
+                null, null, null,
+                null, null, new Storage<TradableList<OpenOffer>>(null, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -98,8 +101,8 @@ public class OpenOfferManagerTest {
 
         final OpenOfferManager manager = new OpenOfferManager(null, null, p2PService,
                 null, null, null, offerBookService,
-                null, null, null, null,
-                null, null, null);
+                null, null, null,
+                null, null, new Storage<TradableList<OpenOffer>>(null, null, corruptedDatabaseFilesHandler));
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 

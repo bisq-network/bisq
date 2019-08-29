@@ -179,7 +179,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tupleSell.second.setUserData(OfferPayload.Direction.SELL.name());
         bottomHBox.getChildren().addAll(tupleBuy.second, tupleSell.second);
 
-
         root.getChildren().addAll(currencyComboBoxTuple.first, chartPane, bottomHBox);
     }
 
@@ -215,6 +214,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     volumeColumnLabel.set(Res.get("shared.amountWithCur", code));
                     xAxis.setTickLabelFormatter(new StringConverter<>() {
                         int cryptoPrecision = 3;
+
                         @Override
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
@@ -374,17 +374,20 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         final Supplier<Optional<? extends XYChart.Data>> optionalMinSupplier = () ->
                 Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE));
 
+        // Hide buy offers that are more than a factor 5 higher than the lowest buy offer
         final Optional<XYChart.Data> buyMaxOptional = model.getBuyData().stream()
+                .filter(o -> (double) o.getXValue() < (double) buyMinOptional.get().getXValue() * 3)
                 .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
                 .or(optionalMinSupplier);
-
-        final Optional<XYChart.Data> sellMinOptional = model.getSellData().stream()
-                .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(optionalMaxSupplier);
 
         final Optional<XYChart.Data> sellMaxOptional = model.getSellData().stream()
                 .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
                 .or(optionalMinSupplier);
+
+        final Optional<XYChart.Data> sellMinOptional = model.getSellData().stream()
+                .filter(o -> (double) o.getXValue() > (double) sellMaxOptional.get().getXValue() / 3)
+                .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
+                .or(optionalMaxSupplier);
 
         final double minValue = Double.min((double) buyMinOptional.get().getXValue(), (double) sellMinOptional.get().getXValue());
         final double maxValue = Double.max((double) buyMaxOptional.get().getXValue(), (double) sellMaxOptional.get().getXValue());

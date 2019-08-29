@@ -18,9 +18,11 @@
 package bisq.desktop.common.view;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.HashMap;
 
+@Singleton
 public class CachingViewLoader implements ViewLoader {
 
     private final HashMap<Object, View> cache = new HashMap<>();

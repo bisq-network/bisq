@@ -25,6 +25,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.collections.ListChangeListener;
 
@@ -33,6 +34,7 @@ import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class MyOfferTakenEvents {
     private final OpenOfferManager openOfferManager;
     private final MobileNotificationService mobileNotificationService;

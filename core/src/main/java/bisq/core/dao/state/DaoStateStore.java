@@ -22,8 +22,6 @@ import bisq.core.dao.state.model.DaoState;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import java.util.LinkedList;
@@ -59,17 +57,17 @@ public class DaoStateStore implements PersistableEnvelope {
 
     public Message toProtoMessage() {
         checkNotNull(daoState, "daoState must not be null when toProtoMessage is invoked");
-        PB.DaoStateStore.Builder builder = PB.DaoStateStore.newBuilder()
+        protobuf.DaoStateStore.Builder builder = protobuf.DaoStateStore.newBuilder()
                 .setDaoState(daoState.getBsqStateBuilder())
                 .addAllDaoStateHash(daoStateHashChain.stream()
                         .map(DaoStateHash::toProtoMessage)
                         .collect(Collectors.toList()));
-        return PB.PersistableEnvelope.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder()
                 .setDaoStateStore(builder)
                 .build();
     }
 
-    public static PersistableEnvelope fromProto(PB.DaoStateStore proto) {
+    public static PersistableEnvelope fromProto(protobuf.DaoStateStore proto) {
         LinkedList<DaoStateHash> daoStateHashList = proto.getDaoStateHashList().isEmpty() ?
                 new LinkedList<>() :
                 new LinkedList<>(proto.getDaoStateHashList().stream()

@@ -19,8 +19,6 @@ package bisq.core.notifications.alerts.price;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import lombok.Value;
 
 @Value
@@ -41,14 +39,14 @@ public class PriceAlertFilter implements PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PriceAlertFilter toProtoMessage() {
-        return PB.PriceAlertFilter.newBuilder()
+    public protobuf.PriceAlertFilter toProtoMessage() {
+        return protobuf.PriceAlertFilter.newBuilder()
                 .setCurrencyCode(currencyCode)
                 .setHigh(high)
                 .setLow(low).build();
     }
 
-    public static PriceAlertFilter fromProto(PB.PriceAlertFilter proto) {
+    public static PriceAlertFilter fromProto(protobuf.PriceAlertFilter proto) {
         return new PriceAlertFilter(proto.getCurrencyCode(), proto.getHigh(), proto.getLow());
     }
 }

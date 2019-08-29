@@ -20,7 +20,9 @@ package bisq.desktop.main.funds.transactions;
 import bisq.core.btc.wallet.BtcWalletService;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class DisplayedTransactionsFactory {
     private final BtcWalletService btcWalletService;
     private final TradableRepository tradableRepository;

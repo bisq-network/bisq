@@ -160,7 +160,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
         Tuple2<Long, Long> meritAndStakeTuple = daoFacade.getMeritAndStakeForProposal(proposal.getTxId());
         long merit = meritAndStakeTuple.first;
         long stake = meritAndStakeTuple.second;
-        proposalDisplay.applyBallotAndVoteWeight(ballot, merit, stake);
+        proposalDisplay.applyBallotAndVoteWeight(ballot, merit, stake, isVoteIncludedInResult);
 
         Region spacer = new Region();
         GridPane.setVgrow(spacer, Priority.ALWAYS);

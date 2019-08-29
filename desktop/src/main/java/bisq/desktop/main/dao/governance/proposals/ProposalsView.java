@@ -209,7 +209,10 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setPrefHeight(100);
         root.getScene().heightProperty().addListener(sceneHeightListener);
-        UserThread.execute(() -> updateTableHeight(root.getScene().getHeight()));
+        UserThread.execute(() -> {
+            if (root.getScene() != null)
+                updateTableHeight(root.getScene().getHeight());
+        });
 
         stakeInputTextField.textProperty().addListener(stakeListener);
         voteButton.setOnAction(e -> onVote());

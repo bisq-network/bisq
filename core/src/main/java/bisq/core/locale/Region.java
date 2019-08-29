@@ -19,8 +19,6 @@ package bisq.core.locale;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import lombok.EqualsAndHashCode;
@@ -42,10 +40,10 @@ public final class Region implements PersistablePayload {
 
     @Override
     public Message toProtoMessage() {
-        return PB.Region.newBuilder().setCode(code).setName(name).build();
+        return protobuf.Region.newBuilder().setCode(code).setName(name).build();
     }
 
-    public static Region fromProto(PB.Region proto) {
+    public static Region fromProto(protobuf.Region proto) {
         return new Region(proto.getCode(), proto.getName());
     }
 }

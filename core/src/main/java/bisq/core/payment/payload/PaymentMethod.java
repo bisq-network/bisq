@@ -22,8 +22,6 @@ import bisq.core.payment.TradeLimits;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.bitcoinj.core.Coin;
 
 import java.util.ArrayList;
@@ -53,8 +51,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
 
     // Default trade limits.
-    // We initialize very early before reading persisted data. We will apply later the limit from the DAO param
-    // but that can be only done after the dao is initialized. The default values will be used for deriving the
+    // We initialize very early before reading persisted data. We will apply later the limit from
+    // the DAO param (Param.MAX_TRADE_LIMIT) but that can be only done after the dao is initialized.
+    // The default values will be used for deriving the
     // risk factor so the relation between the risk categories stays the same as with the default values.
     // We must not change those values as it could lead to invalid offers if amount becomes lower then new trade limit.
     // Increasing might be ok, but needs more thought as well...
@@ -255,15 +254,15 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.PaymentMethod toProtoMessage() {
-        return PB.PaymentMethod.newBuilder()
+    public protobuf.PaymentMethod toProtoMessage() {
+        return protobuf.PaymentMethod.newBuilder()
                 .setId(id)
                 .setMaxTradePeriod(maxTradePeriod)
                 .setMaxTradeLimit(maxTradeLimit)
                 .build();
     }
 
-    public static PaymentMethod fromProto(PB.PaymentMethod proto) {
+    public static PaymentMethod fromProto(protobuf.PaymentMethod proto) {
         return new PaymentMethod(proto.getId(),
                 proto.getMaxTradePeriod(),
                 Coin.valueOf(proto.getMaxTradeLimit()));
@@ -322,6 +321,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             return false;
 
         String id = paymentMethod.getId();
+        return hasChargebackRisk(id);
+    }
+
+    public static boolean hasChargebackRisk(String id) {
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
                 id.equals(PaymentMethod.INTERAC_E_TRANSFER_ID) ||

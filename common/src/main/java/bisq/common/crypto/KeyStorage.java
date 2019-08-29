@@ -22,6 +22,7 @@ import bisq.common.storage.FileUtil;
 import com.google.inject.Inject;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.bouncycastle.openpgp.PGPKeyPair;
 
@@ -56,6 +57,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 // TODO: use a password protection for key storage
+@Singleton
 public class KeyStorage {
     private static final Logger log = LoggerFactory.getLogger(KeyStorage.class);
 
@@ -97,6 +99,7 @@ public class KeyStorage {
 
     @Inject
     public KeyStorage(@Named(KEY_STORAGE_DIR) File storageDir) {
+        storageDir.mkdirs();
         this.storageDir = storageDir;
     }
 

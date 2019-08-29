@@ -17,6 +17,8 @@
 
 package bisq.core.app;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
 import bisq.core.alert.PrivateNotificationManager;
@@ -41,7 +43,6 @@ import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
@@ -58,7 +59,7 @@ import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -72,6 +73,7 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.net.InetAddresses;
 
@@ -109,6 +111,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
+@Singleton
 public class BisqSetup {
     public interface BisqSetupCompleteListener {
         void onSetupComplete();
@@ -134,13 +137,14 @@ public class BisqSetup {
     private final PrivateNotificationManager privateNotificationManager;
     private final FilterManager filterManager;
     private final TradeStatisticsManager tradeStatisticsManager;
-    private final Clock clock;
+    private final ClockWatcher clockWatcher;
     private final FeeService feeService;
     private final DaoSetup daoSetup;
     private final EncryptionService encryptionService;
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final SignedWitnessService signedWitnessService;
     private final MobileNotificationService mobileNotificationService;
     private final MyOfferTakenEvents myOfferTakenEvents;
     private final TradeEvents tradeEvents;
@@ -212,13 +216,14 @@ public class BisqSetup {
                      PrivateNotificationManager privateNotificationManager,
                      FilterManager filterManager,
                      TradeStatisticsManager tradeStatisticsManager,
-                     Clock clock,
+                     ClockWatcher clockWatcher,
                      FeeService feeService,
                      DaoSetup daoSetup,
                      EncryptionService encryptionService,
                      KeyRing keyRing,
                      BisqEnvironment bisqEnvironment,
                      AccountAgeWitnessService accountAgeWitnessService,
+                     SignedWitnessService signedWitnessService,
                      MobileNotificationService mobileNotificationService,
                      MyOfferTakenEvents myOfferTakenEvents,
                      TradeEvents tradeEvents,
@@ -252,13 +257,14 @@ public class BisqSetup {
         this.privateNotificationManager = privateNotificationManager;
         this.filterManager = filterManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
-        this.clock = clock;
+        this.clockWatcher = clockWatcher;
         this.feeService = feeService;
         this.daoSetup = daoSetup;
         this.encryptionService = encryptionService;
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.signedWitnessService = signedWitnessService;
         this.mobileNotificationService = mobileNotificationService;
         this.myOfferTakenEvents = myOfferTakenEvents;
         this.tradeEvents = tradeEvents;
@@ -418,7 +424,9 @@ public class BisqSetup {
 
     private void checkIfLocalHostNodeIsRunning() {
         // For DAO testnet we ignore local btc node
-        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() || BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet()) {
+        if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ||
+                BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ||
+                bisqEnvironment.getIgnoreLocalBtcNode()) {
             step3();
         } else {
             Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
@@ -597,7 +605,7 @@ public class BisqSetup {
     private void initDomainServices() {
         log.info("initDomainServices");
 
-        clock.start();
+        clockWatcher.start();
 
         tradeLimits.onAllServicesInitialized();
 
@@ -643,6 +651,7 @@ public class BisqSetup {
         assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
+        signedWitnessService.onAllServicesInitialized();
 
         priceFeedService.setCurrencyCodeOnInit();
 

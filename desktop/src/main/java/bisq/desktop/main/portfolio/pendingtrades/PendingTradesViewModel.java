@@ -21,10 +21,10 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -35,7 +35,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
@@ -89,7 +89,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     final AccountAgeWitnessService accountAgeWitnessService;
     public final P2PService p2PService;
     private final ClosedTradableManager closedTradableManager;
-    public final Clock clock;
+    public final ClockWatcher clockWatcher;
     @Getter
     private final User user;
 
@@ -113,7 +113,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                                   P2PService p2PService,
                                   ClosedTradableManager closedTradableManager,
                                   AccountAgeWitnessService accountAgeWitnessService,
-                                  Clock clock,
+                                  ClockWatcher clockWatcher,
                                   User user) {
         super(dataModel);
 
@@ -123,7 +123,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         this.p2PService = p2PService;
         this.closedTradableManager = closedTradableManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.clock = clock;
+        this.clockWatcher = clockWatcher;
         this.user = user;
     }
 

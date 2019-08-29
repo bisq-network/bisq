@@ -17,7 +17,6 @@
 
 package bisq.common.proto.persistable;
 
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.Message;
 
@@ -42,12 +41,12 @@ public class NavigationPath implements PersistableEnvelope {
 
     @Override
     public Message toProtoMessage() {
-        final PB.NavigationPath.Builder builder = PB.NavigationPath.newBuilder();
+        final protobuf.NavigationPath.Builder builder = protobuf.NavigationPath.newBuilder();
         if (!CollectionUtils.isEmpty(path)) builder.addAllPath(path);
-        return PB.PersistableEnvelope.newBuilder().setNavigationPath(builder).build();
+        return protobuf.PersistableEnvelope.newBuilder().setNavigationPath(builder).build();
     }
 
-    public static PersistableEnvelope fromProto(PB.NavigationPath proto) {
+    public static PersistableEnvelope fromProto(protobuf.NavigationPath proto) {
         return new NavigationPath(new ArrayList<>(proto.getPathList()));
     }
 }

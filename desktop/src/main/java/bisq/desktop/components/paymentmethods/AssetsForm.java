@@ -19,16 +19,17 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.NewBadge;
+import bisq.desktop.components.SearchComboBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
@@ -228,7 +229,7 @@ public class AssetsForm extends PaymentMethodForm {
         });
 
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager)));
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 15));
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
         currencyComboBox.setConverter(new StringConverter<TradeCurrency>() {
             @Override
             public String toString(TradeCurrency tradeCurrency) {
@@ -243,11 +244,10 @@ public class AssetsForm extends PaymentMethodForm {
                 return tradeCurrencyOptional.orElse(null);
             }
         });
-        currencyComboBox.setOnAction(e -> {
 
+        ((SearchComboBox) currencyComboBox).setOnChangeConfirmed(e -> {
             addressInputTextField.resetValidation();
             addressInputTextField.validate();
-
             paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
             updateFromInputs();
         });

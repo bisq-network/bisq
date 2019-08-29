@@ -1,10 +1,13 @@
 language: java
-jdk: openjdk10
+jdk:
+    - openjdk10
+    - openjdk12
+
 before_install:
-  grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
+    grep -v '^#' assets/src/main/resources/META-INF/services/bisq.asset.Asset | sort --check --dictionary-order --ignore-case
 notifications:
-  slack:
-    on_success: change
-    on_failure: always
-    rooms:
-      - secure: EzlqWTBuhb3FCfApjUXaShWgsWOVDwMXI7ISMiVBkcl2VFISYs/lc/7Qjr7rdy4iqQOQXMcUPHdwMUp0diX+GxiSjLARjUpKIvNOPswZWBL+3Z1h28jyOwtHRviZbM1EU0BZROrr+ODyTNz2lf+L1iXTkpSvk50o5JAnAkumsPw=
+    slack:
+        on_success: change
+        on_failure: always
+        rooms:
+            -   secure: EzlqWTBuhb3FCfApjUXaShWgsWOVDwMXI7ISMiVBkcl2VFISYs/lc/7Qjr7rdy4iqQOQXMcUPHdwMUp0diX+GxiSjLARjUpKIvNOPswZWBL+3Z1h28jyOwtHRviZbM1EU0BZROrr+ODyTNz2lf+L1iXTkpSvk50o5JAnAkumsPw=

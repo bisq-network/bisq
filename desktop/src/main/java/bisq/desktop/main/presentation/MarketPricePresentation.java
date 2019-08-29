@@ -35,6 +35,7 @@ import bisq.core.util.BSFormatter;
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -60,6 +61,7 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 
+@Singleton
 public class MarketPricePresentation {
     private final Preferences preferences;
     private final BSFormatter formatter;

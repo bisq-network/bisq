@@ -40,6 +40,10 @@
             <TableColumn fx:id="priceColumn" minWidth="100"/>
             <TableColumn fx:id="amountColumn" minWidth="130"/>
             <TableColumn fx:id="volumeColumn" minWidth="130"/>
+            <TableColumn fx:id="txFeeColumn" visible="false"/>
+            <TableColumn fx:id="makerFeeColumn" visible="false"/>
+            <TableColumn fx:id="buyerSecurityDepositColumn" visible="false"/>
+            <TableColumn fx:id="sellerSecurityDepositColumn" visible="false"/>
             <TableColumn fx:id="directionColumn" minWidth="80"/>
             <TableColumn fx:id="stateColumn" minWidth="80"/>
             <TableColumn fx:id="avatarColumn" minWidth="40" maxWidth="40"/>

@@ -20,6 +20,7 @@ package bisq.core.app;
 import bisq.core.user.Preferences;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
 
@@ -40,6 +41,7 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
 @Slf4j
+@Singleton
 public class AvoidStandbyModeService {
     private final Preferences preferences;
     private volatile boolean isStopped;

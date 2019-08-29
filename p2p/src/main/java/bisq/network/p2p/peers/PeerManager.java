@@ -29,19 +29,16 @@ import bisq.network.p2p.peers.peerexchange.Peer;
 import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
 import com.google.inject.name.Named;
 
 import javax.inject.Inject;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -84,7 +81,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private Set<Peer> latestLivePeers = new HashSet<>();
 
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -103,7 +99,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final NetworkNode networkNode;
-    private final Clock clock;
+    private final ClockWatcher clockWatcher;
 
     private int maxConnections;
     private final Set<NodeAddress> seedNodeAddresses;
@@ -111,7 +107,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     private final Storage<PeerList> storage;
     private final HashSet<Peer> persistedPeers = new HashSet<>();
     private final Set<Peer> reportedPeers = new HashSet<>();
-    private final Clock.Listener listener;
+    private final ClockWatcher.Listener listener;
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
     private Timer checkMaxConnectionsTimer;
     private boolean stopped;
@@ -132,21 +128,20 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     @Inject
     public PeerManager(NetworkNode networkNode,
                        SeedNodeRepository seedNodeRepository,
-                       Clock clock,
-                       PersistenceProtoResolver persistenceProtoResolver,
+                       ClockWatcher clockWatcher,
                        @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
-                       @Named(Storage.STORAGE_DIR) File storageDir) {
+                       Storage<PeerList> storage) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
-        this.clock = clock;
-        storage = new Storage<>(storageDir, persistenceProtoResolver);
+        this.clockWatcher = clockWatcher;
+        this.storage = storage;
 
         this.networkNode.addConnectionListener(this);
 
         setConnectionLimits(maxConnections);
 
         // we check if app was idle for more then 5 sec.
-        listener = new Clock.Listener() {
+        listener = new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
             }
@@ -162,12 +157,12 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 listeners.forEach(Listener::onAwakeFromStandby);
             }
         };
-        clock.addListener(listener);
+        clockWatcher.addListener(listener);
     }
 
     public void shutDown() {
         networkNode.removeConnectionListener(this);
-        clock.removeListener(listener);
+        clockWatcher.removeListener(listener);
         stopCheckMaxConnectionsTimer();
     }
 

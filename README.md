@@ -17,4 +17,4 @@ Follow the step-by-step instructions at https://bisq.network/get-started.
 
 ## Contribute to Bisq
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer docs](docs#readme).
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [developer docs](docs/README.md).

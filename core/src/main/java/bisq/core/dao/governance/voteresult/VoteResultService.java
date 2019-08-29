@@ -559,7 +559,9 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         evaluatedProposals.forEach(evaluatedProposal -> evaluatedProposalsByTxIdMap.put(evaluatedProposal.getProposalTxId(), evaluatedProposal));
 
         // Proposals which did not get any vote need to be set as failed.
+        // TODO We should not use proposalListPresentation here
         proposalListPresentation.getActiveOrMyUnconfirmedProposals().stream()
+                .filter(proposal -> periodService.isTxInCorrectCycle(proposal.getTxId(), chainHeight))
                 .filter(proposal -> !evaluatedProposalsByTxIdMap.containsKey(proposal.getTxId()))
                 .forEach(proposal -> {
                     ProposalVoteResult proposalVoteResult = new ProposalVoteResult(proposal, 0,

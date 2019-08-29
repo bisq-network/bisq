@@ -24,8 +24,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
 
-import io.bisq.generated.protobuffer.PB;
-
 import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
@@ -80,14 +78,14 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
     }
 
     @Override
-    public PB.Proposal.Builder getProposalBuilder() {
-        final PB.RemoveAssetProposal.Builder builder = PB.RemoveAssetProposal.newBuilder()
+    public protobuf.Proposal.Builder getProposalBuilder() {
+        final protobuf.RemoveAssetProposal.Builder builder = protobuf.RemoveAssetProposal.newBuilder()
                 .setTickerSymbol(tickerSymbol);
         return super.getProposalBuilder().setRemoveAssetProposal(builder);
     }
 
-    public static RemoveAssetProposal fromProto(PB.Proposal proto) {
-        final PB.RemoveAssetProposal proposalProto = proto.getRemoveAssetProposal();
+    public static RemoveAssetProposal fromProto(protobuf.Proposal proto) {
+        final protobuf.RemoveAssetProposal proposalProto = proto.getRemoveAssetProposal();
         return new RemoveAssetProposal(proto.getName(),
                 proto.getLink(),
                 proposalProto.getTickerSymbol(),

@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public abstract class StateInConflictListItem<T extends StateHash> {
     private final String peerAddress;
+    private final String peerAddressString;
     private final String height;
     private final String hash;
     private final String prevHash;
@@ -43,7 +44,8 @@ public abstract class StateInConflictListItem<T extends StateHash> {
     protected StateInConflictListItem(String peerAddress, T stateHash, int cycleIndex,
                                       Set<NodeAddress> seedNodeAddresses) {
         this.stateHash = stateHash;
-        this.peerAddress = seedNodeAddresses.stream().anyMatch(e -> e.getFullAddress().equals(peerAddress)) ?
+        this.peerAddress = peerAddress;
+        this.peerAddressString = seedNodeAddresses.stream().anyMatch(e -> e.getFullAddress().equals(peerAddress)) ?
                 Res.get("dao.monitor.table.seedPeers", peerAddress) :
                 peerAddress;
         height = Res.get("dao.monitor.table.cycleBlockHeight",

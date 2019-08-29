@@ -21,8 +21,6 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
@@ -63,17 +61,17 @@ public final class PrivateNotificationPayload implements NetworkPayload {
         sigPublicKey = Sig.getPublicKeyFromBytes(sigPublicKeyBytes);
     }
 
-    public static PrivateNotificationPayload fromProto(PB.PrivateNotificationPayload proto) {
+    public static PrivateNotificationPayload fromProto(protobuf.PrivateNotificationPayload proto) {
         return new PrivateNotificationPayload(proto.getMessage(),
                 proto.getSignatureAsBase64(),
                 proto.getSigPublicKeyBytes().toByteArray());
     }
 
     @Override
-    public PB.PrivateNotificationPayload toProtoMessage() {
+    public protobuf.PrivateNotificationPayload toProtoMessage() {
         checkNotNull(sigPublicKeyBytes, "sigPublicKeyBytes must not be null");
         checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
-        return PB.PrivateNotificationPayload.newBuilder()
+        return protobuf.PrivateNotificationPayload.newBuilder()
                 .setMessage(message)
                 .setSignatureAsBase64(signatureAsBase64)
                 .setSigPublicKeyBytes(ByteString.copyFrom(sigPublicKeyBytes))

@@ -17,10 +17,12 @@
 
 package bisq.core.dao.monitoring;
 
+import bisq.core.app.AppOptionKeys;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.monitoring.model.UtxoMismatch;
+import bisq.core.dao.monitoring.network.Checkpoint;
 import bisq.core.dao.monitoring.network.DaoStateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
@@ -37,14 +39,21 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.Hash;
+import bisq.common.storage.FileManager;
+import bisq.common.storage.Storage;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.lang3.ArrayUtils;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.io.File;
+
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -80,6 +89,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     public interface Listener {
         void onChangeAfterBatchProcessing();
+
+        void onCheckpointFail();
     }
 
     private final DaoStateService daoStateService;
@@ -101,6 +112,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
+    private List<Checkpoint> checkpoints = Arrays.asList(
+            new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
+    );
+    private boolean checkpointFailed;
+    private boolean ignoreDevMsg;
+
+    private final File storageDir;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -110,10 +128,14 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     public DaoStateMonitoringService(DaoStateService daoStateService,
                                      DaoStateNetworkService daoStateNetworkService,
                                      GenesisTxInfo genesisTxInfo,
-                                     SeedNodeRepository seedNodeRepository) {
+                                     SeedNodeRepository seedNodeRepository,
+                                     @Named(Storage.STORAGE_DIR) File storageDir,
+                                     @Named(AppOptionKeys.IGNORE_DEV_MSG_KEY) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
+        this.storageDir = storageDir;
+        this.ignoreDevMsg = ignoreDevMsg;
         seedNodeAddresses = seedNodeRepository.getSeedNodeAddresses().stream()
                 .map(NodeAddress::getFullAddress)
                 .collect(Collectors.toSet());
@@ -150,6 +172,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // We wait for processing messages until we have completed batch processing
         int fromHeight = daoStateService.getChainHeight() - 10;
         daoStateNetworkService.requestHashesFromAllConnectedSeedNodes(fromHeight);
+
+        if (!ignoreDevMsg) {
+            verifyCheckpoints();
+        }
     }
 
     @Override
@@ -166,6 +192,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
         }
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // StateNetworkService.Listener
@@ -291,7 +318,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
     }
 
-    private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
+    private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress,
+                                             boolean notifyListeners) {
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean inConflictWithNonSeedNode = new AtomicBoolean(this.isInConflictWithNonSeedNode);
         AtomicBoolean inConflictWithSeedNode = new AtomicBoolean(this.isInConflictWithSeedNode);
@@ -337,5 +365,50 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
 
         return changed.get();
+    }
+
+    private void verifyCheckpoints() {
+        // Checkpoint
+        checkpoints.forEach(checkpoint -> daoStateHashChain.stream()
+                .filter(daoStateHash -> daoStateHash.getHeight() == checkpoint.getHeight())
+                .findAny()
+                .ifPresent(daoStateHash -> {
+                    if (Arrays.equals(daoStateHash.getHash(), checkpoint.getHash())) {
+                        log.info("Passed checkpoint {}", checkpoint.toString());
+                    } else {
+                        if (checkpointFailed) {
+                            return;
+                        }
+                        checkpointFailed = true;
+                        try {
+                            // Delete state and stop
+                            removeFile("DaoStateStore");
+                            removeFile("BlindVoteStore");
+                            removeFile("ProposalStore");
+                            removeFile("TempProposalStore");
+
+                            listeners.forEach(Listener::onCheckpointFail);
+                            log.error("Failed checkpoint {}", checkpoint.toString());
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            log.error(t.toString());
+                        }
+                    }
+                }));
+    }
+
+    private void removeFile(String storeName) {
+        long currentTime = System.currentTimeMillis();
+        String newFileName = storeName + "_" + currentTime;
+        String backupDirName = "out_of_sync_dao_data";
+        File corrupted = new File(storageDir, storeName);
+        try {
+            if (corrupted.exists()) {
+                FileManager.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+            log.error(t.toString());
+        }
     }
 }

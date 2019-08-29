@@ -24,8 +24,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.storage.FileUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -132,8 +130,8 @@ public class EncryptionServiceTests {
         }
 
         @Override
-        public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-            return PB.NetworkEnvelope.newBuilder().setPing(PB.Ping.newBuilder().setNonce(nonce)).build();
+        public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+            return protobuf.NetworkEnvelope.newBuilder().setPing(protobuf.Ping.newBuilder().setNonce(nonce)).build();
         }
     }
 }

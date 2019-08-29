@@ -45,6 +45,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
@@ -98,6 +99,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     public void initialize() {
         tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.allBonds.header"), "last");
         tableView.setItems(sortedList);
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
         addColumns();
 
         bondedReputationListener = c -> updateList();

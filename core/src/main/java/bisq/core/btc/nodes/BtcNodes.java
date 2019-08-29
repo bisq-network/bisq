@@ -54,7 +54,7 @@ public class BtcNodes {
                         // emzy
                         new BtcNode("kirsche.emzy.de", "fz6nsij6jiyuwlsc.onion", "78.47.61.83", BtcNode.DEFAULT_PORT, "@emzy"),
                         new BtcNode("node2.emzy.de", "c6ac4jdfyeiakex2.onion", "62.75.210.81", BtcNode.DEFAULT_PORT, "@emzy"),
-                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "163.172.171.119", BtcNode.DEFAULT_PORT, "@emzy"),
+                        new BtcNode("node1.emzy.de", "sjyzmwwu6diiit3r.onion", "167.86.90.239", BtcNode.DEFAULT_PORT, "@emzy"),
                         new BtcNode(null, "3xucqntxp5ddoaz5.onion", null, BtcNode.DEFAULT_PORT, "@emzy"), // cannot provide IP because no static IP
 
                         // ripcurlx
@@ -76,6 +76,10 @@ public class BtcNodes {
 
                         // sgeisler
                         new BtcNode("bcwat.ch", "z33nukt7ngik3cpe.onion", "5.189.166.193", BtcNode.DEFAULT_PORT, "@sgeisler"),
+
+                        // wiz
+                        new BtcNode("node100.hnl.wiz.biz", "22tg6ufbwz6o3l2u.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node130.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
 
                         // others
                         new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke"),

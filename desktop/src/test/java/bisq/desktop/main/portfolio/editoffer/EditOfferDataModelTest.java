@@ -1,7 +1,9 @@
 package bisq.desktop.main.portfolio.editoffer;
 
+import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -11,7 +13,6 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -31,15 +32,10 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
 
 import static bisq.desktop.maker.OfferMaker.btcBCHCOffer;
 import static bisq.desktop.maker.PreferenceMakers.empty;
@@ -51,12 +47,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({BtcWalletService.class, AddressEntry.class, PriceFeedService.class, User.class,
-        FeeService.class, PaymentAccount.class, BsqWalletService.class,
-        SecurityDepositValidator.class, AccountAgeWitnessService.class, BsqFormatter.class, Preferences.class,
-        BsqWalletService.class})
-@PowerMockIgnore({"com.sun.org.apache.xerces.*", "javax.xml.*", "org.xml.*"})
 public class EditOfferDataModelTest {
 
     private EditOfferDataModel model;
@@ -103,7 +93,7 @@ public class EditOfferDataModelTest {
                 btcWalletService, bsqWalletService, empty, user,
                 null, null, priceFeedService, null,
                 accountAgeWitnessService, feeService, null, null,
-                null, null);
+                null, null, mock(MakerFeeProvider.class));
     }
 
     @Test

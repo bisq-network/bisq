@@ -25,8 +25,6 @@ import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -67,12 +65,12 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         TRADE;
 
         public static DisputeCommunicationMessage.Type fromProto(
-                PB.DisputeCommunicationMessage.Type type) {
+                proto.DisputeCommunicationMessage.Type type) {
             return ProtoUtil.enumFromProto(DisputeCommunicationMessage.Type.class, type.name());
         }
 
-        public static PB.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
-            return PB.DisputeCommunicationMessage.Type.valueOf(type.name());
+        public static proto.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
+            return proto.DisputeCommunicationMessage.Type.valueOf(type.name());
         }
     }
 
@@ -162,8 +160,10 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.DisputeCommunicationMessage.Builder builder = PB.DisputeCommunicationMessage.newBuilder()
+    public proto.NetworkEnvelope toProtoNetworkEnvelope() {
+        proto.DisputeCommunicationMessage.Builder builder = proto.DisputeCommunicationMessage.newBuilder()
+    public proto.NetworkEnvelope toProtoNetworkEnvelope() {
+        proto.DisputeCommunicationMessage.Builder builder = proto.DisputeCommunicationMessage.newBuilder()
                 .setType(DisputeCommunicationMessage.Type.toProtoMessage(type))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
@@ -184,7 +184,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(PB.DisputeCommunicationMessage proto, int messageVersion) {
+    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto, int messageVersion) {
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 DisputeCommunicationMessage.Type.fromProto(proto.getType()),
                 proto.getTradeId(),
@@ -205,7 +205,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         return disputeCommunicationMessage;
     }
 
-    public static DisputeCommunicationMessage fromPayloadProto(PB.DisputeCommunicationMessage proto) {
+    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence

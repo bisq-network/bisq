@@ -52,7 +52,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
@@ -61,8 +60,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -115,6 +112,7 @@ public class DisputeManager implements PersistedDataHost {
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
+    private boolean servicesInitialized;
 
     @Getter
     private final ChatManager chatManager;
@@ -132,8 +130,7 @@ public class DisputeManager implements PersistedDataHost {
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          PersistenceProtoResolver persistenceProtoResolver,
-                          @Named(Storage.STORAGE_DIR) File storageDir) {
+                          Storage<DisputeList> storage) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -146,7 +143,7 @@ public class DisputeManager implements PersistedDataHost {
         chatManager = new ChatManager(p2PService, walletsSetup);
         chatManager.setChatSession(new DisputeChatSession(null, this));
 
-        disputeStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        disputeStorage = storage;
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();
@@ -167,6 +164,7 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
+        servicesInitialized = true;
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {
@@ -195,7 +193,8 @@ public class DisputeManager implements PersistedDataHost {
         onDisputesChangeListener(disputes.getList(), null);
     }
 
-    private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
+    private void onDisputesChangeListener(List<? extends Dispute> addedList,
+                                          @Nullable List<? extends Dispute> removedList) {
         if (removedList != null) {
             removedList.forEach(dispute -> {
                 String id = dispute.getId();
@@ -339,7 +338,9 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     // arbitrator sends that to trading peer when he received openDispute request
-    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
+    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
+                                                Contract contractFromOpener,
+                                                PubKeyRing pubKeyRing) {
         Dispute dispute = new Dispute(
                 disputeStorage,
                 disputeFromOpener.getTradeId(),

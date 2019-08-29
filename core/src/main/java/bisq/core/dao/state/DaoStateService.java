@@ -306,9 +306,13 @@ public class DaoStateService implements DaoSetupService {
         return getBlockAtHeight(height).map(Block::getTime).orElse(0L);
     }
 
-    public List<Block> getBlocksFromBlockHeight(int fromBlockHeight) {
+    public List<Block> getBlocksFromBlockHeight(int fromBlockHeight, int numMaxBlocks) {
+        // We limit requests to numMaxBlocks blocks, to avoid performance issues and too
+        // large network data in case a node requests too far back in history.
         return getBlocks().stream()
                 .filter(block -> block.getHeight() >= fromBlockHeight)
+                .sorted(Comparator.comparing(Block::getHeight))
+                .limit(numMaxBlocks)
                 .collect(Collectors.toList());
     }
 

@@ -42,8 +42,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 
@@ -232,19 +230,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected void applyInjector() {
         setupDevEnv();
 
-        setCorruptedDataBaseFilesHandler();
-
         setupPersistedDataHosts(injector);
     }
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
         DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated(bisqEnvironment));
-    }
-
-    private void setCorruptedDataBaseFilesHandler() {
-        CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
-        Storage.setCorruptedDatabaseFilesHandler(corruptedDatabaseFilesHandler);
     }
 
     protected void setupPersistedDataHosts(Injector injector) {
@@ -501,6 +492,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 .withRequiredArg()
                 .describedAs("host");
 
+        parser.accepts(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE,
+                "If set to true a Bitcoin core node running locally will be ignored")
+                .withRequiredArg();
+
         parser.accepts(BtcOptionKeys.BTC_NODES,
                 "Custom nodes used for BitcoinJ as comma separated IP addresses.")
                 .withRequiredArg()
@@ -535,6 +530,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         parser.accepts(DaoOptionKeys.RPC_PASSWORD,
                 "Bitcoind rpc password")
+                .withRequiredArg();
+
+        parser.accepts(DaoOptionKeys.RPC_HOST,
+                "Bitcoind rpc host")
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.RPC_PORT,

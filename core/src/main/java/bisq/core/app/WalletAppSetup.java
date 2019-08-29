@@ -28,6 +28,7 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -50,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
+@Singleton
 public class WalletAppSetup {
     private final WalletsManager walletsManager;
     private final WalletsSetup walletsSetup;

@@ -18,11 +18,19 @@
 package bisq.asset.coins;
 
 import bisq.asset.Coin;
-import bisq.asset.DefaultAddressValidator;
+import bisq.asset.I18n;
+import bisq.asset.RegexAddressValidator;
 
 public class Namecoin extends Coin {
 
-    public Namecoin() {
-        super("Namecoin", "NMC", new DefaultAddressValidator());
+	public Namecoin() {
+		super("Namecoin", "NMC", new NmcAddressValidator());
+    }
+    
+    public static class NmcAddressValidator extends RegexAddressValidator {
+
+        public NmcAddressValidator() {
+            super("^[NM][a-zA-Z0-9]{33}$", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.NMC"));
+        }
     }
 }

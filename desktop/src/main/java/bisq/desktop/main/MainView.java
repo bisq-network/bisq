@@ -39,6 +39,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.util.Transitions;
 
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
@@ -104,7 +105,8 @@ import static javafx.scene.layout.AnchorPane.setTopAnchor;
 
 @FxmlView
 @Slf4j
-public class MainView extends InitializableView<StackPane, MainViewModel> {
+public class MainView extends InitializableView<StackPane, MainViewModel>
+        implements DaoStateMonitoringService.Listener {
     // If after 30 sec we have not got connected we show "open network settings" button
     private final static int SHOW_TOR_SETTINGS_DELAY_SEC = 90;
     private Label versionLabel;
@@ -150,18 +152,21 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
     private ProgressBar btcSyncIndicator, p2pNetworkProgressBar;
     private Label btcSplashInfo;
     private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private final DaoStateMonitoringService daoStateMonitoringService;
 
     @Inject
     public MainView(MainViewModel model,
                     CachingViewLoader viewLoader,
                     Navigation navigation,
                     Transitions transitions,
-                    BSFormatter formatter) {
+                    BSFormatter formatter,
+                    DaoStateMonitoringService daoStateMonitoringService) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.formatter = formatter;
         MainView.transitions = transitions;
+        this.daoStateMonitoringService = daoStateMonitoringService;
     }
 
     @Override
@@ -387,9 +392,31 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
             }
         });
 
+        daoStateMonitoringService.addListener(this);
+
         // Delay a bit to give time for rendering the splash screen
         UserThread.execute(() -> onUiReadyHandler.run());
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateMonitoringService.Listener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onChangeAfterBatchProcessing() {
+    }
+
+    @Override
+    public void onCheckpointFail() {
+        new Popup<>().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
+                .useShutDownButton()
+                .show();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Helpers
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @NotNull
     private Separator getNavigationSeparator() {
@@ -782,6 +809,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel> {
 
             this.setToggleGroup(navButtons);
             this.getStyleClass().add("nav-button");
+            // Japanese fonts are dense, increase top nav button text size
+            if (model.getPreferences().getUserLanguage().equals("ja")) {
+                this.getStyleClass().add("nav-button-japanese");
+            }
 
             this.selectedProperty().addListener((ov, oldValue, newValue) -> this.setMouseTransparent(newValue));
 

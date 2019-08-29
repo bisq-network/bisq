@@ -36,8 +36,6 @@ import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
@@ -164,8 +162,8 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     }
 
     @Override
-    public PB.PersistableNetworkPayload toProtoMessage() {
-        final PB.TradeStatistics2.Builder builder = PB.TradeStatistics2.newBuilder()
+    public protobuf.PersistableNetworkPayload toProtoMessage() {
+        final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
                 .setDirection(OfferPayload.Direction.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
@@ -182,15 +180,15 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
                 .setDepositTxId(depositTxId)
                 .setHash(ByteString.copyFrom(hash));
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return PB.PersistableNetworkPayload.newBuilder().setTradeStatistics2(builder).build();
+        return protobuf.PersistableNetworkPayload.newBuilder().setTradeStatistics2(builder).build();
     }
 
 
-    public PB.TradeStatistics2 toProtoTradeStatistics2() {
+    public protobuf.TradeStatistics2 toProtoTradeStatistics2() {
         return toProtoMessage().getTradeStatistics2();
     }
 
-    public static TradeStatistics2 fromProto(PB.TradeStatistics2 proto) {
+    public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {
         return new TradeStatistics2(
                 OfferPayload.Direction.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),
@@ -263,7 +261,11 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     }
 
     public boolean isValid() {
-        return tradeAmount > 0 && tradePrice > 0;
+        // Exclude a disputed BSQ trade where the price was off by a factor 10 due to a mistake by the maker.
+        // Since the trade wasn't executed it's better to filter it out to avoid it having an undue influence on the
+        // BSQ trade stats.
+        boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
+        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade;
     }
 
     @Override

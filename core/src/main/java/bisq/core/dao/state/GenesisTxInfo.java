@@ -48,8 +48,8 @@ public class GenesisTxInfo {
     private static final int MAINNET_GENESIS_BLOCK_HEIGHT = 571747; // 2019-04-15
     private static final Coin MAINNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("3.65748");
 
-    private static final String TESTNET_GENESIS_TX_ID = "09e70ce0ab7a962a82a2ca84c9ae8a89140bf1c3fb6f7efad6162e39e4b362ae";
-    private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1446300; // 2018-12-02
+    private static final String TESTNET_GENESIS_TX_ID = "f35b62930b16a680ba6bc8ba8fecc4f1db65c5635b5a4b4b0445544649acf4f6";
+    private static final int TESTNET_GENESIS_BLOCK_HEIGHT = 1564395; // 2019-06-21
     private static final Coin TESTNET_GENESIS_TOTAL_SUPPLY = Coin.parseCoin("2.5"); // 2.5M BSQ / 2.50000000 BTC
 
     private static final String DAO_TESTNET_GENESIS_TX_ID = "cb316a186b9e88d1b8e1ce8dc79cc6a2080cc7bbc6df94f2be325d8253417af1";

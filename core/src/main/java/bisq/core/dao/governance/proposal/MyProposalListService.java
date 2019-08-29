@@ -32,7 +32,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
-import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -85,14 +85,14 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
                                  PeriodService periodService,
                                  WalletsManager walletsManager,
                                  Storage<MyProposalList> storage,
-                                 KeyRing keyRing) {
+                                 PubKeyRing pubKeyRing) {
         this.p2PService = p2PService;
         this.daoStateService = daoStateService;
         this.periodService = periodService;
         this.walletsManager = walletsManager;
         this.storage = storage;
 
-        signaturePubKey = keyRing.getPubKeyRing().getSignaturePubKey();
+        signaturePubKey = pubKeyRing.getSignaturePubKey();
 
         numConnectedPeersListener = (observable, oldValue, newValue) -> rePublishMyProposalsOnceWellConnected();
         daoStateService.addDaoStateListener(this);
@@ -239,8 +239,8 @@ public class MyProposalListService implements PersistedDataHost, DaoStateListene
     }
 
     private boolean canRemoveProposal(Proposal proposal, DaoStateService daoStateService, PeriodService periodService) {
-        boolean inPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
-        return isMine(proposal) && inPhase;
+        boolean inProposalPhase = periodService.isInPhase(daoStateService.getChainHeight(), DaoPhase.Phase.PROPOSAL);
+        return isMine(proposal) && inProposalPhase;
 
     }
 }

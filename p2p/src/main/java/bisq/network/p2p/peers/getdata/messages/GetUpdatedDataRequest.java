@@ -23,8 +23,6 @@ import bisq.network.p2p.SendersNodeAddressMessage;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Set;
@@ -66,8 +64,8 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.GetUpdatedDataRequest.Builder builder = PB.GetUpdatedDataRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.GetUpdatedDataRequest.Builder builder = protobuf.GetUpdatedDataRequest.newBuilder()
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setNonce(nonce)
                 .addAllExcludedKeys(excludedKeys.stream()
@@ -79,7 +77,7 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
                 .build();
     }
 
-    public static GetUpdatedDataRequest fromProto(PB.GetUpdatedDataRequest proto, int messageVersion) {
+    public static GetUpdatedDataRequest fromProto(protobuf.GetUpdatedDataRequest proto, int messageVersion) {
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),

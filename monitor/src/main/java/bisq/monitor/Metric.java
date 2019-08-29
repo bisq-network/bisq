@@ -119,13 +119,17 @@ public abstract class Metric extends Configurable implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setName("Metric: " + getName());
+        try {
+            Thread.currentThread().setName("Metric: " + getName());
 
-        // execute all the things
-        synchronized (this) {
-            log.info("{} started", getName());
-            execute();
-            log.info("{} done", getName());
+            // execute all the things
+            synchronized (this) {
+                    log.info("{} started", getName());
+                    execute();
+                    log.info("{} done", getName());
+            }
+        } catch(Throwable e) {
+            log.error("A metric misbehaved!", e);
         }
     }
 

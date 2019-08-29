@@ -27,8 +27,6 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.ByteString;
 
 import java.util.Date;
@@ -124,8 +122,8 @@ public final class PayDepositRequest extends TradeMessage {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        PB.PayDepositRequest.Builder builder = PB.PayDepositRequest.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        protobuf.PayDepositRequest.Builder builder = protobuf.PayDepositRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setTradeAmount(tradeAmount)
@@ -139,7 +137,7 @@ public final class PayDepositRequest extends TradeMessage {
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setTakerPubKeyRing(takerPubKeyRing.toProtoMessage())
-                .setTakerPaymentAccountPayload((PB.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
+                .setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage())
                 .setTakerAccountId(takerAccountId)
                 .setTakerFeeTxId(takerFeeTxId)
                 .addAllAcceptedArbitratorNodeAddresses(acceptedArbitratorNodeAddresses.stream()
@@ -157,7 +155,7 @@ public final class PayDepositRequest extends TradeMessage {
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
 
-    public static PayDepositRequest fromProto(PB.PayDepositRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static PayDepositRequest fromProto(protobuf.PayDepositRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))

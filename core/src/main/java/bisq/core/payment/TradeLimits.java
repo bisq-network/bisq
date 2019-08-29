@@ -26,6 +26,7 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -35,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
+@Singleton
 public class TradeLimits {
     @Nullable
     @Getter
@@ -56,6 +58,14 @@ public class TradeLimits {
         // guice.
     }
 
+
+    /**
+     * The default trade limits defined as statics in PaymentMethod are only used until the DAO
+     * is fully synchronized.
+     *
+     * @see bisq.core.payment.payload.PaymentMethod
+     * @return the maximum trade limit set by the DAO.
+     */
     public Coin getMaxTradeLimit() {
         return daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
     }

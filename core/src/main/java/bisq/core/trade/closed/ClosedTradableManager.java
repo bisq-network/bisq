@@ -26,18 +26,13 @@ import bisq.core.trade.Trade;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 
-import javax.inject.Named;
-
 import com.google.common.collect.ImmutableList;
 
 import javafx.collections.ObservableList;
-
-import java.io.File;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,14 +47,14 @@ public class ClosedTradableManager implements PersistedDataHost {
     private final BtcWalletService btcWalletService;
 
     @Inject
-    public ClosedTradableManager(KeyRing keyRing, PriceFeedService priceFeedService,
-                                 PersistenceProtoResolver persistenceProtoResolver,
+    public ClosedTradableManager(KeyRing keyRing,
+                                 PriceFeedService priceFeedService,
                                  BtcWalletService btcWalletService,
-                                 @Named(Storage.STORAGE_DIR) File storageDir) {
+                                 Storage<TradableList<Tradable>> storage) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        tradableListStorage = storage;
         // The ClosedTrades object can become a few MB so we don't keep so many backups
         tradableListStorage.setNumMaxBackupFiles(3);
 

@@ -316,7 +316,9 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                         // The EC key is in the blockchain already. We prefer here to stick with EC key. If any change
                         // in BitcoinJ would break our consensus we would need to fall back to the old BitcoinJ EC
                         // implementation.
-                        ECKey.ECDSASignature signature = key.sign(Sha256Hash.wrap(blindVoteTxId));
+                        ECKey.ECDSASignature signature = bsqWalletService.isEncrypted() ?
+                                key.sign(Sha256Hash.wrap(blindVoteTxId), bsqWalletService.getAesKey()) :
+                                key.sign(Sha256Hash.wrap(blindVoteTxId));
                         signatureAsBytes = signature.toCanonicalised().encodeToDER();
                     } else {
                         // In case we use it for requesting the currently available merit we don't apply a signature

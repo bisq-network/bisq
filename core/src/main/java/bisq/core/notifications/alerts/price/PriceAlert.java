@@ -33,10 +33,12 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class PriceAlert {
     private final PriceFeedService priceFeedService;
     private final MobileNotificationService mobileNotificationService;

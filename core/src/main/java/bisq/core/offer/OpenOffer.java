@@ -27,8 +27,6 @@ import bisq.common.UserThread;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.Date;
 import java.util.Optional;
 
@@ -85,17 +83,17 @@ public final class OpenOffer implements Tradable {
     }
 
     @Override
-    public PB.Tradable toProtoMessage() {
-        PB.OpenOffer.Builder builder = PB.OpenOffer.newBuilder()
+    public protobuf.Tradable toProtoMessage() {
+        protobuf.OpenOffer.Builder builder = protobuf.OpenOffer.newBuilder()
                 .setOffer(offer.toProtoMessage())
-                .setState(PB.OpenOffer.State.valueOf(state.name()));
+                .setState(protobuf.OpenOffer.State.valueOf(state.name()));
 
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(nodeAddress -> builder.setArbitratorNodeAddress(nodeAddress.toProtoMessage()));
 
-        return PB.Tradable.newBuilder().setOpenOffer(builder).build();
+        return protobuf.Tradable.newBuilder().setOpenOffer(builder).build();
     }
 
-    public static Tradable fromProto(PB.OpenOffer proto) {
+    public static Tradable fromProto(protobuf.OpenOffer proto) {
         return new OpenOffer(Offer.fromProto(proto.getOffer()),
                 ProtoUtil.enumFromProto(OpenOffer.State.class, proto.getState().name()),
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);

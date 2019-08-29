@@ -58,6 +58,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
@@ -147,6 +148,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.reputation.table.header"), 20, "last");
         createColumns();
         tableView.setItems(sortedList);
+        GridPane.setVgrow(tableView, Priority.ALWAYS);
 
         createListeners();
     }

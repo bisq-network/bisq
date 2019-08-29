@@ -17,6 +17,8 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.witness.AccountAgeRestrictions;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferRestrictions;

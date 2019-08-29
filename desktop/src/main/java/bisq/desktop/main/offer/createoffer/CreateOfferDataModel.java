@@ -21,14 +21,15 @@ see <http://www.gnu.org/licenses/>.
 
 package bisq.desktop.main.offer.createoffer;
 
+import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -63,7 +64,8 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 FeeService feeService,
                                 TxFeeEstimationService txFeeEstimationService,
                                 ReferralIdService referralIdService,
-                                BSFormatter btcFormatter) {
+                                BSFormatter btcFormatter,
+                                MakerFeeProvider makerFeeProvider) {
         super(openOfferManager,
                 btcWalletService,
                 bsqWalletService,
@@ -77,6 +79,7 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                 feeService,
                 txFeeEstimationService,
                 referralIdService,
-                btcFormatter);
+                btcFormatter,
+                makerFeeProvider);
     }
 }

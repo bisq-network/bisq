@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
+import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.offer.OfferRestrictions;
-import bisq.core.payment.AccountAgeRestrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -39,7 +39,9 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
         try {
             runInterceptHook();
 
-            log.error("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}", OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade));
+            log.debug("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}",
+                    OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(
+                            processModel.getAccountAgeWitnessService(), trade));
             if (OfferRestrictions.isTradeRisky(trade) &&
                     AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
                 failed("Violation of security restrictions:\n" +

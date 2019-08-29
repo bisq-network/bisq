@@ -15,10 +15,12 @@
  * along with bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.payment;
+package bisq.core.account.witness;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
+import bisq.core.payment.AssetAccount;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
@@ -63,7 +65,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
-    public static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.MARCH, 15).getTime();
 
     public enum AccountAge {
         LESS_ONE_MONTH,
@@ -178,7 +179,7 @@ public class AccountAgeWitnessService {
         if (!containsKey)
             log.debug("hash not found in accountAgeWitnessMap");
 
-        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.<AccountAgeWitness>empty();
+        return accountAgeWitnessMap.containsKey(hashAsByteArray) ? Optional.of(accountAgeWitnessMap.get(hashAsByteArray)) : Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
@@ -212,12 +213,8 @@ public class AccountAgeWitnessService {
 
             final long accountAge = getAccountAge((accountAgeWitnessOptional.get()), now);
             AccountAge accountAgeCategory = accountAgeWitnessOptional
-                    .map(accountAgeWitness1 -> getAccountAgeCategory(accountAge))
+                    .map(accountAgeWitness -> getAccountAgeCategory(accountAge))
                     .orElse(AccountAge.LESS_ONE_MONTH);
-
-            // TODO Fade in by date can be removed after feb 2018
-            // We want to fade in the limit over 2 months to avoid that all users get limited to 25% of the limit when
-            // we deploy that feature.
 
             switch (accountAgeCategory) {
                 case TWO_MONTHS_OR_MORE:

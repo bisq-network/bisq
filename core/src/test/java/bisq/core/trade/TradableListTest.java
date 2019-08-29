@@ -21,27 +21,25 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.Storage;
-
-import io.bisq.generated.protobuffer.PB;
-
-import mockit.Mocked;
 
 import org.junit.Test;
 
-import static io.bisq.generated.protobuffer.PB.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;
 
-//TODO cannot be run in IntelliJ IDE as parameter is not supported. OfferPayload is final so it is not so trivial to
-// replace that.
 public class TradableListTest {
 
     @Test
-    public void protoTesting(@Mocked OfferPayload offerPayload) {
-        Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null);
+    public void protoTesting() {
+        OfferPayload offerPayload = mock(OfferPayload.class, RETURNS_DEEP_STUBS);
+        Storage<TradableList<OpenOffer>> storage = new Storage<>(null, null, mock(CorruptedDatabaseFilesHandler.class));
         TradableList<OpenOffer> openOfferTradableList = new TradableList<>(storage, "filename");
-        PB.PersistableEnvelope message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
+        protobuf.PersistableEnvelope message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
         assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
 
         // test adding an OpenOffer and convert toProto
@@ -49,8 +47,8 @@ public class TradableListTest {
         OpenOffer openOffer = new OpenOffer(offer, storage);
         //openOfferTradableList = new TradableList<OpenOffer>(storage,Lists.newArrayList(openOffer));
         openOfferTradableList.add(openOffer);
-        message = (PB.PersistableEnvelope) openOfferTradableList.toProtoMessage();
-        assertTrue(message.getMessageCase().equals(TRADABLE_LIST));
+        message = (protobuf.PersistableEnvelope) openOfferTradableList.toProtoMessage();
+        assertEquals(message.getMessageCase(), TRADABLE_LIST);
         assertEquals(1, message.getTradableList().getTradableList().size());
     }
 }

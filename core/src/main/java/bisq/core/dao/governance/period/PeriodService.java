@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public final class PeriodService {
+public class PeriodService {
     private final DaoStateService daoStateService;
 
 

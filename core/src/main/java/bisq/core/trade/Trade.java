@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.Mediator;
@@ -31,7 +32,6 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.ProcessModel;
@@ -51,8 +51,6 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
 import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
-
-import io.bisq.generated.protobuffer.PB;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -185,12 +183,12 @@ public abstract class Trade implements Tradable, Model {
             this.phase = phase;
         }
 
-        public static Trade.State fromProto(PB.Trade.State state) {
+        public static Trade.State fromProto(protobuf.Trade.State state) {
             return ProtoUtil.enumFromProto(Trade.State.class, state.name());
         }
 
-        public static PB.Trade.State toProtoMessage(Trade.State state) {
-            return PB.Trade.State.valueOf(state.name());
+        public static protobuf.Trade.State toProtoMessage(Trade.State state) {
+            return protobuf.Trade.State.valueOf(state.name());
         }
     }
 
@@ -204,12 +202,12 @@ public abstract class Trade implements Tradable, Model {
         PAYOUT_PUBLISHED,
         WITHDRAWN;
 
-        public static Trade.Phase fromProto(PB.Trade.Phase phase) {
+        public static Trade.Phase fromProto(protobuf.Trade.Phase phase) {
             return ProtoUtil.enumFromProto(Trade.Phase.class, phase.name());
         }
 
-        public static PB.Trade.Phase toProtoMessage(Trade.Phase phase) {
-            return PB.Trade.Phase.valueOf(phase.name());
+        public static protobuf.Trade.Phase toProtoMessage(Trade.Phase phase) {
+            return protobuf.Trade.Phase.valueOf(phase.name());
         }
     }
 
@@ -219,12 +217,12 @@ public abstract class Trade implements Tradable, Model {
         DISPUTE_STARTED_BY_PEER,
         DISPUTE_CLOSED;
 
-        public static Trade.DisputeState fromProto(PB.Trade.DisputeState disputeState) {
+        public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
         }
 
-        public static PB.Trade.DisputeState toProtoMessage(Trade.DisputeState disputeState) {
-            return PB.Trade.DisputeState.valueOf(disputeState.name());
+        public static protobuf.Trade.DisputeState toProtoMessage(Trade.DisputeState disputeState) {
+            return protobuf.Trade.DisputeState.valueOf(disputeState.name());
         }
     }
 
@@ -233,12 +231,12 @@ public abstract class Trade implements Tradable, Model {
         SECOND_HALF,
         TRADE_PERIOD_OVER;
 
-        public static Trade.TradePeriodState fromProto(PB.Trade.TradePeriodState tradePeriodState) {
+        public static Trade.TradePeriodState fromProto(protobuf.Trade.TradePeriodState tradePeriodState) {
             return ProtoUtil.enumFromProto(Trade.TradePeriodState.class, tradePeriodState.name());
         }
 
-        public static PB.Trade.TradePeriodState toProtoMessage(Trade.TradePeriodState tradePeriodState) {
-            return PB.Trade.TradePeriodState.valueOf(tradePeriodState.name());
+        public static protobuf.Trade.TradePeriodState toProtoMessage(Trade.TradePeriodState tradePeriodState) {
+            return protobuf.Trade.TradePeriodState.valueOf(tradePeriodState.name());
         }
     }
 
@@ -427,7 +425,7 @@ public abstract class Trade implements Tradable, Model {
 
     @Override
     public Message toProtoMessage() {
-        final PB.Trade.Builder builder = PB.Trade.newBuilder()
+        final protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
                 .setOffer(offer.toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
@@ -436,9 +434,9 @@ public abstract class Trade implements Tradable, Model {
                 .setProcessModel(processModel.toProtoMessage())
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
-                .setState(PB.Trade.State.valueOf(state.name()))
-                .setDisputeState(PB.Trade.DisputeState.valueOf(disputeState.name()))
-                .setTradePeriodState(PB.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
+                .setState(proto.Trade.State.valueOf(state.name()))
+                .setDisputeState(proto.Trade.DisputeState.valueOf(disputeState.name()))
+                .setTradePeriodState(proto.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
                 .addAllCommunicationMessages(communicationMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                         .collect(Collectors.toList()));
@@ -463,7 +461,7 @@ public abstract class Trade implements Tradable, Model {
         return builder.build();
     }
 
-    public static Trade fromProto(Trade trade, PB.Trade proto, CoreProtoResolver coreProtoResolver) {
+    public static Trade fromProto(Trade trade, protobuf.Trade proto, CoreProtoResolver coreProtoResolver) {
         trade.setTakeOfferDate(proto.getTakeOfferDate());
         trade.setProcessModel(ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver));
         trade.setState(State.fromProto(proto.getState()));

@@ -1,7 +1,5 @@
 # Building Bisq
 
-_You will need [OpenJDK 10](https://jdk.java.net/10/) installed and configured as the default system JDK to complete the following instructions. See the `scripts` directory for scripts that can be used to install and configure the JDK automatically._
-> TIP: If you are on MacOS, run the script with this command `. scripts/install_java.sh`.
 
 ## Clone
 
@@ -21,6 +19,8 @@ If on Windows run `gradlew.bat build` instead.
 ## Run
 
 Bisq executables are now available in the root project directory. Run Bisq Desktop as follows:
+
+Note: bisq runs fine on jdk10 and jdk11. jdk12 is currently not supported. 
 
     ./bisq-desktop
 

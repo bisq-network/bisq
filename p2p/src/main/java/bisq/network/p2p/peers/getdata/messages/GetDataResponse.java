@@ -28,8 +28,6 @@ import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 
-import io.bisq.generated.protobuffer.PB;
-
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -90,16 +88,16 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     }
 
     @Override
-    public PB.NetworkEnvelope toProtoNetworkEnvelope() {
-        final PB.GetDataResponse.Builder builder = PB.GetDataResponse.newBuilder()
+    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+        final protobuf.GetDataResponse.Builder builder = protobuf.GetDataResponse.newBuilder()
                 .addAllDataSet(dataSet.stream()
                         .map(protectedStorageEntry -> protectedStorageEntry instanceof ProtectedMailboxStorageEntry ?
-                                PB.StorageEntryWrapper.newBuilder()
-                                        .setProtectedMailboxStorageEntry((PB.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
+                                protobuf.StorageEntryWrapper.newBuilder()
+                                        .setProtectedMailboxStorageEntry((protobuf.ProtectedMailboxStorageEntry) protectedStorageEntry.toProtoMessage())
                                         .build()
                                 :
-                                PB.StorageEntryWrapper.newBuilder()
-                                        .setProtectedStorageEntry((PB.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
+                                protobuf.StorageEntryWrapper.newBuilder()
+                                        .setProtectedStorageEntry((protobuf.ProtectedStorageEntry) protectedStorageEntry.toProtoMessage())
                                         .build())
                         .collect(Collectors.toList()))
                 .setRequestNonce(requestNonce)
@@ -115,7 +113,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 .build();
     }
 
-    public static GetDataResponse fromProto(PB.GetDataResponse proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static GetDataResponse fromProto(protobuf.GetDataResponse proto, NetworkProtoResolver resolver, int messageVersion) {
         Set<ProtectedStorageEntry> dataSet = new HashSet<>(
                 proto.getDataSetList().stream()
                         .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))

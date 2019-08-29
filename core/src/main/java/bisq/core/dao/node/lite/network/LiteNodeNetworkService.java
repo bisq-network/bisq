@@ -76,7 +76,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
     public interface Listener {
         void onNoSeedNodeAvailable();
 
-        void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse);
+        void onRequestedBlocksReceived(GetBlocksResponse getBlocksResponse, Runnable onParsingComplete);
 
         void onNewBlockReceived(NewBlockBroadcastMessage newBlockBroadcastMessage);
 
@@ -231,8 +231,8 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
             String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
             if (!receivedBlocks.contains(extBlockId)) {
-                log.info("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
-                        connection.getPeersNodeAddressOptional(), extBlockId);
+                log.debug("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
+                        connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
                 receivedBlocks.add(extBlockId);
                 broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null, false);
                 listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
@@ -259,7 +259,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                             new RequestBlocksHandler.Listener() {
                                 @Override
                                 public void onComplete(GetBlocksResponse getBlocksResponse) {
-                                    log.info("requestBlocksHandler of outbound connection complete. nodeAddress={}",
+                                    log.debug("requestBlocksHandler of outbound connection complete. nodeAddress={}",
                                             peersNodeAddress);
                                     stopRetryTimer();
 
@@ -269,11 +269,12 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                                     if (startBlockHeight >= lastReceivedBlockHeight) {
                                         lastReceivedBlockHeight = startBlockHeight;
 
-                                        // After we received the blocks we allow to disconnect seed nodes.
-                                        // We delay 20 seconds to allow multiple requests to finish.
-                                        UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
-
-                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse));
+                                        listeners.forEach(listener -> listener.onRequestedBlocksReceived(getBlocksResponse,
+                                                () -> {
+                                                    // After we received the blocks we allow to disconnect seed nodes.
+                                                    // We delay 20 seconds to allow multiple requests to finish.
+                                                    UserThread.runAfter(() -> peerManager.setAllowDisconnectSeedNodes(true), 20);
+                                                }));
                                     } else {
                                         log.warn("We got a response which is already obsolete because we receive a " +
                                                 "response from a request with a higher block height. " +

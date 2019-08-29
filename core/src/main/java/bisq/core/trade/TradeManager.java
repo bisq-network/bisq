@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
@@ -31,7 +32,6 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
@@ -49,7 +49,7 @@ import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.Clock;
+import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -57,7 +57,6 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -66,7 +65,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -79,8 +77,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -120,7 +116,7 @@ public class TradeManager implements PersistedDataHost {
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private final Clock clock;
+    private final ClockWatcher clockWatcher;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
     private TradableList<Trade> tradableList;
@@ -155,11 +151,10 @@ public class TradeManager implements PersistedDataHost {
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
-                        PersistenceProtoResolver persistenceProtoResolver,
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
-                        Clock clock,
-                        @Named(Storage.STORAGE_DIR) File storageDir) {
+                        ClockWatcher clockWatcher,
+                        Storage<TradableList<Trade>> storage) {
         this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
@@ -176,9 +171,9 @@ public class TradeManager implements PersistedDataHost {
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
-        this.clock = clock;
+        this.clockWatcher = clockWatcher;
 
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        tradableListStorage = storage;
 
         chatManager = new ChatManager(p2PService, walletsSetup);
         chatManager.setChatSession(new TradeChatSession(null, true, true, this, chatManager));
@@ -634,7 +629,7 @@ public class TradeManager implements PersistedDataHost {
 
     public void applyTradePeriodState() {
         updateTradePeriodState();
-        clock.addListener(new Clock.Listener() {
+        clockWatcher.addListener(new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
             }

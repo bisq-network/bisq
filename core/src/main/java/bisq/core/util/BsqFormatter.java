@@ -35,6 +35,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -44,6 +45,7 @@ import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class BsqFormatter extends BSFormatter {
     @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();

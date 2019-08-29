@@ -17,10 +17,11 @@
 
 package bisq.core.app.misc;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.SetupUtils;
 import bisq.core.app.TorSetup;
 import bisq.core.filter.FilterManager;
-import bisq.core.payment.AccountAgeWitnessService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.crypto.EncryptionService;
@@ -46,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AppSetupWithP2P extends AppSetup {
     protected final P2PService p2PService;
     protected final AccountAgeWitnessService accountAgeWitnessService;
+    private final SignedWitnessService signedWitnessService;
     protected final FilterManager filterManager;
     private final TorSetup torSetup;
     protected BooleanProperty p2pNetWorkReady;
@@ -58,12 +60,14 @@ public class AppSetupWithP2P extends AppSetup {
                            P2PService p2PService,
                            TradeStatisticsManager tradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
+                           SignedWitnessService signedWitnessService,
                            FilterManager filterManager,
                            TorSetup torSetup) {
         super(encryptionService, keyRing);
         this.p2PService = p2PService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.signedWitnessService = signedWitnessService;
         this.filterManager = filterManager;
         this.torSetup = torSetup;
         this.persistedDataHosts = new ArrayList<>();
@@ -184,6 +188,7 @@ public class AppSetupWithP2P extends AppSetup {
         tradeStatisticsManager.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
+        signedWitnessService.onAllServicesInitialized();
 
         filterManager.onAllServicesInitialized();
     }

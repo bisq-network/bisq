@@ -156,6 +156,8 @@ public class CurrencyUtil {
         currencies.add(new CryptoCurrency("ZOC", "01coin"));
         currencies.add(new CryptoCurrency("BURST", "Burstcoin"));
         currencies.add(new CryptoCurrency("STEEM", "Steem"));
+        currencies.add(new CryptoCurrency("DAC", "DACash"));
+        currencies.add(new CryptoCurrency("RDD", "ReddCoin"));
         return currencies;
     }
 

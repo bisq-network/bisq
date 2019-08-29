@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -71,12 +69,12 @@ public final class AdvancedCashAccountPayload extends PaymentAccountPayload {
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setAdvancedCashAccountPayload(PB.AdvancedCashAccountPayload.newBuilder()
+                .setAdvancedCashAccountPayload(protobuf.AdvancedCashAccountPayload.newBuilder()
                         .setAccountNr(accountNr))
                 .build();
     }
 
-    public static AdvancedCashAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static AdvancedCashAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new AdvancedCashAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getAdvancedCashAccountPayload().getAccountNr(),

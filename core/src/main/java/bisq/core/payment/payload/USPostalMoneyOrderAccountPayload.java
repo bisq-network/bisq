@@ -19,8 +19,6 @@ package bisq.core.payment.payload;
 
 import bisq.core.locale.Res;
 
-import io.bisq.generated.protobuffer.PB;
-
 import com.google.protobuf.Message;
 
 import org.springframework.util.CollectionUtils;
@@ -74,13 +72,13 @@ public final class USPostalMoneyOrderAccountPayload extends PaymentAccountPayloa
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setUSPostalMoneyOrderAccountPayload(PB.USPostalMoneyOrderAccountPayload.newBuilder()
+                .setUSPostalMoneyOrderAccountPayload(protobuf.USPostalMoneyOrderAccountPayload.newBuilder()
                         .setPostalAddress(postalAddress)
                         .setHolderName(holderName))
                 .build();
     }
 
-    public static USPostalMoneyOrderAccountPayload fromProto(PB.PaymentAccountPayload proto) {
+    public static USPostalMoneyOrderAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new USPostalMoneyOrderAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getUSPostalMoneyOrderAccountPayload().getPostalAddress(),
