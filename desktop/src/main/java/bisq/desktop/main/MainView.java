@@ -506,7 +506,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
-                tooltip.getStyleClass().add("market-price-tooltip");
                 label.setTooltip(tooltip);
             }
         } else {
