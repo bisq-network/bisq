@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * hold a set of capabilities and offers appropriate comparison methods.
@@ -32,6 +33,7 @@ import lombok.EqualsAndHashCode;
  * @author Florian Reimair
  */
 @EqualsAndHashCode
+@Slf4j
 public class Capabilities {
 
     /**
