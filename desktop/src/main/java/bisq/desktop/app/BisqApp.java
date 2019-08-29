@@ -176,6 +176,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in Guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
                 scene.getStylesheets().setAll(
+                        "/bisq/desktop/theme-light.css",
                         "/bisq/desktop/bisq.css",
                         "/bisq/desktop/images.css");
                 stage.setScene(scene);
@@ -227,12 +228,26 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 maxWindowBounds.height < INITIAL_WINDOW_HEIGHT ?
                         (maxWindowBounds.height < MIN_WINDOW_HEIGHT ? MIN_WINDOW_HEIGHT : maxWindowBounds.height) :
                         INITIAL_WINDOW_HEIGHT);
-        scene.getStylesheets().setAll(
-                "/bisq/desktop/bisq.css",
-                "/bisq/desktop/images.css",
-                "/bisq/desktop/CandleStickChart.css");
+
         addSceneKeyEventHandler(scene, injector);
+
+        loadSceneStyles(scene, injector);
+        injector.getInstance(Preferences.class).getCssThemeProperty().addListener((ov) -> {
+            loadSceneStyles(scene, injector);
+        });
         return scene;
+    }
+
+    private void loadSceneStyles(Scene scene, Injector injector) {
+        Boolean useDarkMode = (injector.getInstance(Preferences.class).getCssTheme() == 1);
+        String colorSheet = "/bisq/desktop/theme-light.css";
+        if (useDarkMode)
+            colorSheet = "/bisq/desktop/theme-dark.css";
+        scene.getStylesheets().setAll(
+            colorSheet,
+            "/bisq/desktop/bisq.css",
+            "/bisq/desktop/images.css",
+            "/bisq/desktop/CandleStickChart.css");
     }
 
     private void setupStage(Scene scene) {
