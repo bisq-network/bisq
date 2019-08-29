@@ -1,7 +1,7 @@
 .root {
     -bs-color-primary: #25b135;
     -bs-color-primary-dark: #2ea33c;
-    -bs-text-color: #cfcecf;
+    -bs-text-color: #cfcfcf;
     -bs-background-color: #2e2e31;
     -bs-background-gray: #1d1d21;
     -bs-content-background-gray: #242424;
@@ -68,8 +68,8 @@
     -bs-text-color-transparent-dark: rgba(29, 29, 33, 0.54);
     -bs-text-color-transparent: rgba(29, 29, 33, 0.2);
     -bs-color-gray-line: #504f52;
-    -bs-rd-separator: #2e2e31;
-    -bs-rd-separator-dark: #151517;
+    -bs-rd-separator: #444444;
+    -bs-rd-separator-dark: #222222;
     -bs-rd-error-red: #d83431;
     -bs-rd-message-bubble: #2cadaf;
     -bs-toggle-selected: #504f52;
@@ -107,7 +107,7 @@
 }
 
 .list-view {
-    -fx-background-color: -bs-background-color;
+    -fx-background-color: -bs-background-gray;
 }
 .list-view .list-cell {
     -fx-background-color: -bs-background-color;
@@ -117,6 +117,9 @@
 }
 .list-view .list-cell:even {
     -fx-background-color: derive(-bs-background-color, 5%);
+}
+.list-view .list-cell:selected {
+    -fx-background-color: -fx-selection-bar;
 }
 .list-view .list-cell .text {
     -fx-text-fill: -bs-rd-font-dark-gray;
@@ -130,8 +133,21 @@
 .table-view {
     -fx-background-color: -bs-background-color;
 }
+.table-row-cell {
+    -fx-border-color: -bs-color-gray-1;
+}
 .table-view .table-cell {
     -fx-background-color: -bs-background-color;
+}
+.table-view .table-row-cell:even .table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color, 5%);
+}
+.table-view .table-row-cell:selected {
+    -fx-background-color: -fx-selection-bar;
 }
 
 .jfx-tab-pane .tab-content-area {
@@ -142,8 +158,38 @@
     -fx-background-color: -bs-viewport-background;
 }
 
-.scroll-pane {
-    -fx-background-color: -bs-scroll-pane-background;
+.jfx-text-field {
+    -fx-background-color: -bs-color-gray-0;
+    -fx-text-fill: -bs-rd-font-dark;
+}
+.jfx-text-field-top-label {
+    -fx-text-fill: -bs-color-gray-6;
+}
+.jfx-text-area:readonly {
+    -jfx-focus-color: transparent;
+}
+.jfx-text-field:readonly, .hyperlink-with-icon {
+    -fx-background-color: -bs-background-gray;
+}
+.input-with-border {
+    -fx-border-color: -bs-color-gray-2;
+}
+
+.jfx-button, .action-button {
+    -fx-background-color: -bs-color-gray-1;
+}
+.jfx-button:hover, .jfx-button:focused {
+    -fx-background-color: derive(-bs-background-gray, -10%);
+}
+.action-button:hover, .action-button:focused {
+    -fx-background-color: derive(-bs-color-primary-dark, -10%);
+}
+.action-button:disabled {
+    -fx-background-color: -bs-color-gray-2;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+.action-button {
+    -fx-background-color: -bs-color-primary-dark;
 }
 
 #sell-button, #sell-button-big {
@@ -152,4 +198,45 @@
 
 #buy-button, #buy-button-big {
     -fx-background-color: #006600 !important;
+}
+
+.wallet-seed-words {
+    -fx-text-fill: -bs-color-gray-6;
+}
+
+.chart-pane, .chart-plot-background,
+#charts .chart-plot-background,
+#charts-dao .chart-plot-background {
+    -fx-background-color: transparent;
+}
+.chart-horizontal-grid-lines, .chart-vertical-grid-lines {
+    -fx-stroke: -bs-color-gray-1;
+}
+
+.separated-phase-bar-active {
+    -fx-text-fill: -fx-accent;
+}
+
+.separated-phase-bar-inactive {
+    -fx-text-fill: -bs-color-primary-dark;
+}
+
+.jfx-badge .badge-pane .text {
+    -fx-fill: white;
+}
+
+.scroll-pane {
+    -fx-background-color: -bs-scroll-pane-background;
+}
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -bs-color-gray-5;
+}
+.scroll-bar:horizontal .thumb:pressed,
+.scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: -bs-color-gray-4;
+}
+.scroll-bar:vertical:focused,
+.scroll-bar:horizontal:focused {
+    -fx-background-color: transparent, -bs-color-gray-4, -bs-color-gray-4;
 }

@@ -244,10 +244,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         if (useDarkMode)
             colorSheet = "/bisq/desktop/theme-dark.css";
         scene.getStylesheets().setAll(
-            colorSheet,
             "/bisq/desktop/bisq.css",
             "/bisq/desktop/images.css",
-            "/bisq/desktop/CandleStickChart.css");
+            "/bisq/desktop/CandleStickChart.css",
+            colorSheet); // load theme last to override CSS colors
     }
 
     private void setupStage(Scene scene) {
