@@ -29,6 +29,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
@@ -60,23 +61,23 @@ public class DisputeChatSession extends ChatSession {
 
     @Override
     public boolean isClient() {
-        return disputeManager.isTrader(dispute);
+        return dispute != null && disputeManager.isTrader(dispute);
     }
 
     @Override
     public String getTradeId() {
-        return dispute.getTradeId();
+        return dispute != null ? dispute.getTradeId() : "";
     }
 
     @Override
     public PubKeyRing getClientPubKeyRing() {
         // Get pubkeyring of trader. Arbitrator is considered server for the chat session
-        return dispute.getTraderPubKeyRing();
+        return dispute != null ? dispute.getTraderPubKeyRing() : null;
     }
 
     @Override
     public void addDisputeCommunicationMessage(DisputeCommunicationMessage message) {
-        if (isClient() || (!isClient() && !message.isSystemMessage()))
+        if (dispute != null && (isClient() || (!isClient() && !message.isSystemMessage())))
             dispute.addDisputeCommunicationMessage(message);
     }
 
@@ -87,12 +88,12 @@ public class DisputeChatSession extends ChatSession {
 
     @Override
     public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessages() {
-        return dispute.getDisputeCommunicationMessages();
+        return dispute != null ? dispute.getDisputeCommunicationMessages() : FXCollections.observableArrayList();
     }
 
     @Override
     public boolean chatIsOpen() {
-        return !dispute.isClosed();
+        return dispute != null && !dispute.isClosed();
     }
 
 

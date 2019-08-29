@@ -26,6 +26,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
@@ -70,20 +71,21 @@ public class TradeChatSession extends ChatSession {
 
     @Override
     public String getTradeId() {
-        return trade.getId();
+        return trade != null ? trade.getId() : "";
     }
 
     @Override
     public PubKeyRing getClientPubKeyRing() {
         // Get pubkeyring of taker. Maker is considered server for chat sessions
-        if (trade.getContract() != null)
+        if (trade != null && trade.getContract() != null)
             return trade.getContract().getTakerPubKeyRing();
         return null;
     }
 
     @Override
     public void addDisputeCommunicationMessage(DisputeCommunicationMessage message) {
-        trade.addCommunicationMessage(message);
+        if (trade != null)
+            trade.addCommunicationMessage(message);
     }
 
     @Override
@@ -93,12 +95,12 @@ public class TradeChatSession extends ChatSession {
 
     @Override
     public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessages() {
-        return trade.getCommunicationMessages();
+        return trade != null ? trade.getCommunicationMessages() : FXCollections.observableArrayList();
     }
 
     @Override
     public boolean chatIsOpen() {
-        return trade.getState() != Trade.State.WITHDRAW_COMPLETED;
+        return trade != null && trade.getState() != Trade.State.WITHDRAW_COMPLETED;
     }
 
     @Override
