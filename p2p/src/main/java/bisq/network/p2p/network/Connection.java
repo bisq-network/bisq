@@ -799,13 +799,14 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         Capabilities supportedCapabilities = ((SupportedCapabilitiesMessage) networkEnvelope).getSupportedCapabilities();
                         if (supportedCapabilities != null) {
                             if (!capabilities.equals(supportedCapabilities)) {
+                                capabilities.set(supportedCapabilities);
+
                                 // Capabilities can be empty. We only check for mandatory if we get some capabilities.
                                 if (!capabilities.isEmpty() && !Capabilities.hasMandatoryCapability(capabilities)) {
                                     shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
                                     return;
                                 }
 
-                                capabilities.set(supportedCapabilities);
                                 capabilitiesListeners.forEach(weakListener -> {
                                     SupportedCapabilitiesListener supportedCapabilitiesListener = weakListener.get();
                                     if (supportedCapabilitiesListener != null) {
