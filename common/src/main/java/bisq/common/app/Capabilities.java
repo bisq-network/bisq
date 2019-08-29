@@ -118,7 +118,7 @@ public class Capabilities {
     }
 
     public static boolean hasMandatoryCapability(Capabilities capabilities) {
-        return capabilities.isEmpty() || capabilities.capabilities.stream().anyMatch(c -> c == mandatoryCapability);
+        return capabilities.capabilities.stream().anyMatch(c -> c == mandatoryCapability);
     }
 
     @Override
