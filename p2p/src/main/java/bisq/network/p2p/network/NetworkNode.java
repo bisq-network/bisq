@@ -96,7 +96,8 @@ public abstract class NetworkNode implements MessageListener {
     // when the events happen.
     abstract public void start(@Nullable SetupListener setupListener);
 
-    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress, NetworkEnvelope networkEnvelope) {
+    public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress,
+                                                  NetworkEnvelope networkEnvelope) {
         log.debug("sendMessage: peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(networkEnvelope));
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
@@ -112,9 +113,9 @@ public abstract class NetworkNode implements MessageListener {
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
             ListenableFuture<Connection> future = executorService.submit(() -> {
-                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress);
+                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress.getFullAddress());
 
-                if(peersNodeAddress.equals(getNodeAddress())){
+                if (peersNodeAddress.equals(getNodeAddress())) {
                     throw new ConnectException("We do not send a message to ourselves");
                 }
 
@@ -162,7 +163,8 @@ public abstract class NetworkNode implements MessageListener {
                             }
 
                             @Override
-                            public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                            public void onDisconnect(CloseConnectionReason closeConnectionReason,
+                                                     Connection connection) {
                                 log.trace("onDisconnect connectionListener\n\tconnection={}" + connection);
                                 //noinspection SuspiciousMethodCalls
                                 outBoundConnections.remove(connection);
@@ -264,7 +266,8 @@ public abstract class NetworkNode implements MessageListener {
     public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope networkEnvelope) {
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
         ListenableFuture<Connection> future = executorService.submit(() -> {
-            Thread.currentThread().setName("NetworkNode:SendMessage-to-" + connection.getUid());
+            String id = connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get().getFullAddress() : connection.getUid();
+            Thread.currentThread().setName("NetworkNode:SendMessage-to-" + id);
             connection.sendMessage(networkEnvelope);
             return connection;
         });
