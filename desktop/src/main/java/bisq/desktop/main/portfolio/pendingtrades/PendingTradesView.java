@@ -29,6 +29,7 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeChatSession;
@@ -47,6 +48,8 @@ import javax.inject.Inject;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
+import com.jfoenix.controls.JFXBadge;
+
 import javafx.fxml.FXML;
 
 import javafx.stage.Modality;
@@ -64,11 +67,13 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -108,6 +113,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Stage chatPopupStage;
     private ListChangeListener<PendingTradesListItem> tradesListChangeListener;
     private Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
+    private String tradeIdOfOpenChat;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -304,21 +310,20 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             newChatMessagesByTradeMap.put(trade.getId(),
                     trade.getCommunicationMessages().stream().filter(m -> !m.isWasDisplayed()).count());
         });
-
-        log.error(newChatMessagesByTradeMap.toString());
     }
 
     private void openChat(Trade trade) {
         if (chatPopupStage != null)
             chatPopupStage.close();
 
+        trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+        trade.persist();
+        tradeIdOfOpenChat = trade.getId();
+
         Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
         tradeChat.setAllowAttachments(false);
         tradeChat.setDisplayHeader(false);
         tradeChat.initialize();
-
-        trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
-        trade.persist();
 
         AnchorPane pane = new AnchorPane(tradeChat);
         pane.setPrefSize(600, 400);
@@ -345,7 +350,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         chatPopupStage.initOwner(rootScene.getWindow());
         chatPopupStage.initModality(Modality.NONE);
         chatPopupStage.initStyle(StageStyle.DECORATED);
-        chatPopupStage.setOnHiding(event -> tradeChat.deactivate());
+        chatPopupStage.setOnHiding(event -> {
+            tradeChat.deactivate();
+            // at close we set all as displayed. While open we ignore updates of the numNewMsg in the list icon.
+            trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+            trade.persist();
+            tradeIdOfOpenChat = null;
+        });
 
         Scene scene = new Scene(pane);
         scene.getStylesheets().setAll("/bisq/desktop/theme-light.css",
@@ -621,30 +632,55 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         chatColumn.setSortable(false);
         chatColumn.setCellFactory(
                 new Callback<>() {
-
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
                         return new TableCell<>() {
-
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
                                 if (!empty && newItem != null) {
                                     Trade trade = newItem.getTrade();
 
-                                    Label label = new Label();
-                                    //todo
-                                    // label.setLayoutY(-5);
-                                    //label.setLayoutX(10);
-                                    label.getStyleClass().addAll("icon", "highlight");
-                                    Tooltip.install(label, new Tooltip(Res.get("portfolio.pending.openChat")));
-                                    AwesomeDude.setIcon(label, AwesomeIcon.COMMENTS_ALT);
-                                    label.setOnMouseClicked(e -> openChat(trade));
-                                    setPadding(new Insets(-20, 0, 0, 20));
-                                    setGraphic(label);
+                                    Label icon = AwesomeDude.createIconLabel(AwesomeIcon.COMMENTS_ALT, "25");
+                                    Tooltip.install(icon, new Tooltip(Res.get("portfolio.pending.openChat")));
+
+                                    JFXBadge numNewMsg = new JFXBadge(icon);
+                                    // FIXME does not take position...
+                                    numNewMsg.setPosition(Pos.TOP_RIGHT);
+                                    icon.setOnMouseClicked(e -> {
+                                        openChat(trade);
+                                        update(trade, numNewMsg);
+                                    });
+
+                                    ListChangeListener<DisputeCommunicationMessage> listener = c -> update(trade, numNewMsg);
+                                    trade.getCommunicationMessages().addListener(listener);
+
+                                    update(trade, numNewMsg);
+
+                                    Pane pane = new Pane();
+                                    pane.getChildren().addAll(icon, numNewMsg);
+                                    setGraphic(pane);
                                 } else {
                                     setGraphic(null);
                                 }
+                            }
+
+                            private void update(Trade trade, JFXBadge numNewMsg) {
+                                if (!trade.getId().equals(tradeIdOfOpenChat)) {
+                                    updateNewChatMessagesByTradeMap();
+                                    long num = newChatMessagesByTradeMap.get(trade.getId());
+                                    if (num > 0) {
+                                        numNewMsg.setText(String.valueOf(num));
+                                        numNewMsg.setEnabled(true);
+                                    } else {
+                                        numNewMsg.setText("");
+                                        numNewMsg.setEnabled(false);
+                                    }
+                                } else {
+                                    numNewMsg.setText("");
+                                    numNewMsg.setEnabled(false);
+                                }
+                                numNewMsg.refreshBadge();
                             }
                         };
                     }
