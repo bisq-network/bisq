@@ -1,0 +1,155 @@
+.root {
+    -bs-color-primary: #25b135;
+    -bs-color-primary-dark: #2ea33c;
+    -bs-text-color: #cfcecf;
+    -bs-background-color: #2e2e31;
+    -bs-background-gray: #1d1d21;
+    -bs-content-background-gray: #242424;
+    -bs-color-gray-13: #bbb;
+    -bs-color-gray-11: #f2f2f2;
+    -bs-color-gray-10: #cfcecf;
+    -bs-color-gray-6: #afaeb0;
+    -bs-color-gray-5: #212627;
+    -bs-color-gray-4: #929293;
+    -bs-color-gray-3: #7b7b7c;
+    -bs-color-gray-2: #504f52;
+    -bs-color-gray-1: #2e2e31;
+    -bs-color-gray-0: #1d1d21;
+    -bs-color-gray-dim: dimgray;
+    -bs-color-gray-ddd: #444444;
+    -bs-color-gray-ccc: #7a7a7a;
+    -bs-color-gray-bbb: #6a6a6a;
+    -bs-color-gray-aaa: #2e2e31;
+    -bs-color-gray-fafa: #fafafa;
+    -bs-color-blue-5: #0a4576;
+    -bs-color-blue-4: #57acc9;
+    -bs-color-blue-3: #9bbdc9;
+    -bs-color-blue-2: #6aa4b6;
+    -bs-color-blue-1: #b5e1ef;
+    -bs-color-blue-0: blue;
+    -bs-color-green-1: #c4d9c5;
+    -bs-color-green-2: #98b999;
+    -bs-color-green-3: #619864;
+    -bs-color-green-4: #15bc1d;
+    -bs-color-green-5: #2a7e2e;
+    -bs-red: #D73030;
+    -bs-turquoise: #2cacaf;
+    -bs-yellow: #ffb60f;
+    -bs-yellow-light: derive(-bs-yellow, 81%);
+    -bs-blue-transparent: #0f87c344;
+    -bs-bg-green: #99ba9c;
+    -bs-rd-green: #25B135;
+    -bs-rd-green-dark: #3EA34A;
+    -bs-rd-nav-selected: #25b135;
+    -bs-rd-nav-deselected: rgba(46, 46, 49, 0.59);
+    -bs-rd-nav-background: #2ea33c;
+    -bs-rd-nav-primary-background: #25b135;
+    -bs-rd-nav-primary-border: #44a750;
+    -bs-rd-nav-border: #2e2e31;
+    -bs-rd-nav-border-color: rgba(46, 46, 49, 0.31);
+    -bs-rd-tab-border: #111;
+    -bs-tab-content-area: #111;
+    -bs-color-gray-background: #2e2e31;
+    -bs-content-pane-bg-top: #1d1d21;
+    -bs-content-pane-bg-bottom: #2e2e31;
+    -bs-scroll-pane-background: transparent;
+    -bs-tab-content-area: transparent;
+    -bs-viewport-background: transparent;
+    -bs-footer-pane-background: #2e2e31;
+    -bs-footer-pane-text: #cfcecf;
+    -bs-footer-pane-line: #2e2e31;
+    -bs-rd-font-balance: #929293;
+    -bs-rd-font-dark-gray: #7b7b7c;
+    -bs-rd-font-dark: #afaeb0;
+    -bs-rd-font-light: #cfcecf;
+    -bs-rd-font-lighter: #f2f2f2;
+    -bs-rd-font-confirmation-label: #504f52;
+    -bs-rd-font-balance-label: #504f52;
+    -bs-text-color-transparent-dark: rgba(29, 29, 33, 0.54);
+    -bs-text-color-transparent: rgba(29, 29, 33, 0.2);
+    -bs-color-gray-line: #504f52;
+    -bs-rd-separator: #2e2e31;
+    -bs-rd-separator-dark: #151517;
+    -bs-rd-error-red: #d83431;
+    -bs-rd-message-bubble: #2cadaf;
+    -bs-toggle-selected: #504f52;
+    -bs-rd-tooltip-truncated: #afaeb0;
+    -bs-warning: #db6300;
+    -bs-buy: #2ea33c;
+    -bs-buy-focus: black;
+    -bs-buy-hover: #237b2d;
+    -bs-buy-transparent: rgba(46, 163, 60, 0.3);
+    -bs-sell: #ee6563;
+    -bs-sell-focus: #090202;
+    -bs-sell-hover: #b42522;
+    -bs-sell-transparent: rgba(216, 52, 49, 0.3);
+    -bs-volume-transparent: rgba(37, 177, 54, 0.3);
+    -bs-candle-stick-average-line: rgba(21, 188, 29, 0.8);
+    -bs-candle-stick-loss: #ee6563;
+    -bs-candle-stick-won: #15bc1d;
+    -bs-cancel: #1d1d21;
+    -bs-cancel-focus: black;
+    -bs-cancel-hover: #050506;
+    -fx-accent: #2ea33c;
+    -fx-box-border: #1d1d21;
+    -bs-green-soft: derive(-bs-rd-green, 60%);
+    -bs-red-soft: derive(-bs-rd-error-red, 60%);
+    -fx-focus-color: #2ea33c;
+    -fx-faint-focus-color: rgba(11, 76, 96, 0.13);
+    -fx-selection-bar: #2a7e2e;
+    -fx-selection-bar-non-focused: -fx-selection-bar;
+    -fx-default-button: white;
+}
+
+.text {
+    -fx-fill: -bs-text-color;
+    -fx-text-fill: -bs-text-color;
+}
+
+.list-view {
+    -fx-background-color: -bs-background-color;
+}
+.list-view .list-cell {
+    -fx-background-color: -bs-background-color;
+}
+.list-view .list-cell:odd {
+    -fx-background-color: derive(-bs-background-color, -5%);
+}
+.list-view .list-cell:even {
+    -fx-background-color: derive(-bs-background-color, 5%);
+}
+.list-view .list-cell .text {
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-fill: -bs-rd-font-dark-gray;
+}
+
+.number-column.table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.table-view {
+    -fx-background-color: -bs-background-color;
+}
+.table-view .table-cell {
+    -fx-background-color: -bs-background-color;
+}
+
+.jfx-tab-pane .tab-content-area {
+    -fx-background-color: -bs-tab-content-area;
+}
+
+.jfx-tab-pane .viewport {
+    -fx-background-color: -bs-viewport-background;
+}
+
+.scroll-pane {
+    -fx-background-color: -bs-scroll-pane-background;
+}
+
+#sell-button, #sell-button-big {
+    -fx-background-color: #660000 !important;
+}
+
+#buy-button, #buy-button-big {
+    -fx-background-color: #006600 !important;
+}

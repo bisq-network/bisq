@@ -89,5 +89,5 @@
 }
 
 .chart-plot-background {
-    -fx-background-color: -bs-rd-white;
+    -fx-background-color: -bs-background-color;
 }
