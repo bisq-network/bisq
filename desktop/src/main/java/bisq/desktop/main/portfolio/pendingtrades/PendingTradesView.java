@@ -316,6 +316,19 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (chatPopupStage != null)
             chatPopupStage.close();
 
+        if (trade.getCommunicationMessages().isEmpty()) {
+            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                    DisputeCommunicationMessage.Type.TRADE,
+                    trade.getId(),
+                    0,
+                    false,
+                    Res.get("tradeChat.rules"),
+                    new NodeAddress("null:0000")
+            );
+            disputeCommunicationMessage.setSystemMessage(true);
+            trade.getCommunicationMessages().add(disputeCommunicationMessage);
+        }
+
         trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
@@ -326,7 +339,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeChat.initialize();
 
         AnchorPane pane = new AnchorPane(tradeChat);
-        pane.setPrefSize(600, 400);
+        pane.setPrefSize(700, 500);
         AnchorPane.setLeftAnchor(tradeChat, 10d);
         AnchorPane.setRightAnchor(tradeChat, 10d);
         AnchorPane.setTopAnchor(tradeChat, -20d);
@@ -344,7 +357,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeChat.scrollToBottom();
 
         chatPopupStage = new Stage();
-        chatPopupStage.setTitle(Res.get("portfolio.pending.chatWindowTitle", trade.getShortId()));
+        chatPopupStage.setTitle(Res.get("tradeChat.chatWindowTitle", trade.getShortId()));
         StackPane owner = MainView.getRootContainer();
         Scene rootScene = owner.getScene();
         chatPopupStage.initOwner(rootScene.getWindow());
@@ -642,7 +655,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     Trade trade = newItem.getTrade();
 
                                     Label icon = AwesomeDude.createIconLabel(AwesomeIcon.COMMENTS_ALT, "25");
-                                    Tooltip.install(icon, new Tooltip(Res.get("portfolio.pending.openChat")));
+                                    Tooltip.install(icon, new Tooltip(Res.get("tradeChat.openChat")));
 
                                     JFXBadge numNewMsg = new JFXBadge(icon);
                                     // FIXME does not take position...

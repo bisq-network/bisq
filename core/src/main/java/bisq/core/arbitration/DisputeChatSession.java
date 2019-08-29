@@ -43,13 +43,12 @@ import javax.annotation.Nullable;
 public class DisputeChatSession extends ChatSession {
     private static final Logger log = LoggerFactory.getLogger(DisputeChatSession.class);
 
+    @Nullable
     private Dispute dispute;
     private DisputeManager disputeManager;
 
-    public DisputeChatSession(
-            @Nullable Dispute dispute,
-            DisputeManager disputeManager
-    ) {
+    public DisputeChatSession(@Nullable Dispute dispute,
+                              DisputeManager disputeManager) {
         super(DisputeCommunicationMessage.Type.DISPUTE);
         this.dispute = dispute;
         this.disputeManager = disputeManager;

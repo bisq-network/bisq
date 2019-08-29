@@ -31,6 +31,7 @@ import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
 import bisq.core.locale.Res;
+import bisq.core.trade.TradeChatSession;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
@@ -200,8 +201,9 @@ public class Chat extends AnchorPane {
         inputTextArea = new BisqTextArea();
         inputTextArea.setPrefHeight(70);
         inputTextArea.setWrapText(true);
-        if (chatSession.isClient())
+        if (chatSession instanceof TradeChatSession || chatSession.isClient()) {
             inputTextArea.setPromptText(Res.get("support.input.prompt"));
+        }
 
         sendButton = new AutoTooltipButton(Res.get("support.send"));
         sendButton.setDefaultButton(true);
