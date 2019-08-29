@@ -108,8 +108,6 @@ public class DisputeManager implements PersistedDataHost {
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
-    private boolean servicesInitialized;
-
     @Getter
     private final ChatManager chatManager;
 
@@ -160,7 +158,7 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        servicesInitialized = true;
+        chatManager.onAllServicesInitialized();
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {

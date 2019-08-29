@@ -59,6 +59,7 @@ public class ChatManager {
 
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private boolean allServicesInitialized;
 
     public ChatManager(P2PService p2PService,
                        WalletsSetup walletsSetup
@@ -77,13 +78,18 @@ public class ChatManager {
         });
     }
 
+    public void onAllServicesInitialized() {
+        allServicesInitialized = true;
+    }
+
     public void tryApplyMessages() {
         if (isReadyForTxBroadcast())
             applyMessages();
     }
 
     private boolean isReadyForTxBroadcast() {
-        return p2PService.isBootstrapped() &&
+        return allServicesInitialized &&
+                p2PService.isBootstrapped() &&
                 walletsSetup.isDownloadComplete() &&
                 walletsSetup.hasSufficientPeersForBroadcast();
     }
@@ -139,7 +145,8 @@ public class ChatManager {
             sendAckMessage(disputeCommunicationMessage, receiverPubKeyRing, true, null);
     }
 
-    private void processAckMessage(AckMessage ackMessage, @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    private void processAckMessage(AckMessage ackMessage,
+                                   @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (ackMessage.getSourceType() == AckMessageSourceType.DISPUTE_MESSAGE) {
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
