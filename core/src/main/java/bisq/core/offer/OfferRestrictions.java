@@ -28,13 +28,13 @@ public class OfferRestrictions {
     public static boolean isOfferRisky(Offer offer) {
         return offer != null &&
                 offer.isBuyOffer() &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
                 isMinTradeAmountRisky(offer);
     }
 
     public static boolean isSellOfferRisky(Offer offer) {
         return offer != null &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
                 isMinTradeAmountRisky(offer);
     }
 
@@ -44,7 +44,7 @@ public class OfferRestrictions {
 
         Offer offer = trade.getOffer();
         return offer != null &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod()) &&
+                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
                 trade.getTradeAmount() != null &&
                 isAmountRisky(trade.getTradeAmount());
     }
