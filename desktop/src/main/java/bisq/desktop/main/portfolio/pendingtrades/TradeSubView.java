@@ -58,7 +58,7 @@ public abstract class TradeSubView extends HBox {
     private GridPane leftGridPane;
     private TitledGroupBg tradeProcessTitledGroupBg;
     private int leftGridPaneRowIndex = 0;
-    private Subscription viewStateSubscription;
+    protected Subscription viewStateSubscription;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation

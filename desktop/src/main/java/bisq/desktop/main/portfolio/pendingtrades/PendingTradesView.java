@@ -90,19 +90,19 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
+    private final Preferences preferences;
     @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn,
             marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn;
-
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
     private Subscription selectedTableItemSubscription;
     private Subscription selectedItemSubscription;
-    private final Preferences preferences;
+    private Stage chatPopupStage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -563,6 +563,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private void openChat(Trade trade) {
+        if (chatPopupStage != null)
+            chatPopupStage.close();
+
         Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
         tradeChat.setAllowAttachments(false);
         tradeChat.setDisplayHeader(false);
@@ -586,39 +589,38 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeChat.activate();
         tradeChat.scrollToBottom();
 
-        Stage stage = new Stage();
-        stage.setTitle(Res.get("portfolio.pending.chatWindowTitle", trade.getShortId()));
+        chatPopupStage = new Stage();
+        chatPopupStage.setTitle(Res.get("portfolio.pending.chatWindowTitle", trade.getShortId()));
         StackPane owner = MainView.getRootContainer();
         Scene rootScene = owner.getScene();
-        stage.initOwner(rootScene.getWindow());
-        stage.initModality(Modality.NONE);
-        stage.initStyle(StageStyle.DECORATED);
+        chatPopupStage.initOwner(rootScene.getWindow());
+        chatPopupStage.initModality(Modality.NONE);
+        chatPopupStage.initStyle(StageStyle.DECORATED);
+        chatPopupStage.setOnHiding(event -> tradeChat.deactivate());
 
         Scene scene = new Scene(pane);
         scene.getStylesheets().setAll(
                 "/bisq/desktop/bisq.css",
                 "/bisq/desktop/images.css");
-        scene.setOnKeyPressed(ev -> {
+        scene.addEventHandler(KeyEvent.KEY_RELEASED, ev -> {
             if (ev.getCode() == KeyCode.ESCAPE) {
                 ev.consume();
-                stage.hide();
+                chatPopupStage.hide();
             }
         });
-        stage.setScene(scene);
+        chatPopupStage.setScene(scene);
 
-        stage.setOpacity(0);
-        stage.show();
+        chatPopupStage.setOpacity(0);
+        chatPopupStage.show();
 
-        //todo exit listener
-
-        Window window = rootScene.getWindow();
-        double titleBarHeight = window.getHeight() - rootScene.getHeight();
-        stage.setX(Math.round(window.getX() + (owner.getWidth() - stage.getWidth() / 4 * 3)));
-        stage.setY(Math.round(window.getY() + titleBarHeight + (owner.getHeight() - stage.getHeight() / 4 * 3)));
+        Window rootSceneWindow = rootScene.getWindow();
+        double titleBarHeight = rootSceneWindow.getHeight() - rootScene.getHeight();
+        chatPopupStage.setX(Math.round(rootSceneWindow.getX() + (owner.getWidth() - chatPopupStage.getWidth() / 4 * 3)));
+        chatPopupStage.setY(Math.round(rootSceneWindow.getY() + titleBarHeight + (owner.getHeight() - chatPopupStage.getHeight() / 4 * 3)));
 
         // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
         // and after a short moment in the correct position
-        UserThread.execute(() -> stage.setOpacity(1));
+        UserThread.execute(() -> chatPopupStage.setOpacity(1));
     }
 }
 
