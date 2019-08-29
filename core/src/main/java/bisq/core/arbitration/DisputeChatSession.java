@@ -96,10 +96,12 @@ public class DisputeChatSession extends ChatSession {
         return !dispute.isClosed();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Not dependent on selected dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
     public NodeAddress getPeerNodeAddress(DisputeCommunicationMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message.getTradeId(), message.getTraderId());
@@ -111,6 +113,7 @@ public class DisputeChatSession extends ChatSession {
         return disputeManager.getNodeAddressPubKeyRingTuple(disputeOptional.get()).first;
     }
 
+    @Nullable
     @Override
     public PubKeyRing getPeerPubKeyRing(DisputeCommunicationMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message.getTradeId(), message.getTraderId());
@@ -128,23 +131,23 @@ public class DisputeChatSession extends ChatSession {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
-        if (message instanceof OpenNewDisputeMessage)
+        if (message instanceof OpenNewDisputeMessage) {
             disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-        else if (message instanceof PeerOpenedDisputeMessage)
+        } else if (message instanceof PeerOpenedDisputeMessage) {
             disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        else if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage)message).getType() != DisputeCommunicationMessage.Type.DISPUTE){
-                log.debug("Ignore non distpute type communication message");
+        } else if (message instanceof DisputeCommunicationMessage) {
+            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.DISPUTE) {
+                log.debug("Ignore non dispute type communication message");
                 return;
             }
             disputeManager.getChatManager().onDisputeDirectMessage((DisputeCommunicationMessage) message);
-        }
-        else if (message instanceof DisputeResultMessage)
+        } else if (message instanceof DisputeResultMessage) {
             disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
-        else if (message instanceof PeerPublishedDisputePayoutTxMessage)
+        } else if (message instanceof PeerPublishedDisputePayoutTxMessage) {
             disputeManager.onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
-        else
+        } else {
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
+        }
     }
 
     @Override
@@ -162,14 +165,13 @@ public class DisputeChatSession extends ChatSession {
     @Override
     public void storeDisputeCommunicationMessage(DisputeCommunicationMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message.getTradeId(), message.getTraderId());
-
         if (disputeOptional.isPresent()) {
-            if (disputeOptional.get().getDisputeCommunicationMessages().stream()
-                    .noneMatch(m -> m.getUid().equals(message.getUid())))
+            if (disputeOptional.get().getDisputeCommunicationMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 disputeOptional.get().addDisputeCommunicationMessage(message);
-            else
+            } else {
                 log.warn("We got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
+            }
         }
     }
 }

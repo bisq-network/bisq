@@ -78,6 +78,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         void onMessageStateChanged();
     }
 
+    // Added with v1.1.6. Old clients will not have set that field and we fall back to entry 0 which is DISPUTE.
     private final DisputeCommunicationMessage.Type type;
     private final String tradeId;
     private final int traderId;
@@ -182,40 +183,44 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage protobuf,
+    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto,
                                                         int messageVersion) {
+        // If we get a msg from an old client type will be ordinal 0 which is the dispute entry and as we only added
+        // the trade case it is the desired behaviour.
+        DisputeCommunicationMessage.Type type = DisputeCommunicationMessage.Type.fromProto(proto.getType());
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                DisputeCommunicationMessage.Type.fromProto(protobuf.getType()),
-                protobuf.getTradeId(),
-                protobuf.getTraderId(),
-                protobuf.getSenderIsTrader(),
-                protobuf.getMessage(),
-                new ArrayList<>(protobuf.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList())),
-                NodeAddress.fromProto(protobuf.getSenderNodeAddress()),
-                protobuf.getDate(),
-                protobuf.getArrived(),
-                protobuf.getStoredInMailbox(),
-                protobuf.getUid(),
+                type,
+                proto.getTradeId(),
+                proto.getTraderId(),
+                proto.getSenderIsTrader(),
+                proto.getMessage(),
+                new ArrayList<>(proto.getAttachmentsList().stream().map(Attachment::fromProto).collect(Collectors.toList())),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getDate(),
+                proto.getArrived(),
+                proto.getStoredInMailbox(),
+                proto.getUid(),
                 messageVersion,
-                protobuf.getAcknowledged(),
-                protobuf.getSendMessageError().isEmpty() ? null : protobuf.getSendMessageError(),
-                protobuf.getAckError().isEmpty() ? null : protobuf.getAckError());
-        disputeCommunicationMessage.setSystemMessage(protobuf.getIsSystemMessage());
+                proto.getAcknowledged(),
+                proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
+                proto.getAckError().isEmpty() ? null : proto.getAckError());
+        disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
         return disputeCommunicationMessage;
     }
 
-    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage protobuf) {
+    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence
         // We set the value to -1 to indicate it is set but irrelevant
-        return fromProto(protobuf, -1);
+        return fromProto(proto, -1);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void addAllAttachments(List<Attachment> attachments) {
         this.attachments.addAll(attachments);
     }
@@ -280,8 +285,12 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     private void notifyChangeListener() {
-        if (listener != null && listener.get() != null)
-            listener.get().onMessageStateChanged();
+        if (listener != null) {
+            Listener listener = this.listener.get();
+            if (listener != null) {
+                listener.onMessageStateChanged();
+            }
+        }
     }
 
     @Override

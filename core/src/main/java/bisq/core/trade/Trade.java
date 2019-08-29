@@ -461,30 +461,30 @@ public abstract class Trade implements Tradable, Model {
         return builder.build();
     }
 
-    public static Trade fromProto(Trade trade, protobuf.Trade protobuf, CoreProtoResolver coreProtoResolver) {
-        trade.setTakeOfferDate(protobuf.getTakeOfferDate());
-        trade.setProcessModel(ProcessModel.fromProto(protobuf.getProcessModel(), coreProtoResolver));
-        trade.setState(State.fromProto(protobuf.getState()));
-        trade.setDisputeState(DisputeState.fromProto(protobuf.getDisputeState()));
-        trade.setTradePeriodState(TradePeriodState.fromProto(protobuf.getTradePeriodState()));
-        trade.setTakerFeeTxId(ProtoUtil.stringOrNullFromProto(protobuf.getTakerFeeTxId()));
-        trade.setDepositTxId(ProtoUtil.stringOrNullFromProto(protobuf.getDepositTxId()));
-        trade.setPayoutTxId(ProtoUtil.stringOrNullFromProto(protobuf.getPayoutTxId()));
-        trade.setContract(protobuf.hasContract() ? Contract.fromProto(protobuf.getContract(), coreProtoResolver) : null);
-        trade.setContractAsJson(ProtoUtil.stringOrNullFromProto(protobuf.getContractAsJson()));
-        trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(protobuf.getContractHash()));
-        trade.setTakerContractSignature(ProtoUtil.stringOrNullFromProto(protobuf.getTakerContractSignature()));
-        trade.setMakerContractSignature(ProtoUtil.stringOrNullFromProto(protobuf.getMakerContractSignature()));
-        trade.setArbitratorNodeAddress(protobuf.hasArbitratorNodeAddress() ? NodeAddress.fromProto(protobuf.getArbitratorNodeAddress()) : null);
-        trade.setMediatorNodeAddress(protobuf.hasMediatorNodeAddress() ? NodeAddress.fromProto(protobuf.getMediatorNodeAddress()) : null);
-        trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(protobuf.getArbitratorBtcPubKey()));
-        trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(protobuf.getTakerPaymentAccountId()));
-        trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(protobuf.getErrorMessage()));
-        trade.setArbitratorPubKeyRing(protobuf.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(protobuf.getArbitratorPubKeyRing()) : null);
-        trade.setMediatorPubKeyRing(protobuf.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(protobuf.getMediatorPubKeyRing()) : null);
-        trade.setCounterCurrencyTxId(protobuf.getCounterCurrencyTxId().isEmpty() ? null : protobuf.getCounterCurrencyTxId());
+    public static Trade fromProto(Trade trade, protobuf.Trade proto, CoreProtoResolver coreProtoResolver) {
+        trade.setTakeOfferDate(proto.getTakeOfferDate());
+        trade.setProcessModel(ProcessModel.fromProto(proto.getProcessModel(), coreProtoResolver));
+        trade.setState(State.fromProto(proto.getState()));
+        trade.setDisputeState(DisputeState.fromProto(proto.getDisputeState()));
+        trade.setTradePeriodState(TradePeriodState.fromProto(proto.getTradePeriodState()));
+        trade.setTakerFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakerFeeTxId()));
+        trade.setDepositTxId(ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()));
+        trade.setPayoutTxId(ProtoUtil.stringOrNullFromProto(proto.getPayoutTxId()));
+        trade.setContract(proto.hasContract() ? Contract.fromProto(proto.getContract(), coreProtoResolver) : null);
+        trade.setContractAsJson(ProtoUtil.stringOrNullFromProto(proto.getContractAsJson()));
+        trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()));
+        trade.setTakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()));
+        trade.setMakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()));
+        trade.setArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
+        trade.setMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
+        trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
+        trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
+        trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
+        trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
+        trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
+        trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
 
-        trade.communicationMessages.addAll(protobuf.getCommunicationMessagesList().stream()
+        trade.communicationMessages.addAll(proto.getCommunicationMessagesList().stream()
                 .map(DisputeCommunicationMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 

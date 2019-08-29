@@ -132,14 +132,14 @@ public class TradeChatSession extends ChatSession {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
         if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage)message).getType() != DisputeCommunicationMessage.Type.TRADE){
+            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.TRADE) {
                 log.debug("Ignore non trade type communication message");
                 return;
             }
             chatManager.onDisputeDirectMessage((DisputeCommunicationMessage) message);
-        }
-        else
+        } else {
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
+        }
     }
 
     @Override
@@ -166,5 +166,4 @@ public class TradeChatSession extends ChatSession {
                         message.getUid(), message.getTradeId());
         }
     }
-
 }

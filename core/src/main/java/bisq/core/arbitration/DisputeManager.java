@@ -70,8 +70,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.io.File;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -103,8 +101,6 @@ public class DisputeManager implements PersistedDataHost {
     @Getter
     private DisputeList disputes;
     private final String disputeInfo;
-    //    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
-//    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
     private final Map<String, Timer> delayMsgMap = new HashMap<>();
@@ -632,6 +628,7 @@ public class DisputeManager implements PersistedDataHost {
 
         chatManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
     }
+
     // We get that message at both peers. The dispute object is in context of the trader
     public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         String errorMessage = null;
