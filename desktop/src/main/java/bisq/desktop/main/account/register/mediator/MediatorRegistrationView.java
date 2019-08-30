@@ -15,14 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.account.register.arbitrator;
+package bisq.desktop.main.account.register.mediator;
 
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.account.register.DisputeResolverRegistrationView;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.dispute.arbitration.Arbitrator;
+import bisq.core.dispute.mediator.Mediator;
 import bisq.core.locale.Res;
 
 import com.google.inject.name.Named;
@@ -30,16 +30,16 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class ArbitratorRegistrationView extends DisputeResolverRegistrationView<Arbitrator, ArbitratorRegistrationViewModel> {
+public class MediatorRegistrationView extends DisputeResolverRegistrationView<Mediator, MediatorRegistrationViewModel> {
 
     @Inject
-    public ArbitratorRegistrationView(ArbitratorRegistrationViewModel model,
-                                      @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public MediatorRegistrationView(MediatorRegistrationViewModel model,
+                                    @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model, useDevPrivilegeKeys);
     }
 
     @Override
     protected String getRole() {
-        return Res.get("shared.arbitrator2");
+        return Res.get("shared.mediator");
     }
 }

@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.account.register.arbitrator;
+package bisq.desktop.main.account.register.mediator;
 
 import bisq.desktop.main.account.register.DisputeResolverRegistrationViewModel;
 
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.mediator.Mediator;
+import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
@@ -34,25 +33,22 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ArbitratorRegistrationViewModel extends DisputeResolverRegistrationViewModel<Arbitrator, ArbitratorManager> {
+class MediatorRegistrationViewModel extends DisputeResolverRegistrationViewModel<Mediator, MediatorManager> {
 
     @Inject
-    public ArbitratorRegistrationViewModel(ArbitratorManager disputeResolverManager,
-                                           User user,
-                                           P2PService p2PService,
-                                           BtcWalletService walletService,
-                                           KeyRing keyRing) {
+    public MediatorRegistrationViewModel(MediatorManager disputeResolverManager,
+                                         User user,
+                                         P2PService p2PService,
+                                         BtcWalletService walletService,
+                                         KeyRing keyRing) {
         super(disputeResolverManager, user, p2PService, walletService, keyRing);
     }
 
     @Override
-    protected Arbitrator getDisputeResolver(String registrationSignature,
-                                            String emailAddress) {
-        AddressEntry arbitratorAddressEntry = walletService.getArbitratorAddressEntry();
-        return new Arbitrator(
+    protected Mediator getDisputeResolver(String registrationSignature,
+                                          String emailAddress) {
+        return new Mediator(
                 p2PService.getAddress(),
-                arbitratorAddressEntry.getPubKey(),
-                arbitratorAddressEntry.getAddressString(),
                 keyRing.getPubKeyRing(),
                 new ArrayList<>(languageCodes),
                 new Date().getTime(),
@@ -65,7 +61,7 @@ public class ArbitratorRegistrationViewModel extends DisputeResolverRegistration
     }
 
     @Override
-    protected Arbitrator getRegisteredDisputeResolverFromUser() {
-        return user.getRegisteredArbitrator();
+    protected Mediator getRegisteredDisputeResolverFromUser() {
+        return user.getRegisteredMediator();
     }
 }
