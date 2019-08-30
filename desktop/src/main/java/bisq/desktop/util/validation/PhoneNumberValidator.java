@@ -23,17 +23,17 @@ public class PhoneNumberValidator extends InputValidator {
     /**
      * ISO 3166-1 alpha-2 country code
      */
-    private final String isoCountryCode;
+    private String isoCountryCode;
     /**
      * The international calling code mapped to the 'isoCountryCode' constructor argument.
      */
     @Nullable
     @Getter
-    private final String callingCode;
+    private String callingCode;
     /**
      * The normalized (digits only) representation of an international calling code.
      */
-    private final String normalizedCallingCode;
+    private String normalizedCallingCode;
     /**
      * Phone number in E.164 format.
      */
@@ -41,23 +41,33 @@ public class PhoneNumberValidator extends InputValidator {
     @Getter
     private String normalizedPhoneNumber;
 
-    // Hide no-arg constructor and set final String fields
-    private PhoneNumberValidator() {
-        this.isoCountryCode = null;
-        this.callingCode = null;
-        this.normalizedCallingCode = null;
-    }
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructors
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Public no-arg constructor required by Guice injector,
+    // but isoCountryCode must be set before validation.
+    public PhoneNumberValidator() {
+    }
+    
     public PhoneNumberValidator(String isoCountryCode) {
         this.isoCountryCode = isoCountryCode;
         this.callingCode = CountryCallingCodes.getCallingCode(isoCountryCode);
         this.normalizedCallingCode = CountryCallingCodes.getNormalizedCallingCode(isoCountryCode);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public ValidationResult validate(String input) {
         normalizedPhoneNumber = null;
-        ValidationResult result = super.validate(input);
+        ValidationResult result = super.validate(isoCountryCode);
+        if (!result.isValid) {
+            return new ValidationResult(false, Res.get("validation.phone.missingCountryCode"));
+        }
+        result = super.validate(input);
         if (!result.isValid) {
             return result;
         }
@@ -88,6 +98,21 @@ public class PhoneNumberValidator extends InputValidator {
         }
         return result;
     }
+
+    /**
+     * Setter for property 'isoCountryCode'.
+     *
+     * @param isoCountryCode Value to set for property 'isoCountryCode'.
+     */
+    public void setIsoCountryCode(String isoCountryCode) {
+        this.isoCountryCode = isoCountryCode;
+        this.callingCode = CountryCallingCodes.getCallingCode(isoCountryCode);
+        this.normalizedCallingCode = CountryCallingCodes.getNormalizedCallingCode(isoCountryCode);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private ValidationResult validateIsNumeric(String rawInput, String pureNumber) {
         try {

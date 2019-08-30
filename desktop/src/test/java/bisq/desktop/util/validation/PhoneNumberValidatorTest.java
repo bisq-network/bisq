@@ -21,6 +21,15 @@ public class PhoneNumberValidatorTest {
     }
 
     @Test
+    public void testMissingCountryCode() {
+        validator = new PhoneNumberValidator();
+        validationResult = validator.validate("+12124567890");
+        assertFalse("Should not be valid if validator's country code is missing", validationResult.isValid);
+        assertEquals(Res.get("validation.phone.missingCountryCode"), validationResult.errorMessage);
+        assertNull(validator.getNormalizedPhoneNumber());
+    }
+
+    @Test
     public void testNoInput() {
         validator = new PhoneNumberValidator("AT");
         validationResult = validator.validate("");
@@ -265,7 +274,6 @@ public class PhoneNumberValidatorTest {
                 validationResult.errorMessage);
         assertNull(validator.getNormalizedPhoneNumber());
     }
-
 
     @Test
     public void testUSAreaCodeMatchesCallingCode() {
