@@ -34,6 +34,7 @@ import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileNotificationService;
@@ -127,6 +128,7 @@ public class BisqSetup {
     private final Balances balances;
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
+    private final MediatorManager mediatorManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
@@ -206,6 +208,7 @@ public class BisqSetup {
                      Balances balances,
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
+                     MediatorManager mediatorManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
@@ -247,6 +250,7 @@ public class BisqSetup {
         this.balances = balances;
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -626,6 +630,7 @@ public class BisqSetup {
         balances.onAllServicesInitialized();
 
         arbitratorManager.onAllServicesInitialized();
+        mediatorManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));

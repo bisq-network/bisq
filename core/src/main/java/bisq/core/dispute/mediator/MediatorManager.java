@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration;
+package bisq.core.dispute.mediator;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.dispute.DisputeResolverManager;
@@ -26,59 +26,57 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.crypto.KeyRing;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import javax.inject.Inject;
+
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Singleton
-public class ArbitratorManager extends DisputeResolverManager<Arbitrator> {
+public class MediatorManager extends DisputeResolverManager<Mediator> {
 
     @Inject
-    public ArbitratorManager(KeyRing keyRing,
-                             ArbitratorService disputeResolverService,
-                             User user,
-                             FilterManager filterManager,
-                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public MediatorManager(KeyRing keyRing,
+                           MediatorService disputeResolverService,
+                           User user,
+                           FilterManager filterManager,
+                           @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(keyRing, disputeResolverService, user, filterManager, useDevPrivilegeKeys);
     }
 
     @Override
     protected boolean isExpectedInstance(ProtectedStorageEntry data) {
-        return data.getProtectedStoragePayload() instanceof Arbitrator;
+        return data.getProtectedStoragePayload() instanceof Mediator;
     }
 
     @Override
-    protected void addAcceptedDisputeResolverToUser(Arbitrator disputeResolver) {
-        user.addAcceptedArbitrator(disputeResolver);
+    protected void addAcceptedDisputeResolverToUser(Mediator disputeResolver) {
+        user.addAcceptedMediator(disputeResolver);
     }
 
     @Override
     protected void removeAcceptedDisputeResolverFromUser(ProtectedStorageEntry data) {
-        user.removeAcceptedArbitrator((Arbitrator) data.getProtectedStoragePayload());
+        user.removeAcceptedMediator((Mediator) data.getProtectedStoragePayload());
     }
 
     @Override
-    protected List<Arbitrator> getAcceptedDisputeResolversFromUser() {
-        return user.getAcceptedArbitrators();
+    protected List<Mediator> getAcceptedDisputeResolversFromUser() {
+        return user.getAcceptedMediators();
     }
 
     @Override
     protected void clearAcceptedDisputeResolversAtUser() {
-        user.clearAcceptedArbitrators();
+        user.clearAcceptedMediators();
     }
 
     @Override
-    protected Arbitrator getRegisteredDisputeResolverFromUser() {
-        return user.getRegisteredArbitrator();
+    protected Mediator getRegisteredDisputeResolverFromUser() {
+        return user.getRegisteredMediator();
     }
 
     @Override
-    protected void setRegisteredDisputeResolverAtUser(Arbitrator disputeResolver) {
-        user.setRegisteredArbitrator(disputeResolver);
+    protected void setRegisteredDisputeResolverAtUser(Mediator disputeResolver) {
+        user.setRegisteredMediator(disputeResolver);
     }
 }

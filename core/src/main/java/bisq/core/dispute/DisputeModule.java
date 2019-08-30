@@ -17,8 +17,6 @@
 
 package bisq.core.dispute;
 
-import bisq.core.dispute.arbitration.ArbitratorManager;
-import bisq.core.dispute.arbitration.ArbitratorService;
 import bisq.core.dispute.arbitration.DisputeManager;
 
 import bisq.common.app.AppModule;
@@ -34,8 +32,6 @@ public class DisputeModule extends AppModule {
 
     @Override
     protected final void configure() {
-        bind(ArbitratorManager.class).in(Singleton.class);
         bind(DisputeManager.class).in(Singleton.class);
-        bind(ArbitratorService.class).in(Singleton.class);
     }
 }

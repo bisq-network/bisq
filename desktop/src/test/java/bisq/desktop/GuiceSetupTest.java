@@ -21,6 +21,10 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.app.P2PNetworkSetup;
 import bisq.core.app.TorSetup;
 import bisq.core.app.WalletAppSetup;
+import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.arbitration.ArbitratorService;
+import bisq.core.dispute.mediator.MediatorManager;
+import bisq.core.dispute.mediator.MediatorService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
@@ -133,6 +137,10 @@ public class GuiceSetupTest {
         assertSingleton(PriceAlert.class);
         assertSingleton(MarketAlerts.class);
         assertSingleton(ChargeBackRisk.class);
+        assertSingleton(ArbitratorService.class);
+        assertSingleton(ArbitratorManager.class);
+        assertSingleton(MediatorService.class);
+        assertSingleton(MediatorManager.class);
 
         assertNotSingleton(Storage.class);
     }
