@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration;
+package bisq.core.dispute.mediator;
 
 import bisq.core.dispute.DisputeResolverService;
 import bisq.core.filter.FilterManager;
@@ -31,17 +31,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ArbitratorService extends DisputeResolverService<Arbitrator> {
+import lombok.extern.slf4j.Slf4j;
+
+
+@Slf4j
+public class MediatorService extends DisputeResolverService<Mediator> {
     @Inject
-    public ArbitratorService(P2PService p2PService, FilterManager filterManager) {
+    public MediatorService(P2PService p2PService, FilterManager filterManager) {
         super(p2PService, filterManager);
     }
 
     @Override
-    protected Set<Arbitrator> getCollect(List<String> bannedDisputeResolvers) {
+    protected Set<Mediator> getCollect(List<String> bannedDisputeResolvers) {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
-                .map(data -> (Arbitrator) data.getProtectedStoragePayload())
+                .filter(data -> data.getProtectedStoragePayload() instanceof Mediator)
+                .map(data -> (Mediator) data.getProtectedStoragePayload())
                 .filter(a -> bannedDisputeResolvers == null ||
                         !bannedDisputeResolvers.contains(a.getNodeAddress().getFullAddress()))
                 .collect(Collectors.toSet());
@@ -49,10 +53,10 @@ public class ArbitratorService extends DisputeResolverService<Arbitrator> {
 
     @Override
     protected List<String> getDisputeResolversFromFilter() {
-        return filterManager.getFilter() != null ? filterManager.getFilter().getArbitrators() : new ArrayList<>();
+        return filterManager.getFilter() != null ? filterManager.getFilter().getMediators() : new ArrayList<>();
     }
 
-    public Map<NodeAddress, Arbitrator> getArbitrators() {
+    public Map<NodeAddress, Mediator> getMediators() {
         return super.getDisputeResolvers();
     }
 }
