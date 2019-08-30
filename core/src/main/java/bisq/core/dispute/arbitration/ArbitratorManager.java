@@ -259,7 +259,7 @@ public class ArbitratorManager {
     public void addArbitrator(Arbitrator arbitrator, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         user.setRegisteredArbitrator(arbitrator);
         arbitratorsObservableMap.put(arbitrator.getNodeAddress(), arbitrator);
-        arbitratorService.addArbitrator(arbitrator,
+        arbitratorService.addDisputeResolver(arbitrator,
                 () -> {
                     log.debug("Arbitrator successfully saved in P2P network");
                     resultHandler.handleResult();
@@ -275,7 +275,7 @@ public class ArbitratorManager {
         if (registeredArbitrator != null) {
             user.setRegisteredArbitrator(null);
             arbitratorsObservableMap.remove(registeredArbitrator.getNodeAddress());
-            arbitratorService.removeArbitrator(registeredArbitrator,
+            arbitratorService.removeDisputeResolver(registeredArbitrator,
                     () -> {
                         log.debug("Arbitrator successfully removed from P2P network");
                         resultHandler.handleResult();
