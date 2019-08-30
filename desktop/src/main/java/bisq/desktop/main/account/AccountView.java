@@ -24,13 +24,13 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.account.arbitratorregistration.ArbitratorRegistrationView;
 import bisq.desktop.main.account.content.altcoinaccounts.AltCoinAccountsView;
 import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
+import bisq.desktop.main.account.register.arbitratorregistration.ArbitratorRegistrationView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
