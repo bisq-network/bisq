@@ -32,6 +32,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -78,9 +79,18 @@ public final class Arbitrator extends DisputeResolver {
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        protobuf.Arbitrator.Builder builder = getBuilder()
+        protobuf.Arbitrator.Builder builder = protobuf.Arbitrator.newBuilder()
+                .setNodeAddress(nodeAddress.toProtoMessage())
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
-                .setBtcAddress(btcAddress);
+                .setBtcAddress(btcAddress)
+                .setPubKeyRing(pubKeyRing.toProtoMessage())
+                .addAllLanguageCodes(languageCodes)
+                .setRegistrationDate(registrationDate)
+                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))
+                .setRegistrationSignature(registrationSignature);
+        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
+        Optional.ofNullable(info).ifPresent(builder::setInfo);
+        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
         return protobuf.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
