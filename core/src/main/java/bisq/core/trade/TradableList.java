@@ -129,6 +129,10 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
         return changed;
     }
 
+    public void persist() {
+        storage.queueUpForSave();
+    }
+
     public Stream<T> stream() {
         return list.stream();
     }

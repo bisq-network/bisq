@@ -59,6 +59,8 @@ public enum Param {
     // Might need adjustment if BSQ/BTC rate changes.
     DEFAULT_MAKER_FEE_BSQ("0.50", ParamType.BSQ, 5, 5),     // ~ 0.01% of trade amount
     DEFAULT_TAKER_FEE_BSQ("1.5", ParamType.BSQ, 5, 5),
+    // Min fee is the  smallest fee allowed for a trade. If the default fee would be less than min fee the
+    // min fee is used instead.
     // 0.03 BSQ (3 satoshi) for a 1 BTC trade. 0.05 USD if 1 BSQ = 1 USD, 10 % of the BTC fee
     MIN_MAKER_FEE_BSQ("0.03", ParamType.BSQ, 5, 5),           // 0.0003%.
     MIN_TAKER_FEE_BSQ("0.03", ParamType.BSQ, 5, 5),

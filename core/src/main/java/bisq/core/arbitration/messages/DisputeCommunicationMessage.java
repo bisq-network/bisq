@@ -22,6 +22,7 @@ import bisq.core.arbitration.Attachment;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
 import javafx.beans.property.BooleanProperty;
@@ -47,17 +48,42 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+/* Message for direct communication between two nodes. Originally built for trader to
+ * arbitrator communication as no other direct communication was allowed. Aribtrator is
+ * considered as the server and trader as the client in arbitration chats
+ *
+ * For trader to trader communication the maker is considered to be the server
+ * and the taker is considered as the client.
+ * */
 @EqualsAndHashCode(callSuper = true) // listener is transient and therefore excluded anyway
 @Getter
 @Slf4j
 public final class DisputeCommunicationMessage extends DisputeMessage {
 
+    public enum Type {
+        DISPUTE,
+        TRADE;
+
+        public static DisputeCommunicationMessage.Type fromProto(
+                protobuf.DisputeCommunicationMessage.Type type) {
+            return ProtoUtil.enumFromProto(DisputeCommunicationMessage.Type.class, type.name());
+        }
+
+        public static protobuf.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
+            return protobuf.DisputeCommunicationMessage.Type.valueOf(type.name());
+        }
+    }
+
     public interface Listener {
         void onMessageStateChanged();
     }
 
+    // Added with v1.1.6. Old clients will not have set that field and we fall back to entry 0 which is DISPUTE.
+    private final DisputeCommunicationMessage.Type type;
     private final String tradeId;
     private final int traderId;
+    // This is only used for the server client relationship
+    // If senderIsTrader == true then the sender is the client
     private final boolean senderIsTrader;
     private final String message;
     private final ArrayList<Attachment> attachments = new ArrayList<>();
@@ -65,6 +91,10 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     private final long date;
     @Setter
     private boolean isSystemMessage;
+
+    // Added in v1.1.6.
+    @Setter
+    private boolean wasDisplayed;
 
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
@@ -74,12 +104,14 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     transient private WeakReference<Listener> listener;
 
-    public DisputeCommunicationMessage(String tradeId,
+    public DisputeCommunicationMessage(DisputeCommunicationMessage.Type type,
+                                       String tradeId,
                                        int traderId,
                                        boolean senderIsTrader,
                                        String message,
                                        NodeAddress senderNodeAddress) {
-        this(tradeId,
+        this(type,
+                tradeId,
                 traderId,
                 senderIsTrader,
                 message,
@@ -92,7 +124,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 Version.getP2PMessageVersion(),
                 false,
                 null,
-                null);
+                null,
+                false);
     }
 
 
@@ -100,7 +133,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeCommunicationMessage(String tradeId,
+    private DisputeCommunicationMessage(Type type,
+                                        String tradeId,
                                         int traderId,
                                         boolean senderIsTrader,
                                         String message,
@@ -113,12 +147,15 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                         int messageVersion,
                                         boolean acknowledged,
                                         @Nullable String sendMessageError,
-                                        @Nullable String ackError) {
+                                        @Nullable String ackError,
+                                        boolean wasDisplayed) {
         super(messageVersion, uid);
+        this.type = type;
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
+        this.wasDisplayed = wasDisplayed;
         Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         this.senderNodeAddress = senderNodeAddress;
         this.date = date;
@@ -133,6 +170,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
+                .setType(DisputeCommunicationMessage.Type.toProtoMessage(type))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
@@ -144,7 +182,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .setStoredInMailbox(storedInMailboxProperty.get())
                 .setIsSystemMessage(isSystemMessage)
                 .setUid(uid)
-                .setAcknowledged(acknowledgedProperty.get());
+                .setAcknowledged(acknowledgedProperty.get())
+                .setWasDisplayed(wasDisplayed);
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
@@ -152,8 +191,13 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto, int messageVersion) {
+    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto,
+                                                        int messageVersion) {
+        // If we get a msg from an old client type will be ordinal 0 which is the dispute entry and as we only added
+        // the trade case it is the desired behaviour.
+        DisputeCommunicationMessage.Type type = DisputeCommunicationMessage.Type.fromProto(proto.getType());
         final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                type,
                 proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getSenderIsTrader(),
@@ -167,7 +211,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 messageVersion,
                 proto.getAcknowledged(),
                 proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
-                proto.getAckError().isEmpty() ? null : proto.getAckError());
+                proto.getAckError().isEmpty() ? null : proto.getAckError(),
+                proto.getWasDisplayed());
         disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
         return disputeCommunicationMessage;
     }
@@ -249,14 +294,19 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     private void notifyChangeListener() {
-        if (listener != null && listener.get() != null)
-            listener.get().onMessageStateChanged();
+        if (listener != null) {
+            Listener listener = this.listener.get();
+            if (listener != null) {
+                listener.onMessageStateChanged();
+            }
+        }
     }
 
     @Override
     public String toString() {
         return "DisputeCommunicationMessage{" +
-                "\n     tradeId='" + tradeId + '\'' +
+                "\n     type='" + type + '\'' +
+                ",\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     senderIsTrader=" + senderIsTrader +
                 ",\n     message='" + message + '\'' +
