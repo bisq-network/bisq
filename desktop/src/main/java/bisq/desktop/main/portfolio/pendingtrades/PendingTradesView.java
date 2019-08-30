@@ -26,6 +26,7 @@ import bisq.desktop.main.Chat.Chat;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
@@ -45,8 +46,7 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXBadge;
 
@@ -59,7 +59,7 @@ import javafx.stage.Window;
 
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -647,18 +647,23 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
                         return new TableCell<>() {
+                            Button button;
+
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
                                 if (!empty && newItem != null) {
                                     Trade trade = newItem.getTrade();
 
-                                    Label icon = AwesomeDude.createIconLabel(AwesomeIcon.COMMENTS_ALT, "25");
-                                    Tooltip.install(icon, new Tooltip(Res.get("tradeChat.openChat")));
+                                    if (button == null) {
+                                        button = FormBuilder.getIconButton(MaterialDesignIcon.COMMENT_MULTIPLE_OUTLINE);
+                                        button.setTooltip(new Tooltip(Res.get("tradeChat.openChat")));
+                                    }
 
-                                    JFXBadge numNewMsg = new JFXBadge(icon);
+                                    JFXBadge numNewMsg = new JFXBadge(button);
                                     numNewMsg.setPosition(Pos.TOP_RIGHT);
-                                    icon.setOnMouseClicked(e -> {
+
+                                    button.setOnAction(e -> {
                                         openChat(trade);
                                         update(trade, numNewMsg);
                                     });
@@ -671,6 +676,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     setGraphic(numNewMsg);
                                 } else {
                                     setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
                                 }
                             }
 
