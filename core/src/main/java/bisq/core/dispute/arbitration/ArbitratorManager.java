@@ -19,6 +19,7 @@ package bisq.core.dispute.arbitration;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.dispute.DisputeResolver;
+import bisq.core.dispute.mediator.Mediator;
 import bisq.core.filter.FilterManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
