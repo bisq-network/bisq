@@ -19,7 +19,7 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.arbitration.Mediator;
+import bisq.core.dispute.mediator.Mediator;
 import bisq.core.filter.Filter;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.TradeCurrency;
