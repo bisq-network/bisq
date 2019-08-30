@@ -23,7 +23,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
-import bisq.core.dispute.ArbitratorModule;
+import bisq.core.dispute.DisputeModule;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.offer.OfferModule;
@@ -121,8 +121,8 @@ public class ModuleForAppWithP2p extends AppModule {
         return new EncryptionServiceModule(environment);
     }
 
-    protected ArbitratorModule arbitratorModule() {
-        return new ArbitratorModule(environment);
+    protected DisputeModule arbitratorModule() {
+        return new DisputeModule(environment);
     }
 
     protected AlertModule alertModule() {

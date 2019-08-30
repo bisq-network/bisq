@@ -27,8 +27,8 @@ import org.springframework.core.env.Environment;
 
 import com.google.inject.Singleton;
 
-public class ArbitratorModule extends AppModule {
-    public ArbitratorModule(Environment environment) {
+public class DisputeModule extends AppModule {
+    public DisputeModule(Environment environment) {
         super(environment);
     }
 
