@@ -294,9 +294,7 @@ configure(project(':desktop')) {
     sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
     dependencies {
-        compile project(':p2p')
         compile project(':core')
-        compile project(':common')
         compile "org.controlsfx:controlsfx:$controlsfxVersion"
         compile "org.reactfx:reactfx:$reactfxVersion"
         compile "net.glxn:qrgen:$qrgenVersion"
