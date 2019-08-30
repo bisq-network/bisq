@@ -18,7 +18,7 @@
 
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="root" fx:controller="bisq.desktop.main.account.register.arbitratorregistration.ArbitratorRegistrationView"
+<VBox fx:id="root" fx:controller="bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView"
       spacing="10"
       xmlns:fx="http://javafx.com/fxml">
     <padding>

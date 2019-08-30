@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.account.register.arbitratorregistration;
+package bisq.desktop.main.account.register.arbitrator;
 
 import bisq.desktop.common.model.ActivatableViewModel;
 
