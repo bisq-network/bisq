@@ -78,6 +78,7 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
@@ -113,6 +114,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ListChangeListener<PendingTradesListItem> tradesListChangeListener;
     private Map<String, Long> newChatMessagesByTradeMap = new HashMap<>();
     private String tradeIdOfOpenChat;
+    private double chatPopupStageXPosition = -1;
+    private double chatPopupStageYPosition = -1;
+    private ChangeListener<Number> xPositionListener;
+    private ChangeListener<Number> yPositionListener;
+
+    private Map<String, Button> buttonByTrade = new HashMap<>();
+    private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
+    private Map<String, ListChangeListener<DisputeCommunicationMessage>> listenerByTrade = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -338,7 +347,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeChat.initialize();
 
         AnchorPane pane = new AnchorPane(tradeChat);
-        pane.setPrefSize(700, 500);
+        pane.setPrefSize(760, 500);
         AnchorPane.setLeftAnchor(tradeChat, 10d);
         AnchorPane.setRightAnchor(tradeChat, 10d);
         AnchorPane.setTopAnchor(tradeChat, -20d);
@@ -368,6 +377,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
             trade.persist();
             tradeIdOfOpenChat = null;
+
+            if (xPositionListener != null) {
+                chatPopupStage.xProperty().removeListener(xPositionListener);
+            }
+            if (yPositionListener != null) {
+                chatPopupStage.xProperty().removeListener(yPositionListener);
+            }
         });
 
         Scene scene = new Scene(pane);
@@ -385,10 +401,20 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         chatPopupStage.setOpacity(0);
         chatPopupStage.show();
 
-        Window rootSceneWindow = rootScene.getWindow();
-        double titleBarHeight = rootSceneWindow.getHeight() - rootScene.getHeight();
-        chatPopupStage.setX(Math.round(rootSceneWindow.getX() + (owner.getWidth() - chatPopupStage.getWidth() / 4 * 3)));
-        chatPopupStage.setY(Math.round(rootSceneWindow.getY() + titleBarHeight + (owner.getHeight() - chatPopupStage.getHeight() / 4 * 3)));
+        xPositionListener = (observable, oldValue, newValue) -> chatPopupStageXPosition = (double) newValue;
+        chatPopupStage.xProperty().addListener(xPositionListener);
+        yPositionListener = (observable, oldValue, newValue) -> chatPopupStageYPosition = (double) newValue;
+        chatPopupStage.yProperty().addListener(yPositionListener);
+
+        if (chatPopupStageXPosition == -1) {
+            Window rootSceneWindow = rootScene.getWindow();
+            double titleBarHeight = rootSceneWindow.getHeight() - rootScene.getHeight();
+            chatPopupStage.setX(Math.round(rootSceneWindow.getX() + (owner.getWidth() - chatPopupStage.getWidth() / 4 * 3)));
+            chatPopupStage.setY(Math.round(rootSceneWindow.getY() + titleBarHeight + (owner.getHeight() - chatPopupStage.getHeight() / 4 * 3)));
+        } else {
+            chatPopupStage.setX(chatPopupStageXPosition);
+            chatPopupStage.setY(chatPopupStageYPosition);
+        }
 
         // Delay display to next render frame to avoid that the popup is first quickly displayed in default position
         // and after a short moment in the correct position
@@ -647,58 +673,75 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     @Override
                     public TableCell<PendingTradesListItem, PendingTradesListItem> call(TableColumn<PendingTradesListItem, PendingTradesListItem> column) {
                         return new TableCell<>() {
-                            Button button;
 
                             @Override
                             public void updateItem(final PendingTradesListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
+
                                 if (!empty && newItem != null) {
                                     Trade trade = newItem.getTrade();
+                                    String id = trade.getId();
 
-                                    if (button == null) {
+                                    // We use maps for each trade to avoid multiple listener registrations when
+                                    // switching views. With current implementation we avoid that but we do not
+                                    // remove listeners when a trade is removed (completed) but that has no consequences
+                                    // as we will not receive any message anyway from a closed trade. Supporting it
+                                    // more correctly would require more effort and managing listener deactivation at
+                                    // screen switches (currently we get the update called if we have selected another
+                                    // view.
+                                    Button button;
+                                    if (!buttonByTrade.containsKey(id)) {
                                         button = FormBuilder.getIconButton(MaterialDesignIcon.COMMENT_MULTIPLE_OUTLINE);
+                                        buttonByTrade.put(id, button);
                                         button.setTooltip(new Tooltip(Res.get("tradeChat.openChat")));
+                                    } else {
+                                        button = buttonByTrade.get(id);
                                     }
 
-                                    JFXBadge numNewMsg = new JFXBadge(button);
-                                    numNewMsg.setPosition(Pos.TOP_RIGHT);
+                                    JFXBadge badge;
+                                    if (!badgeByTrade.containsKey(id)) {
+                                        badge = new JFXBadge(button);
+                                        badgeByTrade.put(id, badge);
+                                        badge.setPosition(Pos.TOP_RIGHT);
+                                    } else {
+                                        badge = badgeByTrade.get(id);
+                                    }
 
                                     button.setOnAction(e -> {
                                         openChat(trade);
-                                        update(trade, numNewMsg);
+                                        update(trade, badge);
                                     });
 
-                                    ListChangeListener<DisputeCommunicationMessage> listener = c -> update(trade, numNewMsg);
-                                    trade.getCommunicationMessages().addListener(listener);
+                                    if (!listenerByTrade.containsKey(id)) {
+                                        ListChangeListener<DisputeCommunicationMessage> listener = c -> update(trade, badge);
+                                        listenerByTrade.put(id, listener);
+                                        trade.getCommunicationMessages().addListener(listener);
+                                    }
 
-                                    update(trade, numNewMsg);
+                                    update(trade, badge);
 
-                                    setGraphic(numNewMsg);
+                                    setGraphic(badge);
                                 } else {
                                     setGraphic(null);
-                                    if (button != null) {
-                                        button.setOnAction(null);
-                                        button = null;
-                                    }
                                 }
                             }
 
-                            private void update(Trade trade, JFXBadge numNewMsg) {
+                            private void update(Trade trade, JFXBadge badge) {
                                 if (!trade.getId().equals(tradeIdOfOpenChat)) {
                                     updateNewChatMessagesByTradeMap();
                                     long num = newChatMessagesByTradeMap.get(trade.getId());
                                     if (num > 0) {
-                                        numNewMsg.setText(String.valueOf(num));
-                                        numNewMsg.setEnabled(true);
+                                        badge.setText(String.valueOf(num));
+                                        badge.setEnabled(true);
                                     } else {
-                                        numNewMsg.setText("");
-                                        numNewMsg.setEnabled(false);
+                                        badge.setText("");
+                                        badge.setEnabled(false);
                                     }
                                 } else {
-                                    numNewMsg.setText("");
-                                    numNewMsg.setEnabled(false);
+                                    badge.setText("");
+                                    badge.setEnabled(false);
                                 }
-                                numNewMsg.refreshBadge();
+                                badge.refreshBadge();
                             }
                         };
                     }
