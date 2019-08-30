@@ -30,7 +30,7 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
-import bisq.desktop.main.account.register.arbitratorregistration.ArbitratorRegistrationView;
+import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
