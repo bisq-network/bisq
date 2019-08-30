@@ -23,8 +23,8 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.dispute.arbitration.Dispute;
+import bisq.core.dispute.arbitration.DisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;

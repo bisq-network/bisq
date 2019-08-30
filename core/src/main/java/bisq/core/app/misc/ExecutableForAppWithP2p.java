@@ -20,10 +20,10 @@ package bisq.core.app.misc;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqExecutable;
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.offer.OpenOfferManager;
 
 import bisq.network.p2p.P2PService;

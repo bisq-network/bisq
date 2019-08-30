@@ -19,11 +19,11 @@ package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.BuyerDataItem;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.arbitration.DisputeResult;
+import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.arbitration.BuyerDataItem;
+import bisq.core.dispute.arbitration.Dispute;
+import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.arbitration.DisputeResult;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;

@@ -21,7 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.ViewLoader;
 
-import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.user.Preferences;
 
 import javax.inject.Inject;

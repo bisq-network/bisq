@@ -15,23 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration;
+package bisq.core.dispute.arbitration;
 
-import bisq.common.app.AppModule;
-
-import org.springframework.core.env.Environment;
-
-import com.google.inject.Singleton;
-
-public class ArbitratorModule extends AppModule {
-    public ArbitratorModule(Environment environment) {
-        super(environment);
-    }
-
-    @Override
-    protected final void configure() {
-        bind(ArbitratorManager.class).in(Singleton.class);
-        bind(DisputeManager.class).in(Singleton.class);
-        bind(ArbitratorService.class).in(Singleton.class);
+public class DisputeAlreadyOpenException extends Exception {
+    public DisputeAlreadyOpenException() {
+        super();
     }
 }

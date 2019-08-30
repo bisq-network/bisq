@@ -18,8 +18,8 @@
 package bisq.core.user;
 
 import bisq.core.alert.Alert;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.Mediator;
+import bisq.core.dispute.arbitration.Arbitrator;
+import bisq.core.dispute.arbitration.Mediator;
 import bisq.core.filter.Filter;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;

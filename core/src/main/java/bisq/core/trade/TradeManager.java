@@ -18,7 +18,6 @@
 package bisq.core.trade;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.setup.WalletsSetup;
@@ -26,6 +25,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.chat.ChatManager;
+import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
