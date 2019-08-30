@@ -67,7 +67,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -658,7 +657,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     Tooltip.install(icon, new Tooltip(Res.get("tradeChat.openChat")));
 
                                     JFXBadge numNewMsg = new JFXBadge(icon);
-                                    // FIXME does not take position...
                                     numNewMsg.setPosition(Pos.TOP_RIGHT);
                                     icon.setOnMouseClicked(e -> {
                                         openChat(trade);
@@ -670,9 +668,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
                                     update(trade, numNewMsg);
 
-                                    Pane pane = new Pane();
-                                    pane.getChildren().addAll(icon, numNewMsg);
-                                    setGraphic(pane);
+                                    setGraphic(numNewMsg);
                                 } else {
                                     setGraphic(null);
                                 }
