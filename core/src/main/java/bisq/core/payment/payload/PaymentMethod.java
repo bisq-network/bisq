@@ -17,6 +17,7 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.TradeLimits;
 
@@ -188,11 +189,6 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
     ));
 
-    // Mature markets where chargeback risk is higher due to more liquidity
-    @Getter
-    private final static List<String> currencyWithChargebackRisk =
-            new ArrayList<>(Arrays.asList("EUR", "USD", "GBP", "CAD", "AUD"));
-
     static {
         paymentMethods.sort((o1, o2) -> {
             String id1 = o1.getId();
@@ -330,7 +326,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     }
 
     public static boolean hasChargebackRisk(String id, String currencyCode) {
-        if (!currencyWithChargebackRisk.contains(currencyCode))
+        if (CurrencyUtil.getMatureMarketCurrencies().stream()
+            .noneMatch(c -> c.getCode().equals(currencyCode)))
             return false;
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
