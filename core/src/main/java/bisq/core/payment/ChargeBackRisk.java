@@ -23,7 +23,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ChargeBackRisk {
-    public boolean hasChargebackRisk(String id) {
-        return PaymentMethod.hasChargebackRisk(id);
+    public boolean hasChargebackRisk(String id, String currencyCode) {
+        return PaymentMethod.hasChargebackRisk(id, currencyCode);
     }
 }

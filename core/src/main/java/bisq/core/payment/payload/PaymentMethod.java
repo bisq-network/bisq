@@ -17,6 +17,7 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.TradeLimits;
 
@@ -316,15 +317,18 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
 
-    public static boolean hasChargebackRisk(PaymentMethod paymentMethod) {
+    public static boolean hasChargebackRisk(PaymentMethod paymentMethod, String currencyCode) {
         if (paymentMethod == null)
             return false;
 
         String id = paymentMethod.getId();
-        return hasChargebackRisk(id);
+        return hasChargebackRisk(id, currencyCode);
     }
 
-    public static boolean hasChargebackRisk(String id) {
+    public static boolean hasChargebackRisk(String id, String currencyCode) {
+        if (CurrencyUtil.getMatureMarketCurrencies().stream()
+            .noneMatch(c -> c.getCode().equals(currencyCode)))
+            return false;
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
                 id.equals(PaymentMethod.INTERAC_E_TRANSFER_ID) ||
