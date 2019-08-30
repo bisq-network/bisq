@@ -230,6 +230,19 @@
     -fx-background-color: -fx-selection-bar;
 }
 
+.list-view:focused,
+.tree-view:focused,
+.table-view:focused,
+.tree-table-view:focused,
+.table-view:focused,
+tree-table-view:focused {
+    -fx-background-insets: 0;
+}
+.list-view:focused {
+    -fx-background-color: -bs-color-primary;
+    -fx-background-insets: 0;
+}
+
 /* Selected rows */
 .list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected,
 .tree-view:focused > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected,
