@@ -15,7 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration;
+package bisq.core.dispute;
+
+import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.arbitration.ArbitratorService;
+import bisq.core.dispute.arbitration.DisputeManager;
 
 import bisq.common.app.AppModule;
 

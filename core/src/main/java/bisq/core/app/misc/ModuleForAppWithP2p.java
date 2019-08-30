@@ -23,7 +23,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
-import bisq.core.dispute.arbitration.ArbitratorModule;
+import bisq.core.dispute.ArbitratorModule;
 import bisq.core.filter.FilterModule;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.offer.OfferModule;
