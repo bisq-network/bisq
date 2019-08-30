@@ -1247,6 +1247,13 @@ textfield */
     -fx-alignment: center-left;
 }
 
+.combo-box-editor-bold {
+    -fx-font-weight: bold;
+    -fx-padding: 5 8 5 8 !important;
+    -fx-text-fill: -bs-rd-black;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
 .currency-label-small {
     -fx-font-size: 0.692em;
     -fx-text-fill: -bs-rd-font-lighter;

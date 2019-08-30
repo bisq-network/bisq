@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.PeerInfoIconSmall;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
@@ -93,7 +94,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static bisq.desktop.util.FormBuilder.addTopLabelComboBox;
+import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 
 @FxmlView
@@ -108,7 +109,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private TableView<OfferListItem> sellOfferTableView;
     private AreaChart<Number, Number> areaChart;
     private AnchorPane chartPane;
-    private ComboBox<CurrencyListItem> currencyComboBox;
+    private AutocompleteComboBox<CurrencyListItem> currencyComboBox;
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
@@ -146,11 +147,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     public void initialize() {
         createListener();
 
-        final Tuple3<VBox, Label, ComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelComboBox(Res.get("shared.currency"),
-                Res.get("list.currency.select"), 0);
+        final Tuple3<VBox, Label, AutocompleteComboBox<CurrencyListItem>> currencyComboBoxTuple = addTopLabelAutocompleteComboBox(Res.get("shared.currency"), 0);
         this.currencyComboBox = currencyComboBoxTuple.third;
-        this.currencyComboBox.setButtonCell(GUIUtil.getCurrencyListItemButtonCell(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"), model.preferences));
         this.currencyComboBox.setCellFactory(GUIUtil.getCurrencyListItemCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"), model.preferences));
 
@@ -191,13 +189,19 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
 
-        currencyComboBox.setItems(model.getCurrencyListItems());
-        currencyComboBox.setVisibleRowCount(12);
+        currencyComboBox.setConverter(new CurrencyListItemStringConverter(currencyComboBox));
+        currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
-        if (model.getSelectedCurrencyListItem().isPresent())
+        currencyComboBox.setAutocompleteItems(model.getCurrencyListItems());
+        currencyComboBox.setVisibleRowCount(10);
+
+        if (model.getSelectedCurrencyListItem().isPresent()) {
+            CurrencyListItem selectedItem = model.getSelectedCurrencyListItem().get();
             currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
+            currencyComboBox.getEditor().setText(new CurrencyListItemStringConverter(currencyComboBox).toString(selectedItem));
+        }
 
-        currencyComboBox.setOnAction(e -> {
+        currencyComboBox.setOnChangeConfirmed(e -> {
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 model.onSetTradeCurrency(selectedItem.tradeCurrency);
@@ -281,6 +285,26 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         updateChartData();
     }
 
+    static class CurrencyListItemStringConverter extends StringConverter<CurrencyListItem> {
+        private ComboBox<CurrencyListItem> comboBox;
+
+        CurrencyListItemStringConverter(ComboBox<CurrencyListItem> comboBox) {
+            this.comboBox = comboBox;
+        }
+
+        @Override
+        public String toString(CurrencyListItem currencyItem) {
+            return currencyItem != null ? currencyItem.codeDashNameString() : "";
+        }
+
+        @Override
+        public CurrencyListItem fromString(String s) {
+            return comboBox.getItems().stream().
+                    filter(currencyItem -> currencyItem.codeDashNameString().equals(s)).
+                    findAny().orElse(null);
+        }
+    }
+
     private void createListener() {
         changeListener = c -> updateChartData();
 
@@ -313,7 +337,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         tabPaneSelectionModel.selectedIndexProperty().removeListener(selectedTabIndexListener);
         model.currencyListItems.getObservableList().removeListener(currencyListItemsListener);
         tradeCurrencySubscriber.unsubscribe();
-        currencyComboBox.setOnAction(null);
         buyOfferTableView.getSelectionModel().selectedItemProperty().removeListener(buyTableRowSelectionListener);
         sellOfferTableView.getSelectionModel().selectedItemProperty().removeListener(sellTableRowSelectionListener);
     }

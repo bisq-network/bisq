@@ -34,7 +34,7 @@ import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
-import bisq.desktop.components.SearchComboBox;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -913,6 +913,21 @@ public class FormBuilder {
         return new Tuple3<>(vBox, label, comboBox);
     }
 
+    public static <T> Tuple3<VBox, Label, AutocompleteComboBox<T>> addTopLabelAutocompleteComboBox(String title) {
+        return addTopLabelAutocompleteComboBox(title, 0);
+    }
+
+    public static <T> Tuple3<VBox, Label, AutocompleteComboBox<T>> addTopLabelAutocompleteComboBox(String title, int top) {
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(top);
+
+        final AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
+
+        vBox.getChildren().addAll(label, comboBox);
+
+        return new Tuple3<>(vBox, label, comboBox);
+    }
+
     @NotNull
     private static VBox getTopLabelVBox(int top) {
         VBox vBox = new VBox();
@@ -984,15 +999,12 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Label  + SearchComboBox
+    // Label  + AutocompleteComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, ComboBox<T>> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-
-        SearchComboBox<T> comboBox = new SearchComboBox<>();
-
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelAutocompleteComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+        AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
         final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, comboBox, top);
-
         return new Tuple2<>(labelVBoxTuple2.first, comboBox);
     }
 
