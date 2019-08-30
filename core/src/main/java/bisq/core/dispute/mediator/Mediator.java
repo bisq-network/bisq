@@ -15,57 +15,32 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration;
+package bisq.core.dispute.mediator;
+
+import bisq.core.dispute.DisputeResolver;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.util.ExtraDataMapValidator;
 
 import com.google.protobuf.ByteString;
 
 import org.springframework.util.CollectionUtils;
 
-import java.security.PublicKey;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
-@ToString
-@Getter
-public final class Mediator implements ProtectedStoragePayload, ExpirablePayload {
-    private final PubKeyRing pubKeyRing;
-    private final NodeAddress nodeAddress;
-    private final List<String> languageCodes;
-    private final long registrationDate;
-    private final String registrationSignature;
-    private final byte[] registrationPubKey;
-    @Nullable
-    private final String emailAddress;
-    @Nullable
-    private final String info;
-
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    private Map<String, String> extraDataMap;
-
+public final class Mediator extends DisputeResolver {
     public Mediator(NodeAddress nodeAddress,
                     PubKeyRing pubKeyRing,
                     List<String> languageCodes,
@@ -75,17 +50,17 @@ public final class Mediator implements ProtectedStoragePayload, ExpirablePayload
                     @Nullable String emailAddress,
                     @Nullable String info,
                     @Nullable Map<String, String> extraDataMap) {
-        this.nodeAddress = nodeAddress;
-        this.pubKeyRing = pubKeyRing;
-        this.languageCodes = languageCodes;
-        this.registrationDate = registrationDate;
-        this.registrationPubKey = registrationPubKey;
-        this.registrationSignature = registrationSignature;
-        this.emailAddress = emailAddress;
-        this.info = info;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
-    }
 
+        super(nodeAddress,
+                pubKeyRing,
+                languageCodes,
+                registrationDate,
+                registrationPubKey,
+                registrationSignature,
+                emailAddress,
+                info,
+                extraDataMap);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -109,7 +84,7 @@ public final class Mediator implements ProtectedStoragePayload, ExpirablePayload
     public static Mediator fromProto(protobuf.Mediator proto) {
         return new Mediator(NodeAddress.fromProto(proto.getNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                proto.getLanguageCodesList().stream().collect(Collectors.toList()),
+                new ArrayList<>(proto.getLanguageCodesList()),
                 proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
@@ -118,17 +93,14 @@ public final class Mediator implements ProtectedStoragePayload, ExpirablePayload
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public long getTTL() {
-        return TimeUnit.DAYS.toMillis(10);
-    }
 
     @Override
-    public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
+    public String toString() {
+        return "Mediator{} " + super.toString();
     }
 }
