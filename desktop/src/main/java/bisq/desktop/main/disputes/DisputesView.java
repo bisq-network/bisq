@@ -101,7 +101,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     }
 
     private void updateArbitratorsDisputesTabDisableState() {
-        boolean isActiveArbitrator = arbitratorManager.getArbitratorsObservableMap().values().stream()
+        boolean isActiveArbitrator = arbitratorManager.getObservableMap().values().stream()
                 .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()));
 
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
@@ -118,8 +118,8 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
-        arbitratorManager.updateArbitratorMap();
-        arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
+        arbitratorManager.updateMap();
+        arbitratorManager.getObservableMap().addListener(arbitratorMapChangeListener);
         updateArbitratorsDisputesTabDisableState();
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
@@ -141,7 +141,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
     @Override
     protected void deactivate() {
-        arbitratorManager.getArbitratorsObservableMap().removeListener(arbitratorMapChangeListener);
+        arbitratorManager.getObservableMap().removeListener(arbitratorMapChangeListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
         currentTab = null;

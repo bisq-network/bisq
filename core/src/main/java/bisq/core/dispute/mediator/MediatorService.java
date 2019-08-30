@@ -23,6 +23,8 @@ import bisq.core.filter.FilterManager;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
+import com.google.inject.Singleton;
+
 import javax.inject.Inject;
 
 import java.util.ArrayList;
@@ -35,7 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 
 
 @Slf4j
+@Singleton
 public class MediatorService extends DisputeResolverService<Mediator> {
+
     @Inject
     public MediatorService(P2PService p2PService, FilterManager filterManager) {
         super(p2PService, filterManager);

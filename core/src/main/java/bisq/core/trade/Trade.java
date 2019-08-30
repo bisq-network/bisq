@@ -533,7 +533,7 @@ public abstract class Trade implements Tradable, Model {
                 useSavingsWallet,
                 fundsNeededForTrade);
 
-        Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getArbitratorByNodeAddress(arbitratorNodeAddress);
+        Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getDisputeResolverByNodeAddress(arbitratorNodeAddress);
         if (optionalArbitrator.isPresent()) {
             Arbitrator arbitrator = optionalArbitrator.get();
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();

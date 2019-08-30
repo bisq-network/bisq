@@ -29,8 +29,6 @@ import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Utilities;
 
-import javax.inject.Inject;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +51,6 @@ public abstract class DisputeResolverService<T extends DisputeResolver> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public DisputeResolverService(P2PService p2PService, FilterManager filterManager) {
         this.p2PService = p2PService;
         this.filterManager = filterManager;

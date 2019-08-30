@@ -70,7 +70,7 @@ public class PreferencesViewModelTest {
 
         Preferences preferences = PreferenceMakers.empty;
 
-        when(arbitratorManager.getArbitratorsObservableMap()).thenReturn(arbitrators);
+        when(arbitratorManager.getObservableMap()).thenReturn(arbitrators);
 
         PreferencesViewModel model = new PreferencesViewModel(preferences, arbitratorManager);
 

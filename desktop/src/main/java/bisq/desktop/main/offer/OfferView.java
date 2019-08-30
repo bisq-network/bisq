@@ -168,7 +168,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {
                     if (!createOfferViewOpen) {
-                        boolean arbitratorAvailableForLanguage = arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage());
+                        boolean arbitratorAvailableForLanguage = arbitratorManager.isDisputeResolverAvailableForLanguage(preferences.getUserLanguage());
                         if (!arbitratorAvailableForLanguage) {
                             showNoArbitratorForUserLocaleWarning();
                         }
@@ -183,7 +183,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 public void onTakeOffer(Offer offer) {
                     if (!takeOfferViewOpen) {
                         List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
-                        List<String> arbitratorLanguages = arbitratorManager.getArbitratorLanguages(arbitratorNodeAddresses);
+                        List<String> arbitratorLanguages = arbitratorManager.getDisputeResolverLanguages(arbitratorNodeAddresses);
                         if (arbitratorLanguages.isEmpty()) {
                             // In case we get an offer which has been created with arbitrators which are not available
                             // anymore we don't want to call the showNoArbitratorForUserLocaleWarning
@@ -243,7 +243,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private String getArbitrationLanguages() {
-        return arbitratorManager.getArbitratorsObservableMap().values().stream()
+        return arbitratorManager.getObservableMap().values().stream()
                 .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
                 .distinct()
                 .map(languageCode -> LanguageUtil.getDisplayName(languageCode))
