@@ -136,6 +136,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField bannedPaymentMethodsInputTextField = addTopLabelInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.bannedPaymentMethods")).second;
         bannedPaymentMethodsInputTextField.setPromptText("E.g. PERFECT_MONEY"); // Do not translate
         InputTextField arbitratorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.arbitrators"));
+        InputTextField mediatorsInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.mediators"));
         InputTextField seedNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.seedNode"));
         InputTextField priceRelayNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.priceRelayNode"));
         InputTextField btcNodesInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("filterWindow.btcNode"));
@@ -172,6 +173,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
             if (filter.getArbitrators() != null)
                 arbitratorsInputTextField.setText(filter.getArbitrators().stream().collect(Collectors.joining(", ")));
 
+            if (filter.getMediators() != null)
+                mediatorsInputTextField.setText(filter.getMediators().stream().collect(Collectors.joining(", ")));
+
             if (filter.getSeedNodes() != null)
                 seedNodesInputTextField.setText(filter.getSeedNodes().stream().collect(Collectors.joining(", ")));
 
@@ -195,6 +199,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             List<String> bannedCurrencies = new ArrayList<>();
             List<String> bannedPaymentMethods = new ArrayList<>();
             List<String> arbitrators = new ArrayList<>();
+            List<String> mediators = new ArrayList<>();
             List<String> seedNodes = new ArrayList<>();
             List<String> priceRelayNodes = new ArrayList<>();
             List<String> btcNodes = new ArrayList<>();
@@ -236,6 +241,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText()).split(",")));
             }
 
+            if (!mediatorsInputTextField.getText().isEmpty()) {
+                mediators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(mediatorsInputTextField.getText()).split(",")));
+            }
+
             if (!seedNodesInputTextField.getText().isEmpty()) {
                 seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText()).split(",")));
             }
@@ -261,7 +270,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             btcNodes,
                             disableDaoCheckBox.isSelected(),
                             disableDaoBelowVersionInputTextField.getText(),
-                            disableTradeBelowVersionInputTextField.getText()),
+                            disableTradeBelowVersionInputTextField.getText(),
+                            mediators),
                     keyInputTextField.getText()))
                 hide();
             else
