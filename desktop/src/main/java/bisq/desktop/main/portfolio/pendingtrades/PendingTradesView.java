@@ -122,6 +122,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Map<String, Button> buttonByTrade = new HashMap<>();
     private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
     private Map<String, ListChangeListener<DisputeCommunicationMessage>> listenerByTrade = new HashMap<>();
+    private TradeChatSession.DisputeStateListener disputeStateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -355,11 +356,18 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
         boolean isBuyer = model.dataModel.isBuyer();
-        tradeChat.display(new TradeChatSession(trade, isTaker, isBuyer,
-                        model.dataModel.tradeManager,
-                        model.dataModel.tradeManager.getChatManager()),
-                null,
-                pane.widthProperty());
+        TradeChatSession chatSession = new TradeChatSession(trade, isTaker, isBuyer,
+                model.dataModel.tradeManager,
+                model.dataModel.tradeManager.getChatManager());
+
+        disputeStateListener = tradeId -> {
+            if (trade.getId().equals(tradeId)) {
+                chatPopupStage.hide();
+            }
+        };
+        chatSession.addDisputeStateListener(disputeStateListener);
+
+        tradeChat.display(chatSession, null, pane.widthProperty());
 
         tradeChat.activate();
         tradeChat.scrollToBottom();
@@ -383,6 +391,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             }
             if (yPositionListener != null) {
                 chatPopupStage.xProperty().removeListener(yPositionListener);
+            }
+            if (disputeStateListener != null) {
+                chatSession.removeDisputeStateListener(disputeStateListener);
             }
         });
 

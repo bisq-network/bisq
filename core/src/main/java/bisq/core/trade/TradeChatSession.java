@@ -19,6 +19,7 @@ package bisq.core.trade;
 
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.arbitration.messages.DisputeMessage;
+import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
 
@@ -31,6 +32,7 @@ import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -44,12 +46,18 @@ import javax.annotation.Nullable;
 public class TradeChatSession extends ChatSession {
     private static final Logger log = LoggerFactory.getLogger(TradeChatSession.class);
 
+    public interface DisputeStateListener {
+        void onDisputeClosed(String tradeId);
+    }
+
     @Nullable
     private Trade trade;
     private boolean isClient;
     private boolean isBuyer;
     private TradeManager tradeManager;
     private ChatManager chatManager;
+    // Needed to avoid ConcurrentModificationException as we remove a listener at the handler call
+    private List<DisputeStateListener> disputeStateListeners = new CopyOnWriteArrayList<>();
 
     public TradeChatSession(@Nullable Trade trade,
                             boolean isClient,
@@ -62,6 +70,14 @@ public class TradeChatSession extends ChatSession {
         this.isBuyer = isBuyer;
         this.tradeManager = tradeManager;
         this.chatManager = chatManager;
+    }
+
+    public void addDisputeStateListener(DisputeStateListener disputeStateListener) {
+        disputeStateListeners.add(disputeStateListener);
+    }
+
+    public void removeDisputeStateListener(DisputeStateListener disputeStateListener) {
+        disputeStateListeners.remove(disputeStateListener);
     }
 
     @Override
@@ -138,14 +154,15 @@ public class TradeChatSession extends ChatSession {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
         if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.TRADE) {
-                log.debug("Ignore non trade type communication message");
-                return;
+            if (((DisputeCommunicationMessage) message).getType() == DisputeCommunicationMessage.Type.TRADE) {
+                chatManager.onDisputeDirectMessage((DisputeCommunicationMessage) message);
             }
-            chatManager.onDisputeDirectMessage((DisputeCommunicationMessage) message);
-        } else {
-            log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
+            // We ignore dispute messages
+        } else if (message instanceof DisputeResultMessage) {
+            // We notify about dispute closed state
+            disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
         }
+        // We ignore all other non DisputeCommunicationMessages
     }
 
     @Override
