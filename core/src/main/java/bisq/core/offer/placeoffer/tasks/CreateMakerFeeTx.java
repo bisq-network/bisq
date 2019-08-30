@@ -17,7 +17,6 @@
 
 package bisq.core.offer.placeoffer.tasks;
 
-import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -27,6 +26,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.dispute.arbitration.Arbitrator;
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.placeoffer.PlaceOfferModel;

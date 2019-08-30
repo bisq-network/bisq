@@ -18,13 +18,13 @@
 package bisq.core.trade;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.Mediator;
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dispute.arbitration.Arbitrator;
+import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.arbitration.Mediator;
+import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;

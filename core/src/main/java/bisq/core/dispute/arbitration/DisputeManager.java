@@ -15,13 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration;
+package bisq.core.dispute.arbitration;
 
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
-import bisq.core.arbitration.messages.DisputeResultMessage;
-import bisq.core.arbitration.messages.OpenNewDisputeMessage;
-import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
-import bisq.core.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.exceptions.WalletException;
@@ -30,6 +25,11 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.chat.ChatManager;
+import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.dispute.arbitration.messages.DisputeResultMessage;
+import bisq.core.dispute.arbitration.messages.OpenNewDisputeMessage;
+import bisq.core.dispute.arbitration.messages.PeerOpenedDisputeMessage;
+import bisq.core.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;

@@ -15,9 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration.messages;
+package bisq.core.dispute.arbitration.messages;
 
-import bisq.core.arbitration.Dispute;
+import bisq.core.dispute.arbitration.Dispute;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.network.p2p.NodeAddress;
@@ -27,15 +27,15 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-@Value
 @EqualsAndHashCode(callSuper = true)
-public final class PeerOpenedDisputeMessage extends DisputeMessage {
+@Value
+public final class OpenNewDisputeMessage extends DisputeMessage {
     private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 
-    public PeerOpenedDisputeMessage(Dispute dispute,
-                                    NodeAddress senderNodeAddress,
-                                    String uid) {
+    public OpenNewDisputeMessage(Dispute dispute,
+                                 NodeAddress senderNodeAddress,
+                                 String uid) {
         this(dispute,
                 senderNodeAddress,
                 uid,
@@ -47,10 +47,10 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private PeerOpenedDisputeMessage(Dispute dispute,
-                                     NodeAddress senderNodeAddress,
-                                     String uid,
-                                     int messageVersion) {
+    private OpenNewDisputeMessage(Dispute dispute,
+                                  NodeAddress senderNodeAddress,
+                                  String uid,
+                                  int messageVersion) {
         super(messageVersion, uid);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
@@ -59,15 +59,17 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setPeerOpenedDisputeMessage(protobuf.PeerOpenedDisputeMessage.newBuilder()
+                .setOpenNewDisputeMessage(protobuf.OpenNewDisputeMessage.newBuilder()
                         .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
 
-    public static PeerOpenedDisputeMessage fromProto(protobuf.PeerOpenedDisputeMessage proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
-        return new PeerOpenedDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
+    public static OpenNewDisputeMessage fromProto(protobuf.OpenNewDisputeMessage proto,
+                                                  CoreProtoResolver coreProtoResolver,
+                                                  int messageVersion) {
+        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -80,10 +82,10 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
 
     @Override
     public String toString() {
-        return "PeerOpenedDisputeMessage{" +
+        return "OpenNewDisputeMessage{" +
                 "\n     dispute=" + dispute +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     PeerOpenedDisputeMessage.uid='" + uid + '\'' +
+                ",\n     OpenNewDisputeMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 "\n} " + super.toString();
     }

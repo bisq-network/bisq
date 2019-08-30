@@ -17,7 +17,7 @@
 
 package bisq.core.presentation;
 
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.dispute.arbitration.DisputeManager;
 
 import javax.inject.Inject;
 

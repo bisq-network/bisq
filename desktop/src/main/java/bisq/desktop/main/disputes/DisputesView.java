@@ -29,9 +29,9 @@ import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.dispute.arbitration.Arbitrator;
+import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.arbitration.DisputeManager;
 import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;

@@ -15,10 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration.messages;
+package bisq.core.dispute.arbitration.messages;
 
-import bisq.core.arbitration.Dispute;
-import bisq.core.proto.CoreProtoResolver;
+import bisq.core.dispute.arbitration.DisputeResult;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -27,16 +26,18 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-@EqualsAndHashCode(callSuper = true)
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Value
-public final class OpenNewDisputeMessage extends DisputeMessage {
-    private final Dispute dispute;
+@EqualsAndHashCode(callSuper = true)
+public final class DisputeResultMessage extends DisputeMessage {
+    private final DisputeResult disputeResult;
     private final NodeAddress senderNodeAddress;
 
-    public OpenNewDisputeMessage(Dispute dispute,
-                                 NodeAddress senderNodeAddress,
-                                 String uid) {
-        this(dispute,
+    public DisputeResultMessage(DisputeResult disputeResult,
+                                NodeAddress senderNodeAddress,
+                                String uid) {
+        this(disputeResult,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -47,29 +48,28 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OpenNewDisputeMessage(Dispute dispute,
-                                  NodeAddress senderNodeAddress,
-                                  String uid,
-                                  int messageVersion) {
+    private DisputeResultMessage(DisputeResult disputeResult,
+                                 NodeAddress senderNodeAddress,
+                                 String uid,
+                                 int messageVersion) {
         super(messageVersion, uid);
-        this.dispute = dispute;
+        this.disputeResult = disputeResult;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setOpenNewDisputeMessage(protobuf.OpenNewDisputeMessage.newBuilder()
-                        .setUid(uid)
-                        .setDispute(dispute.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                .setDisputeResultMessage(protobuf.DisputeResultMessage.newBuilder()
+                        .setDisputeResult(disputeResult.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setUid(uid))
                 .build();
     }
 
-    public static OpenNewDisputeMessage fromProto(protobuf.OpenNewDisputeMessage proto,
-                                                  CoreProtoResolver coreProtoResolver,
-                                                  int messageVersion) {
-        return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
+    public static DisputeResultMessage fromProto(protobuf.DisputeResultMessage proto, int messageVersion) {
+        checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
+        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -77,15 +77,15 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
 
     @Override
     public String getTradeId() {
-        return dispute.getTradeId();
+        return disputeResult.getTradeId();
     }
 
     @Override
     public String toString() {
-        return "OpenNewDisputeMessage{" +
-                "\n     dispute=" + dispute +
+        return "DisputeResultMessage{" +
+                "\n     disputeResult=" + disputeResult +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     OpenNewDisputeMessage.uid='" + uid + '\'' +
+                ",\n     DisputeResultMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 "\n} " + super.toString();
     }
