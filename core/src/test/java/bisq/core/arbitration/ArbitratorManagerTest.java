@@ -44,7 +44,7 @@ public class ArbitratorManagerTest {
         User user = mock(User.class);
         ArbitratorService arbitratorService = mock(ArbitratorService.class);
 
-        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, null, false);
+        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, false);
 
         ArrayList<String> languagesOne = new ArrayList<String>() {{
             add("en");
@@ -64,15 +64,15 @@ public class ArbitratorManagerTest {
                 languagesTwo, 0L, null, "", null,
                 null, null);
 
-        manager.addArbitrator(one, () -> {
+        manager.addDisputeResolver(one, () -> {
         }, errorMessage -> {
         });
-        manager.addArbitrator(two, () -> {
+        manager.addDisputeResolver(two, () -> {
         }, errorMessage -> {
         });
 
-        assertTrue(manager.isArbitratorAvailableForLanguage("en"));
-        assertFalse(manager.isArbitratorAvailableForLanguage("th"));
+        assertTrue(manager.isDisputeResolverAvailableForLanguage("en"));
+        assertFalse(manager.isDisputeResolverAvailableForLanguage("th"));
     }
 
     @Test
@@ -80,7 +80,7 @@ public class ArbitratorManagerTest {
         User user = mock(User.class);
         ArbitratorService arbitratorService = mock(ArbitratorService.class);
 
-        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, null, false);
+        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, false);
 
         ArrayList<String> languagesOne = new ArrayList<String>() {{
             add("en");
@@ -104,15 +104,15 @@ public class ArbitratorManagerTest {
             add(two.getNodeAddress());
         }};
 
-        manager.addArbitrator(one, () -> {
+        manager.addDisputeResolver(one, () -> {
         }, errorMessage -> {
         });
-        manager.addArbitrator(two, () -> {
+        manager.addDisputeResolver(two, () -> {
         }, errorMessage -> {
         });
 
-        assertThat(manager.getArbitratorLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
-        assertThat(manager.getArbitratorLanguages(nodeAddresses), not(containsInAnyOrder("de")));
+        assertThat(manager.getDisputeResolverLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
+        assertThat(manager.getDisputeResolverLanguages(nodeAddresses), not(containsInAnyOrder("de")));
     }
 
 }

@@ -105,7 +105,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-        arbitratorManager.getArbitratorsObservableMap().addListener(arbitratorMapChangeListener);
+        arbitratorManager.getObservableMap().addListener(arbitratorMapChangeListener);
         Arbitrator myRegisteredArbitrator = user.getRegisteredArbitrator();
         myArbitratorProperty.set(myRegisteredArbitrator);
         updateDisableStates();
@@ -113,7 +113,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
 
     @Override
     protected void deactivate() {
-        arbitratorManager.getArbitratorsObservableMap().removeListener(arbitratorMapChangeListener);
+        arbitratorManager.getObservableMap().removeListener(arbitratorMapChangeListener);
     }
 
 
@@ -174,7 +174,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
                     null
             );
 
-            arbitratorManager.addArbitrator(arbitrator,
+            arbitratorManager.addDisputeResolver(arbitrator,
                     () -> {
                         updateDisableStates();
                         resultHandler.handleResult();
@@ -188,7 +188,7 @@ class ArbitratorRegistrationViewModel extends ActivatableViewModel {
 
 
     void onRevoke(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        arbitratorManager.removeArbitrator(
+        arbitratorManager.removeDisputeResolver(
                 () -> {
                     updateDisableStates();
                     resultHandler.handleResult();
