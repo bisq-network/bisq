@@ -25,13 +25,10 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
-import com.google.protobuf.ByteString;
-
 import java.security.PublicKey;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
@@ -81,24 +78,6 @@ public abstract class DisputeResolver implements ProtectedStoragePayload, Expira
         this.emailAddress = emailAddress;
         this.info = info;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public protobuf.Arbitrator.Builder getBuilder() {
-        final protobuf.Arbitrator.Builder builder = protobuf.Arbitrator.newBuilder()
-                .setNodeAddress(nodeAddress.toProtoMessage())
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .addAllLanguageCodes(languageCodes)
-                .setRegistrationDate(registrationDate)
-                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))
-                .setRegistrationSignature(registrationSignature);
-        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
-        Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
-        return builder;
     }
 
 
