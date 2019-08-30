@@ -25,13 +25,13 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.arbitration.DisputeResult;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dispute.arbitration.Dispute;
+import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.arbitration.DisputeResult;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;

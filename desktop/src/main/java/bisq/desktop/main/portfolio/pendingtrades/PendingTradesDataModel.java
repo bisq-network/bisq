@@ -27,11 +27,11 @@ import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeAlreadyOpenException;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dispute.arbitration.Dispute;
+import bisq.core.dispute.arbitration.DisputeAlreadyOpenException;
+import bisq.core.dispute.arbitration.DisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;

@@ -1,6 +1,7 @@
 package bisq.core.arbitration;
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.dispute.arbitration.BuyerDataItem;
 import bisq.core.payment.payload.PaymentAccountPayload;
 
 import org.bitcoinj.core.Coin;

@@ -17,10 +17,10 @@
 
 package bisq.core.offer;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.availability.ArbitratorSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;

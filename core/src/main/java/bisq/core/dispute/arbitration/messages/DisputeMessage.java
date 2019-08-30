@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.arbitration.messages;
+package bisq.core.dispute.arbitration.messages;
 
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.UidMessage;

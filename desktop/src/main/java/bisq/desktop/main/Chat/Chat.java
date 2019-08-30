@@ -26,10 +26,10 @@ import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.arbitration.Attachment;
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
+import bisq.core.dispute.arbitration.Attachment;
+import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.trade.TradeChatSession;
 import bisq.core.util.BSFormatter;

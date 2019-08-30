@@ -17,7 +17,6 @@
 
 package bisq.core.app;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.setup.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
@@ -25,6 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.exceptions.BisqException;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;

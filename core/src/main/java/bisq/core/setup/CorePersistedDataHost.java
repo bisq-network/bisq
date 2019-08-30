@@ -17,7 +17,6 @@
 
 package bisq.core.setup;
 
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.dao.DaoOptionKeys;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -27,6 +26,7 @@ import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
+import bisq.core.dispute.arbitration.DisputeManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;

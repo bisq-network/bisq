@@ -30,7 +30,7 @@ import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.Arbitrator;
+import bisq.core.dispute.arbitration.Arbitrator;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 

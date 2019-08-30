@@ -18,11 +18,11 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
