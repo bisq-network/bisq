@@ -17,26 +17,21 @@
 
 package bisq.core.dispute.arbitration;
 
+import bisq.core.dispute.DisputeResolver;
+
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.storage.payload.ExpirablePayload;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
 import org.springframework.util.CollectionUtils;
 
-import java.security.PublicKey;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -44,30 +39,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class Arbitrator implements ProtectedStoragePayload, ExpirablePayload {
-    public static final long TTL = TimeUnit.DAYS.toMillis(10);
-
-    private final NodeAddress nodeAddress;
+public final class Arbitrator extends DisputeResolver {
     private final byte[] btcPubKey;
     private final String btcAddress;
-    private final PubKeyRing pubKeyRing;
-    private final List<String> languageCodes;
-    private final long registrationDate;
-    private final byte[] registrationPubKey;
-    private final String registrationSignature;
-    @Nullable
-    private final String emailAddress;
-    @Nullable
-    private final String info;
-
-    // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
-    // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
-    // field in a class would break that hash and therefore break the storage mechanism.
-    @Nullable
-    private Map<String, String> extraDataMap;
 
     public Arbitrator(NodeAddress nodeAddress,
                       byte[] btcPubKey,
@@ -80,17 +57,19 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
                       @Nullable String emailAddress,
                       @Nullable String info,
                       @Nullable Map<String, String> extraDataMap) {
-        this.nodeAddress = nodeAddress;
+
+        super(nodeAddress,
+                pubKeyRing,
+                languageCodes,
+                registrationDate,
+                registrationPubKey,
+                registrationSignature,
+                emailAddress,
+                info,
+                extraDataMap);
+
         this.btcPubKey = btcPubKey;
         this.btcAddress = btcAddress;
-        this.pubKeyRing = pubKeyRing;
-        this.languageCodes = languageCodes;
-        this.registrationDate = registrationDate;
-        this.registrationPubKey = registrationPubKey;
-        this.registrationSignature = registrationSignature;
-        this.emailAddress = emailAddress;
-        this.info = info;
-        this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,18 +78,9 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
-        final protobuf.Arbitrator.Builder builder = protobuf.Arbitrator.newBuilder()
-                .setNodeAddress(nodeAddress.toProtoMessage())
+        protobuf.Arbitrator.Builder builder = getBuilder()
                 .setBtcPubKey(ByteString.copyFrom(btcPubKey))
-                .setBtcAddress(btcAddress)
-                .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .addAllLanguageCodes(languageCodes)
-                .setRegistrationDate(registrationDate)
-                .setRegistrationPubKey(ByteString.copyFrom(registrationPubKey))
-                .setRegistrationSignature(registrationSignature);
-        Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
-        Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+                .setBtcAddress(btcAddress);
         return protobuf.StoragePayload.newBuilder().setArbitrator(builder).build();
     }
 
@@ -119,7 +89,7 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
                 proto.getBtcPubKey().toByteArray(),
                 proto.getBtcAddress(),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                proto.getLanguageCodesList().stream().collect(Collectors.toList()),
+                new ArrayList<>(proto.getLanguageCodesList()),
                 proto.getRegistrationDate(),
                 proto.getRegistrationPubKey().toByteArray(),
                 proto.getRegistrationSignature(),
@@ -134,30 +104,10 @@ public final class Arbitrator implements ProtectedStoragePayload, ExpirablePaylo
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public long getTTL() {
-        return TTL;
-    }
-
-    @Override
-    public PublicKey getOwnerPubKey() {
-        return pubKeyRing.getSignaturePubKey();
-    }
-
-
-    @Override
     public String toString() {
         return "Arbitrator{" +
-                "\n     nodeAddress=" + nodeAddress +
-                ",\n     btcPubKey=" + Utilities.bytesAsHexString(btcPubKey) +
+                "\n     btcPubKey=" + Utilities.bytesAsHexString(btcPubKey) +
                 ",\n     btcAddress='" + btcAddress + '\'' +
-                ",\n     pubKeyRing=" + pubKeyRing +
-                ",\n     languageCodes=" + languageCodes +
-                ",\n     registrationDate=" + registrationDate +
-                ",\n     registrationPubKey=" + Utilities.bytesAsHexString(registrationPubKey) +
-                ",\n     registrationSignature='" + registrationSignature + '\'' +
-                ",\n     emailAddress='" + emailAddress + '\'' +
-                ",\n     info='" + info + '\'' +
-                ",\n     extraDataMap=" + extraDataMap +
-                "\n}";
+                "\n} " + super.toString();
     }
 }

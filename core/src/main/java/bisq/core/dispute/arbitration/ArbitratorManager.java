@@ -18,6 +18,7 @@
 package bisq.core.dispute.arbitration;
 
 import bisq.core.app.AppOptionKeys;
+import bisq.core.dispute.DisputeResolver;
 import bisq.core.filter.FilterManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -76,7 +77,7 @@ public class ArbitratorManager {
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static final long REPUBLISH_MILLIS = Arbitrator.TTL / 2;
+    private static final long REPUBLISH_MILLIS = DisputeResolver.TTL / 2;
     private static final long RETRY_REPUBLISH_SEC = 5;
     private static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
