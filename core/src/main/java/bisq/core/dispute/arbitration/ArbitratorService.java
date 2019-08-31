@@ -41,7 +41,7 @@ public class ArbitratorService extends DisputeResolverService<Arbitrator> {
     }
 
     @Override
-    protected Set<Arbitrator> getCollect(List<String> bannedDisputeResolvers) {
+    protected Set<Arbitrator> getDisputeResolverSet(List<String> bannedDisputeResolvers) {
         return p2PService.getDataMap().values().stream()
                 .filter(data -> data.getProtectedStoragePayload() instanceof Arbitrator)
                 .map(data -> (Arbitrator) data.getProtectedStoragePayload())
