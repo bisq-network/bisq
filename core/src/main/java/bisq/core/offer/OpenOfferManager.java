@@ -22,7 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
-import bisq.core.offer.availability.ArbitratorSelection;
+import bisq.core.offer.availability.DisputeResolverSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
@@ -564,7 +564,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                            arbitratorNodeAddress = DisputeResolverSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
                             openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
                             // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
