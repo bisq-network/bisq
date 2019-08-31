@@ -22,8 +22,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 
-import bisq.network.p2p.NodeAddress;
-
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
@@ -55,14 +53,9 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
             offer.setState(Offer.State.AVAILABLE);
 
-            NodeAddress selectedArbitrator = offerAvailabilityResponse.getArbitrator();
-
-            if (selectedArbitrator != null) {
-                model.setSelectedArbitrator(selectedArbitrator);
-                complete();
-            } else {
-                failed("selectedArbitrator is null");
-            }
+            model.setSelectedArbitrator(offerAvailabilityResponse.getArbitrator());
+            model.setSelectedMediator(offerAvailabilityResponse.getMediator());
+            complete();
         } catch (Throwable t) {
             offer.setErrorMessage("An error occurred.\n" +
                     "Error message:\n"
