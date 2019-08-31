@@ -29,6 +29,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dispute.arbitration.Arbitrator;
+import bisq.core.dispute.mediator.Mediator;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -426,6 +427,11 @@ class TakeOfferDataModel extends OfferDataModel {
     boolean hasAcceptedArbitrators() {
         final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
         return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
+    }
+
+    boolean hasAcceptedMediators() {
+        final List<Mediator> acceptedMediators = user.getAcceptedMediators();
+        return acceptedMediators != null && acceptedMediators.size() > 0;
     }
 
     long getMaxTradeLimit() {
