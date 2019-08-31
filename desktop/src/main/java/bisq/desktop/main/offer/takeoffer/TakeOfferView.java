@@ -430,7 +430,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void onTakeOffer() {
         if (model.isReadyForTxBroadcast()) {
             if (model.dataModel.isTakerFeeValid()) {
-                if (model.hasAcceptedArbitrators()) {
+                boolean hasAcceptedArbitrators = model.hasAcceptedArbitrators();
+                if (hasAcceptedArbitrators && model.hasAcceptedMediators()) {
                     if (!DevEnv.isDevMode()) {
                         offerDetailsWindow.onTakeOffer(() ->
                                 model.onTakeOffer(() -> {
@@ -445,7 +446,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         });
                     }
                 } else {
-                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+                    String message = !hasAcceptedArbitrators ?
+                            Res.get("popup.warning.noArbitratorsAvailable") :
+                            Res.get("popup.warning.noMediatorsAvailable");
+                    new Popup<>().warning(message).show();
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
