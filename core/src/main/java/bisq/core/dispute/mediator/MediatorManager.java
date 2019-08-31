@@ -45,24 +45,24 @@ public class MediatorManager extends DisputeResolverManager<Mediator> {
         super(keyRing, disputeResolverService, user, filterManager, useDevPrivilegeKeys);
     }
 
-    //TODO use diff. keys
+    //TODO Before release set new keys from maintainer who manages keys
     @Override
     protected List<String> getPubLeyList() {
-        return List.of("0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",
-                "031c502a60f9dbdb5ae5e438a79819e4e1f417211dd537ac12c9bc23246534c4bd",
-                "02c1e5a242387b6d5319ce27246cea6edaaf51c3550591b528d2578a4753c56c2c",
-                "025c319faf7067d9299590dd6c97fe7e56cd4dac61205ccee1cd1fc390142390a2",
-                "038f6e24c2bfe5d51d0a290f20a9a657c270b94ef2b9c12cd15ca3725fa798fc55",
-                "0255256ff7fb615278c4544a9bbd3f5298b903b8a011cd7889be19b6b1c45cbefe",
-                "024a3a37289f08c910fbd925ebc72b946f33feaeff451a4738ee82037b4cda2e95",
-                "02a88b75e9f0f8afba1467ab26799dcc38fd7a6468fb2795444b425eb43e2c10bd",
-                "02349a51512c1c04c67118386f4d27d768c5195a83247c150a4b722d161722ba81",
-                "03f718a2e0dc672c7cdec0113e72c3322efc70412bb95870750d25c32cd98de17d",
-                "028ff47ee2c56e66313928975c58fa4f1b19a0f81f3a96c4e9c9c3c6768075509e",
-                "02b517c0cbc3a49548f448ddf004ed695c5a1c52ec110be1bfd65fa0ca0761c94b",
-                "03df837a3a0f3d858e82f3356b71d1285327f101f7c10b404abed2abc1c94e7169",
-                "0203a90fb2ab698e524a5286f317a183a84327b8f8c3f7fa4a98fec9e1cefd6b72",
-                "023c99cc073b851c892d8c43329ca3beb5d2213ee87111af49884e3ce66cbd5ba5");
+        return List.of("03be5471ff9090d322110d87912eefe89871784b1754d0707fdb917be5d88d3809",
+                "023736953a5a6638db71d7f78edc38cea0e42143c3b184ee67f331dafdc2c59efa",
+                "03d82260038253f7367012a4fc0c52dac74cfc67ac9cfbc3c3ad8fca746d8e5fc6",
+                "02dac85f726121ef333d425bc8e13173b5b365a6444176306e6a0a9e76ae1073bd",
+                "0342a5b37c8f843c3302e930d0197cdd8948a6f76747c05e138a6671a6a4caf739",
+                "027afa67c920867a70dfad77db6c6f74051f5af8bf56a1ad479f0bc4005df92325",
+                "03505f44f1893b64a457f8883afdd60774d7f4def6f82bb6f60be83a4b5b85cf82",
+                "0277d2d505d28ad67a03b001ef66f0eaaf1184fa87ebeaa937703cec7073cb2e8f",
+                "027cb3e9a56a438714e2144e2f75db7293ad967f12d5c29b17623efbd35ddbceb0",
+                "03be5471ff9090d322110d87912eefe89871784b1754d0707fdb917be5d88d3809",
+                "03756937d33d028eea274a3154775b2bffd076ffcc4a23fe0f9080f8b7fa0dab5b",
+                "03d8359823a91736cb7aecfaf756872daf258084133c9dd25b96ab3643707c38ca",
+                "03589ed6ded1a1aa92d6ad38bead13e4ad8ba24c60ca6ed8a8efc6e154e3f60add",
+                "0356965753f77a9c0e33ca7cc47fd43ce7f99b60334308ad3c11eed3665de79a78",
+                "031112eb033ebacb635754a2b7163c68270c9171c40f271e70e37b22a2590d3c18");
     }
 
     @Override
