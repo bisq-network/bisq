@@ -404,9 +404,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
-                        "proposalDisplay.paramComboBox must no tbe null");
+                        "proposalDisplay.paramComboBox must not be null");
                 checkNotNull(proposalDisplay.paramValueTextField,
-                        "proposalDisplay.paramValueTextField must no tbe null");
+                        "proposalDisplay.paramValueTextField must not be null");
                 Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
                 if (selectedParam == null)
                     throw new ProposalValidationException("selectedParam is null");
