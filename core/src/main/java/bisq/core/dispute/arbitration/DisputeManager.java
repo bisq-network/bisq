@@ -267,7 +267,7 @@ public class DisputeManager implements PersistedDataHost {
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    chatManager.getChatSession().getType(),
+                    DisputeCommunicationMessage.Type.DISPUTE,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -391,7 +391,7 @@ public class DisputeManager implements PersistedDataHost {
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    chatManager.getChatSession().getType(),
+                    DisputeCommunicationMessage.Type.DISPUTE,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -479,7 +479,7 @@ public class DisputeManager implements PersistedDataHost {
         }
 
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                chatManager.getChatSession().getType(),
+                DisputeCommunicationMessage.Type.DISPUTE,
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
@@ -676,11 +676,12 @@ public class DisputeManager implements PersistedDataHost {
 
     // We get that message at both peers. The dispute object is in context of the trader
     void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
-        String errorMessage = null;
-        boolean success = false;
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
-
-        if (isArbitrator(disputeResult)) {
+        DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
+        checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
+        if (!disputeCommunicationMessage.isMediationDispute() &&
+                Arrays.equals(disputeResult.getArbitratorPubKey(),
+                        walletService.getArbitratorAddressEntry().getPubKey())) {
             log.error("Arbitrator received disputeResultMessage. That must never happen.");
             return;
         }
@@ -689,11 +690,11 @@ public class DisputeManager implements PersistedDataHost {
         Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
         if (!disputeOptional.isPresent()) {
-            log.debug("We got a dispute result msg but we don't have a matching dispute. " +
+            log.warn("We got a dispute result msg but we don't have a matching dispute. " +
                     "That might happen when we get the disputeResultMessage before the dispute was created. " +
                     "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
-                // We delay2 sec. to be sure the comm. msg gets added first
+                // We delay 2 sec. to be sure the comm. msg gets added first
                 Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage), 2);
                 delayMsgMap.put(uid, timer);
             } else {
@@ -702,23 +703,41 @@ public class DisputeManager implements PersistedDataHost {
             }
             return;
         }
+
         Dispute dispute = disputeOptional.get();
+        // try {
+        cleanupRetryMap(uid);
+        if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage)) {
+            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
+        } else {
+            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
+        }
+        dispute.setIsClosed(true);
+
+        if (dispute.disputeResultProperty().get() != null) {
+            log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +
+                    "again because the first close did not succeed. TradeId = " + tradeId);
+        }
+
+        dispute.setDisputeResult(disputeResult);
+
+        Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
+        if (dispute.isMediationDispute()) {
+            // Mediation case
+            if (tradeOptional.isPresent()) {
+                tradeOptional.get().setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
+            } else {
+                Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
+                openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
+            }
+            chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), true, null);
+            return;
+        }
+
+        // Arbitration case
+        String errorMessage = null;
+        boolean success = false;
         try {
-            cleanupRetryMap(uid);
-            DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
-            if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage))
-                dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
-            else if (disputeCommunicationMessage != null)
-                log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
-
-            dispute.setIsClosed(true);
-
-            if (dispute.disputeResultProperty().get() != null)
-                log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +
-                        "again because the first close did not succeed. TradeId = " + tradeId);
-
-            dispute.setDisputeResult(disputeResult);
-
             // We need to avoid publishing the tx from both traders as it would create problems with zero confirmation withdrawals
             // There would be different transactions if both sign and publish (signers: once buyer+arb, once seller+arb)
             // The tx publisher is the winner or in case both get 50% the buyer, as the buyer has more inventive to publish the tx as he receives
@@ -742,7 +761,6 @@ public class DisputeManager implements PersistedDataHost {
             if ((isBuyer && publisher == DisputeResult.Winner.BUYER)
                     || (!isBuyer && publisher == DisputeResult.Winner.SELLER)) {
 
-                Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
                 Transaction payoutTx = null;
                 if (tradeOptional.isPresent()) {
                     payoutTx = tradeOptional.get().getPayoutTx();
@@ -756,7 +774,7 @@ public class DisputeManager implements PersistedDataHost {
                 if (payoutTx == null) {
                     if (dispute.getDepositTxSerialized() != null) {
                         byte[] multiSigPubKey = isBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
-                        DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(dispute.getTradeId(), multiSigPubKey);
+                        DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
                         Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
                                 dispute.getDepositTxSerialized(),
                                 disputeResult.getArbitratorSignature(),
@@ -774,17 +792,9 @@ public class DisputeManager implements PersistedDataHost {
                             @Override
                             public void onSuccess(Transaction transaction) {
                                 // after successful publish we send peer the tx
-
                                 dispute.setDisputePayoutTxId(transaction.getHashAsString());
                                 sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
-
-                                // set state after payout as we call swapTradeEntryToAvailableEntry
-                                if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
-                                    tradeManager.closeDisputedTrade(dispute.getTradeId());
-                                else {
-                                    Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
-                                    openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
-                                }
+                                updateTradeOrOpenOfferManager(tradeId);
                             }
 
                             @Override
@@ -807,14 +817,11 @@ public class DisputeManager implements PersistedDataHost {
 
                     success = true;
                 }
-
             } else {
                 log.trace("We don't publish the tx as we are not the winning party.");
                 // Clean up tangling trades
-                if (dispute.disputeResultProperty().get() != null &&
-                        dispute.isClosed() &&
-                        tradeManager.getTradeById(dispute.getTradeId()).isPresent()) {
-                    tradeManager.closeDisputedTrade(dispute.getTradeId());
+                if (dispute.disputeResultProperty().get() != null && dispute.isClosed()) {
+                    updateTradeOrOpenOfferManager(tradeId);
                 }
 
                 success = true;
@@ -826,13 +833,7 @@ public class DisputeManager implements PersistedDataHost {
 
             // We prefer to close the dispute in that case. If there was no deposit tx and a random tx was used
             // we get a TransactionVerificationException. No reason to keep that dispute open...
-            if (tradeManager.getTradeById(dispute.getTradeId()).isPresent())
-                tradeManager.closeDisputedTrade(dispute.getTradeId());
-            else {
-                Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(dispute.getTradeId());
-                openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
-            }
-            dispute.setIsClosed(true);
+            updateTradeOrOpenOfferManager(tradeId);
 
             throw new RuntimeException(errorMessage);
         } catch (AddressFormatException | WalletException e) {
@@ -843,10 +844,17 @@ public class DisputeManager implements PersistedDataHost {
         } finally {
             // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
             // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-            DisputeCommunicationMessage disputeCommunicationMessage = disputeResultMessage.getDisputeResult().getDisputeCommunicationMessage();
-            if (disputeCommunicationMessage != null) {
-                chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
-            }
+            chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
+        }
+    }
+
+    private void updateTradeOrOpenOfferManager(String tradeId) {
+        // set state after payout as we call swapTradeEntryToAvailableEntry
+        if (tradeManager.getTradeById(tradeId).isPresent()) {
+            tradeManager.closeDisputedTrade(tradeId);
+        } else {
+            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
+            openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
     }
 
@@ -906,11 +914,6 @@ public class DisputeManager implements PersistedDataHost {
 
     private boolean isArbitrator(Dispute dispute) {
         return keyRing.getPubKeyRing().equals(dispute.getConflictResolverPubKeyRing());
-    }
-
-    private boolean isArbitrator(DisputeResult disputeResult) {
-        return Arrays.equals(disputeResult.getArbitratorPubKey(),
-                walletService.getArbitratorAddressEntry().getPubKey());
     }
 
     public String getNrOfDisputes(boolean isBuyer, Contract contract) {

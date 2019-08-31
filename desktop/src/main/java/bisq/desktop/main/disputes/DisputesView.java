@@ -126,11 +126,16 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
 
         if (disputeResolversDisputesTab == null && (isActiveArbitrator || isActiveMediator || hasDisputesAsArbitrator)) {
-            String role = isActiveArbitrator ? Res.get("shared.arbitrator2") : Res.get("shared.mediator");
-            disputeResolversDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets", role).toUpperCase());
+            disputeResolversDisputesTab = new Tab();
             disputeResolversDisputesTab.setClosable(false);
             root.getTabs().add(disputeResolversDisputesTab);
             tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets").toUpperCase());
+        }
+
+        // We might get that method called before we have the map is filled in the arbitratorManager
+        if (disputeResolversDisputesTab != null) {
+            String role = isActiveArbitrator ? Res.get("shared.arbitrator2") : Res.get("shared.mediator");
+            disputeResolversDisputesTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", role).toUpperCase());
         }
     }
 
