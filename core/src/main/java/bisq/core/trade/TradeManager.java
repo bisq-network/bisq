@@ -26,6 +26,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.chat.ChatManager;
 import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -116,6 +117,7 @@ public class TradeManager implements PersistedDataHost {
     private final ReferralIdService referralIdService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
+    private final MediatorManager mediatorManager;
     private final ClockWatcher clockWatcher;
 
     private final Storage<TradableList<Trade>> tradableListStorage;
@@ -153,6 +155,7 @@ public class TradeManager implements PersistedDataHost {
                         ReferralIdService referralIdService,
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
+                        MediatorManager mediatorManager,
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage) {
         this.user = user;
@@ -170,6 +173,7 @@ public class TradeManager implements PersistedDataHost {
         this.referralIdService = referralIdService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.clockWatcher = clockWatcher;
 
         tradableListStorage = storage;
@@ -337,6 +341,7 @@ public class TradeManager implements PersistedDataHost {
                         Coin.valueOf(payDepositRequest.getTakerFee()),
                         payDepositRequest.isCurrencyForTakerFeeBtc(),
                         openOffer.getArbitratorNodeAddress(),
+                        openOffer.getMediatorNodeAddress(),
                         tradableListStorage,
                         btcWalletService);
             else
@@ -345,6 +350,7 @@ public class TradeManager implements PersistedDataHost {
                         Coin.valueOf(payDepositRequest.getTakerFee()),
                         payDepositRequest.isCurrencyForTakerFeeBtc(),
                         openOffer.getArbitratorNodeAddress(),
+                        openOffer.getMediatorNodeAddress(),
                         tradableListStorage,
                         btcWalletService);
 
@@ -456,6 +462,7 @@ public class TradeManager implements PersistedDataHost {
                     tradePrice,
                     model.getPeerNodeAddress(),
                     model.getSelectedArbitrator(),
+                    model.getSelectedMediator(),
                     tradableListStorage,
                     btcWalletService);
         else
@@ -467,6 +474,7 @@ public class TradeManager implements PersistedDataHost {
                     tradePrice,
                     model.getPeerNodeAddress(),
                     model.getSelectedArbitrator(),
+                    model.getSelectedMediator(),
                     tradableListStorage,
                     btcWalletService);
 
@@ -484,7 +492,9 @@ public class TradeManager implements PersistedDataHost {
                 offer,
                 keyRing.getPubKeyRing(),
                 p2PService,
-                user);
+                user,
+                mediatorManager,
+                tradeStatisticsManager);
     }
 
 
