@@ -502,7 +502,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (disputeState == Trade.DisputeState.NO_DISPUTE) {
             // If no dispute state set we start with mediation
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
-            checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must no tbe null");
+            checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
@@ -530,7 +530,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else if (disputeState == Trade.DisputeState.MEDIATION_CLOSED) {
             // Only if we have completed mediation we allow arbitration
             PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
-            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
+            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
             Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
