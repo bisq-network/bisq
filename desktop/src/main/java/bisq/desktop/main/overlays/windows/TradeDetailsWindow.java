@@ -34,6 +34,8 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.UserThread;
 
 import org.bitcoinj.core.Utils;
@@ -213,9 +215,13 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 Res.get("shared.takerTxFee", formatter.formatCoinWithCode(offer.getTxFee().multiply(3L)));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
 
-        if (trade.getArbitratorNodeAddress() != null)
-            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"),
-                    trade.getArbitratorNodeAddress().getFullAddress());
+        NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
+        NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
+        if (arbitratorNodeAddress != null && mediatorNodeAddress != null) {
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                    Res.get("tradeDetailsWindow.conflictResolversAddresses"),
+                    arbitratorNodeAddress.getFullAddress() + " / " + mediatorNodeAddress.getFullAddress());
+        }
 
         if (trade.getTradingPeerNodeAddress() != null)
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
