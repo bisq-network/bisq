@@ -390,14 +390,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return offerPayload.getId();
     }
 
-    public List<NodeAddress> getArbitratorNodeAddresses() {
-        return offerPayload.getArbitratorNodeAddresses();
-    }
-
-    public List<NodeAddress> getMediatorNodeAddresses() {
-        return offerPayload.getMediatorNodeAddresses();
-    }
-
     @Nullable
     public List<String> getAcceptedBankIds() {
         return offerPayload.getAcceptedBankIds();
