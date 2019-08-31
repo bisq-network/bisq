@@ -61,6 +61,8 @@ import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
 
+import com.google.common.collect.Lists;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
@@ -370,6 +372,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 minAmountAsLong,
                 baseCurrencyCode,
                 counterCurrencyCode,
+                Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
+                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null,
