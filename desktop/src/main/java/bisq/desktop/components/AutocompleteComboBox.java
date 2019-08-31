@@ -92,12 +92,15 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
             var inputTextItem = getConverter().fromString(inputText);
             if (selectedItem != null && selectedItem.equals(inputTextItem)) {
                 eh.handle(e);
+                getParent().requestFocus();
                 return;
             }
 
             // Case 2: fire if the text is empty to support special "show all" case
-            if (inputText.isEmpty())
+            if (inputText.isEmpty()) {
                 eh.handle(e);
+                getParent().requestFocus();
+            }
         });
     }
 
