@@ -67,6 +67,9 @@ import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
+// TODO translation string keys should be more generic.
+//  @ripcurlx how it is for translators if we change key of string?
+//  I fear they will see the old key removed and need to add the new one again.
 @FxmlView
 public abstract class DisputeResolverRegistrationView<R, T extends DisputeResolverRegistrationViewModel> extends ActivatableViewAndModel<VBox, T> {
 
