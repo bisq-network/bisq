@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class ArbitratorSelection {
+public class DisputeResolverSelection {
 
     public static <T extends DisputeResolver> T getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
                                                                        DisputeResolverManager<T> disputeResolverManager) {
