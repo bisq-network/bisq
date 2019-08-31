@@ -128,6 +128,31 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 false);
     }
 
+    public DisputeCommunicationMessage(DisputeCommunicationMessage.Type type,
+                                       String tradeId,
+                                       int traderId,
+                                       boolean senderIsTrader,
+                                       String message,
+                                       NodeAddress senderNodeAddress,
+                                       long date) {
+        this(type,
+                tradeId,
+                traderId,
+                senderIsTrader,
+                message,
+                null,
+                senderNodeAddress,
+                date,
+                false,
+                false,
+                UUID.randomUUID().toString(),
+                Version.getP2PMessageVersion(),
+                false,
+                null,
+                null,
+                false);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

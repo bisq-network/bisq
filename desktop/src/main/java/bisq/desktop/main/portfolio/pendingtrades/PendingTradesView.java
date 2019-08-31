@@ -317,7 +317,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         model.dataModel.list.forEach(t -> {
             Trade trade = t.getTrade();
             newChatMessagesByTradeMap.put(trade.getId(),
-                    trade.getCommunicationMessages().stream().filter(m -> !m.isWasDisplayed()).count());
+                    trade.getCommunicationMessages().stream()
+                            .filter(m -> !m.isWasDisplayed())
+                            .filter(m -> !m.isSystemMessage())
+                            .count());
         });
     }
 
@@ -326,16 +329,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             chatPopupStage.close();
 
         if (trade.getCommunicationMessages().isEmpty()) {
-            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    DisputeCommunicationMessage.Type.TRADE,
-                    trade.getId(),
-                    0,
-                    false,
-                    Res.get("tradeChat.rules"),
-                    new NodeAddress("null:0000")
-            );
-            disputeCommunicationMessage.setSystemMessage(true);
-            trade.getCommunicationMessages().add(disputeCommunicationMessage);
+            ((TradeChatSession) model.dataModel.tradeManager.getChatManager().getChatSession()).addSystemMsg(trade);
         }
 
         trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));

@@ -22,6 +22,7 @@ import bisq.core.arbitration.messages.DisputeMessage;
 import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
+import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -181,13 +182,33 @@ public class TradeChatSession extends ChatSession {
     public void storeDisputeCommunicationMessage(DisputeCommunicationMessage message) {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
-            if (tradeOptional.get().getCommunicationMessages().stream()
-                    .noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                tradeOptional.get().addCommunicationMessage(message);
+            Trade trade = tradeOptional.get();
+            ObservableList<DisputeCommunicationMessage> communicationMessages = trade.getCommunicationMessages();
+            if (communicationMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
+                if (communicationMessages.isEmpty()) {
+                    addSystemMsg(trade);
+                }
+                trade.addCommunicationMessage(message);
             } else {
                 log.warn("Trade got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
         }
+    }
+
+    public void addSystemMsg(Trade trade) {
+        // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
+        // by date.
+        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                DisputeCommunicationMessage.Type.TRADE,
+                trade.getId(),
+                0,
+                false,
+                Res.get("tradeChat.rules"),
+                new NodeAddress("null:0000"),
+                trade.getDate().getTime()
+        );
+        disputeCommunicationMessage.setSystemMessage(true);
+        trade.getCommunicationMessages().add(disputeCommunicationMessage);
     }
 }
