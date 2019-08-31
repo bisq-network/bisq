@@ -17,12 +17,14 @@
 
 package bisq.core.offer.availability;
 
-import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.DisputeResolver;
+import bisq.core.dispute.DisputeResolverManager;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.util.Tuple2;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,8 +43,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class ArbitratorSelection {
 
-    public static Arbitrator getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
-                                                    ArbitratorManager arbitratorManager) {
+    public static <T extends DisputeResolver> T getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
+                                                                       DisputeResolverManager<T> disputeResolverManager) {
+        return getLeastUsedDisputeResolver(tradeStatisticsManager,
+                disputeResolverManager,
+                TradeStatistics2.ARBITRATOR_ADDRESS);
+    }
+
+    public static <T extends DisputeResolver> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
+                                                                     DisputeResolverManager<T> disputeResolverManager) {
+        return getLeastUsedDisputeResolver(tradeStatisticsManager,
+                disputeResolverManager,
+                TradeStatistics2.MEDIATOR_ADDRESS);
+    }
+
+    private static <T extends DisputeResolver> T getLeastUsedDisputeResolver(TradeStatisticsManager tradeStatisticsManager,
+                                                                             DisputeResolverManager<T> disputeResolverManager,
+                                                                             String extraMapKey) {
         // We take last 100 entries from trade statistics
         List<TradeStatistics2> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
         list.sort(Comparator.comparing(TradeStatistics2::getTradeDate));
@@ -52,32 +69,33 @@ public class ArbitratorSelection {
             list = list.subList(0, max);
         }
 
-        // We stored only first 4 chars of arbitrators onion address
+        // We stored only first 4 chars of disputeResolvers onion address
         List<String> lastAddressesUsedInTrades = list.stream()
                 .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
-                .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(TradeStatistics2.ARBITRATOR_ADDRESS))
+                .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(extraMapKey))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        Set<String> arbitrators = arbitratorManager.getObservableMap().values().stream()
-                .map(arbitrator -> arbitrator.getNodeAddress().getFullAddress())
+        Set<String> disputeResolvers = disputeResolverManager.getObservableMap().values().stream()
+                .map(disputeResolver -> disputeResolver.getNodeAddress().getFullAddress())
                 .collect(Collectors.toSet());
 
-        String result = getLeastUsedArbitrator(lastAddressesUsedInTrades, arbitrators);
+        String result = getLeastUsedDisputeResolver(lastAddressesUsedInTrades, disputeResolvers);
 
-        Optional<Arbitrator> optionalArbitrator = arbitratorManager.getObservableMap().values().stream()
+        Optional<T> optionalDisputeResolver = disputeResolverManager.getObservableMap().values().stream()
                 .filter(e -> e.getNodeAddress().getFullAddress().equals(result))
                 .findAny();
-        checkArgument(optionalArbitrator.isPresent(), "optionalArbitrator has to be present");
-        return optionalArbitrator.get();
+        checkArgument(optionalDisputeResolver.isPresent(), "optionalDisputeResolver has to be present");
+        return optionalDisputeResolver.get();
     }
 
-    static String getLeastUsedArbitrator(List<String> lastAddressesUsedInTrades, Set<String> arbitrators) {
-        checkArgument(!arbitrators.isEmpty(), "arbitrators must not be empty");
-        List<Tuple2<String, AtomicInteger>> arbitratorTuples = arbitrators.stream()
+    @VisibleForTesting
+    static String getLeastUsedDisputeResolver(List<String> lastAddressesUsedInTrades, Set<String> disputeResolvers) {
+        checkArgument(!disputeResolvers.isEmpty(), "disputeResolvers must not be empty");
+        List<Tuple2<String, AtomicInteger>> disputeResolverTuples = disputeResolvers.stream()
                 .map(e -> new Tuple2<>(e, new AtomicInteger(0)))
                 .collect(Collectors.toList());
-        arbitratorTuples.forEach(tuple -> {
+        disputeResolverTuples.forEach(tuple -> {
             int count = (int) lastAddressesUsedInTrades.stream()
                     .filter(tuple.first::startsWith) // we use only first 4 chars for comparing
                     .mapToInt(e -> 1)
@@ -85,8 +103,8 @@ public class ArbitratorSelection {
             tuple.second.set(count);
         });
 
-        arbitratorTuples.sort(Comparator.comparing(e -> e.first));
-        arbitratorTuples.sort(Comparator.comparingInt(e -> e.second.get()));
-        return arbitratorTuples.get(0).first;
+        disputeResolverTuples.sort(Comparator.comparing(e -> e.first));
+        disputeResolverTuples.sort(Comparator.comparingInt(e -> e.second.get()));
+        return disputeResolverTuples.get(0).first;
     }
 }
