@@ -23,7 +23,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.offer.availability.ArbitratorSelection;
+import bisq.core.offer.availability.DisputeResolverSelection;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -47,7 +47,7 @@ public class CreateTakerFeeTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Arbitrator arbitrator = ArbitratorSelection.getLeastUsedArbitrator(processModel.getTradeStatisticsManager(),
+            Arbitrator arbitrator = DisputeResolverSelection.getLeastUsedArbitrator(processModel.getTradeStatisticsManager(),
                     processModel.getArbitratorManager());
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
