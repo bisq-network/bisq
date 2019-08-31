@@ -97,6 +97,10 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Setter
     private boolean wasDisplayed;
 
+    //TODO
+    // Added in v1.1.6. Is false if received from old clients.
+    private boolean isMediationDispute;
+
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
     private final BooleanProperty acknowledgedProperty;
@@ -110,7 +114,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                        int traderId,
                                        boolean senderIsTrader,
                                        String message,
-                                       NodeAddress senderNodeAddress) {
+                                       NodeAddress senderNodeAddress,
+                                       boolean isMediationDispute) {
         this(type,
                 tradeId,
                 traderId,
@@ -126,7 +131,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 false,
                 null,
                 null,
-                false);
+                false,
+                isMediationDispute);
     }
 
     public DisputeCommunicationMessage(DisputeCommunicationMessage.Type type,
@@ -135,7 +141,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                        boolean senderIsTrader,
                                        String message,
                                        NodeAddress senderNodeAddress,
-                                       long date) {
+                                       long date,
+                                       boolean isMediationDispute) {
         this(type,
                 tradeId,
                 traderId,
@@ -151,7 +158,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 false,
                 null,
                 null,
-                false);
+                false,
+                isMediationDispute);
     }
 
 
@@ -174,7 +182,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                                         boolean acknowledged,
                                         @Nullable String sendMessageError,
                                         @Nullable String ackError,
-                                        boolean wasDisplayed) {
+                                        boolean wasDisplayed,
+                                        boolean isMediationDispute) {
         super(messageVersion, uid);
         this.type = type;
         this.tradeId = tradeId;
@@ -182,6 +191,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
         this.senderIsTrader = senderIsTrader;
         this.message = message;
         this.wasDisplayed = wasDisplayed;
+        this.isMediationDispute = isMediationDispute;
         Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         this.senderNodeAddress = senderNodeAddress;
         this.date = date;
@@ -209,7 +219,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .setIsSystemMessage(isSystemMessage)
                 .setUid(uid)
                 .setAcknowledged(acknowledgedProperty.get())
-                .setWasDisplayed(wasDisplayed);
+                .setWasDisplayed(wasDisplayed)
+                .setIsMediationDispute(isMediationDispute);
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
@@ -238,7 +249,8 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 proto.getAcknowledged(),
                 proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
                 proto.getAckError().isEmpty() ? null : proto.getAckError(),
-                proto.getWasDisplayed());
+                proto.getWasDisplayed(),
+                proto.getIsMediationDispute());
         disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
         return disputeCommunicationMessage;
     }
@@ -347,6 +359,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +
                 ",\n     sendMessageErrorProperty=" + sendMessageErrorProperty +
                 ",\n     ackErrorProperty=" + ackErrorProperty +
+                ",\n     isMediationDispute=" + isMediationDispute +
                 "\n} " + super.toString();
     }
 }

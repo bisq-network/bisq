@@ -183,7 +183,11 @@ public final class Dispute implements NetworkPayload {
         this.isSupportTicket = isSupportTicket;
         this.isMediationDispute = isMediationDispute;
 
-        id = tradeId + "_" + traderId;
+        if (isMediationDispute) {
+            id = tradeId + "_" + traderId + "_mediation";
+        } else {
+            id = tradeId + "_" + traderId; // We do not add anything to not break persisted data
+        }
     }
 
     @Override
