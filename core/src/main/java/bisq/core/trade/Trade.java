@@ -381,6 +381,7 @@ public abstract class Trade implements Tradable, Model {
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
                     @Nullable NodeAddress arbitratorNodeAddress,
+                    @Nullable NodeAddress mediatorNodeAddress,
                     Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
         this.offer = offer;
@@ -390,6 +391,7 @@ public abstract class Trade implements Tradable, Model {
         this.storage = storage;
         this.btcWalletService = btcWalletService;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
+        this.mediatorNodeAddress = mediatorNodeAddress;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
@@ -408,10 +410,18 @@ public abstract class Trade implements Tradable, Model {
                     long tradePrice,
                     NodeAddress tradingPeerNodeAddress,
                     @Nullable NodeAddress arbitratorNodeAddress,
+                    @Nullable NodeAddress mediatorNodeAddress,
                     Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
 
-        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+        this(offer,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                storage,
+                btcWalletService);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
