@@ -48,6 +48,13 @@ public class OfferAvailabilityModel implements Model {
     @Getter
     private NodeAddress selectedArbitrator;
 
+    // Added in v1.1.6
+    @Nullable
+    @Setter
+    @Getter
+    private NodeAddress selectedMediator;
+
+
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
                                   P2PService p2PService,
