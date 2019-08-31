@@ -67,6 +67,7 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
@@ -98,6 +99,7 @@ public class DisputeManager implements PersistedDataHost {
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final Storage<DisputeList> disputeStorage;
+    @Nullable
     @Getter
     private DisputeList disputes;
     private final String disputeInfo;
@@ -180,11 +182,15 @@ public class DisputeManager implements PersistedDataHost {
 
         cleanupDisputes();
 
-        disputes.getList().addListener((ListChangeListener<Dispute>) change -> {
-            change.next();
-            onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
-        });
-        onDisputesChangeListener(disputes.getList(), null);
+        if (disputes != null) {
+            disputes.getList().addListener((ListChangeListener<Dispute>) change -> {
+                change.next();
+                onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
+            });
+            onDisputesChangeListener(disputes.getList(), null);
+        } else {
+            log.warn("disputes is null");
+        }
     }
 
     private void onDisputesChangeListener(List<? extends Dispute> addedList,
@@ -215,13 +221,17 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public void cleanupDisputes() {
-        disputes.stream().forEach(dispute -> {
-            dispute.setStorage(disputeStorage);
-            if (dispute.isClosed())
-                closedDisputes.put(dispute.getTradeId(), dispute);
-            else
-                openDisputes.put(dispute.getTradeId(), dispute);
-        });
+        if (disputes != null) {
+            disputes.stream().forEach(dispute -> {
+                dispute.setStorage(disputeStorage);
+                if (dispute.isClosed())
+                    closedDisputes.put(dispute.getTradeId(), dispute);
+                else
+                    openDisputes.put(dispute.getTradeId(), dispute);
+            });
+        } else {
+            log.warn("disputes is null");
+        }
 
         // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator
         // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
@@ -237,7 +247,15 @@ public class DisputeManager implements PersistedDataHost {
         });
     }
 
-    public void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void sendOpenNewDisputeMessage(Dispute dispute,
+                                          boolean reOpen,
+                                          ResultHandler resultHandler,
+                                          FaultHandler faultHandler) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return;
+        }
+
         if (!disputes.contains(dispute)) {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
             if (!storedDisputeOptional.isPresent() || reOpen) {
@@ -335,6 +353,11 @@ public class DisputeManager implements PersistedDataHost {
     private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
                                                 PubKeyRing pubKeyRing) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return null;
+        }
+
         Dispute dispute = new Dispute(
                 disputeStorage,
                 disputeFromOpener.getTradeId(),
@@ -442,6 +465,11 @@ public class DisputeManager implements PersistedDataHost {
 
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return;
+        }
+
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
                 chatManager.getChatSession().getType(),
                 dispute.getTradeId(),
@@ -556,6 +584,11 @@ public class DisputeManager implements PersistedDataHost {
 
     // arbitrator receives that from trader who opens dispute
     public void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return;
+        }
+
         String errorMessage;
         Dispute dispute = openNewDisputeMessage.getDispute();
         Contract contractFromOpener = dispute.getContract();
@@ -592,6 +625,11 @@ public class DisputeManager implements PersistedDataHost {
 
     // not dispute requester receives that from arbitrator
     public void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return;
+        }
+
         String errorMessage;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         if (!isArbitrator(dispute)) {
@@ -848,6 +886,10 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return FXCollections.observableArrayList();
+        }
         return disputes.getList();
     }
 
@@ -907,6 +949,10 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public Optional<Dispute> findDispute(String tradeId, int traderId) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return Optional.empty();
+        }
         return disputes.stream().filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId).findAny();
     }
 
@@ -915,6 +961,10 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     private Stream<Dispute> getDisputeStream(String tradeId) {
+        if (disputes == null) {
+            log.warn("disputes is null");
+            return Optional.<Dispute>empty().stream();
+        }
         return disputes.stream().filter(e -> e.getTradeId().equals(tradeId));
     }
 
