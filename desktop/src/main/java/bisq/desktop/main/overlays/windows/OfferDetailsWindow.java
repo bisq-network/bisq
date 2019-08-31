@@ -293,7 +293,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             textArea.setEditable(false);
         }
 
-        rows = 4;
+        rows = 3;
         if (countryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxId() != null)
@@ -321,8 +321,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
                     CountryUtil.getNameAndCode(countryCode));
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
-                formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
