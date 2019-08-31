@@ -683,7 +683,7 @@ message Dispute {
     string contract_as_json = 15;
     string maker_contract_signature = 16;
     string taker_contract_signature = 17;
-    PubKeyRing arbitrator_pub_key_ring = 18;
+    PubKeyRing arbitrator_pub_key_ring = 18; // Is conflictResolverPubKeyRing in java, but we cannot rename because of backward compatibility
     bool is_support_ticket = 19;
     repeated DisputeCommunicationMessage dispute_communication_messages = 20;
     bool is_closed = 21;

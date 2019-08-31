@@ -415,7 +415,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
-        filteredList.setPredicate(dispute -> !dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
+        filteredList.setPredicate(dispute -> !dispute.getConflictResolverPubKeyRing().equals(keyRing.getPubKeyRing()));
     }
 
 

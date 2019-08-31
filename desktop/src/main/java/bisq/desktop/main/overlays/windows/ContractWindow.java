@@ -169,7 +169,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.getArbitratorNodeAddress().getFullAddress());
+        String title = dispute.isMediationDispute() ? Res.get("shared.selectedMediator") : Res.get("shared.arbitrator");
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, dispute.getConflictResolverNodeAddress().getFullAddress());
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -258,7 +259,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
         });
     }
 
-    private String getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing, String currencyCode) {
+    private String getAccountAge(PaymentAccountPayload paymentAccountPayload,
+                                 PubKeyRing pubKeyRing,
+                                 String currencyCode) {
         long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
         return CurrencyUtil.isFiatCurrency(currencyCode) ?
                 age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :

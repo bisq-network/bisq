@@ -21,6 +21,8 @@ import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.Contract;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
@@ -77,7 +79,7 @@ public final class Dispute implements NetworkPayload {
     private final String makerContractSignature;
     @Nullable
     private final String takerContractSignature;
-    private final PubKeyRing arbitratorPubKeyRing;
+    private final PubKeyRing conflictResolverPubKeyRing;
     private final boolean isSupportTicket;
     private final ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = FXCollections.observableArrayList();
     private BooleanProperty isClosedProperty = new SimpleBooleanProperty();
@@ -114,7 +116,7 @@ public final class Dispute implements NetworkPayload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRing arbitratorPubKeyRing,
+                   PubKeyRing conflictResolverPubKeyRing,
                    boolean isSupportTicket,
                    boolean isMediationDispute) {
         this(tradeId,
@@ -132,7 +134,7 @@ public final class Dispute implements NetworkPayload {
                 contractAsJson,
                 makerContractSignature,
                 takerContractSignature,
-                arbitratorPubKeyRing,
+                conflictResolverPubKeyRing,
                 isSupportTicket,
                 isMediationDispute);
         this.storage = storage;
@@ -159,7 +161,7 @@ public final class Dispute implements NetworkPayload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRing arbitratorPubKeyRing,
+                   PubKeyRing conflictResolverPubKeyRing,
                    boolean isSupportTicket,
                    boolean isMediationDispute) {
         this.tradeId = tradeId;
@@ -177,7 +179,7 @@ public final class Dispute implements NetworkPayload {
         this.contractAsJson = contractAsJson;
         this.makerContractSignature = makerContractSignature;
         this.takerContractSignature = takerContractSignature;
-        this.arbitratorPubKeyRing = arbitratorPubKeyRing;
+        this.conflictResolverPubKeyRing = conflictResolverPubKeyRing;
         this.isSupportTicket = isSupportTicket;
         this.isMediationDispute = isMediationDispute;
 
@@ -195,7 +197,7 @@ public final class Dispute implements NetworkPayload {
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
-                .setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage())
+                .setArbitratorPubKeyRing(conflictResolverPubKeyRing.toProtoMessage()) // We renamed to conflictResolverPubKeyRing but need to keep protobuf as it was to be backward compatible
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
@@ -233,7 +235,7 @@ public final class Dispute implements NetworkPayload {
                 proto.getContractAsJson(),
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
-                PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()),
+                PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()), // We renamed to conflictResolverPubKeyRing but need to keep protobuf as it was to be backward compatible
                 proto.getIsSupportTicket(),
                 proto.getIsMediationDispute());
 
@@ -323,6 +325,10 @@ public final class Dispute implements NetworkPayload {
         return isClosedProperty.get();
     }
 
+    public NodeAddress getConflictResolverNodeAddress() {
+        return isMediationDispute ? contract.getMediatorNodeAddress() : contract.getArbitratorNodeAddress();
+    }
+
     @Override
     public String toString() {
         return "Dispute{" +
@@ -343,7 +349,7 @@ public final class Dispute implements NetworkPayload {
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", makerContractSignature='" + makerContractSignature + '\'' +
                 ", takerContractSignature='" + takerContractSignature + '\'' +
-                ", arbitratorPubKeyRing=" + arbitratorPubKeyRing +
+                ", conflictResolverPubKeyRing=" + conflictResolverPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
                 ", disputeCommunicationMessages=" + disputeCommunicationMessages +
                 ", isClosed=" + isClosedProperty.get() +

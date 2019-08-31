@@ -89,7 +89,7 @@ public class ArbitratorDisputeView extends TraderDisputeView {
                     matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
 
             boolean open = !dispute.isClosed() && filterString.toLowerCase().equals("open");
-            boolean isMyCase = dispute.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing());
+            boolean isMyCase = dispute.getConflictResolverPubKeyRing().equals(keyRing.getPubKeyRing());
             return isMyCase && (open || filterString.isEmpty() || anyMatch);
         });
     }

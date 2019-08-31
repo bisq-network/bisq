@@ -105,7 +105,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                 .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()));
 
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
-                .anyMatch(d -> d.getArbitratorPubKeyRing().equals(keyRing.getPubKeyRing()));
+                .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(keyRing.getPubKeyRing()));
 
         if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
             arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets").toUpperCase());
@@ -115,7 +115,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         }
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
         arbitratorManager.updateMap();
@@ -130,7 +129,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         else
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
-        //noinspection UnusedAssignment
         String key = "supportInfo";
         if (!DevEnv.isDevMode())
             new Popup<>().backgroundInfo(Res.get("support.backgroundInfo"))
