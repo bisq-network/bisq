@@ -228,7 +228,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
         observableMap.put(disputeResolver.getNodeAddress(), disputeResolver);
         disputeResolverService.addDisputeResolver(disputeResolver,
                 () -> {
-                    log.debug("DisputeResolver successfully saved in P2P network");
+                    log.info("DisputeResolver successfully saved in P2P network");
                     resultHandler.handleResult();
 
                     if (observableMap.size() > 0)
