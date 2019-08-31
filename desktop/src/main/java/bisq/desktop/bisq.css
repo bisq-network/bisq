@@ -485,20 +485,20 @@ tree-table-view:focused {
 }
 
 .scroll-bar {
-    -fx-background-color: transparent;
+    -fx-background-color: -bs-background-color;
     -fx-background-radius: 0;
 }
 
 .scroll-bar:horizontal .track,
 .scroll-bar:vertical .track {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-background-color: -bs-background-color;
+    -fx-border-color: -bs-background-color;
     -fx-background-radius: 0;
 }
 
 .scroll-bar:vertical .track-background,
 .scroll-bar:horizontal .track-background {
-    -fx-background-color: transparent;
+    -fx-background-color: -bs-background-color;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
 }
@@ -522,14 +522,14 @@ tree-table-view:focused {
 
 .scroll-bar:horizontal .thumb:pressed,
 .scroll-bar:vertical .thumb:pressed {
-    -fx-background-color: -bs-color-gray-ccc;
+    -fx-background-color: -bs-color-gray-ddd;
 }
 
 .scroll-bar:vertical .increment-button,
 .scroll-bar:vertical .decrement-button,
 .scroll-bar:horizontal .increment-button,
 .scroll-bar:horizontal .decrement-button {
-    -fx-background-color: transparent;
+    -fx-background-color: -bs-background-color;
     -fx-padding: 1;
 }
 
@@ -538,12 +538,12 @@ tree-table-view:focused {
 .scroll-bar:horizontal .decrement-arrow,
 .scroll-bar:vertical .decrement-arrow {
     -fx-shape: null;
-    -fx-background-color: transparent;
+    -fx-background-color: -bs-background-color;
 }
 
 .scroll-bar:vertical:focused,
 .scroll-bar:horizontal:focused {
-    -fx-background-color: transparent, -bs-color-darkest, -bs-color-gray-6;
+    -fx-background-color: -bs-background-color, -bs-color-gray-ccc, -bs-color-gray-ddd;
 }
 
 /* Behavior */
@@ -1028,8 +1028,8 @@ textfield */
 }
 
 .delete:hover {
-    -fx-text-fill: -bs-rd-black;
-    -fx-fill: -bs-rd-black;
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
 }
 
 /*******************************************************************************
@@ -1250,7 +1250,7 @@ textfield */
 .combo-box-editor-bold {
     -fx-font-weight: bold;
     -fx-padding: 5 8 5 8 !important;
-    -fx-text-fill: -bs-rd-black;
+    -fx-text-fill: -bs-text-color;
     -fx-font-family: "IBM Plex Sans Medium";
 }
 
@@ -1301,7 +1301,7 @@ textfield */
  
 /* Account setup */
 #wizard-item-background-deactivated {
-    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-1, -bs-color-gray-1);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-aaa);
     -fx-outer-border: linear-gradient(to bottom, -bs-background-gray, -bs-color-gray-3);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
@@ -1312,7 +1312,7 @@ textfield */
 }
 
 #wizard-item-background-active {
-    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-0, -bs-color-gray-1);
+    -fx-body-color: linear-gradient(to bottom, -bs-bg-gray-5, -bs-color-gray-6);
     -fx-outer-border: linear-gradient(to bottom, -bs-color-blue-1, -bs-color-blue-2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
@@ -1323,7 +1323,7 @@ textfield */
 }
 
 #wizard-item-background-completed {
-    -fx-body-color: linear-gradient(to bottom, -bs-color-gray-1, -bs-color-gray-1);
+    -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-aaa);
     -fx-outer-border: linear-gradient(to bottom, -bs-bg-green, -bs-color-green-2);
     -fx-background-color: -fx-shadow-highlight-color,
     -fx-outer-border,
@@ -1523,7 +1523,7 @@ textfield */
  *                                                                             *
  ******************************************************************************/
 .grid-pane {
-    -fx-background-color: -bs-background-gray;
+    -fx-background-color: -bs-content-background-gray;
     -fx-background-radius: 5;
     -fx-effect: null;
     -fx-effect: dropshadow(gaussian, -bs-color-gray-10, 10, 0, 0, 0);
