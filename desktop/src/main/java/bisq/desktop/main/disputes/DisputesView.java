@@ -25,7 +25,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.arbitrator.ArbitratorDisputeView;
+import bisq.desktop.main.disputes.disputeresolvers.ArbitratorDisputeView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 

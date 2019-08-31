@@ -470,12 +470,49 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_CLOSED:
                 break;
+            case MEDIATION_REQUESTED:
+                // TODO
+                onDisputeOpened();
+                ownDispute = model.dataModel.disputeManager.findOwnDispute(trade.getId());
+                ownDispute.ifPresent(dispute -> {
+                    String msg;
+                    if (dispute.isSupportTicket()) {
+                        setSupportOpenedHeadline();
+                        msg = Res.get("portfolio.pending.supportTicketOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
+                    } else {
+                        setDisputeOpenedHeadline();
+                        msg = Res.get("portfolio.pending.disputeOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
+                    }
+                    if (notificationGroup != null)
+                        notificationGroup.label.setText(msg);
+                });
+
+                break;
+            case MEDIATION_STARTED_BY_PEER:
+                // TODO
+                onDisputeOpened();
+                ownDispute = model.dataModel.disputeManager.findOwnDispute(trade.getId());
+                ownDispute.ifPresent(dispute -> {
+                    String msg;
+                    if (dispute.isSupportTicket()) {
+                        setSupportOpenedHeadline();
+                        msg = Res.get("portfolio.pending.supportTicketOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
+                    } else {
+                        setDisputeOpenedHeadline();
+                        msg = Res.get("portfolio.pending.disputeOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
+                    }
+                    if (notificationGroup != null)
+                        notificationGroup.label.setText(msg);
+                });
+                break;
+            case MEDIATION_CLOSED:
+                // TODO
+                break;
         }
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
-        if (trade.getDisputeState() != Trade.DisputeState.DISPUTE_REQUESTED &&
-                trade.getDisputeState() != Trade.DisputeState.DISPUTE_STARTED_BY_PEER) {
+        if (trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
             switch (tradePeriodState) {
                 case FIRST_HALF:
                     break;
