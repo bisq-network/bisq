@@ -174,7 +174,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         ((SellerTrade) getTrade()).onFiatPaymentReceived(resultHandler, errorMessageHandler);
     }
 
-    public void onWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+    public void onWithdrawRequest(String toAddress,
+                                  Coin amount,
+                                  Coin fee,
+                                  KeyParameter aesKey,
+                                  ResultHandler resultHandler,
+                                  FaultHandler faultHandler) {
         checkNotNull(getTrade(), "trade must not be null");
 
         if (toAddress != null && toAddress.length() > 0) {
@@ -214,11 +219,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public PendingTradesListItem getSelectedItem() {
-        return selectedItemProperty.get() != null ? selectedItemProperty.get() : null;
-    }
-
-    @Nullable
     public Trade getTrade() {
         return selectedItemProperty.get() != null ? selectedItemProperty.get().getTrade() : null;
     }
@@ -228,7 +228,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getTrade() != null ? getTrade().getOffer() : null;
     }
 
-    boolean isBuyOffer() {
+    private boolean isBuyOffer() {
         return getOffer() != null && getOffer().getDirection() == OfferPayload.Direction.BUY;
     }
 
@@ -250,10 +250,15 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             Offer offer = trade.getOffer();
             if (isMaker()) {
-                if (offer.isCurrencyForMakerFeeBtc())
-                    return offer.getMakerFee();
-                else
-                    return Coin.ZERO;// getTradeFeeAsBsq is used for BSQ
+                if (offer != null) {
+                    if (offer.isCurrencyForMakerFeeBtc())
+                        return offer.getMakerFee();
+                    else
+                        return Coin.ZERO;// getTradeFeeAsBsq is used for BSQ
+                } else {
+                    log.error("offer is null");
+                    return Coin.ZERO;
+                }
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
                     return trade.getTakerFee();
@@ -271,10 +276,15 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
-                if (offer.isCurrencyForMakerFeeBtc())
-                    return offer.getTxFee();
-                else
-                    return offer.getTxFee().subtract(offer.getMakerFee()); // BSQ will be used as part of the miner fee
+                if (offer != null) {
+                    if (offer.isCurrencyForMakerFeeBtc())
+                        return offer.getTxFee();
+                    else
+                        return offer.getTxFee().subtract(offer.getMakerFee()); // BSQ will be used as part of the miner fee
+                } else {
+                    log.error("offer is null");
+                    return Coin.ZERO;
+                }
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
                     return trade.getTxFee().multiply(3);
@@ -292,10 +302,16 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         if (trade != null) {
             if (isMaker()) {
                 Offer offer = trade.getOffer();
-                if (offer.isCurrencyForMakerFeeBtc())
-                    return Coin.ZERO; // getTradeFeeInBTC is used for BTC
-                else
-                    return offer.getMakerFee();
+                if (offer != null) {
+                    if (offer.isCurrencyForMakerFeeBtc()) {
+                        return Coin.ZERO; // getTradeFeeInBTC is used for BTC
+                    } else {
+                        return offer.getMakerFee();
+                    }
+                } else {
+                    log.error("offer is null");
+                    return Coin.ZERO;
+                }
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
                     return Coin.ZERO; // getTradeFeeInBTC is used for BTC
@@ -312,10 +328,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getOffer() != null ? getOffer().getCurrencyCode() : "";
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
-        isMaker = tradeManager.isMyOffer(offer);
-        return isMaker ? offer.getDirection() : offer.getMirroredDirection();
-    }
 
     @Nullable
     public PaymentAccountPayload getSellersPaymentAccountPayload() {
@@ -370,8 +382,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void selectItemByTradeId(String tradeId) {
-        if (activated)
+        if (activated) {
             list.stream().filter(e -> e.getTrade().getId().equals(tradeId)).findAny().ifPresent(this::doSelectItem);
+        }
     }
 
     private void doSelectItem(@Nullable PendingTradesListItem item) {
@@ -380,20 +393,37 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
         if (item != null) {
             selectedTrade = item.getTrade();
+            if (selectedTrade == null) {
+                log.error("selectedTrade is null");
+                return;
+            }
+
+            Transaction depositTx = selectedTrade.getDepositTx();
+            String tradeId = selectedTrade.getId();
             tradeStateChangeListener = (observable, oldValue, newValue) -> {
-                if (selectedTrade.getDepositTx() != null) {
-                    txId.set(selectedTrade.getDepositTx().getHashAsString());
-                    notificationCenter.setSelectedTradeId(selectedTrade.getId());
+                if (depositTx != null) {
+                    txId.set(depositTx.getHashAsString());
+                    notificationCenter.setSelectedTradeId(tradeId);
                     selectedTrade.stateProperty().removeListener(tradeStateChangeListener);
+                } else {
+                    txId.set("");
                 }
             };
             selectedTrade.stateProperty().addListener(tradeStateChangeListener);
-            isMaker = tradeManager.isMyOffer(selectedTrade.getOffer());
-            if (selectedTrade.getDepositTx() != null)
-                txId.set(selectedTrade.getDepositTx().getHashAsString());
-            else
+
+            Offer offer = selectedTrade.getOffer();
+            if (offer == null) {
+                log.error("offer is null");
+                return;
+            }
+
+            isMaker = tradeManager.isMyOffer(offer);
+            if (depositTx != null) {
+                txId.set(depositTx.getHashAsString());
+            } else {
                 txId.set("");
-            notificationCenter.setSelectedTradeId(selectedTrade.getId());
+            }
+            notificationCenter.setSelectedTradeId(tradeId);
         } else {
             selectedTrade = null;
             txId.set("");
@@ -403,101 +433,96 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void tryOpenDispute(boolean isSupportTicket) {
-        if (getTrade() != null) {
-            Transaction depositTx = getTrade().getDepositTx();
-            if (depositTx != null) {
-                doOpenDispute(isSupportTicket, getTrade().getDepositTx());
-            } else {
-                log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
-                List<Transaction> candidates = new ArrayList<>();
-                List<Transaction> transactions = btcWalletService.getRecentTransactions(100, true);
-                transactions.stream().forEach(transaction -> {
-                    Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
-                    if (!valueSentFromMe.isZero()) {
-                        // spending tx
-                        // MS tx
-                        candidates.addAll(transaction.getOutputs().stream()
-                                .filter(output -> !btcWalletService.isTransactionOutputMine(output))
-                                .filter(output -> output.getScriptPubKey().isPayToScriptHash())
-                                .map(transactionOutput -> transaction)
-                                .collect(Collectors.toList()));
-                    }
-                });
-
-                if (candidates.size() > 0) {
-                    log.error("Trade.depositTx is null. We take the first possible MultiSig tx just to be able to open a dispute. " +
-                            "candidates={}", candidates);
-                    doOpenDispute(isSupportTicket, candidates.get(0));
-                }/* else if (candidates.size() > 1) {
-                // Let remove that as it confused users and was from little help
-                    new SelectDepositTxWindow().transactions(candidates)
-                            .onSelect(transaction -> doOpenDispute(isSupportTicket, transaction))
-                            .closeButtonText(Res.get("shared.cancel"))
-                            .show();
-                }*/ else if (transactions.size() > 0) {
-                    doOpenDispute(isSupportTicket, transactions.get(0));
-                    log.error("Trade.depositTx is null and we did not find any MultiSig transaction. We take any random tx just to be able to open a dispute");
-                } else {
-                    log.error("Trade.depositTx is null and we did not find any transaction.");
-                }
-            }
-        } else {
+        if (getTrade() == null) {
             log.error("Trade is null");
+            return;
+        }
+
+        Transaction depositTx = getTrade().getDepositTx();
+        if (depositTx != null) {
+            doOpenDispute(isSupportTicket, depositTx);
+        } else {
+            //TODO consider to remove that
+            log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
+            List<Transaction> candidates = new ArrayList<>();
+            List<Transaction> transactions = btcWalletService.getRecentTransactions(100, true);
+            transactions.forEach(transaction -> {
+                Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
+                if (!valueSentFromMe.isZero()) {
+                    // spending tx
+                    // MS tx
+                    candidates.addAll(transaction.getOutputs().stream()
+                            .filter(output -> !btcWalletService.isTransactionOutputMine(output))
+                            .filter(output -> output.getScriptPubKey().isPayToScriptHash())
+                            .map(transactionOutput -> transaction)
+                            .collect(Collectors.toList()));
+                }
+            });
+
+            if (candidates.size() > 0) {
+                log.error("Trade.depositTx is null. We take the first possible MultiSig tx just to be able to open a dispute. " +
+                        "candidates={}", candidates);
+                doOpenDispute(isSupportTicket, candidates.get(0));
+            } else if (transactions.size() > 0) {
+                doOpenDispute(isSupportTicket, transactions.get(0));
+                log.error("Trade.depositTx is null and we did not find any MultiSig transaction. We take any random tx just to be able to open a dispute");
+            } else {
+                log.error("Trade.depositTx is null and we did not find any transaction.");
+            }
         }
     }
 
     private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
-        byte[] depositTxSerialized = null;
-        byte[] payoutTxSerialized = null;
-        String depositTxHashAsString = null;
-        String payoutTxHashAsString = null;
-        if (depositTx != null) {
-            depositTxSerialized = depositTx.bitcoinSerialize();
-            depositTxHashAsString = depositTx.getHashAsString();
-        } else {
-            log.warn("depositTx is null");
-        }
         Trade trade = getTrade();
-        if (trade != null) {
-            Transaction payoutTx = trade.getPayoutTx();
-            if (payoutTx != null) {
-                payoutTxSerialized = payoutTx.bitcoinSerialize();
-                payoutTxHashAsString = payoutTx.getHashAsString();
-            } else {
-                log.debug("payoutTx is null at doOpenDispute");
-            }
-
-            final PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
-            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
-            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
-                    trade.getId(),
-                    keyRing.getPubKeyRing().hashCode(), // traderId
-                    trade.getOffer().getDirection() == OfferPayload.Direction.BUY ? isMaker : !isMaker,
-                    isMaker,
-                    keyRing.getPubKeyRing(),
-                    trade.getDate().getTime(),
-                    trade.getContract(),
-                    trade.getContractHash(),
-                    depositTxSerialized,
-                    payoutTxSerialized,
-                    depositTxHashAsString,
-                    payoutTxHashAsString,
-                    trade.getContractAsJson(),
-                    trade.getMakerContractSignature(),
-                    trade.getTakerContractSignature(),
-                    arbitratorPubKeyRing,
-                    isSupportTicket
-            );
-
-            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
-            if (p2PService.isBootstrapped()) {
-                sendOpenNewDisputeMessage(dispute, false);
-            } else {
-                new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
-            }
-        } else {
+        if (trade == null) {
             log.warn("trade is null at doOpenDispute");
+            return;
         }
+
+        if (trade.getOffer() == null) {
+            log.warn("offer is null at doOpenDispute");
+            return;
+        }
+
+        if (!p2PService.isBootstrapped()) {
+            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            return;
+        }
+
+        byte[] payoutTxSerialized = null;
+        String payoutTxHashAsString = null;
+        Transaction payoutTx = trade.getPayoutTx();
+        if (payoutTx != null) {
+            payoutTxSerialized = payoutTx.bitcoinSerialize();
+            payoutTxHashAsString = payoutTx.getHashAsString();
+        }
+
+        PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
+        checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
+        byte[] depositTxSerialized = depositTx.bitcoinSerialize();
+        String depositTxHashAsString = depositTx.getHashAsString();
+        Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+                trade.getId(),
+                keyRing.getPubKeyRing().hashCode(), // traderId
+                (trade.getOffer().getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                isMaker,
+                keyRing.getPubKeyRing(),
+                trade.getDate().getTime(),
+                trade.getContract(),
+                trade.getContractHash(),
+                depositTxSerialized,
+                payoutTxSerialized,
+                depositTxHashAsString,
+                payoutTxHashAsString,
+                trade.getContractAsJson(),
+                trade.getMakerContractSignature(),
+                trade.getTakerContractSignature(),
+                arbitratorPubKeyRing,
+                isSupportTicket
+        );
+
+        trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+        sendOpenNewDisputeMessage(dispute, false);
     }
 
     private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
