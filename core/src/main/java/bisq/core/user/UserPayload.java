@@ -95,7 +95,7 @@ public class UserPayload implements PersistableEnvelope {
         Optional.ofNullable(registeredArbitrator)
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
+                .ifPresent(registeredMediator -> builder.setRegisteredMediator(registeredMediator.toProtoMessage().getMediator()));
         Optional.ofNullable(acceptedArbitrators)
                 .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
                         message -> ((protobuf.StoragePayload) message).getArbitrator())));
