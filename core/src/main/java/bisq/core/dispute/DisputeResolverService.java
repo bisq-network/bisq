@@ -36,8 +36,6 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Used to store disputeResolvers profile and load map of disputeResolvers
  */
@@ -104,7 +102,7 @@ public abstract class DisputeResolverService<T extends DisputeResolver> {
         }
         if (bannedDisputeResolvers != null)
             log.warn("bannedDisputeResolvers=" + bannedDisputeResolvers);
-        Set<T> disputeResolverSet = getCollect(bannedDisputeResolvers);
+        Set<T> disputeResolverSet = getDisputeResolverSet(bannedDisputeResolvers);
 
         Map<NodeAddress, T> map = new HashMap<>();
         for (T disputeResolver : disputeResolverSet) {
@@ -117,8 +115,7 @@ public abstract class DisputeResolverService<T extends DisputeResolver> {
         return map;
     }
 
-    @NotNull
-    protected abstract Set<T> getCollect(List<String> bannedDisputeResolvers);
+    protected abstract Set<T> getDisputeResolverSet(List<String> bannedDisputeResolvers);
 
     protected abstract List<String> getDisputeResolversFromFilter();
 }

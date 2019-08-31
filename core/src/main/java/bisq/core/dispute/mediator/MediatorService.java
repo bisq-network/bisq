@@ -46,7 +46,7 @@ public class MediatorService extends DisputeResolverService<Mediator> {
     }
 
     @Override
-    protected Set<Mediator> getCollect(List<String> bannedDisputeResolvers) {
+    protected Set<Mediator> getDisputeResolverSet(List<String> bannedDisputeResolvers) {
         return p2PService.getDataMap().values().stream()
                 .filter(data -> data.getProtectedStoragePayload() instanceof Mediator)
                 .map(data -> (Mediator) data.getProtectedStoragePayload())
