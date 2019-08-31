@@ -191,6 +191,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 getMinAmount().get().getValue(),
                 offerPayload.getBaseCurrencyCode(),
                 offerPayload.getCounterCurrencyCode(),
+                offerPayload.getArbitratorNodeAddresses(),
+                offerPayload.getMediatorNodeAddresses(),
                 offerPayload.getPaymentMethodId(),
                 offerPayload.getMakerPaymentAccountId(),
                 offerPayload.getOfferFeePaymentTxId(),
