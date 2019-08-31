@@ -50,10 +50,20 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               long tradePrice,
                               NodeAddress tradingPeerNodeAddress,
                               @Nullable NodeAddress arbitratorNodeAddress,
+                              @Nullable NodeAddress mediatorNodeAddress,
                               Storage<? extends TradableList> storage,
                               BtcWalletService btcWalletService) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice,
-                tradingPeerNodeAddress, arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                tradeAmount,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                tradePrice,
+                tradingPeerNodeAddress,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                storage,
+                btcWalletService);
     }
 
 
@@ -83,6 +93,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                         proto.getTradePrice(),
                         proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
                         proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                        proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                         storage,
                         btcWalletService),
                 proto,
