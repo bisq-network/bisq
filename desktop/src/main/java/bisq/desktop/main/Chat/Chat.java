@@ -260,22 +260,22 @@ public class Chat extends AnchorPane {
             public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
                 return new ListCell<>() {
                     ChangeListener<Boolean> sendMsgBusyAnimationListener;
-                    final Pane bg = new Pane();
-                    final ImageView arrow = new ImageView();
-                    final Label headerLabel = new AutoTooltipLabel();
-                    final Label messageLabel = new AutoTooltipLabel();
-                    final Label copyIcon = new Label();
-                    final HBox attachmentsBox = new HBox();
-                    final AnchorPane messageAnchorPane = new AnchorPane();
-                    final Label statusIcon = new Label();
-                    final Label statusInfoLabel = new Label();
-                    final HBox statusHBox = new HBox();
-                    final double arrowWidth = 15d;
-                    final double attachmentsBoxHeight = 20d;
-                    final double border = 10d;
-                    final double bottomBorder = 25d;
-                    final double padding = border + 10d;
-                    final double msgLabelPaddingRight = padding + 20d;
+                    Pane bg = new Pane();
+                    ImageView arrow = new ImageView();
+                    Label headerLabel = new AutoTooltipLabel();
+                    Label messageLabel = new AutoTooltipLabel();
+                    Label copyIcon = new Label();
+                    HBox attachmentsBox = new HBox();
+                    AnchorPane messageAnchorPane = new AnchorPane();
+                    Label statusIcon = new Label();
+                    Label statusInfoLabel = new Label();
+                    HBox statusHBox = new HBox();
+                    double arrowWidth = 15d;
+                    double attachmentsBoxHeight = 20d;
+                    double border = 10d;
+                    double bottomBorder = 25d;
+                    double padding = border + 10d;
+                    double msgLabelPaddingRight = padding + 20d;
 
                     {
                         bg.setMinHeight(30);
@@ -292,7 +292,7 @@ public class Chat extends AnchorPane {
                     }
 
                     @Override
-                    public void updateItem(final DisputeCommunicationMessage message, boolean empty) {
+                    public void updateItem(DisputeCommunicationMessage message, boolean empty) {
                         super.updateItem(message, empty);
                         if (message != null && !empty) {
                             copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
@@ -419,7 +419,7 @@ public class Chat extends AnchorPane {
                                         getStyleClass().add("message");
                                 }});
                                 message.getAttachments().forEach(attachment -> {
-                                    final Label icon = new Label();
+                                    Label icon = new Label();
                                     setPadding(new Insets(0, 0, 3, 0));
                                     if (isMyMsg)
                                         icon.getStyleClass().add("attachment-icon");
@@ -642,20 +642,22 @@ public class Chat extends AnchorPane {
     }
 
     private DisputeCommunicationMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
+        ChatSession chatSession = chatManager.getChatSession();
         DisputeCommunicationMessage message = new DisputeCommunicationMessage(
-                chatManager.getChatSession().getType(),
-                chatManager.getChatSession().getTradeId(),
-                chatManager.getChatSession().getClientPubKeyRing().hashCode(),
-                chatManager.getChatSession().isClient(),
+                chatSession.getType(),
+                chatSession.getTradeId(),
+                chatSession.getClientPubKeyRing().hashCode(),
+                chatSession.isClient(),
                 text,
-                p2PService.getAddress()
+                p2PService.getAddress(),
+                chatSession.isMediationDispute()
         );
 
         message.addAllAttachments(attachments);
-        NodeAddress peersNodeAddress = chatManager.getChatSession().getPeerNodeAddress(message);
-        PubKeyRing receiverPubKeyRing = chatManager.getChatSession().getPeerPubKeyRing(message);
+        NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress(message);
+        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(message);
 
-        chatManager.getChatSession().addDisputeCommunicationMessage(message);
+        chatSession.addDisputeCommunicationMessage(message);
 
         if (receiverPubKeyRing != null) {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -670,7 +672,7 @@ public class Chat extends AnchorPane {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setArrived(true);
-                            chatManager.getChatSession().persist();
+                            chatSession.persist();
                         }
 
                         @Override
@@ -678,7 +680,7 @@ public class Chat extends AnchorPane {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setStoredInMailbox(true);
-                            chatManager.getChatSession().persist();
+                            chatSession.persist();
                         }
 
                         @Override
@@ -686,7 +688,7 @@ public class Chat extends AnchorPane {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             message.setSendMessageError(errorMessage);
-                            chatManager.getChatSession().persist();
+                            chatSession.persist();
                         }
                     }
             );
