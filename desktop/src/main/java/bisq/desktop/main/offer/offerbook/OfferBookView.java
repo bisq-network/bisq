@@ -333,7 +333,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     return null;
                 });
 
-        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {});
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
+        });
 
         tableView.setItems(model.getOfferList());
 
@@ -524,6 +525,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     .show();
         } else if (!model.hasAcceptedArbitrators()) {
             new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+        } else if (!model.hasAcceptedMediators()) {
+            new Popup<>().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
         } else {
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
@@ -827,7 +830,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             private OfferBookListItem offerBookListItem;
                             final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
-                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                public void changed(ObservableValue<? extends Number> observable,
+                                                    Number oldValue,
+                                                    Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
                                         setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),

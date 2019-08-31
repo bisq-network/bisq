@@ -1044,6 +1044,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return dataModel.hasAcceptedArbitrators();
     }
 
+    boolean hasAcceptedMediators() {
+        return dataModel.hasAcceptedMediators();
+    }
+
     boolean isReadyForTxBroadcast() {
         return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
     }

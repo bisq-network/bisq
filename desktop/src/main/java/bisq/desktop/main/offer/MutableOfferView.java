@@ -181,8 +181,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MutableOfferView(M model, Navigation navigation, Preferences preferences, Transitions transitions,
-                            OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    public MutableOfferView(M model,
+                            Navigation navigation,
+                            Preferences preferences,
+                            Transitions transitions,
+                            OfferDetailsWindow offerDetailsWindow,
+                            BSFormatter btcFormatter,
+                            BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
@@ -356,7 +361,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     private void onPlaceOffer() {
         if (model.isReadyForTxBroadcast()) {
             if (model.getDataModel().isMakerFeeValid()) {
-                if (model.hasAcceptedArbitrators()) {
+                boolean hasAcceptedArbitrators = model.hasAcceptedArbitrators();
+                if (hasAcceptedArbitrators && model.hasAcceptedMediators()) {
                     Offer offer = model.createAndGetOffer();
                     //noinspection PointlessBooleanExpression
                     if (!DevEnv.isDevMode()) {
@@ -369,7 +375,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                         });
                     }
                 } else {
-                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+                    String message = !hasAcceptedArbitrators ?
+                            Res.get("popup.warning.noArbitratorsAvailable") :
+                            Res.get("popup.warning.noMediatorsAvailable");
+                    new Popup<>().warning(message).show();
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();

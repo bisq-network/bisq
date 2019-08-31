@@ -24,6 +24,8 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
+import bisq.core.dispute.arbitration.Arbitrator;
+import bisq.core.dispute.mediator.Mediator;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
@@ -389,21 +391,34 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         placeOfferTuple.forth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
-            if (user.getAcceptedArbitrators() != null &&
-                    user.getAcceptedArbitrators().size() > 0) {
+            boolean hasAcceptedArbitrators = hasAcceptedArbitrators();
+            if (hasAcceptedArbitrators && hasAcceptedMediators()) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();
                 if (isPlaceOffer) {
                     spinnerInfoLabel.setText(Res.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
-                    placeOfferHandlerOptional.get().run();
+                    placeOfferHandlerOptional.ifPresent(Runnable::run);
                 } else {
                     spinnerInfoLabel.setText(Res.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
-                    takeOfferHandlerOptional.get().run();
+                    takeOfferHandlerOptional.ifPresent(Runnable::run);
                 }
             } else {
-                new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+                String message = !hasAcceptedArbitrators ?
+                        Res.get("popup.warning.noArbitratorsAvailable") :
+                        Res.get("popup.warning.noMediatorsAvailable");
+                new Popup<>().warning(message).show();
             }
         });
+    }
+
+    private boolean hasAcceptedArbitrators() {
+        final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
+        return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
+    }
+
+    private boolean hasAcceptedMediators() {
+        final List<Mediator> acceptedMediators = user.getAcceptedMediators();
+        return acceptedMediators != null && acceptedMediators.size() > 0;
     }
 }

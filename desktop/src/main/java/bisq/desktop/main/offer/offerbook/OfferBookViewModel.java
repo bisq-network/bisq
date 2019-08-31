@@ -538,6 +538,11 @@ class OfferBookViewModel extends ActivatableViewModel {
         return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
     }
 
+    boolean hasAcceptedMediators() {
+        return user.getAcceptedMediators() != null && !user.getAcceptedMediators().isEmpty();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Filters
     ///////////////////////////////////////////////////////////////////////////////////////////

@@ -758,6 +758,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.hasAcceptedArbitrators();
     }
 
+    boolean hasAcceptedMediators() {
+        return dataModel.hasAcceptedMediators();
+    }
+
     boolean isReadyForTxBroadcast() {
         return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
     }
