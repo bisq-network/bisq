@@ -433,12 +433,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void tryOpenDispute(boolean isSupportTicket) {
-        if (getTrade() == null) {
+        Trade trade = getTrade();
+        if (trade == null) {
             log.error("Trade is null");
             return;
         }
 
-        Transaction depositTx = getTrade().getDepositTx();
+        Transaction depositTx = trade.getDepositTx();
         if (depositTx != null) {
             doOpenDispute(isSupportTicket, depositTx);
         } else {
@@ -479,7 +480,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return;
         }
 
-        if (trade.getOffer() == null) {
+        Offer offer = trade.getOffer();
+        if (offer == null) {
             log.warn("offer is null at doOpenDispute");
             return;
         }
@@ -496,33 +498,66 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             payoutTxSerialized = payoutTx.bitcoinSerialize();
             payoutTxHashAsString = payoutTx.getHashAsString();
         }
+        Trade.DisputeState disputeState = trade.getDisputeState();
+        if (disputeState == Trade.DisputeState.NO_DISPUTE) {
+            // If no dispute state set we start with mediation
+            PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
+            checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must no tbe null");
+            byte[] depositTxSerialized = depositTx.bitcoinSerialize();
+            String depositTxHashAsString = depositTx.getHashAsString();
+            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+                    trade.getId(),
+                    keyRing.getPubKeyRing().hashCode(), // traderId
+                    (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                    isMaker,
+                    keyRing.getPubKeyRing(),
+                    trade.getDate().getTime(),
+                    trade.getContract(),
+                    trade.getContractHash(),
+                    depositTxSerialized,
+                    payoutTxSerialized,
+                    depositTxHashAsString,
+                    payoutTxHashAsString,
+                    trade.getContractAsJson(),
+                    trade.getMakerContractSignature(),
+                    trade.getTakerContractSignature(),
+                    mediatorPubKeyRing,
+                    isSupportTicket,
+                    true);
 
-        PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
-        checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
-        byte[] depositTxSerialized = depositTx.bitcoinSerialize();
-        String depositTxHashAsString = depositTx.getHashAsString();
-        Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
-                trade.getId(),
-                keyRing.getPubKeyRing().hashCode(), // traderId
-                (trade.getOffer().getDirection() == OfferPayload.Direction.BUY) == isMaker,
-                isMaker,
-                keyRing.getPubKeyRing(),
-                trade.getDate().getTime(),
-                trade.getContract(),
-                trade.getContractHash(),
-                depositTxSerialized,
-                payoutTxSerialized,
-                depositTxHashAsString,
-                payoutTxHashAsString,
-                trade.getContractAsJson(),
-                trade.getMakerContractSignature(),
-                trade.getTakerContractSignature(),
-                arbitratorPubKeyRing,
-                isSupportTicket
-        );
+            trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
+            sendOpenNewDisputeMessage(dispute, false);
+        } else if (disputeState == Trade.DisputeState.MEDIATION_CLOSED) {
+            // Only if we have completed mediation we allow arbitration
+            PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
+            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must no tbe null");
+            byte[] depositTxSerialized = depositTx.bitcoinSerialize();
+            String depositTxHashAsString = depositTx.getHashAsString();
+            Dispute dispute = new Dispute(disputeManager.getDisputeStorage(),
+                    trade.getId(),
+                    keyRing.getPubKeyRing().hashCode(), // traderId
+                    (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                    isMaker,
+                    keyRing.getPubKeyRing(),
+                    trade.getDate().getTime(),
+                    trade.getContract(),
+                    trade.getContractHash(),
+                    depositTxSerialized,
+                    payoutTxSerialized,
+                    depositTxHashAsString,
+                    payoutTxHashAsString,
+                    trade.getContractAsJson(),
+                    trade.getMakerContractSignature(),
+                    trade.getTakerContractSignature(),
+                    arbitratorPubKeyRing,
+                    isSupportTicket,
+                    false);
 
-        trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
-        sendOpenNewDisputeMessage(dispute, false);
+            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+            sendOpenNewDisputeMessage(dispute, false);
+        } else {
+            log.warn("Invalid dispute state {}", disputeState.name());
+        }
     }
 
     private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {

@@ -88,6 +88,9 @@ public final class Dispute implements NetworkPayload {
 
     private long openingDate;
 
+    // Added in v1.1.6. Is false if received from old clients.
+    private boolean isMediationDispute;
+
     transient private Storage<DisputeList> storage;
 
 
@@ -112,7 +115,8 @@ public final class Dispute implements NetworkPayload {
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
-                   boolean isSupportTicket) {
+                   boolean isSupportTicket,
+                   boolean isMediationDispute) {
         this(tradeId,
                 traderId,
                 disputeOpenerIsBuyer,
@@ -129,7 +133,8 @@ public final class Dispute implements NetworkPayload {
                 makerContractSignature,
                 takerContractSignature,
                 arbitratorPubKeyRing,
-                isSupportTicket);
+                isSupportTicket,
+                isMediationDispute);
         this.storage = storage;
         openingDate = new Date().getTime();
     }
@@ -155,7 +160,8 @@ public final class Dispute implements NetworkPayload {
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
                    PubKeyRing arbitratorPubKeyRing,
-                   boolean isSupportTicket) {
+                   boolean isSupportTicket,
+                   boolean isMediationDispute) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
@@ -173,6 +179,7 @@ public final class Dispute implements NetworkPayload {
         this.takerContractSignature = takerContractSignature;
         this.arbitratorPubKeyRing = arbitratorPubKeyRing;
         this.isSupportTicket = isSupportTicket;
+        this.isMediationDispute = isMediationDispute;
 
         id = tradeId + "_" + traderId;
     }
@@ -195,7 +202,8 @@ public final class Dispute implements NetworkPayload {
                         .collect(Collectors.toList()))
                 .setIsClosed(isClosedProperty.get())
                 .setOpeningDate(openingDate)
-                .setId(id);
+                .setId(id)
+                .setIsMediationDispute(isMediationDispute);
 
         Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(e)));
         Optional.ofNullable(depositTxSerialized).ifPresent(e -> builder.setDepositTxSerialized(ByteString.copyFrom(e)));
@@ -226,7 +234,8 @@ public final class Dispute implements NetworkPayload {
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
                 PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()),
-                proto.getIsSupportTicket());
+                proto.getIsSupportTicket(),
+                proto.getIsMediationDispute());
 
         dispute.disputeCommunicationMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
                 .map(DisputeCommunicationMessage::fromPayloadProto)
@@ -245,7 +254,7 @@ public final class Dispute implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+    void addDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
             disputeCommunicationMessages.add(disputeCommunicationMessage);
             storage.queueUpForSave();
@@ -278,8 +287,7 @@ public final class Dispute implements NetworkPayload {
             storage.queueUpForSave();
     }
 
-    @SuppressWarnings("NullableProblems")
-    public void setDisputePayoutTxId(String disputePayoutTxId) {
+    void setDisputePayoutTxId(String disputePayoutTxId) {
         boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
         this.disputePayoutTxId = disputePayoutTxId;
         if (changed)

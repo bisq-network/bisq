@@ -213,9 +213,12 @@ public abstract class Trade implements Tradable, Model {
 
     public enum DisputeState {
         NO_DISPUTE,
-        DISPUTE_REQUESTED,
-        DISPUTE_STARTED_BY_PEER,
-        DISPUTE_CLOSED;
+        DISPUTE_REQUESTED,             // arbitration
+        DISPUTE_STARTED_BY_PEER,       // arbitration
+        DISPUTE_CLOSED,                // arbitration
+        MEDIATION_REQUESTED,
+        MEDIATION_STARTED_BY_PEER,
+        MEDIATION_CLOSED;
 
         public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
