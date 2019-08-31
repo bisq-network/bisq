@@ -264,8 +264,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
-                            } else if (addressEntry.getContext() == AddressEntry.Context.ARBITRATOR) {
-                                setGraphic(new AutoTooltipLabel(Res.get("shared.arbitratorsFee")));
                             } else {
                                 setGraphic(new AutoTooltipLabel(Res.get("shared.noDetailsAvailable")));
                             }
