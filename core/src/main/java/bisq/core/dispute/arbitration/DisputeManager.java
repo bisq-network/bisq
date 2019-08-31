@@ -100,7 +100,6 @@ public class DisputeManager implements PersistedDataHost {
     @Nullable
     @Getter
     private DisputeList disputes;
-    private final String disputeInfo;
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
     private final Map<String, Timer> delayMsgMap = new HashMap<>();
@@ -141,8 +140,6 @@ public class DisputeManager implements PersistedDataHost {
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();
-
-        disputeInfo = Res.get("support.initialInfo");
     }
 
 
@@ -264,6 +261,7 @@ public class DisputeManager implements PersistedDataHost {
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent() || reOpen) {
+            String disputeInfo = getDisputeInfo(dispute.isMediationDispute());
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
@@ -350,6 +348,14 @@ public class DisputeManager implements PersistedDataHost {
         }
     }
 
+    private String getDisputeInfo(boolean isMediationDispute) {
+        String role = isMediationDispute ? Res.get("shared.mediator").toLowerCase() :
+                Res.get("shared.arbitrator2").toLowerCase();
+        String link = isMediationDispute ? "https://docs.bisq.network/trading-rules.html#mediation" :
+                "https://bisq.network/docs/exchange/arbitration-system";
+        return Res.get("support.initialInfo", role, role, link);
+    }
+
     // arbitrator sends that to trading peer when he received openDispute request
     private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
@@ -380,6 +386,7 @@ public class DisputeManager implements PersistedDataHost {
                 disputeFromOpener.isMediationDispute());
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
+            String disputeInfo = getDisputeInfo(dispute.isMediationDispute());
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
