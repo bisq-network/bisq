@@ -37,19 +37,19 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class ArbitratorDisputeView extends TraderDisputeView {
+public class DisputeResolverView extends TraderDisputeView {
 
     @Inject
-    public ArbitratorDisputeView(DisputeManager disputeManager,
-                                 KeyRing keyRing,
-                                 TradeManager tradeManager,
-                                 BSFormatter formatter,
-                                 DisputeSummaryWindow disputeSummaryWindow,
-                                 PrivateNotificationManager privateNotificationManager,
-                                 ContractWindow contractWindow,
-                                 TradeDetailsWindow tradeDetailsWindow,
-                                 AccountAgeWitnessService accountAgeWitnessService,
-                                 @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public DisputeResolverView(DisputeManager disputeManager,
+                               KeyRing keyRing,
+                               TradeManager tradeManager,
+                               BSFormatter formatter,
+                               DisputeSummaryWindow disputeSummaryWindow,
+                               PrivateNotificationManager privateNotificationManager,
+                               ContractWindow contractWindow,
+                               TradeDetailsWindow tradeDetailsWindow,
+                               AccountAgeWitnessService accountAgeWitnessService,
+                               @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
                 tradeManager,

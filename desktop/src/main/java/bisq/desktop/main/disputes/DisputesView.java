@@ -25,7 +25,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.disputeresolvers.ArbitratorDisputeView;
+import bisq.desktop.main.disputes.disputeresolvers.DisputeResolverView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 
@@ -105,7 +105,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             if (newValue == tradersDisputesTab)
                 navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
             else if (newValue == disputeResolversDisputesTab)
-                navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
+                navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
         };
 
         arbitratorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
@@ -148,7 +148,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         if (disputeResolversDisputesTab != null && root.getSelectionModel().getSelectedItem() == disputeResolversDisputesTab)
-            navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
+            navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
         else
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
 
@@ -176,7 +176,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         View view = viewLoader.load(viewClass);
 
-        if (disputeResolversDisputesTab != null && view instanceof ArbitratorDisputeView)
+        if (disputeResolversDisputesTab != null && view instanceof DisputeResolverView)
             currentTab = disputeResolversDisputesTab;
         else
             currentTab = tradersDisputesTab;
