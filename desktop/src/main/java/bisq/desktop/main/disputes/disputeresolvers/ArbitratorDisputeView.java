@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.disputes.arbitrator;
+package bisq.desktop.main.disputes.disputeresolvers;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.disputes.trader.TraderDisputeView;
