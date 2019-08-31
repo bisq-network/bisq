@@ -99,7 +99,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
         this.disputeResolverService = disputeResolverService;
         this.user = user;
         this.filterManager = filterManager;
-        publicKeys = useDevPrivilegeKeys ? Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY) : getPubLeyList();
+        publicKeys = useDevPrivilegeKeys ? Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY) : getPubKeyList();
     }
 
 
@@ -107,7 +107,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
     // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract List<String> getPubLeyList();
+    protected abstract List<String> getPubKeyList();
 
     protected abstract boolean isExpectedInstance(ProtectedStorageEntry data);
 

@@ -47,7 +47,7 @@ public class MediatorManager extends DisputeResolverManager<Mediator> {
 
     //TODO Before release set new keys from maintainer who manages keys
     @Override
-    protected List<String> getPubLeyList() {
+    protected List<String> getPubKeyList() {
         return List.of("03be5471ff9090d322110d87912eefe89871784b1754d0707fdb917be5d88d3809",
                 "023736953a5a6638db71d7f78edc38cea0e42143c3b184ee67f331dafdc2c59efa",
                 "03d82260038253f7367012a4fc0c52dac74cfc67ac9cfbc3c3ad8fca746d8e5fc6",
