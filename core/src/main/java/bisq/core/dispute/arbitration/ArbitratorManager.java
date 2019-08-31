@@ -48,7 +48,7 @@ public class ArbitratorManager extends DisputeResolverManager<Arbitrator> {
     }
 
     @Override
-    protected List<String> getPubLeyList() {
+    protected List<String> getPubKeyList() {
         return List.of("0365c6af94681dbee69de1851f98d4684063bf5c2d64b1c73ed5d90434f375a054",
                 "031c502a60f9dbdb5ae5e438a79819e4e1f417211dd537ac12c9bc23246534c4bd",
                 "02c1e5a242387b6d5319ce27246cea6edaaf51c3550591b528d2578a4753c56c2c",
