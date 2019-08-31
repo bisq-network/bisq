@@ -80,16 +80,13 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+@Slf4j
 public class DisputeManager implements PersistedDataHost {
-    private static final Logger log = LoggerFactory.getLogger(DisputeManager.class);
-
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService walletService;
     private final WalletsSetup walletsSetup;
@@ -208,13 +205,14 @@ public class DisputeManager implements PersistedDataHost {
             String id = dispute.getId();
             Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
                     isClosed -> {
-                        // We get the event before the list gets updated, so we execute on next frame
-                        UserThread.execute(() -> {
-                            int openDisputes = disputes.getList().stream()
-                                    .filter(e -> !e.isClosed())
-                                    .collect(Collectors.toList()).size();
-                            numOpenDisputes.set(openDisputes);
-                        });
+                        if (disputes != null) {
+                            // We get the event before the list gets updated, so we execute on next frame
+                            UserThread.execute(() -> {
+                                int openDisputes = (int) disputes.getList().stream()
+                                        .filter(e -> !e.isClosed()).count();
+                                numOpenDisputes.set(openDisputes);
+                            });
+                        }
                     });
             disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
         });
@@ -583,7 +581,7 @@ public class DisputeManager implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator receives that from trader who opens dispute
-    public void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+    void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         if (disputes == null) {
             log.warn("disputes is null");
             return;
@@ -624,7 +622,7 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     // not dispute requester receives that from arbitrator
-    public void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         if (disputes == null) {
             log.warn("disputes is null");
             return;
@@ -666,7 +664,7 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
-    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
+    void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         String errorMessage = null;
         boolean success = false;
         PubKeyRing arbitratorsPubKeyRing = null;
@@ -838,13 +836,14 @@ public class DisputeManager implements PersistedDataHost {
                 // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
                 // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
                 DisputeCommunicationMessage disputeCommunicationMessage = disputeResultMessage.getDisputeResult().getDisputeCommunicationMessage();
-                chatManager.sendAckMessage(disputeCommunicationMessage, arbitratorsPubKeyRing, success, errorMessage);
+                if (disputeCommunicationMessage != null)
+                    chatManager.sendAckMessage(disputeCommunicationMessage, arbitratorsPubKeyRing, success, errorMessage);
             }
         }
     }
 
     // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    public void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
+    void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
         final String uid = peerPublishedDisputePayoutTxMessage.getUid();
         final String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
@@ -928,8 +927,7 @@ public class DisputeManager implements PersistedDataHost {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
-    public Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
+    Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
@@ -948,7 +946,7 @@ public class DisputeManager implements PersistedDataHost {
         return new Tuple2<>(peerNodeAddress, receiverPubKeyRing);
     }
 
-    public Optional<Dispute> findDispute(String tradeId, int traderId) {
+    Optional<Dispute> findDispute(String tradeId, int traderId) {
         if (disputes == null) {
             log.warn("disputes is null");
             return Optional.empty();
