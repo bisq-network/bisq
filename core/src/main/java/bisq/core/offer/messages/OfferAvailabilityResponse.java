@@ -44,8 +44,6 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     @Nullable
     private final Capabilities supportedCapabilities;
 
-    // Was introduced in v 0.9.0. Might be null if msg received from node with old version
-    @Nullable
     private final NodeAddress arbitrator;
     // Was introduced in v 1.1.6. Might be null if msg received from node with old version
     @Nullable
@@ -74,7 +72,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                                       @Nullable Capabilities supportedCapabilities,
                                       int messageVersion,
                                       @Nullable String uid,
-                                      @Nullable NodeAddress arbitrator,
+                                      NodeAddress arbitrator,
                                       @Nullable NodeAddress mediator) {
         super(messageVersion, offerId, uid);
         this.availabilityResult = availabilityResult;
@@ -87,11 +85,11 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         final protobuf.OfferAvailabilityResponse.Builder builder = protobuf.OfferAvailabilityResponse.newBuilder()
                 .setOfferId(offerId)
-                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()));
+                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()))
+                .setArbitrator(arbitrator.toProtoMessage());
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
-        Optional.ofNullable(arbitrator).ifPresent(e -> builder.setArbitrator(arbitrator.toProtoMessage()));
         Optional.ofNullable(mediator).ifPresent(e -> builder.setMediator(mediator.toProtoMessage()));
 
         return getNetworkEnvelopeBuilder()
@@ -105,7 +103,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid(),
-                proto.hasArbitrator() ? NodeAddress.fromProto(proto.getArbitrator()) : null,
+                NodeAddress.fromProto(proto.getArbitrator()),
                 proto.hasMediator() ? NodeAddress.fromProto(proto.getMediator()) : null);
     }
 }
