@@ -31,6 +31,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -105,8 +106,10 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
 
-    private final List<NodeAddress> arbitratorNodeAddresses;
-    private final List<NodeAddress> mediatorNodeAddresses;
+    @Deprecated // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility
+    private final List<NodeAddress> arbitratorNodeAddresses = new ArrayList<>();
+    @Deprecated // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility
+    private final List<NodeAddress> mediatorNodeAddresses = new ArrayList<>();
     private final String paymentMethodId;
     private final String makerPaymentAccountId;
     // Mutable property. Has to be set before offer is save in P2P network as it changes the objects hash!
@@ -173,8 +176,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                         long minAmount,
                         String baseCurrencyCode,
                         String counterCurrencyCode,
-                        List<NodeAddress> arbitratorNodeAddresses,
-                        List<NodeAddress> mediatorNodeAddresses,
                         String paymentMethodId,
                         String makerPaymentAccountId,
                         @Nullable String offerFeePaymentTxId,
@@ -211,8 +212,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
         this.minAmount = minAmount;
         this.baseCurrencyCode = baseCurrencyCode;
         this.counterCurrencyCode = counterCurrencyCode;
-        this.arbitratorNodeAddresses = arbitratorNodeAddresses;
-        this.mediatorNodeAddresses = mediatorNodeAddresses;
         this.paymentMethodId = paymentMethodId;
         this.makerPaymentAccountId = makerPaymentAccountId;
         this.offerFeePaymentTxId = offerFeePaymentTxId;
@@ -258,10 +257,10 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 .setMinAmount(minAmount)
                 .setBaseCurrencyCode(baseCurrencyCode)
                 .setCounterCurrencyCode(counterCurrencyCode)
-                .addAllArbitratorNodeAddresses(arbitratorNodeAddresses.stream()
+                .addAllArbitratorNodeAddresses(new ArrayList<NodeAddress>().stream()    // use empty list as this field is not used anymore but cannot be removed for backward compatibility
                         .map(NodeAddress::toProtoMessage)
                         .collect(Collectors.toList()))
-                .addAllMediatorNodeAddresses(mediatorNodeAddresses.stream()
+                .addAllMediatorNodeAddresses(new ArrayList<NodeAddress>().stream()      // use empty list as this field is not used anymore but cannot be removed for backward compatibility
                         .map(NodeAddress::toProtoMessage)
                         .collect(Collectors.toList()))
                 .setPaymentMethodId(paymentMethodId)
@@ -317,12 +316,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 proto.getMinAmount(),
                 proto.getBaseCurrencyCode(),
                 proto.getCounterCurrencyCode(),
-                proto.getArbitratorNodeAddressesList().stream()
-                        .map(NodeAddress::fromProto)
-                        .collect(Collectors.toList()),
-                proto.getMediatorNodeAddressesList().stream()
-                        .map(NodeAddress::fromProto)
-                        .collect(Collectors.toList()),
                 proto.getPaymentMethodId(),
                 proto.getMakerPaymentAccountId(),
                 proto.getOfferFeePaymentTxId(),
@@ -388,8 +381,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 ",\n     minAmount=" + minAmount +
                 ",\n     baseCurrencyCode='" + baseCurrencyCode + '\'' +
                 ",\n     counterCurrencyCode='" + counterCurrencyCode + '\'' +
-                ",\n     arbitratorNodeAddresses=" + arbitratorNodeAddresses +
-                ",\n     mediatorNodeAddresses=" + mediatorNodeAddresses +
                 ",\n     paymentMethodId='" + paymentMethodId + '\'' +
                 ",\n     makerPaymentAccountId='" + makerPaymentAccountId + '\'' +
                 ",\n     offerFeePaymentTxId='" + offerFeePaymentTxId + '\'' +

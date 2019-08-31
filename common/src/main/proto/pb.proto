@@ -616,8 +616,8 @@ message OfferPayload {
     int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
-    repeated NodeAddress arbitrator_node_addresses = 13;
-    repeated NodeAddress mediator_node_addresses = 14;
+    repeated NodeAddress arbitrator_node_addresses = 13 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
+    repeated NodeAddress mediator_node_addresses = 14 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
     string payment_method_id = 15;
     string maker_payment_account_id = 16;
     string offer_fee_payment_tx_id = 17;
