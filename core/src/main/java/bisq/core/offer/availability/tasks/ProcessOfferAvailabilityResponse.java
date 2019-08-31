@@ -19,8 +19,11 @@ package bisq.core.offer.availability.tasks;
 
 import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.DisputeResolverSelection;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
@@ -54,7 +57,12 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             offer.setState(Offer.State.AVAILABLE);
 
             model.setSelectedArbitrator(offerAvailabilityResponse.getArbitrator());
-            model.setSelectedMediator(offerAvailabilityResponse.getMediator());
+            NodeAddress mediator = offerAvailabilityResponse.getMediator();
+            if (mediator == null) {
+                // We do not get a mediator from old clients so we need to handle the null case.
+                mediator = DisputeResolverSelection.getLeastUsedMediator(model.getTradeStatisticsManager(), model.getMediatorManager()).getNodeAddress();
+            }
+            model.setSelectedMediator(mediator);
             complete();
         } catch (Throwable t) {
             offer.setErrorMessage("An error occurred.\n" +
