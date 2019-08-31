@@ -281,23 +281,23 @@ public class DisputeManager implements PersistedDataHost {
                 disputes.add(dispute);
             }
 
-            NodeAddress peersNodeAddress = dispute.getContract().getArbitratorNodeAddress();
+            NodeAddress conflictResolverNodeAddress = dispute.getConflictResolverNodeAddress();
             OpenNewDisputeMessage openNewDisputeMessage = new OpenNewDisputeMessage(dispute, p2PService.getAddress(),
                     UUID.randomUUID().toString());
             log.info("Send {} to peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                             "disputeCommunicationMessage.uid={}",
-                    openNewDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                     disputeCommunicationMessage.getUid());
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                    dispute.getArbitratorPubKeyRing(),
+            p2PService.sendEncryptedMailboxMessage(conflictResolverNodeAddress,
+                    dispute.getConflictResolverPubKeyRing(),
                     openNewDisputeMessage,
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                                             "disputeCommunicationMessage.uid={}",
-                                    openNewDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                                     disputeCommunicationMessage.getUid());
 
@@ -312,7 +312,7 @@ public class DisputeManager implements PersistedDataHost {
                         public void onStoredInMailbox() {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                                             "disputeCommunicationMessage.uid={}",
-                                    openNewDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                                     disputeCommunicationMessage.getUid());
 
@@ -327,7 +327,7 @@ public class DisputeManager implements PersistedDataHost {
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                                             "disputeCommunicationMessage.uid={}, errorMessage={}",
-                                    openNewDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
+                                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                                     disputeCommunicationMessage.getUid(), errorMessage);
 
@@ -373,7 +373,7 @@ public class DisputeManager implements PersistedDataHost {
                 disputeFromOpener.getContractAsJson(),
                 disputeFromOpener.getMakerContractSignature(),
                 disputeFromOpener.getTakerContractSignature(),
-                disputeFromOpener.getArbitratorPubKeyRing(),
+                disputeFromOpener.getConflictResolverPubKeyRing(),
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.isMediationDispute());
         Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
@@ -657,17 +657,16 @@ public class DisputeManager implements PersistedDataHost {
         ObservableList<DisputeCommunicationMessage> messages = peerOpenedDisputeMessage.getDispute().getDisputeCommunicationMessages();
         if (!messages.isEmpty()) {
             DisputeCommunicationMessage msg = messages.get(0);
-            chatManager.sendAckMessage(msg, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
+            chatManager.sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
         }
 
-        chatManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
+        chatManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
     void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         String errorMessage = null;
         boolean success = false;
-        PubKeyRing arbitratorsPubKeyRing = null;
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
 
         if (isArbitrator(disputeResult)) {
@@ -695,7 +694,6 @@ public class DisputeManager implements PersistedDataHost {
         Dispute dispute = disputeOptional.get();
         try {
             cleanupRetryMap(uid);
-            arbitratorsPubKeyRing = dispute.getArbitratorPubKeyRing();
             DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
             if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage))
                 dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
@@ -832,12 +830,11 @@ public class DisputeManager implements PersistedDataHost {
             success = false;
             throw new RuntimeException(errorMessage);
         } finally {
-            if (arbitratorsPubKeyRing != null) {
-                // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
-                // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-                DisputeCommunicationMessage disputeCommunicationMessage = disputeResultMessage.getDisputeResult().getDisputeCommunicationMessage();
-                if (disputeCommunicationMessage != null)
-                    chatManager.sendAckMessage(disputeCommunicationMessage, arbitratorsPubKeyRing, success, errorMessage);
+            // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
+            // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
+            DisputeCommunicationMessage disputeCommunicationMessage = disputeResultMessage.getDisputeResult().getDisputeCommunicationMessage();
+            if (disputeCommunicationMessage != null) {
+                chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
             }
         }
     }
@@ -897,7 +894,7 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     private boolean isArbitrator(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getArbitratorPubKeyRing());
+        return keyRing.getPubKeyRing().equals(dispute.getConflictResolverPubKeyRing());
     }
 
     private boolean isArbitrator(DisputeResult disputeResult) {
@@ -931,8 +928,8 @@ public class DisputeManager implements PersistedDataHost {
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
-            receiverPubKeyRing = dispute.getArbitratorPubKeyRing();
-            peerNodeAddress = dispute.getContract().getArbitratorNodeAddress();
+            receiverPubKeyRing = dispute.getConflictResolverPubKeyRing();
+            peerNodeAddress = dispute.getConflictResolverNodeAddress();
         } else if (isArbitrator(dispute)) {
             receiverPubKeyRing = dispute.getTraderPubKeyRing();
             Contract contract = dispute.getContract();
