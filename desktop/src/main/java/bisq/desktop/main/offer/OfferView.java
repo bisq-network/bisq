@@ -37,8 +37,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
 
-import bisq.network.p2p.NodeAddress;
-
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
@@ -74,7 +72,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
 
-    protected OfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences, ArbitratorManager arbitratorManager) {
+    protected OfferView(ViewLoader viewLoader,
+                        Navigation navigation,
+                        Preferences preferences,
+                        ArbitratorManager arbitratorManager) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
@@ -182,19 +183,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onTakeOffer(Offer offer) {
                     if (!takeOfferViewOpen) {
-                        List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
-                        List<String> arbitratorLanguages = arbitratorManager.getDisputeResolverLanguages(arbitratorNodeAddresses);
-                        if (arbitratorLanguages.isEmpty()) {
-                            // In case we get an offer which has been created with arbitrators which are not available
-                            // anymore we don't want to call the showNoArbitratorForUserLocaleWarning
-                            openTakeOffer(offer);
-                        } else {
-                            if (arbitratorLanguages.stream()
-                                    .noneMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
-                                showNoArbitratorForUserLocaleWarning();
-                            }
-                            openTakeOffer(offer);
-                        }
+                        openTakeOffer(offer);
                     } else {
                         log.error("You have already a \"Take offer\" tab open.");
                     }
