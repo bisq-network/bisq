@@ -32,12 +32,15 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.dispute.arbitration.Arbitrator;
 import bisq.core.dispute.arbitration.ArbitratorManager;
 import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.mediator.Mediator;
+import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.DevEnv;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
 
 import javax.inject.Inject;
 
@@ -50,6 +53,8 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.MapChangeListener;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
 public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> {
@@ -57,10 +62,11 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @FXML
     Tab tradersDisputesTab;
 
-    private Tab arbitratorsDisputesTab;
+    private Tab disputeResolversDisputesTab;
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
+    private final MediatorManager mediatorManager;
     private final DisputeManager disputeManager;
     private final KeyRing keyRing;
 
@@ -69,14 +75,19 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private Tab currentTab;
     private final ViewLoader viewLoader;
     private MapChangeListener<NodeAddress, Arbitrator> arbitratorMapChangeListener;
+    private MapChangeListener<NodeAddress, Mediator> mediatorMapChangeListener;
 
     @Inject
-    public DisputesView(CachingViewLoader viewLoader, Navigation navigation,
-                        ArbitratorManager arbitratorManager, DisputeManager disputeManager,
+    public DisputesView(CachingViewLoader viewLoader,
+                        Navigation navigation,
+                        ArbitratorManager arbitratorManager,
+                        MediatorManager mediatorManager,
+                        DisputeManager disputeManager,
                         KeyRing keyRing) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.disputeManager = disputeManager;
         this.keyRing = keyRing;
     }
@@ -93,24 +104,32 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == tradersDisputesTab)
                 navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
-            else if (newValue == arbitratorsDisputesTab)
+            else if (newValue == disputeResolversDisputesTab)
                 navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         };
 
-        arbitratorMapChangeListener = change -> updateArbitratorsDisputesTabDisableState();
+        arbitratorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
+        mediatorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
     }
 
-    private void updateArbitratorsDisputesTabDisableState() {
+    private void updateConflictResolversDisputesTabDisableState() {
+        PubKeyRing myPubKeyRing = keyRing.getPubKeyRing();
         boolean isActiveArbitrator = arbitratorManager.getObservableMap().values().stream()
-                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(keyRing.getPubKeyRing()));
+                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
+        boolean isActiveMediator = mediatorManager.getObservableMap().values().stream()
+                .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
+
+        if (isActiveArbitrator)
+            checkArgument(!isActiveMediator, "We do not support that arbitrators are mediators as well");
 
         boolean hasDisputesAsArbitrator = disputeManager.getDisputesAsObservableList().stream()
-                .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(keyRing.getPubKeyRing()));
+                .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
 
-        if (arbitratorsDisputesTab == null && (isActiveArbitrator || hasDisputesAsArbitrator)) {
-            arbitratorsDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets").toUpperCase());
-            arbitratorsDisputesTab.setClosable(false);
-            root.getTabs().add(arbitratorsDisputesTab);
+        if (disputeResolversDisputesTab == null && (isActiveArbitrator || isActiveMediator || hasDisputesAsArbitrator)) {
+            String role = isActiveArbitrator ? Res.get("shared.arbitrator2") : Res.get("shared.mediator");
+            disputeResolversDisputesTab = new Tab(Res.get("support.tab.ArbitratorsSupportTickets", role).toUpperCase());
+            disputeResolversDisputesTab.setClosable(false);
+            root.getTabs().add(disputeResolversDisputesTab);
             tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets").toUpperCase());
         }
     }
@@ -119,12 +138,16 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     protected void activate() {
         arbitratorManager.updateMap();
         arbitratorManager.getObservableMap().addListener(arbitratorMapChangeListener);
-        updateArbitratorsDisputesTabDisableState();
+
+        mediatorManager.updateMap();
+        mediatorManager.getObservableMap().addListener(mediatorMapChangeListener);
+
+        updateConflictResolversDisputesTabDisableState();
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (arbitratorsDisputesTab != null && root.getSelectionModel().getSelectedItem() == arbitratorsDisputesTab)
+        if (disputeResolversDisputesTab != null && root.getSelectionModel().getSelectedItem() == disputeResolversDisputesTab)
             navigation.navigateTo(MainView.class, DisputesView.class, ArbitratorDisputeView.class);
         else
             navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
@@ -140,6 +163,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @Override
     protected void deactivate() {
         arbitratorManager.getObservableMap().removeListener(arbitratorMapChangeListener);
+        mediatorManager.getObservableMap().removeListener(mediatorMapChangeListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
         navigation.removeListener(navigationListener);
         currentTab = null;
@@ -152,8 +176,8 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         View view = viewLoader.load(viewClass);
 
-        if (arbitratorsDisputesTab != null && view instanceof ArbitratorDisputeView)
-            currentTab = arbitratorsDisputesTab;
+        if (disputeResolversDisputesTab != null && view instanceof ArbitratorDisputeView)
+            currentTab = disputeResolversDisputesTab;
         else
             currentTab = tradersDisputesTab;
 

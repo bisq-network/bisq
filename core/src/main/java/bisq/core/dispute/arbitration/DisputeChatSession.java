@@ -80,7 +80,7 @@ public class DisputeChatSession extends ChatSession {
 
     @Override
     public PubKeyRing getClientPubKeyRing() {
-        // Get pubkeyring of trader. Arbitrator is considered server for the chat session
+        // Get pubKeyRing of trader. Arbitrator is considered server for the chat session
         return dispute != null ? dispute.getTraderPubKeyRing() : null;
     }
 

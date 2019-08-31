@@ -225,7 +225,7 @@ public abstract class DisputeResolverRegistrationView<R, T extends DisputeResolv
 
         Label infoLabel = addMultilineLabel(gridPane, gridRow);
         GridPane.setMargin(infoLabel, new Insets(Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
-        infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg"));
+        infoLabel.setText(Res.get("account.arbitratorRegistration.info.msg", getRole().toLowerCase()));
     }
 
     protected abstract String getRole();

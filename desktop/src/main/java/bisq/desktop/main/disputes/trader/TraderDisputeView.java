@@ -46,7 +46,6 @@ import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
@@ -114,7 +113,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final P2PService p2PService;
 
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final boolean useDevPrivilegeKeys;
@@ -150,7 +148,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
-                             P2PService p2PService,
                              AccountAgeWitnessService accountAgeWitnessService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
@@ -161,7 +158,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.privateNotificationManager = privateNotificationManager;
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
-        this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
