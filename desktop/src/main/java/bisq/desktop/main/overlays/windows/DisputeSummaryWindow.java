@@ -92,6 +92,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private RadioButton reasonWasBugRadioButton, reasonWasUsabilityIssueRadioButton,
             reasonProtocolViolationRadioButton, reasonNoReplyRadioButton, reasonWasScamRadioButton,
             reasonWasOtherRadioButton, reasonWasBankRadioButton;
+    // Dispute object of other trade peer. The dispute field is the one from which we opened the close dispute window.
     private Optional<Dispute> peersDisputeOptional;
     private String role;
     private TextArea summaryNotesTextArea;
@@ -183,7 +184,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult = dispute.getDisputeResultProperty().get();
 
         peersDisputeOptional = disputeManager.getDisputesAsObservableList().stream()
-                .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId()).findFirst();
+                .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId())
+                .findFirst();
 
         addInfoPane();
 
@@ -529,24 +531,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         Button cancelButton = tuple.second;
 
-        final Dispute finalPeersDispute = peersDisputeOptional.get();
         closeTicketButton.setOnAction(e -> {
-            if (dispute.getDepositTxSerialized() != null) {
+            if (dispute.getDepositTxSerialized() == null) {
+                log.warn("dispute.getDepositTxSerialized is null");
+                return;
+            }
+
+            if (!dispute.isMediationDispute()) {
                 try {
                     AddressEntry arbitratorAddressEntry = walletService.getArbitratorAddressEntry();
-                    disputeResult.setArbitratorPubKey(walletService.getArbitratorAddressEntry().getPubKey());
-
-                   /* byte[] depositTxSerialized,
-                    Coin buyerPayoutAmount,
-                    Coin sellerPayoutAmount,
-                    Coin arbitratorPayoutAmount,
-                    String buyerAddressString,
-                    String sellerAddressString,
-                    AddressEntry arbitratorAddressEntry,
-                    byte[] buyerPubKey,
-                    byte[] sellerPubKey,
-                    byte[] arbitratorPubKey)
-                    */
+                    disputeResult.setArbitratorPubKey(arbitratorAddressEntry.getPubKey());
                     byte[] arbitratorSignature = tradeWalletService.arbitratorSignsDisputedPayoutTx(
                             dispute.getDepositTxSerialized(),
                             disputeResult.getBuyerPayoutAmount(),
@@ -559,41 +553,42 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             arbitratorAddressEntry.getPubKey()
                     );
                     disputeResult.setArbitratorSignature(arbitratorSignature);
-
-                    closeTicketButton.disableProperty().unbind();
-                    dispute.setDisputeResult(disputeResult);
-
-                    disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
-                    disputeResult.setCloseDate(new Date());
-                    String text = Res.get("disputeSummaryWindow.close.msg",
-                            formatter.formatDateTime(disputeResult.getCloseDate()),
-                            role,
-                            formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
-                            role,
-                            formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
-                            role,
-                            formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
-                            formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
-                            formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
-                            disputeResult.summaryNotesProperty().get());
-
-                    dispute.setIsClosed(true);
-                    disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
-
-                    if (!finalPeersDispute.isClosed())
-                        UserThread.runAfter(() ->
-                                        new Popup<>().attention(Res.get("disputeSummaryWindow.close.closePeer")).show(),
-                                200, TimeUnit.MILLISECONDS);
-
-                    hide();
-
-                    finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
                 } catch (AddressFormatException | TransactionVerificationException e2) {
-                    e2.printStackTrace();
+                    log.error("Error at close dispute", e2);
+                    return;
                 }
-            } else {
-                log.warn("dispute.getDepositTxSerialized is null");
             }
+
+            disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
+            disputeResult.setCloseDate(new Date());
+            dispute.setDisputeResult(disputeResult);
+            dispute.setIsClosed(true);
+            String text = Res.get("disputeSummaryWindow.close.msg",
+                    formatter.formatDateTime(disputeResult.getCloseDate()),
+                    role,
+                    formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
+                    role,
+                    formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
+                    role,
+                    formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
+                    formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
+                    formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
+                    disputeResult.summaryNotesProperty().get());
+
+            disputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
+
+            if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed()) {
+                UserThread.runAfter(() -> new Popup<>()
+                                .attention(Res.get("disputeSummaryWindow.close.closePeer"))
+                                .show(),
+                        200, TimeUnit.MILLISECONDS);
+            }
+
+            finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
+
+            closeTicketButton.disableProperty().unbind();
+
+            hide();
         });
 
         cancelButton.setOnAction(e -> {
