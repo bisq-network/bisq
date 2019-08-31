@@ -78,12 +78,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DisputeManager implements PersistedDataHost {
@@ -261,7 +262,7 @@ public class DisputeManager implements PersistedDataHost {
             return;
         }
 
-        Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+        Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent() || reOpen) {
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
@@ -273,7 +274,8 @@ public class DisputeManager implements PersistedDataHost {
                     keyRing.getPubKeyRing().hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
-                    p2PService.getAddress()
+                    p2PService.getAddress(),
+                    dispute.isMediationDispute()
             );
             disputeCommunicationMessage.setSystemMessage(true);
             dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
@@ -376,7 +378,7 @@ public class DisputeManager implements PersistedDataHost {
                 disputeFromOpener.getConflictResolverPubKeyRing(),
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.isMediationDispute());
-        Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+        Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket", disputeInfo)
@@ -387,7 +389,8 @@ public class DisputeManager implements PersistedDataHost {
                     keyRing.getPubKeyRing().hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
-                    p2PService.getAddress()
+                    p2PService.getAddress(),
+                    dispute.isMediationDispute()
             );
             disputeCommunicationMessage.setSystemMessage(true);
             dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
@@ -474,7 +477,8 @@ public class DisputeManager implements PersistedDataHost {
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
                 text,
-                p2PService.getAddress()
+                p2PService.getAddress(),
+                dispute.isMediationDispute()
         );
 
         dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
@@ -593,7 +597,7 @@ public class DisputeManager implements PersistedDataHost {
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
         if (isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
-                Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+                Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(disputeStorage);
                     disputes.add(dispute);
@@ -632,7 +636,7 @@ public class DisputeManager implements PersistedDataHost {
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         if (!isArbitrator(dispute)) {
             if (!disputes.contains(dispute)) {
-                Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
+                Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(disputeStorage);
                     disputes.add(dispute);
@@ -675,7 +679,7 @@ public class DisputeManager implements PersistedDataHost {
         }
 
         String tradeId = disputeResult.getTradeId();
-        Optional<Dispute> disputeOptional = findDispute(tradeId, disputeResult.getTraderId());
+        Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
         if (!disputeOptional.isPresent()) {
             log.debug("We got a dispute result msg but we don't have a matching dispute. " +
@@ -943,24 +947,38 @@ public class DisputeManager implements PersistedDataHost {
         return new Tuple2<>(peerNodeAddress, receiverPubKeyRing);
     }
 
-    Optional<Dispute> findDispute(String tradeId, int traderId) {
+    private Optional<Dispute> findDispute(Dispute dispute) {
+        return findDispute(dispute.getTradeId(), dispute.getTraderId(), dispute.isMediationDispute());
+    }
+
+    private Optional<Dispute> findDispute(DisputeResult disputeResult) {
+        DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
+        checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
+        return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId(), disputeCommunicationMessage.isMediationDispute());
+    }
+
+    Optional<Dispute> findDispute(DisputeCommunicationMessage message) {
+        return findDispute(message.getTradeId(), message.getTraderId(), message.isMediationDispute());
+    }
+
+    private Optional<Dispute> findDispute(String tradeId, int traderId, boolean isMediationDispute) {
         if (disputes == null) {
             log.warn("disputes is null");
             return Optional.empty();
         }
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId).findAny();
+        return disputes.stream()
+                .filter(e -> e.getTradeId().equals(tradeId) &&
+                        e.getTraderId() == traderId &&
+                        e.isMediationDispute() == isMediationDispute)
+                .findAny();
     }
 
     public Optional<Dispute> findOwnDispute(String tradeId) {
-        return getDisputeStream(tradeId).findAny();
-    }
-
-    private Stream<Dispute> getDisputeStream(String tradeId) {
         if (disputes == null) {
             log.warn("disputes is null");
-            return Optional.<Dispute>empty().stream();
+            return Optional.empty();
         }
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId));
+        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
     private void cleanupRetryMap(String uid) {

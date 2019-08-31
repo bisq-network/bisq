@@ -87,6 +87,11 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
+    public boolean isMediationDispute() {
+        return false;
+    }
+
+    @Override
     public String getTradeId() {
         return trade != null ? trade.getId() : "";
     }
@@ -206,7 +211,8 @@ public class TradeChatSession extends ChatSession {
                 false,
                 Res.get("tradeChat.rules"),
                 new NodeAddress("null:0000"),
-                trade.getDate().getTime()
+                trade.getDate().getTime(),
+                false
         );
         disputeCommunicationMessage.setSystemMessage(true);
         trade.getCommunicationMessages().add(disputeCommunicationMessage);
