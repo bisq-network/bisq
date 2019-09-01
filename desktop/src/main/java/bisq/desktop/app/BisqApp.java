@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.util.ImageUtil;
+import bisq.desktop.util.CssTheme;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
@@ -175,10 +176,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             if (scene == null) {
                 log.warn("Scene not available yet, we create a new scene. The bug might be caused by an exception in a constructor or by a circular dependency in Guice. throwable=" + throwable.toString());
                 scene = new Scene(new StackPane(), 1000, 650);
-                scene.getStylesheets().setAll(
-                        "/bisq/desktop/theme-light.css",
-                        "/bisq/desktop/bisq.css",
-                        "/bisq/desktop/images.css");
+                CssTheme.loadSceneStyles(scene, CssTheme.CSS_THEME_LIGHT);
                 stage.setScene(scene);
                 stage.show();
             }
@@ -231,23 +229,13 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
         addSceneKeyEventHandler(scene, injector);
 
-        loadSceneStyles(scene, injector);
-        injector.getInstance(Preferences.class).getCssThemeProperty().addListener((ov) -> {
-            loadSceneStyles(scene, injector);
+        Preferences preferences = injector.getInstance(Preferences.class);
+        preferences.getCssThemeProperty().addListener((ov) -> {
+            CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
         });
-        return scene;
-    }
+        CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
 
-    private void loadSceneStyles(Scene scene, Injector injector) {
-        Boolean useDarkMode = (injector.getInstance(Preferences.class).getCssTheme() == 1);
-        String colorSheet = "/bisq/desktop/theme-light.css";
-        if (useDarkMode)
-            colorSheet = "/bisq/desktop/theme-dark.css";
-        scene.getStylesheets().setAll(
-            "/bisq/desktop/bisq.css",
-            "/bisq/desktop/images.css",
-            "/bisq/desktop/CandleStickChart.css",
-            colorSheet); // load theme last to override CSS colors
+        return scene;
     }
 
     private void setupStage(Scene scene) {
