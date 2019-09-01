@@ -35,7 +35,6 @@ import org.bitcoinj.core.TransactionOutput;
 import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.Arrays;
@@ -55,7 +54,8 @@ import lombok.extern.slf4j.Slf4j;
  * unconfirmed txs.
  */
 @Slf4j
-public abstract class BondRepository<T extends Bond, R extends BondedAsset> implements DaoSetupService {
+public abstract class BondRepository<T extends Bond, R extends BondedAsset> implements DaoSetupService,
+        BsqWalletService.WalletTransactionsChangeListener {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -161,11 +161,21 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
                 update();
             }
         });
-        bsqWalletService.getWalletTransactions().addListener((ListChangeListener<Transaction>) c -> update());
+        bsqWalletService.addWalletTransactionsChangeListener(this);
     }
 
     @Override
     public void start() {
+        update();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqWalletService.WalletTransactionsChangeListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onWalletTransactionsChange() {
         update();
     }
 
@@ -195,6 +205,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     abstract protected Stream<R> getBondedAssetStream();
 
     protected void update() {
+        log.debug("update");
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
             bondByUidMap.putIfAbsent(uid, createBond(bondedAsset));

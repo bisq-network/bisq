@@ -26,12 +26,9 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
-import org.bitcoinj.core.Transaction;
-
 import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.Arrays;
@@ -50,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  * unconfirmed txs.
  */
 @Slf4j
-public class MyBondedReputationRepository implements DaoSetupService {
+public class MyBondedReputationRepository implements DaoSetupService, BsqWalletService.WalletTransactionsChangeListener {
     private final DaoStateService daoStateService;
     private final BsqWalletService bsqWalletService;
     private final MyReputationListService myReputationListService;
@@ -84,7 +81,7 @@ public class MyBondedReputationRepository implements DaoSetupService {
                 update();
             }
         });
-        bsqWalletService.getWalletTransactions().addListener((ListChangeListener<Transaction>) c -> update());
+        bsqWalletService.addWalletTransactionsChangeListener(this);
     }
 
     @Override
@@ -93,10 +90,21 @@ public class MyBondedReputationRepository implements DaoSetupService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqWalletService.WalletTransactionsChangeListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onWalletTransactionsChange() {
+        update();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void update() {
+        log.debug("update");
         // It can be that the same salt/hash is in several lockupTxs, so we use the bondByLockupTxIdMap to eliminate
         // duplicates by the collection algorithm.
         Map<String, MyBondedReputation> bondByLockupTxIdMap = new HashMap<>();
