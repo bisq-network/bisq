@@ -158,7 +158,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                        @Named(DaoOptionKeys.RPC_USER) String rpcUser,
                        @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,
-                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort) {
+                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockNotificationPort,
+                       @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockNotificationHost) {
 
 
         this.storage = storage;

@@ -544,6 +544,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 "Bitcoind rpc port for block notifications")
                 .withRequiredArg();
 
+        parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST,
+                "Bitcoind rpc accepted incoming host for block notifications")
+                .withRequiredArg();
+
         parser.accepts(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA,
                 format("If set to true the blockchain data from RPC requests to Bitcoin Core are " +
                         "stored as json file in the data dir. (default: %s)", "false"))
