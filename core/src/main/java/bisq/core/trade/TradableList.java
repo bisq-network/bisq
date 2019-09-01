@@ -40,8 +40,6 @@ import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 public final class TradableList<T extends Tradable> implements PersistableEnvelope {
     transient final private Storage<TradableList<T>> storage;
@@ -80,13 +78,10 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
                 .build();
     }
 
-    @Nullable
     public static TradableList fromProto(protobuf.TradableList proto,
                                          CoreProtoResolver coreProtoResolver,
                                          Storage<TradableList<Tradable>> storage,
                                          BtcWalletService btcWalletService) {
-        log.debug("TradableList fromProto of {} ", proto);
-
         List<Tradable> list = proto.getTradableList().stream()
                 .map(tradable -> {
                     switch (tradable.getMessageCase()) {

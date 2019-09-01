@@ -483,7 +483,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
                 reportedPeersClone.stream().forEach(e -> result.append("\n").append(e));
                 result.append("\n------------------------------------------------------------\n");
-                log.debug(result.toString());
+                log.trace(result.toString());
             }
             log.debug("Number of reported peers: {}", reportedPeers.size());
         }
@@ -495,7 +495,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
             reportedPeersClone.stream().forEach(e -> result.append("\n\t").append(e));
-            log.debug(result.toString());
+            log.trace(result.toString());
         }
         log.debug("Number of new arrived reported peers: {}", reportedPeers.size());
     }

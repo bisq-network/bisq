@@ -385,7 +385,7 @@ public class TxParser {
         }
 
         // TRANSFER_BSQ has no fee, no opReturn and no UNLOCK_OUTPUT at first output
-        log.debug("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");
+        log.trace("No burned fee and no OP_RETURN, so this is a TRANSFER_BSQ tx.");
         return TxType.TRANSFER_BSQ;
     }
 

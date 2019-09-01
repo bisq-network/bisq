@@ -317,7 +317,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                 boolean allowBroadcast,
                                                 boolean reBroadcast,
                                                 boolean checkDate) {
-        log.debug("addPersistableNetworkPayload payload={}", payload);
+        log.trace("addPersistableNetworkPayload payload={}", payload);
         byte[] hash = payload.getHash();
         if (payload.verifyHashSize()) {
             ByteArray hashAsByteArray = new ByteArray(hash);
@@ -683,7 +683,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     msg = "Sequence number is equal to the stored one. sequenceNumber = "
                             + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber;
                 }
-                log.debug(msg);
+                log.trace(msg);
                 return false;
             } else {
                 log.debug("Sequence number is invalid. sequenceNumber = "
@@ -834,7 +834,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         .append(Utilities.toTruncatedString(protectedStoragePayload));
             });
             sb.append("\n------------------------------------------------------------\n");
-            log.debug(sb.toString());
+            log.trace(sb.toString());
             //log.debug("Data set " + info + " operation: size=" + map.values().size());
         }
     }

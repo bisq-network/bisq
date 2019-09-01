@@ -141,7 +141,7 @@ public class AssetTradeActivityCheck {
                 "\n\n" + newAssets.toString() +
                 "\n\n" + sufficientlyTraded.toString();
         // Utilities.copyToClipboard(result);
-        log.debug(result);
+        log.trace(result);
     }
 
     private boolean isWarmingUp(String code) {

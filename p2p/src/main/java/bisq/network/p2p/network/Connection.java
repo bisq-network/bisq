@@ -247,7 +247,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
 
                     protobuf.NetworkEnvelope proto = networkEnvelope.toProtoNetworkEnvelope();
-                    log.debug("Sending message: {}", Utilities.toTruncatedString(proto.toString(), 10000));
+                    log.trace("Sending message: {}", Utilities.toTruncatedString(proto.toString(), 10000));
 
                     if (networkEnvelope instanceof Ping | networkEnvelope instanceof RefreshOfferMessage) {
                         // pings and offer refresh msg we don't want to log in production
