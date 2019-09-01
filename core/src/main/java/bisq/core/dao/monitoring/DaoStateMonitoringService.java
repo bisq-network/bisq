@@ -326,7 +326,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
         }
         long duration = System.currentTimeMillis() - ts;
-        // We don't want to spam the outpu. We log accumulated time after parsing is completed.
+        // We don't want to spam the output. We log accumulated time after parsing is completed.
         log.trace("updateHashChain for block {} took {} ms",
                 block.getHeight(),
                 duration);
