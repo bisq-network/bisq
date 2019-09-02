@@ -27,6 +27,7 @@ import java.security.PublicKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+// TODO consider to move to signed witness domain
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BuyerDataItem {
