@@ -41,18 +41,18 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class TradersArbitrationDisputeView extends TradersDisputeView {
+public class TradersArbitrationView extends TradersDisputeView {
     @Inject
-    public TradersArbitrationDisputeView(ArbitrationDisputeManager arbitrationDisputeManager,
-                                         KeyRing keyRing,
-                                         TradeManager tradeManager,
-                                         BSFormatter formatter,
-                                         DisputeSummaryWindow disputeSummaryWindow,
-                                         PrivateNotificationManager privateNotificationManager,
-                                         ContractWindow contractWindow,
-                                         TradeDetailsWindow tradeDetailsWindow,
-                                         AccountAgeWitnessService accountAgeWitnessService,
-                                         @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public TradersArbitrationView(ArbitrationDisputeManager arbitrationDisputeManager,
+                                  KeyRing keyRing,
+                                  TradeManager tradeManager,
+                                  BSFormatter formatter,
+                                  DisputeSummaryWindow disputeSummaryWindow,
+                                  PrivateNotificationManager privateNotificationManager,
+                                  ContractWindow contractWindow,
+                                  TradeDetailsWindow tradeDetailsWindow,
+                                  AccountAgeWitnessService accountAgeWitnessService,
+                                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(arbitrationDisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 useDevPrivilegeKeys);

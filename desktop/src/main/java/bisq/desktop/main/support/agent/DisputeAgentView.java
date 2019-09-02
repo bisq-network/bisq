@@ -42,18 +42,18 @@ import com.google.inject.name.Named;
 import javafx.scene.control.Button;
 
 @FxmlView
-public abstract class DisputeResolverView extends DisputeView {
+public abstract class DisputeAgentView extends DisputeView {
 
-    public DisputeResolverView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                               KeyRing keyRing,
-                               TradeManager tradeManager,
-                               BSFormatter formatter,
-                               DisputeSummaryWindow disputeSummaryWindow,
-                               PrivateNotificationManager privateNotificationManager,
-                               ContractWindow contractWindow,
-                               TradeDetailsWindow tradeDetailsWindow,
-                               AccountAgeWitnessService accountAgeWitnessService,
-                               @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public DisputeAgentView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+                            KeyRing keyRing,
+                            TradeManager tradeManager,
+                            BSFormatter formatter,
+                            DisputeSummaryWindow disputeSummaryWindow,
+                            PrivateNotificationManager privateNotificationManager,
+                            ContractWindow contractWindow,
+                            TradeDetailsWindow tradeDetailsWindow,
+                            AccountAgeWitnessService accountAgeWitnessService,
+                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(disputeManager,
                 keyRing,
                 tradeManager,
