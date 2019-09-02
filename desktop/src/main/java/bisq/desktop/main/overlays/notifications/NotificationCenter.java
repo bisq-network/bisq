@@ -23,12 +23,12 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 import bisq.desktop.main.support.SupportView;
 import bisq.desktop.main.support.trader.TradersDisputeView;
-import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
-import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
+import bisq.desktop.main.support.trader.arbitration.TradersArbitrationView;
+import bisq.desktop.main.support.trader.mediation.TradersMediationView;
 
+import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.support.dispute.mediation.MediationDisputeManager;
-import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.SellerTrade;
@@ -286,8 +286,8 @@ public class NotificationCenter {
     private void goToSupport(Trade trade, String message, boolean isMediation) {
         Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
         Class<? extends TradersDisputeView> viewClass = isMediation ?
-                TradersMediationDisputeView.class :
-                TradersArbitrationDisputeView.class;
+                TradersMediationView.class :
+                TradersArbitrationView.class;
         if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(viewClass)) {
             notification.actionButtonTextWithGoTo("navigation.support")
                     .onAction(() -> navigation.navigateTo(MainView.class, SupportView.class, viewClass))
