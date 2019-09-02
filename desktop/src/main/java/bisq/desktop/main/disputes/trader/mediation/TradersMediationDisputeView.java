@@ -25,17 +25,21 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.app.AppOptionKeys;
 import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.crypto.KeyRing;
 
-//todo separate class
-// will be probably only used for arbitration communication, will be renamed and the icon changed
+import com.google.inject.name.Named;
+
+import javax.inject.Inject;
+
 @FxmlView
 public class TradersMediationDisputeView extends TradersDisputeView {
 
+    @Inject
     public TradersMediationDisputeView(MediationDisputeManager mediationDisputeManager,
                                        KeyRing keyRing,
                                        TradeManager tradeManager,
@@ -45,7 +49,7 @@ public class TradersMediationDisputeView extends TradersDisputeView {
                                        ContractWindow contractWindow,
                                        TradeDetailsWindow tradeDetailsWindow,
                                        AccountAgeWitnessService accountAgeWitnessService,
-                                       boolean useDevPrivilegeKeys) {
+                                       @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(mediationDisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 useDevPrivilegeKeys);
