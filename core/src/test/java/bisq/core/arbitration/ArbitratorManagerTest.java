@@ -17,9 +17,9 @@
 
 package bisq.core.arbitration;
 
-import bisq.core.support.dispute.arbitration.Arbitrator;
-import bisq.core.support.dispute.arbitration.ArbitratorManager;
-import bisq.core.support.dispute.arbitration.ArbitratorService;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorService;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;

@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.arbitration;
+package bisq.core.support.dispute.arbitration.arbitrator;
 
-import bisq.core.support.dispute.DisputeResolverService;
 import bisq.core.filter.FilterManager;
+import bisq.core.support.dispute.DisputeResolverService;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

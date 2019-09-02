@@ -18,14 +18,14 @@
 package bisq.core.user;
 
 import bisq.core.alert.Alert;
-import bisq.core.support.dispute.arbitration.Arbitrator;
-import bisq.core.support.dispute.mediator.Mediator;
 import bisq.core.filter.Filter;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.mediator.Mediator;
 
 import bisq.network.p2p.NodeAddress;
 
