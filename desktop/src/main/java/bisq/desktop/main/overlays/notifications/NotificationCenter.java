@@ -21,6 +21,8 @@ import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.disputes.trader.TradersDisputeView;
+import bisq.desktop.main.disputes.trader.arbitration.TradersArbitrationDisputeView;
+import bisq.desktop.main.disputes.trader.mediation.TradersMediationDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
@@ -249,14 +251,7 @@ public class NotificationCenter {
                     break;
             }
             if (message != null) {
-                Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
-                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TradersDisputeView.class)) {
-                    notification.actionButtonTextWithGoTo("navigation.support")
-                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class))
-                            .show();
-                } else {
-                    notification.show();
-                }
+                goToSupport(trade, message, false);
             }
         }
         if (mediationDisputeManager.findOwnDispute(trade.getId()).isPresent()) {
@@ -279,15 +274,22 @@ public class NotificationCenter {
                     break;
             }
             if (message != null) {
-                Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
-                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TradersDisputeView.class)) {
-                    notification.actionButtonTextWithGoTo("navigation.support")
-                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class))
-                            .show();
-                } else {
-                    notification.show();
-                }
+                goToSupport(trade, message, true);
             }
+        }
+    }
+
+    private void goToSupport(Trade trade, String message, boolean isMediation) {
+        Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
+        Class<? extends TradersDisputeView> viewClass = isMediation ?
+                TradersMediationDisputeView.class :
+                TradersArbitrationDisputeView.class;
+        if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(viewClass)) {
+            notification.actionButtonTextWithGoTo("navigation.support")
+                    .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, viewClass))
+                    .show();
+        } else {
+            notification.show();
         }
     }
 

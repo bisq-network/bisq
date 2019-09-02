@@ -26,7 +26,8 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.disputeresolvers.DisputeResolverView;
-import bisq.desktop.main.disputes.trader.TradersDisputeView;
+import bisq.desktop.main.disputes.trader.arbitration.TradersArbitrationDisputeView;
+import bisq.desktop.main.disputes.trader.mediation.TradersMediationDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
@@ -61,7 +62,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
-    Tab tradersDisputesTab;
+    Tab tradersArbitrationDisputesTab, tradersMediationDisputesTab;
 
     private Tab disputeResolversDisputesTab;
 
@@ -99,15 +100,18 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     @Override
     public void initialize() {
         log.debug("initialize ");
-        tradersDisputesTab.setText(Res.get("support.tab.support").toUpperCase());
+        tradersArbitrationDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
+        tradersMediationDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DisputesView.class) == 1)
                 loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-            if (newValue == tradersDisputesTab)
-                navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class);
+            if (newValue == tradersArbitrationDisputesTab)
+                navigation.navigateTo(MainView.class, DisputesView.class, TradersArbitrationDisputeView.class);
+            else if (newValue == tradersMediationDisputesTab)
+                navigation.navigateTo(MainView.class, DisputesView.class, TradersMediationDisputeView.class);
             else if (newValue == disputeResolversDisputesTab)
                 navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
         };
@@ -138,7 +142,6 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
             disputeResolversDisputesTab = new Tab();
             disputeResolversDisputesTab.setClosable(false);
             root.getTabs().add(disputeResolversDisputesTab);
-            tradersDisputesTab.setText(Res.get("support.tab.TradersSupportTickets").toUpperCase());
         }
 
         // We might get that method called before we have the map is filled in the arbitratorManager
@@ -161,10 +164,13 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
 
-        if (disputeResolversDisputesTab != null && root.getSelectionModel().getSelectedItem() == disputeResolversDisputesTab)
+        if (root.getSelectionModel().getSelectedItem() == tradersMediationDisputesTab) {
+            navigation.navigateTo(MainView.class, DisputesView.class, TradersMediationDisputeView.class);
+        } else if (root.getSelectionModel().getSelectedItem() == tradersArbitrationDisputesTab) {
+            navigation.navigateTo(MainView.class, DisputesView.class, TradersArbitrationDisputeView.class);
+        } else if (disputeResolversDisputesTab != null) {
             navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
-        else
-            navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class);
+        }
 
         String key = "supportInfo";
         if (!DevEnv.isDevMode())
@@ -190,11 +196,13 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         View view = viewLoader.load(viewClass);
 
-        if (disputeResolversDisputesTab != null && view instanceof DisputeResolverView)
+        if (view instanceof TradersMediationDisputeView) {
+            currentTab = tradersMediationDisputesTab;
+        } else if (view instanceof TradersArbitrationDisputeView) {
+            currentTab = tradersArbitrationDisputesTab;
+        } else {
             currentTab = disputeResolversDisputesTab;
-        else
-            currentTab = tradersDisputesTab;
-
+        }
         currentTab.setContent(view.getRoot());
         root.getSelectionModel().select(currentTab);
     }
