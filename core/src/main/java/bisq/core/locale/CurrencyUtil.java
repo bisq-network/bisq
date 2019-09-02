@@ -86,8 +86,7 @@ public class CurrencyUtil {
         list.add(new FiatCurrency("GBP"));
         list.add(new FiatCurrency("CAD"));
         list.add(new FiatCurrency("AUD"));
-        list.add(new FiatCurrency("RUB"));
-        list.add(new FiatCurrency("INR"));
+        list.add(new FiatCurrency("BRL"));
 
         list.sort(TradeCurrency::compareTo);
 
