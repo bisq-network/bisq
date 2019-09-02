@@ -26,7 +26,10 @@ import bisq.desktop.main.support.trader.TradersDisputeView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.dispute.DisputeList;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.mediator.MediationDisputeManager;
+import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -53,6 +56,11 @@ public class TradersMediationDisputeView extends TradersDisputeView {
         super(mediationDisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 useDevPrivilegeKeys);
+    }
+
+    @Override
+    protected DisputeCommunicationMessage.Type getType(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+        return DisputeCommunicationMessage.Type.MEDIATION;
     }
 }
 

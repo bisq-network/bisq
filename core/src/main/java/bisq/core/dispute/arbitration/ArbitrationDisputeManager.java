@@ -20,8 +20,9 @@ package bisq.core.dispute.arbitration;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dispute.DisputeList;
+import bisq.core.dispute.DisputeChatSession;
 import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -38,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class ArbitrationDisputeManager extends DisputeManager {
+public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDisputeList> {
 
     @Inject
     public ArbitrationDisputeManager(P2PService p2PService,
@@ -49,7 +50,17 @@ public class ArbitrationDisputeManager extends DisputeManager {
                                      ClosedTradableManager closedTradableManager,
                                      OpenOfferManager openOfferManager,
                                      KeyRing keyRing,
-                                     Storage<DisputeList> storage) {
+                                     Storage<ArbitrationDisputeList> storage) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, openOfferManager, keyRing, storage);
+    }
+
+    @Override
+    protected DisputeChatSession getConcreteChatSession() {
+        return new DisputeChatSession(this, DisputeCommunicationMessage.Type.ARBITRATION);
+    }
+
+    @Override
+    protected ArbitrationDisputeList getConcreteDisputeList() {
+        return new ArbitrationDisputeList(disputeStorage);
     }
 }

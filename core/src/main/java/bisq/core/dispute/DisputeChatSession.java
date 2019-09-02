@@ -50,13 +50,23 @@ public class DisputeChatSession extends ChatSession {
     @Nullable
     @Getter
     private Dispute dispute;
-    private DisputeManager disputeManager;
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+    private final DisputeCommunicationMessage.Type type;
 
     public DisputeChatSession(@Nullable Dispute dispute,
-                              DisputeManager disputeManager) {
+                              DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+                              DisputeCommunicationMessage.Type type) {
         super(DisputeCommunicationMessage.Type.ARBITRATION);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
+        this.type = type;
+    }
+
+    public DisputeChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+                              DisputeCommunicationMessage.Type type) {
+        super(DisputeCommunicationMessage.Type.ARBITRATION);
+        this.disputeManager = disputeManager;
+        this.type = type;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +102,7 @@ public class DisputeChatSession extends ChatSession {
 
     @Override
     public void persist() {
-        DisputeList disputes = disputeManager.getDisputes();
+        DisputeList disputes = disputeManager.getDisputeList();
         if (disputes != null) {
             disputes.persist();
         }
@@ -164,7 +174,7 @@ public class DisputeChatSession extends ChatSession {
 
     @Override
     public List<DisputeCommunicationMessage> getChatMessages() {
-        DisputeList disputes = disputeManager.getDisputes();
+        DisputeList<? extends DisputeList> disputes = disputeManager.getDisputeList();
         if (disputes != null) {
             return disputes.getList().stream()
                     .flatMap(dispute -> dispute.getDisputeCommunicationMessages().stream())

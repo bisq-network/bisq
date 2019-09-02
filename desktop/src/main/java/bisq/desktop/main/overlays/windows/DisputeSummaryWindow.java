@@ -30,6 +30,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeList;
 import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.DisputeResult;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
@@ -604,7 +605,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         });
     }
 
-    private DisputeManager getDisputeManager(Dispute dispute) {
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
         return dispute.isMediationDispute() ? mediationDisputeManager : arbitrationDisputeManager;
     }
 

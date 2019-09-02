@@ -24,6 +24,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeList;
 import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.mediator.MediationDisputeManager;
@@ -267,7 +268,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         });
     }
 
-    private DisputeManager getDisputeManager(Dispute dispute) {
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
         return dispute.isMediationDispute() ? mediationDisputeManager : arbitrationDisputeManager;
     }
 

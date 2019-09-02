@@ -33,7 +33,8 @@ import bisq.core.dao.state.DaoStateStore;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
-import bisq.core.dispute.DisputeList;
+import bisq.core.dispute.arbitration.ArbitrationDisputeList;
+import bisq.core.dispute.mediator.MediationDisputeList;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradableList;
@@ -102,7 +103,11 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                 case TRADE_STATISTICS_LIST:
                     throw new ProtobufferRuntimeException("TRADE_STATISTICS_LIST is not used anymore");
                 case DISPUTE_LIST:
-                    return DisputeList.fromProto(proto.getDisputeList(),
+                    return ArbitrationDisputeList.fromProto(proto.getDisputeList(),
+                            this,
+                            new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
+                case MEDIATION_DISPUTE_LIST:
+                    return MediationDisputeList.fromProto(proto.getMediationDisputeList(),
                             this,
                             new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
                 case PREFERENCES_PAYLOAD:
