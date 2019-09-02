@@ -23,7 +23,7 @@ import bisq.core.app.BisqExecutable;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.support.arbitration.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.ArbitratorManager;
 import bisq.core.offer.OpenOfferManager;
 
 import bisq.network.p2p.P2PService;

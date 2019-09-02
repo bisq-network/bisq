@@ -26,8 +26,8 @@ import bisq.desktop.main.support.disputeresolver.DisputeResolverView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.support.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 

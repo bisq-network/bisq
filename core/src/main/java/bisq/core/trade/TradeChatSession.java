@@ -19,9 +19,9 @@ package bisq.core.trade;
 
 import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
-import bisq.core.support.messages.DisputeCommunicationMessage;
-import bisq.core.support.messages.DisputeMessage;
-import bisq.core.support.messages.DisputeResultMessage;
+import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.dispute.messages.DisputeMessage;
+import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;

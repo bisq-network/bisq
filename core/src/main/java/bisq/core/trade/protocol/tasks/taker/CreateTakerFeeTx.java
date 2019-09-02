@@ -22,7 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
-import bisq.core.support.arbitration.Arbitrator;
+import bisq.core.support.dispute.arbitration.Arbitrator;
 import bisq.core.offer.availability.DisputeResolverSelection;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;

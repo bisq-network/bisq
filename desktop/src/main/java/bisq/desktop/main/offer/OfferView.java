@@ -27,7 +27,7 @@ import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.takeoffer.TakeOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.support.arbitration.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.ArbitratorManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;

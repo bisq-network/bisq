@@ -17,8 +17,8 @@
 
 package bisq.core.offer.availability;
 
-import bisq.core.support.DisputeResolver;
-import bisq.core.support.DisputeResolverManager;
+import bisq.core.support.dispute.DisputeResolver;
+import bisq.core.support.dispute.DisputeResolverManager;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 

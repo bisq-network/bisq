@@ -20,8 +20,8 @@ package bisq.desktop.main.account.register.mediator;
 import bisq.desktop.main.account.register.DisputeResolverRegistrationViewModel;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.support.mediator.Mediator;
-import bisq.core.support.mediator.MediatorManager;
+import bisq.core.support.dispute.mediator.Mediator;
+import bisq.core.support.dispute.mediator.MediatorManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;

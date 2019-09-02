@@ -23,11 +23,11 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.support.Dispute;
-import bisq.core.support.DisputeList;
-import bisq.core.support.DisputeManager;
-import bisq.core.support.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.mediator.MediationDisputeManager;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeList;
+import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.mediator.MediationDisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
