@@ -19,7 +19,7 @@
 
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="root" fx:controller="bisq.desktop.main.support.disputeresolver.mediation.MediatorView"
+<VBox fx:id="root" fx:controller="bisq.desktop.main.support.agent.arbitration.ArbitratorView"
       spacing="10"
       xmlns:fx="http://javafx.com/fxml">
     <padding>
@@ -27,3 +27,4 @@
     </padding>
 
 </VBox>
+
