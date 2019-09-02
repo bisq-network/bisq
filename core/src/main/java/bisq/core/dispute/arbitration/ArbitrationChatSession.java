@@ -21,12 +21,12 @@ import bisq.core.dispute.Dispute;
 import bisq.core.dispute.DisputeChatSession;
 import bisq.core.dispute.DisputeList;
 import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.dispute.messages.DisputeMessage;
 import bisq.core.dispute.messages.DisputeResultMessage;
 import bisq.core.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.dispute.messages.PeerOpenedDisputeMessage;
-import bisq.core.dispute.messages.PeerPublishedDisputePayoutTxMessage;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +63,8 @@ public class ArbitrationChatSession extends DisputeChatSession {
         } else if (message instanceof DisputeResultMessage) {
             disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
         } else if (message instanceof PeerPublishedDisputePayoutTxMessage) {
-            disputeManager.onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
+            //todo make generic
+            ((ArbitrationDisputeManager) disputeManager).onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
         } else {
             log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
         }

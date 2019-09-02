@@ -17,24 +17,18 @@
 
 package bisq.core.dispute;
 
-import bisq.core.btc.exceptions.TransactionVerificationException;
-import bisq.core.btc.exceptions.TxBroadcastException;
-import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.chat.ChatManager;
 import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.dispute.messages.DisputeResultMessage;
 import bisq.core.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.dispute.messages.PeerOpenedDisputeMessage;
-import bisq.core.dispute.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.Contract;
-import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -55,10 +49,6 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Transaction;
-import org.bitcoinj.crypto.DeterministicKey;
-
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -69,7 +59,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,27 +75,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> implements PersistedDataHost {
-    private final TradeWalletService tradeWalletService;
-    private final BtcWalletService walletService;
+    protected final TradeWalletService tradeWalletService;
+    protected final BtcWalletService walletService;
     private final WalletsSetup walletsSetup;
-    private final TradeManager tradeManager;
-    private final ClosedTradableManager closedTradableManager;
-    private final OpenOfferManager openOfferManager;
-    private final P2PService p2PService;
-    private final KeyRing keyRing;
+    protected final TradeManager tradeManager;
+    protected final ClosedTradableManager closedTradableManager;
+    protected final OpenOfferManager openOfferManager;
+    protected final P2PService p2PService;
+    protected final KeyRing keyRing;
     protected final Storage<T> disputeStorage;
     @Nullable
     @Getter
     private T disputeList;
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
-    private final Map<String, Timer> delayMsgMap = new HashMap<>();
+    protected final Map<String, Timer> delayMsgMap = new HashMap<>();
 
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
     @Getter
-    private final ChatManager chatManager;
+    protected final ChatManager chatManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -557,41 +546,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         );
     }
 
-    // winner (or buyer in case of 50/50) sends tx to other peer
-    private void sendPeerPublishedPayoutTxMessage(Transaction transaction, Dispute dispute, Contract contract) {
-        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
-        NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getSellerNodeAddress() : contract.getBuyerNodeAddress();
-        log.trace("sendPeerPublishedPayoutTxMessage to peerAddress " + peersNodeAddress);
-        PeerPublishedDisputePayoutTxMessage message = new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
-                dispute.getTradeId(),
-                p2PService.getAddress(),
-                UUID.randomUUID().toString());
-        log.info("Send {} to peer {}. tradeId={}, uid={}",
-                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-        p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                peersPubKeyRing,
-                message,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                    }
-                }
-        );
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message
@@ -681,180 +635,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
-    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
-        DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
-        DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
-        checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
-        if (!disputeCommunicationMessage.isMediationDispute() &&
-                Arrays.equals(disputeResult.getArbitratorPubKey(),
-                        walletService.getArbitratorAddressEntry().getPubKey())) {
-            log.error("Arbitrator received disputeResultMessage. That must never happen.");
-            return;
-        }
+    abstract public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
 
-        String tradeId = disputeResult.getTradeId();
-        Optional<Dispute> disputeOptional = findDispute(disputeResult);
-        String uid = disputeResultMessage.getUid();
-        if (!disputeOptional.isPresent()) {
-            log.warn("We got a dispute result msg but we don't have a matching dispute. " +
-                    "That might happen when we get the disputeResultMessage before the dispute was created. " +
-                    "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
-            if (!delayMsgMap.containsKey(uid)) {
-                // We delay 2 sec. to be sure the comm. msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputeResultMessage(disputeResultMessage), 2);
-                delayMsgMap.put(uid, timer);
-            } else {
-                log.warn("We got a dispute result msg after we already repeated to apply the message after a delay. " +
-                        "That should never happen. TradeId = " + tradeId);
-            }
-            return;
-        }
-
-        Dispute dispute = disputeOptional.get();
-        // try {
-        cleanupRetryMap(uid);
-        if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage)) {
-            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
-        } else {
-            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
-        }
-        dispute.setIsClosed(true);
-
-        if (dispute.disputeResultProperty().get() != null) {
-            log.warn("We got already a dispute result. That should only happen if a dispute needs to be closed " +
-                    "again because the first close did not succeed. TradeId = " + tradeId);
-        }
-
-        dispute.setDisputeResult(disputeResult);
-
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
-        if (dispute.isMediationDispute()) {
-            // Mediation case
-            if (tradeOptional.isPresent()) {
-                tradeOptional.get().setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
-            } else {
-                Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
-                openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
-            }
-            chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), true, null);
-            return;
-        }
-
-        // Arbitration case
-        String errorMessage = null;
-        boolean success = false;
-        try {
-            // We need to avoid publishing the tx from both traders as it would create problems with zero confirmation withdrawals
-            // There would be different transactions if both sign and publish (signers: once buyer+arb, once seller+arb)
-            // The tx publisher is the winner or in case both get 50% the buyer, as the buyer has more inventive to publish the tx as he receives
-            // more BTC as he has deposited
-            Contract contract = dispute.getContract();
-
-            boolean isBuyer = keyRing.getPubKeyRing().equals(contract.getBuyerPubKeyRing());
-            DisputeResult.Winner publisher = disputeResult.getWinner();
-
-            // Sometimes the user who receives the trade amount is never online, so we might want to
-            // let the loser publish the tx. When the winner comes online he gets his funds as it was published by the other peer.
-            // Default isLoserPublisher is set to false
-            if (disputeResult.isLoserPublisher()) {
-                // we invert the logic
-                if (publisher == DisputeResult.Winner.BUYER)
-                    publisher = DisputeResult.Winner.SELLER;
-                else if (publisher == DisputeResult.Winner.SELLER)
-                    publisher = DisputeResult.Winner.BUYER;
-            }
-
-            if ((isBuyer && publisher == DisputeResult.Winner.BUYER)
-                    || (!isBuyer && publisher == DisputeResult.Winner.SELLER)) {
-
-                Transaction payoutTx = null;
-                if (tradeOptional.isPresent()) {
-                    payoutTx = tradeOptional.get().getPayoutTx();
-                } else {
-                    Optional<Tradable> tradableOptional = closedTradableManager.getTradableById(tradeId);
-                    if (tradableOptional.isPresent() && tradableOptional.get() instanceof Trade) {
-                        payoutTx = ((Trade) tradableOptional.get()).getPayoutTx();
-                    }
-                }
-
-                if (payoutTx == null) {
-                    if (dispute.getDepositTxSerialized() != null) {
-                        byte[] multiSigPubKey = isBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
-                        DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
-                        Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
-                                dispute.getDepositTxSerialized(),
-                                disputeResult.getArbitratorSignature(),
-                                disputeResult.getBuyerPayoutAmount(),
-                                disputeResult.getSellerPayoutAmount(),
-                                contract.getBuyerPayoutAddressString(),
-                                contract.getSellerPayoutAddressString(),
-                                multiSigKeyPair,
-                                contract.getBuyerMultiSigPubKey(),
-                                contract.getSellerMultiSigPubKey(),
-                                disputeResult.getArbitratorPubKey()
-                        );
-                        Transaction committedDisputedPayoutTx = tradeWalletService.addTxToWallet(signedDisputedPayoutTx);
-                        tradeWalletService.broadcastTx(committedDisputedPayoutTx, new TxBroadcaster.Callback() {
-                            @Override
-                            public void onSuccess(Transaction transaction) {
-                                // after successful publish we send peer the tx
-                                dispute.setDisputePayoutTxId(transaction.getHashAsString());
-                                sendPeerPublishedPayoutTxMessage(transaction, dispute, contract);
-                                updateTradeOrOpenOfferManager(tradeId);
-                            }
-
-                            @Override
-                            public void onFailure(TxBroadcastException exception) {
-                                log.error(exception.getMessage());
-                            }
-                        }, 15);
-
-                        success = true;
-                    } else {
-                        errorMessage = "DepositTx is null. TradeId = " + tradeId;
-                        log.warn(errorMessage);
-                        success = false;
-                    }
-                } else {
-                    log.warn("We got already a payout tx. That might be the case if the other peer did not get the " +
-                            "payout tx and opened a dispute. TradeId = " + tradeId);
-                    dispute.setDisputePayoutTxId(payoutTx.getHashAsString());
-                    sendPeerPublishedPayoutTxMessage(payoutTx, dispute, contract);
-
-                    success = true;
-                }
-            } else {
-                log.trace("We don't publish the tx as we are not the winning party.");
-                // Clean up tangling trades
-                if (dispute.disputeResultProperty().get() != null && dispute.isClosed()) {
-                    updateTradeOrOpenOfferManager(tradeId);
-                }
-
-                success = true;
-            }
-        } catch (TransactionVerificationException e) {
-            errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage, e);
-            success = false;
-
-            // We prefer to close the dispute in that case. If there was no deposit tx and a random tx was used
-            // we get a TransactionVerificationException. No reason to keep that dispute open...
-            updateTradeOrOpenOfferManager(tradeId);
-
-            throw new RuntimeException(errorMessage);
-        } catch (AddressFormatException | WalletException e) {
-            errorMessage = "Error at traderSignAndFinalizeDisputedPayoutTx " + e.toString();
-            log.error(errorMessage, e);
-            success = false;
-            throw new RuntimeException(errorMessage);
-        } finally {
-            // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
-            // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-            chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
-        }
-    }
-
-    private void updateTradeOrOpenOfferManager(String tradeId) {
+    protected void updateTradeOrOpenOfferManager(String tradeId) {
         // set state after payout as we call swapTradeEntryToAvailableEntry
         if (tradeManager.getTradeById(tradeId).isPresent()) {
             tradeManager.closeDisputedTrade(tradeId);
@@ -864,38 +647,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    public void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
-        String uid = peerPublishedDisputePayoutTxMessage.getUid();
-        String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
-        Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
-        if (!disputeOptional.isPresent()) {
-            log.debug("We got a peerPublishedPayoutTxMessage but we don't have a matching dispute. TradeId = " + tradeId);
-            if (!delayMsgMap.containsKey(uid)) {
-                // We delay 3 sec. to be sure the close msg gets added first
-                Timer timer = UserThread.runAfter(() -> onDisputedPayoutTxMessage(peerPublishedDisputePayoutTxMessage), 3);
-                delayMsgMap.put(uid, timer);
-            } else {
-                log.warn("We got a peerPublishedPayoutTxMessage after we already repeated to apply the message after a delay. " +
-                        "That should never happen. TradeId = " + tradeId);
-            }
-            return;
-        }
-
-        Dispute dispute = disputeOptional.get();
-        Contract contract = dispute.getContract();
-        PubKeyRing ownPubKeyRing = keyRing.getPubKeyRing();
-        boolean isBuyer = ownPubKeyRing.equals(contract.getBuyerPubKeyRing());
-        PubKeyRing peersPubKeyRing = isBuyer ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
-
-        cleanupRetryMap(uid);
-        Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction());
-        dispute.setDisputePayoutTxId(walletTx.getHashAsString());
-        BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
-
-        // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute
-        chatManager.sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
-    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -967,7 +718,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return findDispute(dispute.getTradeId(), dispute.getTraderId(), dispute.isMediationDispute());
     }
 
-    private Optional<Dispute> findDispute(DisputeResult disputeResult) {
+    protected Optional<Dispute> findDispute(DisputeResult disputeResult) {
         DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
         checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
         return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId(), disputeCommunicationMessage.isMediationDispute());
@@ -997,7 +748,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
-    private void cleanupRetryMap(String uid) {
+    protected void cleanupRetryMap(String uid) {
         if (delayMsgMap.containsKey(uid)) {
             Timer timer = delayMsgMap.remove(uid);
             if (timer != null)
