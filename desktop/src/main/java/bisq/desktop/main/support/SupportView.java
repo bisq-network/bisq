@@ -26,8 +26,8 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.support.disputeresolver.arbitration.ArbitratorView;
-import bisq.desktop.main.support.disputeresolver.mediation.MediatorView;
+import bisq.desktop.main.support.agent.arbitration.ArbitratorView;
+import bisq.desktop.main.support.agent.mediation.MediatorView;
 import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
 
