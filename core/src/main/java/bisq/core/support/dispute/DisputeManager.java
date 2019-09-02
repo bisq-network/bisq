@@ -23,7 +23,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.support.ChatManager;
+import bisq.core.support.SupportManager;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -96,7 +96,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
     @Getter
-    protected final ChatManager chatManager;
+    protected final SupportManager supportManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -120,8 +120,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        chatManager = new ChatManager(p2PService, walletsSetup);
-        chatManager.setChatSession(getConcreteChatSession());
+        supportManager = new SupportManager(p2PService, walletsSetup);
+        supportManager.setSupportSession(getConcreteChatSession());
 
         disputeStorage = storage;
 
@@ -134,7 +134,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract protected DisputeChatSession getConcreteChatSession();
+    abstract protected DisputeSession getConcreteChatSession();
 
     abstract protected T getConcreteDisputeList();
 
@@ -151,25 +151,25 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     public void onAllServicesInitialized() {
-        chatManager.onAllServicesInitialized();
+        supportManager.onAllServicesInitialized();
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {
-                chatManager.tryApplyMessages();
+                supportManager.tryApplyMessages();
             }
         });
 
         walletsSetup.downloadPercentageProperty().addListener((observable, oldValue, newValue) -> {
             if (walletsSetup.isDownloadComplete())
-                chatManager.tryApplyMessages();
+                supportManager.tryApplyMessages();
         });
 
         walletsSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             if (walletsSetup.hasSufficientPeersForBroadcast())
-                chatManager.tryApplyMessages();
+                supportManager.tryApplyMessages();
         });
 
-        chatManager.tryApplyMessages();
+        supportManager.tryApplyMessages();
 
         cleanupDisputes();
 
@@ -594,7 +594,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);
             PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
-            chatManager.sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
+            supportManager.sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
         }
     }
 
@@ -634,10 +634,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);
-            chatManager.sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+            supportManager.sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
         }
 
-        chatManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+        supportManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
     }
 
     // We get that message at both peers. The dispute object is in context of the trader

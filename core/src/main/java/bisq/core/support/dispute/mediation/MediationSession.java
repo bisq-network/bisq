@@ -19,7 +19,7 @@ package bisq.core.support.dispute.mediation;
 
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeChatSession;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
@@ -33,14 +33,14 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class MediationChatSession extends DisputeChatSession {
+public class MediationSession extends DisputeSession {
 
-    public MediationChatSession(@Nullable Dispute dispute,
-                                DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+    public MediationSession(@Nullable Dispute dispute,
+                            DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
         super(dispute, disputeManager, SupportType.MEDIATION);
     }
 
-    MediationChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+    MediationSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
         super(disputeManager, SupportType.MEDIATION);
 
     }
@@ -60,7 +60,7 @@ public class MediationChatSession extends DisputeChatSession {
                     log.debug("Ignore non dispute type communication message");
                     return;
                 }
-                disputeManager.getChatManager().onDisputeDirectMessage((ChatMessage) message);
+                disputeManager.getSupportManager().onDisputeDirectMessage((ChatMessage) message);
             } else if (message instanceof DisputeResultMessage) {
                 disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
             } else {

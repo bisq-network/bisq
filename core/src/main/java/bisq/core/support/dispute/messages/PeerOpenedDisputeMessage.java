@@ -30,7 +30,7 @@ import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class PeerOpenedDisputeMessage extends DisputeChatMessage {
+public final class PeerOpenedDisputeMessage extends DisputeMessage {
     private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 

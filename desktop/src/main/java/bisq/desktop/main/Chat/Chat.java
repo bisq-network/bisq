@@ -27,8 +27,8 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
-import bisq.core.support.ChatManager;
-import bisq.core.support.ChatSession;
+import bisq.core.support.SupportManager;
+import bisq.core.support.SupportSession;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
@@ -139,12 +139,12 @@ public class Chat extends AnchorPane {
 
     protected final BSFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
-    private ChatManager chatManager;
+    private SupportManager supportManager;
 
-    public Chat(ChatManager chatManager, BSFormatter formatter) {
-        this.chatManager = chatManager;
+    public Chat(SupportManager supportManager, BSFormatter formatter) {
+        this.supportManager = supportManager;
         this.formatter = formatter;
-        this.p2PService = chatManager.getP2PService();
+        this.p2PService = supportManager.getP2PService();
         allowAttachments = true;
         displayHeader = true;
     }
@@ -154,7 +154,7 @@ public class Chat extends AnchorPane {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
-                if (chatManager.getChatSession().chatIsOpen() && inputTextArea.isFocused())
+                if (supportManager.getSupportSession().chatIsOpen() && inputTextArea.isFocused())
                     onTrySendMessage();
             }
         };
@@ -169,14 +169,14 @@ public class Chat extends AnchorPane {
         removeListenersOnSessionChange();
     }
 
-    public void display(ChatSession chatSession, ReadOnlyDoubleProperty widthProperty) {
-        display(chatSession, null, widthProperty);
+    public void display(SupportSession supportSession, ReadOnlyDoubleProperty widthProperty) {
+        display(supportSession, null, widthProperty);
     }
 
-    public void display(ChatSession chatSession, @Nullable Button extraButton,
+    public void display(SupportSession supportSession, @Nullable Button extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
         removeListenersOnSessionChange();
-        chatManager.setChatSession(chatSession);
+        supportManager.setSupportSession(supportSession);
         this.getChildren().clear();
         this.extraButton = extraButton;
         this.widthProperty = widthProperty;
@@ -189,7 +189,7 @@ public class Chat extends AnchorPane {
         AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
         AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-        chatMessages = chatSession.getObservableChatMessageList();
+        chatMessages = supportSession.getObservableChatMessageList();
         SortedList<ChatMessage> sortedList = new SortedList<>(chatMessages);
         sortedList.setComparator(Comparator.comparing(o -> new Date(o.getDate())));
         messageListView = new ListView<>(sortedList);
@@ -205,7 +205,7 @@ public class Chat extends AnchorPane {
         inputTextArea = new BisqTextArea();
         inputTextArea.setPrefHeight(70);
         inputTextArea.setWrapText(true);
-        if (chatSession instanceof TradeChatSession || chatSession.isClient()) {
+        if (supportSession instanceof TradeChatSession || supportSession.isClient()) {
             inputTextArea.setPromptText(Res.get("support.input.prompt"));
         }
 
@@ -227,7 +227,7 @@ public class Chat extends AnchorPane {
         if (displayHeader)
             this.getChildren().add(tableGroupHeadline);
 
-        if (chatSession.chatIsOpen()) {
+        if (supportSession.chatIsOpen()) {
             HBox buttonBox = new HBox();
             buttonBox.setSpacing(10);
             if (allowAttachments)
@@ -320,7 +320,7 @@ public class Chat extends AnchorPane {
                             AnchorPane.setBottomAnchor(attachmentsBox, bottomBorder + 10);
 
                             boolean senderIsTrader = message.isSenderIsTrader();
-                            boolean isMyMsg = chatSession.isClient() == senderIsTrader;
+                            boolean isMyMsg = supportSession.isClient() == senderIsTrader;
 
                             arrow.setVisible(!message.isSystemMessage());
                             arrow.setManaged(!message.isSystemMessage());
@@ -343,7 +343,7 @@ public class Chat extends AnchorPane {
                                 bg.setId("message-bubble-blue");
                                 messageLabel.getStyleClass().add("my-message");
                                 copyIcon.getStyleClass().add("my-message");
-                                if (chatSession.isClient())
+                                if (supportSession.isClient())
                                     arrow.setId("bubble_arrow_blue_left");
                                 else
                                     arrow.setId("bubble_arrow_blue_right");
@@ -364,7 +364,7 @@ public class Chat extends AnchorPane {
                                 bg.setId("message-bubble-grey");
                                 messageLabel.getStyleClass().add("message");
                                 copyIcon.getStyleClass().add("message");
-                                if (chatSession.isClient())
+                                if (supportSession.isClient())
                                     arrow.setId("bubble_arrow_grey_right");
                                 else
                                     arrow.setId("bubble_arrow_grey_left");
@@ -646,22 +646,22 @@ public class Chat extends AnchorPane {
     }
 
     private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
-        ChatSession chatSession = chatManager.getChatSession();
+        SupportSession supportSession = supportManager.getSupportSession();
         ChatMessage message = new ChatMessage(
-                chatSession.getSupportType(),
-                chatSession.getTradeId(),
-                chatSession.getClientPubKeyRing().hashCode(),
-                chatSession.isClient(),
+                supportSession.getSupportType(),
+                supportSession.getTradeId(),
+                supportSession.getClientPubKeyRing().hashCode(),
+                supportSession.isClient(),
                 text,
                 p2PService.getAddress(),
-                chatSession.isMediationDispute()
+                supportSession.isMediationDispute()
         );
 
         message.addAllAttachments(attachments);
-        NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress(message);
-        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(message);
+        NodeAddress peersNodeAddress = supportSession.getPeerNodeAddress(message);
+        PubKeyRing receiverPubKeyRing = supportSession.getPeerPubKeyRing(message);
 
-        chatSession.addChatMessage(message);
+        supportSession.addChatMessage(message);
 
         if (receiverPubKeyRing != null) {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -676,7 +676,7 @@ public class Chat extends AnchorPane {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setArrived(true);
-                            chatSession.persist();
+                            supportSession.persist();
                         }
 
                         @Override
@@ -684,7 +684,7 @@ public class Chat extends AnchorPane {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setStoredInMailbox(true);
-                            chatSession.persist();
+                            supportSession.persist();
                         }
 
                         @Override
@@ -692,7 +692,7 @@ public class Chat extends AnchorPane {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             message.setSendMessageError(errorMessage);
-                            chatSession.persist();
+                            supportSession.persist();
                         }
                     }
             );

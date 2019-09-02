@@ -18,8 +18,8 @@
 package bisq.core.support.traderchat;
 
 import bisq.core.locale.Res;
-import bisq.core.support.ChatManager;
-import bisq.core.support.ChatSession;
+import bisq.core.support.SupportManager;
+import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
 /* Makers are considered as servers and takers as clients for trader to trader chat
  * sessions. This is only to make it easier to understand who's who, there is no real
  * server/client relationship */
-public class TradeChatSession extends ChatSession {
+public class TradeChatSession extends SupportSession {
     private static final Logger log = LoggerFactory.getLogger(TradeChatSession.class);
 
     public interface DisputeStateListener {
@@ -59,7 +59,7 @@ public class TradeChatSession extends ChatSession {
     private boolean isClient;
     private boolean isBuyer;
     private TradeManager tradeManager;
-    private ChatManager chatManager;
+    private SupportManager supportManager;
     // Needed to avoid ConcurrentModificationException as we remove a listener at the handler call
     private List<DisputeStateListener> disputeStateListeners = new CopyOnWriteArrayList<>();
 
@@ -67,13 +67,13 @@ public class TradeChatSession extends ChatSession {
                             boolean isClient,
                             boolean isBuyer,
                             TradeManager tradeManager,
-                            ChatManager chatManager) {
+                            SupportManager supportManager) {
         super(SupportType.TRADE);
         this.trade = trade;
         this.isClient = isClient;
         this.isBuyer = isBuyer;
         this.tradeManager = tradeManager;
-        this.chatManager = chatManager;
+        this.supportManager = supportManager;
     }
 
     public void addDisputeStateListener(DisputeStateListener disputeStateListener) {
@@ -165,7 +165,7 @@ public class TradeChatSession extends ChatSession {
         if (message.getSupportType() == SupportType.ARBITRATION) {
             if (message instanceof ChatMessage) {
                 if (((ChatMessage) message).getSupportType() == SupportType.TRADE) {
-                    chatManager.onDisputeDirectMessage((ChatMessage) message);
+                    supportManager.onDisputeDirectMessage((ChatMessage) message);
                 }
                 // We ignore dispute messages
             } else if (message instanceof DisputeResultMessage) {

@@ -332,14 +332,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         TradeManager tradeManager = model.dataModel.tradeManager;
         if (trade.getCommunicationMessages().isEmpty()) {
-            ((TradeChatSession) tradeManager.getChatManager().getChatSession()).addSystemMsg(trade);
+            ((TradeChatSession) tradeManager.getSupportManager().getSupportSession()).addSystemMsg(trade);
         }
 
         trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
 
-        Chat tradeChat = new Chat(tradeManager.getChatManager(), formatter);
+        Chat tradeChat = new Chat(tradeManager.getSupportManager(), formatter);
         tradeChat.setAllowAttachments(false);
         tradeChat.setDisplayHeader(false);
         tradeChat.initialize();
@@ -357,7 +357,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 isTaker,
                 isBuyer,
                 tradeManager,
-                tradeManager.getChatManager());
+                tradeManager.getSupportManager());
 
         disputeStateListener = tradeId -> {
             if (trade.getId().equals(tradeId)) {

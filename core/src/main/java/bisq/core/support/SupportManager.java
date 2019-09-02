@@ -45,23 +45,23 @@ import lombok.Setter;
 
 import javax.annotation.Nullable;
 
-public class ChatManager {
-    private static final Logger log = LoggerFactory.getLogger(ChatManager.class);
+public class SupportManager {
+    private static final Logger log = LoggerFactory.getLogger(SupportManager.class);
 
     @Getter
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     @Setter
     @Getter
-    private ChatSession chatSession;
+    private SupportSession supportSession;
     private final Map<String, Timer> delayMsgMap = new HashMap<>();
 
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private boolean allServicesInitialized;
 
-    public ChatManager(P2PService p2PService,
-                       WalletsSetup walletsSetup
+    public SupportManager(P2PService p2PService,
+                          WalletsSetup walletsSetup
     ) {
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -97,7 +97,7 @@ public class ChatManager {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             if (networkEnvelope instanceof SupportMessage) {
-                chatSession.dispatchMessage((SupportMessage) networkEnvelope);
+                supportSession.dispatchMessage((SupportMessage) networkEnvelope);
             } else if (networkEnvelope instanceof AckMessage) {
                 processAckMessage((AckMessage) networkEnvelope, null);
             }
@@ -108,7 +108,7 @@ public class ChatManager {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
             if (networkEnvelope instanceof SupportMessage) {
-                chatSession.dispatchMessage((SupportMessage) networkEnvelope);
+                supportSession.dispatchMessage((SupportMessage) networkEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             } else if (networkEnvelope instanceof AckMessage) {
                 processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
@@ -120,7 +120,7 @@ public class ChatManager {
     public void onDisputeDirectMessage(ChatMessage chatMessage) {
         final String tradeId = chatMessage.getTradeId();
         final String uid = chatMessage.getUid();
-        boolean channelOpen = chatSession.channelOpen(chatMessage);
+        boolean channelOpen = supportSession.channelOpen(chatMessage);
         if (!channelOpen) {
             log.debug("We got a chatMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
@@ -134,9 +134,9 @@ public class ChatManager {
         }
 
         cleanupRetryMap(uid);
-        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(chatMessage);
+        PubKeyRing receiverPubKeyRing = supportSession.getPeerPubKeyRing(chatMessage);
 
-        chatSession.storeChatMessage(chatMessage);
+        supportSession.storeChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
@@ -155,14 +155,14 @@ public class ChatManager {
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
             }
 
-            chatSession.getChatMessages()
+            supportSession.getChatMessages()
                     .forEach(msg -> {
                         if (ackMessage.isSuccess())
                             msg.setAcknowledged(true);
                         else
                             msg.setAckError(ackMessage.getErrorMessage());
                     });
-            chatSession.persist();
+            supportSession.persist();
 
             if (decryptedMessageWithPubKey != null)
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);

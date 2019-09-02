@@ -15,14 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.messages;
+package bisq.core.support.dispute.arbitration.messages;
 
 import bisq.core.support.SupportType;
-import bisq.core.support.messages.SupportMessage;
+import bisq.core.support.dispute.messages.DisputeMessage;
 
-public abstract class DisputeChatMessage extends SupportMessage {
-
-    public DisputeChatMessage(int messageVersion, String uid, SupportType supportType) {
+public abstract class ArbitrationMessage extends DisputeMessage {
+    ArbitrationMessage(int messageVersion, String uid, SupportType supportType) {
         super(messageVersion, uid, supportType);
     }
 }

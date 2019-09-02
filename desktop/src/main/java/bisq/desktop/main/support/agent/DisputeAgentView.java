@@ -29,7 +29,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeChatSession;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.trade.TradeManager;
@@ -101,7 +101,7 @@ public abstract class DisputeAgentView extends DisputeView {
             closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
             closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
         }
-        DisputeChatSession chatSession = getConcreteDisputeChatSession(dispute);
+        DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
         disputeChat.display(chatSession, closeDisputeButton, root.widthProperty());
     }
 }
