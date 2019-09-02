@@ -61,7 +61,8 @@ import javax.annotation.Nullable;
 public final class DisputeCommunicationMessage extends DisputeMessage {
 
     public enum Type {
-        DISPUTE,
+        MEDIATION,
+        ARBITRATION,
         TRADE;
 
         public static DisputeCommunicationMessage.Type fromProto(
