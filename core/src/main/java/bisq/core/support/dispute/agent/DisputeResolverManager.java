@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute;
+package bisq.core.support.dispute.agent;
 
 import bisq.core.filter.FilterManager;
 import bisq.core.user.User;

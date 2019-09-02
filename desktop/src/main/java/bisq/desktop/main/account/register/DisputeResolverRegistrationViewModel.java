@@ -20,9 +20,9 @@ package bisq.desktop.main.account.register;
 import bisq.desktop.common.model.ActivatableViewModel;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.support.dispute.DisputeResolver;
-import bisq.core.support.dispute.DisputeResolverManager;
 import bisq.core.locale.LanguageUtil;
+import bisq.core.support.dispute.agent.DisputeResolver;
+import bisq.core.support.dispute.agent.DisputeResolverManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
