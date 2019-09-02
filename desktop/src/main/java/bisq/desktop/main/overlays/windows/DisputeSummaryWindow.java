@@ -30,8 +30,10 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.DisputeResult;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
@@ -81,6 +83,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private final BSFormatter formatter;
     private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final MediationDisputeManager mediationDisputeManager;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
@@ -112,11 +115,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     @Inject
     public DisputeSummaryWindow(BSFormatter formatter,
                                 ArbitrationDisputeManager arbitrationDisputeManager,
+                                MediationDisputeManager mediationDisputeManager,
                                 BtcWalletService walletService,
                                 TradeWalletService tradeWalletService) {
 
         this.formatter = formatter;
         this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.mediationDisputeManager = mediationDisputeManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
 
@@ -185,7 +190,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         else
             disputeResult = dispute.getDisputeResultProperty().get();
 
-        peersDisputeOptional = arbitrationDisputeManager.getDisputesAsObservableList().stream()
+        peersDisputeOptional = getDisputeManager(dispute).getDisputesAsObservableList().stream()
                 .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId())
                 .findFirst();
 
@@ -577,7 +582,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                     disputeResult.summaryNotesProperty().get());
 
-            arbitrationDisputeManager.sendDisputeResultMessage(disputeResult, dispute, text);
+            getDisputeManager(dispute).sendDisputeResultMessage(disputeResult, dispute, text);
 
             if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed()) {
                 UserThread.runAfter(() -> new Popup<>()
@@ -597,6 +602,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             dispute.setDisputeResult(disputeResult);
             hide();
         });
+    }
+
+    private DisputeManager getDisputeManager(Dispute dispute) {
+        return dispute.isMediationDispute() ? mediationDisputeManager : arbitrationDisputeManager;
     }
 
 

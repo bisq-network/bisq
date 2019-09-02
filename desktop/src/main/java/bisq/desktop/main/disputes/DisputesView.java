@@ -32,6 +32,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.arbitration.Arbitrator;
 import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.dispute.mediator.Mediator;
 import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.locale.Res;
@@ -68,6 +69,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final MediationDisputeManager mediationDisputeManager;
     private final KeyRing keyRing;
 
     private Navigation.Listener navigationListener;
@@ -83,12 +85,14 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
                         ArbitrationDisputeManager arbitrationDisputeManager,
+                        MediationDisputeManager mediationDisputeManager,
                         KeyRing keyRing) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.mediationDisputeManager = mediationDisputeManager;
         this.keyRing = keyRing;
     }
 
@@ -122,10 +126,15 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         if (isActiveArbitrator)
             checkArgument(!isActiveMediator, "We do not support that arbitrators are mediators as well");
 
+        // In case a arbitrator or mediator has become inactive he still might get disputes from pending trades
         boolean hasDisputesAsArbitrator = arbitrationDisputeManager.getDisputesAsObservableList().stream()
                 .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
+        boolean hasDisputesAsMediator = mediationDisputeManager.getDisputesAsObservableList().stream()
+                .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
 
-        if (disputeResolversDisputesTab == null && (isActiveArbitrator || isActiveMediator || hasDisputesAsArbitrator)) {
+        boolean isActive = isActiveArbitrator || isActiveMediator;
+        boolean hasReceivedDisputes = hasDisputesAsArbitrator || hasDisputesAsMediator;
+        if (disputeResolversDisputesTab == null && (isActive || hasReceivedDisputes)) {
             disputeResolversDisputesTab = new Tab();
             disputeResolversDisputesTab.setClosable(false);
             root.getTabs().add(disputeResolversDisputesTab);

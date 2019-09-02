@@ -25,6 +25,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
@@ -35,6 +36,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 
 import com.google.inject.Inject;
 
@@ -79,6 +81,7 @@ public class NotificationCenter {
 
     private final TradeManager tradeManager;
     private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final MediationDisputeManager mediationDisputeManager;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -93,10 +96,12 @@ public class NotificationCenter {
     @Inject
     public NotificationCenter(TradeManager tradeManager,
                               ArbitrationDisputeManager arbitrationDisputeManager,
+                              MediationDisputeManager mediationDisputeManager,
                               Preferences preferences,
                               Navigation navigation) {
         this.tradeManager = tradeManager;
         this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.mediationDisputeManager = mediationDisputeManager;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -238,7 +243,28 @@ public class NotificationCenter {
                 case DISPUTE_CLOSED:
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
-                //TODO
+                default:
+                    if (DevEnv.isDevMode())
+                        throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
+                    break;
+            }
+            if (message != null) {
+                Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
+                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
+                    notification.actionButtonTextWithGoTo("navigation.support")
+                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
+                            .show();
+                } else {
+                    notification.show();
+                }
+            }
+        }
+        if (mediationDisputeManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = mediationDisputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+                    Res.get("shared.supportTicket") :
+                    Res.get("shared.dispute");
+            switch (disputeState) {
+                // TODO
                 case MEDIATION_REQUESTED:
                     break;
                 case MEDIATION_STARTED_BY_PEER:
@@ -246,6 +272,10 @@ public class NotificationCenter {
                     break;
                 case MEDIATION_CLOSED:
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
+                    break;
+                default:
+                    if (DevEnv.isDevMode())
+                        throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
                     break;
             }
             if (message != null) {

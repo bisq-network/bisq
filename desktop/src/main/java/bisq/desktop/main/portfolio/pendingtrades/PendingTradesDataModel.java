@@ -31,7 +31,9 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dispute.Dispute;
 import bisq.core.dispute.DisputeAlreadyOpenException;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -83,6 +85,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final BtcWalletService btcWalletService;
     private final KeyRing keyRing;
     public final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final MediationDisputeManager mediationDisputeManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     @Getter
@@ -111,6 +114,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   BtcWalletService btcWalletService,
                                   KeyRing keyRing,
                                   ArbitrationDisputeManager arbitrationDisputeManager,
+                                  MediationDisputeManager mediationDisputeManager,
                                   Preferences preferences,
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
@@ -122,6 +126,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.btcWalletService = btcWalletService;
         this.keyRing = keyRing;
         this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.mediationDisputeManager = mediationDisputeManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -505,7 +510,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
-            Dispute dispute = new Dispute(arbitrationDisputeManager.getDisputeStorage(),
+            boolean isMediationDispute = true;
+            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -523,7 +529,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getTakerContractSignature(),
                     mediatorPubKeyRing,
                     isSupportTicket,
-                    true);
+                    isMediationDispute);
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false);
@@ -533,7 +539,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
-            Dispute dispute = new Dispute(arbitrationDisputeManager.getDisputeStorage(),
+            boolean isMediationDispute = false;
+            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getDisputeStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -551,7 +558,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getTakerContractSignature(),
                     arbitratorPubKeyRing,
                     isSupportTicket,
-                    false);
+                    isMediationDispute);
 
             trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false);
@@ -561,7 +568,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
-        arbitrationDisputeManager.sendOpenNewDisputeMessage(dispute,
+        getDisputeManager(dispute.isMediationDispute()).sendOpenNewDisputeMessage(dispute,
                 reOpen,
                 () -> navigation.navigateTo(MainView.class, DisputesView.class),
                 (errorMessage, throwable) -> {
@@ -576,6 +583,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         new Popup<>().warning(errorMessage).show();
                     }
                 });
+    }
+
+    private DisputeManager getDisputeManager(boolean isMediationDispute) {
+        return isMediationDispute ? mediationDisputeManager : arbitrationDisputeManager;
     }
 }
 

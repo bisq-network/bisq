@@ -34,6 +34,7 @@ import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -133,6 +134,7 @@ public class BisqSetup {
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final MediationDisputeManager mediationDisputeManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
@@ -213,6 +215,7 @@ public class BisqSetup {
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      ArbitrationDisputeManager arbitrationDisputeManager,
+                     MediationDisputeManager mediationDisputeManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
@@ -255,6 +258,7 @@ public class BisqSetup {
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.mediationDisputeManager = mediationDisputeManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
@@ -619,6 +623,7 @@ public class BisqSetup {
         tradeLimits.onAllServicesInitialized();
 
         arbitrationDisputeManager.onAllServicesInitialized();
+        mediationDisputeManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
 
