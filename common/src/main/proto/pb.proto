@@ -283,8 +283,9 @@ message PeerOpenedDisputeMessage {
 
 message DisputeCommunicationMessage {
     enum Type {
-        DISPUTE = 0;
-        TRADE = 1;
+        MEDIATION = 0;
+        ARBITRATION = 1;
+        TRADE = 2;
     }
     int64 date = 1;
     string trade_id = 2;

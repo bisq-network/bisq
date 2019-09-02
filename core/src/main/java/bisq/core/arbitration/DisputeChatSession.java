@@ -50,7 +50,7 @@ public class DisputeChatSession extends ChatSession {
 
     public DisputeChatSession(@Nullable Dispute dispute,
                               DisputeManager disputeManager) {
-        super(DisputeCommunicationMessage.Type.DISPUTE);
+        super(DisputeCommunicationMessage.Type.ARBITRATION);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
     }
@@ -136,7 +136,7 @@ public class DisputeChatSession extends ChatSession {
         } else if (message instanceof PeerOpenedDisputeMessage) {
             disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
         } else if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.DISPUTE) {
+            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.ARBITRATION) {
                 log.debug("Ignore non dispute type communication message");
                 return;
             }
