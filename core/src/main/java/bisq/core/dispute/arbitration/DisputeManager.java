@@ -336,7 +336,7 @@ public class DisputeManager implements PersistedDataHost {
                             disputeCommunicationMessage.setSendMessageError(errorMessage);
                             disputes.persist();
                             faultHandler.handleFault("Sending dispute message failed: " +
-                                    errorMessage, new MessageDeliveryFailedException());
+                                    errorMessage, new DisputeMessageDeliveryFailedException());
                         }
                     }
             );
