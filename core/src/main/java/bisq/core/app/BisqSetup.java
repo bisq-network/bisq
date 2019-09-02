@@ -32,8 +32,8 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
+import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.arbitration.ArbitratorManager;
-import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -132,7 +132,7 @@ public class BisqSetup {
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
-    private final DisputeManager disputeManager;
+    private final ArbitrationDisputeManager arbitrationDisputeManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
@@ -212,7 +212,7 @@ public class BisqSetup {
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
-                     DisputeManager disputeManager,
+                     ArbitrationDisputeManager arbitrationDisputeManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
@@ -254,7 +254,7 @@ public class BisqSetup {
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.disputeManager = disputeManager;
+        this.arbitrationDisputeManager = arbitrationDisputeManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
@@ -618,7 +618,7 @@ public class BisqSetup {
 
         tradeLimits.onAllServicesInitialized();
 
-        disputeManager.onAllServicesInitialized();
+        arbitrationDisputeManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
 

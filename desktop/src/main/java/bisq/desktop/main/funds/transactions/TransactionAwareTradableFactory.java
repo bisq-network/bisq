@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
@@ -27,18 +27,18 @@ import javax.inject.Singleton;
 
 @Singleton
 public class TransactionAwareTradableFactory {
-    private final DisputeManager disputeManager;
+    private final ArbitrationDisputeManager arbitrationDisputeManager;
 
     @Inject
-    TransactionAwareTradableFactory(DisputeManager disputeManager) {
-        this.disputeManager = disputeManager;
+    TransactionAwareTradableFactory(ArbitrationDisputeManager arbitrationDisputeManager) {
+        this.arbitrationDisputeManager = arbitrationDisputeManager;
     }
 
     TransactionAwareTradable create(Tradable delegate) {
         if (delegate instanceof OpenOffer) {
             return new TransactionAwareOpenOffer((OpenOffer) delegate);
         } else if (delegate instanceof Trade) {
-            return new TransactionAwareTrade((Trade) delegate, disputeManager);
+            return new TransactionAwareTrade((Trade) delegate, arbitrationDisputeManager);
         } else {
             return new DummyTransactionAwareTradable(delegate);
         }

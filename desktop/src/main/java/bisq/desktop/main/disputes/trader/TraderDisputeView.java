@@ -37,7 +37,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.dispute.Dispute;
 import bisq.core.dispute.DisputeChatSession;
-import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.trade.Contract;
@@ -105,7 +105,7 @@ import lombok.Getter;
 @FxmlView
 public class TraderDisputeView extends ActivatableView<VBox, Void> {
 
-    private final DisputeManager disputeManager;
+    private final ArbitrationDisputeManager arbitrationDisputeManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final BSFormatter formatter;
@@ -140,7 +140,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager disputeManager,
+    public TraderDisputeView(ArbitrationDisputeManager arbitrationDisputeManager,
                              KeyRing keyRing,
                              TradeManager tradeManager,
                              BSFormatter formatter,
@@ -150,7 +150,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                              TradeDetailsWindow tradeDetailsWindow,
                              AccountAgeWitnessService accountAgeWitnessService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        this.disputeManager = disputeManager;
+        this.arbitrationDisputeManager = arbitrationDisputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
         this.formatter = formatter;
@@ -230,7 +230,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
                 Map<String, List<Dispute>> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> {
+                arbitrationDisputeManager.getDisputesAsObservableList().forEach(dispute -> {
                     String tradeId = dispute.getTradeId();
                     List<Dispute> list;
                     if (!map.containsKey(tradeId))
@@ -313,16 +313,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             }
         };
 
-        disputeChat = new Chat(disputeManager.getChatManager(), formatter);
+        disputeChat = new Chat(arbitrationDisputeManager.getChatManager(), formatter);
         disputeChat.initialize();
     }
 
     @Override
     protected void activate() {
         filterTextField.textProperty().addListener(filterTextFieldListener);
-        disputeManager.cleanupDisputes();
+        arbitrationDisputeManager.cleanupDisputes();
 
-        filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
+        filteredList = new FilteredList<>(arbitrationDisputeManager.getDisputesAsObservableList());
         applyFilteredListPredicate(filterTextField.getText());
 
         sortedList = new SortedList<>(filteredList);
@@ -360,7 +360,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                 startDate = new Date(0); // print all from start
 
                 HashMap<String, Dispute> map = new HashMap<>();
-                disputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
+                arbitrationDisputeManager.getDisputesAsObservableList().forEach(dispute -> map.put(dispute.getDepositTxId(), dispute));
 
                 final Date finalStartDate = startDate;
                 List<Dispute> disputes = new ArrayList<>(map.values());
@@ -446,11 +446,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             this.selectedDispute = dispute;
             if (disputeChat != null) {
                 Button closeDisputeButton = null;
-                if (!dispute.isClosed() && !disputeManager.isTrader(dispute)) {
+                if (!dispute.isClosed() && !arbitrationDisputeManager.isTrader(dispute)) {
                     closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
                     closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
                 }
-                disputeChat.display(new DisputeChatSession(dispute, disputeManager), closeDisputeButton,
+                disputeChat.display(new DisputeChatSession(dispute, arbitrationDisputeManager), closeDisputeButton,
                         root.widthProperty()
                 );
             }
@@ -687,7 +687,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (contract != null) {
             NodeAddress buyerNodeAddress = contract.getBuyerNodeAddress();
             if (buyerNodeAddress != null) {
-                String nrOfDisputes = disputeManager.getNrOfDisputes(true, contract);
+                String nrOfDisputes = arbitrationDisputeManager.getNrOfDisputes(true, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
                 String age = formatter.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
@@ -704,7 +704,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         if (contract != null) {
             NodeAddress sellerNodeAddress = contract.getSellerNodeAddress();
             if (sellerNodeAddress != null) {
-                String nrOfDisputes = disputeManager.getNrOfDisputes(false, contract);
+                String nrOfDisputes = arbitrationDisputeManager.getNrOfDisputes(false, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
                 String age = formatter.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";

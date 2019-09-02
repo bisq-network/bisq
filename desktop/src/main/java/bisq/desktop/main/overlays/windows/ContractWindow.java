@@ -24,7 +24,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dispute.Dispute;
-import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -66,7 +66,7 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
-    private final DisputeManager disputeManager;
+    private final ArbitrationDisputeManager arbitrationDisputeManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private Dispute dispute;
@@ -77,9 +77,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, AccountAgeWitnessService accountAgeWitnessService,
+    public ContractWindow(ArbitrationDisputeManager arbitrationDisputeManager,
+                          AccountAgeWitnessService accountAgeWitnessService,
                           BSFormatter formatter) {
-        this.disputeManager = disputeManager;
+        this.arbitrationDisputeManager = arbitrationDisputeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
         type = Type.Confirmation;
@@ -162,7 +163,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                         getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing(), offer.getCurrencyCode()));
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
-                disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+                arbitrationDisputeManager.getNrOfDisputes(true, contract) + " / " + arbitrationDisputeManager.getNrOfDisputes(false, contract));
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);

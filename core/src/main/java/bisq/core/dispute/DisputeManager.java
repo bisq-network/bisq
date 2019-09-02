@@ -59,8 +59,6 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
-import com.google.inject.Inject;
-
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -87,7 +85,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class DisputeManager implements PersistedDataHost {
+public abstract class DisputeManager implements PersistedDataHost {
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService walletService;
     private final WalletsSetup walletsSetup;
@@ -114,7 +112,6 @@ public class DisputeManager implements PersistedDataHost {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public DisputeManager(P2PService p2PService,
                           TradeWalletService tradeWalletService,
                           BtcWalletService walletService,

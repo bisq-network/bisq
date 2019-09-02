@@ -24,7 +24,7 @@ import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
-import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
@@ -78,7 +78,7 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final TradeManager tradeManager;
-    private final DisputeManager disputeManager;
+    private final ArbitrationDisputeManager arbitrationDisputeManager;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -91,9 +91,12 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public NotificationCenter(TradeManager tradeManager, DisputeManager disputeManager, Preferences preferences, Navigation navigation) {
+    public NotificationCenter(TradeManager tradeManager,
+                              ArbitrationDisputeManager arbitrationDisputeManager,
+                              Preferences preferences,
+                              Navigation navigation) {
         this.tradeManager = tradeManager;
-        this.disputeManager = disputeManager;
+        this.arbitrationDisputeManager = arbitrationDisputeManager;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -220,8 +223,8 @@ public class NotificationCenter {
 
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
         String message = null;
-        if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
-            String disputeOrTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+        if (arbitrationDisputeManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = arbitrationDisputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
                     Res.get("shared.dispute");
             switch (disputeState) {

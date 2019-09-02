@@ -26,7 +26,7 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -40,7 +40,7 @@ import javax.inject.Inject;
 public class DisputeResolverView extends TraderDisputeView {
 
     @Inject
-    public DisputeResolverView(DisputeManager disputeManager,
+    public DisputeResolverView(ArbitrationDisputeManager arbitrationDisputeManager,
                                KeyRing keyRing,
                                TradeManager tradeManager,
                                BSFormatter formatter,
@@ -50,7 +50,7 @@ public class DisputeResolverView extends TraderDisputeView {
                                TradeDetailsWindow tradeDetailsWindow,
                                AccountAgeWitnessService accountAgeWitnessService,
                                @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(disputeManager,
+        super(arbitrationDisputeManager,
                 keyRing,
                 tradeManager,
                 formatter,

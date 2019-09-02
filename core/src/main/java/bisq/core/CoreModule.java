@@ -90,7 +90,7 @@ public class CoreModule extends AppModule {
         // ordering is used for shut down sequence
         install(tradeModule());
         install(encryptionServiceModule());
-        install(arbitratorModule());
+        install(disputeModule());
         install(offerModule());
         install(p2pModule());
         install(bitcoinModule());
@@ -109,7 +109,7 @@ public class CoreModule extends AppModule {
         return new EncryptionServiceModule(environment);
     }
 
-    private DisputeModule arbitratorModule() {
+    private DisputeModule disputeModule() {
         return new DisputeModule(environment);
     }
 
