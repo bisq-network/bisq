@@ -23,7 +23,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
-import bisq.desktop.main.support.DisputesView;
+import bisq.desktop.main.support.SupportView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -570,7 +570,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
         getDisputeManager(dispute.isMediationDispute()).sendOpenNewDisputeMessage(dispute,
                 reOpen,
-                () -> navigation.navigateTo(MainView.class, DisputesView.class),
+                () -> navigation.navigateTo(MainView.class, SupportView.class),
                 (errorMessage, throwable) -> {
                     if ((throwable instanceof DisputeAlreadyOpenException)) {
                         errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");

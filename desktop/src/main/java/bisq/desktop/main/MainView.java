@@ -36,7 +36,7 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
-import bisq.desktop.main.support.DisputesView;
+import bisq.desktop.main.support.SupportView;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
@@ -179,7 +179,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio").toUpperCase());
         ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds").toUpperCase());
 
-        ToggleButton disputesButton = new NavButton(DisputesView.class, Res.get("mainView.menu.support"));
+        ToggleButton disputesButton = new NavButton(SupportView.class, Res.get("mainView.menu.support"));
         ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
