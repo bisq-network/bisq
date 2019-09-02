@@ -17,8 +17,8 @@
 
 package bisq.core.notifications.alerts;
 
-import bisq.core.dispute.arbitration.Dispute;
-import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileMessage;

@@ -17,8 +17,6 @@
 
 package bisq.core.dispute;
 
-import bisq.core.dispute.arbitration.DisputeManager;
-
 import bisq.common.app.AppModule;
 
 import org.springframework.core.env.Environment;

@@ -24,7 +24,7 @@ import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
-import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
