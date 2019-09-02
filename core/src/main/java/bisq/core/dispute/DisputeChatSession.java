@@ -18,12 +18,12 @@
 package bisq.core.dispute;
 
 import bisq.core.chat.ChatSession;
-import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
-import bisq.core.dispute.arbitration.messages.DisputeMessage;
-import bisq.core.dispute.arbitration.messages.DisputeResultMessage;
-import bisq.core.dispute.arbitration.messages.OpenNewDisputeMessage;
-import bisq.core.dispute.arbitration.messages.PeerOpenedDisputeMessage;
-import bisq.core.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
+import bisq.core.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.dispute.messages.DisputeMessage;
+import bisq.core.dispute.messages.DisputeResultMessage;
+import bisq.core.dispute.messages.OpenNewDisputeMessage;
+import bisq.core.dispute.messages.PeerOpenedDisputeMessage;
+import bisq.core.dispute.messages.PeerPublishedDisputePayoutTxMessage;
 
 import bisq.network.p2p.NodeAddress;
 

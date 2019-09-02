@@ -26,12 +26,12 @@ import bisq.desktop.main.Chat.Chat;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.CssTheme;
+import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeChatSession;
