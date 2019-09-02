@@ -26,8 +26,8 @@ import bisq.desktop.main.support.trader.TradersDisputeView;
 import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
 
-import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.dispute.mediator.MediationDisputeManager;
+import bisq.core.support.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.mediator.MediationDisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;

@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.core.dispute.Dispute;
-import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.Dispute;
+import bisq.core.support.arbitration.ArbitrationDisputeManager;
 import bisq.core.trade.Trade;
 
 import org.bitcoinj.core.Transaction;

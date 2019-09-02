@@ -17,7 +17,7 @@
 
 package bisq.core.offer.availability;
 
-import bisq.core.dispute.mediator.MediatorManager;
+import bisq.core.support.mediator.MediatorManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.trade.statistics.TradeStatisticsManager;

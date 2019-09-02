@@ -20,7 +20,7 @@ package bisq.desktop.main.settings.preferences;
 
 import bisq.desktop.common.model.ActivatableViewModel;
 
-import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.support.arbitration.ArbitratorManager;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.user.Preferences;
 
