@@ -42,7 +42,7 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.mediator.Mediator;
+import bisq.core.support.dispute.mediation.Mediator;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;

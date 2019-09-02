@@ -33,7 +33,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.mediator.Mediator;
+import bisq.core.support.dispute.mediation.Mediator;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 

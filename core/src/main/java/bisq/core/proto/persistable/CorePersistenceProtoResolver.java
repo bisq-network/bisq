@@ -34,7 +34,7 @@ import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
-import bisq.core.support.dispute.mediator.MediationDisputeList;
+import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.TradableList;

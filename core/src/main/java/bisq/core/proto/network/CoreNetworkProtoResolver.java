@@ -40,7 +40,7 @@ import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
-import bisq.core.support.dispute.mediator.Mediator;
+import bisq.core.support.dispute.mediation.Mediator;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;

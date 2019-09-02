@@ -22,7 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.account.register.DisputeResolverRegistrationView;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.support.dispute.mediator.Mediator;
+import bisq.core.support.dispute.mediation.Mediator;
 import bisq.core.locale.Res;
 
 import com.google.inject.name.Named;

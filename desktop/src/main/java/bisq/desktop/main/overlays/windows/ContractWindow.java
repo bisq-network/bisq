@@ -27,7 +27,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediator.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationDisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
