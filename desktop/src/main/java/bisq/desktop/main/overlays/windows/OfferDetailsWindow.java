@@ -24,8 +24,8 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
-import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.mediator.Mediator;
+import bisq.core.support.arbitration.Arbitrator;
+import bisq.core.support.mediator.Mediator;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;

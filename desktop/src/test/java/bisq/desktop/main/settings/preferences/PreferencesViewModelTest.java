@@ -19,8 +19,8 @@ package bisq.desktop.main.settings.preferences;
 
 import bisq.desktop.maker.PreferenceMakers;
 
-import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.support.arbitration.Arbitrator;
+import bisq.core.support.arbitration.ArbitratorManager;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;

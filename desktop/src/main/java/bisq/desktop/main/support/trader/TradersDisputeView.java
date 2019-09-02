@@ -25,10 +25,10 @@ import bisq.desktop.main.support.DisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.dispute.Dispute;
-import bisq.core.dispute.DisputeChatSession;
-import bisq.core.dispute.DisputeList;
-import bisq.core.dispute.DisputeManager;
+import bisq.core.support.Dispute;
+import bisq.core.support.DisputeChatSession;
+import bisq.core.support.DisputeList;
+import bisq.core.support.DisputeManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 

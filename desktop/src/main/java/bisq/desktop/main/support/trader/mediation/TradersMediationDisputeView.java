@@ -26,11 +26,11 @@ import bisq.desktop.main.support.trader.TradersDisputeView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.dispute.Dispute;
-import bisq.core.dispute.DisputeChatSession;
-import bisq.core.dispute.mediator.MediationChatSession;
-import bisq.core.dispute.mediator.MediationDisputeManager;
-import bisq.core.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.Dispute;
+import bisq.core.support.DisputeChatSession;
+import bisq.core.support.mediator.MediationChatSession;
+import bisq.core.support.mediator.MediationDisputeManager;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 

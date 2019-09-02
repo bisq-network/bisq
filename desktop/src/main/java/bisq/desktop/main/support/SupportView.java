@@ -31,12 +31,12 @@ import bisq.desktop.main.support.disputeresolver.mediation.MediatorView;
 import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
 
-import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.arbitration.ArbitratorManager;
-import bisq.core.dispute.mediator.MediationDisputeManager;
-import bisq.core.dispute.mediator.Mediator;
-import bisq.core.dispute.mediator.MediatorManager;
+import bisq.core.support.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.arbitration.Arbitrator;
+import bisq.core.support.arbitration.ArbitratorManager;
+import bisq.core.support.mediator.MediationDisputeManager;
+import bisq.core.support.mediator.Mediator;
+import bisq.core.support.mediator.MediatorManager;
 import bisq.core.locale.Res;
 
 import bisq.network.p2p.NodeAddress;

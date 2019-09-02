@@ -21,8 +21,8 @@ import bisq.desktop.main.account.register.DisputeResolverRegistrationViewModel;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dispute.arbitration.Arbitrator;
-import bisq.core.dispute.arbitration.ArbitratorManager;
+import bisq.core.support.arbitration.Arbitrator;
+import bisq.core.support.arbitration.ArbitratorManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;

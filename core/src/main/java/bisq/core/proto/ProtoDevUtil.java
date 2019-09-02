@@ -18,7 +18,7 @@
 package bisq.core.proto;
 
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.dispute.DisputeResult;
+import bisq.core.support.DisputeResult;
 import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
