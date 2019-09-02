@@ -204,6 +204,7 @@ public final class ChatMessage extends DisputeMessage {
         notifyChangeListener();
     }
 
+    // We cannot rename protobuf definition because it would break backward compatibility
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
