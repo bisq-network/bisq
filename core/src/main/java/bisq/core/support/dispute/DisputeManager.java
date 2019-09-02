@@ -583,7 +583,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             log.error(errorMessage);
         }
 
-        // We use the DisputeCommunicationMessage not the openNewDisputeMessage for the ACK
+        // We use the ChatMessage not the openNewDisputeMessage for the ACK
         ObservableList<ChatMessage> messages = openNewDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);
@@ -624,7 +624,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             log.error(errorMessage);
         }
 
-        // We use the DisputeCommunicationMessage not the peerOpenedDisputeMessage for the ACK
+        // We use the ChatMessage not the peerOpenedDisputeMessage for the ACK
         ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);

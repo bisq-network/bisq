@@ -343,7 +343,7 @@ public final class ChatMessage extends TradeChatMessage {
 
     @Override
     public String toString() {
-        return "DisputeCommunicationMessage{" +
+        return "ChatMessage{" +
                 "\n     type='" + type + '\'' +
                 ",\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
@@ -355,7 +355,7 @@ public final class ChatMessage extends TradeChatMessage {
                 ",\n     isSystemMessage=" + isSystemMessage +
                 ",\n     arrivedProperty=" + arrivedProperty +
                 ",\n     storedInMailboxProperty=" + storedInMailboxProperty +
-                ",\n     DisputeCommunicationMessage.uid='" + uid + '\'' +
+                ",\n     ChatMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +
                 ",\n     sendMessageErrorProperty=" + sendMessageErrorProperty +

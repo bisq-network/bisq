@@ -51,7 +51,7 @@ public abstract class ChatSession {
 
     abstract public void persist();
 
-    abstract public ObservableList<ChatMessage> getDisputeCommunicationMessages();
+    abstract public ObservableList<ChatMessage> getObservableChatMessageList();
 
     abstract public List<ChatMessage> getChatMessages();
 
@@ -65,5 +65,5 @@ public abstract class ChatSession {
 
     abstract public boolean channelOpen(ChatMessage message);
 
-    abstract public void storeDisputeCommunicationMessage(ChatMessage message);
+    abstract public void storeChatMessage(ChatMessage message);
 }

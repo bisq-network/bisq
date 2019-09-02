@@ -189,7 +189,7 @@ public class Chat extends AnchorPane {
         AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
         AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-        chatMessages = chatSession.getDisputeCommunicationMessages();
+        chatMessages = chatSession.getObservableChatMessageList();
         SortedList<ChatMessage> sortedList = new SortedList<>(chatMessages);
         sortedList.setComparator(Comparator.comparing(o -> new Date(o.getDate())));
         messageListView = new ListView<>(sortedList);
