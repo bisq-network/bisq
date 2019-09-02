@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.support.disputeresolvers;
+package bisq.desktop.main.support.disputeresolver;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
