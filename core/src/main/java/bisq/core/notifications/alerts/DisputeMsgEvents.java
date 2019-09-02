@@ -70,16 +70,16 @@ public class DisputeMsgEvents {
             log.debug("We got a ChatMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
             c.next();
             if (c.wasAdded()) {
-                c.getAddedSubList().forEach(this::setDisputeCommunicationMessage);
+                c.getAddedSubList().forEach(this::setChatMessage);
             }
         });
 
         //TODO test
         if (!dispute.getChatMessages().isEmpty())
-            setDisputeCommunicationMessage(dispute.getChatMessages().get(0));
+            setChatMessage(dispute.getChatMessages().get(0));
     }
 
-    private void setDisputeCommunicationMessage(ChatMessage disputeMsg) {
+    private void setChatMessage(ChatMessage disputeMsg) {
         // TODO we need to prevent to send msg for old dispute messages again at restart
         // Maybe we need a new property in DisputeCommunicationMessage
         // As key is not set in initial iterations it seems we don't need an extra handling.

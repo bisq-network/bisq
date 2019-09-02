@@ -21,10 +21,6 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.support.dispute.arbitration.Arbitrator;
-import bisq.core.support.dispute.arbitration.ArbitratorManager;
-import bisq.core.support.dispute.mediator.Mediator;
-import bisq.core.support.messages.ChatMessage;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
@@ -34,6 +30,10 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.Arbitrator;
+import bisq.core.support.dispute.arbitration.ArbitratorManager;
+import bisq.core.support.dispute.mediator.Mediator;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -616,7 +616,7 @@ public abstract class Trade implements Tradable, Model {
             communicationMessages.add(chatMessage);
             storage.queueUpForSave();
         } else {
-            log.error("Trade DisputeCommunicationMessage already exists");
+            log.error("Trade ChatMessage already exists");
         }
     }
 
