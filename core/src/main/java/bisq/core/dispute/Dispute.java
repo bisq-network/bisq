@@ -260,7 +260,7 @@ public final class Dispute implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void addDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
+    public void addDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
         if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
             disputeCommunicationMessages.add(disputeCommunicationMessage);
             storage.queueUpForSave();
@@ -293,7 +293,7 @@ public final class Dispute implements NetworkPayload {
             storage.queueUpForSave();
     }
 
-    void setDisputePayoutTxId(String disputePayoutTxId) {
+    public void setDisputePayoutTxId(String disputePayoutTxId) {
         boolean changed = this.disputePayoutTxId == null || !this.disputePayoutTxId.equals(disputePayoutTxId);
         this.disputePayoutTxId = disputePayoutTxId;
         if (changed)
