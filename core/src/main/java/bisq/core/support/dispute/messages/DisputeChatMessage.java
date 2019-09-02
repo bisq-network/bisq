@@ -17,9 +17,9 @@
 
 package bisq.core.support.dispute.messages;
 
-import bisq.core.support.messages.TradeChatMessage;
+import bisq.core.support.messages.SupportChatMessage;
 
-public abstract class DisputeChatMessage extends TradeChatMessage {
+public abstract class DisputeChatMessage extends SupportChatMessage {
 
     public DisputeChatMessage(int messageVersion, String uid) {
         super(messageVersion, uid);

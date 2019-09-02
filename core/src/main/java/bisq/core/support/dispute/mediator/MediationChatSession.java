@@ -25,7 +25,7 @@ import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.TradeChatMessage;
+import bisq.core.support.messages.SupportChatMessage;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +45,7 @@ public class MediationChatSession extends DisputeChatSession {
     }
 
     @Override
-    public void dispatchMessage(TradeChatMessage message) {
+    public void dispatchMessage(SupportChatMessage message) {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
