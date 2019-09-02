@@ -2,6 +2,7 @@
 
 * Update translations [translation-process.md](translation-process.md#synchronising-translations).
 * Update data stores [data-stores.md](data-stores.md#update-stores).
+* Update bitcoinj checkpoint [bitcoinj-checkpoint](bitcoinj-checkpoint.md#update-checkpoint).
 * Write release notes (see below).
 * Webpage (Prepare PR)
     * Update version number in:
