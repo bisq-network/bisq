@@ -1,0 +1,55 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.desktop.main.disputes.trader.mediation;
+
+import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.main.disputes.trader.TraderDisputeView;
+import bisq.desktop.main.overlays.windows.ContractWindow;
+import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
+import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
+import bisq.core.trade.TradeManager;
+import bisq.core.util.BSFormatter;
+
+import bisq.common.crypto.KeyRing;
+
+//todo separate class
+// will be probably only used for arbitration communication, will be renamed and the icon changed
+@FxmlView
+public class TradersMediationDisputeView extends TraderDisputeView {
+
+    public TradersMediationDisputeView(MediationDisputeManager mediationDisputeManager,
+                                       KeyRing keyRing,
+                                       TradeManager tradeManager,
+                                       BSFormatter formatter,
+                                       DisputeSummaryWindow disputeSummaryWindow,
+                                       PrivateNotificationManager privateNotificationManager,
+                                       ContractWindow contractWindow,
+                                       TradeDetailsWindow tradeDetailsWindow,
+                                       AccountAgeWitnessService accountAgeWitnessService,
+                                       boolean useDevPrivilegeKeys) {
+        super(mediationDisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
+                privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
+                useDevPrivilegeKeys);
+    }
+}
+
+
