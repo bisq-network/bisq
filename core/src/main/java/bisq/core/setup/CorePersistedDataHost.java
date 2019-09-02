@@ -27,6 +27,7 @@ import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -61,6 +62,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
         persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
         persistedDataHosts.add(injector.getInstance(ArbitrationDisputeManager.class));
+        persistedDataHosts.add(injector.getInstance(MediationDisputeManager.class));
         persistedDataHosts.add(injector.getInstance(P2PService.class));
 
         if (injector.getInstance(Key.get(Boolean.class, Names.named(DaoOptionKeys.DAO_ACTIVATED)))) {
