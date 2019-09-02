@@ -29,7 +29,7 @@ import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.Contract;
@@ -95,9 +95,9 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
     // We get that message at both peers. The dispute object is in context of the trader
     public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
-        DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
-        checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
-        if (!disputeCommunicationMessage.isMediationDispute() &&
+        ChatMessage chatMessage = disputeResult.getChatMessage();
+        checkNotNull(chatMessage, "disputeCommunicationMessage must not be null");
+        if (!chatMessage.isMediationDispute() &&
                 Arrays.equals(disputeResult.getArbitratorPubKey(),
                         walletService.getArbitratorAddressEntry().getPubKey())) {
             log.error("Arbitrator received disputeResultMessage. That must never happen.");
@@ -124,10 +124,10 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
 
         Dispute dispute = disputeOptional.get();
         cleanupRetryMap(uid);
-        if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage)) {
-            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
+        if (!dispute.getChatMessages().contains(chatMessage)) {
+            dispute.addDisputeCommunicationMessage(chatMessage);
         } else {
-            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
+            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }
         dispute.setIsClosed(true);
 
@@ -251,7 +251,7 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
         } finally {
             // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
             // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-            chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
+            chatManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
         }
     }
 

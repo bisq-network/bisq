@@ -30,7 +30,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.arbitration.ArbitrationChatSession;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -59,8 +59,8 @@ public class TradersArbitrationDisputeView extends TradersDisputeView {
     }
 
     @Override
-    protected DisputeCommunicationMessage.Type getType() {
-        return DisputeCommunicationMessage.Type.ARBITRATION;
+    protected ChatMessage.Type getType() {
+        return ChatMessage.Type.ARBITRATION;
     }
 
     @Override

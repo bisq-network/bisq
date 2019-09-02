@@ -20,7 +20,7 @@ package bisq.core.support.traderchat;
 import bisq.core.locale.Res;
 import bisq.core.support.ChatManager;
 import bisq.core.support.ChatSession;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.trade.Trade;
@@ -67,7 +67,7 @@ public class TradeChatSession extends ChatSession {
                             boolean isBuyer,
                             TradeManager tradeManager,
                             ChatManager chatManager) {
-        super(DisputeCommunicationMessage.Type.TRADE);
+        super(ChatMessage.Type.TRADE);
         this.trade = trade;
         this.isClient = isClient;
         this.isBuyer = isBuyer;
@@ -107,7 +107,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public void addDisputeCommunicationMessage(DisputeCommunicationMessage message) {
+    public void addDisputeCommunicationMessage(ChatMessage message) {
         if (trade != null)
             trade.addCommunicationMessage(message);
     }
@@ -118,7 +118,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessages() {
+    public ObservableList<ChatMessage> getDisputeCommunicationMessages() {
         return trade != null ? trade.getCommunicationMessages() : FXCollections.observableArrayList();
     }
 
@@ -128,7 +128,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public NodeAddress getPeerNodeAddress(DisputeCommunicationMessage message) {
+    public NodeAddress getPeerNodeAddress(ChatMessage message) {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade t = tradeOptional.get();
@@ -141,7 +141,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public PubKeyRing getPeerPubKeyRing(DisputeCommunicationMessage message) {
+    public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade t = tradeOptional.get();
@@ -161,9 +161,9 @@ public class TradeChatSession extends ChatSession {
     public void dispatchMessage(DisputeMessage message) {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-        if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage) message).getType() == DisputeCommunicationMessage.Type.TRADE) {
-                chatManager.onDisputeDirectMessage((DisputeCommunicationMessage) message);
+        if (message instanceof ChatMessage) {
+            if (((ChatMessage) message).getType() == ChatMessage.Type.TRADE) {
+                chatManager.onDisputeDirectMessage((ChatMessage) message);
             }
             // We ignore dispute messages
         } else if (message instanceof DisputeResultMessage) {
@@ -174,23 +174,23 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public List<DisputeCommunicationMessage> getChatMessages() {
+    public List<ChatMessage> getChatMessages() {
         return tradeManager.getTradableList().stream()
                 .flatMap(trade -> trade.getCommunicationMessages().stream())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public boolean channelOpen(DisputeCommunicationMessage message) {
+    public boolean channelOpen(ChatMessage message) {
         return tradeManager.getTradeById(message.getTradeId()).isPresent();
     }
 
     @Override
-    public void storeDisputeCommunicationMessage(DisputeCommunicationMessage message) {
+    public void storeDisputeCommunicationMessage(ChatMessage message) {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
-            ObservableList<DisputeCommunicationMessage> communicationMessages = trade.getCommunicationMessages();
+            ObservableList<ChatMessage> communicationMessages = trade.getCommunicationMessages();
             if (communicationMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 if (communicationMessages.isEmpty()) {
                     addSystemMsg(trade);
@@ -206,8 +206,8 @@ public class TradeChatSession extends ChatSession {
     public void addSystemMsg(Trade trade) {
         // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
         // by date.
-        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                DisputeCommunicationMessage.Type.TRADE,
+        ChatMessage chatMessage = new ChatMessage(
+                ChatMessage.Type.TRADE,
                 trade.getId(),
                 0,
                 false,
@@ -216,7 +216,7 @@ public class TradeChatSession extends ChatSession {
                 trade.getDate().getTime(),
                 false
         );
-        disputeCommunicationMessage.setSystemMessage(true);
-        trade.getCommunicationMessages().add(disputeCommunicationMessage);
+        chatMessage.setSystemMessage(true);
+        trade.getCommunicationMessages().add(chatMessage);
     }
 }

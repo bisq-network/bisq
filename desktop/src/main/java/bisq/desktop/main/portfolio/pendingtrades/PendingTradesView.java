@@ -32,7 +32,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -123,7 +123,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private Map<String, Button> buttonByTrade = new HashMap<>();
     private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
-    private Map<String, ListChangeListener<DisputeCommunicationMessage>> listenerByTrade = new HashMap<>();
+    private Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
     private TradeChatSession.DisputeStateListener disputeStateListener;
 
 
@@ -721,7 +721,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     });
 
                                     if (!listenerByTrade.containsKey(id)) {
-                                        ListChangeListener<DisputeCommunicationMessage> listener = c -> update(trade, badge);
+                                        ListChangeListener<ChatMessage> listener = c -> update(trade, badge);
                                         listenerByTrade.put(id, listener);
                                         trade.getCommunicationMessages().addListener(listener);
                                     }

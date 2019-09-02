@@ -21,7 +21,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -36,11 +36,11 @@ public class MediationChatSession extends DisputeChatSession {
 
     public MediationChatSession(@Nullable Dispute dispute,
                                 DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(dispute, disputeManager, DisputeCommunicationMessage.Type.MEDIATION);
+        super(dispute, disputeManager, ChatMessage.Type.MEDIATION);
     }
 
     MediationChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager, DisputeCommunicationMessage.Type.MEDIATION);
+        super(disputeManager, ChatMessage.Type.MEDIATION);
 
     }
 
@@ -53,12 +53,12 @@ public class MediationChatSession extends DisputeChatSession {
             disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
         } else if (message instanceof PeerOpenedDisputeMessage) {
             disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        } else if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.MEDIATION) {
+        } else if (message instanceof ChatMessage) {
+            if (((ChatMessage) message).getType() != ChatMessage.Type.MEDIATION) {
                 log.debug("Ignore non dispute type communication message");
                 return;
             }
-            disputeManager.getChatManager().onDisputeDirectMessage((DisputeCommunicationMessage) message);
+            disputeManager.getChatManager().onDisputeDirectMessage((ChatMessage) message);
         } else if (message instanceof DisputeResultMessage) {
             disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
         } else {

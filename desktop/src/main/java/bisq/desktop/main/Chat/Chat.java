@@ -30,7 +30,7 @@ import bisq.core.locale.Res;
 import bisq.core.support.ChatManager;
 import bisq.core.support.ChatSession;
 import bisq.core.support.dispute.Attachment;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.util.BSFormatter;
 
@@ -111,7 +111,7 @@ public class Chat extends AnchorPane {
     // UI
     private TextArea inputTextArea;
     private Button sendButton;
-    private ListView<DisputeCommunicationMessage> messageListView;
+    private ListView<ChatMessage> messageListView;
     private Label sendMsgInfoLabel;
     private BusyAnimation sendMsgBusyAnimation;
     private TableGroupHeadline tableGroupHeadline;
@@ -129,9 +129,9 @@ public class Chat extends AnchorPane {
 
     // Communication stuff, to be renamed to something more generic
     private final P2PService p2PService;
-    private DisputeCommunicationMessage disputeCommunicationMessage;
-    private ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages;
-    private ListChangeListener<DisputeCommunicationMessage> disputeDirectMessageListListener;
+    private ChatMessage chatMessage;
+    private ObservableList<ChatMessage> chatMessages;
+    private ListChangeListener<ChatMessage> disputeDirectMessageListListener;
     private Subscription inputTextAreaTextSubscription;
     private final List<Attachment> tempAttachments = new ArrayList<>();
     private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
@@ -189,8 +189,8 @@ public class Chat extends AnchorPane {
         AnchorPane.setBottomAnchor(tableGroupHeadline, 0d);
         AnchorPane.setLeftAnchor(tableGroupHeadline, 0d);
 
-        disputeCommunicationMessages = chatSession.getDisputeCommunicationMessages();
-        SortedList<DisputeCommunicationMessage> sortedList = new SortedList<>(disputeCommunicationMessages);
+        chatMessages = chatSession.getDisputeCommunicationMessages();
+        SortedList<ChatMessage> sortedList = new SortedList<>(chatMessages);
         sortedList.setComparator(Comparator.comparing(o -> new Date(o.getDate())));
         messageListView = new ListView<>(sortedList);
         messageListView.setId("message-list-view");
@@ -261,7 +261,7 @@ public class Chat extends AnchorPane {
 
         messageListView.setCellFactory(new Callback<>() {
             @Override
-            public ListCell<DisputeCommunicationMessage> call(ListView<DisputeCommunicationMessage> list) {
+            public ListCell<ChatMessage> call(ListView<ChatMessage> list) {
                 return new ListCell<>() {
                     ChangeListener<Boolean> sendMsgBusyAnimationListener;
                     Pane bg = new Pane();
@@ -296,7 +296,7 @@ public class Chat extends AnchorPane {
                     }
 
                     @Override
-                    public void updateItem(DisputeCommunicationMessage message, boolean empty) {
+                    public void updateItem(ChatMessage message, boolean empty) {
                         super.updateItem(message, empty);
                         if (message != null && !empty) {
                             copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(messageLabel.getText()));
@@ -466,7 +466,7 @@ public class Chat extends AnchorPane {
                         }
                     }
 
-                    private void updateMsgState(DisputeCommunicationMessage message) {
+                    private void updateMsgState(ChatMessage message) {
                         boolean visible;
                         AwesomeIcon icon = null;
                         String text = null;
@@ -596,13 +596,13 @@ public class Chat extends AnchorPane {
     }
 
     private void onSendMessage(String inputText) {
-        if (disputeCommunicationMessage != null) {
-            disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
-            disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
-            disputeCommunicationMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
+        if (chatMessage != null) {
+            chatMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+            chatMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+            chatMessage.sendMessageErrorProperty().removeListener(sendMessageErrorPropertyListener);
         }
 
-        disputeCommunicationMessage = sendDisputeDirectMessage(inputText, new ArrayList<>(tempAttachments));
+        chatMessage = sendDisputeDirectMessage(inputText, new ArrayList<>(tempAttachments));
         tempAttachments.clear();
         scrollToBottom();
 
@@ -638,16 +638,16 @@ public class Chat extends AnchorPane {
                 hideSendMsgInfo(timer);
             }
         };
-        if (disputeCommunicationMessage != null) {
-            disputeCommunicationMessage.arrivedProperty().addListener(arrivedPropertyListener);
-            disputeCommunicationMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
-            disputeCommunicationMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
+        if (chatMessage != null) {
+            chatMessage.arrivedProperty().addListener(arrivedPropertyListener);
+            chatMessage.storedInMailboxProperty().addListener(storedInMailboxPropertyListener);
+            chatMessage.sendMessageErrorProperty().addListener(sendMessageErrorPropertyListener);
         }
     }
 
-    private DisputeCommunicationMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
+    private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
         ChatSession chatSession = chatManager.getChatSession();
-        DisputeCommunicationMessage message = new DisputeCommunicationMessage(
+        ChatMessage message = new ChatMessage(
                 chatSession.getType(),
                 chatSession.getTradeId(),
                 chatSession.getClientPubKeyRing().hashCode(),
@@ -740,20 +740,20 @@ public class Chat extends AnchorPane {
             tableGroupHeadline.prefWidthProperty().bind(widthProperty);
             messageListView.prefWidthProperty().bind(widthProperty);
             this.prefWidthProperty().bind(widthProperty);
-            disputeCommunicationMessages.addListener(disputeDirectMessageListListener);
+            chatMessages.addListener(disputeDirectMessageListListener);
             inputTextAreaTextSubscription = EasyBind.subscribe(inputTextArea.textProperty(), t -> sendButton.setDisable(t.isEmpty()));
         }
     }
 
     private void removeListenersOnSessionChange() {
-        if (disputeCommunicationMessages != null && disputeDirectMessageListListener != null)
-            disputeCommunicationMessages.removeListener(disputeDirectMessageListListener);
+        if (chatMessages != null && disputeDirectMessageListListener != null)
+            chatMessages.removeListener(disputeDirectMessageListListener);
 
-        if (disputeCommunicationMessage != null) {
+        if (chatMessage != null) {
             if (arrivedPropertyListener != null)
-                disputeCommunicationMessage.arrivedProperty().removeListener(arrivedPropertyListener);
+                chatMessage.arrivedProperty().removeListener(arrivedPropertyListener);
             if (storedInMailboxPropertyListener != null)
-                disputeCommunicationMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
+                chatMessage.storedInMailboxProperty().removeListener(storedInMailboxPropertyListener);
         }
 
         if (messageListView != null)
