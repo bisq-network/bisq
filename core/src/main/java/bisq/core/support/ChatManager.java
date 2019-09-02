@@ -136,7 +136,7 @@ public class ChatManager {
         cleanupRetryMap(uid);
         PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(chatMessage);
 
-        chatSession.storeDisputeCommunicationMessage(chatMessage);
+        chatSession.storeChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)

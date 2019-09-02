@@ -118,7 +118,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public ObservableList<ChatMessage> getDisputeCommunicationMessages() {
+    public ObservableList<ChatMessage> getObservableChatMessageList() {
         return trade != null ? trade.getCommunicationMessages() : FXCollections.observableArrayList();
     }
 
@@ -170,7 +170,7 @@ public class TradeChatSession extends ChatSession {
             // We notify about dispute closed state
             disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
         }
-        // We ignore all other non DisputeCommunicationMessages
+        // We ignore all other non ChatMessages
     }
 
     @Override
@@ -186,7 +186,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public void storeDisputeCommunicationMessage(ChatMessage message) {
+    public void storeChatMessage(ChatMessage message) {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();

@@ -98,7 +98,7 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public ObservableList<ChatMessage> getDisputeCommunicationMessages() {
+    public ObservableList<ChatMessage> getObservableChatMessageList() {
         return dispute != null ? dispute.getChatMessages() : FXCollections.observableArrayList();
     }
 
@@ -156,7 +156,7 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public void storeDisputeCommunicationMessage(ChatMessage message) {
+    public void storeChatMessage(ChatMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
         if (disputeOptional.isPresent()) {
             if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {

@@ -81,7 +81,7 @@ public class DisputeMsgEvents {
 
     private void setChatMessage(ChatMessage disputeMsg) {
         // TODO we need to prevent to send msg for old dispute messages again at restart
-        // Maybe we need a new property in DisputeCommunicationMessage
+        // Maybe we need a new property in ChatMessage
         // As key is not set in initial iterations it seems we don't need an extra handling.
         // the mailbox msg is set a bit later so that triggers a notification, but not the old messages.
 
