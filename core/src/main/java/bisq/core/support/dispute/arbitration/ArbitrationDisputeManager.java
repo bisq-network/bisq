@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeChatSession;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
@@ -83,8 +83,8 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
     }
 
     @Override
-    protected DisputeChatSession getConcreteChatSession() {
-        return new ArbitrationChatSession(this);
+    protected DisputeSession getConcreteChatSession() {
+        return new ArbitrationSession(this);
     }
 
     @Override
@@ -252,7 +252,7 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
         } finally {
             // We use the chatMessage as we only persist those not the disputeResultMessage.
             // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-            chatManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
+            supportManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
         }
     }
 
@@ -323,7 +323,7 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
         BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute
-        chatManager.sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
+        supportManager.sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
     }
 
 }

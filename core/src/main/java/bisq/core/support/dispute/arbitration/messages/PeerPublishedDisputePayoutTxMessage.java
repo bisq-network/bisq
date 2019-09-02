@@ -31,7 +31,7 @@ import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationChatMessage {
+public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationMessage {
     private final byte[] transaction;
     private final String tradeId;
     private final NodeAddress senderNodeAddress;

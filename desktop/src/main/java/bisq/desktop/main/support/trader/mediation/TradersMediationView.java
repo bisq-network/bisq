@@ -28,8 +28,8 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeChatSession;
-import bisq.core.support.dispute.mediation.MediationChatSession;
+import bisq.core.support.dispute.DisputeSession;
+import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.support.dispute.mediation.MediationDisputeManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
@@ -65,8 +65,8 @@ public class TradersMediationView extends TradersDisputeView {
     }
 
     @Override
-    protected DisputeChatSession getConcreteDisputeChatSession(Dispute dispute) {
-        return new MediationChatSession(dispute, disputeManager);
+    protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
+        return new MediationSession(dispute, disputeManager);
     }
 }
 

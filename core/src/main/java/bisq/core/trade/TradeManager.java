@@ -31,7 +31,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.ChatManager;
+import bisq.core.support.SupportManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.traderchat.TradeChatSession;
@@ -132,7 +132,7 @@ public class TradeManager implements PersistedDataHost {
     private final LongProperty numPendingTrades = new SimpleLongProperty();
 
     @Getter
-    private final ChatManager chatManager;
+    private final SupportManager supportManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,8 +179,8 @@ public class TradeManager implements PersistedDataHost {
 
         tradableListStorage = storage;
 
-        chatManager = new ChatManager(p2PService, walletsSetup);
-        chatManager.setChatSession(new TradeChatSession(null, true, true, this, chatManager));
+        supportManager = new SupportManager(p2PService, walletsSetup);
+        supportManager.setSupportSession(new TradeChatSession(null, true, true, this, supportManager));
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -255,7 +255,7 @@ public class TradeManager implements PersistedDataHost {
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
 
-        chatManager.onAllServicesInitialized();
+        supportManager.onAllServicesInitialized();
     }
 
     public void shutDown() {

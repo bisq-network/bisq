@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.support.ChatSession;
+import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 
@@ -39,22 +39,22 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class DisputeChatSession extends ChatSession {
+public abstract class DisputeSession extends SupportSession {
     @Nullable
     @Getter
     private Dispute dispute;
     protected DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
 
-    public DisputeChatSession(@Nullable Dispute dispute,
-                              DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                              SupportType supportType) {
+    public DisputeSession(@Nullable Dispute dispute,
+                          DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+                          SupportType supportType) {
         super(supportType);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
     }
 
-    public DisputeChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                              SupportType supportType) {
+    public DisputeSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
+                          SupportType supportType) {
         super(supportType);
         this.disputeManager = disputeManager;
     }

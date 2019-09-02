@@ -30,11 +30,11 @@ import java.util.List;
 
 import lombok.Getter;
 
-public abstract class ChatSession {
+public abstract class SupportSession {
     @Getter
     SupportType supportType;
 
-    public ChatSession(SupportType supportType) {
+    public SupportSession(SupportType supportType) {
         this.supportType = supportType;
     }
 

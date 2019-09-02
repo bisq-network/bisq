@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class DisputeResultMessage extends DisputeChatMessage {
+public final class DisputeResultMessage extends DisputeMessage {
     private final DisputeResult disputeResult;
     private final NodeAddress senderNodeAddress;
 

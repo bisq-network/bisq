@@ -23,7 +23,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeChatSession;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
@@ -67,8 +67,8 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
     }
 
     @Override
-    protected DisputeChatSession getConcreteChatSession() {
-        return new MediationChatSession(this);
+    protected DisputeSession getConcreteChatSession() {
+        return new MediationSession(this);
     }
 
     @Override
@@ -125,6 +125,6 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
-        chatManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
+        supportManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
     }
 }
