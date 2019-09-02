@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration.messages;
+package bisq.core.dispute.messages;
 
 import bisq.core.dispute.Attachment;
 

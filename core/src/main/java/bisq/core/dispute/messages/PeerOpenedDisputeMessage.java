@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration.messages;
+package bisq.core.dispute.messages;
 
-import bisq.core.dispute.DisputeResult;
+import bisq.core.dispute.Dispute;
+import bisq.core.proto.CoreProtoResolver;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -26,18 +27,16 @@ import bisq.common.app.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class DisputeResultMessage extends DisputeMessage {
-    private final DisputeResult disputeResult;
+public final class PeerOpenedDisputeMessage extends DisputeMessage {
+    private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 
-    public DisputeResultMessage(DisputeResult disputeResult,
-                                NodeAddress senderNodeAddress,
-                                String uid) {
-        this(disputeResult,
+    public PeerOpenedDisputeMessage(Dispute dispute,
+                                    NodeAddress senderNodeAddress,
+                                    String uid) {
+        this(dispute,
                 senderNodeAddress,
                 uid,
                 Version.getP2PMessageVersion());
@@ -48,28 +47,27 @@ public final class DisputeResultMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeResultMessage(DisputeResult disputeResult,
-                                 NodeAddress senderNodeAddress,
-                                 String uid,
-                                 int messageVersion) {
+    private PeerOpenedDisputeMessage(Dispute dispute,
+                                     NodeAddress senderNodeAddress,
+                                     String uid,
+                                     int messageVersion) {
         super(messageVersion, uid);
-        this.disputeResult = disputeResult;
+        this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDisputeResultMessage(protobuf.DisputeResultMessage.newBuilder()
-                        .setDisputeResult(disputeResult.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                .setPeerOpenedDisputeMessage(protobuf.PeerOpenedDisputeMessage.newBuilder()
+                        .setUid(uid)
+                        .setDispute(dispute.toProtoMessage())
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
                 .build();
     }
 
-    public static DisputeResultMessage fromProto(protobuf.DisputeResultMessage proto, int messageVersion) {
-        checkArgument(proto.hasDisputeResult(), "DisputeResult must be set");
-        return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
+    public static PeerOpenedDisputeMessage fromProto(protobuf.PeerOpenedDisputeMessage proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+        return new PeerOpenedDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
                 messageVersion);
@@ -77,15 +75,15 @@ public final class DisputeResultMessage extends DisputeMessage {
 
     @Override
     public String getTradeId() {
-        return disputeResult.getTradeId();
+        return dispute.getTradeId();
     }
 
     @Override
     public String toString() {
-        return "DisputeResultMessage{" +
-                "\n     disputeResult=" + disputeResult +
+        return "PeerOpenedDisputeMessage{" +
+                "\n     dispute=" + dispute +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     DisputeResultMessage.uid='" + uid + '\'' +
+                ",\n     PeerOpenedDisputeMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
                 "\n} " + super.toString();
     }

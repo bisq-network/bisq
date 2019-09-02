@@ -17,7 +17,7 @@
 
 package bisq.core.dispute;
 
-import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
+import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.Contract;
 
