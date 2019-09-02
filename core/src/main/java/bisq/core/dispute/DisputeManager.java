@@ -267,7 +267,7 @@ public class DisputeManager implements PersistedDataHost {
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    DisputeCommunicationMessage.Type.DISPUTE,
+                    DisputeCommunicationMessage.Type.ARBITRATION,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -391,7 +391,7 @@ public class DisputeManager implements PersistedDataHost {
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    DisputeCommunicationMessage.Type.DISPUTE,
+                    DisputeCommunicationMessage.Type.ARBITRATION,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -479,7 +479,7 @@ public class DisputeManager implements PersistedDataHost {
         }
 
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                DisputeCommunicationMessage.Type.DISPUTE,
+                DisputeCommunicationMessage.Type.ARBITRATION,
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
