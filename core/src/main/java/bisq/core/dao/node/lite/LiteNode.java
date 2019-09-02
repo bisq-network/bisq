@@ -88,9 +88,6 @@ public class LiteNode extends BsqNode {
         liteNodeNetworkService.start();
 
         bsqWalletService.addNewBestBlockListener(block -> {
-            int height = block.getHeight();
-            log.info("New block at height {} from bsqWalletService", height);
-
             // Check if we are done with parsing
             if (!daoStateService.isParseBlockChainComplete())
                 return;
@@ -99,6 +96,9 @@ public class LiteNode extends BsqNode {
                 // In case we received a new block before out timer gets called we stop the old timer
                 checkForBlockReceivedTimer.stop();
             }
+
+            int height = block.getHeight();
+            log.info("New block at height {} from bsqWalletService", height);
 
             // We expect to receive the new BSQ block from the network shortly after BitcoinJ has been aware of it.
             // If we don't receive it we request it manually from seed nodes

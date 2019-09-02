@@ -170,7 +170,7 @@ public class TradeStatisticsManager {
     private void addToMap(TradeStatistics2 tradeStatistics, Map<String, TradeStatistics2> map) {
         TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
         if (prevValue != null)
-            log.debug("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
+            log.trace("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
     }
 
     private void dump() {

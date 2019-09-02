@@ -190,7 +190,7 @@ public class FileManager<T extends PersistableEnvelope> {
     private void saveNowInternal(T persistable) {
         long now = System.currentTimeMillis();
         saveToFile(persistable, dir, storageFile);
-        log.trace("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
+        log.debug("Save {} completed in {} msec", storageFile, System.currentTimeMillis() - now);
     }
 
     private synchronized void saveToFile(T persistable, File dir, File storageFile) {

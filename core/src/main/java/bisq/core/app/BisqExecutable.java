@@ -281,12 +281,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(DaoSetup.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
+                    log.info("OpenOfferManager shutdown completed");
                     injector.getInstance(P2PService.class).shutDown(() -> {
+                        log.info("P2PService shutdown completed");
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
+                            log.info("WalletsSetup shutdown completed");
                             module.close(injector);
-                            log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
-
+                            log.info("Graceful shutdown completed. Exiting now.");
                             System.exit(0);
                         });
                         injector.getInstance(WalletsSetup.class).shutDown();
