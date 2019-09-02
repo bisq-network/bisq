@@ -20,7 +20,7 @@ package bisq.desktop.main.overlays.notifications;
 import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.DisputesView;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
+import bisq.desktop.main.disputes.trader.TradersDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
@@ -250,9 +250,9 @@ public class NotificationCenter {
             }
             if (message != null) {
                 Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
-                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
+                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TradersDisputeView.class)) {
                     notification.actionButtonTextWithGoTo("navigation.support")
-                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
+                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class))
                             .show();
                 } else {
                     notification.show();
@@ -280,9 +280,9 @@ public class NotificationCenter {
             }
             if (message != null) {
                 Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
-                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
+                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TradersDisputeView.class)) {
                     notification.actionButtonTextWithGoTo("navigation.support")
-                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
+                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class))
                             .show();
                 } else {
                     notification.show();

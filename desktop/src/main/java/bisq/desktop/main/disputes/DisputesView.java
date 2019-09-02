@@ -26,7 +26,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.disputes.disputeresolvers.DisputeResolverView;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
+import bisq.desktop.main.disputes.trader.TradersDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
@@ -107,7 +107,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == tradersDisputesTab)
-                navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
+                navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class);
             else if (newValue == disputeResolversDisputesTab)
                 navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
         };
@@ -164,7 +164,7 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         if (disputeResolversDisputesTab != null && root.getSelectionModel().getSelectedItem() == disputeResolversDisputesTab)
             navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
         else
-            navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class);
+            navigation.navigateTo(MainView.class, DisputesView.class, TradersDisputeView.class);
 
         String key = "supportInfo";
         if (!DevEnv.isDevMode())

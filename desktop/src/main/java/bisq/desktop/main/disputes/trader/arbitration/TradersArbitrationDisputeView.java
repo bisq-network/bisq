@@ -18,7 +18,7 @@
 package bisq.desktop.main.disputes.trader.arbitration;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
+import bisq.desktop.main.disputes.trader.TradersDisputeView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -34,7 +34,7 @@ import bisq.common.crypto.KeyRing;
 //todo separate class
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
-public class TradersArbitrationDisputeView extends TraderDisputeView {
+public class TradersArbitrationDisputeView extends TradersDisputeView {
 
     public TradersArbitrationDisputeView(ArbitrationDisputeManager arbitrationDisputeManager,
                                          KeyRing keyRing,
