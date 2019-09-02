@@ -19,7 +19,7 @@
 
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="root" fx:controller="bisq.desktop.main.support.disputeresolvers.DisputeResolverView"
+<VBox fx:id="root" fx:controller="bisq.desktop.main.support.disputeresolver.DisputeResolverView"
       spacing="10"
       xmlns:fx="http://javafx.com/fxml">
     <padding>
