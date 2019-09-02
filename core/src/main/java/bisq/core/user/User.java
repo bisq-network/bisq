@@ -25,7 +25,7 @@ import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.mediation.Mediator;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 
 import bisq.network.p2p.NodeAddress;
 
