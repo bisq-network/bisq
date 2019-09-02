@@ -21,8 +21,6 @@ import bisq.common.app.AppModule;
 
 import org.springframework.core.env.Environment;
 
-import com.google.inject.Singleton;
-
 public class DisputeModule extends AppModule {
     public DisputeModule(Environment environment) {
         super(environment);
@@ -30,6 +28,5 @@ public class DisputeModule extends AppModule {
 
     @Override
     protected final void configure() {
-        bind(DisputeManager.class).in(Singleton.class);
     }
 }
