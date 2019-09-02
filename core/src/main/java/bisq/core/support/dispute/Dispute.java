@@ -17,8 +17,8 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.support.messages.ChatMessage;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 
 import bisq.network.p2p.NodeAddress;
@@ -260,7 +260,7 @@ public final class Dispute implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDisputeCommunicationMessage(ChatMessage chatMessage) {
+    public void addChatMessage(ChatMessage chatMessage) {
         if (!chatMessages.contains(chatMessage)) {
             chatMessages.add(chatMessage);
             storage.queueUpForSave();
@@ -355,7 +355,7 @@ public final class Dispute implements NetworkPayload {
                 ", takerContractSignature='" + takerContractSignature + '\'' +
                 ", conflictResolverPubKeyRing=" + conflictResolverPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
-                ", disputeCommunicationMessages=" + chatMessages +
+                ", chatMessages=" + chatMessages +
                 ", isClosed=" + isClosedProperty.get() +
                 ", disputeResult=" + disputeResultProperty.get() +
                 ", disputePayoutTxId='" + disputePayoutTxId + '\'' +

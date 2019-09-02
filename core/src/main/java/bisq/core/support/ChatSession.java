@@ -40,13 +40,14 @@ public abstract class ChatSession {
 
     abstract public boolean isClient();
 
+    //todo remove
     abstract public boolean isMediationDispute();
 
     abstract public String getTradeId();
 
     abstract public PubKeyRing getClientPubKeyRing();
 
-    abstract public void addDisputeCommunicationMessage(ChatMessage message);
+    abstract public void addChatMessage(ChatMessage message);
 
     abstract public void persist();
 
