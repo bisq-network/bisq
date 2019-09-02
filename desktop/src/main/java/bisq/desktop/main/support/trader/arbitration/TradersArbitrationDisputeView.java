@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.disputes.trader.arbitration;
+package bisq.desktop.main.support.trader.arbitration;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.disputes.trader.TradersDisputeView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.support.trader.TradersDisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;

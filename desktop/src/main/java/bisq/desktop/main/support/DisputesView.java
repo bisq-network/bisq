@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.disputes;
+package bisq.desktop.main.support;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.Activatable;
@@ -25,10 +25,10 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.disputeresolvers.DisputeResolverView;
-import bisq.desktop.main.disputes.trader.arbitration.TradersArbitrationDisputeView;
-import bisq.desktop.main.disputes.trader.mediation.TradersMediationDisputeView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.support.disputeresolvers.DisputeResolverView;
+import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
+import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
 
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.arbitration.Arbitrator;

@@ -29,7 +29,6 @@ import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
 import bisq.desktop.main.offer.BuyOfferView;
@@ -37,6 +36,7 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.main.support.DisputesView;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;

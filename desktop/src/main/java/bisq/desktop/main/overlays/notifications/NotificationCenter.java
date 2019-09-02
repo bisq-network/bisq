@@ -19,12 +19,12 @@ package bisq.desktop.main.overlays.notifications;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.DisputesView;
-import bisq.desktop.main.disputes.trader.TradersDisputeView;
-import bisq.desktop.main.disputes.trader.arbitration.TradersArbitrationDisputeView;
-import bisq.desktop.main.disputes.trader.mediation.TradersMediationDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
+import bisq.desktop.main.support.DisputesView;
+import bisq.desktop.main.support.trader.TradersDisputeView;
+import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
+import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
 
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.mediator.MediationDisputeManager;
