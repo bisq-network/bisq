@@ -28,7 +28,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
-import bisq.core.dispute.arbitration.Attachment;
+import bisq.core.dispute.Attachment;
 import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.trade.TradeChatSession;
