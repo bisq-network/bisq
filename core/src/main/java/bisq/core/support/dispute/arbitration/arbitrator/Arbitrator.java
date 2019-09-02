@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.arbitration;
+package bisq.core.support.dispute.arbitration.arbitrator;
 
 import bisq.core.support.dispute.DisputeResolver;
 

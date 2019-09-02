@@ -26,10 +26,10 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.support.dispute.arbitration.Arbitrator;
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.DisputeResolverSelection;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.Task;
