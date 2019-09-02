@@ -41,7 +41,7 @@ import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.ArbitrationChatSession;
 import bisq.core.support.dispute.mediator.MediationChatSession;
 import bisq.core.support.dispute.mediator.MediationDisputeManager;
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.trade.Contract;

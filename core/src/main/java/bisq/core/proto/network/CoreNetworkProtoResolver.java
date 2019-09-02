@@ -36,7 +36,7 @@ import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.support.dispute.arbitration.Arbitrator;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.support.dispute.mediator.Mediator;
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;

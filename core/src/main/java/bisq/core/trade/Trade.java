@@ -24,7 +24,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.support.dispute.arbitration.Arbitrator;
 import bisq.core.support.dispute.arbitration.ArbitratorManager;
 import bisq.core.support.dispute.mediator.Mediator;
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
