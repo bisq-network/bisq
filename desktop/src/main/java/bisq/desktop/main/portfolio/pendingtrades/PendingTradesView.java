@@ -32,7 +32,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;

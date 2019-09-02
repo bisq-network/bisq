@@ -30,7 +30,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.mediator.MediationChatSession;
 import bisq.core.support.dispute.mediator.MediationDisputeManager;
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 

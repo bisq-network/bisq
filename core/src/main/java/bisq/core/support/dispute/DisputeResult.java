@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;

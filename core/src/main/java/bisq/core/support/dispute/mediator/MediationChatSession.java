@@ -21,7 +21,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.DisputeCommunicationMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
