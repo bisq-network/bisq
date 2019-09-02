@@ -22,7 +22,7 @@ import bisq.core.support.ChatManager;
 import bisq.core.support.ChatSession;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.DisputeMessage;
+import bisq.core.support.messages.TradeChatMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 
@@ -158,7 +158,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public void dispatchMessage(DisputeMessage message) {
+    public void dispatchMessage(TradeChatMessage message) {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
         if (message instanceof ChatMessage) {

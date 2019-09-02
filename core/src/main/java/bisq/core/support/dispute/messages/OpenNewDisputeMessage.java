@@ -19,7 +19,7 @@ package bisq.core.support.dispute.messages;
 
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.messages.DisputeMessage;
+import bisq.core.support.messages.TradeChatMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -30,7 +30,7 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class OpenNewDisputeMessage extends DisputeMessage {
+public final class OpenNewDisputeMessage extends TradeChatMessage {
     private final Dispute dispute;
     private final NodeAddress senderNodeAddress;
 

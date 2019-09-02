@@ -58,7 +58,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true) // listener is transient and therefore excluded anyway
 @Getter
 @Slf4j
-public final class ChatMessage extends DisputeMessage {
+public final class ChatMessage extends TradeChatMessage {
 
     public enum Type {
         MEDIATION,

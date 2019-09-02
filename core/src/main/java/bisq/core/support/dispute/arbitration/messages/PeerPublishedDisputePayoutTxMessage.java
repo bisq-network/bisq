@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute.arbitration.messages;
 
-import bisq.core.support.messages.DisputeMessage;
+import bisq.core.support.messages.TradeChatMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -31,7 +31,7 @@ import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class PeerPublishedDisputePayoutTxMessage extends DisputeMessage {
+public final class PeerPublishedDisputePayoutTxMessage extends TradeChatMessage {
     private final byte[] transaction;
     private final String tradeId;
     private final NodeAddress senderNodeAddress;

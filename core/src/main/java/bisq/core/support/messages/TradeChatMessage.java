@@ -27,10 +27,10 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class DisputeMessage extends NetworkEnvelope implements MailboxMessage, UidMessage {
+public abstract class TradeChatMessage extends NetworkEnvelope implements MailboxMessage, UidMessage {
     protected final String uid;
 
-    public DisputeMessage(int messageVersion, String uid) {
+    public TradeChatMessage(int messageVersion, String uid) {
         super(messageVersion);
         this.uid = uid;
     }

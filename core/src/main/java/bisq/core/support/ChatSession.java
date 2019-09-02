@@ -18,7 +18,7 @@
 package bisq.core.support;
 
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.DisputeMessage;
+import bisq.core.support.messages.TradeChatMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -60,7 +60,7 @@ public abstract class ChatSession {
 
     abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
 
-    abstract public void dispatchMessage(DisputeMessage message);
+    abstract public void dispatchMessage(TradeChatMessage message);
 
     abstract public boolean channelOpen(ChatMessage message);
 
