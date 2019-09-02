@@ -20,7 +20,7 @@ package bisq.core.offer.placeoffer;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.support.arbitration.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.ArbitratorManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
 import bisq.core.trade.statistics.TradeStatisticsManager;

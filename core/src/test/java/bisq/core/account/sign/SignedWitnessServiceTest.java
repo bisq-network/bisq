@@ -19,8 +19,8 @@ package bisq.core.account.sign;
 
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.support.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.arbitration.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitratorManager;
 
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
