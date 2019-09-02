@@ -17,11 +17,12 @@
 
 package bisq.core.support.dispute.messages;
 
-import bisq.core.support.messages.SupportChatMessage;
+import bisq.core.support.SupportType;
+import bisq.core.support.messages.SupportMessage;
 
-public abstract class DisputeChatMessage extends SupportChatMessage {
+public abstract class DisputeChatMessage extends SupportMessage {
 
-    public DisputeChatMessage(int messageVersion, String uid) {
-        super(messageVersion, uid);
+    public DisputeChatMessage(int messageVersion, String uid, SupportType supportType) {
+        super(messageVersion, uid, supportType);
     }
 }

@@ -17,6 +17,8 @@
 
 package bisq.core.support.dispute.arbitration.messages;
 
+import bisq.core.support.SupportType;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -37,12 +39,14 @@ public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationChatMe
     public PeerPublishedDisputePayoutTxMessage(byte[] transaction,
                                                String tradeId,
                                                NodeAddress senderNodeAddress,
-                                               String uid) {
+                                               String uid,
+                                               SupportType supportType) {
         this(transaction,
                 tradeId,
                 senderNodeAddress,
                 uid,
-                Version.getP2PMessageVersion());
+                Version.getP2PMessageVersion(),
+                supportType);
     }
 
 
@@ -54,8 +58,9 @@ public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationChatMe
                                                 String tradeId,
                                                 NodeAddress senderNodeAddress,
                                                 String uid,
-                                                int messageVersion) {
-        super(messageVersion, uid);
+                                                int messageVersion,
+                                                SupportType supportType) {
+        super(messageVersion, uid, supportType);
         this.transaction = transaction;
         this.tradeId = tradeId;
         this.senderNodeAddress = senderNodeAddress;
@@ -72,12 +77,14 @@ public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationChatMe
                 .build();
     }
 
-    public static PeerPublishedDisputePayoutTxMessage fromProto(protobuf.PeerPublishedDisputePayoutTxMessage proto, int messageVersion) {
+    public static PeerPublishedDisputePayoutTxMessage fromProto(protobuf.PeerPublishedDisputePayoutTxMessage proto,
+                                                                int messageVersion) {
         return new PeerPublishedDisputePayoutTxMessage(proto.getTransaction().toByteArray(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                SupportType.fromProto(proto.getType()));
     }
 
     @Override
@@ -93,6 +100,7 @@ public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationChatMe
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     PeerPublishedDisputePayoutTxMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
+                ",\n     supportType=" + supportType +
                 "\n} " + super.toString();
     }
 }

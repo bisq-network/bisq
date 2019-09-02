@@ -648,7 +648,7 @@ public class Chat extends AnchorPane {
     private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
         ChatSession chatSession = chatManager.getChatSession();
         ChatMessage message = new ChatMessage(
-                chatSession.getType(),
+                chatSession.getSupportType(),
                 chatSession.getTradeId(),
                 chatSession.getClientPubKeyRing().hashCode(),
                 chatSession.isClient(),

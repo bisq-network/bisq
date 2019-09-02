@@ -18,6 +18,7 @@
 package bisq.core.support.dispute.messages;
 
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 
 import bisq.network.p2p.NodeAddress;
@@ -35,11 +36,13 @@ public final class PeerOpenedDisputeMessage extends DisputeChatMessage {
 
     public PeerOpenedDisputeMessage(Dispute dispute,
                                     NodeAddress senderNodeAddress,
-                                    String uid) {
+                                    String uid,
+                                    SupportType supportType) {
         this(dispute,
                 senderNodeAddress,
                 uid,
-                Version.getP2PMessageVersion());
+                Version.getP2PMessageVersion(),
+                supportType);
     }
 
 
@@ -50,8 +53,9 @@ public final class PeerOpenedDisputeMessage extends DisputeChatMessage {
     private PeerOpenedDisputeMessage(Dispute dispute,
                                      NodeAddress senderNodeAddress,
                                      String uid,
-                                     int messageVersion) {
-        super(messageVersion, uid);
+                                     int messageVersion,
+                                     SupportType supportType) {
+        super(messageVersion, uid, supportType);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -70,7 +74,8 @@ public final class PeerOpenedDisputeMessage extends DisputeChatMessage {
         return new PeerOpenedDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                SupportType.fromProto(proto.getType()));
     }
 
     @Override
@@ -85,6 +90,7 @@ public final class PeerOpenedDisputeMessage extends DisputeChatMessage {
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     PeerOpenedDisputeMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
+                ",\n     supportType=" + supportType +
                 "\n} " + super.toString();
     }
 }

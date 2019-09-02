@@ -19,7 +19,7 @@ package bisq.core.support;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportChatMessage;
+import bisq.core.support.messages.SupportMessage;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
@@ -96,8 +96,8 @@ public class ChatManager {
     private void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof SupportChatMessage) {
-                chatSession.dispatchMessage((SupportChatMessage) networkEnvelope);
+            if (networkEnvelope instanceof SupportMessage) {
+                chatSession.dispatchMessage((SupportMessage) networkEnvelope);
             } else if (networkEnvelope instanceof AckMessage) {
                 processAckMessage((AckMessage) networkEnvelope, null);
             }
@@ -107,8 +107,8 @@ public class ChatManager {
         decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
-            if (networkEnvelope instanceof SupportChatMessage) {
-                chatSession.dispatchMessage((SupportChatMessage) networkEnvelope);
+            if (networkEnvelope instanceof SupportMessage) {
+                chatSession.dispatchMessage((SupportMessage) networkEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             } else if (networkEnvelope instanceof AckMessage) {
                 processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
@@ -169,18 +169,18 @@ public class ChatManager {
         }
     }
 
-    public void sendAckMessage(SupportChatMessage supportChatMessage, PubKeyRing peersPubKeyRing,
+    public void sendAckMessage(SupportMessage supportMessage, PubKeyRing peersPubKeyRing,
                                boolean result, @Nullable String errorMessage) {
-        String tradeId = supportChatMessage.getTradeId();
-        String uid = supportChatMessage.getUid();
+        String tradeId = supportMessage.getTradeId();
+        String uid = supportMessage.getUid();
         AckMessage ackMessage = new AckMessage(p2PService.getNetworkNode().getNodeAddress(),
                 AckMessageSourceType.DISPUTE_MESSAGE,
-                supportChatMessage.getClass().getSimpleName(),
+                supportMessage.getClass().getSimpleName(),
                 uid,
                 tradeId,
                 result,
                 errorMessage);
-        final NodeAddress peersNodeAddress = supportChatMessage.getSenderNodeAddress();
+        final NodeAddress peersNodeAddress = supportMessage.getSenderNodeAddress();
         log.info("Send AckMessage for {} to peer {}. tradeId={}, uid={}",
                 ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, uid);
         p2PService.sendEncryptedMailboxMessage(

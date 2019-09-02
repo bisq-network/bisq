@@ -20,9 +20,10 @@ package bisq.core.support.traderchat;
 import bisq.core.locale.Res;
 import bisq.core.support.ChatManager;
 import bisq.core.support.ChatSession;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportChatMessage;
+import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 
@@ -67,7 +68,7 @@ public class TradeChatSession extends ChatSession {
                             boolean isBuyer,
                             TradeManager tradeManager,
                             ChatManager chatManager) {
-        super(ChatMessage.Type.TRADE);
+        super(SupportType.TRADE);
         this.trade = trade;
         this.isClient = isClient;
         this.isBuyer = isBuyer;
@@ -158,19 +159,22 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public void dispatchMessage(SupportChatMessage message) {
+    public void dispatchMessage(SupportMessage message) {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-        if (message instanceof ChatMessage) {
-            if (((ChatMessage) message).getType() == ChatMessage.Type.TRADE) {
-                chatManager.onDisputeDirectMessage((ChatMessage) message);
+        if (message.getSupportType() == SupportType.ARBITRATION) {
+            if (message instanceof ChatMessage) {
+                if (((ChatMessage) message).getSupportType() == SupportType.TRADE) {
+                    chatManager.onDisputeDirectMessage((ChatMessage) message);
+                }
+                // We ignore dispute messages
+            } else if (message instanceof DisputeResultMessage) {
+                // We notify about dispute closed state
+                disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
+            } else {
+                log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
-            // We ignore dispute messages
-        } else if (message instanceof DisputeResultMessage) {
-            // We notify about dispute closed state
-            disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
         }
-        // We ignore all other non ChatMessages
     }
 
     @Override
@@ -207,7 +211,7 @@ public class TradeChatSession extends ChatSession {
         // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
         // by date.
         ChatMessage chatMessage = new ChatMessage(
-                ChatMessage.Type.TRADE,
+                SupportType.TRADE,
                 trade.getId(),
                 0,
                 false,

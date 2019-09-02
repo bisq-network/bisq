@@ -271,25 +271,28 @@ message PayoutTxPublishedMessage {
 
 // dispute
 
+enum SupportType {
+    MEDIATION = 0;
+    ARBITRATION = 1;
+    TRADE = 2;
+}
+
 message OpenNewDisputeMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
+    SupportType type = 4;
 }
 
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
+    SupportType type = 4;
 }
 
 // ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
 message DisputeCommunicationMessage {
-    enum Type {
-        MEDIATION = 0;
-        ARBITRATION = 1;
-        TRADE = 2;
-    }
     int64 date = 1;
     string trade_id = 2;
     int32 trader_id = 3;
@@ -304,7 +307,7 @@ message DisputeCommunicationMessage {
     string send_message_error = 12;
     bool acknowledged = 13;
     string ack_error = 14;
-    Type type = 15;
+    SupportType type = 15;
     bool was_displayed = 16;
     bool is_mediation_dispute = 17;
 }
@@ -313,6 +316,7 @@ message DisputeResultMessage {
     string uid = 1;
     DisputeResult dispute_result = 2;
     NodeAddress sender_node_address = 3;
+    SupportType type = 4;
 }
 
 message PeerPublishedDisputePayoutTxMessage {
@@ -320,6 +324,7 @@ message PeerPublishedDisputePayoutTxMessage {
     bytes transaction = 2;
     string trade_id = 3;
     NodeAddress sender_node_address = 4;
+    SupportType type = 5;
 }
 
 

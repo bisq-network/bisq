@@ -15,13 +15,21 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.arbitration.messages;
+package bisq.core.support;
 
-import bisq.core.support.SupportType;
-import bisq.core.support.dispute.messages.DisputeChatMessage;
+import bisq.common.proto.ProtoUtil;
 
-public abstract class ArbitrationChatMessage extends DisputeChatMessage {
-    ArbitrationChatMessage(int messageVersion, String uid, SupportType supportType) {
-        super(messageVersion, uid, supportType);
+public enum SupportType {
+    MEDIATION,
+    ARBITRATION,
+    TRADE;
+
+    public static SupportType fromProto(
+            protobuf.SupportType type) {
+        return ProtoUtil.enumFromProto(SupportType.class, type.name());
+    }
+
+    public static protobuf.SupportType toProtoMessage(SupportType supportType) {
+        return protobuf.SupportType.valueOf(supportType.name());
     }
 }
