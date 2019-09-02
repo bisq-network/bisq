@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.mediation;
+package bisq.core.support.dispute.mediation.mediator;
 
 import bisq.core.app.AppOptionKeys;
-import bisq.core.support.dispute.DisputeResolverManager;
 import bisq.core.filter.FilterManager;
+import bisq.core.support.dispute.DisputeResolverManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;

@@ -33,7 +33,7 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.ChatManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediation.MediatorManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;

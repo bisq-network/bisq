@@ -28,7 +28,7 @@ import bisq.core.offer.placeoffer.PlaceOfferModel;
 import bisq.core.offer.placeoffer.PlaceOfferProtocol;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediation.MediatorManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.handlers.TransactionResultHandler;
