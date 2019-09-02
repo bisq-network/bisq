@@ -20,10 +20,10 @@ package bisq.desktop.main.portfolio.pendingtrades;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
+import bisq.desktop.main.support.DisputesView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
