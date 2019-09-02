@@ -203,8 +203,10 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         } else {
             currentTab = disputeResolversDisputesTab;
         }
-        currentTab.setContent(view.getRoot());
-        root.getSelectionModel().select(currentTab);
+        if (currentTab != null) {
+            currentTab.setContent(view.getRoot());
+            root.getSelectionModel().select(currentTab);
+        }
     }
 }
 

@@ -85,7 +85,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class DisputeManager implements PersistedDataHost {
+public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> implements PersistedDataHost {
     private final TradeWalletService tradeWalletService;
     private final BtcWalletService walletService;
     private final WalletsSetup walletsSetup;
@@ -94,10 +94,10 @@ public abstract class DisputeManager implements PersistedDataHost {
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
-    private final Storage<DisputeList> disputeStorage;
+    protected final Storage<T> disputeStorage;
     @Nullable
     @Getter
-    private DisputeList disputes;
+    private T disputeList;
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
     private final Map<String, Timer> delayMsgMap = new HashMap<>();
@@ -120,7 +120,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          Storage<DisputeList> storage) {
+                          Storage<T> storage) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -131,7 +131,7 @@ public abstract class DisputeManager implements PersistedDataHost {
         this.keyRing = keyRing;
 
         chatManager = new ChatManager(p2PService, walletsSetup);
-        chatManager.setChatSession(new DisputeChatSession(null, this));
+        chatManager.setChatSession(getConcreteChatSession());
 
         disputeStorage = storage;
 
@@ -141,14 +141,23 @@ public abstract class DisputeManager implements PersistedDataHost {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    abstract protected DisputeChatSession getConcreteChatSession();
+
+    abstract protected T getConcreteDisputeList();
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void readPersisted() {
-        disputes = new DisputeList(disputeStorage);
-        disputes.readPersisted();
-        disputes.stream().forEach(dispute -> dispute.setStorage(disputeStorage));
+        disputeList = getConcreteDisputeList();
+        disputeList.readPersisted();
+        disputeList.stream().forEach(dispute -> dispute.setStorage(disputeStorage));
     }
 
     public void onAllServicesInitialized() {
@@ -174,12 +183,12 @@ public abstract class DisputeManager implements PersistedDataHost {
 
         cleanupDisputes();
 
-        if (disputes != null) {
-            disputes.getList().addListener((ListChangeListener<Dispute>) change -> {
+        if (disputeList != null) {
+            disputeList.getList().addListener((ListChangeListener<Dispute>) change -> {
                 change.next();
                 onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
             });
-            onDisputesChangeListener(disputes.getList(), null);
+            onDisputesChangeListener(disputeList.getList(), null);
         } else {
             log.warn("disputes is null");
         }
@@ -200,10 +209,10 @@ public abstract class DisputeManager implements PersistedDataHost {
             String id = dispute.getId();
             Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
                     isClosed -> {
-                        if (disputes != null) {
+                        if (disputeList != null) {
                             // We get the event before the list gets updated, so we execute on next frame
                             UserThread.execute(() -> {
-                                int openDisputes = (int) disputes.getList().stream()
+                                int openDisputes = (int) disputeList.getList().stream()
                                         .filter(e -> !e.isClosed()).count();
                                 numOpenDisputes.set(openDisputes);
                             });
@@ -214,8 +223,8 @@ public abstract class DisputeManager implements PersistedDataHost {
     }
 
     public void cleanupDisputes() {
-        if (disputes != null) {
-            disputes.stream().forEach(dispute -> {
+        if (disputeList != null) {
+            disputeList.stream().forEach(dispute -> {
                 dispute.setStorage(disputeStorage);
                 if (dispute.isClosed())
                     closedDisputes.put(dispute.getTradeId(), dispute);
@@ -244,12 +253,12 @@ public abstract class DisputeManager implements PersistedDataHost {
                                           boolean reOpen,
                                           ResultHandler resultHandler,
                                           FaultHandler faultHandler) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return;
         }
 
-        if (disputes.contains(dispute)) {
+        if (disputeList.contains(dispute)) {
             String msg = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
             log.warn(msg);
             faultHandler.handleFault(msg, new DisputeAlreadyOpenException());
@@ -275,7 +284,7 @@ public abstract class DisputeManager implements PersistedDataHost {
             disputeCommunicationMessage.setSystemMessage(true);
             dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
             if (!reOpen) {
-                disputes.add(dispute);
+                disputeList.add(dispute);
             }
 
             NodeAddress conflictResolverNodeAddress = dispute.getConflictResolverNodeAddress();
@@ -301,7 +310,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                             // We use the disputeCommunicationMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             disputeCommunicationMessage.setArrived(true);
-                            disputes.persist();
+                            disputeList.persist();
                             resultHandler.handleResult();
                         }
 
@@ -316,7 +325,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                             // We use the disputeCommunicationMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             disputeCommunicationMessage.setStoredInMailbox(true);
-                            disputes.persist();
+                            disputeList.persist();
                             resultHandler.handleResult();
                         }
 
@@ -331,7 +340,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                             // We use the disputeCommunicationMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             disputeCommunicationMessage.setSendMessageError(errorMessage);
-                            disputes.persist();
+                            disputeList.persist();
                             faultHandler.handleFault("Sending dispute message failed: " +
                                     errorMessage, new DisputeMessageDeliveryFailedException());
                         }
@@ -357,7 +366,7 @@ public abstract class DisputeManager implements PersistedDataHost {
     private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
                                                 PubKeyRing pubKeyRing) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return null;
         }
@@ -398,7 +407,7 @@ public abstract class DisputeManager implements PersistedDataHost {
             );
             disputeCommunicationMessage.setSystemMessage(true);
             dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
-            disputes.add(dispute);
+            disputeList.add(dispute);
 
             // we mirrored dispute already!
             Contract contract = dispute.getContract();
@@ -427,7 +436,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                             // We use the disputeCommunicationMessage wrapped inside the peerOpenedDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             disputeCommunicationMessage.setArrived(true);
-                            disputes.persist();
+                            disputeList.persist();
                         }
 
                         @Override
@@ -441,7 +450,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                             // We use the disputeCommunicationMessage wrapped inside the peerOpenedDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             disputeCommunicationMessage.setStoredInMailbox(true);
-                            disputes.persist();
+                            disputeList.persist();
                         }
 
                         @Override
@@ -455,7 +464,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                             // We use the disputeCommunicationMessage wrapped inside the peerOpenedDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
                             disputeCommunicationMessage.setSendMessageError(errorMessage);
-                            disputes.persist();
+                            disputeList.persist();
                         }
                     }
             );
@@ -470,7 +479,7 @@ public abstract class DisputeManager implements PersistedDataHost {
 
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return;
         }
@@ -514,7 +523,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                         // We use the disputeCommunicationMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         disputeCommunicationMessage.setArrived(true);
-                        disputes.persist();
+                        disputeList.persist();
                     }
 
                     @Override
@@ -528,7 +537,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                         // We use the disputeCommunicationMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         disputeCommunicationMessage.setStoredInMailbox(true);
-                        disputes.persist();
+                        disputeList.persist();
                     }
 
                     @Override
@@ -542,7 +551,7 @@ public abstract class DisputeManager implements PersistedDataHost {
                         // We use the disputeCommunicationMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
                         disputeCommunicationMessage.setSendMessageError(errorMessage);
-                        disputes.persist();
+                        disputeList.persist();
                     }
                 }
         );
@@ -590,7 +599,7 @@ public abstract class DisputeManager implements PersistedDataHost {
 
     // arbitrator receives that from trader who opens dispute
     void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return;
         }
@@ -600,11 +609,11 @@ public abstract class DisputeManager implements PersistedDataHost {
         Contract contractFromOpener = dispute.getContract();
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
         if (isArbitrator(dispute)) {
-            if (!disputes.contains(dispute)) {
+            if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(disputeStorage);
-                    disputes.add(dispute);
+                    disputeList.add(dispute);
                     errorMessage = sendPeerOpenedDisputeMessage(dispute, contractFromOpener, peersPubKeyRing);
                 } else {
                     errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
@@ -631,7 +640,7 @@ public abstract class DisputeManager implements PersistedDataHost {
 
     // not dispute requester receives that from arbitrator
     void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return;
         }
@@ -639,11 +648,11 @@ public abstract class DisputeManager implements PersistedDataHost {
         String errorMessage;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         if (!isArbitrator(dispute)) {
-            if (!disputes.contains(dispute)) {
+            if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
                     dispute.setStorage(disputeStorage);
-                    disputes.add(dispute);
+                    disputeList.add(dispute);
                     Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
                     tradeOptional.ifPresent(trade -> trade.setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER));
                     errorMessage = null;
@@ -893,16 +902,16 @@ public abstract class DisputeManager implements PersistedDataHost {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Storage<DisputeList> getDisputeStorage() {
+    public Storage<T> getDisputeStorage() {
         return disputeStorage;
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return FXCollections.observableArrayList();
         }
-        return disputes.getList();
+        return disputeList.getList();
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -969,11 +978,11 @@ public abstract class DisputeManager implements PersistedDataHost {
     }
 
     private Optional<Dispute> findDispute(String tradeId, int traderId, boolean isMediationDispute) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return Optional.empty();
         }
-        return disputes.stream()
+        return disputeList.stream()
                 .filter(e -> e.getTradeId().equals(tradeId) &&
                         e.getTraderId() == traderId &&
                         e.isMediationDispute() == isMediationDispute)
@@ -981,11 +990,11 @@ public abstract class DisputeManager implements PersistedDataHost {
     }
 
     public Optional<Dispute> findOwnDispute(String tradeId) {
-        if (disputes == null) {
+        if (disputeList == null) {
             log.warn("disputes is null");
             return Optional.empty();
         }
-        return disputes.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
+        return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
     private void cleanupRetryMap(String uid) {

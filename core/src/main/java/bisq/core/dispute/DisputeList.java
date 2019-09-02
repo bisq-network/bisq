@@ -17,8 +17,6 @@
 
 package bisq.core.dispute;
 
-import bisq.core.proto.CoreProtoResolver;
-
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -30,7 +28,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
@@ -39,33 +36,28 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @ToString
-/**
+/*
  * Holds a List of Dispute objects.
  *
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
  */
-public final class DisputeList implements PersistableEnvelope, PersistedDataHost {
-    transient private final Storage<DisputeList> storage;
-    @Getter
-    private final ObservableList<Dispute> list = FXCollections.observableArrayList();
+public abstract class DisputeList<T extends PersistableEnvelope> implements PersistableEnvelope, PersistedDataHost {
+    transient protected final Storage<T> storage;
 
-    public DisputeList(Storage<DisputeList> storage) {
+    @Getter
+    protected final ObservableList<Dispute> list = FXCollections.observableArrayList();
+
+    public DisputeList(Storage<T> storage) {
         this.storage = storage;
     }
 
-    @Override
-    public void readPersisted() {
-        DisputeList persisted = storage.initAndGetPersisted(this, 50);
-        if (persisted != null)
-            list.addAll(persisted.getList());
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeList(Storage<DisputeList> storage, List<Dispute> list) {
+    protected DisputeList(Storage<T> storage, List<Dispute> list) {
         this.storage = storage;
         this.list.addAll(list);
     }
@@ -76,16 +68,6 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
                 .addAllDispute(ProtoUtil.collectionToProto(list))).build();
     }
 
-    public static DisputeList fromProto(protobuf.DisputeList proto,
-                                        CoreProtoResolver coreProtoResolver,
-                                        Storage<DisputeList> storage) {
-        List<Dispute> list = proto.getDisputeList().stream()
-                .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
-                .collect(Collectors.toList());
-        list.forEach(e -> e.setStorage(storage));
-        return new DisputeList(storage, list);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -93,10 +75,9 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
 
     public boolean add(Dispute dispute) {
         if (!list.contains(dispute)) {
-            boolean changed = list.add(dispute);
-            if (changed)
-                persist();
-            return changed;
+            list.add(dispute);
+            persist();
+            return true;
         } else {
             return false;
         }

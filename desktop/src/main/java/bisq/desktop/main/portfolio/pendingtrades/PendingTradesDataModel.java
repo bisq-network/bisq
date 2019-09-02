@@ -31,6 +31,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dispute.Dispute;
 import bisq.core.dispute.DisputeAlreadyOpenException;
+import bisq.core.dispute.DisputeList;
 import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.dispute.mediator.MediationDisputeManager;
@@ -504,7 +505,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             payoutTxHashAsString = payoutTx.getHashAsString();
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
-        if (disputeState == Trade.DisputeState.NO_DISPUTE) {
+        // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or \
+        // in case of arbitration disputeState == Trade.DisputeState.ARBITRATION_REQUESTED
+        if (disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED) {
             // If no dispute state set we start with mediation
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
@@ -533,7 +536,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false);
-        } else if (disputeState == Trade.DisputeState.MEDIATION_CLOSED) {
+        } else if (disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.DISPUTE_REQUESTED) {
             // Only if we have completed mediation we allow arbitration
             PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
             checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must not be null");
@@ -585,7 +588,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 });
     }
 
-    private DisputeManager getDisputeManager(boolean isMediationDispute) {
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(boolean isMediationDispute) {
         return isMediationDispute ? mediationDisputeManager : arbitrationDisputeManager;
     }
 }

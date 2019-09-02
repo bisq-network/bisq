@@ -93,14 +93,14 @@ public final class Dispute implements NetworkPayload {
     // Added in v1.1.6. Is false if received from old clients.
     private boolean isMediationDispute;
 
-    transient private Storage<DisputeList> storage;
+    transient private Storage<? extends DisputeList> storage;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Dispute(Storage<DisputeList> storage,
+    public Dispute(Storage<? extends DisputeList> storage,
                    String tradeId,
                    int traderId,
                    boolean disputeOpenerIsBuyer,
@@ -275,7 +275,7 @@ public final class Dispute implements NetworkPayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // In case we get the object via the network storage is not set as its transient, so we need to set it.
-    public void setStorage(Storage<DisputeList> storage) {
+    public void setStorage(Storage<? extends DisputeList> storage) {
         this.storage = storage;
     }
 

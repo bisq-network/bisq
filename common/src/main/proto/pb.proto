@@ -1014,7 +1014,7 @@ message PersistableEnvelope {
 
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
-        DisputeList dispute_list = 8;
+        DisputeList dispute_list = 8; // mapped to java class ArbitrationDisputeList
 
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
@@ -1044,6 +1044,7 @@ message PersistableEnvelope {
         MyProofOfBurnList my_proof_of_burn_list = 26;
         UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
         SignedWitnessStore signed_witness_store = 28;
+        MediationDisputeList mediation_dispute_list = 29;
     }
 }
 
@@ -1334,6 +1335,10 @@ message TradingPeer {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 message DisputeList {
+    repeated Dispute dispute = 1;
+}
+
+message MediationDisputeList {
     repeated Dispute dispute = 1;
 }
 

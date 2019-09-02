@@ -25,6 +25,8 @@ import bisq.desktop.main.support.DisputeView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.dispute.DisputeList;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -32,7 +34,7 @@ import bisq.common.crypto.KeyRing;
 
 @FxmlView
 public abstract class TradersDisputeView extends DisputeView {
-    public TradersDisputeView(bisq.core.dispute.DisputeManager DisputeManager,
+    public TradersDisputeView(DisputeManager<? extends DisputeList<? extends DisputeList>> DisputeManager,
                               KeyRing keyRing,
                               TradeManager tradeManager,
                               BSFormatter formatter,
