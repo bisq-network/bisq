@@ -995,5 +995,4 @@ public abstract class DisputeManager implements PersistedDataHost {
                 timer.stop();
         }
     }
-
 }

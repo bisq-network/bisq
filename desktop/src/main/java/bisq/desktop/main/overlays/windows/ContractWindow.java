@@ -24,7 +24,9 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -67,6 +69,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
     private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final MediationDisputeManager mediationDisputeManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private Dispute dispute;
@@ -78,10 +81,12 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
     @Inject
     public ContractWindow(ArbitrationDisputeManager arbitrationDisputeManager,
+                          MediationDisputeManager mediationDisputeManager,
                           AccountAgeWitnessService accountAgeWitnessService,
                           BSFormatter formatter) {
         this.arbitrationDisputeManager = arbitrationDisputeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.mediationDisputeManager = mediationDisputeManager;
         this.formatter = formatter;
         type = Type.Confirmation;
     }
@@ -162,8 +167,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing(), offer.getCurrencyCode()) + " / " +
                         getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing(), offer.getCurrencyCode()));
 
+        String nrOfDisputesAsBuyer = getDisputeManager(dispute).getNrOfDisputes(true, contract);
+        String nrOfDisputesAsSeller = getDisputeManager(dispute).getNrOfDisputes(false, contract);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
-                arbitrationDisputeManager.getNrOfDisputes(true, contract) + " / " + arbitrationDisputeManager.getNrOfDisputes(false, contract));
+                nrOfDisputesAsBuyer + " / " + nrOfDisputesAsSeller);
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
@@ -258,6 +265,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();
         });
+    }
+
+    private DisputeManager getDisputeManager(Dispute dispute) {
+        return dispute.isMediationDispute() ? mediationDisputeManager : arbitrationDisputeManager;
     }
 
     private String getAccountAge(PaymentAccountPayload paymentAccountPayload,
