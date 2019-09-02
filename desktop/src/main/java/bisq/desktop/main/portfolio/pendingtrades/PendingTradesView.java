@@ -27,6 +27,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.CssTheme;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
@@ -392,9 +393,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         });
 
         Scene scene = new Scene(pane);
-        scene.getStylesheets().setAll("/bisq/desktop/theme-light.css",
-                "/bisq/desktop/bisq.css",
-                "/bisq/desktop/images.css");
+        CssTheme.loadSceneStyles(scene, preferences.getCssTheme());
         scene.addEventHandler(KeyEvent.KEY_RELEASED, ev -> {
             if (ev.getCode() == KeyCode.ESCAPE) {
                 ev.consume();

@@ -1,26 +1,50 @@
 .root {
+    /* javafx main color palette */
+    -fx-base: #222222;
+    -fx-background: #2e2e31;
+    -fx-control-inner-background: #1d1d21;
+    -fx-dark-text-color: #dadada;
+    -fx-mid-text-color: #cacaca;
+    -fx-light-text-color: #bababa;
+    -fx-text-fill: #cfcfcf;
+
+    /* javafx elements */
+    -fx-accent: #25b135;
+    -fx-box-border: #1d1d21;
+    -fx-focus-color: #2ea33c;
+    -fx-faint-focus-color: rgba(11, 76, 96, 0.13);
+    -fx-selection-bar: #1a6e1e;
+    -fx-selection-bar-non-focused: #2a7e2e;
+    -fx-default-button: derive(-fx-accent, 95%);
+
+    /* bisq main colors */
     -bs-color-primary: #25b135;
     -bs-color-primary-dark: #2ea33c;
-    -bs-text-color: #cfcfcf;
+    -bs-text-color: #bfbfbf;
     -bs-background-color: #2e2e31;
     -bs-background-gray: #1d1d21;
     -bs-content-background-gray: #242424;
+
+    /* fifty shades of gray */
     -bs-color-gray-13: #bbb;
     -bs-color-gray-11: #f2f2f2;
     -bs-color-gray-10: #cfcecf;
     -bs-color-gray-6: #afaeb0;
-    -bs-color-gray-5: #212627;
+    -bs-color-gray-5: #424242;
     -bs-color-gray-4: #929293;
     -bs-color-gray-3: #7b7b7c;
     -bs-color-gray-2: #504f52;
     -bs-color-gray-1: #2e2e31;
     -bs-color-gray-0: #1d1d21;
-    -bs-color-gray-dim: dimgray;
+    -bs-color-gray-dim: #aaaaaa;
     -bs-color-gray-ddd: #444444;
     -bs-color-gray-ccc: #7a7a7a;
-    -bs-color-gray-bbb: #6a6a6a;
+    -bs-color-gray-bbb: #5a5a5a;
     -bs-color-gray-aaa: #2e2e31;
-    -bs-color-gray-fafa: #fafafa;
+    -bs-color-gray-fafa: #0a0a0a;
+    -bs-color-gray-background: #2e2e31;
+
+    /* lesser used colors */
     -bs-color-blue-5: #0a4576;
     -bs-color-blue-4: #57acc9;
     -bs-color-blue-3: #9bbdc9;
@@ -40,40 +64,48 @@
     -bs-bg-green: #99ba9c;
     -bs-rd-green: #25B135;
     -bs-rd-green-dark: #3EA34A;
+
+    /* other element styling */
     -bs-rd-nav-selected: #25b135;
-    -bs-rd-nav-deselected: rgba(46, 46, 49, 0.59);
+    -bs-rd-nav-deselected: #1d1d21;
     -bs-rd-nav-background: #2ea33c;
     -bs-rd-nav-primary-background: #25b135;
     -bs-rd-nav-primary-border: #44a750;
     -bs-rd-nav-border: #2e2e31;
     -bs-rd-nav-border-color: rgba(46, 46, 49, 0.31);
     -bs-rd-tab-border: #111;
+
     -bs-tab-content-area: #111;
-    -bs-color-gray-background: #2e2e31;
     -bs-content-pane-bg-top: #1d1d21;
     -bs-content-pane-bg-bottom: #2e2e31;
     -bs-scroll-pane-background: transparent;
     -bs-tab-content-area: transparent;
     -bs-viewport-background: transparent;
+
     -bs-footer-pane-background: #2e2e31;
     -bs-footer-pane-text: #cfcecf;
     -bs-footer-pane-line: #2e2e31;
-    -bs-rd-font-balance: #929293;
-    -bs-rd-font-dark-gray: #7b7b7c;
-    -bs-rd-font-dark: #afaeb0;
-    -bs-rd-font-light: #cfcecf;
-    -bs-rd-font-lighter: #f2f2f2;
+
+    -bs-rd-font-balance: #bbbbbb;
+    -bs-rd-font-dark-gray: #d4d4d4;
+    -bs-rd-font-dark: #cccccc;
+    -bs-rd-font-light: #b4b4b4;
+    -bs-rd-font-lighter: #a0a0a0;
+
     -bs-rd-font-confirmation-label: #504f52;
-    -bs-rd-font-balance-label: #504f52;
+    -bs-rd-font-balance-label: #999999;
+
     -bs-text-color-transparent-dark: rgba(29, 29, 33, 0.54);
     -bs-text-color-transparent: rgba(29, 29, 33, 0.2);
     -bs-color-gray-line: #504f52;
+
     -bs-rd-separator: #444444;
     -bs-rd-separator-dark: #222222;
     -bs-rd-error-red: #d83431;
     -bs-rd-message-bubble: #2cadaf;
-    -bs-toggle-selected: #504f52;
     -bs-rd-tooltip-truncated: #afaeb0;
+
+    -bs-toggle-selected: #25b135;
     -bs-warning: #db6300;
     -bs-buy: #2ea33c;
     -bs-buy-focus: black;
@@ -83,32 +115,19 @@
     -bs-sell-focus: #090202;
     -bs-sell-hover: #b42522;
     -bs-sell-transparent: rgba(216, 52, 49, 0.3);
-    -bs-volume-transparent: rgba(37, 177, 54, 0.3);
+    -bs-volume-transparent: rgba(37, 177, 54, 0.5);
     -bs-candle-stick-average-line: rgba(21, 188, 29, 0.8);
     -bs-candle-stick-loss: #ee6563;
     -bs-candle-stick-won: #15bc1d;
     -bs-cancel: #1d1d21;
     -bs-cancel-focus: black;
     -bs-cancel-hover: #050506;
-    -fx-accent: #2ea33c;
-    -fx-box-border: #1d1d21;
+
     -bs-green-soft: derive(-bs-rd-green, 60%);
     -bs-red-soft: derive(-bs-rd-error-red, 60%);
-    -fx-focus-color: #2ea33c;
-    -fx-faint-focus-color: rgba(11, 76, 96, 0.13);
-    -fx-selection-bar: #2a7e2e;
-    -fx-selection-bar-non-focused: -fx-selection-bar;
-    -fx-default-button: white;
 }
 
-.text {
-    -fx-fill: -bs-text-color;
-    -fx-text-fill: -bs-text-color;
-}
-
-.list-view {
-    -fx-background-color: -bs-background-gray;
-}
+/* list view */
 .list-view .list-cell {
     -fx-background-color: -bs-background-color;
 }
@@ -118,38 +137,47 @@
 .list-view .list-cell:even {
     -fx-background-color: derive(-bs-background-color, 5%);
 }
-.list-view .list-cell:selected {
+.list-view .list-cell:selected,
+.table-view .table-cell:selected {
+    -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
-}
-.list-view .list-cell .text {
-    -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-fill: -bs-rd-font-dark-gray;
+    -fx-border-color: -fx-selection-bar;
 }
 
 .number-column.table-cell {
     -fx-background-color: -bs-background-color;
 }
 
-.table-view {
-    -fx-background-color: -bs-background-color;
-}
-.table-row-cell {
-    -fx-border-color: -bs-color-gray-1;
-}
-.table-view .table-cell {
-    -fx-background-color: -bs-background-color;
+/* table view */
+.table-view, .table-cell:focused, .table-row-cell {
+    -fx-background: transparent;
 }
 .table-view .table-row-cell:even .table-cell {
-    -fx-background-color: -bs-background-color;
-}
-
-.table-view .table-row-cell:odd .table-cell {
     -fx-background-color: derive(-bs-background-color, 5%);
+    -fx-border-color: derive(-bs-background-color,5%);
 }
-.table-view .table-row-cell:selected {
+.table-view .table-row-cell:odd .table-cell {
+    -fx-background-color: derive(-bs-background-color,-5%);
+    -fx-border-color: derive(-bs-background-color,-5%);
+}
+.table-view .table-row-cell:selected .table-cell {
+    -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
+    -fx-border-color: -fx-selection-bar;
+}
+.table-row-cell {
+    -fx-border-color: -bs-background-color;
+}
+.table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
+    -fx-background-color: -bs-background-color;
+    -fx-min-height: 36;
+}
+.offer-table .table-row-cell {
+    -fx-background: -fx-accent;
+    -fx-background-color: -bs-color-gray-6;
 }
 
+/* tab pane */
 .jfx-tab-pane .tab-content-area {
     -fx-background-color: -bs-tab-content-area;
 }
@@ -158,50 +186,36 @@
     -fx-background-color: -bs-viewport-background;
 }
 
-.jfx-text-field {
-    -fx-background-color: -bs-color-gray-0;
-    -fx-text-fill: -bs-rd-font-dark;
+/* text field */
+.jfx-text-field, .jfx-text-area,
+.jfx-combo-box, .jfx-combo-box > .list-cell {
+    -fx-background-color: -bs-background-color;
+    -fx-prompt-text-fill: -bs-color-gray-3;
+    -fx-text-fill: -bs-text-color;
 }
-.jfx-text-field-top-label {
-    -fx-text-fill: -bs-color-gray-6;
+.jfx-text-area:readonly, .jfx-text-field:readonly,
+.hyperlink-with-icon {
+    -fx-background: -bs-background-color;
+    -fx-background-color: -bs-background-color;
+    -fx-prompt-text-fill: -bs-color-gray-2;
+    -fx-text-fill: -bs-color-gray-3;
 }
-.jfx-text-area:readonly {
-    -jfx-focus-color: transparent;
+.jfx-combo-box > .text,
+.jfx-text-field-top-label, .jfx-text-area-top-label {
+    -fx-text-fill: -bs-text-color;
 }
-.jfx-text-field:readonly, .hyperlink-with-icon {
-    -fx-background-color: -bs-background-gray;
-}
+
 .input-with-border {
     -fx-border-color: -bs-color-gray-2;
 }
 
-.jfx-button, .action-button {
-    -fx-background-color: -bs-color-gray-1;
-}
-.jfx-button:hover, .jfx-button:focused {
-    -fx-background-color: derive(-bs-background-gray, -10%);
-}
-.action-button:hover, .action-button:focused {
-    -fx-background-color: derive(-bs-color-primary-dark, -10%);
-}
-.action-button:disabled {
-    -fx-background-color: -bs-color-gray-2;
-    -fx-text-fill: -bs-rd-font-dark-gray;
-}
-.action-button {
-    -fx-background-color: -bs-color-primary-dark;
-}
-
-#sell-button, #sell-button-big {
-    -fx-background-color: #660000 !important;
-}
-
-#buy-button, #buy-button-big {
-    -fx-background-color: #006600 !important;
-}
-
 .wallet-seed-words {
     -fx-text-fill: -bs-color-gray-6;
+}
+
+.action-button {
+    -fx-background-color: -bs-color-primary-dark;
+    -fx-text-fill: -fx-dark-text-color;
 }
 
 .chart-pane, .chart-plot-background,
@@ -209,24 +223,24 @@
 #charts-dao .chart-plot-background {
     -fx-background-color: transparent;
 }
-.chart-horizontal-grid-lines, .chart-vertical-grid-lines {
-    -fx-stroke: -bs-color-gray-1;
+.axis:top, .axis:right, .axis:bottom, .axis:left {
+    -fx-border-color: transparent transparent transparent transparent;
+}
+#charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
+    -fx-tick-label-fill: -bs-color-gray-dim;
+}
+.chart-horizontal-grid-lines, .chart-vertical-grid-lines,
+.chart-horizontal-zero-line, .chart-vertical-zero-line,
+.axis-tick-mark, .axis-minor-tick-mark {
+    -fx-stroke: -bs-color-gray-0;
 }
 
-.separated-phase-bar-active {
-    -fx-text-fill: -fx-accent;
-}
-
-.separated-phase-bar-inactive {
-    -fx-text-fill: -bs-color-primary-dark;
-}
-
-.jfx-badge .badge-pane .text {
-    -fx-fill: white;
-}
-
+/* scrollbars */
 .scroll-pane {
     -fx-background-color: -bs-scroll-pane-background;
+}
+.scroll-bar {
+    -fx-background-color: transparent;
 }
 .scroll-bar:horizontal .thumb:hover,
 .scroll-bar:vertical .thumb:hover {
