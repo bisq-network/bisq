@@ -196,10 +196,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         stopPeriodicRepublishOffersTimer();
         stopRetryRepublishOffersTimer();
 
-        log.info("Remove open offers at shutDown. Number of open offers: {}", openOffers.size());
         // we remove own offers from offerbook when we go offline
         // Normally we use a delay for broadcasting to the peers, but at shut down we want to get it fast out
         int size = openOffers != null ? openOffers.size() : 0;
+        log.info("Remove open offers at shutDown. Number of open offers: {}", size);
         if (offerBookService.isBootstrapped() && size > 0) {
             openOffers.forEach(openOffer -> offerBookService.removeOfferAtShutDown(openOffer.getOffer().getOfferPayload()));
             if (completeHandler != null)
