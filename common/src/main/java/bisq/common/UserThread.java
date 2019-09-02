@@ -93,8 +93,7 @@ public class UserThread {
             return timerClass.getDeclaredConstructor().newInstance();
         } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             String message = "Could not instantiate timer bsTimerClass=" + timerClass;
-            log.error(message);
-            e.printStackTrace();
+            log.error(message, e);
             throw new RuntimeException(message);
         }
     }

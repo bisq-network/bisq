@@ -70,8 +70,7 @@ public class Encryption {
             log.trace("Generate msgEncryptionKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
         } catch (Throwable e) {
-            log.error(e.toString());
-            e.printStackTrace();
+            log.error("Could not create key.", e);
             throw new RuntimeException("Could not create key.");
         }
     }
@@ -87,7 +86,7 @@ public class Encryption {
             cipher.init(Cipher.ENCRYPT_MODE, secretKey);
             return cipher.doFinal(payload);
         } catch (Throwable e) {
-            e.printStackTrace();
+            log.error("error in encrypt", e);
             throw new CryptoException(e);
         }
     }
@@ -128,8 +127,7 @@ public class Encryption {
                 outputStream.flush();
                 payloadWithHmac = outputStream.toByteArray().clone();
             } catch (IOException | NoSuchProviderException e) {
-                log.error(e.toString());
-                e.printStackTrace();
+                log.error("Could not create hmac", e);
                 throw new RuntimeException("Could not create hmac");
             } finally {
                 if (outputStream != null) {
@@ -140,8 +138,7 @@ public class Encryption {
                 }
             }
         } catch (Throwable e) {
-            log.error(e.toString());
-            e.printStackTrace();
+            log.error("Could not create hmac", e);
             throw new RuntimeException("Could not create hmac");
         }
         return payloadWithHmac;
@@ -153,8 +150,7 @@ public class Encryption {
             byte[] hmacTest = getHmac(message, secretKey);
             return Arrays.equals(hmacTest, hmac);
         } catch (Throwable e) {
-            log.error(e.toString());
-            e.printStackTrace();
+            log.error("Could not create cipher", e);
             throw new RuntimeException("Could not create cipher");
         }
     }
@@ -204,7 +200,7 @@ public class Encryption {
             cipher.init(Cipher.WRAP_MODE, publicKey, oaepParameterSpec);
             return cipher.wrap(secretKey);
         } catch (Throwable e) {
-            e.printStackTrace();
+            log.error("Couldn't encrypt payload", e);
             throw new CryptoException("Couldn't encrypt payload");
         }
     }
@@ -233,8 +229,7 @@ public class Encryption {
             keyPairGenerator.init(bits);
             return keyPairGenerator.generateKey();
         } catch (Throwable e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
+            log.error("Couldn't generate key", e);
             throw new RuntimeException("Couldn't generate key");
         }
     }
@@ -252,7 +247,6 @@ public class Encryption {
             return KeyFactory.getInstance(Encryption.ASYM_KEY_ALGO).generatePublic(new X509EncodedKeySpec(encryptionPubKeyBytes));
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             log.error("Error creating sigPublicKey from bytes. sigPublicKeyBytes as hex={}, error={}", Utilities.bytesAsHexString(encryptionPubKeyBytes), e);
-            e.printStackTrace();
             throw new KeyConversionException(e);
         }
     }
