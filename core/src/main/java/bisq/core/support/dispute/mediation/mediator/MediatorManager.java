@@ -19,7 +19,7 @@ package bisq.core.support.dispute.mediation.mediator;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
-import bisq.core.support.dispute.DisputeResolverManager;
+import bisq.core.support.dispute.agent.DisputeResolverManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;

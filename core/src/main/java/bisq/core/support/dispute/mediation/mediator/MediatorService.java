@@ -18,7 +18,7 @@
 package bisq.core.support.dispute.mediation.mediator;
 
 import bisq.core.filter.FilterManager;
-import bisq.core.support.dispute.DisputeResolverService;
+import bisq.core.support.dispute.agent.DisputeResolverService;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
