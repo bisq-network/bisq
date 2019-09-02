@@ -17,8 +17,8 @@
 
 package bisq.core.dispute.arbitration;
 
-public class MessageDeliveryFailedException extends Exception {
-    public MessageDeliveryFailedException() {
+public class DisputeMessageDeliveryFailedException extends Exception {
+    public DisputeMessageDeliveryFailedException() {
         super();
     }
 }
