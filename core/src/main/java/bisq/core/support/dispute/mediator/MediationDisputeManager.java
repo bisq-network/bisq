@@ -24,7 +24,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -81,8 +81,8 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
     public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         String tradeId = disputeResult.getTradeId();
-        DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
-        checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
+        ChatMessage chatMessage = disputeResult.getChatMessage();
+        checkNotNull(chatMessage, "disputeCommunicationMessage must not be null");
         Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
         if (!disputeOptional.isPresent()) {
@@ -104,10 +104,10 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
         checkArgument(dispute.isMediationDispute(), "Dispute must be MediationDispute");
 
         cleanupRetryMap(uid);
-        if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage)) {
-            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
+        if (!dispute.getChatMessages().contains(chatMessage)) {
+            dispute.addDisputeCommunicationMessage(chatMessage);
         } else {
-            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + disputeCommunicationMessage.getTradeId());
+            log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }
         dispute.setIsClosed(true);
 
@@ -125,6 +125,6 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
-        chatManager.sendAckMessage(disputeCommunicationMessage, dispute.getConflictResolverPubKeyRing(), true, null);
+        chatManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
     }
 }

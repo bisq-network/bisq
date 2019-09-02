@@ -59,16 +59,16 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true) // listener is transient and therefore excluded anyway
 @Getter
 @Slf4j
-public final class DisputeCommunicationMessage extends DisputeMessage {
+public final class ChatMessage extends DisputeMessage {
 
     public enum Type {
         MEDIATION,
         ARBITRATION,
         TRADE;
 
-        public static DisputeCommunicationMessage.Type fromProto(
+        public static ChatMessage.Type fromProto(
                 protobuf.DisputeCommunicationMessage.Type type) {
-            return ProtoUtil.enumFromProto(DisputeCommunicationMessage.Type.class, type.name());
+            return ProtoUtil.enumFromProto(ChatMessage.Type.class, type.name());
         }
 
         public static protobuf.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
@@ -81,7 +81,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     }
 
     // Added with v1.1.6. Old clients will not have set that field and we fall back to entry 0 which is DISPUTE.
-    private final DisputeCommunicationMessage.Type type;
+    private final ChatMessage.Type type;
     private final String tradeId;
     private final int traderId;
     // This is only used for the server client relationship
@@ -110,13 +110,13 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
 
     transient private WeakReference<Listener> listener;
 
-    public DisputeCommunicationMessage(DisputeCommunicationMessage.Type type,
-                                       String tradeId,
-                                       int traderId,
-                                       boolean senderIsTrader,
-                                       String message,
-                                       NodeAddress senderNodeAddress,
-                                       boolean isMediationDispute) {
+    public ChatMessage(ChatMessage.Type type,
+                       String tradeId,
+                       int traderId,
+                       boolean senderIsTrader,
+                       String message,
+                       NodeAddress senderNodeAddress,
+                       boolean isMediationDispute) {
         this(type,
                 tradeId,
                 traderId,
@@ -136,14 +136,14 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 isMediationDispute);
     }
 
-    public DisputeCommunicationMessage(DisputeCommunicationMessage.Type type,
-                                       String tradeId,
-                                       int traderId,
-                                       boolean senderIsTrader,
-                                       String message,
-                                       NodeAddress senderNodeAddress,
-                                       long date,
-                                       boolean isMediationDispute) {
+    public ChatMessage(ChatMessage.Type type,
+                       String tradeId,
+                       int traderId,
+                       boolean senderIsTrader,
+                       String message,
+                       NodeAddress senderNodeAddress,
+                       long date,
+                       boolean isMediationDispute) {
         this(type,
                 tradeId,
                 traderId,
@@ -168,23 +168,23 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DisputeCommunicationMessage(Type type,
-                                        String tradeId,
-                                        int traderId,
-                                        boolean senderIsTrader,
-                                        String message,
-                                        @Nullable List<Attachment> attachments,
-                                        NodeAddress senderNodeAddress,
-                                        long date,
-                                        boolean arrived,
-                                        boolean storedInMailbox,
-                                        String uid,
-                                        int messageVersion,
-                                        boolean acknowledged,
-                                        @Nullable String sendMessageError,
-                                        @Nullable String ackError,
-                                        boolean wasDisplayed,
-                                        boolean isMediationDispute) {
+    private ChatMessage(Type type,
+                        String tradeId,
+                        int traderId,
+                        boolean senderIsTrader,
+                        String message,
+                        @Nullable List<Attachment> attachments,
+                        NodeAddress senderNodeAddress,
+                        long date,
+                        boolean arrived,
+                        boolean storedInMailbox,
+                        String uid,
+                        int messageVersion,
+                        boolean acknowledged,
+                        @Nullable String sendMessageError,
+                        @Nullable String ackError,
+                        boolean wasDisplayed,
+                        boolean isMediationDispute) {
         super(messageVersion, uid);
         this.type = type;
         this.tradeId = tradeId;
@@ -207,7 +207,7 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
-                .setType(DisputeCommunicationMessage.Type.toProtoMessage(type))
+                .setType(ChatMessage.Type.toProtoMessage(type))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
@@ -229,12 +229,12 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 .build();
     }
 
-    public static DisputeCommunicationMessage fromProto(protobuf.DisputeCommunicationMessage proto,
-                                                        int messageVersion) {
+    public static ChatMessage fromProto(protobuf.DisputeCommunicationMessage proto,
+                                        int messageVersion) {
         // If we get a msg from an old client type will be ordinal 0 which is the dispute entry and as we only added
         // the trade case it is the desired behaviour.
-        DisputeCommunicationMessage.Type type = DisputeCommunicationMessage.Type.fromProto(proto.getType());
-        final DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+        ChatMessage.Type type = ChatMessage.Type.fromProto(proto.getType());
+        final ChatMessage chatMessage = new ChatMessage(
                 type,
                 proto.getTradeId(),
                 proto.getTraderId(),
@@ -252,11 +252,11 @@ public final class DisputeCommunicationMessage extends DisputeMessage {
                 proto.getAckError().isEmpty() ? null : proto.getAckError(),
                 proto.getWasDisplayed(),
                 proto.getIsMediationDispute());
-        disputeCommunicationMessage.setSystemMessage(proto.getIsSystemMessage());
-        return disputeCommunicationMessage;
+        chatMessage.setSystemMessage(proto.getIsSystemMessage());
+        return chatMessage;
     }
 
-    public static DisputeCommunicationMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
+    public static ChatMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence

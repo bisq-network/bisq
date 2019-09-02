@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.Contract;
 
@@ -81,7 +81,7 @@ public final class Dispute implements NetworkPayload {
     private final String takerContractSignature;
     private final PubKeyRing conflictResolverPubKeyRing;
     private final boolean isSupportTicket;
-    private final ObservableList<DisputeCommunicationMessage> disputeCommunicationMessages = FXCollections.observableArrayList();
+    private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
     private BooleanProperty isClosedProperty = new SimpleBooleanProperty();
     // disputeResultProperty.get is Nullable!
     private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
@@ -203,7 +203,7 @@ public final class Dispute implements NetworkPayload {
                 .setContractAsJson(contractAsJson)
                 .setArbitratorPubKeyRing(conflictResolverPubKeyRing.toProtoMessage()) // We renamed to conflictResolverPubKeyRing but need to keep protobuf as it was to be backward compatible
                 .setIsSupportTicket(isSupportTicket)
-                .addAllDisputeCommunicationMessages(disputeCommunicationMessages.stream()
+                .addAllDisputeCommunicationMessages(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                         .collect(Collectors.toList()))
                 .setIsClosed(isClosedProperty.get())
@@ -243,8 +243,8 @@ public final class Dispute implements NetworkPayload {
                 proto.getIsSupportTicket(),
                 proto.getIsMediationDispute());
 
-        dispute.disputeCommunicationMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
-                .map(DisputeCommunicationMessage::fromPayloadProto)
+        dispute.chatMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
+                .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
         dispute.openingDate = proto.getOpeningDate();
@@ -260,9 +260,9 @@ public final class Dispute implements NetworkPayload {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDisputeCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        if (!disputeCommunicationMessages.contains(disputeCommunicationMessage)) {
-            disputeCommunicationMessages.add(disputeCommunicationMessage);
+    public void addDisputeCommunicationMessage(ChatMessage chatMessage) {
+        if (!chatMessages.contains(chatMessage)) {
+            chatMessages.add(chatMessage);
             storage.queueUpForSave();
         } else {
             log.error("disputeDirectMessage already exists");
@@ -355,7 +355,7 @@ public final class Dispute implements NetworkPayload {
                 ", takerContractSignature='" + takerContractSignature + '\'' +
                 ", conflictResolverPubKeyRing=" + conflictResolverPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
-                ", disputeCommunicationMessages=" + disputeCommunicationMessages +
+                ", disputeCommunicationMessages=" + chatMessages +
                 ", isClosed=" + isClosedProperty.get() +
                 ", disputeResult=" + disputeResultProperty.get() +
                 ", disputePayoutTxId='" + disputePayoutTxId + '\'' +

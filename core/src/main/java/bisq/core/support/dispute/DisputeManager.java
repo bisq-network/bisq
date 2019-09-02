@@ -24,7 +24,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.ChatManager;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
@@ -261,8 +261,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
-            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    DisputeCommunicationMessage.Type.ARBITRATION,
+            ChatMessage chatMessage = new ChatMessage(
+                    ChatMessage.Type.ARBITRATION,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -270,8 +270,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     p2PService.getAddress(),
                     dispute.isMediationDispute()
             );
-            disputeCommunicationMessage.setSystemMessage(true);
-            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
+            chatMessage.setSystemMessage(true);
+            dispute.addDisputeCommunicationMessage(chatMessage);
             if (!reOpen) {
                 disputeList.add(dispute);
             }
@@ -283,7 +283,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                             "disputeCommunicationMessage.uid={}",
                     openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
-                    disputeCommunicationMessage.getUid());
+                    chatMessage.getUid());
             p2PService.sendEncryptedMailboxMessage(conflictResolverNodeAddress,
                     dispute.getConflictResolverPubKeyRing(),
                     openNewDisputeMessage,
@@ -294,11 +294,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                             "disputeCommunicationMessage.uid={}",
                                     openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
-                                    disputeCommunicationMessage.getUid());
+                                    chatMessage.getUid());
 
                             // We use the disputeCommunicationMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
-                            disputeCommunicationMessage.setArrived(true);
+                            chatMessage.setArrived(true);
                             disputeList.persist();
                             resultHandler.handleResult();
                         }
@@ -309,11 +309,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                             "disputeCommunicationMessage.uid={}",
                                     openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
-                                    disputeCommunicationMessage.getUid());
+                                    chatMessage.getUid());
 
                             // We use the disputeCommunicationMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
-                            disputeCommunicationMessage.setStoredInMailbox(true);
+                            chatMessage.setStoredInMailbox(true);
                             disputeList.persist();
                             resultHandler.handleResult();
                         }
@@ -324,11 +324,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                             "disputeCommunicationMessage.uid={}, errorMessage={}",
                                     openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
-                                    disputeCommunicationMessage.getUid(), errorMessage);
+                                    chatMessage.getUid(), errorMessage);
 
                             // We use the disputeCommunicationMessage wrapped inside the openNewDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
-                            disputeCommunicationMessage.setSendMessageError(errorMessage);
+                            chatMessage.setSendMessageError(errorMessage);
                             disputeList.persist();
                             faultHandler.handleFault("Sending dispute message failed: " +
                                     errorMessage, new DisputeMessageDeliveryFailedException());
@@ -385,8 +385,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
-            DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                    DisputeCommunicationMessage.Type.ARBITRATION,
+            ChatMessage chatMessage = new ChatMessage(
+                    ChatMessage.Type.ARBITRATION,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -394,8 +394,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     p2PService.getAddress(),
                     dispute.isMediationDispute()
             );
-            disputeCommunicationMessage.setSystemMessage(true);
-            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
+            chatMessage.setSystemMessage(true);
+            dispute.addDisputeCommunicationMessage(chatMessage);
             disputeList.add(dispute);
 
             // we mirrored dispute already!
@@ -409,7 +409,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                             "disputeCommunicationMessage.uid={}",
                     peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
                     peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                    disputeCommunicationMessage.getUid());
+                    chatMessage.getUid());
             p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
                     peersPubKeyRing,
                     peerOpenedDisputeMessage,
@@ -420,11 +420,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                             "disputeCommunicationMessage.uid={}",
                                     peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
                                     peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                                    disputeCommunicationMessage.getUid());
+                                    chatMessage.getUid());
 
                             // We use the disputeCommunicationMessage wrapped inside the peerOpenedDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
-                            disputeCommunicationMessage.setArrived(true);
+                            chatMessage.setArrived(true);
                             disputeList.persist();
                         }
 
@@ -434,11 +434,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                             "disputeCommunicationMessage.uid={}",
                                     peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
                                     peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                                    disputeCommunicationMessage.getUid());
+                                    chatMessage.getUid());
 
                             // We use the disputeCommunicationMessage wrapped inside the peerOpenedDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
-                            disputeCommunicationMessage.setStoredInMailbox(true);
+                            chatMessage.setStoredInMailbox(true);
                             disputeList.persist();
                         }
 
@@ -448,11 +448,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                             "disputeCommunicationMessage.uid={}, errorMessage={}",
                                     peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
                                     peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
-                                    disputeCommunicationMessage.getUid(), errorMessage);
+                                    chatMessage.getUid(), errorMessage);
 
                             // We use the disputeCommunicationMessage wrapped inside the peerOpenedDisputeMessage for
                             // the state, as that is displayed to the user and we only persist that msg
-                            disputeCommunicationMessage.setSendMessageError(errorMessage);
+                            chatMessage.setSendMessageError(errorMessage);
                             disputeList.persist();
                         }
                     }
@@ -473,8 +473,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             return;
         }
 
-        DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
-                DisputeCommunicationMessage.Type.ARBITRATION,
+        ChatMessage chatMessage = new ChatMessage(
+                ChatMessage.Type.ARBITRATION,
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
@@ -483,8 +483,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 dispute.isMediationDispute()
         );
 
-        dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
-        disputeResult.setDisputeCommunicationMessage(disputeCommunicationMessage);
+        dispute.addDisputeCommunicationMessage(chatMessage);
+        disputeResult.setChatMessage(chatMessage);
 
         NodeAddress peersNodeAddress;
         Contract contract = dispute.getContract();
@@ -496,7 +496,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 UUID.randomUUID().toString());
         log.info("Send {} to peer {}. tradeId={}, disputeResultMessage.uid={}, disputeCommunicationMessage.uid={}",
                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress, disputeResultMessage.getTradeId(),
-                disputeResultMessage.getUid(), disputeCommunicationMessage.getUid());
+                disputeResultMessage.getUid(), chatMessage.getUid());
         p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
                 dispute.getTraderPubKeyRing(),
                 disputeResultMessage,
@@ -507,11 +507,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                         "disputeCommunicationMessage.uid={}",
                                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress,
                                 disputeResultMessage.getTradeId(), disputeResultMessage.getUid(),
-                                disputeCommunicationMessage.getUid());
+                                chatMessage.getUid());
 
                         // We use the disputeCommunicationMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
-                        disputeCommunicationMessage.setArrived(true);
+                        chatMessage.setArrived(true);
                         disputeList.persist();
                     }
 
@@ -521,11 +521,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                         "disputeCommunicationMessage.uid={}",
                                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress,
                                 disputeResultMessage.getTradeId(), disputeResultMessage.getUid(),
-                                disputeCommunicationMessage.getUid());
+                                chatMessage.getUid());
 
                         // We use the disputeCommunicationMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
-                        disputeCommunicationMessage.setStoredInMailbox(true);
+                        chatMessage.setStoredInMailbox(true);
                         disputeList.persist();
                     }
 
@@ -535,11 +535,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                         "disputeCommunicationMessage.uid={}, errorMessage={}",
                                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress,
                                 disputeResultMessage.getTradeId(), disputeResultMessage.getUid(),
-                                disputeCommunicationMessage.getUid(), errorMessage);
+                                chatMessage.getUid(), errorMessage);
 
                         // We use the disputeCommunicationMessage wrapped inside the disputeResultMessage for
                         // the state, as that is displayed to the user and we only persist that msg
-                        disputeCommunicationMessage.setSendMessageError(errorMessage);
+                        chatMessage.setSendMessageError(errorMessage);
                         disputeList.persist();
                     }
                 }
@@ -584,9 +584,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         // We use the DisputeCommunicationMessage not the openNewDisputeMessage for the ACK
-        ObservableList<DisputeCommunicationMessage> messages = openNewDisputeMessage.getDispute().getDisputeCommunicationMessages();
+        ObservableList<ChatMessage> messages = openNewDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
-            DisputeCommunicationMessage msg = messages.get(0);
+            ChatMessage msg = messages.get(0);
             PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
             chatManager.sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
         }
@@ -625,9 +625,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         // We use the DisputeCommunicationMessage not the peerOpenedDisputeMessage for the ACK
-        ObservableList<DisputeCommunicationMessage> messages = peerOpenedDisputeMessage.getDispute().getDisputeCommunicationMessages();
+        ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
-            DisputeCommunicationMessage msg = messages.get(0);
+            ChatMessage msg = messages.get(0);
             chatManager.sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
         }
 
@@ -719,12 +719,12 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     protected Optional<Dispute> findDispute(DisputeResult disputeResult) {
-        DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
-        checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
-        return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId(), disputeCommunicationMessage.isMediationDispute());
+        ChatMessage chatMessage = disputeResult.getChatMessage();
+        checkNotNull(chatMessage, "disputeCommunicationMessage must not be null");
+        return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId(), chatMessage.isMediationDispute());
     }
 
-    Optional<Dispute> findDispute(DisputeCommunicationMessage message) {
+    Optional<Dispute> findDispute(ChatMessage message) {
         return findDispute(message.getTradeId(), message.getTraderId(), message.isMediationDispute());
     }
 

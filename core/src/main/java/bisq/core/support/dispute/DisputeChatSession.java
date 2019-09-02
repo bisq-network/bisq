@@ -18,7 +18,7 @@
 package bisq.core.support.dispute;
 
 import bisq.core.support.ChatSession;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -46,14 +46,14 @@ public abstract class DisputeChatSession extends ChatSession {
 
     public DisputeChatSession(@Nullable Dispute dispute,
                               DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                              DisputeCommunicationMessage.Type type) {
+                              ChatMessage.Type type) {
         super(type);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
     }
 
     public DisputeChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                              DisputeCommunicationMessage.Type type) {
+                              ChatMessage.Type type) {
         super(type);
         this.disputeManager = disputeManager;
     }
@@ -84,7 +84,7 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public void addDisputeCommunicationMessage(DisputeCommunicationMessage message) {
+    public void addDisputeCommunicationMessage(ChatMessage message) {
         if (dispute != null && (isClient() || (!isClient() && !message.isSystemMessage())))
             dispute.addDisputeCommunicationMessage(message);
     }
@@ -98,8 +98,8 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessages() {
-        return dispute != null ? dispute.getDisputeCommunicationMessages() : FXCollections.observableArrayList();
+    public ObservableList<ChatMessage> getDisputeCommunicationMessages() {
+        return dispute != null ? dispute.getChatMessages() : FXCollections.observableArrayList();
     }
 
     @Override
@@ -114,7 +114,7 @@ public abstract class DisputeChatSession extends ChatSession {
 
     @Nullable
     @Override
-    public NodeAddress getPeerNodeAddress(DisputeCommunicationMessage message) {
+    public NodeAddress getPeerNodeAddress(ChatMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
         if (!disputeOptional.isPresent()) {
             log.warn("Could not find dispute for tradeId = {} traderId = {}",
@@ -126,7 +126,7 @@ public abstract class DisputeChatSession extends ChatSession {
 
     @Nullable
     @Override
-    public PubKeyRing getPeerPubKeyRing(DisputeCommunicationMessage message) {
+    public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
         if (!disputeOptional.isPresent()) {
             log.warn("Could not find dispute for tradeId = {} traderId = {}",
@@ -138,11 +138,11 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public List<DisputeCommunicationMessage> getChatMessages() {
+    public List<ChatMessage> getChatMessages() {
         DisputeList<? extends DisputeList> disputes = disputeManager.getDisputeList();
         if (disputes != null) {
             return disputes.getList().stream()
-                    .flatMap(dispute -> dispute.getDisputeCommunicationMessages().stream())
+                    .flatMap(dispute -> dispute.getChatMessages().stream())
                     .collect(Collectors.toList());
         } else {
             log.error("disputes is null");
@@ -151,15 +151,15 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public boolean channelOpen(DisputeCommunicationMessage message) {
+    public boolean channelOpen(ChatMessage message) {
         return disputeManager.findDispute(message).isPresent();
     }
 
     @Override
-    public void storeDisputeCommunicationMessage(DisputeCommunicationMessage message) {
+    public void storeDisputeCommunicationMessage(ChatMessage message) {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
         if (disputeOptional.isPresent()) {
-            if (disputeOptional.get().getDisputeCommunicationMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
+            if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 disputeOptional.get().addDisputeCommunicationMessage(message);
             } else {
                 log.warn("We got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",

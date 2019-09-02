@@ -22,7 +22,7 @@ import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -37,11 +37,11 @@ public class ArbitrationChatSession extends DisputeChatSession {
 
     public ArbitrationChatSession(@Nullable Dispute dispute,
                                   DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(dispute, disputeManager, DisputeCommunicationMessage.Type.ARBITRATION);
+        super(dispute, disputeManager, ChatMessage.Type.ARBITRATION);
     }
 
     ArbitrationChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager, DisputeCommunicationMessage.Type.ARBITRATION);
+        super(disputeManager, ChatMessage.Type.ARBITRATION);
 
     }
 
@@ -54,12 +54,12 @@ public class ArbitrationChatSession extends DisputeChatSession {
             disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
         } else if (message instanceof PeerOpenedDisputeMessage) {
             disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        } else if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.ARBITRATION) {
+        } else if (message instanceof ChatMessage) {
+            if (((ChatMessage) message).getType() != ChatMessage.Type.ARBITRATION) {
                 log.debug("Ignore non dispute type communication message");
                 return;
             }
-            disputeManager.getChatManager().onDisputeDirectMessage((DisputeCommunicationMessage) message);
+            disputeManager.getChatManager().onDisputeDirectMessage((ChatMessage) message);
         } else if (message instanceof DisputeResultMessage) {
             disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
         } else if (message instanceof PeerPublishedDisputePayoutTxMessage) {

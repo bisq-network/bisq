@@ -41,7 +41,7 @@ import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.ArbitrationChatSession;
 import bisq.core.support.dispute.mediator.MediationChatSession;
 import bisq.core.support.dispute.mediator.MediationDisputeManager;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.trade.Contract;
@@ -270,7 +270,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                                 .append(dispute.getTraderId())
                                 .append("\n*******************************************************************************************\n")
                                 .append("\n");
-                        dispute.getDisputeCommunicationMessages().forEach(m -> {
+                        dispute.getChatMessages().forEach(m -> {
                             String role = m.isSenderIsTrader() ? ">> Trader's msg: " : "<< Arbitrator's msg: ";
                             stringBuilder.append(role)
                                     .append(m.getMessage())
@@ -407,7 +407,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             disputeChat.deactivate();
     }
 
-    protected abstract DisputeCommunicationMessage.Type getType();
+    protected abstract ChatMessage.Type getType();
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)

@@ -19,7 +19,7 @@ package bisq.core.notifications.alerts;
 
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
@@ -66,7 +66,7 @@ public class DisputeMsgEvents {
     private void setDisputeListener(Dispute dispute) {
         //TODO use weak ref or remove listener
         log.debug("We got a dispute added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
-        dispute.getDisputeCommunicationMessages().addListener((ListChangeListener<DisputeCommunicationMessage>) c -> {
+        dispute.getChatMessages().addListener((ListChangeListener<ChatMessage>) c -> {
             log.debug("We got a DisputeCommunicationMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
             c.next();
             if (c.wasAdded()) {
@@ -75,11 +75,11 @@ public class DisputeMsgEvents {
         });
 
         //TODO test
-        if (!dispute.getDisputeCommunicationMessages().isEmpty())
-            setDisputeCommunicationMessage(dispute.getDisputeCommunicationMessages().get(0));
+        if (!dispute.getChatMessages().isEmpty())
+            setDisputeCommunicationMessage(dispute.getChatMessages().get(0));
     }
 
-    private void setDisputeCommunicationMessage(DisputeCommunicationMessage disputeMsg) {
+    private void setDisputeCommunicationMessage(ChatMessage disputeMsg) {
         // TODO we need to prevent to send msg for old dispute messages again at restart
         // Maybe we need a new property in DisputeCommunicationMessage
         // As key is not set in initial iterations it seems we don't need an extra handling.

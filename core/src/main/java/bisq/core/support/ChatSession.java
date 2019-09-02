@@ -17,7 +17,7 @@
 
 package bisq.core.support;
 
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -32,9 +32,9 @@ import lombok.Getter;
 
 public abstract class ChatSession {
     @Getter
-    DisputeCommunicationMessage.Type type;
+    ChatMessage.Type type;
 
-    public ChatSession(DisputeCommunicationMessage.Type type) {
+    public ChatSession(ChatMessage.Type type) {
         this.type = type;
     }
 
@@ -46,23 +46,23 @@ public abstract class ChatSession {
 
     abstract public PubKeyRing getClientPubKeyRing();
 
-    abstract public void addDisputeCommunicationMessage(DisputeCommunicationMessage message);
+    abstract public void addDisputeCommunicationMessage(ChatMessage message);
 
     abstract public void persist();
 
-    abstract public ObservableList<DisputeCommunicationMessage> getDisputeCommunicationMessages();
+    abstract public ObservableList<ChatMessage> getDisputeCommunicationMessages();
 
-    abstract public List<DisputeCommunicationMessage> getChatMessages();
+    abstract public List<ChatMessage> getChatMessages();
 
     abstract public boolean chatIsOpen();
 
-    abstract public NodeAddress getPeerNodeAddress(DisputeCommunicationMessage message);
+    abstract public NodeAddress getPeerNodeAddress(ChatMessage message);
 
-    abstract public PubKeyRing getPeerPubKeyRing(DisputeCommunicationMessage message);
+    abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
 
     abstract public void dispatchMessage(DisputeMessage message);
 
-    abstract public boolean channelOpen(DisputeCommunicationMessage message);
+    abstract public boolean channelOpen(ChatMessage message);
 
-    abstract public void storeDisputeCommunicationMessage(DisputeCommunicationMessage message);
+    abstract public void storeDisputeCommunicationMessage(ChatMessage message);
 }

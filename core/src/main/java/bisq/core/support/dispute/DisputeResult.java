@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
@@ -74,7 +74,7 @@ public final class DisputeResult implements NetworkPayload {
     private final StringProperty summaryNotesProperty = new SimpleStringProperty("");
     @Setter
     @Nullable
-    private DisputeCommunicationMessage disputeCommunicationMessage;
+    private ChatMessage chatMessage;
     @Setter
     @Nullable
     private byte[] arbitratorSignature;
@@ -100,7 +100,7 @@ public final class DisputeResult implements NetworkPayload {
                          boolean idVerification,
                          boolean screenCast,
                          String summaryNotes,
-                         @Nullable DisputeCommunicationMessage disputeCommunicationMessage,
+                         @Nullable ChatMessage chatMessage,
                          @Nullable byte[] arbitratorSignature,
                          long buyerPayoutAmount,
                          long sellerPayoutAmount,
@@ -115,7 +115,7 @@ public final class DisputeResult implements NetworkPayload {
         this.idVerificationProperty.set(idVerification);
         this.screenCastProperty.set(screenCast);
         this.summaryNotesProperty.set(summaryNotes);
-        this.disputeCommunicationMessage = disputeCommunicationMessage;
+        this.chatMessage = chatMessage;
         this.arbitratorSignature = arbitratorSignature;
         this.buyerPayoutAmount = buyerPayoutAmount;
         this.sellerPayoutAmount = sellerPayoutAmount;
@@ -138,7 +138,7 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getIdVerification(),
                 proto.getScreenCast(),
                 proto.getSummaryNotes(),
-                proto.getDisputeCommunicationMessage() == null ? null : DisputeCommunicationMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
+                proto.getDisputeCommunicationMessage() == null ? null : ChatMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
                 proto.getArbitratorSignature().toByteArray(),
                 proto.getBuyerPayoutAmount(),
                 proto.getSellerPayoutAmount(),
@@ -165,7 +165,7 @@ public final class DisputeResult implements NetworkPayload {
         Optional.ofNullable(arbitratorSignature).ifPresent(arbitratorSignature -> builder.setArbitratorSignature(ByteString.copyFrom(arbitratorSignature)));
         Optional.ofNullable(arbitratorPubKey).ifPresent(arbitratorPubKey -> builder.setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey)));
         Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(protobuf.DisputeResult.Winner.valueOf(winner.name())));
-        Optional.ofNullable(disputeCommunicationMessage).ifPresent(disputeCommunicationMessage ->
+        Optional.ofNullable(chatMessage).ifPresent(disputeCommunicationMessage ->
                 builder.setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
 
         return builder.build();
@@ -242,7 +242,7 @@ public final class DisputeResult implements NetworkPayload {
                 ",\n     idVerificationProperty=" + idVerificationProperty +
                 ",\n     screenCastProperty=" + screenCastProperty +
                 ",\n     summaryNotesProperty=" + summaryNotesProperty +
-                ",\n     disputeCommunicationMessage=" + disputeCommunicationMessage +
+                ",\n     disputeCommunicationMessage=" + chatMessage +
                 ",\n     arbitratorSignature=" + Utilities.bytesAsHexString(arbitratorSignature) +
                 ",\n     buyerPayoutAmount=" + buyerPayoutAmount +
                 ",\n     sellerPayoutAmount=" + sellerPayoutAmount +

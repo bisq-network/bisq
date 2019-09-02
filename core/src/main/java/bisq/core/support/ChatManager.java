@@ -18,7 +18,7 @@
 package bisq.core.support;
 
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 
 import bisq.network.p2p.AckMessage;
@@ -117,14 +117,14 @@ public class ChatManager {
         decryptedMailboxMessageWithPubKeys.clear();
     }
 
-    public void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        final String tradeId = disputeCommunicationMessage.getTradeId();
-        final String uid = disputeCommunicationMessage.getUid();
-        boolean channelOpen = chatSession.channelOpen(disputeCommunicationMessage);
+    public void onDisputeDirectMessage(ChatMessage chatMessage) {
+        final String tradeId = chatMessage.getTradeId();
+        final String uid = chatMessage.getUid();
+        boolean channelOpen = chatSession.channelOpen(chatMessage);
         if (!channelOpen) {
             log.debug("We got a disputeCommunicationMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
-                Timer timer = UserThread.runAfter(() -> onDisputeDirectMessage(disputeCommunicationMessage), 1);
+                Timer timer = UserThread.runAfter(() -> onDisputeDirectMessage(chatMessage), 1);
                 delayMsgMap.put(uid, timer);
             } else {
                 String msg = "We got a disputeCommunicationMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
@@ -134,14 +134,14 @@ public class ChatManager {
         }
 
         cleanupRetryMap(uid);
-        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(disputeCommunicationMessage);
+        PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(chatMessage);
 
-        chatSession.storeDisputeCommunicationMessage(disputeCommunicationMessage);
+        chatSession.storeDisputeCommunicationMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
         if (receiverPubKeyRing != null)
-            sendAckMessage(disputeCommunicationMessage, receiverPubKeyRing, true, null);
+            sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
     }
 
     private void processAckMessage(AckMessage ackMessage,

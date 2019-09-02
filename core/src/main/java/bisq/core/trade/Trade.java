@@ -24,7 +24,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.support.dispute.arbitration.Arbitrator;
 import bisq.core.support.dispute.arbitration.ArbitratorManager;
 import bisq.core.support.dispute.mediator.Mediator;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
@@ -340,7 +340,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     private String counterCurrencyTxId;
     @Getter
-    private final ObservableList<DisputeCommunicationMessage> communicationMessages = FXCollections.observableArrayList();
+    private final ObservableList<ChatMessage> communicationMessages = FXCollections.observableArrayList();
 
     // Transient
     // Immutable
@@ -498,7 +498,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
 
         trade.communicationMessages.addAll(proto.getCommunicationMessagesList().stream()
-                .map(DisputeCommunicationMessage::fromPayloadProto)
+                .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
         return trade;
@@ -611,9 +611,9 @@ public abstract class Trade implements Tradable, Model {
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
-    public void addCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        if (!communicationMessages.contains(disputeCommunicationMessage)) {
-            communicationMessages.add(disputeCommunicationMessage);
+    public void addCommunicationMessage(ChatMessage chatMessage) {
+        if (!communicationMessages.contains(chatMessage)) {
+            communicationMessages.add(chatMessage);
             storage.queueUpForSave();
         } else {
             log.error("Trade DisputeCommunicationMessage already exists");

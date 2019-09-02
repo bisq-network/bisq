@@ -36,7 +36,7 @@ import bisq.core.dao.node.messages.NewBlockBroadcastMessage;
 import bisq.core.support.dispute.arbitration.Arbitrator;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.support.dispute.mediator.Mediator;
-import bisq.core.support.messages.DisputeCommunicationMessage;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
@@ -148,7 +148,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case PEER_OPENED_DISPUTE_MESSAGE:
                     return PeerOpenedDisputeMessage.fromProto(proto.getPeerOpenedDisputeMessage(), this, messageVersion);
                 case DISPUTE_COMMUNICATION_MESSAGE:
-                    return DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage(), messageVersion);
+                    return ChatMessage.fromProto(proto.getDisputeCommunicationMessage(), messageVersion);
                 case DISPUTE_RESULT_MESSAGE:
                     return DisputeResultMessage.fromProto(proto.getDisputeResultMessage(), messageVersion);
                 case PEER_PUBLISHED_DISPUTE_PAYOUT_TX_MESSAGE:
