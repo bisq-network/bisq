@@ -15,14 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.support.traderchat;
 
-import bisq.core.chat.ChatManager;
-import bisq.core.chat.ChatSession;
+import bisq.core.locale.Res;
+import bisq.core.support.ChatManager;
+import bisq.core.support.ChatSession;
 import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
-import bisq.core.locale.Res;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 
 import bisq.network.p2p.NodeAddress;
 

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.chat;
+package bisq.core.support;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.support.dispute.messages.DisputeCommunicationMessage;
