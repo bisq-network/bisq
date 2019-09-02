@@ -33,7 +33,7 @@ import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.voteresult.VoteResultException;
 import bisq.core.dao.governance.voteresult.VoteResultService;
 import bisq.core.dispute.arbitration.ArbitratorManager;
-import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;

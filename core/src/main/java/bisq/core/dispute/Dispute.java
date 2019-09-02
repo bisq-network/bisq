@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration;
+package bisq.core.dispute;
 
 import bisq.core.dispute.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.proto.CoreProtoResolver;

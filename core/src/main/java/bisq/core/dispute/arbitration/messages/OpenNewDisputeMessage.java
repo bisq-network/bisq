@@ -17,7 +17,7 @@
 
 package bisq.core.dispute.arbitration.messages;
 
-import bisq.core.dispute.arbitration.Dispute;
+import bisq.core.dispute.Dispute;
 import bisq.core.proto.CoreProtoResolver;
 
 import bisq.network.p2p.NodeAddress;

@@ -31,7 +31,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.dispute.arbitration.Arbitrator;
 import bisq.core.dispute.arbitration.ArbitratorManager;
-import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.dispute.mediator.Mediator;
 import bisq.core.dispute.mediator.MediatorManager;
 import bisq.core.locale.Res;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dispute.arbitration;
+package bisq.core.dispute;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;

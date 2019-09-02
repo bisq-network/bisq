@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.core.dispute.arbitration.Dispute;
-import bisq.core.dispute.arbitration.DisputeManager;
+import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeManager;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
