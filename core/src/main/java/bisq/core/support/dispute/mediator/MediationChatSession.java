@@ -21,11 +21,11 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
+import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.messages.DisputeMessage;
 
 import lombok.extern.slf4j.Slf4j;
 

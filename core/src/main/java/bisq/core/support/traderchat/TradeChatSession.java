@@ -20,9 +20,9 @@ package bisq.core.support.traderchat;
 import bisq.core.locale.Res;
 import bisq.core.support.ChatManager;
 import bisq.core.support.ChatSession;
-import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.dispute.messages.DisputeMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
+import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.messages.DisputeMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 

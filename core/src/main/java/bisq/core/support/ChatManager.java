@@ -19,7 +19,7 @@ package bisq.core.support;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.dispute.messages.DisputeMessage;
+import bisq.core.support.messages.DisputeMessage;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
