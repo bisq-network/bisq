@@ -18,7 +18,7 @@
 package bisq.desktop.main.disputes.disputeresolvers;
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
+import bisq.desktop.main.disputes.trader.TradersDisputeView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -37,7 +37,7 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class DisputeResolverView extends TraderDisputeView {
+public class DisputeResolverView extends TradersDisputeView {
 
     @Inject
     public DisputeResolverView(ArbitrationDisputeManager arbitrationDisputeManager,

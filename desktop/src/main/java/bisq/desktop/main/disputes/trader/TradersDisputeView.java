@@ -104,7 +104,7 @@ import lombok.Getter;
 //todo separate class
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
-public class TraderDisputeView extends ActivatableView<VBox, Void> {
+public class TradersDisputeView extends ActivatableView<VBox, Void> {
 
     private final DisputeManager DisputeManager;
     protected final KeyRing keyRing;
@@ -141,16 +141,16 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderDisputeView(DisputeManager DisputeManager,
-                             KeyRing keyRing,
-                             TradeManager tradeManager,
-                             BSFormatter formatter,
-                             DisputeSummaryWindow disputeSummaryWindow,
-                             PrivateNotificationManager privateNotificationManager,
-                             ContractWindow contractWindow,
-                             TradeDetailsWindow tradeDetailsWindow,
-                             AccountAgeWitnessService accountAgeWitnessService,
-                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public TradersDisputeView(DisputeManager DisputeManager,
+                              KeyRing keyRing,
+                              TradeManager tradeManager,
+                              BSFormatter formatter,
+                              DisputeSummaryWindow disputeSummaryWindow,
+                              PrivateNotificationManager privateNotificationManager,
+                              ContractWindow contractWindow,
+                              TradeDetailsWindow tradeDetailsWindow,
+                              AccountAgeWitnessService accountAgeWitnessService,
+                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.DisputeManager = DisputeManager;
         this.keyRing = keyRing;
         this.tradeManager = tradeManager;
