@@ -165,8 +165,8 @@ public final class DisputeResult implements NetworkPayload {
         Optional.ofNullable(arbitratorSignature).ifPresent(arbitratorSignature -> builder.setArbitratorSignature(ByteString.copyFrom(arbitratorSignature)));
         Optional.ofNullable(arbitratorPubKey).ifPresent(arbitratorPubKey -> builder.setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey)));
         Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(protobuf.DisputeResult.Winner.valueOf(winner.name())));
-        Optional.ofNullable(chatMessage).ifPresent(disputeCommunicationMessage ->
-                builder.setDisputeCommunicationMessage(disputeCommunicationMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
+        Optional.ofNullable(chatMessage).ifPresent(chatMessage ->
+                builder.setDisputeCommunicationMessage(chatMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
 
         return builder.build();
     }
@@ -242,7 +242,7 @@ public final class DisputeResult implements NetworkPayload {
                 ",\n     idVerificationProperty=" + idVerificationProperty +
                 ",\n     screenCastProperty=" + screenCastProperty +
                 ",\n     summaryNotesProperty=" + summaryNotesProperty +
-                ",\n     disputeCommunicationMessage=" + chatMessage +
+                ",\n     chatMessage=" + chatMessage +
                 ",\n     arbitratorSignature=" + Utilities.bytesAsHexString(arbitratorSignature) +
                 ",\n     buyerPayoutAmount=" + buyerPayoutAmount +
                 ",\n     sellerPayoutAmount=" + sellerPayoutAmount +

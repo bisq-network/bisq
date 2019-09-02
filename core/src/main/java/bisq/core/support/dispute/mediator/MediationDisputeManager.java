@@ -20,14 +20,14 @@ package bisq.core.support.dispute.mediator;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
-import bisq.core.offer.OpenOffer;
-import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -82,7 +82,7 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         String tradeId = disputeResult.getTradeId();
         ChatMessage chatMessage = disputeResult.getChatMessage();
-        checkNotNull(chatMessage, "disputeCommunicationMessage must not be null");
+        checkNotNull(chatMessage, "chatMessage must not be null");
         Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
         if (!disputeOptional.isPresent()) {
@@ -105,7 +105,7 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
 
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
-            dispute.addDisputeCommunicationMessage(chatMessage);
+            dispute.addChatMessage(chatMessage);
         } else {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }

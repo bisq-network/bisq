@@ -661,7 +661,7 @@ public class Chat extends AnchorPane {
         NodeAddress peersNodeAddress = chatSession.getPeerNodeAddress(message);
         PubKeyRing receiverPubKeyRing = chatSession.getPeerPubKeyRing(message);
 
-        chatSession.addDisputeCommunicationMessage(message);
+        chatSession.addChatMessage(message);
 
         if (receiverPubKeyRing != null) {
             log.info("Send {} to peer {}. tradeId={}, uid={}",

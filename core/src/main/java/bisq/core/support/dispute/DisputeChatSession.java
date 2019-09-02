@@ -84,9 +84,9 @@ public abstract class DisputeChatSession extends ChatSession {
     }
 
     @Override
-    public void addDisputeCommunicationMessage(ChatMessage message) {
+    public void addChatMessage(ChatMessage message) {
         if (dispute != null && (isClient() || (!isClient() && !message.isSystemMessage())))
-            dispute.addDisputeCommunicationMessage(message);
+            dispute.addChatMessage(message);
     }
 
     @Override
@@ -160,9 +160,9 @@ public abstract class DisputeChatSession extends ChatSession {
         Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
         if (disputeOptional.isPresent()) {
             if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                disputeOptional.get().addDisputeCommunicationMessage(message);
+                disputeOptional.get().addChatMessage(message);
             } else {
-                log.warn("We got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",
+                log.warn("We got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
         }

@@ -17,13 +17,13 @@
 
 package bisq.core.notifications.alerts;
 
-import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.messages.ChatMessage;
 import bisq.core.locale.Res;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.messages.ChatMessage;
 
 import bisq.network.p2p.P2PService;
 
@@ -67,7 +67,7 @@ public class DisputeMsgEvents {
         //TODO use weak ref or remove listener
         log.debug("We got a dispute added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
         dispute.getChatMessages().addListener((ListChangeListener<ChatMessage>) c -> {
-            log.debug("We got a DisputeCommunicationMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
+            log.debug("We got a ChatMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(this::setDisputeCommunicationMessage);

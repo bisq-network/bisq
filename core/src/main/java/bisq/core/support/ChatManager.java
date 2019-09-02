@@ -122,12 +122,12 @@ public class ChatManager {
         final String uid = chatMessage.getUid();
         boolean channelOpen = chatSession.channelOpen(chatMessage);
         if (!channelOpen) {
-            log.debug("We got a disputeCommunicationMessage but we don't have a matching chat. TradeId = " + tradeId);
+            log.debug("We got a chatMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
                 Timer timer = UserThread.runAfter(() -> onDisputeDirectMessage(chatMessage), 1);
                 delayMsgMap.put(uid, timer);
             } else {
-                String msg = "We got a disputeCommunicationMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
+                String msg = "We got a chatMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
                 log.warn(msg);
             }
             return;

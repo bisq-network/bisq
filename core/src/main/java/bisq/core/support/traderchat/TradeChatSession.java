@@ -107,7 +107,7 @@ public class TradeChatSession extends ChatSession {
     }
 
     @Override
-    public void addDisputeCommunicationMessage(ChatMessage message) {
+    public void addChatMessage(ChatMessage message) {
         if (trade != null)
             trade.addCommunicationMessage(message);
     }
@@ -197,7 +197,7 @@ public class TradeChatSession extends ChatSession {
                 }
                 trade.addCommunicationMessage(message);
             } else {
-                log.warn("Trade got a disputeCommunicationMessage what we have already stored. UId = {} TradeId = {}",
+                log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
         }
