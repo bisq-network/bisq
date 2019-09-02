@@ -27,7 +27,7 @@ import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediator.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationDisputeManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;

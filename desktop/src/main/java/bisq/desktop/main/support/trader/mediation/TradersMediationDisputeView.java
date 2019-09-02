@@ -29,8 +29,8 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
-import bisq.core.support.dispute.mediator.MediationChatSession;
-import bisq.core.support.dispute.mediator.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationChatSession;
+import bisq.core.support.dispute.mediation.MediationDisputeManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 

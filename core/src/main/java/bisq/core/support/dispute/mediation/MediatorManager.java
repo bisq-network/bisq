@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.mediator;
+package bisq.core.support.dispute.mediation;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.support.dispute.DisputeResolverManager;

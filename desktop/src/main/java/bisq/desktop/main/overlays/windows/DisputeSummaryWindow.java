@@ -34,7 +34,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediator.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationDisputeManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;

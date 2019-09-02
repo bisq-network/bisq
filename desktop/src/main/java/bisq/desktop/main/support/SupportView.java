@@ -35,9 +35,9 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediator.MediationDisputeManager;
-import bisq.core.support.dispute.mediator.Mediator;
-import bisq.core.support.dispute.mediator.MediatorManager;
+import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.Mediator;
+import bisq.core.support.dispute.mediation.MediatorManager;
 
 import bisq.network.p2p.NodeAddress;
 
