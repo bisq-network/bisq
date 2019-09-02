@@ -38,6 +38,9 @@ import bisq.core.dispute.Dispute;
 import bisq.core.dispute.DisputeChatSession;
 import bisq.core.dispute.DisputeList;
 import bisq.core.dispute.DisputeManager;
+import bisq.core.dispute.arbitration.ArbitrationChatSession;
+import bisq.core.dispute.mediator.MediationChatSession;
+import bisq.core.dispute.mediator.MediationDisputeManager;
 import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -98,12 +101,10 @@ import java.util.Optional;
 
 import lombok.Getter;
 
-//todo separate class
-// will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
 public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
-    private final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+    protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final BSFormatter formatter;
@@ -119,9 +120,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     private SortedList<Dispute> sortedList;
 
     @Getter
-    private Dispute selectedDispute;
+    protected Dispute selectedDispute;
 
-    private Chat disputeChat;
+    protected Chat disputeChat;
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
@@ -406,7 +407,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             disputeChat.deactivate();
     }
 
-    protected abstract DisputeCommunicationMessage.Type getType(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager);
+    protected abstract DisputeCommunicationMessage.Type getType();
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)
@@ -422,19 +423,19 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         contractWindow.show(dispute);
     }
 
-    private void removeListenersOnSelectDispute() {
+    protected void removeListenersOnSelectDispute() {
         if (selectedDispute != null) {
             if (selectedDisputeClosedPropertyListener != null)
                 selectedDispute.isClosedProperty().removeListener(selectedDisputeClosedPropertyListener);
         }
     }
 
-    private void addListenersOnSelectDispute() {
+    protected void addListenersOnSelectDispute() {
         if (selectedDispute != null)
             selectedDispute.isClosedProperty().addListener(selectedDisputeClosedPropertyListener);
     }
 
-    private void onSelectDispute(Dispute dispute) {
+    protected void onSelectDispute(Dispute dispute) {
         removeListenersOnSelectDispute();
         if (dispute == null) {
             if (root.getChildren().size() > 2)
@@ -444,13 +445,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         } else if (selectedDispute != dispute) {
             this.selectedDispute = dispute;
             if (disputeChat != null) {
-                Button closeDisputeButton = null;
-                if (!dispute.isClosed() && !disputeManager.isTrader(dispute)) {
-                    closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-                    closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
-                }
-                DisputeChatSession chatSession = new DisputeChatSession(dispute, disputeManager, getType(disputeManager));
-                disputeChat.display(chatSession, closeDisputeButton, root.widthProperty());
+                handleOnSelectDispute(dispute);
             }
 
             if (root.getChildren().size() > 2)
@@ -461,7 +456,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         addListenersOnSelectDispute();
     }
 
-    private void onCloseDispute(Dispute dispute) {
+    protected abstract void handleOnSelectDispute(Dispute dispute);
+
+
+    protected DisputeChatSession getConcreteDisputeChatSession(Dispute dispute) {
+        return disputeManager instanceof MediationDisputeManager ?
+                new MediationChatSession(dispute, disputeManager) :
+                new ArbitrationChatSession(dispute, disputeManager);
+    }
+
+    protected void onCloseDispute(Dispute dispute) {
         long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
             disputeSummaryWindow.onFinalizeDispute(() -> disputeChat.removeInputBox())

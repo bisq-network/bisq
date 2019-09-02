@@ -598,7 +598,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator receives that from trader who opens dispute
-    void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+    public void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
@@ -639,7 +639,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     // not dispute requester receives that from arbitrator
-    void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    public void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
@@ -681,7 +681,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
-    void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
+    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         DisputeCommunicationMessage disputeCommunicationMessage = disputeResult.getDisputeCommunicationMessage();
         checkNotNull(disputeCommunicationMessage, "disputeCommunicationMessage must not be null");
@@ -865,7 +865,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
+    public void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
         String uid = peerPublishedDisputePayoutTxMessage.getUid();
         String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);

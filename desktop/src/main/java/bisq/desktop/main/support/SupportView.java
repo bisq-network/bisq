@@ -26,7 +26,8 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.support.disputeresolver.DisputeResolverView;
+import bisq.desktop.main.support.disputeresolver.arbitration.ArbitratorView;
+import bisq.desktop.main.support.disputeresolver.mediation.MediatorView;
 import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
 
@@ -64,7 +65,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
     @FXML
     Tab tradersArbitrationDisputesTab, tradersMediationDisputesTab;
 
-    private Tab disputeResolversDisputesTab;
+    private Tab arbitratorTab, mediatorTab;
 
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
@@ -112,8 +113,10 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, SupportView.class, TradersArbitrationDisputeView.class);
             else if (newValue == tradersMediationDisputesTab)
                 navigation.navigateTo(MainView.class, SupportView.class, TradersMediationDisputeView.class);
-            else if (newValue == disputeResolversDisputesTab)
-                navigation.navigateTo(MainView.class, SupportView.class, DisputeResolverView.class);
+            else if (newValue == arbitratorTab)
+                navigation.navigateTo(MainView.class, SupportView.class, ArbitratorView.class);
+            else if (newValue == mediatorTab)
+                navigation.navigateTo(MainView.class, SupportView.class, MediatorView.class);
         };
 
         arbitratorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
@@ -130,24 +133,33 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (isActiveArbitrator)
             checkArgument(!isActiveMediator, "We do not support that arbitrators are mediators as well");
 
-        // In case a arbitrator or mediator has become inactive he still might get disputes from pending trades
-        boolean hasDisputesAsArbitrator = arbitrationDisputeManager.getDisputesAsObservableList().stream()
-                .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
-        boolean hasDisputesAsMediator = mediationDisputeManager.getDisputesAsObservableList().stream()
-                .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
-
-        boolean isActive = isActiveArbitrator || isActiveMediator;
-        boolean hasReceivedDisputes = hasDisputesAsArbitrator || hasDisputesAsMediator;
-        if (disputeResolversDisputesTab == null && (isActive || hasReceivedDisputes)) {
-            disputeResolversDisputesTab = new Tab();
-            disputeResolversDisputesTab.setClosable(false);
-            root.getTabs().add(disputeResolversDisputesTab);
+        if (arbitratorTab == null) {
+            // In case a arbitrator has become inactive he still might get disputes from pending trades
+            boolean hasDisputesAsArbitrator = arbitrationDisputeManager.getDisputesAsObservableList().stream()
+                    .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
+            if (isActiveArbitrator || hasDisputesAsArbitrator) {
+                arbitratorTab = new Tab();
+                arbitratorTab.setClosable(false);
+                root.getTabs().add(arbitratorTab);
+            }
+        }
+        if (mediatorTab == null) {
+            // In case a mediator has become inactive he still might get disputes from pending trades
+            boolean hasDisputesAsMediator = mediationDisputeManager.getDisputesAsObservableList().stream()
+                    .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
+            if (isActiveMediator || hasDisputesAsMediator) {
+                mediatorTab = new Tab();
+                mediatorTab.setClosable(false);
+                root.getTabs().add(mediatorTab);
+            }
         }
 
         // We might get that method called before we have the map is filled in the arbitratorManager
-        if (disputeResolversDisputesTab != null) {
-            String role = isActiveArbitrator ? Res.get("shared.arbitrator2") : Res.get("shared.mediator");
-            disputeResolversDisputesTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", role).toUpperCase());
+        if (arbitratorTab != null) {
+            arbitratorTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.arbitrator2")).toUpperCase());
+        }
+        if (mediatorTab != null) {
+            mediatorTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.mediator")).toUpperCase());
         }
     }
 
@@ -168,8 +180,10 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, SupportView.class, TradersMediationDisputeView.class);
         } else if (root.getSelectionModel().getSelectedItem() == tradersArbitrationDisputesTab) {
             navigation.navigateTo(MainView.class, SupportView.class, TradersArbitrationDisputeView.class);
-        } else if (disputeResolversDisputesTab != null) {
-            navigation.navigateTo(MainView.class, SupportView.class, DisputeResolverView.class);
+        } else if (arbitratorTab != null) {
+            navigation.navigateTo(MainView.class, SupportView.class, ArbitratorView.class);
+        } else if (mediatorTab != null) {
+            navigation.navigateTo(MainView.class, SupportView.class, MediatorView.class);
         }
 
         String key = "supportInfo";
@@ -200,9 +214,14 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
             currentTab = tradersMediationDisputesTab;
         } else if (view instanceof TradersArbitrationDisputeView) {
             currentTab = tradersArbitrationDisputesTab;
+        } else if (view instanceof ArbitratorView) {
+            currentTab = arbitratorTab;
+        } else if (view instanceof MediatorView) {
+            currentTab = mediatorTab;
         } else {
-            currentTab = disputeResolversDisputesTab;
+            currentTab = null;
         }
+
         if (currentTab != null) {
             currentTab.setContent(view.getRoot());
             root.getSelectionModel().select(currentTab);

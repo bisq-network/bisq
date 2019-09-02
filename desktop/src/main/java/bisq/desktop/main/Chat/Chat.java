@@ -169,6 +169,10 @@ public class Chat extends AnchorPane {
         removeListenersOnSessionChange();
     }
 
+    public void display(ChatSession chatSession, ReadOnlyDoubleProperty widthProperty) {
+        display(chatSession, null, widthProperty);
+    }
+
     public void display(ChatSession chatSession, @Nullable Button extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
         removeListenersOnSessionChange();

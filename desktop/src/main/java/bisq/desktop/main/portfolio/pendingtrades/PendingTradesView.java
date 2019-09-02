@@ -35,6 +35,7 @@ import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeChatSession;
+import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
@@ -329,15 +330,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (chatPopupStage != null)
             chatPopupStage.close();
 
+        TradeManager tradeManager = model.dataModel.tradeManager;
         if (trade.getCommunicationMessages().isEmpty()) {
-            ((TradeChatSession) model.dataModel.tradeManager.getChatManager().getChatSession()).addSystemMsg(trade);
+            ((TradeChatSession) tradeManager.getChatManager().getChatSession()).addSystemMsg(trade);
         }
 
         trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
 
-        Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
+        Chat tradeChat = new Chat(tradeManager.getChatManager(), formatter);
         tradeChat.setAllowAttachments(false);
         tradeChat.setDisplayHeader(false);
         tradeChat.initialize();
@@ -351,9 +353,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
         boolean isBuyer = model.dataModel.isBuyer();
-        TradeChatSession chatSession = new TradeChatSession(trade, isTaker, isBuyer,
-                model.dataModel.tradeManager,
-                model.dataModel.tradeManager.getChatManager());
+        TradeChatSession chatSession = new TradeChatSession(trade,
+                isTaker,
+                isBuyer,
+                tradeManager,
+                tradeManager.getChatManager());
 
         disputeStateListener = tradeId -> {
             if (trade.getId().equals(tradeId)) {
@@ -362,7 +366,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
         chatSession.addDisputeStateListener(disputeStateListener);
 
-        tradeChat.display(chatSession, null, pane.widthProperty());
+        tradeChat.display(chatSession, pane.widthProperty());
 
         tradeChat.activate();
         tradeChat.scrollToBottom();

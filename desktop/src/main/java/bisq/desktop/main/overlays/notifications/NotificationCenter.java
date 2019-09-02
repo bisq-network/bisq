@@ -246,8 +246,10 @@ public class NotificationCenter {
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
                 default:
-                    if (DevEnv.isDevMode())
-                        throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
+                    if (DevEnv.isDevMode()) {
+                        log.error("arbitrationDisputeManager must not contain mediation disputes");
+                        //throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
+                    }
                     break;
             }
             if (message != null) {
@@ -269,8 +271,10 @@ public class NotificationCenter {
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
                 default:
-                    if (DevEnv.isDevMode())
-                        throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
+                    if (DevEnv.isDevMode()) {
+                        log.error("mediationDisputeManager must not contain arbitration disputes");
+                        //throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
+                    }
                     break;
             }
             if (message != null) {

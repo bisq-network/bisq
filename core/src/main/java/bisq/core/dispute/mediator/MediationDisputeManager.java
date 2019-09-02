@@ -22,7 +22,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dispute.DisputeChatSession;
 import bisq.core.dispute.DisputeManager;
-import bisq.core.dispute.messages.DisputeCommunicationMessage;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -56,7 +55,7 @@ public class MediationDisputeManager extends DisputeManager<MediationDisputeList
 
     @Override
     protected DisputeChatSession getConcreteChatSession() {
-        return new DisputeChatSession(this, DisputeCommunicationMessage.Type.MEDIATION);
+        return new MediationChatSession(this);
     }
 
     @Override
