@@ -19,11 +19,6 @@ package bisq.core.dispute;
 
 import bisq.core.chat.ChatSession;
 import bisq.core.dispute.messages.DisputeCommunicationMessage;
-import bisq.core.dispute.messages.DisputeMessage;
-import bisq.core.dispute.messages.DisputeResultMessage;
-import bisq.core.dispute.messages.OpenNewDisputeMessage;
-import bisq.core.dispute.messages.PeerOpenedDisputeMessage;
-import bisq.core.dispute.messages.PeerPublishedDisputePayoutTxMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -37,36 +32,30 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-public class DisputeChatSession extends ChatSession {
-    private static final Logger log = LoggerFactory.getLogger(DisputeChatSession.class);
-
+@Slf4j
+public abstract class DisputeChatSession extends ChatSession {
     @Nullable
     @Getter
     private Dispute dispute;
-    private DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
-    private final DisputeCommunicationMessage.Type type;
+    protected DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
 
     public DisputeChatSession(@Nullable Dispute dispute,
                               DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                               DisputeCommunicationMessage.Type type) {
-        super(DisputeCommunicationMessage.Type.ARBITRATION);
+        super(type);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
-        this.type = type;
     }
 
     public DisputeChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                               DisputeCommunicationMessage.Type type) {
-        super(DisputeCommunicationMessage.Type.ARBITRATION);
+        super(type);
         this.disputeManager = disputeManager;
-        this.type = type;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -146,30 +135,6 @@ public class DisputeChatSession extends ChatSession {
         }
 
         return disputeManager.getNodeAddressPubKeyRingTuple(disputeOptional.get()).second;
-    }
-
-    @Override
-    public void dispatchMessage(DisputeMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-
-        if (message instanceof OpenNewDisputeMessage) {
-            disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-        } else if (message instanceof PeerOpenedDisputeMessage) {
-            disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        } else if (message instanceof DisputeCommunicationMessage) {
-            if (((DisputeCommunicationMessage) message).getType() != DisputeCommunicationMessage.Type.ARBITRATION) {
-                log.debug("Ignore non dispute type communication message");
-                return;
-            }
-            disputeManager.getChatManager().onDisputeDirectMessage((DisputeCommunicationMessage) message);
-        } else if (message instanceof DisputeResultMessage) {
-            disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
-        } else if (message instanceof PeerPublishedDisputePayoutTxMessage) {
-            disputeManager.onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
-        } else {
-            log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
-        }
     }
 
     @Override

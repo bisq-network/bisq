@@ -18,6 +18,7 @@
 package bisq.desktop.main.support.disputeresolver;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -26,11 +27,11 @@ import bisq.desktop.main.support.DisputeView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.dispute.Dispute;
+import bisq.core.dispute.DisputeChatSession;
 import bisq.core.dispute.DisputeList;
 import bisq.core.dispute.DisputeManager;
-import bisq.core.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.dispute.mediator.MediationDisputeManager;
-import bisq.core.dispute.messages.DisputeCommunicationMessage;
+import bisq.core.locale.Res;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -38,13 +39,12 @@ import bisq.common.crypto.KeyRing;
 
 import com.google.inject.name.Named;
 
-import javax.inject.Inject;
+import javafx.scene.control.Button;
 
 @FxmlView
-public class DisputeResolverView extends DisputeView {
+public abstract class DisputeResolverView extends DisputeView {
 
-    @Inject
-    public DisputeResolverView(ArbitrationDisputeManager arbitrationDisputeManager,
+    public DisputeResolverView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                                KeyRing keyRing,
                                TradeManager tradeManager,
                                BSFormatter formatter,
@@ -54,7 +54,7 @@ public class DisputeResolverView extends DisputeView {
                                TradeDetailsWindow tradeDetailsWindow,
                                AccountAgeWitnessService accountAgeWitnessService,
                                @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(arbitrationDisputeManager,
+        super(disputeManager,
                 keyRing,
                 tradeManager,
                 formatter,
@@ -64,12 +64,6 @@ public class DisputeResolverView extends DisputeView {
                 tradeDetailsWindow,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
-    }
-
-    @Override
-    protected DisputeCommunicationMessage.Type getType(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        return disputeManager instanceof MediationDisputeManager ? DisputeCommunicationMessage.Type.MEDIATION :
-                DisputeCommunicationMessage.Type.ARBITRATION;
     }
 
     @Override
@@ -100,6 +94,16 @@ public class DisputeResolverView extends DisputeView {
         });
     }
 
+    @Override
+    protected void handleOnSelectDispute(Dispute dispute) {
+        Button closeDisputeButton = null;
+        if (!dispute.isClosed() && !disputeManager.isTrader(dispute)) {
+            closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
+            closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
+        }
+        DisputeChatSession chatSession = getConcreteDisputeChatSession(dispute);
+        disputeChat.display(chatSession, closeDisputeButton, root.widthProperty());
+    }
 }
 
 

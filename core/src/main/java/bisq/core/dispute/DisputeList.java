@@ -17,12 +17,9 @@
 
 package bisq.core.dispute;
 
-import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
-
-import com.google.protobuf.Message;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -60,12 +57,6 @@ public abstract class DisputeList<T extends PersistableEnvelope> implements Pers
     protected DisputeList(Storage<T> storage, List<Dispute> list) {
         this.storage = storage;
         this.list.addAll(list);
-    }
-
-    @Override
-    public Message toProtoMessage() {
-        return protobuf.PersistableEnvelope.newBuilder().setDisputeList(protobuf.DisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(list))).build();
     }
 
 
