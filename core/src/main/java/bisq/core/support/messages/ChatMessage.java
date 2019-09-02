@@ -18,7 +18,6 @@
 package bisq.core.support.messages;
 
 import bisq.core.support.dispute.Attachment;
-import bisq.core.support.dispute.messages.DisputeMessage;
 
 import bisq.network.p2p.NodeAddress;
 
