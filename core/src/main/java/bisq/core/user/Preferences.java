@@ -235,7 +235,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
                     "preferredTradeCurrency must not be null");
             prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
-            setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
+            setFiatCurrencies(new ArrayList<>(Collections.singletonList((FiatCurrency) preferredTradeCurrency)));
             setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
 
             switch (baseCurrencyNetwork.getCurrencyCode()) {
