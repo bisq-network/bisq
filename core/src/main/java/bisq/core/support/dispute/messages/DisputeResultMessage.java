@@ -18,7 +18,6 @@
 package bisq.core.support.dispute.messages;
 
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.messages.TradeChatMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -31,7 +30,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-public final class DisputeResultMessage extends TradeChatMessage {
+public final class DisputeResultMessage extends DisputeChatMessage {
     private final DisputeResult disputeResult;
     private final NodeAddress senderNodeAddress;
 
