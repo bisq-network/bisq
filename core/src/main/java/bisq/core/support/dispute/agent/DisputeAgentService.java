@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * Used to store disputeResolvers profile and load map of disputeResolvers
  */
 @Slf4j
-public abstract class DisputeResolverService<T extends DisputeResolver> {
+public abstract class DisputeAgentService<T extends DisputeAgent> {
     protected final P2PService p2PService;
     protected final FilterManager filterManager;
 
@@ -49,7 +49,7 @@ public abstract class DisputeResolverService<T extends DisputeResolver> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeResolverService(P2PService p2PService, FilterManager filterManager) {
+    public DisputeAgentService(P2PService p2PService, FilterManager filterManager) {
         this.p2PService = p2PService;
         this.filterManager = filterManager;
     }

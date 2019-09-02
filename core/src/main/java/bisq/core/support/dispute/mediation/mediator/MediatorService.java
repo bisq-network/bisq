@@ -18,7 +18,7 @@
 package bisq.core.support.dispute.mediation.mediator;
 
 import bisq.core.filter.FilterManager;
-import bisq.core.support.dispute.agent.DisputeResolverService;
+import bisq.core.support.dispute.agent.DisputeAgentService;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class MediatorService extends DisputeResolverService<Mediator> {
+public class MediatorService extends DisputeAgentService<Mediator> {
 
     @Inject
     public MediatorService(P2PService p2PService, FilterManager filterManager) {

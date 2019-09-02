@@ -19,7 +19,7 @@ package bisq.core.support.dispute.mediation.mediator;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
-import bisq.core.support.dispute.agent.DisputeResolverManager;
+import bisq.core.support.dispute.agent.DisputeAgentManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -34,7 +34,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 @Singleton
-public class MediatorManager extends DisputeResolverManager<Mediator> {
+public class MediatorManager extends DisputeAgentManager<Mediator> {
 
     @Inject
     public MediatorManager(KeyRing keyRing,

@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute.arbitration.arbitrator;
 
-import bisq.core.support.dispute.agent.DisputeResolver;
+import bisq.core.support.dispute.agent.DisputeAgent;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class Arbitrator extends DisputeResolver {
+public final class Arbitrator extends DisputeAgent {
     private final byte[] btcPubKey;
     private final String btcAddress;
 

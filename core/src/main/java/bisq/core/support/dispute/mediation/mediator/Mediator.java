@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute.mediation.mediator;
 
-import bisq.core.support.dispute.agent.DisputeResolver;
+import bisq.core.support.dispute.agent.DisputeAgent;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public final class Mediator extends DisputeResolver {
+public final class Mediator extends DisputeAgent {
     public Mediator(NodeAddress nodeAddress,
                     PubKeyRing pubKeyRing,
                     List<String> languageCodes,

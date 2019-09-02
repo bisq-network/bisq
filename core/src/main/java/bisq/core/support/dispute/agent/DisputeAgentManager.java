@@ -61,13 +61,13 @@ import javax.annotation.Nullable;
 import static org.bitcoinj.core.Utils.HEX;
 
 @Slf4j
-public abstract class DisputeResolverManager<T extends DisputeResolver> {
+public abstract class DisputeAgentManager<T extends DisputeAgent> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected static final long REPUBLISH_MILLIS = DisputeResolver.TTL / 2;
+    protected static final long REPUBLISH_MILLIS = DisputeAgent.TTL / 2;
     protected static final long RETRY_REPUBLISH_SEC = 5;
     protected static final long REPEATED_REPUBLISH_AT_STARTUP_SEC = 60;
 
@@ -78,7 +78,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected final KeyRing keyRing;
-    protected final DisputeResolverService<T> disputeResolverService;
+    protected final DisputeAgentService<T> disputeAgentService;
     protected final User user;
     protected final FilterManager filterManager;
     protected final ObservableMap<NodeAddress, T> observableMap = FXCollections.observableHashMap();
@@ -90,13 +90,13 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeResolverManager(KeyRing keyRing,
-                                  DisputeResolverService<T> disputeResolverService,
-                                  User user,
-                                  FilterManager filterManager,
-                                  boolean useDevPrivilegeKeys) {
+    public DisputeAgentManager(KeyRing keyRing,
+                               DisputeAgentService<T> disputeAgentService,
+                               User user,
+                               FilterManager filterManager,
+                               boolean useDevPrivilegeKeys) {
         this.keyRing = keyRing;
-        this.disputeResolverService = disputeResolverService;
+        this.disputeAgentService = disputeAgentService;
         this.user = user;
         this.filterManager = filterManager;
         publicKeys = useDevPrivilegeKeys ? Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY) : getPubKeyList();
@@ -129,7 +129,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized() {
-        disputeResolverService.addHashSetChangedListener(new HashMapChangedListener() {
+        disputeAgentService.addHashSetChangedListener(new HashMapChangedListener() {
             @Override
             public void onAdded(ProtectedStorageEntry data) {
                 if (isExpectedInstance(data)) {
@@ -150,7 +150,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
         clearAcceptedDisputeResolversAtUser();
 
         if (getRegisteredDisputeResolverFromUser() != null) {
-            P2PService p2PService = disputeResolverService.getP2PService();
+            P2PService p2PService = disputeAgentService.getP2PService();
             if (p2PService.isBootstrapped())
                 startRepublishDisputeResolver();
             else
@@ -181,7 +181,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
     }
 
     public void updateMap() {
-        Map<NodeAddress, T> map = disputeResolverService.getDisputeResolvers();
+        Map<NodeAddress, T> map = disputeAgentService.getDisputeResolvers();
         observableMap.clear();
         Map<NodeAddress, T> filtered = map.values().stream()
                 .filter(e -> {
@@ -205,7 +205,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
 
                     return isInPublicKeyInList && isSigValid;
                 })
-                .collect(Collectors.toMap(DisputeResolver::getNodeAddress, Function.identity()));
+                .collect(Collectors.toMap(DisputeAgent::getNodeAddress, Function.identity()));
 
         observableMap.putAll(filtered);
 
@@ -226,7 +226,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
                                    ErrorMessageHandler errorMessageHandler) {
         setRegisteredDisputeResolverAtUser(disputeResolver);
         observableMap.put(disputeResolver.getNodeAddress(), disputeResolver);
-        disputeResolverService.addDisputeResolver(disputeResolver,
+        disputeAgentService.addDisputeResolver(disputeResolver,
                 () -> {
                     log.info("DisputeResolver successfully saved in P2P network");
                     resultHandler.handleResult();
@@ -243,7 +243,7 @@ public abstract class DisputeResolverManager<T extends DisputeResolver> {
         if (registeredDisputeResolver != null) {
             setRegisteredDisputeResolverAtUser(null);
             observableMap.remove(registeredDisputeResolver.getNodeAddress());
-            disputeResolverService.removeDisputeResolver(registeredDisputeResolver,
+            disputeAgentService.removeDisputeResolver(registeredDisputeResolver,
                     () -> {
                         log.debug("DisputeResolver successfully removed from P2P network");
                         resultHandler.handleResult();
