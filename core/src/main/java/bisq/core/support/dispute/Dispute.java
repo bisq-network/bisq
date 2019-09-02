@@ -18,6 +18,7 @@
 package bisq.core.support.dispute;
 
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 
@@ -362,5 +363,9 @@ public final class Dispute implements NetworkPayload {
                 ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';
+    }
+
+    public SupportType getSupportType() {
+        return isMediationDispute ? SupportType.MEDIATION : SupportType.ARBITRATION;
     }
 }

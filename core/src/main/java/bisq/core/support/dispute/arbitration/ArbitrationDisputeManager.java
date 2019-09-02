@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeManager;
@@ -263,7 +264,8 @@ public class ArbitrationDisputeManager extends DisputeManager<ArbitrationDispute
         PeerPublishedDisputePayoutTxMessage message = new PeerPublishedDisputePayoutTxMessage(transaction.bitcoinSerialize(),
                 dispute.getTradeId(),
                 p2PService.getAddress(),
-                UUID.randomUUID().toString());
+                UUID.randomUUID().toString(),
+                SupportType.ARBITRATION);
         log.info("Send {} to peer {}. tradeId={}, uid={}",
                 message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
         p2PService.sendEncryptedMailboxMessage(peersNodeAddress,

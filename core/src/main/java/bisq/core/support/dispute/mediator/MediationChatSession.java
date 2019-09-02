@@ -17,6 +17,7 @@
 
 package bisq.core.support.dispute.mediator;
 
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeList;
@@ -25,7 +26,7 @@ import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportChatMessage;
+import bisq.core.support.messages.SupportMessage;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,33 +37,35 @@ public class MediationChatSession extends DisputeChatSession {
 
     public MediationChatSession(@Nullable Dispute dispute,
                                 DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(dispute, disputeManager, ChatMessage.Type.MEDIATION);
+        super(dispute, disputeManager, SupportType.MEDIATION);
     }
 
     MediationChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager, ChatMessage.Type.MEDIATION);
+        super(disputeManager, SupportType.MEDIATION);
 
     }
 
     @Override
-    public void dispatchMessage(SupportChatMessage message) {
+    public void dispatchMessage(SupportMessage message) {
         log.info("Received {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
-        if (message instanceof OpenNewDisputeMessage) {
-            disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-        } else if (message instanceof PeerOpenedDisputeMessage) {
-            disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        } else if (message instanceof ChatMessage) {
-            if (((ChatMessage) message).getType() != ChatMessage.Type.MEDIATION) {
-                log.debug("Ignore non dispute type communication message");
-                return;
+        if (message.getSupportType() == SupportType.MEDIATION) {
+            if (message instanceof OpenNewDisputeMessage) {
+                disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
+            } else if (message instanceof PeerOpenedDisputeMessage) {
+                disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
+            } else if (message instanceof ChatMessage) {
+                if (((ChatMessage) message).getSupportType() != SupportType.MEDIATION) {
+                    log.debug("Ignore non dispute type communication message");
+                    return;
+                }
+                disputeManager.getChatManager().onDisputeDirectMessage((ChatMessage) message);
+            } else if (message instanceof DisputeResultMessage) {
+                disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
+            } else {
+                log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
-            disputeManager.getChatManager().onDisputeDirectMessage((ChatMessage) message);
-        } else if (message instanceof DisputeResultMessage) {
-            disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
-        } else {
-            log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
         }
     }
 }

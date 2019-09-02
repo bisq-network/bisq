@@ -18,7 +18,7 @@
 package bisq.core.support;
 
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportChatMessage;
+import bisq.core.support.messages.SupportMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -32,10 +32,10 @@ import lombok.Getter;
 
 public abstract class ChatSession {
     @Getter
-    ChatMessage.Type type;
+    SupportType supportType;
 
-    public ChatSession(ChatMessage.Type type) {
-        this.type = type;
+    public ChatSession(SupportType supportType) {
+        this.supportType = supportType;
     }
 
     abstract public boolean isClient();
@@ -61,7 +61,7 @@ public abstract class ChatSession {
 
     abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
 
-    abstract public void dispatchMessage(SupportChatMessage message);
+    abstract public void dispatchMessage(SupportMessage message);
 
     abstract public boolean channelOpen(ChatMessage message);
 

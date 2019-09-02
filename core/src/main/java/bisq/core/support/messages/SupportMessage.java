@@ -17,6 +17,8 @@
 
 package bisq.core.support.messages;
 
+import bisq.core.support.SupportType;
+
 import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.UidMessage;
 
@@ -27,12 +29,16 @@ import lombok.Getter;
 
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public abstract class SupportChatMessage extends NetworkEnvelope implements MailboxMessage, UidMessage {
+public abstract class SupportMessage extends NetworkEnvelope implements MailboxMessage, UidMessage {
     protected final String uid;
 
-    public SupportChatMessage(int messageVersion, String uid) {
+    // Added with v1.1.6. Old clients will not have set that field and we fall back to entry 0 which is ARBITRATION.
+    protected final SupportType supportType;
+
+    public SupportMessage(int messageVersion, String uid, SupportType supportType) {
         super(messageVersion);
         this.uid = uid;
+        this.supportType = supportType;
     }
 
     public abstract String getTradeId();
@@ -42,6 +48,7 @@ public abstract class SupportChatMessage extends NetworkEnvelope implements Mail
         return "DisputeMessage{" +
                 "\n     uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
+                ",\n     supportType=" + supportType +
                 "\n} " + super.toString();
     }
 }

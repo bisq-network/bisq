@@ -26,11 +26,11 @@ import bisq.desktop.main.support.trader.TradersDisputeView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.arbitration.ArbitrationChatSession;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -59,8 +59,8 @@ public class TradersArbitrationDisputeView extends TradersDisputeView {
     }
 
     @Override
-    protected ChatMessage.Type getType() {
-        return ChatMessage.Type.ARBITRATION;
+    protected SupportType getType() {
+        return SupportType.ARBITRATION;
     }
 
     @Override

@@ -18,6 +18,7 @@
 package bisq.core.support.dispute.messages;
 
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 
 import bisq.network.p2p.NodeAddress;
@@ -35,11 +36,13 @@ public final class OpenNewDisputeMessage extends DisputeChatMessage {
 
     public OpenNewDisputeMessage(Dispute dispute,
                                  NodeAddress senderNodeAddress,
-                                 String uid) {
+                                 String uid,
+                                 SupportType supportType) {
         this(dispute,
                 senderNodeAddress,
                 uid,
-                Version.getP2PMessageVersion());
+                Version.getP2PMessageVersion(),
+                supportType);
     }
 
 
@@ -50,8 +53,9 @@ public final class OpenNewDisputeMessage extends DisputeChatMessage {
     private OpenNewDisputeMessage(Dispute dispute,
                                   NodeAddress senderNodeAddress,
                                   String uid,
-                                  int messageVersion) {
-        super(messageVersion, uid);
+                                  int messageVersion,
+                                  SupportType supportType) {
+        super(messageVersion, uid, supportType);
         this.dispute = dispute;
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -72,7 +76,8 @@ public final class OpenNewDisputeMessage extends DisputeChatMessage {
         return new OpenNewDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                SupportType.fromProto(proto.getType()));
     }
 
     @Override
@@ -87,6 +92,7 @@ public final class OpenNewDisputeMessage extends DisputeChatMessage {
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     OpenNewDisputeMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
+                ",\n     supportType=" + supportType +
                 "\n} " + super.toString();
     }
 }

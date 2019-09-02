@@ -18,6 +18,7 @@
 package bisq.core.support.dispute;
 
 import bisq.core.support.ChatSession;
+import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -46,15 +47,15 @@ public abstract class DisputeChatSession extends ChatSession {
 
     public DisputeChatSession(@Nullable Dispute dispute,
                               DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                              ChatMessage.Type type) {
-        super(type);
+                              SupportType supportType) {
+        super(supportType);
         this.dispute = dispute;
         this.disputeManager = disputeManager;
     }
 
     public DisputeChatSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                              ChatMessage.Type type) {
-        super(type);
+                              SupportType supportType) {
+        super(supportType);
         this.disputeManager = disputeManager;
     }
 

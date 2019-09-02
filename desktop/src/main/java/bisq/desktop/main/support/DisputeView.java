@@ -34,6 +34,9 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeChatSession;
 import bisq.core.support.dispute.DisputeList;
@@ -41,9 +44,6 @@ import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.ArbitrationChatSession;
 import bisq.core.support.dispute.mediator.MediationChatSession;
 import bisq.core.support.dispute.mediator.MediationDisputeManager;
-import bisq.core.support.messages.ChatMessage;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.Res;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -407,7 +407,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             disputeChat.deactivate();
     }
 
-    protected abstract ChatMessage.Type getType();
+    protected abstract SupportType getType();
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)

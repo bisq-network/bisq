@@ -24,6 +24,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.ChatManager;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
@@ -262,7 +263,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
             ChatMessage chatMessage = new ChatMessage(
-                    ChatMessage.Type.ARBITRATION,
+                    SupportType.ARBITRATION,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -277,8 +278,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             }
 
             NodeAddress conflictResolverNodeAddress = dispute.getConflictResolverNodeAddress();
-            OpenNewDisputeMessage openNewDisputeMessage = new OpenNewDisputeMessage(dispute, p2PService.getAddress(),
-                    UUID.randomUUID().toString());
+            OpenNewDisputeMessage openNewDisputeMessage = new OpenNewDisputeMessage(dispute,
+                    p2PService.getAddress(),
+                    UUID.randomUUID().toString(),
+                    dispute.getSupportType());
             log.info("Send {} to peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                             "chatMessage.uid={}",
                     openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
@@ -386,7 +389,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             ChatMessage chatMessage = new ChatMessage(
-                    ChatMessage.Type.ARBITRATION,
+                    SupportType.ARBITRATION,
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -404,7 +407,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
             PeerOpenedDisputeMessage peerOpenedDisputeMessage = new PeerOpenedDisputeMessage(dispute,
                     p2PService.getAddress(),
-                    UUID.randomUUID().toString());
+                    UUID.randomUUID().toString(),
+                    dispute.getSupportType());
             log.info("Send {} to peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
                             "chatMessage.uid={}",
                     peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
@@ -474,7 +478,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         ChatMessage chatMessage = new ChatMessage(
-                ChatMessage.Type.ARBITRATION,
+                SupportType.ARBITRATION,
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
@@ -492,8 +496,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             peersNodeAddress = contract.getBuyerNodeAddress();
         else
             peersNodeAddress = contract.getSellerNodeAddress();
-        DisputeResultMessage disputeResultMessage = new DisputeResultMessage(disputeResult, p2PService.getAddress(),
-                UUID.randomUUID().toString());
+        DisputeResultMessage disputeResultMessage = new DisputeResultMessage(disputeResult,
+                p2PService.getAddress(),
+                UUID.randomUUID().toString(),
+                dispute.getSupportType());
         log.info("Send {} to peer {}. tradeId={}, disputeResultMessage.uid={}, chatMessage.uid={}",
                 disputeResultMessage.getClass().getSimpleName(), peersNodeAddress, disputeResultMessage.getTradeId(),
                 disputeResultMessage.getUid(), chatMessage.getUid());

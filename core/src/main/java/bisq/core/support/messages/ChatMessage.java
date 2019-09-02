@@ -17,12 +17,12 @@
 
 package bisq.core.support.messages;
 
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
-import bisq.common.proto.ProtoUtil;
 import bisq.common.util.Utilities;
 
 import javafx.beans.property.BooleanProperty;
@@ -58,29 +58,12 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true) // listener is transient and therefore excluded anyway
 @Getter
 @Slf4j
-public final class ChatMessage extends SupportChatMessage {
-
-    public enum Type {
-        MEDIATION,
-        ARBITRATION,
-        TRADE;
-
-        public static ChatMessage.Type fromProto(
-                protobuf.DisputeCommunicationMessage.Type type) {
-            return ProtoUtil.enumFromProto(ChatMessage.Type.class, type.name());
-        }
-
-        public static protobuf.DisputeCommunicationMessage.Type toProtoMessage(Type type) {
-            return protobuf.DisputeCommunicationMessage.Type.valueOf(type.name());
-        }
-    }
+public final class ChatMessage extends SupportMessage {
 
     public interface Listener {
         void onMessageStateChanged();
     }
 
-    // Added with v1.1.6. Old clients will not have set that field and we fall back to entry 0 which is DISPUTE.
-    private final ChatMessage.Type type;
     private final String tradeId;
     private final int traderId;
     // This is only used for the server client relationship
@@ -93,7 +76,7 @@ public final class ChatMessage extends SupportChatMessage {
     @Setter
     private boolean isSystemMessage;
 
-    // Added in v1.1.6.
+    // Added in v1.1.6. for trader chat to store if message was shown in popup
     @Setter
     private boolean wasDisplayed;
 
@@ -109,14 +92,14 @@ public final class ChatMessage extends SupportChatMessage {
 
     transient private WeakReference<Listener> listener;
 
-    public ChatMessage(ChatMessage.Type type,
+    public ChatMessage(SupportType supportType,
                        String tradeId,
                        int traderId,
                        boolean senderIsTrader,
                        String message,
                        NodeAddress senderNodeAddress,
                        boolean isMediationDispute) {
-        this(type,
+        this(supportType,
                 tradeId,
                 traderId,
                 senderIsTrader,
@@ -135,7 +118,7 @@ public final class ChatMessage extends SupportChatMessage {
                 isMediationDispute);
     }
 
-    public ChatMessage(ChatMessage.Type type,
+    public ChatMessage(SupportType supportType,
                        String tradeId,
                        int traderId,
                        boolean senderIsTrader,
@@ -143,7 +126,7 @@ public final class ChatMessage extends SupportChatMessage {
                        NodeAddress senderNodeAddress,
                        long date,
                        boolean isMediationDispute) {
-        this(type,
+        this(supportType,
                 tradeId,
                 traderId,
                 senderIsTrader,
@@ -167,7 +150,7 @@ public final class ChatMessage extends SupportChatMessage {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ChatMessage(Type type,
+    private ChatMessage(SupportType supportType,
                         String tradeId,
                         int traderId,
                         boolean senderIsTrader,
@@ -184,8 +167,7 @@ public final class ChatMessage extends SupportChatMessage {
                         @Nullable String ackError,
                         boolean wasDisplayed,
                         boolean isMediationDispute) {
-        super(messageVersion, uid);
-        this.type = type;
+        super(messageVersion, uid, supportType);
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
@@ -207,7 +189,7 @@ public final class ChatMessage extends SupportChatMessage {
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
-                .setType(ChatMessage.Type.toProtoMessage(type))
+                .setType(SupportType.toProtoMessage(supportType))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
                 .setSenderIsTrader(senderIsTrader)
@@ -229,13 +211,13 @@ public final class ChatMessage extends SupportChatMessage {
                 .build();
     }
 
+    // The protobuf definition DisputeCommunicationMessage cannot be changed as it would break backward compatibility.
     public static ChatMessage fromProto(protobuf.DisputeCommunicationMessage proto,
                                         int messageVersion) {
         // If we get a msg from an old client type will be ordinal 0 which is the dispute entry and as we only added
         // the trade case it is the desired behaviour.
-        ChatMessage.Type type = ChatMessage.Type.fromProto(proto.getType());
         final ChatMessage chatMessage = new ChatMessage(
-                type,
+                SupportType.fromProto(proto.getType()),
                 proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getSenderIsTrader(),
@@ -344,7 +326,7 @@ public final class ChatMessage extends SupportChatMessage {
     @Override
     public String toString() {
         return "ChatMessage{" +
-                "\n     type='" + type + '\'' +
+                "\n     type='" + supportType + '\'' +
                 ",\n     tradeId='" + tradeId + '\'' +
                 ",\n     traderId=" + traderId +
                 ",\n     senderIsTrader=" + senderIsTrader +

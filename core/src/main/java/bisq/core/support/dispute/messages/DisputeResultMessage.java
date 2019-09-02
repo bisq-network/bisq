@@ -17,6 +17,7 @@
 
 package bisq.core.support.dispute.messages;
 
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.DisputeResult;
 
 import bisq.network.p2p.NodeAddress;
@@ -36,11 +37,13 @@ public final class DisputeResultMessage extends DisputeChatMessage {
 
     public DisputeResultMessage(DisputeResult disputeResult,
                                 NodeAddress senderNodeAddress,
-                                String uid) {
+                                String uid,
+                                SupportType supportType) {
         this(disputeResult,
                 senderNodeAddress,
                 uid,
-                Version.getP2PMessageVersion());
+                Version.getP2PMessageVersion(),
+                supportType);
     }
 
 
@@ -51,8 +54,9 @@ public final class DisputeResultMessage extends DisputeChatMessage {
     private DisputeResultMessage(DisputeResult disputeResult,
                                  NodeAddress senderNodeAddress,
                                  String uid,
-                                 int messageVersion) {
-        super(messageVersion, uid);
+                                 int messageVersion,
+                                 SupportType supportType) {
+        super(messageVersion, uid, supportType);
         this.disputeResult = disputeResult;
         this.senderNodeAddress = senderNodeAddress;
     }
@@ -72,7 +76,8 @@ public final class DisputeResultMessage extends DisputeChatMessage {
         return new DisputeResultMessage(DisputeResult.fromProto(proto.getDisputeResult()),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),
-                messageVersion);
+                messageVersion,
+                SupportType.fromProto(proto.getType()));
     }
 
     @Override
@@ -87,6 +92,7 @@ public final class DisputeResultMessage extends DisputeChatMessage {
                 ",\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     DisputeResultMessage.uid='" + uid + '\'' +
                 ",\n     messageVersion=" + messageVersion +
+                ",\n     supportType=" + supportType +
                 "\n} " + super.toString();
     }
 }
