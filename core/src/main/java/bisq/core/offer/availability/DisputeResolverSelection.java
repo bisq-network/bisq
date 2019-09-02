@@ -17,8 +17,8 @@
 
 package bisq.core.offer.availability;
 
-import bisq.core.support.dispute.agent.DisputeResolver;
-import bisq.core.support.dispute.agent.DisputeResolverManager;
+import bisq.core.support.dispute.agent.DisputeAgent;
+import bisq.core.support.dispute.agent.DisputeAgentManager;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -43,23 +43,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 public class DisputeResolverSelection {
 
-    public static <T extends DisputeResolver> T getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
-                                                                       DisputeResolverManager<T> disputeResolverManager) {
+    public static <T extends DisputeAgent> T getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
+                                                                    DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeResolver(tradeStatisticsManager,
-                disputeResolverManager,
+                disputeAgentManager,
                 TradeStatistics2.ARBITRATOR_ADDRESS);
     }
 
-    public static <T extends DisputeResolver> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
-                                                                     DisputeResolverManager<T> disputeResolverManager) {
+    public static <T extends DisputeAgent> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
+                                                                  DisputeAgentManager<T> disputeAgentManager) {
         return getLeastUsedDisputeResolver(tradeStatisticsManager,
-                disputeResolverManager,
+                disputeAgentManager,
                 TradeStatistics2.MEDIATOR_ADDRESS);
     }
 
-    private static <T extends DisputeResolver> T getLeastUsedDisputeResolver(TradeStatisticsManager tradeStatisticsManager,
-                                                                             DisputeResolverManager<T> disputeResolverManager,
-                                                                             String extraMapKey) {
+    private static <T extends DisputeAgent> T getLeastUsedDisputeResolver(TradeStatisticsManager tradeStatisticsManager,
+                                                                          DisputeAgentManager<T> disputeAgentManager,
+                                                                          String extraMapKey) {
         // We take last 100 entries from trade statistics
         List<TradeStatistics2> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
         list.sort(Comparator.comparing(TradeStatistics2::getTradeDate));
@@ -76,13 +76,13 @@ public class DisputeResolverSelection {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        Set<String> disputeResolvers = disputeResolverManager.getObservableMap().values().stream()
+        Set<String> disputeResolvers = disputeAgentManager.getObservableMap().values().stream()
                 .map(disputeResolver -> disputeResolver.getNodeAddress().getFullAddress())
                 .collect(Collectors.toSet());
 
         String result = getLeastUsedDisputeResolver(lastAddressesUsedInTrades, disputeResolvers);
 
-        Optional<T> optionalDisputeResolver = disputeResolverManager.getObservableMap().values().stream()
+        Optional<T> optionalDisputeResolver = disputeAgentManager.getObservableMap().values().stream()
                 .filter(e -> e.getNodeAddress().getFullAddress().equals(result))
                 .findAny();
         checkArgument(optionalDisputeResolver.isPresent(), "optionalDisputeResolver has to be present");

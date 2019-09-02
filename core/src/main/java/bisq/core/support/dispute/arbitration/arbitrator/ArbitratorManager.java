@@ -19,7 +19,7 @@ package bisq.core.support.dispute.arbitration.arbitrator;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.FilterManager;
-import bisq.core.support.dispute.agent.DisputeResolverManager;
+import bisq.core.support.dispute.agent.DisputeAgentManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class ArbitratorManager extends DisputeResolverManager<Arbitrator> {
+public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Inject
     public ArbitratorManager(KeyRing keyRing,

@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode
 @Slf4j
 @Getter
-public abstract class DisputeResolver implements ProtectedStoragePayload, ExpirablePayload {
+public abstract class DisputeAgent implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(10);
 
     protected final NodeAddress nodeAddress;
@@ -60,15 +60,15 @@ public abstract class DisputeResolver implements ProtectedStoragePayload, Expira
     @Nullable
     protected Map<String, String> extraDataMap;
 
-    public DisputeResolver(NodeAddress nodeAddress,
-                           PubKeyRing pubKeyRing,
-                           List<String> languageCodes,
-                           long registrationDate,
-                           byte[] registrationPubKey,
-                           String registrationSignature,
-                           @Nullable String emailAddress,
-                           @Nullable String info,
-                           @Nullable Map<String, String> extraDataMap) {
+    public DisputeAgent(NodeAddress nodeAddress,
+                        PubKeyRing pubKeyRing,
+                        List<String> languageCodes,
+                        long registrationDate,
+                        byte[] registrationPubKey,
+                        String registrationSignature,
+                        @Nullable String emailAddress,
+                        @Nullable String info,
+                        @Nullable Map<String, String> extraDataMap) {
         this.nodeAddress = nodeAddress;
         this.pubKeyRing = pubKeyRing;
         this.languageCodes = languageCodes;

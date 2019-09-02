@@ -21,8 +21,8 @@ import bisq.desktop.common.model.ActivatableViewModel;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.LanguageUtil;
-import bisq.core.support.dispute.agent.DisputeResolver;
-import bisq.core.support.dispute.agent.DisputeResolverManager;
+import bisq.core.support.dispute.agent.DisputeAgent;
+import bisq.core.support.dispute.agent.DisputeAgentManager;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -46,7 +46,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
-public abstract class DisputeResolverRegistrationViewModel<R extends DisputeResolver, T extends DisputeResolverManager<R>> extends ActivatableViewModel {
+public abstract class DisputeResolverRegistrationViewModel<R extends DisputeAgent, T extends DisputeAgentManager<R>> extends ActivatableViewModel {
     private final T disputeResolverManager;
     protected final User user;
     protected final P2PService p2PService;

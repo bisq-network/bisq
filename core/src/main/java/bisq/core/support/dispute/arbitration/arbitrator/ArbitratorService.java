@@ -18,7 +18,7 @@
 package bisq.core.support.dispute.arbitration.arbitrator;
 
 import bisq.core.filter.FilterManager;
-import bisq.core.support.dispute.agent.DisputeResolverService;
+import bisq.core.support.dispute.agent.DisputeAgentService;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
-public class ArbitratorService extends DisputeResolverService<Arbitrator> {
+public class ArbitratorService extends DisputeAgentService<Arbitrator> {
     @Inject
     public ArbitratorService(P2PService p2PService, FilterManager filterManager) {
         super(p2PService, filterManager);
