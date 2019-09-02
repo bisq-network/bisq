@@ -21,7 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
-import bisq.desktop.main.support.DisputesView;
+import bisq.desktop.main.support.SupportView;
 import bisq.desktop.main.support.trader.TradersDisputeView;
 import bisq.desktop.main.support.trader.arbitration.TradersArbitrationDisputeView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationDisputeView;
@@ -286,7 +286,7 @@ public class NotificationCenter {
                 TradersArbitrationDisputeView.class;
         if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(viewClass)) {
             notification.actionButtonTextWithGoTo("navigation.support")
-                    .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, viewClass))
+                    .onAction(() -> navigation.navigateTo(MainView.class, SupportView.class, viewClass))
                     .show();
         } else {
             notification.show();

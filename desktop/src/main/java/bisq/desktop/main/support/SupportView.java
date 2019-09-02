@@ -59,7 +59,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 // will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
-public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @FXML
     Tab tradersArbitrationDisputesTab, tradersMediationDisputesTab;
@@ -81,13 +81,13 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
     private MapChangeListener<NodeAddress, Mediator> mediatorMapChangeListener;
 
     @Inject
-    public DisputesView(CachingViewLoader viewLoader,
-                        Navigation navigation,
-                        ArbitratorManager arbitratorManager,
-                        MediatorManager mediatorManager,
-                        ArbitrationDisputeManager arbitrationDisputeManager,
-                        MediationDisputeManager mediationDisputeManager,
-                        KeyRing keyRing) {
+    public SupportView(CachingViewLoader viewLoader,
+                       Navigation navigation,
+                       ArbitratorManager arbitratorManager,
+                       MediatorManager mediatorManager,
+                       ArbitrationDisputeManager arbitrationDisputeManager,
+                       MediationDisputeManager mediationDisputeManager,
+                       KeyRing keyRing) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
@@ -103,17 +103,17 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         tradersArbitrationDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
         tradersMediationDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
         navigationListener = viewPath -> {
-            if (viewPath.size() == 3 && viewPath.indexOf(DisputesView.class) == 1)
+            if (viewPath.size() == 3 && viewPath.indexOf(SupportView.class) == 1)
                 loadView(viewPath.tip());
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == tradersArbitrationDisputesTab)
-                navigation.navigateTo(MainView.class, DisputesView.class, TradersArbitrationDisputeView.class);
+                navigation.navigateTo(MainView.class, SupportView.class, TradersArbitrationDisputeView.class);
             else if (newValue == tradersMediationDisputesTab)
-                navigation.navigateTo(MainView.class, DisputesView.class, TradersMediationDisputeView.class);
+                navigation.navigateTo(MainView.class, SupportView.class, TradersMediationDisputeView.class);
             else if (newValue == disputeResolversDisputesTab)
-                navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
+                navigation.navigateTo(MainView.class, SupportView.class, DisputeResolverView.class);
         };
 
         arbitratorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
@@ -165,11 +165,11 @@ public class DisputesView extends ActivatableViewAndModel<TabPane, Activatable> 
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == tradersMediationDisputesTab) {
-            navigation.navigateTo(MainView.class, DisputesView.class, TradersMediationDisputeView.class);
+            navigation.navigateTo(MainView.class, SupportView.class, TradersMediationDisputeView.class);
         } else if (root.getSelectionModel().getSelectedItem() == tradersArbitrationDisputesTab) {
-            navigation.navigateTo(MainView.class, DisputesView.class, TradersArbitrationDisputeView.class);
+            navigation.navigateTo(MainView.class, SupportView.class, TradersArbitrationDisputeView.class);
         } else if (disputeResolversDisputesTab != null) {
-            navigation.navigateTo(MainView.class, DisputesView.class, DisputeResolverView.class);
+            navigation.navigateTo(MainView.class, SupportView.class, DisputeResolverView.class);
         }
 
         String key = "supportInfo";
