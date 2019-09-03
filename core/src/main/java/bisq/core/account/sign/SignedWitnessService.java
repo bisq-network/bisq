@@ -350,6 +350,8 @@ public class SignedWitnessService {
     }
 
     private boolean isBuyerWinner(Dispute dispute) {
+        if (!dispute.isClosed() || dispute.getDisputeResultProperty() == null)
+            return false;
         return dispute.getDisputeResultProperty().get().getWinner() == DisputeResult.Winner.BUYER;
     }
 
