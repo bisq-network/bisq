@@ -40,7 +40,11 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+
+import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,6 +53,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -67,10 +72,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                             TradeManager tradeManager,
                             ClosedTradableManager closedTradableManager,
                             OpenOfferManager openOfferManager,
-                            KeyRing keyRing,
+                            PubKeyRing pubKeyRing,
                             MediationDisputeListService mediationDisputeListService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, keyRing, mediationDisputeListService);
+                openOfferManager, pubKeyRing, mediationDisputeListService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -158,11 +163,29 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
-        sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
+        sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getMediatorNodeAddress();
+    }
+
+    public void onAcceptMediationResult(Trade trade,
+                                        ResultHandler resultHandler,
+                                        ErrorMessageHandler errorMessageHandler) {
+        Optional<Dispute> optionalDispute = findDispute(trade.getId());
+        checkArgument(optionalDispute.isPresent(), "dispute must be present");
+        DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
+        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
+        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
+        trade.getProcessModel().setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
+        trade.getProcessModel().setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
+        trade.getTradeProtocol().onAcceptMediationResult(resultHandler, errorMessageHandler);
     }
 }

@@ -99,7 +99,9 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
     @Override
     public void initialize() {
-        log.debug("initialize ");
+        // has to be called before loadView
+        updateAgentTabs();
+
         tradersArbitrationDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
         tradersMediationDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
         navigationListener = viewPath -> {
@@ -118,11 +120,12 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, SupportView.class, MediatorView.class);
         };
 
-        arbitratorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
-        mediatorMapChangeListener = change -> updateConflictResolversDisputesTabDisableState();
+        arbitratorMapChangeListener = change -> updateAgentTabs();
+        mediatorMapChangeListener = change -> updateAgentTabs();
+
     }
 
-    private void updateConflictResolversDisputesTabDisableState() {
+    private void updateAgentTabs() {
         PubKeyRing myPubKeyRing = keyRing.getPubKeyRing();
         boolean isActiveArbitrator = arbitratorManager.getObservableMap().values().stream()
                 .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
@@ -135,7 +138,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (arbitratorTab == null) {
             // In case a arbitrator has become inactive he still might get disputes from pending trades
             boolean hasDisputesAsArbitrator = arbitrationManager.getDisputesAsObservableList().stream()
-                    .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
+                    .anyMatch(d -> d.getAgentPubKeyRing().equals(myPubKeyRing));
             if (isActiveArbitrator || hasDisputesAsArbitrator) {
                 arbitratorTab = new Tab();
                 arbitratorTab.setClosable(false);
@@ -145,7 +148,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         if (mediatorTab == null) {
             // In case a mediator has become inactive he still might get disputes from pending trades
             boolean hasDisputesAsMediator = mediationManager.getDisputesAsObservableList().stream()
-                    .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
+                    .anyMatch(d -> d.getAgentPubKeyRing().equals(myPubKeyRing));
             if (isActiveMediator || hasDisputesAsMediator) {
                 mediatorTab = new Tab();
                 mediatorTab.setClosable(false);
@@ -170,7 +173,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         mediatorManager.updateMap();
         mediatorManager.getObservableMap().addListener(mediatorMapChangeListener);
 
-        updateConflictResolversDisputesTabDisableState();
+        updateAgentTabs();
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);

@@ -593,4 +593,9 @@ public class BuyerStep2View extends TradeStepView {
             }
         }
     }
+
+    @Override
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+        confirmButton.setDisable(isDisabled);
+    }
 }

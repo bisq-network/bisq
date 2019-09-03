@@ -142,6 +142,15 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private NodeAddress tempTradingPeerNodeAddress;
 
+    // Added in v.1.1.6
+    @Nullable
+    @Setter
+    private byte[] txSignatureFromMediation;
+    @Setter
+    private long buyerPayoutAmountFromMediation;
+    @Setter
+    private long sellerPayoutAmountFromMediation;
+
     // The only trade message where we want to indicate the user the state of the message delivery is the
     // CounterCurrencyTransferStartedMessage. We persist the state with the processModel.
     @Setter
@@ -165,7 +174,9 @@ public class ProcessModel implements Model, PersistablePayload {
                 .setChangeOutputValue(changeOutputValue)
                 .setUseSavingsWallet(useSavingsWallet)
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
-                .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name());
+                .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name())
+                .setBuyerPayoutAmountFromMediation(buyerPayoutAmountFromMediation)
+                .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -176,6 +187,7 @@ public class ProcessModel implements Model, PersistablePayload {
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
+        Optional.ofNullable(txSignatureFromMediation).ifPresent(e -> builder.setTxSignatureFromMediation(ByteString.copyFrom(e)));
         return builder.build();
     }
 
@@ -188,6 +200,8 @@ public class ProcessModel implements Model, PersistablePayload {
         processModel.setChangeOutputValue(proto.getChangeOutputValue());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
         processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
+        processModel.setBuyerPayoutAmountFromMediation(proto.getBuyerPayoutAmountFromMediation());
+        processModel.setSellerPayoutAmountFromMediation(proto.getSellerPayoutAmountFromMediation());
 
         // nullable
         processModel.setTakeOfferFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakeOfferFeeTxId()));
@@ -211,6 +225,7 @@ public class ProcessModel implements Model, PersistablePayload {
         String paymentStartedMessageState = proto.getPaymentStartedMessageState().isEmpty() ? MessageState.UNDEFINED.name() : proto.getPaymentStartedMessageState();
         ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
         paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
+        processModel.setTxSignatureFromMediation(ProtoUtil.byteArrayOrNullFromProto(proto.getTxSignatureFromMediation()));
         return processModel;
     }
 

@@ -24,11 +24,11 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -221,7 +221,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
         if (arbitratorNodeAddress != null && mediatorNodeAddress != null) {
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
-                    Res.get("tradeDetailsWindow.conflictResolversAddresses"),
+                    Res.get("tradeDetailsWindow.agentAddresses"),
                     arbitratorNodeAddress.getFullAddress() + " / " + mediatorNodeAddress.getFullAddress());
         }
 

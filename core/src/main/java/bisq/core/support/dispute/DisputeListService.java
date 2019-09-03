@@ -137,10 +137,11 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
         if (disputeList != null) {
             disputeList.stream().forEach(dispute -> {
                 dispute.setStorage(storage);
-                if (dispute.isClosed())
+                if (dispute.isClosed()) {
                     closedDisputes.put(dispute.getTradeId(), dispute);
-                else
+                } else {
                     openDisputes.put(dispute.getTradeId(), dispute);
+                }
             });
         } else {
             log.warn("disputes is null");

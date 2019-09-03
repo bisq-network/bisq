@@ -511,7 +511,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
-        // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or \
+        // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or
         // in case of arbitration disputeState == Trade.DisputeState.ARBITRATION_REQUESTED
         if (disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED) {
             // If no dispute state set we start with mediation

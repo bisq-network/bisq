@@ -20,6 +20,7 @@ package bisq.core.trade.protocol;
 
 import bisq.core.trade.BuyerAsTakerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
@@ -190,7 +191,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -210,6 +210,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -223,6 +224,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
+            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }

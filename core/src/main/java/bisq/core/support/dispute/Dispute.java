@@ -78,7 +78,7 @@ public final class Dispute implements NetworkPayload {
     private final String makerContractSignature;
     @Nullable
     private final String takerContractSignature;
-    private final PubKeyRing conflictResolverPubKeyRing;
+    private final PubKeyRing agentPubKeyRing; // arbitrator or mediator
     private final boolean isSupportTicket;
     private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
     private BooleanProperty isClosedProperty = new SimpleBooleanProperty();
@@ -111,7 +111,7 @@ public final class Dispute implements NetworkPayload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRing conflictResolverPubKeyRing,
+                   PubKeyRing agentPubKeyRing,
                    boolean isSupportTicket) {
         this(tradeId,
                 traderId,
@@ -128,7 +128,7 @@ public final class Dispute implements NetworkPayload {
                 contractAsJson,
                 makerContractSignature,
                 takerContractSignature,
-                conflictResolverPubKeyRing,
+                agentPubKeyRing,
                 isSupportTicket);
         this.storage = storage;
         openingDate = new Date().getTime();
@@ -154,7 +154,7 @@ public final class Dispute implements NetworkPayload {
                    String contractAsJson,
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
-                   PubKeyRing conflictResolverPubKeyRing,
+                   PubKeyRing agentPubKeyRing,
                    boolean isSupportTicket) {
         this.tradeId = tradeId;
         this.traderId = traderId;
@@ -171,7 +171,7 @@ public final class Dispute implements NetworkPayload {
         this.contractAsJson = contractAsJson;
         this.makerContractSignature = makerContractSignature;
         this.takerContractSignature = takerContractSignature;
-        this.conflictResolverPubKeyRing = conflictResolverPubKeyRing;
+        this.agentPubKeyRing = agentPubKeyRing;
         this.isSupportTicket = isSupportTicket;
 
         id = tradeId + "_" + traderId;
@@ -188,7 +188,7 @@ public final class Dispute implements NetworkPayload {
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
-                .setArbitratorPubKeyRing(conflictResolverPubKeyRing.toProtoMessage()) // We renamed to conflictResolverPubKeyRing but need to keep protobuf as it was to be backward compatible
+                .setArbitratorPubKeyRing(agentPubKeyRing.toProtoMessage()) // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
                 .setIsSupportTicket(isSupportTicket)
                 .addAllDisputeCommunicationMessages(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
@@ -225,7 +225,7 @@ public final class Dispute implements NetworkPayload {
                 proto.getContractAsJson(),
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
-                PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()), // We renamed to conflictResolverPubKeyRing but need to keep protobuf as it was to be backward compatible
+                PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()), // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
                 proto.getIsSupportTicket());
 
         dispute.chatMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
@@ -338,7 +338,7 @@ public final class Dispute implements NetworkPayload {
                 ", contractAsJson='" + contractAsJson + '\'' +
                 ", makerContractSignature='" + makerContractSignature + '\'' +
                 ", takerContractSignature='" + takerContractSignature + '\'' +
-                ", conflictResolverPubKeyRing=" + conflictResolverPubKeyRing +
+                ", agentPubKeyRing=" + agentPubKeyRing +
                 ", isSupportTicket=" + isSupportTicket +
                 ", chatMessages=" + chatMessages +
                 ", isClosed=" + isClosedProperty.get() +
