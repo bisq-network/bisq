@@ -33,8 +33,8 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
@@ -83,8 +83,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
 
     private final BSFormatter formatter;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
-    private final MediationDisputeManager mediationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
@@ -115,14 +115,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     @Inject
     public DisputeSummaryWindow(BSFormatter formatter,
-                                ArbitrationDisputeManager arbitrationDisputeManager,
-                                MediationDisputeManager mediationDisputeManager,
+                                ArbitrationManager arbitrationManager,
+                                MediationManager mediationManager,
                                 BtcWalletService walletService,
                                 TradeWalletService tradeWalletService) {
 
         this.formatter = formatter;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
-        this.mediationDisputeManager = mediationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
 
@@ -606,7 +606,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
-        return dispute.isMediationDispute() ? mediationDisputeManager : arbitrationDisputeManager;
+        return dispute.isMediationDispute() ? mediationManager : arbitrationManager;
     }
 
 

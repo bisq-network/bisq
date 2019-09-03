@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
@@ -32,9 +32,9 @@ import static org.mockito.Mockito.mock;
 public class TransactionAwareTradableFactoryTest {
     @Test
     public void testCreateWhenNotOpenOfferOrTrade() {
-        ArbitrationDisputeManager arbitrationDisputeManager = mock(ArbitrationDisputeManager.class);
+        ArbitrationManager arbitrationManager = mock(ArbitrationManager.class);
 
-        TransactionAwareTradableFactory factory = new TransactionAwareTradableFactory(arbitrationDisputeManager);
+        TransactionAwareTradableFactory factory = new TransactionAwareTradableFactory(arbitrationManager);
 
         Tradable delegate = mock(Tradable.class);
         assertFalse(delegate instanceof OpenOffer);

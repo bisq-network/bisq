@@ -32,10 +32,10 @@ import bisq.desktop.main.support.trader.arbitration.TradersArbitrationView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationView;
 
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 
@@ -70,8 +70,8 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
-    private final MediationDisputeManager mediationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final KeyRing keyRing;
 
     private Navigation.Listener navigationListener;
@@ -86,15 +86,15 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
                        Navigation navigation,
                        ArbitratorManager arbitratorManager,
                        MediatorManager mediatorManager,
-                       ArbitrationDisputeManager arbitrationDisputeManager,
-                       MediationDisputeManager mediationDisputeManager,
+                       ArbitrationManager arbitrationManager,
+                       MediationManager mediationManager,
                        KeyRing keyRing) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
-        this.mediationDisputeManager = mediationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.keyRing = keyRing;
     }
 
@@ -135,7 +135,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         if (arbitratorTab == null) {
             // In case a arbitrator has become inactive he still might get disputes from pending trades
-            boolean hasDisputesAsArbitrator = arbitrationDisputeManager.getDisputesAsObservableList().stream()
+            boolean hasDisputesAsArbitrator = arbitrationManager.getDisputesAsObservableList().stream()
                     .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
             if (isActiveArbitrator || hasDisputesAsArbitrator) {
                 arbitratorTab = new Tab();
@@ -145,7 +145,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         }
         if (mediatorTab == null) {
             // In case a mediator has become inactive he still might get disputes from pending trades
-            boolean hasDisputesAsMediator = mediationDisputeManager.getDisputesAsObservableList().stream()
+            boolean hasDisputesAsMediator = mediationManager.getDisputesAsObservableList().stream()
                     .anyMatch(d -> d.getConflictResolverPubKeyRing().equals(myPubKeyRing));
             if (isActiveMediator || hasDisputesAsMediator) {
                 mediatorTab = new Tab();

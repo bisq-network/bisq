@@ -30,7 +30,7 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.mediation.MediationSession;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -44,7 +44,7 @@ import javax.inject.Inject;
 public class TradersMediationView extends TradersDisputeView {
 
     @Inject
-    public TradersMediationView(MediationDisputeManager mediationDisputeManager,
+    public TradersMediationView(MediationManager mediationManager,
                                 KeyRing keyRing,
                                 TradeManager tradeManager,
                                 BSFormatter formatter,
@@ -54,7 +54,7 @@ public class TradersMediationView extends TradersDisputeView {
                                 TradeDetailsWindow tradeDetailsWindow,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(mediationDisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
+        super(mediationManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 useDevPrivilegeKeys);
     }

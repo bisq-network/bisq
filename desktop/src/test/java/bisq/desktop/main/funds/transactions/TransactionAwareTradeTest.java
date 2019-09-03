@@ -18,7 +18,7 @@
 package bisq.desktop.main.funds.transactions;
 
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Trade;
 
 import org.bitcoinj.core.Transaction;
@@ -39,7 +39,7 @@ public class TransactionAwareTradeTest {
     private static final String XID = "123";
 
     private Transaction transaction;
-    private ArbitrationDisputeManager arbitrationDisputeManager;
+    private ArbitrationManager arbitrationManager;
     private Trade delegate;
     private TransactionAwareTradable trade;
 
@@ -49,8 +49,8 @@ public class TransactionAwareTradeTest {
         when(transaction.getHashAsString()).thenReturn(XID);
 
         this.delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
-        this.arbitrationDisputeManager = mock(ArbitrationDisputeManager.class, RETURNS_DEEP_STUBS);
-        this.trade = new TransactionAwareTrade(this.delegate, this.arbitrationDisputeManager);
+        this.arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
+        this.trade = new TransactionAwareTrade(this.delegate, this.arbitrationManager);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class TransactionAwareTradeTest {
         when(dispute.getDisputePayoutTxId()).thenReturn(XID);
         when(dispute.getTradeId()).thenReturn(tradeId);
 
-        when(arbitrationDisputeManager.getDisputesAsObservableList())
+        when(arbitrationManager.getDisputesAsObservableList())
                 .thenReturn(FXCollections.observableArrayList(Collections.singleton(dispute)));
 
         when(delegate.getId()).thenReturn(tradeId);

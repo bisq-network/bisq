@@ -24,7 +24,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -69,7 +69,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(TradeDetailsWindow.class);
 
     private final BSFormatter formatter;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
     private final TradeManager tradeManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private Trade trade;
@@ -85,11 +85,11 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
     @Inject
     public TradeDetailsWindow(BSFormatter formatter,
-                              ArbitrationDisputeManager arbitrationDisputeManager,
+                              ArbitrationManager arbitrationManager,
                               TradeManager tradeManager,
                               AccountAgeWitnessService accountAgeWitnessService) {
         this.formatter = formatter;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
         this.tradeManager = tradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         type = Type.Confirmation;
@@ -189,8 +189,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
         if (trade.getPayoutTx() != null)
             rows++;
-        boolean showDisputedTx = arbitrationDisputeManager.findOwnDispute(trade.getId()).isPresent() &&
-                arbitrationDisputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null;
+        boolean showDisputedTx = arbitrationManager.findOwnDispute(trade.getId()).isPresent() &&
+                arbitrationManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null;
         if (showDisputedTx)
             rows++;
         if (trade.hasFailed())
@@ -274,7 +274,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     trade.getPayoutTx().getHashAsString());
         if (showDisputedTx)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.disputedPayoutTxId"),
-                    arbitrationDisputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
+                    arbitrationManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
         if (contract != null) {
             Button viewContractButton = addConfirmationLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),

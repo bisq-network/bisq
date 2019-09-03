@@ -43,7 +43,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.ArbitrationSession;
 import bisq.core.support.dispute.mediation.MediationSession;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -460,7 +460,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
 
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
-        return disputeManager instanceof MediationDisputeManager ?
+        return disputeManager instanceof MediationManager ?
                 new MediationSession(dispute, disputeManager) :
                 new ArbitrationSession(dispute, disputeManager);
     }

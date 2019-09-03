@@ -33,8 +33,8 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -85,8 +85,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
     private final KeyRing keyRing;
-    public final ArbitrationDisputeManager arbitrationDisputeManager;
-    private final MediationDisputeManager mediationDisputeManager;
+    public final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     @Getter
@@ -114,8 +114,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public PendingTradesDataModel(TradeManager tradeManager,
                                   BtcWalletService btcWalletService,
                                   KeyRing keyRing,
-                                  ArbitrationDisputeManager arbitrationDisputeManager,
-                                  MediationDisputeManager mediationDisputeManager,
+                                  ArbitrationManager arbitrationManager,
+                                  MediationManager mediationManager,
                                   Preferences preferences,
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
@@ -126,8 +126,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.keyRing = keyRing;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
-        this.mediationDisputeManager = mediationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -589,7 +589,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(boolean isMediationDispute) {
-        return isMediationDispute ? mediationDisputeManager : arbitrationDisputeManager;
+        return isMediationDispute ? mediationManager : arbitrationManager;
     }
 }
 

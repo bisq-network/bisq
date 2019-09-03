@@ -24,7 +24,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.BuyerDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
@@ -75,7 +75,7 @@ public class SignedWitnessService {
     private final P2PService p2PService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
     private final ChargeBackRisk chargeBackRisk;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
@@ -92,13 +92,13 @@ public class SignedWitnessService {
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                ArbitrationDisputeManager arbitrationDisputeManager,
+                                ArbitrationManager arbitrationManager,
                                 ChargeBackRisk chargeBackRisk) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
         this.chargeBackRisk = chargeBackRisk;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
@@ -333,7 +333,7 @@ public class SignedWitnessService {
 
     // Arbitrator signing
     public List<BuyerDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod) {
-        return arbitrationDisputeManager.getDisputesAsObservableList().stream()
+        return arbitrationManager.getDisputesAsObservableList().stream()
                 .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)

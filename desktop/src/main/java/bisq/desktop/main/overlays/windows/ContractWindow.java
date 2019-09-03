@@ -26,8 +26,8 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -69,8 +69,8 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
-    private final MediationDisputeManager mediationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private Dispute dispute;
@@ -81,13 +81,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(ArbitrationDisputeManager arbitrationDisputeManager,
-                          MediationDisputeManager mediationDisputeManager,
+    public ContractWindow(ArbitrationManager arbitrationManager,
+                          MediationManager mediationManager,
                           AccountAgeWitnessService accountAgeWitnessService,
                           BSFormatter formatter) {
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.mediationDisputeManager = mediationDisputeManager;
+        this.mediationManager = mediationManager;
         this.formatter = formatter;
         type = Type.Confirmation;
     }
@@ -269,7 +269,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     }
 
     private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
-        return dispute.isMediationDispute() ? mediationDisputeManager : arbitrationDisputeManager;
+        return dispute.isMediationDispute() ? mediationManager : arbitrationManager;
     }
 
     private String getAccountAge(PaymentAccountPayload paymentAccountPayload,

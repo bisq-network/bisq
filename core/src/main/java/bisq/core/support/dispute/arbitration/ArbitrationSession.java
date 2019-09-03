@@ -66,7 +66,7 @@ public class ArbitrationSession extends DisputeSession {
                 disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
             } else if (message instanceof PeerPublishedDisputePayoutTxMessage) {
                 //todo make generic
-                ((ArbitrationDisputeManager) disputeManager).onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
+                ((ArbitrationManager) disputeManager).onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
