@@ -60,9 +60,9 @@ public class TradeChatSession extends SupportSession {
     }
 
     @Override
-    public void addChatMessage(ChatMessage message) {
+    public void addAndPersistChatMessage(ChatMessage message) {
         if (trade != null)
-            trade.addChatMessage(message);
+            trade.addAndPersistChatMessage(message);
     }
 
     @Override

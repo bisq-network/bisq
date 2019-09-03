@@ -611,7 +611,7 @@ public abstract class Trade implements Tradable, Model {
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
-    public void addChatMessage(ChatMessage chatMessage) {
+    public void addAndPersistChatMessage(ChatMessage chatMessage) {
         if (!chatMessages.contains(chatMessage)) {
             chatMessages.add(chatMessage);
             storage.queueUpForSave();

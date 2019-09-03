@@ -152,7 +152,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Optional<Dispute> disputeOptional = findDispute(message);
         if (disputeOptional.isPresent()) {
             if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                disputeOptional.get().addChatMessage(message);
+                disputeOptional.get().addAndPersistChatMessage(message);
             } else {
                 log.warn("We got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
@@ -367,7 +367,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     Res.get("support.systemMsg", sysMsg),
                     p2PService.getAddress());
             chatMessage.setSystemMessage(true);
-            dispute.addChatMessage(chatMessage);
+            dispute.addAndPersistChatMessage(chatMessage);
             if (!reOpen) {
                 disputeList.add(dispute);
             }
@@ -484,7 +484,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     Res.get("support.systemMsg", sysMsg),
                     p2PService.getAddress());
             chatMessage.setSystemMessage(true);
-            dispute.addChatMessage(chatMessage);
+            dispute.addAndPersistChatMessage(chatMessage);
             disputeList.add(dispute);
 
             // we mirrored dispute already!
@@ -572,7 +572,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 text,
                 p2PService.getAddress());
 
-        dispute.addChatMessage(chatMessage);
+        dispute.addAndPersistChatMessage(chatMessage);
         disputeResult.setChatMessage(chatMessage);
 
         NodeAddress peersNodeAddress;

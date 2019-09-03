@@ -70,9 +70,9 @@ public abstract class DisputeSession extends SupportSession {
     }
 
     @Override
-    public void addChatMessage(ChatMessage message) {
+    public void addAndPersistChatMessage(ChatMessage message) {
         if (dispute != null && (isClient() || (!isClient() && !message.isSystemMessage())))
-            dispute.addChatMessage(message);
+            dispute.addAndPersistChatMessage(message);
     }
 
     @Override

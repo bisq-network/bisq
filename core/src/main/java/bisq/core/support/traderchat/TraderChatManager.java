@@ -137,7 +137,7 @@ public class TraderChatManager extends SupportManager {
                 if (chatMessages.isEmpty()) {
                     addSystemMsg(trade);
                 }
-                trade.addChatMessage(message);
+                trade.addAndPersistChatMessage(message);
             } else {
                 log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
