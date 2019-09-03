@@ -34,11 +34,11 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -48,14 +48,10 @@ public abstract class SupportManager {
     @Getter
     protected final P2PService p2PService;
     protected final WalletsSetup walletsSetup;
-    @Setter
-    @Getter
-    protected SupportSession supportSession;
     protected final Map<String, Timer> delayMsgMap = new HashMap<>();
-
-    protected final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    protected final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    protected boolean allServicesInitialized;
+    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    private boolean allServicesInitialized;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +86,14 @@ public abstract class SupportManager {
 
     public abstract SupportType getSupportType();
 
+    abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
+
+    abstract public boolean channelOpen(ChatMessage message);
+
+    abstract public List<ChatMessage> getChatMessages();
+
+    abstract public void storeChatMessage(ChatMessage message);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -99,44 +103,9 @@ public abstract class SupportManager {
         allServicesInitialized = true;
     }
 
-    protected boolean isReady() {
-        return allServicesInitialized &&
-                p2PService.isBootstrapped() &&
-                walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast();
-    }
-
     public void tryApplyMessages() {
         if (isReady())
             applyMessages();
-    }
-
-    protected void applyMessages() {
-        decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof SupportMessage) {
-                dispatchMessage((SupportMessage) networkEnvelope);
-            } else if (networkEnvelope instanceof AckMessage) {
-                processAckMessage((AckMessage) networkEnvelope, null);
-            }
-        });
-        decryptedDirectMessageWithPubKeys.clear();
-
-        decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
-            if (networkEnvelope instanceof SupportMessage) {
-                dispatchMessage((SupportMessage) networkEnvelope);
-                p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-            } else if (networkEnvelope instanceof AckMessage) {
-                processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
-            }
-        });
-        decryptedMailboxMessageWithPubKeys.clear();
-    }
-
-    protected boolean canProcessMessage(SupportMessage message) {
-        return message.getSupportType() == getSupportType();
     }
 
 
@@ -147,7 +116,7 @@ public abstract class SupportManager {
     protected void onChatMessage(ChatMessage chatMessage) {
         final String tradeId = chatMessage.getTradeId();
         final String uid = chatMessage.getUid();
-        boolean channelOpen = supportSession.channelOpen(chatMessage);
+        boolean channelOpen = channelOpen(chatMessage);
         if (!channelOpen) {
             log.debug("We got a chatMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
@@ -161,9 +130,9 @@ public abstract class SupportManager {
         }
 
         cleanupRetryMap(uid);
-        PubKeyRing receiverPubKeyRing = supportSession.getPeerPubKeyRing(chatMessage);
+        PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(chatMessage);
 
-        supportSession.storeChatMessage(chatMessage);
+        storeChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
@@ -187,7 +156,7 @@ public abstract class SupportManager {
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
             }
 
-            supportSession.getChatMessages()
+            getChatMessages()
                     .forEach(msg -> {
                         if (ackMessage.isSuccess())
                             msg.setAcknowledged(true);
@@ -243,8 +212,12 @@ public abstract class SupportManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Util
+    // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected boolean canProcessMessage(SupportMessage message) {
+        return message.getSupportType() == getSupportType();
+    }
 
     protected void cleanupRetryMap(String uid) {
         if (delayMsgMap.containsKey(uid)) {
@@ -252,5 +225,41 @@ public abstract class SupportManager {
             if (timer != null)
                 timer.stop();
         }
+    }
+
+    private boolean isReady() {
+        return allServicesInitialized &&
+                p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
+                walletsSetup.hasSufficientPeersForBroadcast();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyMessages() {
+        decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
+            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+            if (networkEnvelope instanceof SupportMessage) {
+                dispatchMessage((SupportMessage) networkEnvelope);
+            } else if (networkEnvelope instanceof AckMessage) {
+                processAckMessage((AckMessage) networkEnvelope, null);
+            }
+        });
+        decryptedDirectMessageWithPubKeys.clear();
+
+        decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
+            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
+            log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
+            if (networkEnvelope instanceof SupportMessage) {
+                dispatchMessage((SupportMessage) networkEnvelope);
+                p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
+            } else if (networkEnvelope instanceof AckMessage) {
+                processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
+            }
+        });
+        decryptedMailboxMessageWithPubKeys.clear();
     }
 }

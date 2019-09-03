@@ -23,8 +23,6 @@ import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.ObservableList;
 
-import java.util.List;
-
 import lombok.Getter;
 
 public abstract class SupportSession {
@@ -41,7 +39,6 @@ public abstract class SupportSession {
         this.isBuyer = isBuyer;
     }
 
-
     public SupportSession(SupportType supportType) {
         this.supportType = supportType;
     }
@@ -52,16 +49,7 @@ public abstract class SupportSession {
 
     abstract public void addChatMessage(ChatMessage message);
 
-
     abstract public ObservableList<ChatMessage> getObservableChatMessageList();
 
-    abstract public List<ChatMessage> getChatMessages();
-
     abstract public boolean chatIsOpen();
-
-    abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
-
-    abstract public boolean channelOpen(ChatMessage message);
-
-    abstract public void storeChatMessage(ChatMessage message);
 }
