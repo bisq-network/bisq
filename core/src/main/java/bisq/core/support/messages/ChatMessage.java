@@ -124,6 +124,33 @@ public final class ChatMessage extends SupportMessage {
                        boolean senderIsTrader,
                        String message,
                        NodeAddress senderNodeAddress,
+                       boolean isMediationDispute,
+                       ArrayList<Attachment> attachments) {
+        this(supportType,
+                tradeId,
+                traderId,
+                senderIsTrader,
+                message,
+                attachments,
+                senderNodeAddress,
+                new Date().getTime(),
+                false,
+                false,
+                UUID.randomUUID().toString(),
+                Version.getP2PMessageVersion(),
+                false,
+                null,
+                null,
+                false,
+                isMediationDispute);
+    }
+
+    public ChatMessage(SupportType supportType,
+                       String tradeId,
+                       int traderId,
+                       boolean senderIsTrader,
+                       String message,
+                       NodeAddress senderNodeAddress,
                        long date,
                        boolean isMediationDispute) {
         this(supportType,

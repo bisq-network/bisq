@@ -29,7 +29,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
-import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.util.BSFormatter;
@@ -648,21 +647,9 @@ public class Chat extends AnchorPane {
     }
 
     private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
-        return optionalSupportSession.map(supportSession -> {
-            SupportType supportType = supportManager.getSupportType();
-            boolean isMediationDispute = supportType == SupportType.MEDIATION;
-            ChatMessage message = new ChatMessage(
-                    supportType,
-                    supportSession.getTradeId(),
-                    supportSession.getClientPubKeyRing().hashCode(),
-                    supportSession.isClient(),
-                    text,
-                    supportManager.getMyAddress(),
-                    isMediationDispute
-            );
-            message.addAllAttachments(attachments);
-            return supportManager.sendChatMessage(message, supportSession);
-        }).orElse(null);
+        return optionalSupportSession.map(supportSession ->
+                supportManager.sendChatMessage(text, attachments, supportSession))
+                .orElse(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
