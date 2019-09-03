@@ -23,17 +23,17 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeList;
-import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeList;
+import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
@@ -86,8 +86,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
                           AccountAgeWitnessService accountAgeWitnessService,
                           BSFormatter formatter) {
         this.arbitrationManager = arbitrationManager;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.mediationManager = mediationManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
         type = Type.Confirmation;
     }
@@ -179,7 +179,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
         String title = dispute.isMediationDispute() ? Res.get("shared.selectedMediator") : Res.get("shared.arbitrator");
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, dispute.getConflictResolverNodeAddress().getFullAddress());
+        String agentNodeAddress = getDisputeManager(dispute).getAgentNodeAddress(dispute).getFullAddress();
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress);
 
         if (showAcceptedCountryCodes) {
             String countries;

@@ -22,8 +22,6 @@ import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Contract;
 
-import bisq.network.p2p.NodeAddress;
-
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
@@ -88,11 +86,7 @@ public final class Dispute implements NetworkPayload {
     private ObjectProperty<DisputeResult> disputeResultProperty = new SimpleObjectProperty<>();
     @Nullable
     private String disputePayoutTxId;
-
     private long openingDate;
-
-    // Added in v1.1.6. Is false if received from old clients.
-    private boolean isMediationDispute;
 
     transient private Storage<? extends DisputeList> storage;
 
@@ -118,8 +112,7 @@ public final class Dispute implements NetworkPayload {
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
                    PubKeyRing conflictResolverPubKeyRing,
-                   boolean isSupportTicket,
-                   boolean isMediationDispute) {
+                   boolean isSupportTicket) {
         this(tradeId,
                 traderId,
                 disputeOpenerIsBuyer,
@@ -136,8 +129,7 @@ public final class Dispute implements NetworkPayload {
                 makerContractSignature,
                 takerContractSignature,
                 conflictResolverPubKeyRing,
-                isSupportTicket,
-                isMediationDispute);
+                isSupportTicket);
         this.storage = storage;
         openingDate = new Date().getTime();
     }
@@ -163,8 +155,7 @@ public final class Dispute implements NetworkPayload {
                    @Nullable String makerContractSignature,
                    @Nullable String takerContractSignature,
                    PubKeyRing conflictResolverPubKeyRing,
-                   boolean isSupportTicket,
-                   boolean isMediationDispute) {
+                   boolean isSupportTicket) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.disputeOpenerIsBuyer = disputeOpenerIsBuyer;
@@ -182,13 +173,8 @@ public final class Dispute implements NetworkPayload {
         this.takerContractSignature = takerContractSignature;
         this.conflictResolverPubKeyRing = conflictResolverPubKeyRing;
         this.isSupportTicket = isSupportTicket;
-        this.isMediationDispute = isMediationDispute;
 
-        if (isMediationDispute) {
-            id = tradeId + "_" + traderId + "_mediation";
-        } else {
-            id = tradeId + "_" + traderId; // We do not add anything to not break persisted data
-        }
+        id = tradeId + "_" + traderId;
     }
 
     @Override
@@ -209,8 +195,7 @@ public final class Dispute implements NetworkPayload {
                         .collect(Collectors.toList()))
                 .setIsClosed(isClosedProperty.get())
                 .setOpeningDate(openingDate)
-                .setId(id)
-                .setIsMediationDispute(isMediationDispute);
+                .setId(id);
 
         Optional.ofNullable(contractHash).ifPresent(e -> builder.setContractHash(ByteString.copyFrom(e)));
         Optional.ofNullable(depositTxSerialized).ifPresent(e -> builder.setDepositTxSerialized(ByteString.copyFrom(e)));
@@ -241,8 +226,7 @@ public final class Dispute implements NetworkPayload {
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
                 PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()), // We renamed to conflictResolverPubKeyRing but need to keep protobuf as it was to be backward compatible
-                proto.getIsSupportTicket(),
-                proto.getIsMediationDispute());
+                proto.getIsSupportTicket());
 
         dispute.chatMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -268,6 +252,10 @@ public final class Dispute implements NetworkPayload {
         } else {
             log.error("disputeDirectMessage already exists");
         }
+    }
+
+    public boolean isMediationDispute() {
+        return !chatMessages.isEmpty() && chatMessages.get(0).getSupportType() == SupportType.MEDIATION;
     }
 
 
@@ -330,10 +318,6 @@ public final class Dispute implements NetworkPayload {
         return isClosedProperty.get();
     }
 
-    public NodeAddress getConflictResolverNodeAddress() {
-        return isMediationDispute ? contract.getMediatorNodeAddress() : contract.getArbitratorNodeAddress();
-    }
-
     @Override
     public String toString() {
         return "Dispute{" +
@@ -363,9 +347,5 @@ public final class Dispute implements NetworkPayload {
                 ", isClosedProperty=" + isClosedProperty +
                 ", disputeResultProperty=" + disputeResultProperty +
                 '}';
-    }
-
-    public SupportType getSupportType() {
-        return isMediationDispute ? SupportType.MEDIATION : SupportType.ARBITRATION;
     }
 }

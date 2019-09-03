@@ -87,7 +87,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final BtcWalletService btcWalletService;
     private final KeyRing keyRing;
     public final ArbitrationManager arbitrationManager;
-    private final MediationManager mediationManager;
+    public final MediationManager mediationManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     @Getter
@@ -510,16 +510,17 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             payoutTxHashAsString = payoutTx.getHashAsString();
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
+        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
         // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or \
         // in case of arbitration disputeState == Trade.DisputeState.ARBITRATION_REQUESTED
         if (disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED) {
             // If no dispute state set we start with mediation
+            disputeManager = mediationManager;
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
-            boolean isMediationDispute = true;
-            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getStorage(),
+            Dispute dispute = new Dispute(disputeManager.getStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -536,19 +537,18 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
                     mediatorPubKeyRing,
-                    isSupportTicket,
-                    isMediationDispute);
+                    isSupportTicket);
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
-            sendOpenNewDisputeMessage(dispute, false);
+            sendOpenNewDisputeMessage(dispute, false, disputeManager);
         } else if (disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.DISPUTE_REQUESTED) {
             // Only if we have completed mediation we allow arbitration
+            disputeManager = arbitrationManager;
             PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
             checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
-            boolean isMediationDispute = false;
-            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getStorage(),
+            Dispute dispute = new Dispute(disputeManager.getStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -565,18 +565,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
                     arbitratorPubKeyRing,
-                    isSupportTicket,
-                    isMediationDispute);
+                    isSupportTicket);
 
             trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
-            sendOpenNewDisputeMessage(dispute, false);
+            sendOpenNewDisputeMessage(dispute, false, disputeManager);
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
     }
 
-    private void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen) {
-        getDisputeManager(dispute.isMediationDispute()).sendOpenNewDisputeMessage(dispute,
+    private void sendOpenNewDisputeMessage(Dispute dispute,
+                                           boolean reOpen,
+                                           DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+        disputeManager.sendOpenNewDisputeMessage(dispute,
                 reOpen,
                 () -> navigation.navigateTo(MainView.class, SupportView.class),
                 (errorMessage, throwable) -> {
@@ -584,17 +585,13 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
                         new Popup<>().warning(errorMessage)
                                 .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
-                                .onAction(() -> sendOpenNewDisputeMessage(dispute, true))
+                                .onAction(() -> sendOpenNewDisputeMessage(dispute, true, disputeManager))
                                 .closeButtonText(Res.get("shared.cancel"))
                                 .show();
                     } else {
                         new Popup<>().warning(errorMessage).show();
                     }
                 });
-    }
-
-    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(boolean isMediationDispute) {
-        return isMediationDispute ? mediationManager : arbitrationManager;
     }
 }
 

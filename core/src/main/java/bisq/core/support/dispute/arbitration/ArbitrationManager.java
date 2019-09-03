@@ -63,7 +63,6 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -109,10 +108,6 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             } else if (message instanceof PeerOpenedDisputeMessage) {
                 onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
             } else if (message instanceof ChatMessage) {
-                if (message.getSupportType() != SupportType.ARBITRATION) {
-                    log.debug("Ignore non dispute type communication message");
-                    return;
-                }
                 onChatMessage((ChatMessage) message);
             } else if (message instanceof DisputeResultMessage) {
                 onDisputeResultMessage((DisputeResultMessage) message);
@@ -122,6 +117,11 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
         }
+    }
+
+    @Override
+    public NodeAddress getAgentNodeAddress(Dispute dispute) {
+        return dispute.getContract().getArbitratorNodeAddress();
     }
 
 
@@ -174,11 +174,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         }
 
         dispute.setDisputeResult(disputeResult);
-
         Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
-        checkArgument(!dispute.isMediationDispute(), "Dispute must not be MediationDispute");
-
-        // Arbitration case
         String errorMessage = null;
         boolean success = false;
         try {
@@ -339,7 +335,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 dispute.getTradeId(),
                 p2PService.getAddress(),
                 UUID.randomUUID().toString(),
-                SupportType.ARBITRATION);
+                getSupportType());
         log.info("Send {} to peer {}. tradeId={}, uid={}",
                 message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
         p2PService.sendEncryptedMailboxMessage(peersNodeAddress,

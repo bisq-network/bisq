@@ -73,7 +73,8 @@ public final class PeerPublishedDisputePayoutTxMessage extends ArbitrationMessag
                         .setTransaction(ByteString.copyFrom(transaction))
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                        .setUid(uid)
+                        .setType(SupportType.toProtoMessage(supportType)))
                 .build();
     }
 

@@ -697,7 +697,6 @@ message Dispute {
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
-    bool is_mediation_dispute = 24;
 }
 
 message Attachment {

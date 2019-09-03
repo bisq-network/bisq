@@ -66,7 +66,8 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
                 .setPeerOpenedDisputeMessage(protobuf.PeerOpenedDisputeMessage.newBuilder()
                         .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setType(SupportType.toProtoMessage(supportType)))
                 .build();
     }
 
