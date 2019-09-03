@@ -42,10 +42,6 @@ public abstract class DisputeSession extends SupportSession {
         this.disputeManager = disputeManager;
     }
 
-    public DisputeSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super();
-        this.disputeManager = disputeManager;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dependent on selected dispute
@@ -65,12 +61,6 @@ public abstract class DisputeSession extends SupportSession {
     public PubKeyRing getClientPubKeyRing() {
         // Get pubKeyRing of trader. Arbitrator is considered server for the chat session
         return dispute != null ? dispute.getTraderPubKeyRing() : null;
-    }
-
-    @Override
-    public void addAndPersistChatMessage(ChatMessage message) {
-        if (dispute != null && (isClient() || (!isClient() && !message.isSystemMessage())))
-            dispute.addAndPersistChatMessage(message);
     }
 
     @Override

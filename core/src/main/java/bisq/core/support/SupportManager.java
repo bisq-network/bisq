@@ -88,7 +88,7 @@ public abstract class SupportManager {
 
     public abstract List<ChatMessage> getAllChatMessages();
 
-    protected abstract void addAndPersistChatMessage(ChatMessage message);
+    public abstract void addAndPersistChatMessage(ChatMessage message);
 
     public abstract void persist();
 

@@ -38,7 +38,6 @@ import javax.inject.Singleton;
 import javafx.collections.ObservableList;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
@@ -123,9 +122,7 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public void addAndPersistChatMessage(ChatMessage message) {
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
-        if (tradeOptional.isPresent()) {
-            Trade trade = tradeOptional.get();
+        tradeManager.getTradeById(message.getTradeId()).ifPresent(trade -> {
             ObservableList<ChatMessage> chatMessages = trade.getChatMessages();
             if (chatMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 if (chatMessages.isEmpty()) {
@@ -136,7 +133,7 @@ public class TraderChatManager extends SupportManager {
                 log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
-        }
+        });
     }
 
 

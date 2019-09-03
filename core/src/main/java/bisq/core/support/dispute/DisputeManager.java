@@ -142,15 +142,14 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     @Override
     public void addAndPersistChatMessage(ChatMessage message) {
-        Optional<Dispute> disputeOptional = findDispute(message);
-        if (disputeOptional.isPresent()) {
-            if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                disputeOptional.get().addAndPersistChatMessage(message);
+        findDispute(message).ifPresent(dispute -> {
+            if (dispute.getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
+                dispute.addAndPersistChatMessage(message);
             } else {
                 log.warn("We got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
-        }
+        });
     }
 
 
