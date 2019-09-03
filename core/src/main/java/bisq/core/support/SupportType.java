@@ -20,8 +20,8 @@ package bisq.core.support;
 import bisq.common.proto.ProtoUtil;
 
 public enum SupportType {
+    ARBITRATION, // Need to be at index 0 to be the fall back for old clients
     MEDIATION,
-    ARBITRATION,
     TRADE;
 
     public static SupportType fromProto(
