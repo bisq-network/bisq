@@ -435,9 +435,7 @@ public class BisqSetup {
             step3();
         } else {
             Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
-                Socket socket = null;
-                try {
-                    socket = new Socket();
+                try (Socket socket = new Socket()) {
                     socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
                             BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
                     log.info("Localhost Bitcoin node detected.");
@@ -447,13 +445,6 @@ public class BisqSetup {
                     });
                 } catch (Throwable e) {
                     UserThread.execute(BisqSetup.this::step3);
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                    }
                 }
             }, "checkIfLocalHostNodeIsRunningThread");
             checkIfLocalHostNodeIsRunningThread.start();
