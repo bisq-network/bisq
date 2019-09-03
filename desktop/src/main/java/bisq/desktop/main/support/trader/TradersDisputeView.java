@@ -55,6 +55,4 @@ public abstract class TradersDisputeView extends DisputeView {
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
         chatView.display(chatSession, root.widthProperty());
     }
-
-    protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
 }

@@ -40,6 +40,7 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -404,6 +405,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     }
 
     protected abstract SupportType getType();
+
+    protected abstract DisputeSession getConcreteDisputeChatSession(Dispute dispute);
 
     protected void applyFilteredListPredicate(String filterString) {
         // If in trader view we must not display arbitrators own disputes as trader (must not happen anyway)

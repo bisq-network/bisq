@@ -27,7 +27,10 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.support.SupportType;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -66,5 +69,10 @@ public class MediatorView extends DisputeAgentView {
     @Override
     protected SupportType getType() {
         return SupportType.MEDIATION;
+    }
+
+    @Override
+    protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
+        return new MediationSession(dispute, disputeManager.isTrader(dispute));
     }
 }
