@@ -35,6 +35,8 @@ import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
+
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.BlockChain;
@@ -57,15 +59,14 @@ import org.bitcoinj.wallet.listeners.AbstractWalletEventListener;
 
 import javax.inject.Inject;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -80,12 +81,20 @@ import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
 public class BsqWalletService extends WalletService implements DaoStateListener {
+
+    public interface WalletTransactionsChangeListener {
+
+        void onWalletTransactionsChange();
+    }
+
     private final BsqCoinSelector bsqCoinSelector;
     private final NonBsqCoinSelector nonBsqCoinSelector;
     private final DaoStateService daoStateService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
-    private final ObservableList<Transaction> walletTransactions = FXCollections.observableArrayList();
+    private final List<Transaction> walletTransactions = new ArrayList<>();
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
+    private final List<WalletTransactionsChangeListener> walletTransactionsChangeListeners = new ArrayList<>();
+    private boolean updateBsqWalletTransactionsPending;
 
     // balance of non BSQ satoshis
     @Getter
@@ -152,7 +161,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
                     @Override
                     public void onTransactionConfidenceChanged(Wallet wallet, Transaction tx) {
-                        updateBsqWalletTransactions();
+                        // We are only interested in updates from unconfirmed txs and confirmed txs at the
+                        // time when it gets into a block. Otherwise we would get called
+                        // updateBsqWalletTransactions for each tx as the block depth changes for all.
+                        if (tx.getConfidence().getDepthInBlocks() <= 1 &&
+                                daoStateService.isParseBlockChainComplete()) {
+                            updateBsqWalletTransactions();
+                        }
                         unconfirmedBsqChangeOutputListService.onTransactionConfidenceChanged(tx);
                     }
 
@@ -215,6 +230,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateBsqBalance() {
+        long ts = System.currentTimeMillis();
         unverifiedBalance = Coin.valueOf(
                 getTransactions(false).stream()
                         .filter(tx -> tx.getConfidence().getConfidenceType() == PENDING)
@@ -246,7 +262,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                                         }
                                         return false;
                                     })
-                                    .mapToLong(in -> in != null ? in.getValue().value : 0)
+                                    .mapToLong(in -> in.getValue() != null ? in.getValue().value : 0)
                                     .sum();
                             return outputs - lockedInputs;
                         })
@@ -289,6 +305,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
         bsqBalanceListeners.forEach(e -> e.onUpdateBalances(availableConfirmedBalance, availableNonBsqBalance, unverifiedBalance,
                 unconfirmedChangeBalance, lockedForVotingBalance, lockupBondsBalance, unlockingBondsBalance));
+        log.info("updateBsqBalance took {} ms", System.currentTimeMillis() - ts);
     }
 
     public void addBsqBalanceListener(BsqBalanceListener listener) {
@@ -299,13 +316,21 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         bsqBalanceListeners.remove(listener);
     }
 
+    public void addWalletTransactionsChangeListener(WalletTransactionsChangeListener listener) {
+        walletTransactionsChangeListeners.add(listener);
+    }
+
+    public void removeWalletTransactionsChangeListener(WalletTransactionsChangeListener listener) {
+        walletTransactionsChangeListeners.remove(listener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BSQ TransactionOutputs and Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ObservableList<Transaction> getWalletTransactions() {
-        return walletTransactions;
+    public List<Transaction> getClonedWalletTransactions() {
+        return new ArrayList<>(walletTransactions);
     }
 
     public Stream<Transaction> getPendingWalletTransactionsStream() {
@@ -314,9 +339,21 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     private void updateBsqWalletTransactions() {
-        walletTransactions.setAll(getTransactions(false));
         if (daoStateService.isParseBlockChainComplete()) {
-            updateBsqBalance();
+            // We get called updateBsqWalletTransactions multiple times from onWalletChanged, onTransactionConfidenceChanged
+            // and from onParseBlockCompleteAfterBatchProcessing. But as updateBsqBalance is an expensive operation we do
+            // not want to call it in a short interval series so we use a flag and a delay to not call it multiple times
+            // in a 100 ms period.
+            if (!updateBsqWalletTransactionsPending) {
+                updateBsqWalletTransactionsPending = true;
+                UserThread.runAfter(() -> {
+                    walletTransactions.clear();
+                    walletTransactions.addAll(getTransactions(false));
+                    walletTransactionsChangeListeners.forEach(WalletTransactionsChangeListener::onWalletTransactionsChange);
+                    updateBsqBalance();
+                    updateBsqWalletTransactionsPending = false;
+                }, 100, TimeUnit.MILLISECONDS);
+            }
         }
     }
 
@@ -434,7 +471,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public Optional<Transaction> isWalletTransaction(String txId) {
-        return getWalletTransactions().stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
+        return walletTransactions.stream().filter(e -> e.getHashAsString().equals(txId)).findAny();
     }
 
 
@@ -553,7 +590,10 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return tx;
     }
 
-    private void addInputsAndChangeOutputForTx(Transaction tx, Coin fee, BsqCoinSelector bsqCoinSelector, boolean requireChangeOutput)
+    private void addInputsAndChangeOutputForTx(Transaction tx,
+                                               Coin fee,
+                                               BsqCoinSelector bsqCoinSelector,
+                                               boolean requireChangeOutput)
             throws InsufficientBsqException {
         Coin requiredInput;
         // If our fee is less then dust limit we increase it so we are sure to not get any dust output.

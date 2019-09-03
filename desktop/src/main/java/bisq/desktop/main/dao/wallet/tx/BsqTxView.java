@@ -71,13 +71,11 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -85,7 +83,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener {
+public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBalanceListener, DaoStateListener,
+        BsqWalletService.WalletTransactionsChangeListener {
 
     private TableView<BsqTxListItem> tableView;
 
@@ -100,7 +99,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
     private final SortedList<BsqTxListItem> sortedList = new SortedList<>(observableList);
-    private ListChangeListener<Transaction> walletBsqTransactionsListener;
     private int gridRow = 0;
     private Label chainHeightLabel;
     private ProgressBar chainSyncIndicator;
@@ -173,7 +171,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         VBox.setVgrow(tableView, Priority.ALWAYS);
         root.getChildren().add(vBox);
 
-        walletBsqTransactionsListener = change -> updateList();
         walletChainHeightListener = (observable, oldValue, newValue) -> {
             walletChainHeight = bsqWalletService.getBestChainHeight();
             onUpdateAnyChainHeight();
@@ -183,7 +180,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     @Override
     protected void activate() {
         bsqBalanceUtil.activate();
-        bsqWalletService.getWalletTransactions().addListener(walletBsqTransactionsListener);
+        bsqWalletService.addWalletTransactionsChangeListener(this);
         bsqWalletService.addBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
 
@@ -207,7 +204,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     protected void deactivate() {
         bsqBalanceUtil.deactivate();
         sortedList.comparatorProperty().unbind();
-        bsqWalletService.getWalletTransactions().removeListener(walletBsqTransactionsListener);
+        bsqWalletService.removeWalletTransactionsChangeListener(this);
         bsqWalletService.removeBsqBalanceListener(this);
         btcWalletService.getChainHeightProperty().removeListener(walletChainHeightListener);
         daoFacade.removeBsqStateListener(this);
@@ -252,6 +249,15 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
             updateAnyChainHeightTimer.stop();
             updateAnyChainHeightTimer = null;
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqWalletService.WalletTransactionsChangeListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onWalletTransactionsChange() {
+        updateList();
     }
 
 
@@ -299,8 +305,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private void updateList() {
         observableList.forEach(BsqTxListItem::cleanup);
 
-        // copy list to avoid ConcurrentModificationException
-        final List<Transaction> walletTransactions = new ArrayList<>(bsqWalletService.getWalletTransactions());
+        List<Transaction> walletTransactions = bsqWalletService.getClonedWalletTransactions();
         List<BsqTxListItem> items = walletTransactions.stream()
                 .map(transaction -> {
                     return new BsqTxListItem(transaction,

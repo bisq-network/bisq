@@ -51,13 +51,13 @@ public abstract class TradeSubView extends HBox {
 
     protected final PendingTradesViewModel model;
     protected VBox leftVBox;
-    protected AnchorPane contentPane;
-    protected TradeStepView tradeStepView;
+    private AnchorPane contentPane;
+    private TradeStepView tradeStepView;
     private AutoTooltipButton openDisputeButton;
     private NotificationGroup notificationGroup;
-    protected GridPane leftGridPane;
-    protected TitledGroupBg tradeProcessTitledGroupBg;
-    protected int leftGridPaneRowIndex = 0;
+    private GridPane leftGridPane;
+    private TitledGroupBg tradeProcessTitledGroupBg;
+    private int leftGridPaneRowIndex = 0;
     protected Subscription viewStateSubscription;
 
     ///////////////////////////////////////////////////////////////////////////////////////////

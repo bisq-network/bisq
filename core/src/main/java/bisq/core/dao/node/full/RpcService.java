@@ -75,6 +75,7 @@ public class RpcService {
     private final String rpcHost;
     private final String rpcPort;
     private final String rpcBlockPort;
+    private final String rpcBlockHost;
 
     private BtcdClient client;
     private BtcdDaemon daemon;
@@ -93,7 +94,8 @@ public class RpcService {
     public RpcService(Preferences preferences,
                       @Named(DaoOptionKeys.RPC_HOST) String rpcHost,
                       @Named(DaoOptionKeys.RPC_PORT) String rpcPort,
-                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort) {
+                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) String rpcBlockPort,
+                      @Named(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) String rpcBlockHost) {
         this.rpcUser = preferences.getRpcUser();
         this.rpcPassword = preferences.getRpcPw();
 
@@ -107,9 +109,11 @@ public class RpcService {
         this.rpcPort = isPortSet ? rpcPort :
                 isMainnet || isDaoBetaNet ? "8332" :
                         isTestnet ? "18332" :
-                                        "18443"; // regtest
-        this.rpcBlockPort = rpcBlockPort != null && !rpcBlockPort.isEmpty() ? rpcBlockPort : "5125";
-
+                                "18443"; // regtest
+        boolean isBlockPortSet = rpcBlockPort != null && !rpcBlockPort.isEmpty();
+        boolean isBlockHostSet = rpcBlockHost != null && !rpcBlockHost.isEmpty();
+        this.rpcBlockPort = isBlockPortSet ? rpcBlockPort : "5125";
+        this.rpcBlockHost = isBlockHostSet ? rpcBlockHost : "127.0.0.1";
     }
 
 
@@ -120,8 +124,10 @@ public class RpcService {
     void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
         ListenableFuture<Void> future = executor.submit(() -> {
             try {
-                log.info("Starting RPCService with btcd-cli4j version {} on {}:{} with user {}, listening for blocknotify on port {}",
-                        BtcdCli4jVersion.VERSION, this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort);
+                log.info("Starting RPCService with btcd-cli4j version {} on {}:{} with user {}, " +
+                                "listening for blocknotify on port {} from {}",
+                        BtcdCli4jVersion.VERSION, this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort,
+                        this.rpcBlockHost);
 
                 long startTs = System.currentTimeMillis();
                 PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
@@ -134,6 +140,7 @@ public class RpcService {
                 nodeConfig.setProperty("node.bitcoind.rpc.password", rpcPassword);
                 nodeConfig.setProperty("node.bitcoind.rpc.port", rpcPort);
                 nodeConfig.setProperty("node.bitcoind.notification.block.port", rpcBlockPort);
+                nodeConfig.setProperty("node.bitcoind.notification.block.host", rpcBlockHost);
                 nodeConfig.setProperty("node.bitcoind.notification.alert.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
                 nodeConfig.setProperty("node.bitcoind.notification.wallet.port", String.valueOf(bisq.network.p2p.Utils.findFreeSystemPort()));
 
@@ -252,7 +259,8 @@ public class RpcService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RawTx getTxFromRawTransaction(RawTransaction rawBtcTx, com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock) {
+    private RawTx getTxFromRawTransaction(RawTransaction rawBtcTx,
+                                          com.neemre.btcdcli4j.core.domain.RawBlock rawBtcBlock) {
         String txId = rawBtcTx.getTxId();
         long blockTime = rawBtcBlock.getTime() * 1000; // We convert block time from sec to ms
         int blockHeight = rawBtcBlock.getHeight();
@@ -284,7 +292,7 @@ public class RpcService {
                 .filter(e -> e != null && e.getN() != null && e.getValue() != null && e.getScriptPubKey() != null)
                 .map(rawBtcTxOutput -> {
                             byte[] opReturnData = null;
-                    com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey = rawBtcTxOutput.getScriptPubKey();
+                            com.neemre.btcdcli4j.core.domain.PubKeyScript scriptPubKey = rawBtcTxOutput.getScriptPubKey();
                             if (ScriptTypes.NULL_DATA.equals(scriptPubKey.getType()) && scriptPubKey.getAsm() != null) {
                                 String[] chunks = scriptPubKey.getAsm().split(" ");
                                 // We get on testnet a lot of "OP_RETURN 0" data, so we filter those away
@@ -304,10 +312,10 @@ public class RpcService {
                             // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
                             String address = scriptPubKey.getAddresses() != null &&
                                     scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
-                    PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
-                    return new RawTxOutput(rawBtcTxOutput.getN(),
-                            rawBtcTxOutput.getValue().movePointRight(8).longValue(),
-                            rawBtcTx.getTxId(),
+                            PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
+                            return new RawTxOutput(rawBtcTxOutput.getN(),
+                                    rawBtcTxOutput.getValue().movePointRight(8).longValue(),
+                                    rawBtcTx.getTxId(),
                                     pubKeyScript,
                                     address,
                                     opReturnData,

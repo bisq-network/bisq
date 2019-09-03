@@ -17,9 +17,17 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.util.validation.InputValidator;
+public final class SwishValidator extends PhoneNumberValidator {
 
-public final class SwishValidator extends InputValidator {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Public no-arg constructor required by Guice injector.
+    // Superclass' isoCountryCode must be set before validation.
+    public SwishValidator() {
+        this.setIsoCountryCode("SE");
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -27,11 +35,6 @@ public final class SwishValidator extends InputValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        // TODO
         return super.validate(input);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private methods
-    ///////////////////////////////////////////////////////////////////////////////////////////
 }

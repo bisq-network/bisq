@@ -280,6 +280,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     void onSetPaymentMethod(PaymentMethod paymentMethod) {
+        if (paymentMethod == null)
+            return;
+
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;

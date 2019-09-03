@@ -143,6 +143,10 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         listeners.add(listener);
     }
 
+    /**
+     *
+     * @param startBlockHeight      Block height from where we expect new blocks (current block height in bsqState + 1)
+     */
     public void requestBlocks(int startBlockHeight) {
         lastRequestedBlockHeight = startBlockHeight;
         Optional<Connection> connectionToSeedNodeOptional = networkNode.getConfirmedConnections().stream()

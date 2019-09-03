@@ -148,11 +148,11 @@ public class SeparatedPhaseBars extends VBox {
         }
 
         public void setInActive() {
-            titleLabel.setStyle("-fx-text-fill: black;");
+            titleLabel.getStyleClass().add("separated-phase-bar-inactive");
         }
 
         public void setActive() {
-            titleLabel.setStyle("-fx-text-fill: -fx-accent;");
+            titleLabel.getStyleClass().add("separated-phase-bar-active");
         }
 
         public void setPeriodRange(int firstBlock, int lastBlock, int duration) {

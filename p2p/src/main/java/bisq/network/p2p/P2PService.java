@@ -537,7 +537,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     log.error("Protobuffer data could not be processed: {}", e.toString());
                 }
             } else {
-                log.debug("Wrong blurredAddressHash. The message is not intended for us.");
+                log.trace("Wrong blurredAddressHash. The message is not intended for us.");
             }
         }
     }

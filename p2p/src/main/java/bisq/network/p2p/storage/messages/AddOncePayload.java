@@ -15,28 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.asset.coins;
+package bisq.network.p2p.storage.messages;
 
-import bisq.asset.AbstractAssetTest;
-
-import org.junit.Test;
-
-public class ByteballTest extends AbstractAssetTest {
-
-    public ByteballTest() {
-        super(new Byteball());
-    }
-
-    @Test
-    public void testValidAddresses() {
-        assertValidAddress("BN7JXKXWEG4BVJ7NW6Q3Z7SMJNZJYM3G");
-        assertValidAddress("XGKZODTTTRXIUA75TKONWHFDCU6634DE");
-    }
-
-    @Test
-    public void testInvalidAddresses() {
-        assertInvalidAddress("XGKZODTGTRXIUA75TKONWHFDCU6634DE");
-        assertInvalidAddress("XGKZODTTTRXIUA75TKONWHFDCU6634D");
-        assertInvalidAddress("XGKZODTTTRXIUA75TKONWHFDCU6634DZ");
-    }
+/**
+ * Marker interface for messages which must not be added again after a remove message has been received (e.g. MailboxMessages).
+ */
+public interface AddOncePayload {
 }

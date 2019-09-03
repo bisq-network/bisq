@@ -23,6 +23,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
@@ -100,6 +101,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 
 import javafx.util.Callback;
+import javafx.util.StringConverter;
 
 import java.util.Comparator;
 import java.util.Optional;
@@ -117,8 +119,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
 
-    private ComboBox<TradeCurrency> currencyComboBox;
-    private ComboBox<PaymentMethod> paymentMethodComboBox;
+    private AutocompleteComboBox<TradeCurrency> currencyComboBox;
+    private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
             priceColumn, avatarColumn;
@@ -130,6 +132,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ListChangeListener<OfferBookListItem> offerListListener;
     private ChangeListener<Number> priceFeedUpdateCounterListener;
     private Subscription currencySelectionSubscriber;
+    private static final int SHOW_ALL = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -163,10 +166,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         hBox.setSpacing(35);
         hBox.setPadding(new Insets(10, 0, 0, 0));
 
-        final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelComboBox(
-                Res.get("offerbook.filterByCurrency"), Res.get("list.currency.select"));
-        final Tuple3<VBox, Label, ComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelComboBox(
-                Res.get("offerbook.filterByPaymentMethod"), Res.get("shared.selectPaymentMethod"));
+        final Tuple3<VBox, Label, AutocompleteComboBox<TradeCurrency>> currencyBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
+                Res.get("offerbook.filterByCurrency"));
+        final Tuple3<VBox, Label, AutocompleteComboBox<PaymentMethod>> paymentBoxTuple = FormBuilder.addTopLabelAutocompleteComboBox(
+                Res.get("offerbook.filterByPaymentMethod"));
 
         createOfferButton = new AutoTooltipButton();
         createOfferButton.setMinHeight(40);
@@ -191,8 +194,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox = currencyBoxTuple.third;
 
         paymentMethodComboBox = paymentBoxTuple.third;
-        paymentMethodComboBox.setVisibleRowCount(12);
-        paymentMethodComboBox.setButtonCell(GUIUtil.getPaymentMethodButtonCell());
         paymentMethodComboBox.setCellFactory(GUIUtil.getPaymentMethodCellFactory());
 
         tableView = new TableView<>();
@@ -262,22 +263,27 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     protected void activate() {
-        currencyComboBox.setItems(model.getTradeCurrencies());
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
 
-        currencyComboBox.setButtonCell(GUIUtil.getTradeCurrencyButtonCell(Res.get("shared.oneOffer"),
-                Res.get("shared.multipleOffers"),
-                (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
+        currencyComboBox.setConverter(new CurrencyStringConverter(currencyComboBox));
+        currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 12));
-        currencyComboBox.setOnAction(e -> model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem()));
+        currencyComboBox.setAutocompleteItems(model.getTradeCurrencies());
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
+
+        currencyComboBox.setOnChangeConfirmed(e -> {
+            if (currencyComboBox.getEditor().getText().isEmpty())
+                currencyComboBox.getSelectionModel().select(SHOW_ALL);
+            model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+        });
 
         if (model.showAllTradeCurrenciesProperty.get())
-            currencyComboBox.getSelectionModel().select(0);
+            currencyComboBox.getSelectionModel().select(SHOW_ALL);
         else
             currencyComboBox.getSelectionModel().select(model.getSelectedTradeCurrency());
+        currencyComboBox.getEditor().setText(new CurrencyStringConverter(currencyComboBox).toString(currencyComboBox.getSelectionModel().getSelectedItem()));
 
         volumeColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
         priceColumn.sortableProperty().bind(model.showAllTradeCurrenciesProperty.not());
@@ -285,12 +291,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.priceSortTypeProperty.addListener((observable, oldValue, newValue) -> priceColumn.setSortType(newValue));
         priceColumn.setSortType(model.priceSortTypeProperty.get());
 
-        paymentMethodComboBox.setItems(model.getPaymentMethods());
-        paymentMethodComboBox.setOnAction(e -> model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
+        paymentMethodComboBox.setConverter(new PaymentMethodStringConverter(paymentMethodComboBox));
+        paymentMethodComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
+
+        paymentMethodComboBox.setAutocompleteItems(model.getPaymentMethods());
+        paymentMethodComboBox.setVisibleRowCount(Math.min(paymentMethodComboBox.getItems().size(), 10));
+
+        paymentMethodComboBox.setOnChangeConfirmed(e -> {
+            if (paymentMethodComboBox.getEditor().getText().isEmpty())
+                paymentMethodComboBox.getSelectionModel().select(SHOW_ALL);
+            model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
+        });
+
         if (model.showAllPaymentMethods)
-            paymentMethodComboBox.getSelectionModel().select(0);
+            paymentMethodComboBox.getSelectionModel().select(SHOW_ALL);
         else
             paymentMethodComboBox.getSelectionModel().select(model.selectedPaymentMethod);
+        paymentMethodComboBox.getEditor().setText(new PaymentMethodStringConverter(paymentMethodComboBox).toString(paymentMethodComboBox.getSelectionModel().getSelectedItem()));
 
         createOfferButton.setOnAction(e -> onCreateOffer());
 
@@ -315,8 +332,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                     return null;
                 });
-        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
-        });
+
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {});
 
         tableView.setItems(model.getOfferList());
 
@@ -328,8 +345,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     protected void deactivate() {
-        currencyComboBox.setOnAction(null);
-        paymentMethodComboBox.setOnAction(null);
         createOfferButton.setOnAction(null);
         model.getOfferList().comparatorProperty().unbind();
 
@@ -342,6 +357,88 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         model.priceFeedService.updateCounterProperty().removeListener(priceFeedUpdateCounterListener);
 
         currencySelectionSubscriber.unsubscribe();
+    }
+
+    static class CurrencyStringConverter extends StringConverter<TradeCurrency> {
+        private ComboBox<TradeCurrency> comboBox;
+
+        CurrencyStringConverter(ComboBox<TradeCurrency> comboBox) {
+            this.comboBox = comboBox;
+        }
+
+        @Override
+        public String toString(TradeCurrency item) {
+            return item != null ? asString(item) : "";
+        }
+
+        @Override
+        public TradeCurrency fromString(String query) {
+            if (comboBox.getItems().isEmpty())
+                return null;
+            if (query.isEmpty())
+                return specialShowAllItem();
+            return comboBox.getItems().stream().
+                    filter(item -> asString(item).equals(query)).
+                    findAny().orElse(null);
+        }
+
+        private String asString(TradeCurrency item) {
+            if (isSpecialShowAllItem(item))
+                return Res.get(GUIUtil.SHOW_ALL_FLAG);
+            if (isSpecialEditItem(item))
+                return Res.get(GUIUtil.EDIT_FLAG);
+            return item.getCode() + "  -  " + item.getName();
+        }
+
+        private boolean isSpecialShowAllItem(TradeCurrency item) {
+            return item.getCode().equals(GUIUtil.SHOW_ALL_FLAG);
+        }
+
+        private boolean isSpecialEditItem(TradeCurrency item) {
+            return item.getCode().equals(GUIUtil.EDIT_FLAG);
+        }
+
+        private TradeCurrency specialShowAllItem() {
+            return comboBox.getItems().get(SHOW_ALL);
+        }
+    }
+
+    static class PaymentMethodStringConverter extends StringConverter<PaymentMethod> {
+        private ComboBox<PaymentMethod> comboBox;
+
+        PaymentMethodStringConverter(ComboBox<PaymentMethod> comboBox) {
+            this.comboBox = comboBox;
+        }
+
+        @Override
+        public String toString(PaymentMethod item) {
+            return item != null ? asString(item) : "";
+        }
+
+        @Override
+        public PaymentMethod fromString(String query) {
+            if (comboBox.getItems().isEmpty())
+                return null;
+            if (query.isEmpty())
+                return specialShowAllItem();
+            return comboBox.getItems().stream().
+                    filter(item -> asString(item).equals(query)).
+                    findAny().orElse(null);
+        }
+
+        private String asString(PaymentMethod item) {
+            if (isSpecialShowAllItem(item))
+                return Res.get(GUIUtil.SHOW_ALL_FLAG);
+            return Res.get(item.getId());
+        }
+
+        private boolean isSpecialShowAllItem(PaymentMethod item) {
+            return item.getId().equals(GUIUtil.SHOW_ALL_FLAG);
+        }
+
+        private PaymentMethod specialShowAllItem() {
+            return comboBox.getItems().get(SHOW_ALL);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -993,4 +1090,3 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 }
-
