@@ -80,10 +80,6 @@ public final class ChatMessage extends SupportMessage {
     @Setter
     private boolean wasDisplayed;
 
-    public boolean isMediationDispute() {
-        return supportType == SupportType.MEDIATION;
-    }
-
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
     private final BooleanProperty acknowledgedProperty;
