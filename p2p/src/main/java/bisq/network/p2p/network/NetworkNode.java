@@ -452,7 +452,7 @@ public abstract class NetworkNode implements MessageListener {
         log.debug(sb.toString());
     }
 
-    abstract protected Socket createSocket(NodeAddress peersNodeAddress) throws IOException;
+    protected abstract Socket createSocket(NodeAddress peersNodeAddress) throws IOException;
 
     @Nullable
     public NodeAddress getNodeAddress() {
