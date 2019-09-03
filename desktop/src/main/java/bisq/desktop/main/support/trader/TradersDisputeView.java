@@ -53,7 +53,7 @@ public abstract class TradersDisputeView extends DisputeView {
     @Override
     protected void handleOnSelectDispute(Dispute dispute) {
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
-        disputeChat.display(disputeManager, chatSession, root.widthProperty());
+        disputeChatView.display(disputeManager, chatSession, root.widthProperty());
     }
 }
 

@@ -101,7 +101,7 @@ import lombok.Setter;
 
 import javax.annotation.Nullable;
 
-public class Chat extends AnchorPane {
+public class ChatView extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(TextFieldWithIcon.class);
 
     // UI
@@ -137,7 +137,7 @@ public class Chat extends AnchorPane {
     private SupportManager supportManager;
     private Optional<SupportSession> optionalSupportSession = Optional.empty();
 
-    public Chat(SupportManager supportManager, BSFormatter formatter) {
+    public ChatView(SupportManager supportManager, BSFormatter formatter) {
         this.supportManager = supportManager;
         this.formatter = formatter;
         allowAttachments = true;
