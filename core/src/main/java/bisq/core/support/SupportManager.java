@@ -38,14 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
 public abstract class SupportManager {
-    @Getter
     protected final P2PService p2PService;
     protected final WalletsSetup walletsSetup;
     protected final Map<String, Timer> delayMsgMap = new HashMap<>();
@@ -96,6 +94,19 @@ public abstract class SupportManager {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates p2pService
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isBootstrapped() {
+        return p2PService.isBootstrapped();
+    }
+
+    public NodeAddress getMyAddress() {
+        return p2PService.getAddress();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -140,13 +151,8 @@ public abstract class SupportManager {
             sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Ack
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void processAckMessage(AckMessage ackMessage,
-                                   @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    private void onAckMessage(AckMessage ackMessage,
+                              @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (ackMessage.getSourceType() == AckMessageSourceType.DISPUTE_MESSAGE) {
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
@@ -168,6 +174,55 @@ public abstract class SupportManager {
             if (decryptedMessageWithPubKey != null)
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Send message
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ChatMessage sendChatMessage(ChatMessage message, SupportSession supportSession) {
+        NodeAddress peersNodeAddress = getPeerNodeAddress(message, supportSession);
+        PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(message);
+
+        supportSession.addChatMessage(message);
+
+        if (receiverPubKeyRing != null) {
+            log.info("Send {} to peer {}. tradeId={}, uid={}",
+                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+
+            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+                    receiverPubKeyRing,
+                    message,
+                    new SendMailboxMessageListener() {
+                        @Override
+                        public void onArrived() {
+                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                            message.setArrived(true);
+                            persist();
+                        }
+
+                        @Override
+                        public void onStoredInMailbox() {
+                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                            message.setStoredInMailbox(true);
+                            persist();
+                        }
+
+                        @Override
+                        public void onFault(String errorMessage) {
+                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
+                            message.setSendMessageError(errorMessage);
+                            persist();
+                        }
+                    }
+            );
+        }
+
+        return message;
     }
 
     protected void sendAckMessage(SupportMessage supportMessage, PubKeyRing peersPubKeyRing,
@@ -245,7 +300,7 @@ public abstract class SupportManager {
             if (networkEnvelope instanceof SupportMessage) {
                 dispatchMessage((SupportMessage) networkEnvelope);
             } else if (networkEnvelope instanceof AckMessage) {
-                processAckMessage((AckMessage) networkEnvelope, null);
+                onAckMessage((AckMessage) networkEnvelope, null);
             }
         });
         decryptedDirectMessageWithPubKeys.clear();
@@ -257,7 +312,7 @@ public abstract class SupportManager {
                 dispatchMessage((SupportMessage) networkEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             } else if (networkEnvelope instanceof AckMessage) {
-                processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
+                onAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();

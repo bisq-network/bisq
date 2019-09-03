@@ -35,14 +35,10 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.util.BSFormatter;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
-import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.network.Connection;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
 import com.google.common.io.ByteStreams;
@@ -130,7 +126,6 @@ public class Chat extends AnchorPane {
     boolean displayHeader;
 
     // Communication stuff, to be renamed to something more generic
-    private final P2PService p2PService;
     private ChatMessage chatMessage;
     private ObservableList<ChatMessage> chatMessages;
     private ListChangeListener<ChatMessage> disputeDirectMessageListListener;
@@ -147,8 +142,6 @@ public class Chat extends AnchorPane {
     public Chat(SupportManager supportManager, BSFormatter formatter) {
         this.supportManager = supportManager;
         this.formatter = formatter;
-        //todo remove
-        this.p2PService = supportManager.getP2PService();
         allowAttachments = true;
         displayHeader = true;
     }
@@ -530,7 +523,7 @@ public class Chat extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onTrySendMessage() {
-        if (p2PService.isBootstrapped()) {
+        if (supportManager.isBootstrapped()) {
             String text = inputTextArea.getText();
             if (!text.isEmpty()) {
                 if (text.length() < 5_000) {
@@ -664,52 +657,11 @@ public class Chat extends AnchorPane {
                     supportSession.getClientPubKeyRing().hashCode(),
                     supportSession.isClient(),
                     text,
-                    p2PService.getAddress(),
+                    supportManager.getMyAddress(),
                     isMediationDispute
             );
-
             message.addAllAttachments(attachments);
-            NodeAddress peersNodeAddress = supportManager.getPeerNodeAddress(message, supportSession);
-            PubKeyRing receiverPubKeyRing = supportManager.getPeerPubKeyRing(message);
-
-            supportSession.addChatMessage(message);
-
-            if (receiverPubKeyRing != null) {
-                log.info("Send {} to peer {}. tradeId={}, uid={}",
-                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-
-                p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                        receiverPubKeyRing,
-                        message,
-                        new SendMailboxMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                message.setArrived(true);
-                                supportManager.persist();
-                            }
-
-                            @Override
-                            public void onStoredInMailbox() {
-                                log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                message.setStoredInMailbox(true);
-                                supportManager.persist();
-                            }
-
-                            @Override
-                            public void onFault(String errorMessage) {
-                                log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                                message.setSendMessageError(errorMessage);
-                                supportManager.persist();
-                            }
-                        }
-                );
-            }
-
-            return message;
+            return supportManager.sendChatMessage(message, supportSession);
         }).orElse(null);
     }
 
