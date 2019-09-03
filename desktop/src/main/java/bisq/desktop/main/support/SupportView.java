@@ -28,8 +28,8 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.support.agent.arbitration.ArbitratorView;
 import bisq.desktop.main.support.agent.mediation.MediatorView;
-import bisq.desktop.main.support.trader.arbitration.TradersArbitrationView;
-import bisq.desktop.main.support.trader.mediation.TradersMediationView;
+import bisq.desktop.main.support.client.arbitration.TradersArbitrationView;
+import bisq.desktop.main.support.client.mediation.TradersMediationView;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
@@ -58,7 +58,6 @@ import javafx.collections.MapChangeListener;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// will be probably only used for arbitration communication, will be renamed and the icon changed
 @FxmlView
 public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
