@@ -319,7 +319,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         model.dataModel.list.forEach(t -> {
             Trade trade = t.getTrade();
             newChatMessagesByTradeMap.put(trade.getId(),
-                    trade.getCommunicationMessages().stream()
+                    trade.getChatMessages().stream()
                             .filter(m -> !m.isWasDisplayed())
                             .filter(m -> !m.isSystemMessage())
                             .count());
@@ -331,11 +331,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             chatPopupStage.close();
 
         TraderChatManager traderChatManager = model.dataModel.getTraderChatManager();
-        if (trade.getCommunicationMessages().isEmpty()) {
+        if (trade.getChatMessages().isEmpty()) {
             traderChatManager.addSystemMsg(trade);
         }
 
-        trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+        trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
 
@@ -376,7 +376,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         chatPopupStage.setOnHiding(event -> {
             tradeChat.deactivate();
             // at close we set all as displayed. While open we ignore updates of the numNewMsg in the list icon.
-            trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+            trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
             trade.persist();
             tradeIdOfOpenChat = null;
 
@@ -718,7 +718,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     if (!listenerByTrade.containsKey(id)) {
                                         ListChangeListener<ChatMessage> listener = c -> update(trade, badge);
                                         listenerByTrade.put(id, listener);
-                                        trade.getCommunicationMessages().addListener(listener);
+                                        trade.getChatMessages().addListener(listener);
                                     }
 
                                     update(trade, badge);
