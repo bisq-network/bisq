@@ -154,9 +154,9 @@ public abstract class TradeSubView extends HBox {
         createAndAddTradeStepView(item.getViewClass());
     }
 
-    abstract protected void addWizards();
+    protected abstract void addWizards();
 
-    abstract protected void onViewStateChanged(PendingTradesViewModel.State viewState);
+    protected abstract void onViewStateChanged(PendingTradesViewModel.State viewState);
 
     protected void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
         if (leftGridPaneRowIndex == 0)

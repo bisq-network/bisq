@@ -278,7 +278,7 @@ public abstract class PaymentMethodForm {
         flowPane.getChildren().add(checkBox);
     }
 
-    abstract protected void autoFillNameTextField();
+    protected abstract void autoFillNameTextField();
 
     public abstract void addFormForAddAccount();
 

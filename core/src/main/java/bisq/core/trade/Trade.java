@@ -641,7 +641,7 @@ public abstract class Trade implements Tradable, Model {
     // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract protected void createTradeProtocol();
+    protected abstract void createTradeProtocol();
 
     public abstract Coin getPayoutAmount();
 

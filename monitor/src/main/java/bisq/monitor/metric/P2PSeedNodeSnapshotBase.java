@@ -103,7 +103,7 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         report();
     }
 
-    abstract protected List<NetworkEnvelope> getRequests();
+    protected abstract List<NetworkEnvelope> getRequests();
 
     protected void send(NetworkNode networkNode, NetworkEnvelope message) {
 
@@ -172,5 +172,5 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         connection.removeMessageListener(this);
     }
 
-    abstract protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection);
+    protected abstract boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection);
 }
