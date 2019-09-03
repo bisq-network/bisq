@@ -26,6 +26,7 @@ import bisq.common.storage.Storage;
 
 import com.google.protobuf.Message;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -66,7 +67,7 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
     @Override
     public Message toProtoMessage() {
         return protobuf.PersistableEnvelope.newBuilder().setMediationDisputeList(protobuf.MediationDisputeList.newBuilder()
-                .addAllDispute(ProtoUtil.collectionToProto(list))).build();
+                .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list)))).build();
     }
 
     public static MediationDisputeList fromProto(protobuf.MediationDisputeList proto,
