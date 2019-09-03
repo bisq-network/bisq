@@ -29,7 +29,6 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -110,7 +109,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             } else if (message instanceof PeerOpenedDisputeMessage) {
                 onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
             } else if (message instanceof ChatMessage) {
-                if (((ChatMessage) message).getSupportType() != SupportType.ARBITRATION) {
+                if (message.getSupportType() != SupportType.ARBITRATION) {
                     log.debug("Ignore non dispute type communication message");
                     return;
                 }
@@ -123,13 +122,6 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
         }
-    }
-
-
-    //todo
-    @Override
-    protected DisputeSession getConcreteChatSession() {
-        return new ArbitrationSession(this);
     }
 
 

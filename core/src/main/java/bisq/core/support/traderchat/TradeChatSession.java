@@ -30,9 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-/* Makers are considered as servers and takers as clients for trader to trader chat
- * sessions. This is only to make it easier to understand who's who, there is no real
- * server/client relationship */
 @Slf4j
 public class TradeChatSession extends SupportSession {
 

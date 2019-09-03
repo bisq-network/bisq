@@ -79,7 +79,7 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public SupportType getSupportType() {
-        return SupportType.MEDIATION;
+        return SupportType.TRADE;
     }
 
     @Override
@@ -100,23 +100,17 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
-        if (tradeOptional.isPresent()) {
-            Trade t = tradeOptional.get();
-            if (t.getContract() != null && t.getOffer() != null) {
-                if (t.getOffer().getOwnerPubKey().equals(tradeManager.getKeyRing().getPubKeyRing().getSignaturePubKey())) {
-                    // I am maker
-                    return t.getContract().getTakerPubKeyRing();
-                } else {
-                    return t.getContract().getMakerPubKeyRing();
-                }
+        return tradeManager.getTradeById(message.getTradeId()).map(trade -> {
+            if (trade.getContract() != null) {
+                return trade.getContract().getPeersPubKeyRing(pubKeyRing);
+            } else {
+                return null;
             }
-        }
-        return null;
+        }).orElse(null);
     }
 
     @Override
-    public List<ChatMessage> getChatMessages() {
+    public List<ChatMessage> getAllChatMessages() {
         return tradeManager.getTradableList().stream()
                 .flatMap(trade -> trade.getChatMessages().stream())
                 .collect(Collectors.toList());
@@ -128,7 +122,7 @@ public class TraderChatManager extends SupportManager {
     }
 
     @Override
-    public void storeChatMessage(ChatMessage message) {
+    public void addAndPersistChatMessage(ChatMessage message) {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();

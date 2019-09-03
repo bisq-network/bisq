@@ -86,9 +86,9 @@ public abstract class SupportManager {
 
     public abstract boolean channelOpen(ChatMessage message);
 
-    public abstract List<ChatMessage> getChatMessages();
+    public abstract List<ChatMessage> getAllChatMessages();
 
-    public abstract void storeChatMessage(ChatMessage message);
+    protected abstract void addAndPersistChatMessage(ChatMessage message);
 
     public abstract void persist();
 
@@ -143,7 +143,7 @@ public abstract class SupportManager {
         cleanupRetryMap(uid);
         PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(chatMessage);
 
-        storeChatMessage(chatMessage);
+        addAndPersistChatMessage(chatMessage);
 
         // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
         // cannot send it anyway)
@@ -162,7 +162,8 @@ public abstract class SupportManager {
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
             }
 
-            getChatMessages()
+            getAllChatMessages().stream()
+                    .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
                     .forEach(msg -> {
                         if (ackMessage.isSuccess())
                             msg.setAcknowledged(true);

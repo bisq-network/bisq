@@ -33,10 +33,4 @@ public class MediationSession extends DisputeSession {
                             DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
         super(dispute, disputeManager);
     }
-
-    MediationSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager);
-
-    }
-
 }

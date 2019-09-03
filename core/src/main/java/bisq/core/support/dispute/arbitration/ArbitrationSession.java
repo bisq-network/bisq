@@ -33,9 +33,4 @@ public class ArbitrationSession extends DisputeSession {
                               DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
         super(dispute, disputeManager);
     }
-
-    ArbitrationSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager);
-
-    }
 }

@@ -25,7 +25,6 @@ import bisq.common.crypto.PubKeyRing;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -33,7 +32,6 @@ import javax.annotation.Nullable;
 @Slf4j
 public abstract class DisputeSession extends SupportSession {
     @Nullable
-    @Getter
     private Dispute dispute;
     private DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
 

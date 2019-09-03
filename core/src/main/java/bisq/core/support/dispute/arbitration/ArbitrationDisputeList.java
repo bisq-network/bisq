@@ -17,9 +17,9 @@
 
 package bisq.core.support.dispute.arbitration;
 
+import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
-import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.storage.Storage;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 /*
- * Holds a List of Dispute objects.
+ * Holds a List of arbitration dispute objects.
  *
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
