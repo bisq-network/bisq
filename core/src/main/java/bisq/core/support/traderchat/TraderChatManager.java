@@ -20,7 +20,6 @@ package bisq.core.support.traderchat;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.support.SupportManager;
-import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
@@ -49,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class TraderChatManager extends SupportManager {
     private final TradeManager tradeManager;
+    private final PubKeyRing pubKeyRing;
 
     public interface DisputeStateListener {
         void onDisputeClosed(String tradeId);
@@ -63,9 +63,13 @@ public class TraderChatManager extends SupportManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderChatManager(P2PService p2PService, WalletsSetup walletsSetup, TradeManager tradeManager) {
+    public TraderChatManager(P2PService p2PService,
+                             WalletsSetup walletsSetup,
+                             TradeManager tradeManager,
+                             PubKeyRing pubKeyRing) {
         super(p2PService, walletsSetup);
         this.tradeManager = tradeManager;
+        this.pubKeyRing = pubKeyRing;
     }
 
 
@@ -84,16 +88,14 @@ public class TraderChatManager extends SupportManager {
     }
 
     @Override
-    public NodeAddress getPeerNodeAddress(ChatMessage message, SupportSession supportSession) {
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
-        if (tradeOptional.isPresent()) {
-            Trade t = tradeOptional.get();
-            if (t.getContract() != null)
-                return supportSession.isBuyer() ?
-                        t.getContract().getSellerNodeAddress() :
-                        t.getContract().getBuyerNodeAddress();
-        }
-        return null;
+    public NodeAddress getPeerNodeAddress(ChatMessage message) {
+        return tradeManager.getTradeById(message.getTradeId()).map(trade -> {
+            if (trade.getContract() != null) {
+                return trade.getContract().getPeersNodeAddress(pubKeyRing);
+            } else {
+                return null;
+            }
+        }).orElse(null);
     }
 
     @Override

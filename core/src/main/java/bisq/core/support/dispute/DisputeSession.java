@@ -84,4 +84,9 @@ public abstract class DisputeSession extends SupportSession {
     public boolean chatIsOpen() {
         return dispute != null && !dispute.isClosed();
     }
+
+    @Override
+    public boolean isDisputeAgent() {
+        return !isClient();
+    }
 }

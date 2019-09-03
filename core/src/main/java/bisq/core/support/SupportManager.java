@@ -80,7 +80,7 @@ public abstract class SupportManager {
 
     public abstract void persist();
 
-    public abstract NodeAddress getPeerNodeAddress(ChatMessage message, SupportSession supportSession);
+    public abstract NodeAddress getPeerNodeAddress(ChatMessage message);
 
     public abstract SupportType getSupportType();
 
@@ -182,7 +182,7 @@ public abstract class SupportManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public ChatMessage sendChatMessage(ChatMessage message, SupportSession supportSession) {
-        NodeAddress peersNodeAddress = getPeerNodeAddress(message, supportSession);
+        NodeAddress peersNodeAddress = getPeerNodeAddress(message);
         PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(message);
 
         supportSession.addChatMessage(message);
