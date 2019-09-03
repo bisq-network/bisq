@@ -27,20 +27,16 @@ import lombok.Getter;
 
 public abstract class SupportSession {
     @Getter
-    private SupportType supportType;
-    @Getter
     private boolean isClient;
     @Getter
     private boolean isBuyer;
 
-    public SupportSession(SupportType supportType, boolean isClient, boolean isBuyer) {
-        this.supportType = supportType;
+    protected SupportSession(boolean isClient, boolean isBuyer) {
         this.isClient = isClient;
         this.isBuyer = isBuyer;
     }
 
-    public SupportSession(SupportType supportType) {
-        this.supportType = supportType;
+    protected SupportSession() {
     }
 
     abstract public String getTradeId();

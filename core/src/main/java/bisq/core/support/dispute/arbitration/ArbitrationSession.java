@@ -17,7 +17,6 @@
 
 package bisq.core.support.dispute.arbitration;
 
-import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
@@ -32,11 +31,11 @@ public class ArbitrationSession extends DisputeSession {
 
     public ArbitrationSession(@Nullable Dispute dispute,
                               DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(dispute, disputeManager, SupportType.ARBITRATION);
+        super(dispute, disputeManager);
     }
 
     ArbitrationSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager, SupportType.ARBITRATION);
+        super(disputeManager);
 
     }
 }

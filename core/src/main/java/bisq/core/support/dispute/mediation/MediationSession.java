@@ -17,7 +17,6 @@
 
 package bisq.core.support.dispute.mediation;
 
-import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
@@ -32,11 +31,11 @@ public class MediationSession extends DisputeSession {
 
     public MediationSession(@Nullable Dispute dispute,
                             DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(dispute, disputeManager, SupportType.MEDIATION);
+        super(dispute, disputeManager);
     }
 
     MediationSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(disputeManager, SupportType.MEDIATION);
+        super(disputeManager);
 
     }
 

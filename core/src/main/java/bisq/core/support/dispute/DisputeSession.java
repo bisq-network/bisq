@@ -18,7 +18,6 @@
 package bisq.core.support.dispute;
 
 import bisq.core.support.SupportSession;
-import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.common.crypto.PubKeyRing;
@@ -36,19 +35,17 @@ public abstract class DisputeSession extends SupportSession {
     @Nullable
     @Getter
     private Dispute dispute;
-    protected DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
 
     public DisputeSession(@Nullable Dispute dispute,
-                          DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                          SupportType supportType) {
-        super(supportType);
+                          DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+        super();
         this.dispute = dispute;
         this.disputeManager = disputeManager;
     }
 
-    public DisputeSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
-                          SupportType supportType) {
-        super(supportType);
+    public DisputeSession(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+        super();
         this.disputeManager = disputeManager;
     }
 
