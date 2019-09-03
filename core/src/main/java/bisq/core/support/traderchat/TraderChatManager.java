@@ -19,22 +19,31 @@ package bisq.core.support.traderchat;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.support.SupportManager;
+import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
+import bisq.core.trade.Trade;
+import bisq.core.trade.TradeManager;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class TraderChatManager extends SupportManager {
+    private final TradeManager tradeManager;
+
     public interface DisputeStateListener {
         void onDisputeClosed(String tradeId);
     }
@@ -48,9 +57,43 @@ public class TraderChatManager extends SupportManager {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TraderChatManager(P2PService p2PService, WalletsSetup walletsSetup) {
+    public TraderChatManager(P2PService p2PService, WalletsSetup walletsSetup, TradeManager tradeManager) {
         super(p2PService, walletsSetup);
+        this.tradeManager = tradeManager;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Implement template methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public SupportType getSupportType() {
+        return SupportType.MEDIATION;
+    }
+
+    @Override
+    public void persist() {
+        tradeManager.persistTrades();
+    }
+
+    @Override
+    public NodeAddress getPeerNodeAddress(ChatMessage message, SupportSession supportSession) {
+        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
+        if (tradeOptional.isPresent()) {
+            Trade t = tradeOptional.get();
+            if (t.getContract() != null)
+                return supportSession.isBuyer() ?
+                        t.getContract().getSellerNodeAddress() :
+                        t.getContract().getBuyerNodeAddress();
+        }
+        return null;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void addDisputeStateListener(TraderChatManager.DisputeStateListener disputeStateListener) {
         disputeStateListeners.add(disputeStateListener);

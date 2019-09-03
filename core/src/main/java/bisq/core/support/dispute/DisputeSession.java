@@ -21,8 +21,6 @@ import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 
-import bisq.network.p2p.NodeAddress;
-
 import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.FXCollections;
@@ -64,11 +62,6 @@ public abstract class DisputeSession extends SupportSession {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public boolean isMediationDispute() {
-        return dispute == null || dispute.isMediationDispute();
-    }
-
-    @Override
     public boolean isClient() {
         return dispute != null && disputeManager.isTrader(dispute);
     }
@@ -91,14 +84,6 @@ public abstract class DisputeSession extends SupportSession {
     }
 
     @Override
-    public void persist() {
-        DisputeList disputes = disputeManager.getDisputeList();
-        if (disputes != null) {
-            disputes.persist();
-        }
-    }
-
-    @Override
     public ObservableList<ChatMessage> getObservableChatMessageList() {
         return dispute != null ? dispute.getChatMessages() : FXCollections.observableArrayList();
     }
@@ -112,18 +97,6 @@ public abstract class DisputeSession extends SupportSession {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Not dependent on selected dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Nullable
-    @Override
-    public NodeAddress getPeerNodeAddress(ChatMessage message) {
-        Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
-        if (!disputeOptional.isPresent()) {
-            log.warn("Could not find dispute for tradeId = {} traderId = {}",
-                    message.getTradeId(), message.getTraderId());
-            return null;
-        }
-        return disputeManager.getNodeAddressPubKeyRingTuple(disputeOptional.get()).first;
-    }
 
     @Nullable
     @Override

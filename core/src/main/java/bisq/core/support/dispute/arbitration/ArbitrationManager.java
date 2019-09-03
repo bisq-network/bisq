@@ -50,7 +50,6 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Transaction;
@@ -70,8 +69,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
-
+public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -86,19 +84,27 @@ public class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
                               KeyRing keyRing,
-                              Storage<ArbitrationDisputeList> storage) {
-        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, openOfferManager, keyRing, storage);
+                              ArbitrationDisputeListService arbitrationDisputeListService) {
+        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
+                openOfferManager, keyRing, arbitrationDisputeListService);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Abstract methods
+    // Implement template methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public SupportType getSupportType() {
+        return SupportType.ARBITRATION;
+    }
+
+    @Override
     public void dispatchMessage(SupportMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
+        if (canProcessMessage(message)) {
+            log.info("Received {} with tradeId {} and uid {}",
+                    message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
 
-        if (message.getSupportType() == SupportType.ARBITRATION) {
             if (message instanceof OpenNewDisputeMessage) {
                 onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
             } else if (message instanceof PeerOpenedDisputeMessage) {
@@ -119,14 +125,11 @@ public class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
         }
     }
 
+
+    //todo
     @Override
     protected DisputeSession getConcreteChatSession() {
         return new ArbitrationSession(this);
-    }
-
-    @Override
-    protected ArbitrationDisputeList getConcreteDisputeList() {
-        return new ArbitrationDisputeList(disputeStorage);
     }
 
 
@@ -333,9 +336,8 @@ public class ArbitrationManager extends DisputeManager<ArbitrationDisputeList> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Send messages
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     // winner (or buyer in case of 50/50) sends tx to other peer
     private void sendPeerPublishedPayoutTxMessage(Transaction transaction, Dispute dispute, Contract contract) {

@@ -24,6 +24,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportManager;
+import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -39,60 +40,35 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
-import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.Subscription;
-
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> extends SupportManager
-        implements PersistedDataHost {
+public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> extends SupportManager {
     protected final TradeWalletService tradeWalletService;
     protected final BtcWalletService walletService;
     protected final TradeManager tradeManager;
     protected final ClosedTradableManager closedTradableManager;
     protected final OpenOfferManager openOfferManager;
     protected final KeyRing keyRing;
-    @Getter
-    protected final Storage<T> disputeStorage;
-    @Nullable
-    @Getter
-    private T disputeList;
-    private final Map<String, Dispute> openDisputes;
-    private final Map<String, Dispute> closedDisputes;
+    private final DisputeListService<T> disputeListService;
 
-    private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
-    @Getter
-    private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -106,7 +82,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          Storage<T> storage) {
+                          DisputeListService<T> disputeListService) {
         super(p2PService, walletsSetup);
 
         this.tradeWalletService = tradeWalletService;
@@ -115,13 +91,31 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
+        this.disputeListService = disputeListService;
 
         setSupportSession(getConcreteChatSession());
+    }
 
-        disputeStorage = storage;
 
-        openDisputes = new HashMap<>();
-        closedDisputes = new HashMap<>();
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Implement template methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void persist() {
+        disputeListService.persist();
+    }
+
+
+    @Override
+    public NodeAddress getPeerNodeAddress(ChatMessage message, SupportSession supportSession) {
+        Optional<Dispute> disputeOptional = findDispute(message);
+        if (!disputeOptional.isPresent()) {
+            log.warn("Could not find dispute for tradeId = {} traderId = {}",
+                    message.getTradeId(), message.getTraderId());
+            return null;
+        }
+        return getNodeAddressPubKeyRingTuple(disputeOptional.get()).first;
     }
 
 
@@ -134,23 +128,44 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     abstract protected DisputeSession getConcreteChatSession();
 
-    abstract protected T getConcreteDisputeList();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public IntegerProperty getNumOpenDisputes() {
+        return disputeListService.getNumOpenDisputes();
+    }
+
+    public Storage<? extends DisputeList> getStorage() {
+        return disputeListService.getStorage();
+    }
+
+    public void cleanupDisputes() {
+        disputeListService.cleanupDisputes(tradeManager::closeDisputedTrade);
+    }
+
+    public ObservableList<Dispute> getDisputesAsObservableList() {
+        return disputeListService.getDisputesAsObservableList();
+    }
+
+    public String getNrOfDisputes(boolean isBuyer, Contract contract) {
+        return disputeListService.getNrOfDisputes(isBuyer, contract);
+    }
+
+    public T getDisputeList() {
+        return disputeListService.getDisputeList();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public void readPersisted() {
-        disputeList = getConcreteDisputeList();
-        disputeList.readPersisted();
-        disputeList.stream().forEach(dispute -> dispute.setStorage(disputeStorage));
-    }
-
-    //todo
     public void onAllServicesInitialized() {
         super.onAllServicesInitialized();
+        disputeListService.onAllServicesInitialized();
+
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {
@@ -169,53 +184,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         });
 
         tryApplyMessages();
-
-        cleanupDisputes();
-
-        if (disputeList != null) {
-            disputeList.getList().addListener((ListChangeListener<Dispute>) change -> {
-                change.next();
-                onDisputesChangeListener(change.getAddedSubList(), change.getRemoved());
-            });
-            onDisputesChangeListener(disputeList.getList(), null);
-        } else {
-            log.warn("disputes is null");
-        }
-    }
-
-    public void cleanupDisputes() {
-        if (disputeList != null) {
-            disputeList.stream().forEach(dispute -> {
-                dispute.setStorage(disputeStorage);
-                if (dispute.isClosed())
-                    closedDisputes.put(dispute.getTradeId(), dispute);
-                else
-                    openDisputes.put(dispute.getTradeId(), dispute);
-            });
-        } else {
-            log.warn("disputes is null");
-        }
-
-        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator
-        // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
-        openDisputes.forEach((key, openDispute) -> {
-            if (closedDisputes.containsKey(key)) {
-                Dispute closedDispute = closedDisputes.get(key);
-                // We need to check if is from the same peer, we don't want to close the peers dispute
-                if (closedDispute.getTraderId() == openDispute.getTraderId()) {
-                    openDispute.setIsClosed(true);
-                    tradeManager.closeDisputedTrade(openDispute.getTradeId());
-                }
-            }
-        });
-    }
-
-    public ObservableList<Dispute> getDisputesAsObservableList() {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return FXCollections.observableArrayList();
-        }
-        return disputeList.getList();
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -223,25 +191,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
 
-    public String getNrOfDisputes(boolean isBuyer, Contract contract) {
-        return String.valueOf(getDisputesAsObservableList().stream()
-                .filter(e -> {
-                    Contract contract1 = e.getContract();
-                    if (contract1 == null)
-                        return false;
-
-                    if (isBuyer) {
-                        NodeAddress buyerNodeAddress = contract1.getBuyerNodeAddress();
-                        return buyerNodeAddress != null && buyerNodeAddress.equals(contract.getBuyerNodeAddress());
-                    } else {
-                        NodeAddress sellerNodeAddress = contract1.getSellerNodeAddress();
-                        return sellerNodeAddress != null && sellerNodeAddress.equals(contract.getSellerNodeAddress());
-                    }
-                })
-                .collect(Collectors.toSet()).size());
-    }
-
     public Optional<Dispute> findOwnDispute(String tradeId) {
+        T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return Optional.empty();
@@ -249,6 +200,94 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Message handler
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // arbitrator receives that from trader who opens dispute
+    protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+        T disputeList = getDisputeList();
+        if (disputeList == null) {
+            log.warn("disputes is null");
+            return;
+        }
+
+        String errorMessage;
+        Dispute dispute = openNewDisputeMessage.getDispute();
+        Contract contractFromOpener = dispute.getContract();
+        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
+        if (isArbitrator(dispute)) {
+            if (!disputeList.contains(dispute)) {
+                Optional<Dispute> storedDisputeOptional = findDispute(dispute);
+                if (!storedDisputeOptional.isPresent()) {
+                    dispute.setStorage(disputeListService.getStorage());
+                    disputeList.add(dispute);
+                    errorMessage = sendPeerOpenedDisputeMessage(dispute, contractFromOpener, peersPubKeyRing);
+                } else {
+                    errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
+                            "TradeId = " + dispute.getTradeId();
+                    log.warn(errorMessage);
+                }
+            } else {
+                errorMessage = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
+                log.warn(errorMessage);
+            }
+        } else {
+            errorMessage = "Trader received openNewDisputeMessage. That must never happen.";
+            log.error(errorMessage);
+        }
+
+        // We use the ChatMessage not the openNewDisputeMessage for the ACK
+        ObservableList<ChatMessage> messages = openNewDisputeMessage.getDispute().getChatMessages();
+        if (!messages.isEmpty()) {
+            ChatMessage msg = messages.get(0);
+            PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
+            sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
+        }
+    }
+
+    // not dispute requester receives that from arbitrator
+    protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+        T disputeList = getDisputeList();
+        if (disputeList == null) {
+            log.warn("disputes is null");
+            return;
+        }
+
+        String errorMessage;
+        Dispute dispute = peerOpenedDisputeMessage.getDispute();
+        if (!isArbitrator(dispute)) {
+            if (!disputeList.contains(dispute)) {
+                Optional<Dispute> storedDisputeOptional = findDispute(dispute);
+                if (!storedDisputeOptional.isPresent()) {
+                    dispute.setStorage(disputeListService.getStorage());
+                    disputeList.add(dispute);
+                    Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
+                    tradeOptional.ifPresent(trade -> trade.setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER));
+                    errorMessage = null;
+                } else {
+                    errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
+                            "TradeId = " + dispute.getTradeId();
+                    log.warn(errorMessage);
+                }
+            } else {
+                errorMessage = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
+                log.warn(errorMessage);
+            }
+        } else {
+            errorMessage = "Arbitrator received peerOpenedDisputeMessage. That must never happen.";
+            log.error(errorMessage);
+        }
+
+        // We use the ChatMessage not the peerOpenedDisputeMessage for the ACK
+        ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
+        if (!messages.isEmpty()) {
+            ChatMessage msg = messages.get(0);
+            sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+        }
+
+        sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Send message
@@ -258,6 +297,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                                           boolean reOpen,
                                           ResultHandler resultHandler,
                                           FaultHandler faultHandler) {
+        T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
@@ -361,57 +401,17 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void onDisputesChangeListener(List<? extends Dispute> addedList,
-                                          @Nullable List<? extends Dispute> removedList) {
-        if (removedList != null) {
-            removedList.forEach(dispute -> {
-                String id = dispute.getId();
-                if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                    disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
-                    disputeIsClosedSubscriptionsMap.remove(id);
-                }
-            });
-        }
-        addedList.forEach(dispute -> {
-            String id = dispute.getId();
-            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                    isClosed -> {
-                        if (disputeList != null) {
-                            // We get the event before the list gets updated, so we execute on next frame
-                            UserThread.execute(() -> {
-                                int openDisputes = (int) disputeList.getList().stream()
-                                        .filter(e -> !e.isClosed()).count();
-                                numOpenDisputes.set(openDisputes);
-                            });
-                        }
-                    });
-            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
-        });
-    }
-
-    private String getDisputeInfo(boolean isMediationDispute) {
-        String role = isMediationDispute ? Res.get("shared.mediator").toLowerCase() :
-                Res.get("shared.arbitrator2").toLowerCase();
-        String link = isMediationDispute ? "https://docs.bisq.network/trading-rules.html#mediation" :
-                "https://bisq.network/docs/exchange/arbitration-system";
-        return Res.get("support.initialInfo", role, role, link);
-    }
-
     // arbitrator sends that to trading peer when he received openDispute request
     private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
                                                 PubKeyRing pubKeyRing) {
+        T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return null;
         }
 
-        Dispute dispute = new Dispute(disputeStorage,
+        Dispute dispute = new Dispute(disputeListService.getStorage(),
                 disputeFromOpener.getTradeId(),
                 pubKeyRing.hashCode(),
                 !disputeFromOpener.isDisputeOpenerIsBuyer(),
@@ -520,6 +520,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
+        T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
@@ -602,94 +603,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Message handler
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // arbitrator receives that from trader who opens dispute
-    protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return;
-        }
-
-        String errorMessage;
-        Dispute dispute = openNewDisputeMessage.getDispute();
-        Contract contractFromOpener = dispute.getContract();
-        PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
-        if (isArbitrator(dispute)) {
-            if (!disputeList.contains(dispute)) {
-                Optional<Dispute> storedDisputeOptional = findDispute(dispute);
-                if (!storedDisputeOptional.isPresent()) {
-                    dispute.setStorage(disputeStorage);
-                    disputeList.add(dispute);
-                    errorMessage = sendPeerOpenedDisputeMessage(dispute, contractFromOpener, peersPubKeyRing);
-                } else {
-                    errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
-                            "TradeId = " + dispute.getTradeId();
-                    log.warn(errorMessage);
-                }
-            } else {
-                errorMessage = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
-                log.warn(errorMessage);
-            }
-        } else {
-            errorMessage = "Trader received openNewDisputeMessage. That must never happen.";
-            log.error(errorMessage);
-        }
-
-        // We use the ChatMessage not the openNewDisputeMessage for the ACK
-        ObservableList<ChatMessage> messages = openNewDisputeMessage.getDispute().getChatMessages();
-        if (!messages.isEmpty()) {
-            ChatMessage msg = messages.get(0);
-            PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
-            sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
-        }
-    }
-
-    // not dispute requester receives that from arbitrator
-    protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return;
-        }
-
-        String errorMessage;
-        Dispute dispute = peerOpenedDisputeMessage.getDispute();
-        if (!isArbitrator(dispute)) {
-            if (!disputeList.contains(dispute)) {
-                Optional<Dispute> storedDisputeOptional = findDispute(dispute);
-                if (!storedDisputeOptional.isPresent()) {
-                    dispute.setStorage(disputeStorage);
-                    disputeList.add(dispute);
-                    Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
-                    tradeOptional.ifPresent(trade -> trade.setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER));
-                    errorMessage = null;
-                } else {
-                    errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
-                            "TradeId = " + dispute.getTradeId();
-                    log.warn(errorMessage);
-                }
-            } else {
-                errorMessage = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
-                log.warn(errorMessage);
-            }
-        } else {
-            errorMessage = "Arbitrator received peerOpenedDisputeMessage. That must never happen.";
-            log.error(errorMessage);
-        }
-
-        // We use the ChatMessage not the peerOpenedDisputeMessage for the ACK
-        ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
-        if (!messages.isEmpty()) {
-            ChatMessage msg = messages.get(0);
-            sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
-        }
-
-        sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -741,6 +654,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     private Optional<Dispute> findDispute(String tradeId, int traderId, boolean isMediationDispute) {
+        T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return Optional.empty();
@@ -750,5 +664,13 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         e.getTraderId() == traderId &&
                         e.isMediationDispute() == isMediationDispute)
                 .findAny();
+    }
+
+    private String getDisputeInfo(boolean isMediationDispute) {
+        String role = isMediationDispute ? Res.get("shared.mediator").toLowerCase() :
+                Res.get("shared.arbitrator2").toLowerCase();
+        String link = isMediationDispute ? "https://docs.bisq.network/trading-rules.html#mediation" :
+                "https://bisq.network/docs/exchange/arbitration-system";
+        return Res.get("support.initialInfo", role, role, link);
     }
 }

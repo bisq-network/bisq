@@ -332,7 +332,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             chatPopupStage.close();
 
         TradeManager tradeManager = model.dataModel.tradeManager;
-        TraderChatManager traderChatManager = tradeManager.getTraderChatManager();
+        TraderChatManager traderChatManager = model.dataModel.getTraderChatManager();
         if (trade.getCommunicationMessages().isEmpty()) {
             ((TradeChatSession) traderChatManager.getSupportSession()).addSystemMsg(trade);
         }
@@ -355,7 +355,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
         boolean isBuyer = model.dataModel.isBuyer();
-        TradeChatSession chatSession = new TradeChatSession(trade,
+        TradeChatSession tradeChatSession = new TradeChatSession(trade,
                 isTaker,
                 isBuyer,
                 tradeManager);
@@ -367,7 +367,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
         traderChatManager.addDisputeStateListener(disputeStateListener);
 
-        tradeChat.display(chatSession, pane.widthProperty());
+        tradeChat.display(traderChatManager, tradeChatSession, pane.widthProperty());
 
         tradeChat.activate();
         tradeChat.scrollToBottom();

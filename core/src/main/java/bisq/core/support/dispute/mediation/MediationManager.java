@@ -41,7 +41,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
-import bisq.common.storage.Storage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -55,8 +54,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public class MediationManager extends DisputeManager<MediationDisputeList> {
-
+public final class MediationManager extends DisputeManager<MediationDisputeList> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -71,19 +69,26 @@ public class MediationManager extends DisputeManager<MediationDisputeList> {
                             ClosedTradableManager closedTradableManager,
                             OpenOfferManager openOfferManager,
                             KeyRing keyRing,
-                            Storage<MediationDisputeList> storage) {
-        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, openOfferManager, keyRing, storage);
+                            MediationDisputeListService mediationDisputeListService) {
+        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
+                openOfferManager, keyRing, mediationDisputeListService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Abstract methods
+    // Implement template methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void dispatchMessage(SupportMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
+    @Override
+    public SupportType getSupportType() {
+        return SupportType.MEDIATION;
+    }
 
-        if (message.getSupportType() == SupportType.MEDIATION) {
+    @Override
+    public void dispatchMessage(SupportMessage message) {
+        if (canProcessMessage(message)) {
+            log.info("Received {} with tradeId {} and uid {}",
+                    message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
+
             if (message instanceof OpenNewDisputeMessage) {
                 onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
             } else if (message instanceof PeerOpenedDisputeMessage) {
@@ -102,14 +107,11 @@ public class MediationManager extends DisputeManager<MediationDisputeList> {
         }
     }
 
+
+    //todo
     @Override
     protected DisputeSession getConcreteChatSession() {
         return new MediationSession(this);
-    }
-
-    @Override
-    protected MediationDisputeList getConcreteDisputeList() {
-        return new MediationDisputeList(disputeStorage);
     }
 
 

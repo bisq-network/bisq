@@ -33,8 +33,6 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.support.traderchat.TradeChatSession;
-import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -131,9 +129,6 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
 
-    @Getter
-    private final TraderChatManager traderChatManager;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -157,7 +152,6 @@ public class TradeManager implements PersistedDataHost {
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
-                        TraderChatManager traderChatManager,
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage) {
         this.user = user;
@@ -176,13 +170,9 @@ public class TradeManager implements PersistedDataHost {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
-        this.traderChatManager = traderChatManager;
         this.clockWatcher = clockWatcher;
 
         tradableListStorage = storage;
-
-        //todo
-        traderChatManager.setSupportSession(new TradeChatSession(null, true, true, this));
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -256,8 +246,6 @@ public class TradeManager implements PersistedDataHost {
                     log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
-
-        traderChatManager.onAllServicesInitialized();
     }
 
     public void shutDown() {
