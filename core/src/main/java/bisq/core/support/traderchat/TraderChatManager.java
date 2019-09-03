@@ -118,7 +118,7 @@ public class TraderChatManager extends SupportManager {
     @Override
     public List<ChatMessage> getChatMessages() {
         return tradeManager.getTradableList().stream()
-                .flatMap(trade -> trade.getCommunicationMessages().stream())
+                .flatMap(trade -> trade.getChatMessages().stream())
                 .collect(Collectors.toList());
     }
 
@@ -132,12 +132,12 @@ public class TraderChatManager extends SupportManager {
         Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
-            ObservableList<ChatMessage> communicationMessages = trade.getCommunicationMessages();
-            if (communicationMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                if (communicationMessages.isEmpty()) {
+            ObservableList<ChatMessage> chatMessages = trade.getChatMessages();
+            if (chatMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
+                if (chatMessages.isEmpty()) {
                     addSystemMsg(trade);
                 }
-                trade.addCommunicationMessage(message);
+                trade.addChatMessage(message);
             } else {
                 log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
@@ -188,6 +188,6 @@ public class TraderChatManager extends SupportManager {
                 new NodeAddress("null:0000"),
                 trade.getDate().getTime());
         chatMessage.setSystemMessage(true);
-        trade.getCommunicationMessages().add(chatMessage);
+        trade.getChatMessages().add(chatMessage);
     }
 }

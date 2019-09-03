@@ -340,7 +340,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     private String counterCurrencyTxId;
     @Getter
-    private final ObservableList<ChatMessage> communicationMessages = FXCollections.observableArrayList();
+    private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
 
     // Transient
     // Immutable
@@ -450,7 +450,7 @@ public abstract class Trade implements Tradable, Model {
                 .setState(protobuf.Trade.State.valueOf(state.name()))
                 .setDisputeState(protobuf.Trade.DisputeState.valueOf(disputeState.name()))
                 .setTradePeriodState(protobuf.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
-                .addAllCommunicationMessages(communicationMessages.stream()
+                .addAllCommunicationMessages(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                         .collect(Collectors.toList()));
 
@@ -497,7 +497,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
 
-        trade.communicationMessages.addAll(proto.getCommunicationMessagesList().stream()
+        trade.chatMessages.addAll(proto.getCommunicationMessagesList().stream()
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
@@ -611,9 +611,9 @@ public abstract class Trade implements Tradable, Model {
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
-    public void addCommunicationMessage(ChatMessage chatMessage) {
-        if (!communicationMessages.contains(chatMessage)) {
-            communicationMessages.add(chatMessage);
+    public void addChatMessage(ChatMessage chatMessage) {
+        if (!chatMessages.contains(chatMessage)) {
+            chatMessages.add(chatMessage);
             storage.queueUpForSave();
         } else {
             log.error("Trade ChatMessage already exists");
@@ -1025,7 +1025,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     decryptedMessageWithPubKeySet=" + decryptedMessageWithPubKeySet +
                 ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
-                ",\n     communicationMessages=" + communicationMessages +
+                ",\n     chatMessages=" + chatMessages +
                 "\n}";
     }
 }
