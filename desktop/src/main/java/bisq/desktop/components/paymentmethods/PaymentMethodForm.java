@@ -280,9 +280,9 @@ public abstract class PaymentMethodForm {
 
     abstract protected void autoFillNameTextField();
 
-    abstract public void addFormForAddAccount();
+    public abstract void addFormForAddAccount();
 
-    abstract public void addFormForDisplayAccount();
+    public abstract void addFormForDisplayAccount();
 
     protected abstract void updateAllInputsValid();
 

@@ -39,15 +39,15 @@ public abstract class SupportSession {
     protected SupportSession() {
     }
 
-    abstract public String getTradeId();
+    public abstract String getTradeId();
 
-    abstract public PubKeyRing getClientPubKeyRing();
+    public abstract PubKeyRing getClientPubKeyRing();
 
-    abstract public void addChatMessage(ChatMessage message);
+    public abstract void addChatMessage(ChatMessage message);
 
-    abstract public ObservableList<ChatMessage> getObservableChatMessageList();
+    public abstract ObservableList<ChatMessage> getObservableChatMessageList();
 
-    abstract public boolean chatIsOpen();
+    public abstract boolean chatIsOpen();
 
     public abstract boolean isDisputeAgent();
 }

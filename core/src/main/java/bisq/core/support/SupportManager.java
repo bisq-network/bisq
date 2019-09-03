@@ -84,13 +84,13 @@ public abstract class SupportManager {
 
     public abstract SupportType getSupportType();
 
-    abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
+    public abstract PubKeyRing getPeerPubKeyRing(ChatMessage message);
 
-    abstract public boolean channelOpen(ChatMessage message);
+    public abstract boolean channelOpen(ChatMessage message);
 
-    abstract public List<ChatMessage> getChatMessages();
+    public abstract List<ChatMessage> getChatMessages();
 
-    abstract public void storeChatMessage(ChatMessage message);
+    public abstract void storeChatMessage(ChatMessage message);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
