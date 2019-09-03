@@ -38,12 +38,12 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.arbitration.ArbitrationSession;
-import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -311,7 +311,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             }
         };
 
-        disputeChat = new Chat(disputeManager.getSupportManager(), formatter);
+        disputeChat = new Chat(disputeManager, formatter);
         disputeChat.initialize();
     }
 

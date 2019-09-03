@@ -39,7 +39,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
-import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
@@ -75,28 +74,25 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> implements PersistedDataHost {
+public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> extends SupportManager
+        implements PersistedDataHost {
     protected final TradeWalletService tradeWalletService;
     protected final BtcWalletService walletService;
-    private final WalletsSetup walletsSetup;
     protected final TradeManager tradeManager;
     protected final ClosedTradableManager closedTradableManager;
     protected final OpenOfferManager openOfferManager;
-    protected final P2PService p2PService;
     protected final KeyRing keyRing;
+    @Getter
     protected final Storage<T> disputeStorage;
     @Nullable
     @Getter
     private T disputeList;
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
-    protected final Map<String, Timer> delayMsgMap = new HashMap<>();
 
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
-    @Getter
-    protected final SupportManager supportManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -111,17 +107,16 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
                           Storage<T> storage) {
-        this.p2PService = p2PService;
+        super(p2PService, walletsSetup);
+
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
-        this.walletsSetup = walletsSetup;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        supportManager = new SupportManager(p2PService, walletsSetup);
-        supportManager.setSupportSession(getConcreteChatSession());
+        setSupportSession(getConcreteChatSession());
 
         disputeStorage = storage;
 
@@ -133,6 +128,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract methods
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // We get that message at both peers. The dispute object is in context of the trader
+    abstract public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
 
     abstract protected DisputeSession getConcreteChatSession();
 
@@ -150,26 +148,27 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         disputeList.stream().forEach(dispute -> dispute.setStorage(disputeStorage));
     }
 
+    //todo
     public void onAllServicesInitialized() {
-        supportManager.onAllServicesInitialized();
+        super.onAllServicesInitialized();
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {
-                supportManager.tryApplyMessages();
+                tryApplyMessages();
             }
         });
 
         walletsSetup.downloadPercentageProperty().addListener((observable, oldValue, newValue) -> {
             if (walletsSetup.isDownloadComplete())
-                supportManager.tryApplyMessages();
+                tryApplyMessages();
         });
 
         walletsSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             if (walletsSetup.hasSufficientPeersForBroadcast())
-                supportManager.tryApplyMessages();
+                tryApplyMessages();
         });
 
-        supportManager.tryApplyMessages();
+        tryApplyMessages();
 
         cleanupDisputes();
 
@@ -182,34 +181,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         } else {
             log.warn("disputes is null");
         }
-    }
-
-    private void onDisputesChangeListener(List<? extends Dispute> addedList,
-                                          @Nullable List<? extends Dispute> removedList) {
-        if (removedList != null) {
-            removedList.forEach(dispute -> {
-                String id = dispute.getId();
-                if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
-                    disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
-                    disputeIsClosedSubscriptionsMap.remove(id);
-                }
-            });
-        }
-        addedList.forEach(dispute -> {
-            String id = dispute.getId();
-            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
-                    isClosed -> {
-                        if (disputeList != null) {
-                            // We get the event before the list gets updated, so we execute on next frame
-                            UserThread.execute(() -> {
-                                int openDisputes = (int) disputeList.getList().stream()
-                                        .filter(e -> !e.isClosed()).count();
-                                numOpenDisputes.set(openDisputes);
-                            });
-                        }
-                    });
-            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
-        });
     }
 
     public void cleanupDisputes() {
@@ -238,6 +209,50 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             }
         });
     }
+
+    public ObservableList<Dispute> getDisputesAsObservableList() {
+        if (disputeList == null) {
+            log.warn("disputes is null");
+            return FXCollections.observableArrayList();
+        }
+        return disputeList.getList();
+    }
+
+    public boolean isTrader(Dispute dispute) {
+        return keyRing.getPubKeyRing().equals(dispute.getTraderPubKeyRing());
+    }
+
+
+    public String getNrOfDisputes(boolean isBuyer, Contract contract) {
+        return String.valueOf(getDisputesAsObservableList().stream()
+                .filter(e -> {
+                    Contract contract1 = e.getContract();
+                    if (contract1 == null)
+                        return false;
+
+                    if (isBuyer) {
+                        NodeAddress buyerNodeAddress = contract1.getBuyerNodeAddress();
+                        return buyerNodeAddress != null && buyerNodeAddress.equals(contract.getBuyerNodeAddress());
+                    } else {
+                        NodeAddress sellerNodeAddress = contract1.getSellerNodeAddress();
+                        return sellerNodeAddress != null && sellerNodeAddress.equals(contract.getSellerNodeAddress());
+                    }
+                })
+                .collect(Collectors.toSet()).size());
+    }
+
+    public Optional<Dispute> findOwnDispute(String tradeId) {
+        if (disputeList == null) {
+            log.warn("disputes is null");
+            return Optional.empty();
+        }
+        return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Send message
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void sendOpenNewDisputeMessage(Dispute dispute,
                                           boolean reOpen,
@@ -344,6 +359,39 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             log.warn(msg);
             faultHandler.handleFault(msg, new DisputeAlreadyOpenException());
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void onDisputesChangeListener(List<? extends Dispute> addedList,
+                                          @Nullable List<? extends Dispute> removedList) {
+        if (removedList != null) {
+            removedList.forEach(dispute -> {
+                String id = dispute.getId();
+                if (disputeIsClosedSubscriptionsMap.containsKey(id)) {
+                    disputeIsClosedSubscriptionsMap.get(id).unsubscribe();
+                    disputeIsClosedSubscriptionsMap.remove(id);
+                }
+            });
+        }
+        addedList.forEach(dispute -> {
+            String id = dispute.getId();
+            Subscription disputeStateSubscription = EasyBind.subscribe(dispute.isClosedProperty(),
+                    isClosed -> {
+                        if (disputeList != null) {
+                            // We get the event before the list gets updated, so we execute on next frame
+                            UserThread.execute(() -> {
+                                int openDisputes = (int) disputeList.getList().stream()
+                                        .filter(e -> !e.isClosed()).count();
+                                numOpenDisputes.set(openDisputes);
+                            });
+                        }
+                    });
+            disputeIsClosedSubscriptionsMap.put(id, disputeStateSubscription);
+        });
     }
 
     private String getDisputeInfo(boolean isMediationDispute) {
@@ -554,11 +602,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message
+    // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator receives that from trader who opens dispute
-    public void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+    protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
@@ -594,12 +642,12 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);
             PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
-            supportManager.sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
+            sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
         }
     }
 
     // not dispute requester receives that from arbitrator
-    public void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
@@ -634,14 +682,16 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);
-            supportManager.sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+            sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
         }
 
-        supportManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+        sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
     }
 
-    // We get that message at both peers. The dispute object is in context of the trader
-    abstract public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void updateTradeOrOpenOfferManager(String tradeId) {
         // set state after payout as we call swapTradeEntryToAvailableEntry
@@ -652,54 +702,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
     }
-
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Storage<T> getDisputeStorage() {
-        return disputeStorage;
-    }
-
-    public ObservableList<Dispute> getDisputesAsObservableList() {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return FXCollections.observableArrayList();
-        }
-        return disputeList.getList();
-    }
-
-    public boolean isTrader(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getTraderPubKeyRing());
-    }
-
-    private boolean isArbitrator(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getConflictResolverPubKeyRing());
-    }
-
-    public String getNrOfDisputes(boolean isBuyer, Contract contract) {
-        return String.valueOf(getDisputesAsObservableList().stream()
-                .filter(e -> {
-                    Contract contract1 = e.getContract();
-                    if (contract1 == null)
-                        return false;
-
-                    if (isBuyer) {
-                        NodeAddress buyerNodeAddress = contract1.getBuyerNodeAddress();
-                        return buyerNodeAddress != null && buyerNodeAddress.equals(contract.getBuyerNodeAddress());
-                    } else {
-                        NodeAddress sellerNodeAddress = contract1.getSellerNodeAddress();
-                        return sellerNodeAddress != null && sellerNodeAddress.equals(contract.getSellerNodeAddress());
-                    }
-                })
-                .collect(Collectors.toSet()).size());
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
         PubKeyRing receiverPubKeyRing = null;
@@ -718,6 +720,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             log.error("That must not happen. Trader cannot communicate to other trader.");
         }
         return new Tuple2<>(peerNodeAddress, receiverPubKeyRing);
+    }
+
+    private boolean isArbitrator(Dispute dispute) {
+        return keyRing.getPubKeyRing().equals(dispute.getConflictResolverPubKeyRing());
     }
 
     private Optional<Dispute> findDispute(Dispute dispute) {
@@ -744,21 +750,5 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         e.getTraderId() == traderId &&
                         e.isMediationDispute() == isMediationDispute)
                 .findAny();
-    }
-
-    public Optional<Dispute> findOwnDispute(String tradeId) {
-        if (disputeList == null) {
-            log.warn("disputes is null");
-            return Optional.empty();
-        }
-        return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
-    }
-
-    protected void cleanupRetryMap(String uid) {
-        if (delayMsgMap.containsKey(uid)) {
-            Timer timer = delayMsgMap.remove(uid);
-            if (timer != null)
-                timer.stop();
-        }
     }
 }

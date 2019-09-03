@@ -34,6 +34,7 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
+import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
@@ -124,7 +125,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Map<String, Button> buttonByTrade = new HashMap<>();
     private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
     private Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
-    private TradeChatSession.DisputeStateListener disputeStateListener;
+    private TraderChatManager.DisputeStateListener disputeStateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -331,15 +332,16 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             chatPopupStage.close();
 
         TradeManager tradeManager = model.dataModel.tradeManager;
+        TraderChatManager traderChatManager = tradeManager.getTraderChatManager();
         if (trade.getCommunicationMessages().isEmpty()) {
-            ((TradeChatSession) tradeManager.getSupportManager().getSupportSession()).addSystemMsg(trade);
+            ((TradeChatSession) traderChatManager.getSupportSession()).addSystemMsg(trade);
         }
 
         trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
 
-        Chat tradeChat = new Chat(tradeManager.getSupportManager(), formatter);
+        Chat tradeChat = new Chat(traderChatManager, formatter);
         tradeChat.setAllowAttachments(false);
         tradeChat.setDisplayHeader(false);
         tradeChat.initialize();
@@ -356,15 +358,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         TradeChatSession chatSession = new TradeChatSession(trade,
                 isTaker,
                 isBuyer,
-                tradeManager,
-                tradeManager.getSupportManager());
+                tradeManager);
 
         disputeStateListener = tradeId -> {
             if (trade.getId().equals(tradeId)) {
                 chatPopupStage.hide();
             }
         };
-        chatSession.addDisputeStateListener(disputeStateListener);
+        traderChatManager.addDisputeStateListener(disputeStateListener);
 
         tradeChat.display(chatSession, pane.widthProperty());
 
@@ -392,7 +393,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 chatPopupStage.xProperty().removeListener(yPositionListener);
             }
             if (disputeStateListener != null) {
-                chatSession.removeDisputeStateListener(disputeStateListener);
+                traderChatManager.removeDisputeStateListener(disputeStateListener);
             }
         });
 

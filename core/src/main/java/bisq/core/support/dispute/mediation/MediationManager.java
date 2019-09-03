@@ -22,12 +22,16 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
+import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
+import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -53,6 +57,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Singleton
 public class MediationManager extends DisputeManager<MediationDisputeList> {
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Inject
     public MediationManager(P2PService p2PService,
                             TradeWalletService tradeWalletService,
@@ -66,6 +75,33 @@ public class MediationManager extends DisputeManager<MediationDisputeList> {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, openOfferManager, keyRing, storage);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void dispatchMessage(SupportMessage message) {
+        log.info("Received {} with tradeId {} and uid {}",
+                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
+
+        if (message.getSupportType() == SupportType.MEDIATION) {
+            if (message instanceof OpenNewDisputeMessage) {
+                onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
+            } else if (message instanceof PeerOpenedDisputeMessage) {
+                onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
+            } else if (message instanceof ChatMessage) {
+                if (((ChatMessage) message).getSupportType() != SupportType.MEDIATION) {
+                    log.debug("Ignore non dispute type communication message");
+                    return;
+                }
+                onChatMessage((ChatMessage) message);
+            } else if (message instanceof DisputeResultMessage) {
+                onDisputeResultMessage((DisputeResultMessage) message);
+            } else {
+                log.warn("Unsupported message at dispatchMessage. message={}", message);
+            }
+        }
+    }
+
     @Override
     protected DisputeSession getConcreteChatSession() {
         return new MediationSession(this);
@@ -75,6 +111,11 @@ public class MediationManager extends DisputeManager<MediationDisputeList> {
     protected MediationDisputeList getConcreteDisputeList() {
         return new MediationDisputeList(disputeStorage);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Message handler
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     // We get that message at both peers. The dispute object is in context of the trader
@@ -125,6 +166,6 @@ public class MediationManager extends DisputeManager<MediationDisputeList> {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
-        supportManager.sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
+        sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
     }
 }

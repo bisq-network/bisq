@@ -37,32 +37,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-public class SupportManager {
-    private static final Logger log = LoggerFactory.getLogger(SupportManager.class);
-
+@Slf4j
+public abstract class SupportManager {
     @Getter
-    private final P2PService p2PService;
-    private final WalletsSetup walletsSetup;
+    protected final P2PService p2PService;
+    protected final WalletsSetup walletsSetup;
     @Setter
     @Getter
-    private SupportSession supportSession;
-    private final Map<String, Timer> delayMsgMap = new HashMap<>();
+    protected SupportSession supportSession;
+    protected final Map<String, Timer> delayMsgMap = new HashMap<>();
 
-    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    private boolean allServicesInitialized;
+    protected final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    protected final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
+    protected boolean allServicesInitialized;
 
-    public SupportManager(P2PService p2PService,
-                          WalletsSetup walletsSetup
-    ) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public SupportManager(P2PService p2PService, WalletsSetup walletsSetup) {
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
 
@@ -77,8 +77,27 @@ public class SupportManager {
         });
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract void dispatchMessage(SupportMessage networkEnvelope);
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void onAllServicesInitialized() {
         allServicesInitialized = true;
+    }
+
+    protected boolean isReady() {
+        return allServicesInitialized &&
+                p2PService.isBootstrapped() &&
+                walletsSetup.isDownloadComplete() &&
+                walletsSetup.hasSufficientPeersForBroadcast();
     }
 
     public void tryApplyMessages() {
@@ -86,18 +105,11 @@ public class SupportManager {
             applyMessages();
     }
 
-    private boolean isReady() {
-        return allServicesInitialized &&
-                p2PService.isBootstrapped() &&
-                walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast();
-    }
-
-    private void applyMessages() {
+    protected void applyMessages() {
         decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             if (networkEnvelope instanceof SupportMessage) {
-                supportSession.dispatchMessage((SupportMessage) networkEnvelope);
+                dispatchMessage((SupportMessage) networkEnvelope);
             } else if (networkEnvelope instanceof AckMessage) {
                 processAckMessage((AckMessage) networkEnvelope, null);
             }
@@ -108,7 +120,7 @@ public class SupportManager {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
             log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
             if (networkEnvelope instanceof SupportMessage) {
-                supportSession.dispatchMessage((SupportMessage) networkEnvelope);
+                dispatchMessage((SupportMessage) networkEnvelope);
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
             } else if (networkEnvelope instanceof AckMessage) {
                 processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
@@ -117,14 +129,19 @@ public class SupportManager {
         decryptedMailboxMessageWithPubKeys.clear();
     }
 
-    public void onDisputeDirectMessage(ChatMessage chatMessage) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Message handler
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void onChatMessage(ChatMessage chatMessage) {
         final String tradeId = chatMessage.getTradeId();
         final String uid = chatMessage.getUid();
         boolean channelOpen = supportSession.channelOpen(chatMessage);
         if (!channelOpen) {
             log.debug("We got a chatMessage but we don't have a matching chat. TradeId = " + tradeId);
             if (!delayMsgMap.containsKey(uid)) {
-                Timer timer = UserThread.runAfter(() -> onDisputeDirectMessage(chatMessage), 1);
+                Timer timer = UserThread.runAfter(() -> onChatMessage(chatMessage), 1);
                 delayMsgMap.put(uid, timer);
             } else {
                 String msg = "We got a chatMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
@@ -143,6 +160,11 @@ public class SupportManager {
         if (receiverPubKeyRing != null)
             sendAckMessage(chatMessage, receiverPubKeyRing, true, null);
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Ack
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAckMessage(AckMessage ackMessage,
                                    @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
@@ -169,8 +191,8 @@ public class SupportManager {
         }
     }
 
-    public void sendAckMessage(SupportMessage supportMessage, PubKeyRing peersPubKeyRing,
-                               boolean result, @Nullable String errorMessage) {
+    protected void sendAckMessage(SupportMessage supportMessage, PubKeyRing peersPubKeyRing,
+                                  boolean result, @Nullable String errorMessage) {
         String tradeId = supportMessage.getTradeId();
         String uid = supportMessage.getUid();
         AckMessage ackMessage = new AckMessage(p2PService.getNetworkNode().getNodeAddress(),
@@ -209,7 +231,12 @@ public class SupportManager {
         );
     }
 
-    private void cleanupRetryMap(String uid) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Util
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void cleanupRetryMap(String uid) {
         if (delayMsgMap.containsKey(uid)) {
             Timer timer = delayMsgMap.remove(uid);
             if (timer != null)
