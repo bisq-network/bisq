@@ -18,7 +18,6 @@
 package bisq.core.support;
 
 import bisq.core.btc.setup.WalletsSetup;
-import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 
@@ -34,7 +33,6 @@ import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkEnvelope;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -183,24 +181,9 @@ public abstract class SupportManager {
     // Send message
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ChatMessage sendChatMessage(String text,
-                                       ArrayList<Attachment> attachments,
-                                       SupportSession supportSession) {
-        SupportType supportType = getSupportType();
-        ChatMessage message = new ChatMessage(
-                supportType,
-                supportSession.getTradeId(),
-                supportSession.getClientPubKeyRing().hashCode(),
-                supportSession.isClient(),
-                text,
-                getMyAddress(),
-                attachments
-        );
-        supportSession.addChatMessage(message);
-
+    public ChatMessage sendChatMessage(ChatMessage message) {
         NodeAddress peersNodeAddress = getPeerNodeAddress(message);
         PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(message);
-
         if (receiverPubKeyRing != null) {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());

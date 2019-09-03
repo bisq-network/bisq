@@ -80,6 +80,7 @@ public final class ChatMessage extends SupportMessage {
     @Setter
     private boolean wasDisplayed;
 
+    //todo move to base class
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
     private final BooleanProperty acknowledgedProperty;

@@ -647,9 +647,19 @@ public class Chat extends AnchorPane {
     }
 
     private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
-        return optionalSupportSession.map(supportSession ->
-                supportManager.sendChatMessage(text, attachments, supportSession))
-                .orElse(null);
+        return optionalSupportSession.map(supportSession -> {
+            ChatMessage message = new ChatMessage(
+                    supportManager.getSupportType(),
+                    supportSession.getTradeId(),
+                    supportSession.getClientPubKeyRing().hashCode(),
+                    supportSession.isClient(),
+                    text,
+                    supportManager.getMyAddress(),
+                    attachments
+            );
+            supportSession.addChatMessage(message);
+            return supportManager.sendChatMessage(message);
+        }).orElse(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
