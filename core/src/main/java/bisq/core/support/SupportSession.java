@@ -47,7 +47,7 @@ public abstract class SupportSession {
 
     public abstract PubKeyRing getClientPubKeyRing();
 
-    public abstract void addChatMessage(ChatMessage message);
+    public abstract void addAndPersistChatMessage(ChatMessage message);
 
     public abstract ObservableList<ChatMessage> getObservableChatMessageList();
 

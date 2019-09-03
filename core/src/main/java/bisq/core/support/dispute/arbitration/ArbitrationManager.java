@@ -170,7 +170,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         Dispute dispute = disputeOptional.get();
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
-            dispute.addChatMessage(chatMessage);
+            dispute.addAndPersistChatMessage(chatMessage);
         } else {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }
