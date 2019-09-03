@@ -161,6 +161,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     public abstract NodeAddress getAgentNodeAddress(Dispute dispute);
 
+    protected abstract Trade.DisputeState getDisputeState_StartedByPeer();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates for disputeListService
@@ -296,7 +298,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     dispute.setStorage(disputeListService.getStorage());
                     disputeList.add(dispute);
                     Optional<Trade> tradeOptional = tradeManager.getTradeById(dispute.getTradeId());
-                    tradeOptional.ifPresent(trade -> trade.setDisputeState(Trade.DisputeState.DISPUTE_STARTED_BY_PEER));
+                    tradeOptional.ifPresent(trade -> trade.setDisputeState(getDisputeState_StartedByPeer()));
                     errorMessage = null;
                 } else {
                     errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
@@ -321,6 +323,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Send message

@@ -124,6 +124,10 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         return dispute.getContract().getArbitratorNodeAddress();
     }
 
+    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+        return Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler

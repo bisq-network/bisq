@@ -102,6 +102,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
     }
 
+    protected Trade.DisputeState getDisputeState_StartedByPeer() {
+        return Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
