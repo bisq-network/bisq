@@ -26,6 +26,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.FilterManager;
@@ -91,8 +92,9 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                AssetService assetService,
                                FilterManager filterManager,
                                BSFormatter formatter,
-                               Preferences preferences) {
-        super(model);
+                               Preferences preferences,
+                               SignedWitnessService signedWitnessService) {
+        super(model, signedWitnessService);
 
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;

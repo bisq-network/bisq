@@ -359,14 +359,22 @@ public class SignedWitnessService {
     private BuyerDataItem getBuyerData(Dispute dispute) {
         PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
         PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
-        Optional<AccountAgeWitness> optionalWitness = accountAgeWitnessService
-                .findWitness(buyerPaymentAccountPaload, buyerPubKeyRing);
-        return optionalWitness.map(witness -> new BuyerDataItem(
-                buyerPaymentAccountPaload,
-                witness,
-                dispute.getContract().getTradeAmount(),
-                dispute.getContract().getSellerPubKeyRing().getSignaturePubKey()))
+        return getAccountAgeWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
+                .map(witness -> new BuyerDataItem(
+                        buyerPaymentAccountPaload,
+                        witness,
+                        dispute.getContract().getTradeAmount(),
+                        dispute.getContract().getSellerPubKeyRing().getSignaturePubKey()))
                 .orElse(null);
     }
 
+    private Optional<AccountAgeWitness> getAccountAgeWitness(PaymentAccountPayload buyerPaymentAccountPaload,
+                                                             PubKeyRing buyerPubKeyRing) {
+        return accountAgeWitnessService.findWitness(buyerPaymentAccountPaload, buyerPubKeyRing);
+    }
+
+    // Check if my account has a signed witness
+    public boolean hasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
+        return isValidAccountAgeWitness(accountAgeWitnessService.getMyWitness(paymentAccountPayload));
+    }
 }

@@ -7,6 +7,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.ImageUtil;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 
@@ -33,9 +34,11 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     protected ListView<PaymentAccount> paymentAccountsListView;
     protected ChangeListener<PaymentAccount> paymentAccountChangeListener;
     protected Button addAccountButton, exportButton, importButton;
+    SignedWitnessService signedWitnessService;
 
-    public PaymentAccountsView(M model) {
+    public PaymentAccountsView(M model, SignedWitnessService signedWitnessService) {
         super(model);
+        this.signedWitnessService = signedWitnessService;
     }
 
     @Override
@@ -91,12 +94,14 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
-                    final AnchorPane pane = new AnchorPane(label, removeButton);
+                    final ImageView signed = ImageUtil.getImageViewById("image-update-failed");
+                    final AnchorPane pane = new AnchorPane(label, signed, removeButton);
 
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
                         AnchorPane.setRightAnchor(removeButton, 0d);
+                        AnchorPane.setRightAnchor(signed, removeButton.getWidth());
                     }
 
                     @Override
@@ -105,6 +110,9 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         if (item != null && !empty) {
                             label.setText(item.getAccountName());
                             removeButton.setOnAction(e -> onDeleteAccount(item));
+                            String signedWitnessId = signedWitnessService.hasSignedWitness(item.paymentAccountPayload) ?
+                                    "image-tick" : "rejected";
+                            signed.setId(signedWitnessId);
                             setGraphic(pane);
                         } else {
                             setGraphic(null);
