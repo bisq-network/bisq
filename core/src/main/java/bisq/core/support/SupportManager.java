@@ -187,7 +187,6 @@ public abstract class SupportManager {
                                        ArrayList<Attachment> attachments,
                                        SupportSession supportSession) {
         SupportType supportType = getSupportType();
-        boolean isMediationDispute = supportType == SupportType.MEDIATION;
         ChatMessage message = new ChatMessage(
                 supportType,
                 supportSession.getTradeId(),
@@ -195,7 +194,6 @@ public abstract class SupportManager {
                 supportSession.isClient(),
                 text,
                 getMyAddress(),
-                isMediationDispute,
                 attachments
         );
         supportSession.addChatMessage(message);
