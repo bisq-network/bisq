@@ -80,9 +80,9 @@ public final class ChatMessage extends SupportMessage {
     @Setter
     private boolean wasDisplayed;
 
-    //TODO
-    // Added in v1.1.6. Is false if received from old clients.
-    private boolean isMediationDispute;
+    public boolean isMediationDispute() {
+        return supportType == SupportType.MEDIATION;
+    }
 
     private final BooleanProperty arrivedProperty;
     private final BooleanProperty storedInMailboxProperty;
@@ -97,8 +97,7 @@ public final class ChatMessage extends SupportMessage {
                        int traderId,
                        boolean senderIsTrader,
                        String message,
-                       NodeAddress senderNodeAddress,
-                       boolean isMediationDispute) {
+                       NodeAddress senderNodeAddress) {
         this(supportType,
                 tradeId,
                 traderId,
@@ -114,8 +113,7 @@ public final class ChatMessage extends SupportMessage {
                 false,
                 null,
                 null,
-                false,
-                isMediationDispute);
+                false);
     }
 
     public ChatMessage(SupportType supportType,
@@ -124,7 +122,6 @@ public final class ChatMessage extends SupportMessage {
                        boolean senderIsTrader,
                        String message,
                        NodeAddress senderNodeAddress,
-                       boolean isMediationDispute,
                        ArrayList<Attachment> attachments) {
         this(supportType,
                 tradeId,
@@ -141,8 +138,7 @@ public final class ChatMessage extends SupportMessage {
                 false,
                 null,
                 null,
-                false,
-                isMediationDispute);
+                false);
     }
 
     public ChatMessage(SupportType supportType,
@@ -151,8 +147,7 @@ public final class ChatMessage extends SupportMessage {
                        boolean senderIsTrader,
                        String message,
                        NodeAddress senderNodeAddress,
-                       long date,
-                       boolean isMediationDispute) {
+                       long date) {
         this(supportType,
                 tradeId,
                 traderId,
@@ -168,8 +163,7 @@ public final class ChatMessage extends SupportMessage {
                 false,
                 null,
                 null,
-                false,
-                isMediationDispute);
+                false);
     }
 
 
@@ -192,15 +186,13 @@ public final class ChatMessage extends SupportMessage {
                         boolean acknowledged,
                         @Nullable String sendMessageError,
                         @Nullable String ackError,
-                        boolean wasDisplayed,
-                        boolean isMediationDispute) {
+                        boolean wasDisplayed) {
         super(messageVersion, uid, supportType);
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.senderIsTrader = senderIsTrader;
         this.message = message;
         this.wasDisplayed = wasDisplayed;
-        this.isMediationDispute = isMediationDispute;
         Optional.ofNullable(attachments).ifPresent(e -> addAllAttachments(attachments));
         this.senderNodeAddress = senderNodeAddress;
         this.date = date;
@@ -229,8 +221,7 @@ public final class ChatMessage extends SupportMessage {
                 .setIsSystemMessage(isSystemMessage)
                 .setUid(uid)
                 .setAcknowledged(acknowledgedProperty.get())
-                .setWasDisplayed(wasDisplayed)
-                .setIsMediationDispute(isMediationDispute);
+                .setWasDisplayed(wasDisplayed);
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
@@ -259,8 +250,7 @@ public final class ChatMessage extends SupportMessage {
                 proto.getAcknowledged(),
                 proto.getSendMessageError().isEmpty() ? null : proto.getSendMessageError(),
                 proto.getAckError().isEmpty() ? null : proto.getAckError(),
-                proto.getWasDisplayed(),
-                proto.getIsMediationDispute());
+                proto.getWasDisplayed());
         chatMessage.setSystemMessage(proto.getIsSystemMessage());
         return chatMessage;
     }
@@ -369,7 +359,6 @@ public final class ChatMessage extends SupportMessage {
                 ",\n     acknowledgedProperty=" + acknowledgedProperty +
                 ",\n     sendMessageErrorProperty=" + sendMessageErrorProperty +
                 ",\n     ackErrorProperty=" + ackErrorProperty +
-                ",\n     isMediationDispute=" + isMediationDispute +
                 "\n} " + super.toString();
     }
 }

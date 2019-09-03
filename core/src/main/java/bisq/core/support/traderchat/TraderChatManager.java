@@ -186,9 +186,7 @@ public class TraderChatManager extends SupportManager {
                 false,
                 Res.get("tradeChat.rules"),
                 new NodeAddress("null:0000"),
-                trade.getDate().getTime(),
-                false
-        );
+                trade.getDate().getTime());
         chatMessage.setSystemMessage(true);
         trade.getCommunicationMessages().add(chatMessage);
     }

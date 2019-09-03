@@ -365,9 +365,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     keyRing.getPubKeyRing().hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
-                    p2PService.getAddress(),
-                    dispute.isMediationDispute()
-            );
+                    p2PService.getAddress());
             chatMessage.setSystemMessage(true);
             dispute.addChatMessage(chatMessage);
             if (!reOpen) {
@@ -484,9 +482,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     keyRing.getPubKeyRing().hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
-                    p2PService.getAddress(),
-                    dispute.isMediationDispute()
-            );
+                    p2PService.getAddress());
             chatMessage.setSystemMessage(true);
             dispute.addChatMessage(chatMessage);
             disputeList.add(dispute);
@@ -574,9 +570,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
                 text,
-                p2PService.getAddress(),
-                dispute.isMediationDispute()
-        );
+                p2PService.getAddress());
 
         dispute.addChatMessage(chatMessage);
         disputeResult.setChatMessage(chatMessage);
