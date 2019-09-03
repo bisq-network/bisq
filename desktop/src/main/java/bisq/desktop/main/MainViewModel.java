@@ -32,6 +32,7 @@ import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
+import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;

@@ -36,6 +36,7 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.main.support.SupportView;
 import bisq.desktop.util.Transitions;
 
