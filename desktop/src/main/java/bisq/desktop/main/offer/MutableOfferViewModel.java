@@ -514,9 +514,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     feeInFiatAsString = Res.get("shared.na");
                 }
 
-                double amountAsLong = (double) dataModel.getAmount().get().value;
-                double makerFeeInBtcAsLong = (double) makerFeeInBtc.value;
-                double percent = makerFeeInBtcAsLong / amountAsLong;
+                double amountAsDouble = (double) dataModel.getAmount().get().value;
+                double makerFeeInBtcAsDouble = (double) makerFeeInBtc.value;
+                double percent = makerFeeInBtcAsDouble / amountAsDouble;
 
                 tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
                         feeInFiatAsString,
@@ -741,6 +741,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 onFocusOutVolumeTextField(true, false);
                 onFocusOutMinAmountTextField(true, false);
             });
+
+            if (marketPriceMargin.get() == null && amount.get() != null && volume.get() != null) {
+                updateMarketPriceAToManual();
+            }
         }
     }
 
@@ -855,6 +859,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     if (amountValidationResult.getValue() != null && amountValidationResult.getValue().isValid && minAmount.get() != null)
                         minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
                 }
+            }
+
+            if (marketPriceMargin.get() == null && amount.get() != null && volume.get() != null) {
+                updateMarketPriceAToManual();
             }
         }
     }
@@ -1207,5 +1215,36 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private BSFormatter getFormatterForMakerFee() {
         return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
+    }
+
+    private void updateMarketPriceAToManual() {
+        final String currencyCode = dataModel.getTradeCurrencyCode().get();
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
+            double marketPriceAsDouble = marketPrice.getPrice();
+            double amountAsDouble = btcFormatter.parseNumberStringToDouble(amount.get());
+            double volumeAsDouble =  btcFormatter.parseNumberStringToDouble(volume.get());
+            double manualPriceAsDouble =  volumeAsDouble / amountAsDouble;
+            double percentage = MathUtils.roundDouble(manualPriceAsDouble / marketPriceAsDouble, 4);
+
+            final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
+            int precision = isCryptoCurrency ?
+                    Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
+            // protect from triggering unwanted updates
+            price.set(btcFormatter.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
+            setPriceToModel();
+            dataModel.setMarketPriceMargin(percentage);
+            dataModel.calculateTotalToPay();
+            updateButtonDisableState();
+            applyMakerFee();
+        } else {
+            marketPriceMargin.set("");
+            String id = "showNoPriceFeedAvailablePopup";
+            if (preferences.showAgain(id)) {
+                new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                        .dontShowAgainId(id)
+                        .show();
+            }
+        }
     }
 }
