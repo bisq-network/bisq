@@ -18,7 +18,7 @@
 package bisq.desktop.main.funds.transactions;
 
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
@@ -31,11 +31,11 @@ import java.util.Optional;
 
 class TransactionAwareTrade implements TransactionAwareTradable {
     private final Trade delegate;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
 
-    TransactionAwareTrade(Trade delegate, ArbitrationDisputeManager arbitrationDisputeManager) {
+    TransactionAwareTrade(Trade delegate, ArbitrationManager arbitrationManager) {
         this.delegate = delegate;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
     }
 
     @Override
@@ -75,7 +75,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     private boolean isDisputedPayoutTx(String txId) {
         String delegateId = delegate.getId();
 
-        ObservableList<Dispute> disputes = arbitrationDisputeManager.getDisputesAsObservableList();
+        ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
         return disputes.stream()
                 .anyMatch(dispute -> {
                     String disputePayoutTxId = dispute.getDisputePayoutTxId();

@@ -437,7 +437,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_REQUESTED:
                 onDisputeOpened();
-                ownDispute = model.dataModel.arbitrationDisputeManager.findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
@@ -454,7 +454,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_STARTED_BY_PEER:
                 onDisputeOpened();
-                ownDispute = model.dataModel.arbitrationDisputeManager.findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
@@ -473,7 +473,7 @@ public abstract class TradeStepView extends AnchorPane {
             case MEDIATION_REQUESTED:
                 // TODO
                 onDisputeOpened();
-                ownDispute = model.dataModel.arbitrationDisputeManager.findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
@@ -491,7 +491,7 @@ public abstract class TradeStepView extends AnchorPane {
             case MEDIATION_STARTED_BY_PEER:
                 // TODO
                 onDisputeOpened();
-                ownDispute = model.dataModel.arbitrationDisputeManager.findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {

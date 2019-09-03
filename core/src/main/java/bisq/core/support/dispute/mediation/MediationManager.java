@@ -51,18 +51,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public class MediationDisputeManager extends DisputeManager<MediationDisputeList> {
+public class MediationManager extends DisputeManager<MediationDisputeList> {
 
     @Inject
-    public MediationDisputeManager(P2PService p2PService,
-                                   TradeWalletService tradeWalletService,
-                                   BtcWalletService walletService,
-                                   WalletsSetup walletsSetup,
-                                   TradeManager tradeManager,
-                                   ClosedTradableManager closedTradableManager,
-                                   OpenOfferManager openOfferManager,
-                                   KeyRing keyRing,
-                                   Storage<MediationDisputeList> storage) {
+    public MediationManager(P2PService p2PService,
+                            TradeWalletService tradeWalletService,
+                            BtcWalletService walletService,
+                            WalletsSetup walletsSetup,
+                            TradeManager tradeManager,
+                            ClosedTradableManager closedTradableManager,
+                            OpenOfferManager openOfferManager,
+                            KeyRing keyRing,
+                            Storage<MediationDisputeList> storage) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, openOfferManager, keyRing, storage);
     }
 

@@ -27,8 +27,8 @@ import bisq.desktop.main.support.trader.arbitration.TradersArbitrationView;
 import bisq.desktop.main.support.trader.mediation.TradersMediationView;
 
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.SellerTrade;
@@ -82,8 +82,8 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final TradeManager tradeManager;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
-    private final MediationDisputeManager mediationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -97,13 +97,13 @@ public class NotificationCenter {
 
     @Inject
     public NotificationCenter(TradeManager tradeManager,
-                              ArbitrationDisputeManager arbitrationDisputeManager,
-                              MediationDisputeManager mediationDisputeManager,
+                              ArbitrationManager arbitrationManager,
+                              MediationManager mediationManager,
                               Preferences preferences,
                               Navigation navigation) {
         this.tradeManager = tradeManager;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
-        this.mediationDisputeManager = mediationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -230,8 +230,8 @@ public class NotificationCenter {
 
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
         String message = null;
-        if (arbitrationDisputeManager.findOwnDispute(trade.getId()).isPresent()) {
-            String disputeOrTicket = arbitrationDisputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+        if (arbitrationManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = arbitrationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
                     Res.get("shared.dispute");
             switch (disputeState) {
@@ -256,8 +256,8 @@ public class NotificationCenter {
                 goToSupport(trade, message, false);
             }
         }
-        if (mediationDisputeManager.findOwnDispute(trade.getId()).isPresent()) {
-            String disputeOrTicket = mediationDisputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+        if (mediationManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = mediationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
                     Res.get("shared.dispute");
             switch (disputeState) {

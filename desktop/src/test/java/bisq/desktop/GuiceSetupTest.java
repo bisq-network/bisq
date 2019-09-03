@@ -36,10 +36,10 @@ import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.TradeLimits;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorService;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorService;
 import bisq.core.user.Preferences;
@@ -143,8 +143,8 @@ public class GuiceSetupTest {
         assertSingleton(ArbitratorManager.class);
         assertSingleton(MediatorService.class);
         assertSingleton(MediatorManager.class);
-        assertSingleton(ArbitrationDisputeManager.class);
-        assertSingleton(MediationDisputeManager.class);
+        assertSingleton(ArbitrationManager.class);
+        assertSingleton(MediationManager.class);
 
 
         assertNotSingleton(Storage.class);

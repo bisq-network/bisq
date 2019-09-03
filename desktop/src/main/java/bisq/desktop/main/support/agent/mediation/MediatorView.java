@@ -27,7 +27,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.support.SupportType;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -41,7 +41,7 @@ import javax.inject.Inject;
 public class MediatorView extends DisputeAgentView {
 
     @Inject
-    public MediatorView(MediationDisputeManager mediationDisputeManager,
+    public MediatorView(MediationManager mediationManager,
                         KeyRing keyRing,
                         TradeManager tradeManager,
                         BSFormatter formatter,
@@ -51,7 +51,7 @@ public class MediatorView extends DisputeAgentView {
                         TradeDetailsWindow tradeDetailsWindow,
                         AccountAgeWitnessService accountAgeWitnessService,
                         @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(mediationDisputeManager,
+        super(mediationManager,
                 keyRing,
                 tradeManager,
                 formatter,

@@ -45,9 +45,9 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.support.dispute.mediation.MediationDisputeManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
@@ -133,8 +133,8 @@ public class BisqSetup {
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
-    private final ArbitrationDisputeManager arbitrationDisputeManager;
-    private final MediationDisputeManager mediationDisputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
@@ -214,8 +214,8 @@ public class BisqSetup {
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
-                     ArbitrationDisputeManager arbitrationDisputeManager,
-                     MediationDisputeManager mediationDisputeManager,
+                     ArbitrationManager arbitrationManager,
+                     MediationManager mediationManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
@@ -257,8 +257,8 @@ public class BisqSetup {
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.arbitrationDisputeManager = arbitrationDisputeManager;
-        this.mediationDisputeManager = mediationDisputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
@@ -622,8 +622,8 @@ public class BisqSetup {
 
         tradeLimits.onAllServicesInitialized();
 
-        arbitrationDisputeManager.onAllServicesInitialized();
-        mediationDisputeManager.onAllServicesInitialized();
+        arbitrationManager.onAllServicesInitialized();
+        mediationManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
 

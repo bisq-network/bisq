@@ -22,7 +22,7 @@ import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.network.p2p.P2PService;
@@ -43,20 +43,20 @@ public class DisputeMsgEvents {
     private final MobileNotificationService mobileNotificationService;
 
     @Inject
-    public DisputeMsgEvents(ArbitrationDisputeManager arbitrationDisputeManager,
+    public DisputeMsgEvents(ArbitrationManager arbitrationManager,
                             P2PService p2PService,
                             MobileNotificationService mobileNotificationService) {
         this.p2PService = p2PService;
         this.mobileNotificationService = mobileNotificationService;
 
         // We need to handle it here in the constructor otherwise we get repeated the messages sent.
-        arbitrationDisputeManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> {
+        arbitrationManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> {
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(this::setDisputeListener);
             }
         });
-        arbitrationDisputeManager.getDisputesAsObservableList().forEach(this::setDisputeListener);
+        arbitrationManager.getDisputesAsObservableList().forEach(this::setDisputeListener);
     }
 
     // We ignore that onAllServicesInitialized here
