@@ -18,6 +18,7 @@
 package bisq.core.support.traderchat;
 
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.locale.Res;
 import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
@@ -30,12 +31,17 @@ import bisq.core.trade.TradeManager;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
+import bisq.common.crypto.PubKeyRing;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,6 +96,53 @@ public class TraderChatManager extends SupportManager {
         return null;
     }
 
+    @Override
+    public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
+        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
+        if (tradeOptional.isPresent()) {
+            Trade t = tradeOptional.get();
+            if (t.getContract() != null && t.getOffer() != null) {
+                if (t.getOffer().getOwnerPubKey().equals(tradeManager.getKeyRing().getPubKeyRing().getSignaturePubKey())) {
+                    // I am maker
+                    return t.getContract().getTakerPubKeyRing();
+                } else {
+                    return t.getContract().getMakerPubKeyRing();
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public List<ChatMessage> getChatMessages() {
+        return tradeManager.getTradableList().stream()
+                .flatMap(trade -> trade.getCommunicationMessages().stream())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean channelOpen(ChatMessage message) {
+        return tradeManager.getTradeById(message.getTradeId()).isPresent();
+    }
+
+    @Override
+    public void storeChatMessage(ChatMessage message) {
+        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
+        if (tradeOptional.isPresent()) {
+            Trade trade = tradeOptional.get();
+            ObservableList<ChatMessage> communicationMessages = trade.getCommunicationMessages();
+            if (communicationMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
+                if (communicationMessages.isEmpty()) {
+                    addSystemMsg(trade);
+                }
+                trade.addCommunicationMessage(message);
+            } else {
+                log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
+                        message.getUid(), message.getTradeId());
+            }
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -119,5 +172,22 @@ public class TraderChatManager extends SupportManager {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
         }
+    }
+
+    public void addSystemMsg(Trade trade) {
+        // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
+        // by date.
+        ChatMessage chatMessage = new ChatMessage(
+                SupportType.TRADE,
+                trade.getId(),
+                0,
+                false,
+                Res.get("tradeChat.rules"),
+                new NodeAddress("null:0000"),
+                trade.getDate().getTime(),
+                false
+        );
+        chatMessage.setSystemMessage(true);
+        trade.getCommunicationMessages().add(chatMessage);
     }
 }

@@ -17,23 +17,15 @@
 
 package bisq.core.support.traderchat;
 
-import bisq.core.locale.Res;
 import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
-
-import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,22 +37,14 @@ import javax.annotation.Nullable;
 @Slf4j
 public class TradeChatSession extends SupportSession {
 
-    public interface DisputeStateListener {
-        void onDisputeClosed(String tradeId);
-    }
-
     @Nullable
     private Trade trade;
 
-    private TradeManager tradeManager;
-
     public TradeChatSession(@Nullable Trade trade,
                             boolean isClient,
-                            boolean isBuyer,
-                            TradeManager tradeManager) {
+                            boolean isBuyer) {
         super(SupportType.TRADE, isClient, isBuyer);
         this.trade = trade;
-        this.tradeManager = tradeManager;
     }
 
 
@@ -83,7 +67,6 @@ public class TradeChatSession extends SupportSession {
             trade.addCommunicationMessage(message);
     }
 
-
     @Override
     public ObservableList<ChatMessage> getObservableChatMessageList() {
         return trade != null ? trade.getCommunicationMessages() : FXCollections.observableArrayList();
@@ -92,69 +75,5 @@ public class TradeChatSession extends SupportSession {
     @Override
     public boolean chatIsOpen() {
         return trade != null && trade.getState() != Trade.State.WITHDRAW_COMPLETED;
-    }
-
-    @Override
-    public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
-        if (tradeOptional.isPresent()) {
-            Trade t = tradeOptional.get();
-            if (t.getContract() != null && t.getOffer() != null) {
-                if (t.getOffer().getOwnerPubKey().equals(tradeManager.getKeyRing().getPubKeyRing().getSignaturePubKey())) {
-                    // I am maker
-                    return t.getContract().getTakerPubKeyRing();
-                } else {
-                    return t.getContract().getMakerPubKeyRing();
-                }
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public List<ChatMessage> getChatMessages() {
-        return tradeManager.getTradableList().stream()
-                .flatMap(trade -> trade.getCommunicationMessages().stream())
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public boolean channelOpen(ChatMessage message) {
-        return tradeManager.getTradeById(message.getTradeId()).isPresent();
-    }
-
-    @Override
-    public void storeChatMessage(ChatMessage message) {
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
-        if (tradeOptional.isPresent()) {
-            Trade trade = tradeOptional.get();
-            ObservableList<ChatMessage> communicationMessages = trade.getCommunicationMessages();
-            if (communicationMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                if (communicationMessages.isEmpty()) {
-                    addSystemMsg(trade);
-                }
-                trade.addCommunicationMessage(message);
-            } else {
-                log.warn("Trade got a chatMessage what we have already stored. UId = {} TradeId = {}",
-                        message.getUid(), message.getTradeId());
-            }
-        }
-    }
-
-    public void addSystemMsg(Trade trade) {
-        // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
-        // by date.
-        ChatMessage chatMessage = new ChatMessage(
-                SupportType.TRADE,
-                trade.getId(),
-                0,
-                false,
-                Res.get("tradeChat.rules"),
-                new NodeAddress("null:0000"),
-                trade.getDate().getTime(),
-                false
-        );
-        chatMessage.setSystemMessage(true);
-        trade.getCommunicationMessages().add(chatMessage);
     }
 }

@@ -96,6 +96,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -141,10 +142,12 @@ public class Chat extends AnchorPane {
     protected final BSFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private SupportManager supportManager;
+    private Optional<SupportSession> optionalSupportSession = Optional.empty();
 
     public Chat(SupportManager supportManager, BSFormatter formatter) {
         this.supportManager = supportManager;
         this.formatter = formatter;
+        //todo remove
         this.p2PService = supportManager.getP2PService();
         allowAttachments = true;
         displayHeader = true;
@@ -155,8 +158,11 @@ public class Chat extends AnchorPane {
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.ENTER, event)) {
-                if (supportManager.getSupportSession().chatIsOpen() && inputTextArea.isFocused())
-                    onTrySendMessage();
+                optionalSupportSession.ifPresent(supportSession -> {
+                    if (supportSession.chatIsOpen() && inputTextArea.isFocused()) {
+                        onTrySendMessage();
+                    }
+                });
             }
         };
     }
@@ -178,8 +184,8 @@ public class Chat extends AnchorPane {
 
     public void display(SupportManager supportManager, SupportSession supportSession, @Nullable Button extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
+        optionalSupportSession = Optional.of(supportSession);
         removeListenersOnSessionChange();
-        supportManager.setSupportSession(supportSession);
         this.getChildren().clear();
         this.extraButton = extraButton;
         this.widthProperty = widthProperty;
@@ -649,61 +655,62 @@ public class Chat extends AnchorPane {
     }
 
     private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
-        SupportSession supportSession = supportManager.getSupportSession();
-        SupportType supportType = supportManager.getSupportType();
-        boolean isMediationDispute = supportType == SupportType.MEDIATION;
-        ChatMessage message = new ChatMessage(
-                supportType,
-                supportSession.getTradeId(),
-                supportSession.getClientPubKeyRing().hashCode(),
-                supportSession.isClient(),
-                text,
-                p2PService.getAddress(),
-                isMediationDispute
-        );
-
-        message.addAllAttachments(attachments);
-        NodeAddress peersNodeAddress = supportManager.getPeerNodeAddress(message, supportSession);
-        PubKeyRing receiverPubKeyRing = supportSession.getPeerPubKeyRing(message);
-
-        supportSession.addChatMessage(message);
-
-        if (receiverPubKeyRing != null) {
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                    receiverPubKeyRing,
-                    message,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            message.setArrived(true);
-                            supportManager.persist();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            message.setStoredInMailbox(true);
-                            supportManager.persist();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            message.setSendMessageError(errorMessage);
-                            supportManager.persist();
-                        }
-                    }
+        return optionalSupportSession.map(supportSession -> {
+            SupportType supportType = supportManager.getSupportType();
+            boolean isMediationDispute = supportType == SupportType.MEDIATION;
+            ChatMessage message = new ChatMessage(
+                    supportType,
+                    supportSession.getTradeId(),
+                    supportSession.getClientPubKeyRing().hashCode(),
+                    supportSession.isClient(),
+                    text,
+                    p2PService.getAddress(),
+                    isMediationDispute
             );
-        }
 
-        return message;
+            message.addAllAttachments(attachments);
+            NodeAddress peersNodeAddress = supportManager.getPeerNodeAddress(message, supportSession);
+            PubKeyRing receiverPubKeyRing = supportManager.getPeerPubKeyRing(message);
+
+            supportSession.addChatMessage(message);
+
+            if (receiverPubKeyRing != null) {
+                log.info("Send {} to peer {}. tradeId={}, uid={}",
+                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+
+                p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
+                        receiverPubKeyRing,
+                        message,
+                        new SendMailboxMessageListener() {
+                            @Override
+                            public void onArrived() {
+                                log.info("{} arrived at peer {}. tradeId={}, uid={}",
+                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                                message.setArrived(true);
+                                supportManager.persist();
+                            }
+
+                            @Override
+                            public void onStoredInMailbox() {
+                                log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
+                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                                message.setStoredInMailbox(true);
+                                supportManager.persist();
+                            }
+
+                            @Override
+                            public void onFault(String errorMessage) {
+                                log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
+                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
+                                message.setSendMessageError(errorMessage);
+                                supportManager.persist();
+                            }
+                        }
+                );
+            }
+
+            return message;
+        }).orElse(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

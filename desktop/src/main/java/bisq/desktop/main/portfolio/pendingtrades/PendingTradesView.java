@@ -36,7 +36,6 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.Trade;
-import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
@@ -331,10 +330,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (chatPopupStage != null)
             chatPopupStage.close();
 
-        TradeManager tradeManager = model.dataModel.tradeManager;
         TraderChatManager traderChatManager = model.dataModel.getTraderChatManager();
         if (trade.getCommunicationMessages().isEmpty()) {
-            ((TradeChatSession) traderChatManager.getSupportSession()).addSystemMsg(trade);
+            traderChatManager.addSystemMsg(trade);
         }
 
         trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
@@ -357,8 +355,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         boolean isBuyer = model.dataModel.isBuyer();
         TradeChatSession tradeChatSession = new TradeChatSession(trade,
                 isTaker,
-                isBuyer,
-                tradeManager);
+                isBuyer);
 
         disputeStateListener = tradeId -> {
             if (trade.getId().equals(tradeId)) {

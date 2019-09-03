@@ -26,11 +26,6 @@ import bisq.common.crypto.PubKeyRing;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,54 +86,5 @@ public abstract class DisputeSession extends SupportSession {
     @Override
     public boolean chatIsOpen() {
         return dispute != null && !dispute.isClosed();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Not dependent on selected dispute
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Nullable
-    @Override
-    public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
-        Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
-        if (!disputeOptional.isPresent()) {
-            log.warn("Could not find dispute for tradeId = {} traderId = {}",
-                    message.getTradeId(), message.getTraderId());
-            return null;
-        }
-
-        return disputeManager.getNodeAddressPubKeyRingTuple(disputeOptional.get()).second;
-    }
-
-    @Override
-    public List<ChatMessage> getChatMessages() {
-        DisputeList<? extends DisputeList> disputes = disputeManager.getDisputeList();
-        if (disputes != null) {
-            return disputes.getList().stream()
-                    .flatMap(dispute -> dispute.getChatMessages().stream())
-                    .collect(Collectors.toList());
-        } else {
-            log.error("disputes is null");
-            return new ArrayList<>();
-        }
-    }
-
-    @Override
-    public boolean channelOpen(ChatMessage message) {
-        return disputeManager.findDispute(message).isPresent();
-    }
-
-    @Override
-    public void storeChatMessage(ChatMessage message) {
-        Optional<Dispute> disputeOptional = disputeManager.findDispute(message);
-        if (disputeOptional.isPresent()) {
-            if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
-                disputeOptional.get().addChatMessage(message);
-            } else {
-                log.warn("We got a chatMessage what we have already stored. UId = {} TradeId = {}",
-                        message.getUid(), message.getTradeId());
-            }
-        }
     }
 }
