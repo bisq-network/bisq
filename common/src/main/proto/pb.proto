@@ -272,8 +272,8 @@ message PayoutTxPublishedMessage {
 // dispute
 
 enum SupportType {
-    MEDIATION = 0;
-    ARBITRATION = 1;
+    ARBITRATION = 0;
+    MEDIATION = 1;
     TRADE = 2;
 }
 
