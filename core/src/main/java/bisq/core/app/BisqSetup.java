@@ -435,7 +435,6 @@ public class BisqSetup {
             step3();
         } else {
             Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
-                Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
                 Socket socket = null;
                 try {
                     socket = new Socket();
@@ -456,7 +455,7 @@ public class BisqSetup {
                         }
                     }
                 }
-            });
+            }, "checkIfLocalHostNodeIsRunningThread");
             checkIfLocalHostNodeIsRunningThread.start();
         }
     }
