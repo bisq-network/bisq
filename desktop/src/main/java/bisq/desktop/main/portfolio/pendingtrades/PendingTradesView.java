@@ -22,10 +22,10 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIcon;
-import bisq.desktop.main.Chat.ChatView;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.FormBuilder;
 
@@ -339,17 +339,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
 
-        ChatView tradeChatView = new ChatView(traderChatManager, formatter);
-        tradeChatView.setAllowAttachments(false);
-        tradeChatView.setDisplayHeader(false);
-        tradeChatView.initialize();
+        ChatView chatView = new ChatView(traderChatManager, formatter);
+        chatView.setAllowAttachments(false);
+        chatView.setDisplayHeader(false);
+        chatView.initialize();
 
-        AnchorPane pane = new AnchorPane(tradeChatView);
+        AnchorPane pane = new AnchorPane(chatView);
         pane.setPrefSize(760, 500);
-        AnchorPane.setLeftAnchor(tradeChatView, 10d);
-        AnchorPane.setRightAnchor(tradeChatView, 10d);
-        AnchorPane.setTopAnchor(tradeChatView, -20d);
-        AnchorPane.setBottomAnchor(tradeChatView, 10d);
+        AnchorPane.setLeftAnchor(chatView, 10d);
+        AnchorPane.setRightAnchor(chatView, 10d);
+        AnchorPane.setTopAnchor(chatView, -20d);
+        AnchorPane.setBottomAnchor(chatView, 10d);
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
         TradeChatSession tradeChatSession = new TradeChatSession(trade, isTaker);
@@ -361,10 +361,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
         traderChatManager.addDisputeStateListener(disputeStateListener);
 
-        tradeChatView.display(traderChatManager, tradeChatSession, pane.widthProperty());
+        chatView.display(traderChatManager, tradeChatSession, pane.widthProperty());
 
-        tradeChatView.activate();
-        tradeChatView.scrollToBottom();
+        chatView.activate();
+        chatView.scrollToBottom();
 
         chatPopupStage = new Stage();
         chatPopupStage.setTitle(Res.get("tradeChat.chatWindowTitle", trade.getShortId()));
@@ -374,7 +374,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         chatPopupStage.initModality(Modality.NONE);
         chatPopupStage.initStyle(StageStyle.DECORATED);
         chatPopupStage.setOnHiding(event -> {
-            tradeChatView.deactivate();
+            chatView.deactivate();
             // at close we set all as displayed. While open we ignore updates of the numNewMsg in the list icon.
             trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
             trade.persist();

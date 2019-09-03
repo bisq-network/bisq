@@ -24,12 +24,12 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.Chat.ChatView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -122,7 +122,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     @Getter
     protected Dispute selectedDispute;
 
-    protected ChatView disputeChatView;
+    protected ChatView chatView;
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
@@ -223,7 +223,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> disputeChatView.setInputBoxVisible(!newValue);
+        selectedDisputeClosedPropertyListener = (observable, oldValue, newValue) -> chatView.setInputBoxVisible(!newValue);
 
         keyEventEventHandler = event -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.L, event)) {
@@ -311,8 +311,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             }
         };
 
-        disputeChatView = new ChatView(disputeManager, formatter);
-        disputeChatView.initialize();
+        chatView = new ChatView(disputeManager, formatter);
+        chatView.initialize();
     }
 
     @Override
@@ -334,9 +334,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         if (selectedItem != null)
             tableView.getSelectionModel().select(selectedItem);
 
-        if (disputeChatView != null) {
-            disputeChatView.activate();
-            disputeChatView.scrollToBottom();
+        if (chatView != null) {
+            chatView.activate();
+            chatView.scrollToBottom();
         }
 
         scene = root.getScene();
@@ -403,8 +403,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
-        if (disputeChatView != null)
-            disputeChatView.deactivate();
+        if (chatView != null)
+            chatView.deactivate();
     }
 
     protected abstract SupportType getType();
@@ -444,13 +444,13 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
             selectedDispute = null;
         } else if (selectedDispute != dispute) {
             this.selectedDispute = dispute;
-            if (disputeChatView != null) {
+            if (chatView != null) {
                 handleOnSelectDispute(dispute);
             }
 
             if (root.getChildren().size() > 2)
                 root.getChildren().remove(2);
-            root.getChildren().add(2, disputeChatView);
+            root.getChildren().add(2, chatView);
         }
 
         addListenersOnSelectDispute();
@@ -468,7 +468,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected void onCloseDispute(Dispute dispute) {
         long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();
         if (protocolVersion == Version.TRADE_PROTOCOL_VERSION) {
-            disputeSummaryWindow.onFinalizeDispute(() -> disputeChatView.removeInputBox())
+            disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
                     .show(dispute);
         } else {
             new Popup<>()
