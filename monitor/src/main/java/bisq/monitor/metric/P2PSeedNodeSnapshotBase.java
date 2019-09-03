@@ -58,7 +58,7 @@ import org.jetbrains.annotations.NotNull;
  *
  */
 @Slf4j
-abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageListener {
+public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageListener {
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";

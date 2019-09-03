@@ -166,7 +166,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We get that message at both peers. The dispute object is in context of the trader
-    abstract public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
+    public abstract void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
 
     abstract protected DisputeSession getConcreteChatSession();
 

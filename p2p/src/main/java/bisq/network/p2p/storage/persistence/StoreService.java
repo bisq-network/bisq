@@ -73,7 +73,7 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         return store;
     }
 
-    abstract public String getFileName();
+    public abstract String getFileName();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
