@@ -40,10 +40,6 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.DisputeSession;
-import bisq.core.support.dispute.arbitration.ArbitrationSession;
-import bisq.core.support.dispute.mediation.MediationManager;
-import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -457,13 +453,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     }
 
     protected abstract void handleOnSelectDispute(Dispute dispute);
-
-
-    protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
-        return disputeManager instanceof MediationManager ?
-                new MediationSession(dispute, disputeManager) :
-                new ArbitrationSession(dispute, disputeManager);
-    }
 
     protected void onCloseDispute(Dispute dispute) {
         long protocolVersion = dispute.getContract().getOfferPayload().getProtocolVersion();

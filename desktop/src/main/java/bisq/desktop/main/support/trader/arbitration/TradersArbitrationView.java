@@ -29,8 +29,8 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeSession;
-import bisq.core.support.dispute.arbitration.ArbitrationSession;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.ArbitrationSession;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -65,7 +65,7 @@ public class TradersArbitrationView extends TradersDisputeView {
 
     @Override
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
-        return new ArbitrationSession(dispute, disputeManager);
+        return new ArbitrationSession(dispute, disputeManager.isTrader(dispute));
     }
 }
 
