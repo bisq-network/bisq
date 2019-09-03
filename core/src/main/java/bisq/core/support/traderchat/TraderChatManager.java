@@ -150,14 +150,11 @@ public class TraderChatManager extends SupportManager {
     }
 
     public void dispatchMessage(SupportMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-        if (message.getSupportType() == SupportType.ARBITRATION) {
+        if (canProcessMessage(message)) {
+            log.info("Received {} with tradeId {} and uid {}",
+                    message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
             if (message instanceof ChatMessage) {
-                if (((ChatMessage) message).getSupportType() == SupportType.TRADE) {
-                    onChatMessage((ChatMessage) message);
-                }
-                // We ignore dispute messages
+                onChatMessage((ChatMessage) message);
             } else if (message instanceof DisputeResultMessage) {
                 // We notify about dispute closed state
                 disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
@@ -171,7 +168,7 @@ public class TraderChatManager extends SupportManager {
         // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
         // by date.
         ChatMessage chatMessage = new ChatMessage(
-                SupportType.TRADE,
+                getSupportType(),
                 trade.getId(),
                 0,
                 false,

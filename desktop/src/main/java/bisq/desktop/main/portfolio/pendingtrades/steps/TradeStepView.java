@@ -25,8 +25,8 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
 import bisq.desktop.util.Layout;
 
-import bisq.core.support.dispute.Dispute;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.Dispute;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
@@ -473,7 +473,7 @@ public abstract class TradeStepView extends AnchorPane {
             case MEDIATION_REQUESTED:
                 // TODO
                 onDisputeOpened();
-                ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.mediationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {
@@ -491,7 +491,7 @@ public abstract class TradeStepView extends AnchorPane {
             case MEDIATION_STARTED_BY_PEER:
                 // TODO
                 onDisputeOpened();
-                ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
+                ownDispute = model.dataModel.mediationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
                     String msg;
                     if (dispute.isSupportTicket()) {

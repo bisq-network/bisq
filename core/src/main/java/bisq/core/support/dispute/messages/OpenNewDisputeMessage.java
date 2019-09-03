@@ -66,7 +66,8 @@ public final class OpenNewDisputeMessage extends DisputeMessage {
                 .setOpenNewDisputeMessage(protobuf.OpenNewDisputeMessage.newBuilder()
                         .setUid(uid)
                         .setDispute(dispute.toProtoMessage())
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage()))
+                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+                        .setType(SupportType.toProtoMessage(supportType)))
                 .build();
     }
 

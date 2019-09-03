@@ -35,6 +35,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.Timer;
@@ -48,7 +49,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -93,10 +93,6 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             } else if (message instanceof PeerOpenedDisputeMessage) {
                 onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
             } else if (message instanceof ChatMessage) {
-                if (message.getSupportType() != SupportType.MEDIATION) {
-                    log.debug("Ignore non dispute type communication message");
-                    return;
-                }
                 onChatMessage((ChatMessage) message);
             } else if (message instanceof DisputeResultMessage) {
                 onDisputeResultMessage((DisputeResultMessage) message);
@@ -136,8 +132,6 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
 
         Dispute dispute = disputeOptional.get();
-        checkArgument(dispute.isMediationDispute(), "Dispute must be MediationDispute");
-
         cleanupRetryMap(uid);
         if (!dispute.getChatMessages().contains(chatMessage)) {
             dispute.addAndPersistChatMessage(chatMessage);
@@ -161,5 +155,10 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
         sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), true, null);
+    }
+
+    @Override
+    public NodeAddress getAgentNodeAddress(Dispute dispute) {
+        return dispute.getContract().getMediatorNodeAddress();
     }
 }
