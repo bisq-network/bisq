@@ -656,7 +656,7 @@ public class ChatView extends AnchorPane {
                     supportManager.getMyAddress(),
                     attachments
             );
-            supportSession.addAndPersistChatMessage(message);
+            supportManager.addAndPersistChatMessage(message);
             return supportManager.sendChatMessage(message);
         }).orElse(null);
     }

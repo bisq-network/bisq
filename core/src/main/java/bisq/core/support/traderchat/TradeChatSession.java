@@ -57,12 +57,6 @@ public class TradeChatSession extends SupportSession {
     }
 
     @Override
-    public void addAndPersistChatMessage(ChatMessage message) {
-        if (trade != null)
-            trade.addAndPersistChatMessage(message);
-    }
-
-    @Override
     public ObservableList<ChatMessage> getObservableChatMessageList() {
         return trade != null ? trade.getChatMessages() : FXCollections.observableArrayList();
     }
