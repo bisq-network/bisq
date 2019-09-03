@@ -1,12 +1,12 @@
 .root {
     /* javafx main color palette */
-    -fx-base: #222222;
-    -fx-background: #2e2e31;
+    -fx-base: #29292a;
+    -fx-background: #29292a;
     -fx-control-inner-background: #1d1d21;
-    -fx-dark-text-color: #dadada;
-    -fx-mid-text-color: #cacaca;
-    -fx-light-text-color: #bababa;
-    -fx-text-fill: #cfcfcf;
+    -fx-dark-text-color: #fcfcfc;
+    -fx-mid-text-color: #dadada;
+    -fx-light-text-color: #cacaca;
+    -fx-text-fill: #dadada;
 
     /* javafx elements */
     -fx-accent: #25b135;
@@ -20,8 +20,8 @@
     /* bisq main colors */
     -bs-color-primary: #25b135;
     -bs-color-primary-dark: #2ea33c;
-    -bs-text-color: #bfbfbf;
-    -bs-background-color: #2e2e31;
+    -bs-text-color: #dadada;
+    -bs-background-color: #29292a;
     -bs-background-gray: #1d1d21;
     -bs-content-background-gray: #242424;
 
@@ -34,15 +34,15 @@
     -bs-color-gray-4: #929293;
     -bs-color-gray-3: #7b7b7c;
     -bs-color-gray-2: #504f52;
-    -bs-color-gray-1: #2e2e31;
+    -bs-color-gray-1: #29292a;
     -bs-color-gray-0: #1d1d21;
     -bs-color-gray-dim: #aaaaaa;
     -bs-color-gray-ddd: #444444;
     -bs-color-gray-ccc: #7a7a7a;
     -bs-color-gray-bbb: #5a5a5a;
-    -bs-color-gray-aaa: #2e2e31;
+    -bs-color-gray-aaa: #29292a;
     -bs-color-gray-fafa: #0a0a0a;
-    -bs-color-gray-background: #2e2e31;
+    -bs-color-gray-background: #29292a;
 
     /* lesser used colors */
     -bs-color-blue-5: #0a4576;
@@ -71,20 +71,20 @@
     -bs-rd-nav-background: #2ea33c;
     -bs-rd-nav-primary-background: #25b135;
     -bs-rd-nav-primary-border: #44a750;
-    -bs-rd-nav-border: #2e2e31;
+    -bs-rd-nav-border: #29292a;
     -bs-rd-nav-border-color: rgba(46, 46, 49, 0.31);
     -bs-rd-tab-border: #111;
 
     -bs-tab-content-area: #111;
-    -bs-content-pane-bg-top: #1d1d21;
-    -bs-content-pane-bg-bottom: #2e2e31;
+    -bs-content-pane-bg-top: #222226;
+    -bs-content-pane-bg-bottom: #29292a;
     -bs-scroll-pane-background: transparent;
     -bs-tab-content-area: transparent;
     -bs-viewport-background: transparent;
 
-    -bs-footer-pane-background: #2e2e31;
+    -bs-footer-pane-background: #29292a;
     -bs-footer-pane-text: #cfcecf;
-    -bs-footer-pane-line: #2e2e31;
+    -bs-footer-pane-line: #29292a;
 
     -bs-rd-font-balance: #bbbbbb;
     -bs-rd-font-dark-gray: #d4d4d4;
@@ -209,6 +209,13 @@
     -fx-border-color: -bs-color-gray-2;
 }
 
+#sell-button, #sell-button-big {
+    -fx-background-color: #660000 !important;
+}
+#buy-button, #buy-button-big {
+    -fx-background-color: #006600 !important;
+}
+
 .wallet-seed-words {
     -fx-text-fill: -bs-color-gray-6;
 }
@@ -227,12 +234,12 @@
     -fx-border-color: transparent transparent transparent transparent;
 }
 #charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
-    -fx-tick-label-fill: -bs-color-gray-dim;
+    -fx-tick-label-fill: rgba(255,255,255,0.7);
 }
 .chart-horizontal-grid-lines, .chart-vertical-grid-lines,
 .chart-horizontal-zero-line, .chart-vertical-zero-line,
 .axis-tick-mark, .axis-minor-tick-mark {
-    -fx-stroke: -bs-color-gray-0;
+    -fx-stroke: rgba(0,0,0,0.3);
 }
 
 /* scrollbars */
