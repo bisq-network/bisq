@@ -35,17 +35,17 @@ import bisq.core.util.BSFormatter;
 import bisq.common.crypto.KeyRing;
 
 @FxmlView
-public abstract class TradersDisputeView extends DisputeView {
-    public TradersDisputeView(DisputeManager<? extends DisputeList<? extends DisputeList>> DisputeManager,
-                              KeyRing keyRing,
-                              TradeManager tradeManager,
-                              BSFormatter formatter,
-                              DisputeSummaryWindow disputeSummaryWindow,
-                              PrivateNotificationManager privateNotificationManager,
-                              ContractWindow contractWindow,
-                              TradeDetailsWindow tradeDetailsWindow,
-                              AccountAgeWitnessService accountAgeWitnessService,
-                              boolean useDevPrivilegeKeys) {
+public abstract class DisputeClientView extends DisputeView {
+    public DisputeClientView(DisputeManager<? extends DisputeList<? extends DisputeList>> DisputeManager,
+                             KeyRing keyRing,
+                             TradeManager tradeManager,
+                             BSFormatter formatter,
+                             DisputeSummaryWindow disputeSummaryWindow,
+                             PrivateNotificationManager privateNotificationManager,
+                             ContractWindow contractWindow,
+                             TradeDetailsWindow tradeDetailsWindow,
+                             AccountAgeWitnessService accountAgeWitnessService,
+                             boolean useDevPrivilegeKeys) {
         super(DisputeManager, keyRing, tradeManager, formatter, disputeSummaryWindow, privateNotificationManager,
                 contractWindow, tradeDetailsWindow, accountAgeWitnessService, useDevPrivilegeKeys);
     }
