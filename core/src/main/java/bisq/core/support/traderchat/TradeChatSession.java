@@ -18,7 +18,6 @@
 package bisq.core.support.traderchat;
 
 import bisq.core.support.SupportSession;
-import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.Trade;
 
@@ -43,7 +42,7 @@ public class TradeChatSession extends SupportSession {
     public TradeChatSession(@Nullable Trade trade,
                             boolean isClient,
                             boolean isBuyer) {
-        super(SupportType.TRADE, isClient, isBuyer);
+        super(isClient, isBuyer);
         this.trade = trade;
     }
 
