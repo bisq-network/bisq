@@ -352,10 +352,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         AnchorPane.setBottomAnchor(tradeChat, 10d);
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
-        boolean isBuyer = model.dataModel.isBuyer();
-        TradeChatSession tradeChatSession = new TradeChatSession(trade,
-                isTaker,
-                isBuyer);
+        TradeChatSession tradeChatSession = new TradeChatSession(trade, isTaker);
 
         disputeStateListener = tradeId -> {
             if (trade.getId().equals(tradeId)) {

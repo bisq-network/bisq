@@ -40,9 +40,8 @@ public class TradeChatSession extends SupportSession {
     private Trade trade;
 
     public TradeChatSession(@Nullable Trade trade,
-                            boolean isClient,
-                            boolean isBuyer) {
-        super(isClient, isBuyer);
+                            boolean isClient) {
+        super(isClient);
         this.trade = trade;
     }
 
