@@ -676,29 +676,27 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     private Optional<Dispute> findDispute(Dispute dispute) {
-        return findDispute(dispute.getTradeId(), dispute.getTraderId(), dispute.isMediationDispute());
+        return findDispute(dispute.getTradeId(), dispute.getTraderId());
     }
 
     protected Optional<Dispute> findDispute(DisputeResult disputeResult) {
         ChatMessage chatMessage = disputeResult.getChatMessage();
         checkNotNull(chatMessage, "chatMessage must not be null");
-        return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId(), chatMessage.isMediationDispute());
+        return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId());
     }
 
     Optional<Dispute> findDispute(ChatMessage message) {
-        return findDispute(message.getTradeId(), message.getTraderId(), message.isMediationDispute());
+        return findDispute(message.getTradeId(), message.getTraderId());
     }
 
-    private Optional<Dispute> findDispute(String tradeId, int traderId, boolean isMediationDispute) {
+    private Optional<Dispute> findDispute(String tradeId, int traderId) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return Optional.empty();
         }
         return disputeList.stream()
-                .filter(e -> e.getTradeId().equals(tradeId) &&
-                        e.getTraderId() == traderId &&
-                        e.isMediationDispute() == isMediationDispute)
+                .filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId)
                 .findAny();
     }
 

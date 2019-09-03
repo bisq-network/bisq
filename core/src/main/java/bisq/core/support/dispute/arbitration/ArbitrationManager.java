@@ -143,9 +143,8 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         DisputeResult disputeResult = disputeResultMessage.getDisputeResult();
         ChatMessage chatMessage = disputeResult.getChatMessage();
         checkNotNull(chatMessage, "chatMessage must not be null");
-        if (!chatMessage.isMediationDispute() &&
-                Arrays.equals(disputeResult.getArbitratorPubKey(),
-                        walletService.getArbitratorAddressEntry().getPubKey())) {
+        if (Arrays.equals(disputeResult.getArbitratorPubKey(),
+                walletService.getArbitratorAddressEntry().getPubKey())) {
             log.error("Arbitrator received disputeResultMessage. That must never happen.");
             return;
         }
