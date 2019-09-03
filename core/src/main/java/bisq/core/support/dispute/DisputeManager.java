@@ -51,7 +51,6 @@ import javafx.beans.property.IntegerProperty;
 
 import javafx.collections.ObservableList;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -130,16 +129,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     @Override
-    public List<ChatMessage> getChatMessages() {
-        DisputeList<? extends DisputeList> disputes = getDisputeList();
-        if (disputes != null) {
-            return disputes.getList().stream()
-                    .flatMap(dispute -> dispute.getChatMessages().stream())
-                    .collect(Collectors.toList());
-        } else {
-            log.error("disputes is null");
-            return new ArrayList<>();
-        }
+    public List<ChatMessage> getAllChatMessages() {
+        return getDisputeList().stream()
+                .flatMap(dispute -> dispute.getChatMessages().stream())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -148,7 +141,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     @Override
-    public void storeChatMessage(ChatMessage message) {
+    public void addAndPersistChatMessage(ChatMessage message) {
         Optional<Dispute> disputeOptional = findDispute(message);
         if (disputeOptional.isPresent()) {
             if (disputeOptional.get().getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
@@ -168,11 +161,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     // We get that message at both peers. The dispute object is in context of the trader
     public abstract void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
 
-    protected abstract DisputeSession getConcreteChatSession();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delegates
+    // Delegates for disputeListService
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public IntegerProperty getNumOpenDisputes() {
@@ -195,7 +186,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeListService.getNrOfDisputes(isBuyer, contract);
     }
 
-    public T getDisputeList() {
+    private T getDisputeList() {
         return disputeListService.getDisputeList();
     }
 
@@ -258,7 +249,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Dispute dispute = openNewDisputeMessage.getDispute();
         Contract contractFromOpener = dispute.getContract();
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
-        if (isArbitrator(dispute)) {
+        if (isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
@@ -298,7 +289,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
-        if (!isArbitrator(dispute)) {
+        if (!isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
@@ -652,13 +643,13 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
+    private Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
             receiverPubKeyRing = dispute.getConflictResolverPubKeyRing();
             peerNodeAddress = dispute.getConflictResolverNodeAddress();
-        } else if (isArbitrator(dispute)) {
+        } else if (isAgent(dispute)) {
             receiverPubKeyRing = dispute.getTraderPubKeyRing();
             Contract contract = dispute.getContract();
             if (contract.getBuyerPubKeyRing().equals(receiverPubKeyRing))
@@ -671,7 +662,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return new Tuple2<>(peerNodeAddress, receiverPubKeyRing);
     }
 
-    private boolean isArbitrator(Dispute dispute) {
+    private boolean isAgent(Dispute dispute) {
         return keyRing.getPubKeyRing().equals(dispute.getConflictResolverPubKeyRing());
     }
 
@@ -685,7 +676,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return findDispute(disputeResult.getTradeId(), disputeResult.getTraderId());
     }
 
-    Optional<Dispute> findDispute(ChatMessage message) {
+    private Optional<Dispute> findDispute(ChatMessage message) {
         return findDispute(message.getTradeId(), message.getTraderId());
     }
 

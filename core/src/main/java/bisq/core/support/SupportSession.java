@@ -23,9 +23,6 @@ import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.ObservableList;
 
-/**
- * Encapsulate the object
- */
 public abstract class SupportSession {
     // todo refactor ui so that can be converted to isTrader
     private boolean isClient;
