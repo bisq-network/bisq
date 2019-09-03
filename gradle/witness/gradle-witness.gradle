@@ -35,7 +35,6 @@ dependencyVerification {
         'com.fasterxml.jackson.core:jackson-annotations:2566b3a6662afa3c6af4f5b25006cb46be2efc68f1b5116291d6998a8cdf7ed3',
         'com.google.protobuf:protobuf-java:5a1e5c225791eccd3d67a598922e637406190c90155fb97f38e4eab29719324d',
         'com.google.code.gson:gson:2d43eb5ea9e133d2ee2405cc14f5ee08951b8361302fdd93494a3a997b508d32',
-        'com.googlecode.json-simple:json-simple:4e69696892b88b41c55d49ab2fdcc21eead92bf54acc588c0050596c3b75199c',
         'org.springframework:spring-core:c451e8417adb2ffb2445636da5e44a2f59307c4100037a1fe387c3fba4f29b52',
         'ch.qos.logback:logback-classic:e66efc674e94837344bc5b748ff510c37a44eeff86cbfdbf9e714ef2eb374013',
         'org.slf4j:slf4j-api:3a4cd4969015f3beb4b5b4d81dbafc01765fb60b8a439955ca64d8476fef553e',

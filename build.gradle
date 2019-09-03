@@ -180,9 +180,6 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
-        compile("com.googlecode.json-simple:json-simple:$jsonsimpleVersion") {
-            exclude(module: 'junit')
-        }
         compile "org.springframework:spring-core:$springVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
