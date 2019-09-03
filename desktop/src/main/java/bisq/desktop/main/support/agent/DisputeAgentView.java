@@ -102,7 +102,7 @@ public abstract class DisputeAgentView extends DisputeView {
             closeDisputeButton.setOnAction(e -> onCloseDispute(getSelectedDispute()));
         }
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
-        chatView.display(disputeManager, chatSession, closeDisputeButton, root.widthProperty());
+        chatView.display(chatSession, closeDisputeButton, root.widthProperty());
     }
 }
 

@@ -167,13 +167,12 @@ public class ChatView extends AnchorPane {
         removeListenersOnSessionChange();
     }
 
-    public void display(SupportManager supportManager,
-                        SupportSession supportSession,
-                        ReadOnlyDoubleProperty widthProperty) {
-        display(supportManager, supportSession, null, widthProperty);
+    public void display(SupportSession supportSession, ReadOnlyDoubleProperty widthProperty) {
+        display(supportSession, null, widthProperty);
     }
 
-    public void display(SupportManager supportManager, SupportSession supportSession, @Nullable Button extraButton,
+    public void display(SupportSession supportSession,
+                        @Nullable Button extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
         optionalSupportSession = Optional.of(supportSession);
         removeListenersOnSessionChange();

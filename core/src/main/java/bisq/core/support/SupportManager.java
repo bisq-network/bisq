@@ -78,19 +78,19 @@ public abstract class SupportManager {
 
     protected abstract void dispatchMessage(SupportMessage networkEnvelope);
 
-    public abstract void persist();
-
     public abstract NodeAddress getPeerNodeAddress(ChatMessage message);
 
-    public abstract SupportType getSupportType();
-
     public abstract PubKeyRing getPeerPubKeyRing(ChatMessage message);
+
+    public abstract SupportType getSupportType();
 
     public abstract boolean channelOpen(ChatMessage message);
 
     public abstract List<ChatMessage> getChatMessages();
 
     public abstract void storeChatMessage(ChatMessage message);
+
+    public abstract void persist();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

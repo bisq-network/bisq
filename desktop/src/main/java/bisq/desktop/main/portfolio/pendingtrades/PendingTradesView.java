@@ -361,7 +361,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
         traderChatManager.addDisputeStateListener(disputeStateListener);
 
-        chatView.display(traderChatManager, tradeChatSession, pane.widthProperty());
+        chatView.display(tradeChatSession, pane.widthProperty());
 
         chatView.activate();
         chatView.scrollToBottom();
