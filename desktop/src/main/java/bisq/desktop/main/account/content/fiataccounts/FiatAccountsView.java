@@ -69,7 +69,6 @@ import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
 
-import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
@@ -138,7 +137,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final F2FValidator f2FValidator;
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
@@ -168,9 +166,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             PromptPayValidator promptPayValidator,
                             AdvancedCashValidator advancedCashValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
-                            BSFormatter formatter,
-                            SignedWitnessService signedWitnessService) {
-        super(model, signedWitnessService);
+                            BSFormatter formatter) {
+        super(model, accountAgeWitnessService);
 
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
@@ -191,7 +188,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.f2FValidator = f2FValidator;
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
 

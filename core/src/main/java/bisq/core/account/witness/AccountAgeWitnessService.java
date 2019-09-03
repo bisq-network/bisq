@@ -17,9 +17,15 @@
 
 package bisq.core.account.witness;
 
+import bisq.core.account.sign.SignedWitness;
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.arbitration.BuyerDataItem;
+import bisq.core.arbitration.Dispute;
+import bisq.core.arbitration.DisputeResult;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.payment.AssetAccount;
+import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -43,6 +49,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import javax.inject.Inject;
 
@@ -52,12 +59,17 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -75,6 +87,8 @@ public class AccountAgeWitnessService {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final User user;
+    private final SignedWitnessService signedWitnessService;
+    private final ChargeBackRisk chargeBackRisk;
 
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
@@ -85,12 +99,18 @@ public class AccountAgeWitnessService {
 
 
     @Inject
-    public AccountAgeWitnessService(KeyRing keyRing, P2PService p2PService, User user,
+    public AccountAgeWitnessService(KeyRing keyRing,
+                                    P2PService p2PService,
+                                    User user,
+                                    SignedWitnessService signedWitnessService,
+                                    ChargeBackRisk chargeBackRisk,
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
                                     AppendOnlyDataStoreService appendOnlyDataStoreService) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.user = user;
+        this.signedWitnessService = signedWitnessService;
+        this.chargeBackRisk = chargeBackRisk;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(accountAgeWitnessStorageService);
@@ -164,7 +184,7 @@ public class AccountAgeWitnessService {
         return new AccountAgeWitness(hash, new Date().getTime());
     }
 
-    public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+    private Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
@@ -207,11 +227,16 @@ public class AccountAgeWitnessService {
         }
     }
 
-    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date now) {
+    private long getTradeLimit(Coin maxTradeLimit,
+                               String currencyCode,
+                               Optional<AccountAgeWitness> accountAgeWitnessOptional,
+                               Date now) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
-            final long accountAge = getAccountAge((accountAgeWitnessOptional.get()), now);
+            final long accountAge = accountAgeWitnessOptional
+                    .map(ageWitness -> getAccountAge((ageWitness), now))
+                    .orElse(0L);
             AccountAge accountAgeCategory = accountAgeWitnessOptional
                     .map(accountAgeWitness -> getAccountAgeCategory(accountAge))
                     .orElse(AccountAge.LESS_ONE_MONTH);
@@ -356,7 +381,9 @@ public class AccountAgeWitnessService {
     // Package scope verification subroutines
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean isDateAfterReleaseDate(long witnessDateAsLong, Date ageWitnessReleaseDate, ErrorMessageHandler errorMessageHandler) {
+    boolean isDateAfterReleaseDate(long witnessDateAsLong,
+                                   Date ageWitnessReleaseDate,
+                                   ErrorMessageHandler errorMessageHandler) {
         // Release date minus 1 day as tolerance for not synced clocks
         Date releaseDateWithTolerance = new Date(ageWitnessReleaseDate.getTime() - TimeUnit.DAYS.toMillis(1));
         final Date witnessDate = new Date(witnessDateAsLong);
@@ -436,4 +463,72 @@ public class AccountAgeWitnessService {
         }
         return result;
     }
+
+    ///////////////////////////////////////////////////////////////
+    // Signing
+    ///////////////////////////////////////////////////////////////
+    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
+                                               AccountAgeWitness accountAgeWitness,
+                                               ECKey key,
+                                               PublicKey peersPubKey) {
+        return signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
+    }
+
+    public List<Long> getMyWitnessAgeList(PaymentAccountPayload myPaymentAccountPayload) {
+        AccountAgeWitness accountAgeWitness = getMyWitness(myPaymentAccountPayload);
+        // We do not validate as it would not make sense to cheat one self...
+        return signedWitnessService.getSignedWitnessSet(accountAgeWitness).stream()
+                .map(SignedWitness::getDate)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    // Arbitrator signing
+    public List<BuyerDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
+                                                       List<Dispute> disputes) {
+        return disputes.stream()
+                .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
+                .filter(this::hasChargebackRisk)
+                .filter(this::isBuyerWinner)
+                .map(this::getBuyerData)
+                .filter(Objects::nonNull)
+                .filter(buyerDataItem -> buyerDataItem.getAccountAgeWitness().getDate() < safeDate)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private boolean hasChargebackRisk(Dispute dispute) {
+        return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId(),
+                dispute.getContract().getOfferPayload().getCurrencyCode());
+    }
+
+    private boolean isBuyerWinner(Dispute dispute) {
+        if (!dispute.isClosed() || dispute.getDisputeResultProperty() == null)
+            return false;
+        return dispute.getDisputeResultProperty().get().getWinner() == DisputeResult.Winner.BUYER;
+    }
+
+    @Nullable
+    private BuyerDataItem getBuyerData(Dispute dispute) {
+        PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
+        PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
+        return getAccountAgeWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
+                .map(witness -> new BuyerDataItem(
+                        buyerPaymentAccountPaload,
+                        witness,
+                        dispute.getContract().getTradeAmount(),
+                        dispute.getContract().getSellerPubKeyRing().getSignaturePubKey()))
+                .orElse(null);
+    }
+
+    private Optional<AccountAgeWitness> getAccountAgeWitness(PaymentAccountPayload buyerPaymentAccountPaload,
+                                                             PubKeyRing buyerPubKeyRing) {
+        return findWitness(buyerPaymentAccountPaload, buyerPubKeyRing);
+    }
+
+    // Check if my account has a signed witness
+    public boolean hasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
+        return signedWitnessService.isValidAccountAgeWitness(getMyWitness(paymentAccountPayload));
+    }
+
 }

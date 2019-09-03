@@ -23,9 +23,10 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.sign.SignedWitness;
-import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.arbitration.BuyerDataItem;
+import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -72,15 +73,18 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     private DatePicker datePicker;
     private InputTextField privateKey;
     private ListView<BuyerDataItem> selectedPaymentAccountsList = new ListView<>();
-    private final SignedWitnessService signedWitnessService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
+    private final DisputeManager disputeManager;
 
 
     @Inject
-    public SignPaymentAccountsWindow(SignedWitnessService signedWitnessService,
-                                     ArbitratorManager arbitratorManager) {
-        this.signedWitnessService = signedWitnessService;
+    public SignPaymentAccountsWindow(AccountAgeWitnessService accountAgeWitnessService,
+                                     ArbitratorManager arbitratorManager,
+                                     DisputeManager disputeManager) {
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
+        this.disputeManager = disputeManager;
     }
 
     @Override
@@ -177,9 +181,10 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 3);
         selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
         selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(
-                signedWitnessService.getBuyerPaymentAccounts(
+                accountAgeWitnessService.getBuyerPaymentAccounts(
                         datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
-                        paymentMethodComboBox.getSelectionModel().getSelectedItem())));
+                        paymentMethodComboBox.getSelectionModel().getSelectedItem(),
+                        disputeManager.getDisputesAsObservableList())));
 
         headLineLabel.setText(Res.get("popup.accountSigning.signAccounts.headline"));
         descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description",
@@ -201,7 +206,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                     if (isKeyValid) {
                         selectedPaymentAccountsList.getItems().forEach(item -> {
                             // Sign accounts
-                            SignedWitness signedWitness = signedWitnessService.signAccountAgeWitness(
+                            SignedWitness signedWitness = accountAgeWitnessService.signAccountAgeWitness(
                                     item.getTradeAmount(),
                                     item.getAccountAgeWitness(),
                                     arbitratorKey,

@@ -18,15 +18,7 @@
 package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.BuyerDataItem;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.arbitration.DisputeResult;
-import bisq.core.payment.ChargeBackRisk;
-import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -34,7 +26,6 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
-import bisq.common.crypto.PubKeyRing;
 import bisq.common.crypto.Sig;
 import bisq.common.util.Utilities;
 
@@ -57,15 +48,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
-import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class SignedWitnessService {
@@ -73,10 +60,7 @@ public class SignedWitnessService {
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private final DisputeManager disputeManager;
-    private final ChargeBackRisk chargeBackRisk;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
@@ -88,18 +72,12 @@ public class SignedWitnessService {
     @Inject
     public SignedWitnessService(KeyRing keyRing,
                                 P2PService p2PService,
-                                AccountAgeWitnessService accountAgeWitnessService,
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
-                                AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                DisputeManager disputeManager,
-                                ChargeBackRisk chargeBackRisk) {
+                                AppendOnlyDataStoreService appendOnlyDataStoreService) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
-        this.disputeManager = disputeManager;
-        this.chargeBackRisk = chargeBackRisk;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -127,16 +105,6 @@ public class SignedWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public List<Long> getMyWitnessAgeList(PaymentAccountPayload myPaymentAccountPayload) {
-        AccountAgeWitness accountAgeWitness = accountAgeWitnessService.getMyWitness(myPaymentAccountPayload);
-        // We do not validate as it would not make sense to cheat one self...
-        return getSignedWitnessSet(accountAgeWitness).stream()
-                .map(SignedWitness::getDate)
-                .sorted()
-                .collect(Collectors.toList());
-    }
-
 
     public List<Long> getVerifiedWitnessAgeList(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
@@ -244,8 +212,8 @@ public class SignedWitnessService {
 
     // We go one level up by using the signer Key to lookup for SignedWitness objects which contain the signerKey as
     // witnessOwnerPubKey
-    public Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey,
-                                                               Stack<P2PDataStorage.ByteArray> excluded) {
+    private Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey,
+                                                                Stack<P2PDataStorage.ByteArray> excluded) {
         return signedWitnessMap.values().stream()
                 .filter(e -> Arrays.equals(e.getWitnessOwnerPubKey(), ownerPubKey))
                 .filter(e -> !excluded.contains(new P2PDataStorage.ByteArray(e.getSignerPubKey())))
@@ -254,7 +222,7 @@ public class SignedWitnessService {
 
     /**
      * Checks whether the accountAgeWitness has a valid signature from a peer/arbitrator.
-     * @param accountAgeWitness
+     * @param accountAgeWitness accountAgeWitness
      * @return true if accountAgeWitness is valid, false otherwise.
      */
     public boolean isValidAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
@@ -329,52 +297,5 @@ public class SignedWitnessService {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
             p2PService.addPersistableNetworkPayload(signedWitness, false);
         }
-    }
-
-    // Arbitrator signing
-    public List<BuyerDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod) {
-        return disputeManager.getDisputesAsObservableList().stream()
-                .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
-                .filter(this::hasChargebackRisk)
-                .filter(this::isBuyerWinner)
-                .map(this::getBuyerData)
-                .filter(Objects::nonNull)
-                .filter(buyerDataItem -> buyerDataItem.getAccountAgeWitness().getDate() < safeDate)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
-    private boolean hasChargebackRisk(Dispute dispute) {
-        return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId(),
-                dispute.getContract().getOfferPayload().getCurrencyCode());
-    }
-
-    private boolean isBuyerWinner(Dispute dispute) {
-        if (!dispute.isClosed() || dispute.getDisputeResultProperty() == null)
-            return false;
-        return dispute.getDisputeResultProperty().get().getWinner() == DisputeResult.Winner.BUYER;
-    }
-
-    @Nullable
-    private BuyerDataItem getBuyerData(Dispute dispute) {
-        PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
-        PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
-        return getAccountAgeWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
-                .map(witness -> new BuyerDataItem(
-                        buyerPaymentAccountPaload,
-                        witness,
-                        dispute.getContract().getTradeAmount(),
-                        dispute.getContract().getSellerPubKeyRing().getSignaturePubKey()))
-                .orElse(null);
-    }
-
-    private Optional<AccountAgeWitness> getAccountAgeWitness(PaymentAccountPayload buyerPaymentAccountPaload,
-                                                             PubKeyRing buyerPubKeyRing) {
-        return accountAgeWitnessService.findWitness(buyerPaymentAccountPaload, buyerPubKeyRing);
-    }
-
-    // Check if my account has a signed witness
-    public boolean hasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
-        return isValidAccountAgeWitness(accountAgeWitnessService.getMyWitness(paymentAccountPayload));
     }
 }

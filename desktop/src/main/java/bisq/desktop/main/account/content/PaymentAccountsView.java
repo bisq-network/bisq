@@ -8,6 +8,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 
@@ -32,13 +33,14 @@ import java.util.concurrent.TimeUnit;
 public abstract class PaymentAccountsView<R extends Node, M extends ActivatableWithDataModel> extends ActivatableViewAndModel<R, M> {
 
     protected ListView<PaymentAccount> paymentAccountsListView;
-    protected ChangeListener<PaymentAccount> paymentAccountChangeListener;
+    private ChangeListener<PaymentAccount> paymentAccountChangeListener;
     protected Button addAccountButton, exportButton, importButton;
     SignedWitnessService signedWitnessService;
+    protected AccountAgeWitnessService accountAgeWitnessService;
 
-    public PaymentAccountsView(M model, SignedWitnessService signedWitnessService) {
+    public PaymentAccountsView(M model, AccountAgeWitnessService accountAgeWitnessService) {
         super(model);
-        this.signedWitnessService = signedWitnessService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
     @Override
@@ -87,10 +89,10 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     }
 
     protected void setPaymentAccountsCellFactory() {
-        paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
+        paymentAccountsListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
-                return new ListCell<PaymentAccount>() {
+                return new ListCell<>() {
                     final Label label = new AutoTooltipLabel();
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
@@ -110,8 +112,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         if (item != null && !empty) {
                             label.setText(item.getAccountName());
                             removeButton.setOnAction(e -> onDeleteAccount(item));
-                            String signedWitnessId = signedWitnessService.hasSignedWitness(item.paymentAccountPayload) ?
-                                    "image-tick" : "rejected";
+                            String signedWitnessId = accountAgeWitnessService.hasSignedWitness(
+                                    item.paymentAccountPayload) ? "image-tick" : "rejected";
                             signed.setId(signedWitnessId);
                             setGraphic(pane);
                         } else {
