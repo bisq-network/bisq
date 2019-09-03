@@ -23,6 +23,10 @@ import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.ObservableList;
 
+/**
+ * A Support session is using a trade or a dispute to implement the methods.
+ * It keeps the ChatView transparent if used in dispute or trade chat context.
+ */
 public abstract class SupportSession {
     // todo refactor ui so that can be converted to isTrader
     private boolean isClient;

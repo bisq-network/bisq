@@ -33,13 +33,12 @@ import javax.annotation.Nullable;
 public abstract class DisputeSession extends SupportSession {
     @Nullable
     private Dispute dispute;
-    private DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
+    private final boolean isTrader;
 
-    public DisputeSession(@Nullable Dispute dispute,
-                          DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
+    public DisputeSession(@Nullable Dispute dispute, boolean isTrader) {
         super();
         this.dispute = dispute;
-        this.disputeManager = disputeManager;
+        this.isTrader = isTrader;
     }
 
 
@@ -49,7 +48,7 @@ public abstract class DisputeSession extends SupportSession {
 
     @Override
     public boolean isClient() {
-        return dispute != null && disputeManager.isTrader(dispute);
+        return isTrader;
     }
 
     @Override

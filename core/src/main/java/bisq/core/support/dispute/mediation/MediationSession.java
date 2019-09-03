@@ -18,8 +18,6 @@
 package bisq.core.support.dispute.mediation;
 
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeList;
-import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +27,7 @@ import javax.annotation.Nullable;
 @Slf4j
 public class MediationSession extends DisputeSession {
 
-    public MediationSession(@Nullable Dispute dispute,
-                            DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        super(dispute, disputeManager);
+    public MediationSession(@Nullable Dispute dispute, boolean isTrader) {
+        super(dispute, isTrader);
     }
 }
