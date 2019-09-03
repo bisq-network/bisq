@@ -1547,6 +1547,7 @@ textfield */
 #charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
     -fx-tick-label-fill: -bs-rd-font-lighter;
     -fx-tick-label-font-size: 0.769em;
+    -fx-font-size: 0.880em;
 }
 
 #charts .chart-plot-background, #charts-dao .chart-plot-background {
