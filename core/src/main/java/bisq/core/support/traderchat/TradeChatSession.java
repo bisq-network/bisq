@@ -45,7 +45,6 @@ public class TradeChatSession extends SupportSession {
         this.trade = trade;
     }
 
-
     @Override
     public String getTradeId() {
         return trade != null ? trade.getId() : "";
@@ -53,7 +52,8 @@ public class TradeChatSession extends SupportSession {
 
     @Override
     public PubKeyRing getClientPubKeyRing() {
-        // Get pubkeyring of taker. Maker is considered server for chat sessions
+        // TODO remove that client-server concept for trade chat
+        // Get pubKeyRing of taker. Maker is considered server for chat sessions
         if (trade != null && trade.getContract() != null)
             return trade.getContract().getTakerPubKeyRing();
         return null;
