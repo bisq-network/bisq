@@ -15,26 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.crypto;
+package bisq.common.util;
 
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.spec.X509EncodedKeySpec;
+/**
+ * We use Java 8 builtin Base64 because it is much faster than Guava and Apache versions:
+ * http://java-performance.info/base64-encoding-and-decoding-performance/
+ */
+public class Base64 {
 
-import java.util.Base64;
-
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class CryptoUtils {
-    public static String pubKeyToString(PublicKey publicKey) {
-        final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        return Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
+    public static byte[] decode(String base64) {
+        return java.util.Base64.getDecoder().decode(base64);
     }
 
-    public static byte[] getRandomBytes(int size) {
-        byte[] bytes = new byte[size];
-        new SecureRandom().nextBytes(bytes);
-        return bytes;
+    public static String encode(byte[] bytes) {
+        return java.util.Base64.getEncoder().encodeToString(bytes);
     }
 }

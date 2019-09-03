@@ -18,10 +18,9 @@
 package bisq.common.crypto;
 
 import bisq.common.util.Utilities;
+import bisq.common.util.Base64;
 
 import com.google.common.base.Charsets;
-
-import org.bouncycastle.util.encoders.Base64;
 
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -95,7 +94,7 @@ public class Sig {
      */
     public static String sign(PrivateKey privateKey, String message) throws CryptoException {
         byte[] sigAsBytes = sign(privateKey, message.getBytes(Charsets.UTF_8));
-        return Base64.toBase64String(sigAsBytes);
+        return Base64.encode(sigAsBytes);
     }
 
     /**
@@ -143,4 +142,3 @@ public class Sig {
         return new X509EncodedKeySpec(sigPublicKey.getEncoded()).getEncoded();
     }
 }
-
