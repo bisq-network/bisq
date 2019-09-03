@@ -37,17 +37,17 @@ class PaymentAccounts {
     private static final Logger log = LoggerFactory.getLogger(PaymentAccounts.class);
 
     private final Set<PaymentAccount> accounts;
-    private final AccountAgeWitnessService service;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BiFunction<Offer, PaymentAccount, Boolean> validator;
 
-    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service) {
-        this(accounts, service, PaymentAccountUtil::isTakerPaymentAccountValidForOffer);
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService accountAgeWitnessService) {
+        this(accounts, accountAgeWitnessService, PaymentAccountUtil::isTakerPaymentAccountValidForOffer);
     }
 
-    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService service,
+    PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService accountAgeWitnessService,
                     BiFunction<Offer, PaymentAccount, Boolean> validator) {
         this.accounts = accounts;
-        this.service = service;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.validator = validator;
     }
 
@@ -78,7 +78,7 @@ class PaymentAccounts {
             StringBuilder message = new StringBuilder("Valid accounts: \n");
             for (PaymentAccount account : accounts) {
                 String accountName = account.getAccountName();
-                String witnessHex = service.getMyWitnessHashAsHex(account.getPaymentAccountPayload());
+                String witnessHex = accountAgeWitnessService.getMyWitnessHashAsHex(account.getPaymentAccountPayload());
 
                 message.append("name = ")
                         .append(accountName)
@@ -92,13 +92,13 @@ class PaymentAccounts {
     }
 
     private int compareByAge(PaymentAccount left, PaymentAccount right) {
-        AccountAgeWitness leftWitness = service.getMyWitness(left.getPaymentAccountPayload());
-        AccountAgeWitness rightWitness = service.getMyWitness(right.getPaymentAccountPayload());
+        AccountAgeWitness leftWitness = accountAgeWitnessService.getMyWitness(left.getPaymentAccountPayload());
+        AccountAgeWitness rightWitness = accountAgeWitnessService.getMyWitness(right.getPaymentAccountPayload());
 
         Date now = new Date();
 
-        long leftAge = service.getAccountAge(leftWitness, now);
-        long rightAge = service.getAccountAge(rightWitness, now);
+        long leftAge = accountAgeWitnessService.getAccountAge(leftWitness, now);
+        long rightAge = accountAgeWitnessService.getAccountAge(rightWitness, now);
 
         return Long.compare(leftAge, rightAge);
     }
