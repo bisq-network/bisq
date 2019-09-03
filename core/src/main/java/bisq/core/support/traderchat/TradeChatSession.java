@@ -18,12 +18,9 @@
 package bisq.core.support.traderchat;
 
 import bisq.core.locale.Res;
-import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
-import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 
@@ -36,7 +33,6 @@ import javafx.collections.ObservableList;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -59,30 +55,18 @@ public class TradeChatSession extends SupportSession {
     private boolean isClient;
     private boolean isBuyer;
     private TradeManager tradeManager;
-    private SupportManager supportManager;
-    // Needed to avoid ConcurrentModificationException as we remove a listener at the handler call
-    private List<DisputeStateListener> disputeStateListeners = new CopyOnWriteArrayList<>();
 
     public TradeChatSession(@Nullable Trade trade,
                             boolean isClient,
                             boolean isBuyer,
-                            TradeManager tradeManager,
-                            SupportManager supportManager) {
+                            TradeManager tradeManager) {
         super(SupportType.TRADE);
         this.trade = trade;
         this.isClient = isClient;
         this.isBuyer = isBuyer;
         this.tradeManager = tradeManager;
-        this.supportManager = supportManager;
     }
 
-    public void addDisputeStateListener(DisputeStateListener disputeStateListener) {
-        disputeStateListeners.add(disputeStateListener);
-    }
-
-    public void removeDisputeStateListener(DisputeStateListener disputeStateListener) {
-        disputeStateListeners.remove(disputeStateListener);
-    }
 
     @Override
     public boolean isClient() {
@@ -156,25 +140,6 @@ public class TradeChatSession extends SupportSession {
             }
         }
         return null;
-    }
-
-    @Override
-    public void dispatchMessage(SupportMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-        if (message.getSupportType() == SupportType.ARBITRATION) {
-            if (message instanceof ChatMessage) {
-                if (((ChatMessage) message).getSupportType() == SupportType.TRADE) {
-                    supportManager.onDisputeDirectMessage((ChatMessage) message);
-                }
-                // We ignore dispute messages
-            } else if (message instanceof DisputeResultMessage) {
-                // We notify about dispute closed state
-                disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
-            } else {
-                log.warn("Unsupported message at dispatchMessage. message={}", message);
-            }
-        }
     }
 
     @Override

@@ -18,7 +18,6 @@
 package bisq.core.support;
 
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -60,8 +59,6 @@ public abstract class SupportSession {
     abstract public NodeAddress getPeerNodeAddress(ChatMessage message);
 
     abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
-
-    abstract public void dispatchMessage(SupportMessage message);
 
     abstract public boolean channelOpen(ChatMessage message);
 

@@ -19,14 +19,9 @@ package bisq.core.support.dispute.mediation;
 
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.messages.DisputeResultMessage;
-import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
-import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
-import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.messages.SupportMessage;
+import bisq.core.support.dispute.DisputeSession;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,27 +40,4 @@ public class MediationSession extends DisputeSession {
 
     }
 
-    @Override
-    public void dispatchMessage(SupportMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-
-        if (message.getSupportType() == SupportType.MEDIATION) {
-            if (message instanceof OpenNewDisputeMessage) {
-                disputeManager.onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-            } else if (message instanceof PeerOpenedDisputeMessage) {
-                disputeManager.onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-            } else if (message instanceof ChatMessage) {
-                if (((ChatMessage) message).getSupportType() != SupportType.MEDIATION) {
-                    log.debug("Ignore non dispute type communication message");
-                    return;
-                }
-                disputeManager.getSupportManager().onDisputeDirectMessage((ChatMessage) message);
-            } else if (message instanceof DisputeResultMessage) {
-                disputeManager.onDisputeResultMessage((DisputeResultMessage) message);
-            } else {
-                log.warn("Unsupported message at dispatchMessage. message={}", message);
-            }
-        }
-    }
 }

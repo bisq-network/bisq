@@ -31,10 +31,10 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.SupportManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.traderchat.TradeChatSession;
+import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
@@ -132,7 +132,7 @@ public class TradeManager implements PersistedDataHost {
     private final LongProperty numPendingTrades = new SimpleLongProperty();
 
     @Getter
-    private final SupportManager supportManager;
+    private final TraderChatManager traderChatManager;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +157,7 @@ public class TradeManager implements PersistedDataHost {
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
+                        TraderChatManager traderChatManager,
                         ClockWatcher clockWatcher,
                         Storage<TradableList<Trade>> storage) {
         this.user = user;
@@ -175,12 +176,13 @@ public class TradeManager implements PersistedDataHost {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
+        this.traderChatManager = traderChatManager;
         this.clockWatcher = clockWatcher;
 
         tradableListStorage = storage;
 
-        supportManager = new SupportManager(p2PService, walletsSetup);
-        supportManager.setSupportSession(new TradeChatSession(null, true, true, this, supportManager));
+        //todo
+        traderChatManager.setSupportSession(new TradeChatSession(null, true, true, this));
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -255,7 +257,7 @@ public class TradeManager implements PersistedDataHost {
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
 
-        supportManager.onAllServicesInitialized();
+        traderChatManager.onAllServicesInitialized();
     }
 
     public void shutDown() {
