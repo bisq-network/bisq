@@ -26,10 +26,10 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.support.agent.arbitration.ArbitratorView;
-import bisq.desktop.main.support.agent.mediation.MediatorView;
-import bisq.desktop.main.support.client.arbitration.ArbitrationClientView;
-import bisq.desktop.main.support.client.mediation.MediationClientView;
+import bisq.desktop.main.support.dispute.agent.arbitration.ArbitratorView;
+import bisq.desktop.main.support.dispute.agent.mediation.MediatorView;
+import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientView;
+import bisq.desktop.main.support.dispute.client.mediation.MediationClientView;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;

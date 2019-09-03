@@ -22,9 +22,9 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 import bisq.desktop.main.support.SupportView;
-import bisq.desktop.main.support.client.DisputeClientView;
-import bisq.desktop.main.support.client.arbitration.ArbitrationClientView;
-import bisq.desktop.main.support.client.mediation.MediationClientView;
+import bisq.desktop.main.support.dispute.client.DisputeClientView;
+import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientView;
+import bisq.desktop.main.support.dispute.client.mediation.MediationClientView;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;

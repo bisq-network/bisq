@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.support.client.arbitration;
+package bisq.desktop.main.support.dispute.agent.arbitration;
 
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.main.support.client.DisputeClientView;
+import bisq.desktop.main.support.dispute.agent.DisputeAgentView;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
@@ -41,20 +41,28 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class ArbitrationClientView extends DisputeClientView {
+public class ArbitratorView extends DisputeAgentView {
+
     @Inject
-    public ArbitrationClientView(ArbitrationManager arbitrationManager,
-                                 KeyRing keyRing,
-                                 TradeManager tradeManager,
-                                 BSFormatter formatter,
-                                 DisputeSummaryWindow disputeSummaryWindow,
-                                 PrivateNotificationManager privateNotificationManager,
-                                 ContractWindow contractWindow,
-                                 TradeDetailsWindow tradeDetailsWindow,
-                                 AccountAgeWitnessService accountAgeWitnessService,
-                                 @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(arbitrationManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
-                privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
+    public ArbitratorView(ArbitrationManager arbitrationManager,
+                          KeyRing keyRing,
+                          TradeManager tradeManager,
+                          BSFormatter formatter,
+                          DisputeSummaryWindow disputeSummaryWindow,
+                          PrivateNotificationManager privateNotificationManager,
+                          ContractWindow contractWindow,
+                          TradeDetailsWindow tradeDetailsWindow,
+                          AccountAgeWitnessService accountAgeWitnessService,
+                          @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+        super(arbitrationManager,
+                keyRing,
+                tradeManager,
+                formatter,
+                disputeSummaryWindow,
+                privateNotificationManager,
+                contractWindow,
+                tradeDetailsWindow,
+                accountAgeWitnessService,
                 useDevPrivilegeKeys);
     }
 
@@ -68,5 +76,3 @@ public class ArbitrationClientView extends DisputeClientView {
         return new ArbitrationSession(dispute, disputeManager.isTrader(dispute));
     }
 }
-
-
