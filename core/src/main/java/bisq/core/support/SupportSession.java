@@ -19,8 +19,6 @@ package bisq.core.support;
 
 import bisq.core.support.messages.ChatMessage;
 
-import bisq.network.p2p.NodeAddress;
-
 import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.ObservableList;
@@ -31,16 +29,22 @@ import lombok.Getter;
 
 public abstract class SupportSession {
     @Getter
-    SupportType supportType;
+    private SupportType supportType;
+    @Getter
+    private boolean isClient;
+    @Getter
+    private boolean isBuyer;
+
+    public SupportSession(SupportType supportType, boolean isClient, boolean isBuyer) {
+        this.supportType = supportType;
+        this.isClient = isClient;
+        this.isBuyer = isBuyer;
+    }
+
 
     public SupportSession(SupportType supportType) {
         this.supportType = supportType;
     }
-
-    abstract public boolean isClient();
-
-    //todo remove
-    abstract public boolean isMediationDispute();
 
     abstract public String getTradeId();
 
@@ -48,15 +52,12 @@ public abstract class SupportSession {
 
     abstract public void addChatMessage(ChatMessage message);
 
-    abstract public void persist();
 
     abstract public ObservableList<ChatMessage> getObservableChatMessageList();
 
     abstract public List<ChatMessage> getChatMessages();
 
     abstract public boolean chatIsOpen();
-
-    abstract public NodeAddress getPeerNodeAddress(ChatMessage message);
 
     abstract public PubKeyRing getPeerPubKeyRing(ChatMessage message);
 

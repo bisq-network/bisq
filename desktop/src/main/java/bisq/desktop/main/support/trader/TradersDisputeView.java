@@ -26,9 +26,9 @@ import bisq.desktop.main.support.DisputeView;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.support.dispute.Dispute;
-import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.DisputeSession;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
 
@@ -53,7 +53,7 @@ public abstract class TradersDisputeView extends DisputeView {
     @Override
     protected void handleOnSelectDispute(Dispute dispute) {
         DisputeSession chatSession = getConcreteDisputeChatSession(dispute);
-        disputeChat.display(chatSession, root.widthProperty());
+        disputeChat.display(disputeManager, chatSession, root.widthProperty());
     }
 }
 

@@ -29,16 +29,17 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
-import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
@@ -101,6 +102,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
     public final StringProperty txId = new SimpleStringProperty();
+    @Getter
+    private final TraderChatManager traderChatManager;
     public final Preferences preferences;
     private boolean activated;
     private ChangeListener<Trade.State> tradeStateChangeListener;
@@ -116,6 +119,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   KeyRing keyRing,
                                   ArbitrationManager arbitrationManager,
                                   MediationManager mediationManager,
+                                  TraderChatManager traderChatManager,
                                   Preferences preferences,
                                   P2PService p2PService,
                                   WalletsSetup walletsSetup,
@@ -128,6 +132,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.keyRing = keyRing;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
@@ -514,7 +519,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
             boolean isMediationDispute = true;
-            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getDisputeStorage(),
+            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
@@ -543,7 +548,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
             boolean isMediationDispute = false;
-            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getDisputeStorage(),
+            Dispute dispute = new Dispute(getDisputeManager(isMediationDispute).getStorage(),
                     trade.getId(),
                     keyRing.getPubKeyRing().hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,

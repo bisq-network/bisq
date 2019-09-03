@@ -29,6 +29,7 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.locale.Res;
 import bisq.core.support.SupportManager;
 import bisq.core.support.SupportSession;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
@@ -169,11 +170,13 @@ public class Chat extends AnchorPane {
         removeListenersOnSessionChange();
     }
 
-    public void display(SupportSession supportSession, ReadOnlyDoubleProperty widthProperty) {
-        display(supportSession, null, widthProperty);
+    public void display(SupportManager supportManager,
+                        SupportSession supportSession,
+                        ReadOnlyDoubleProperty widthProperty) {
+        display(supportManager, supportSession, null, widthProperty);
     }
 
-    public void display(SupportSession supportSession, @Nullable Button extraButton,
+    public void display(SupportManager supportManager, SupportSession supportSession, @Nullable Button extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
         removeListenersOnSessionChange();
         supportManager.setSupportSession(supportSession);
@@ -647,18 +650,20 @@ public class Chat extends AnchorPane {
 
     private ChatMessage sendDisputeDirectMessage(String text, ArrayList<Attachment> attachments) {
         SupportSession supportSession = supportManager.getSupportSession();
+        SupportType supportType = supportManager.getSupportType();
+        boolean isMediationDispute = supportType == SupportType.MEDIATION;
         ChatMessage message = new ChatMessage(
-                supportSession.getSupportType(),
+                supportType,
                 supportSession.getTradeId(),
                 supportSession.getClientPubKeyRing().hashCode(),
                 supportSession.isClient(),
                 text,
                 p2PService.getAddress(),
-                supportSession.isMediationDispute()
+                isMediationDispute
         );
 
         message.addAllAttachments(attachments);
-        NodeAddress peersNodeAddress = supportSession.getPeerNodeAddress(message);
+        NodeAddress peersNodeAddress = supportManager.getPeerNodeAddress(message, supportSession);
         PubKeyRing receiverPubKeyRing = supportSession.getPeerPubKeyRing(message);
 
         supportSession.addChatMessage(message);
@@ -676,7 +681,7 @@ public class Chat extends AnchorPane {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setArrived(true);
-                            supportSession.persist();
+                            supportManager.persist();
                         }
 
                         @Override
@@ -684,7 +689,7 @@ public class Chat extends AnchorPane {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             message.setStoredInMailbox(true);
-                            supportSession.persist();
+                            supportManager.persist();
                         }
 
                         @Override
@@ -692,7 +697,7 @@ public class Chat extends AnchorPane {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
                             message.setSendMessageError(errorMessage);
-                            supportSession.persist();
+                            supportManager.persist();
                         }
                     }
             );

@@ -35,16 +35,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 /* Makers are considered as servers and takers as clients for trader to trader chat
  * sessions. This is only to make it easier to understand who's who, there is no real
  * server/client relationship */
+@Slf4j
 public class TradeChatSession extends SupportSession {
-    private static final Logger log = LoggerFactory.getLogger(TradeChatSession.class);
 
     public interface DisputeStateListener {
         void onDisputeClosed(String tradeId);
@@ -52,31 +51,18 @@ public class TradeChatSession extends SupportSession {
 
     @Nullable
     private Trade trade;
-    private boolean isClient;
-    private boolean isBuyer;
+
     private TradeManager tradeManager;
 
     public TradeChatSession(@Nullable Trade trade,
                             boolean isClient,
                             boolean isBuyer,
                             TradeManager tradeManager) {
-        super(SupportType.TRADE);
+        super(SupportType.TRADE, isClient, isBuyer);
         this.trade = trade;
-        this.isClient = isClient;
-        this.isBuyer = isBuyer;
         this.tradeManager = tradeManager;
     }
 
-
-    @Override
-    public boolean isClient() {
-        return isClient;
-    }
-
-    @Override
-    public boolean isMediationDispute() {
-        return false;
-    }
 
     @Override
     public String getTradeId() {
@@ -97,10 +83,6 @@ public class TradeChatSession extends SupportSession {
             trade.addCommunicationMessage(message);
     }
 
-    @Override
-    public void persist() {
-        tradeManager.persistTrades();
-    }
 
     @Override
     public ObservableList<ChatMessage> getObservableChatMessageList() {
@@ -110,19 +92,6 @@ public class TradeChatSession extends SupportSession {
     @Override
     public boolean chatIsOpen() {
         return trade != null && trade.getState() != Trade.State.WITHDRAW_COMPLETED;
-    }
-
-    @Override
-    public NodeAddress getPeerNodeAddress(ChatMessage message) {
-        Optional<Trade> tradeOptional = tradeManager.getTradeById(message.getTradeId());
-        if (tradeOptional.isPresent()) {
-            Trade t = tradeOptional.get();
-            if (t.getContract() != null)
-                return isBuyer ?
-                        t.getContract().getSellerNodeAddress() :
-                        t.getContract().getBuyerNodeAddress();
-        }
-        return null;
     }
 
     @Override

@@ -84,6 +84,12 @@ public abstract class SupportManager {
 
     protected abstract void dispatchMessage(SupportMessage networkEnvelope);
 
+    public abstract void persist();
+
+    public abstract NodeAddress getPeerNodeAddress(ChatMessage message, SupportSession supportSession);
+
+    public abstract SupportType getSupportType();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -127,6 +133,10 @@ public abstract class SupportManager {
             }
         });
         decryptedMailboxMessageWithPubKeys.clear();
+    }
+
+    protected boolean canProcessMessage(SupportMessage message) {
+        return message.getSupportType() == getSupportType();
     }
 
 
@@ -184,7 +194,7 @@ public abstract class SupportManager {
                         else
                             msg.setAckError(ackMessage.getErrorMessage());
                     });
-            supportSession.persist();
+            persist();
 
             if (decryptedMessageWithPubKey != null)
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
