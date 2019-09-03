@@ -24,7 +24,6 @@ import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportManager;
-import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
@@ -107,9 +106,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         disputeListService.persist();
     }
 
-
     @Override
-    public NodeAddress getPeerNodeAddress(ChatMessage message, SupportSession supportSession) {
+    public NodeAddress getPeerNodeAddress(ChatMessage message) {
         Optional<Dispute> disputeOptional = findDispute(message);
         if (!disputeOptional.isPresent()) {
             log.warn("Could not find dispute for tradeId = {} traderId = {}",

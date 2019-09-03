@@ -26,8 +26,11 @@ import javafx.collections.ObservableList;
 import lombok.Getter;
 
 public abstract class SupportSession {
+
+    // todo refactor ui so that can be converted to isTrader
     @Getter
     private boolean isClient;
+
     @Getter
     private boolean isBuyer;
 
@@ -48,4 +51,6 @@ public abstract class SupportSession {
     abstract public ObservableList<ChatMessage> getObservableChatMessageList();
 
     abstract public boolean chatIsOpen();
+
+    public abstract boolean isDisputeAgent();
 }

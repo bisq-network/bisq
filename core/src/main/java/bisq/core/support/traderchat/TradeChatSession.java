@@ -75,4 +75,9 @@ public class TradeChatSession extends SupportSession {
     public boolean chatIsOpen() {
         return trade != null && trade.getState() != Trade.State.WITHDRAW_COMPLETED;
     }
+
+    @Override
+    public boolean isDisputeAgent() {
+        return false;
+    }
 }

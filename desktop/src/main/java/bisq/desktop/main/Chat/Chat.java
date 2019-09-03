@@ -32,7 +32,6 @@ import bisq.core.support.SupportSession;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Attachment;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.network.Connection;
@@ -207,7 +206,8 @@ public class Chat extends AnchorPane {
         inputTextArea = new BisqTextArea();
         inputTextArea.setPrefHeight(70);
         inputTextArea.setWrapText(true);
-        if (supportSession instanceof TradeChatSession || supportSession.isClient()) {
+
+        if (!supportSession.isDisputeAgent()) {
             inputTextArea.setPromptText(Res.get("support.input.prompt"));
         }
 
