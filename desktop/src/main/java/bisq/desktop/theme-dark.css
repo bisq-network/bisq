@@ -229,7 +229,7 @@
 #charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
     -fx-tick-label-fill: -bs-color-gray-dim;
 }
-.chart-horizontal-grid-lines, .chart-vertical-grid-lines,
+.chart-horizontal-grid-lines,
 .chart-horizontal-zero-line, .chart-vertical-zero-line,
 .axis-tick-mark, .axis-minor-tick-mark {
     -fx-stroke: -bs-color-gray-0;

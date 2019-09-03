@@ -1576,6 +1576,9 @@ textfield */
 #charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
     -fx-fill: -bs-buy-transparent;
 }
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
+}
 
 #charts .axis-label {
     -fx-font-size: 0.769em;
