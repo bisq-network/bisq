@@ -23,12 +23,11 @@ import bisq.common.crypto.PubKeyRing;
 
 import javafx.collections.ObservableList;
 
-import lombok.Getter;
-
+/**
+ * Encapsulate the object
+ */
 public abstract class SupportSession {
-
     // todo refactor ui so that can be converted to isTrader
-    @Getter
     private boolean isClient;
 
 
@@ -37,6 +36,11 @@ public abstract class SupportSession {
     }
 
     protected SupportSession() {
+    }
+
+    // todo refactor ui so that can be converted to isTrader
+    public boolean isClient() {
+        return isClient;
     }
 
     public abstract String getTradeId();
