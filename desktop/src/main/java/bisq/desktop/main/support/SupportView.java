@@ -28,8 +28,8 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.support.agent.arbitration.ArbitratorView;
 import bisq.desktop.main.support.agent.mediation.MediatorView;
-import bisq.desktop.main.support.client.arbitration.TradersArbitrationView;
-import bisq.desktop.main.support.client.mediation.TradersMediationView;
+import bisq.desktop.main.support.client.arbitration.ArbitrationClientView;
+import bisq.desktop.main.support.client.mediation.MediationClientView;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
@@ -109,9 +109,9 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         tabChangeListener = (ov, oldValue, newValue) -> {
             if (newValue == tradersArbitrationDisputesTab)
-                navigation.navigateTo(MainView.class, SupportView.class, TradersArbitrationView.class);
+                navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class);
             else if (newValue == tradersMediationDisputesTab)
-                navigation.navigateTo(MainView.class, SupportView.class, TradersMediationView.class);
+                navigation.navigateTo(MainView.class, SupportView.class, MediationClientView.class);
             else if (newValue == arbitratorTab)
                 navigation.navigateTo(MainView.class, SupportView.class, ArbitratorView.class);
             else if (newValue == mediatorTab)
@@ -176,9 +176,9 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         navigation.addListener(navigationListener);
 
         if (root.getSelectionModel().getSelectedItem() == tradersMediationDisputesTab) {
-            navigation.navigateTo(MainView.class, SupportView.class, TradersMediationView.class);
+            navigation.navigateTo(MainView.class, SupportView.class, MediationClientView.class);
         } else if (root.getSelectionModel().getSelectedItem() == tradersArbitrationDisputesTab) {
-            navigation.navigateTo(MainView.class, SupportView.class, TradersArbitrationView.class);
+            navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class);
         } else if (arbitratorTab != null) {
             navigation.navigateTo(MainView.class, SupportView.class, ArbitratorView.class);
         } else if (mediatorTab != null) {
@@ -209,9 +209,9 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         View view = viewLoader.load(viewClass);
 
-        if (view instanceof TradersMediationView) {
+        if (view instanceof MediationClientView) {
             currentTab = tradersMediationDisputesTab;
-        } else if (view instanceof TradersArbitrationView) {
+        } else if (view instanceof ArbitrationClientView) {
             currentTab = tradersArbitrationDisputesTab;
         } else if (view instanceof ArbitratorView) {
             currentTab = arbitratorTab;

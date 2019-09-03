@@ -22,9 +22,9 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 import bisq.desktop.main.support.SupportView;
-import bisq.desktop.main.support.client.TradersDisputeView;
-import bisq.desktop.main.support.client.arbitration.TradersArbitrationView;
-import bisq.desktop.main.support.client.mediation.TradersMediationView;
+import bisq.desktop.main.support.client.DisputeClientView;
+import bisq.desktop.main.support.client.arbitration.ArbitrationClientView;
+import bisq.desktop.main.support.client.mediation.MediationClientView;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
@@ -285,9 +285,9 @@ public class NotificationCenter {
 
     private void goToSupport(Trade trade, String message, boolean isMediation) {
         Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
-        Class<? extends TradersDisputeView> viewClass = isMediation ?
-                TradersMediationView.class :
-                TradersArbitrationView.class;
+        Class<? extends DisputeClientView> viewClass = isMediation ?
+                MediationClientView.class :
+                ArbitrationClientView.class;
         if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(viewClass)) {
             notification.actionButtonTextWithGoTo("navigation.support")
                     .onAction(() -> navigation.navigateTo(MainView.class, SupportView.class, viewClass))
