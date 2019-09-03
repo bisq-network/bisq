@@ -489,7 +489,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             if (closeConnectionReason.sendCloseMessage) {
                 new Thread(() -> {
-                    Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     try {
                         String reason = closeConnectionReason == CloseConnectionReason.RULE_VIOLATION ?
                                 getRuleViolation().name() : closeConnectionReason.name();
@@ -506,7 +505,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         stopped = true;
                         UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
                     }
-                }).start();
+                }, "Connection:SendCloseConnectionMessage-" + this.uid).start();
             } else {
                 stopped = true;
                 doShutDown(closeConnectionReason, shutDownCompleteHandler);

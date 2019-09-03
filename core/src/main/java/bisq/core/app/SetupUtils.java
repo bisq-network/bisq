@@ -81,8 +81,7 @@ public class SetupUtils {
 
     public static BooleanProperty readFromResources(P2PDataStorage p2PDataStorage) {
         BooleanProperty result = new SimpleBooleanProperty();
-        Thread thread = new Thread(() -> {
-            Thread.currentThread().setName("readFromResourcesThread");
+        new Thread(() -> {
             // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
             final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
             final String postFix = "_" + baseCurrencyNetwork.name();
@@ -90,8 +89,7 @@ public class SetupUtils {
             p2PDataStorage.readFromResources(postFix);
             log.info("readFromResources took {} ms", (new Date().getTime() - ts));
             UserThread.execute(() -> result.set(true));
-        });
-        thread.start();
+        }, "readFromResourcesThread").start();
         return result;
     }
 }
