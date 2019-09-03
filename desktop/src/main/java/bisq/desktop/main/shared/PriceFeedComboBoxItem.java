@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main;
+package bisq.desktop.main.shared;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
