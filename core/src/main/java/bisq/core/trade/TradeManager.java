@@ -20,7 +20,6 @@ package bisq.core.trade;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -144,7 +143,6 @@ public class TradeManager implements PersistedDataHost {
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
-                        WalletsSetup walletsSetup,
                         PriceFeedService priceFeedService,
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
@@ -562,6 +560,7 @@ public class TradeManager implements PersistedDataHost {
         Optional<Trade> tradeOptional = getTradeById(tradeId);
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
+            // We only get called from arbitration so we set DISPUTE_CLOSED
             trade.setDisputeState(Trade.DisputeState.DISPUTE_CLOSED);
             addTradeToClosedTrades(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);

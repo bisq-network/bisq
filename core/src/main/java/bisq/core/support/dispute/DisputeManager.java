@@ -39,7 +39,6 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.app.Version;
-import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
@@ -66,7 +65,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final TradeManager tradeManager;
     protected final ClosedTradableManager closedTradableManager;
     protected final OpenOfferManager openOfferManager;
-    protected final KeyRing keyRing;
+    protected final PubKeyRing pubKeyRing;
     private final DisputeListService<T> disputeListService;
 
 
@@ -81,7 +80,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
-                          KeyRing keyRing,
+                          PubKeyRing pubKeyRing,
                           DisputeListService<T> disputeListService) {
         super(p2PService, walletsSetup);
 
@@ -90,7 +89,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
-        this.keyRing = keyRing;
+        this.pubKeyRing = pubKeyRing;
         this.disputeListService = disputeListService;
     }
 
@@ -222,7 +221,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     public boolean isTrader(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getTraderPubKeyRing());
+        return pubKeyRing.equals(dispute.getTraderPubKeyRing());
     }
 
 
@@ -318,10 +317,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         ObservableList<ChatMessage> messages = peerOpenedDisputeMessage.getDispute().getChatMessages();
         if (!messages.isEmpty()) {
             ChatMessage msg = messages.get(0);
-            sendAckMessage(msg, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+            sendAckMessage(msg, dispute.getAgentPubKeyRing(), errorMessage == null, errorMessage);
         }
 
-        sendAckMessage(peerOpenedDisputeMessage, dispute.getConflictResolverPubKeyRing(), errorMessage == null, errorMessage);
+        sendAckMessage(peerOpenedDisputeMessage, dispute.getAgentPubKeyRing(), errorMessage == null, errorMessage);
     }
 
 
@@ -356,7 +355,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             ChatMessage chatMessage = new ChatMessage(
                     getSupportType(),
                     dispute.getTradeId(),
-                    keyRing.getPubKeyRing().hashCode(),
+                    pubKeyRing.hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
                     p2PService.getAddress());
@@ -366,25 +365,25 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeList.add(dispute);
             }
 
-            NodeAddress conflictResolverNodeAddress = getAgentNodeAddress(dispute);
+            NodeAddress agentNodeAddress = getAgentNodeAddress(dispute);
             OpenNewDisputeMessage openNewDisputeMessage = new OpenNewDisputeMessage(dispute,
                     p2PService.getAddress(),
                     UUID.randomUUID().toString(),
                     getSupportType());
             log.info("Send {} to peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                             "chatMessage.uid={}",
-                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
+                    openNewDisputeMessage.getClass().getSimpleName(), agentNodeAddress,
                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                     chatMessage.getUid());
-            p2PService.sendEncryptedMailboxMessage(conflictResolverNodeAddress,
-                    dispute.getConflictResolverPubKeyRing(),
+            p2PService.sendEncryptedMailboxMessage(agentNodeAddress,
+                    dispute.getAgentPubKeyRing(),
                     openNewDisputeMessage,
                     new SendMailboxMessageListener() {
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                                             "chatMessage.uid={}",
-                                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
+                                    openNewDisputeMessage.getClass().getSimpleName(), agentNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                                     chatMessage.getUid());
 
@@ -399,7 +398,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         public void onStoredInMailbox() {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                                             "chatMessage.uid={}",
-                                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
+                                    openNewDisputeMessage.getClass().getSimpleName(), agentNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                                     chatMessage.getUid());
 
@@ -414,7 +413,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
                                             "chatMessage.uid={}, errorMessage={}",
-                                    openNewDisputeMessage.getClass().getSimpleName(), conflictResolverNodeAddress,
+                                    openNewDisputeMessage.getClass().getSimpleName(), agentNodeAddress,
                                     openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
                                     chatMessage.getUid(), errorMessage);
 
@@ -461,7 +460,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.getContractAsJson(),
                 disputeFromOpener.getMakerContractSignature(),
                 disputeFromOpener.getTakerContractSignature(),
-                disputeFromOpener.getConflictResolverPubKeyRing(),
+                disputeFromOpener.getAgentPubKeyRing(),
                 disputeFromOpener.isSupportTicket());
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
@@ -472,7 +471,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             ChatMessage chatMessage = new ChatMessage(
                     getSupportType(),
                     dispute.getTradeId(),
-                    keyRing.getPubKeyRing().hashCode(),
+                    pubKeyRing.hashCode(),
                     false,
                     Res.get("support.systemMsg", sysMsg),
                     p2PService.getAddress());
@@ -649,7 +648,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
-            receiverPubKeyRing = dispute.getConflictResolverPubKeyRing();
+            receiverPubKeyRing = dispute.getAgentPubKeyRing();
             peerNodeAddress = getAgentNodeAddress(dispute);
         } else if (isAgent(dispute)) {
             receiverPubKeyRing = dispute.getTraderPubKeyRing();
@@ -665,7 +664,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     }
 
     private boolean isAgent(Dispute dispute) {
-        return keyRing.getPubKeyRing().equals(dispute.getConflictResolverPubKeyRing());
+        return pubKeyRing.equals(dispute.getAgentPubKeyRing());
     }
 
     private Optional<Dispute> findDispute(Dispute dispute) {
@@ -690,6 +689,17 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
         return disputeList.stream()
                 .filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId)
+                .findAny();
+    }
+
+    public Optional<Dispute> findDispute(String tradeId) {
+        T disputeList = getDisputeList();
+        if (disputeList == null) {
+            log.warn("disputes is null");
+            return Optional.empty();
+        }
+        return disputeList.stream()
+                .filter(e -> e.getTradeId().equals(tradeId))
                 .findAny();
     }
 

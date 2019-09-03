@@ -403,6 +403,11 @@ public class SellerStep3View extends TradeStepView {
             return Optional.empty();
         }
     }
+
+    @Override
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+        confirmButton.setDisable(isDisabled);
+    }
 }
 
 

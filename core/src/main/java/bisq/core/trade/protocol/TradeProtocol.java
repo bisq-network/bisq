@@ -21,8 +21,14 @@ import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.tasks.ApplyFilter;
+import bisq.core.trade.protocol.tasks.ProcessMediatedPayoutSignatureMessage;
+import bisq.core.trade.protocol.tasks.SendMediatedPayoutSignatureMessage;
+import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
+import bisq.core.trade.protocol.tasks.SignMediatedPayoutTx;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
@@ -35,6 +41,8 @@ import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javafx.beans.value.ChangeListener;
@@ -102,10 +110,62 @@ public abstract class TradeProtocol {
         trade.stateProperty().addListener(stateChangeListener);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mediation: Called from UI if trader accepts mediation result
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (trade.isDepositConfirmed()) {
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> {
+                        resultHandler.handleResult();
+                        handleTaskRunnerSuccess("onAcceptMediationResult");
+                    },
+                    (errorMessage) -> {
+                        errorMessageHandler.handleErrorMessage(errorMessage);
+                        handleTaskRunnerFault(errorMessage);
+                    });
+            taskRunner.addTasks(
+                    ApplyFilter.class,
+                    SignMediatedPayoutTx.class,
+                    SendMediatedPayoutSignatureMessage.class,
+                    SetupPayoutTxListener.class
+            );
+            taskRunner.run();
+        } else {
+            log.warn("deposit tx is not confirmed yet. tradeState=" + trade.getState());
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mediation: incoming message
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void handle(MediatedPayoutSignatureMessage tradeMessage, NodeAddress sender) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(sender);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "MediatedPayoutSignatureMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                ProcessMediatedPayoutSignatureMessage.class
+        );
+        taskRunner.run();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void completed() {
         cleanup();
 
-        // We only removed earlier the listner here, but then we migth have dangling trades after faults...
+        // We only removed earlier the listener here, but then we migth have dangling trades after faults...
         // so lets remove it at cleanup
         //processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }

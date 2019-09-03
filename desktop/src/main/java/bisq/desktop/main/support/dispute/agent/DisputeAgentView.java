@@ -89,7 +89,7 @@ public abstract class DisputeAgentView extends DisputeView {
                     matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
 
             boolean open = !dispute.isClosed() && filterString.toLowerCase().equals("open");
-            boolean isMyCase = dispute.getConflictResolverPubKeyRing().equals(keyRing.getPubKeyRing());
+            boolean isMyCase = dispute.getAgentPubKeyRing().equals(keyRing.getPubKeyRing());
             return isMyCase && (open || filterString.isEmpty() || anyMatch);
         });
     }

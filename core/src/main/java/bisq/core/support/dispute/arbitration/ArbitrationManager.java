@@ -47,7 +47,6 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -81,10 +80,10 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                               TradeManager tradeManager,
                               ClosedTradableManager closedTradableManager,
                               OpenOfferManager openOfferManager,
-                              KeyRing keyRing,
+                              PubKeyRing pubKeyRing,
                               ArbitrationDisputeListService arbitrationDisputeListService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, keyRing, arbitrationDisputeListService);
+                openOfferManager, pubKeyRing, arbitrationDisputeListService);
     }
 
 
@@ -188,7 +187,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             // more BTC as he has deposited
             Contract contract = dispute.getContract();
 
-            boolean isBuyer = keyRing.getPubKeyRing().equals(contract.getBuyerPubKeyRing());
+            boolean isBuyer = pubKeyRing.equals(contract.getBuyerPubKeyRing());
             DisputeResult.Winner publisher = disputeResult.getWinner();
 
             // Sometimes the user who receives the trade amount is never online, so we might want to
@@ -288,7 +287,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         } finally {
             // We use the chatMessage as we only persist those not the disputeResultMessage.
             // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
-            sendAckMessage(chatMessage, dispute.getConflictResolverPubKeyRing(), success, errorMessage);
+            sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), success, errorMessage);
         }
     }
 
@@ -312,8 +311,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
 
         Dispute dispute = disputeOptional.get();
         Contract contract = dispute.getContract();
-        PubKeyRing ownPubKeyRing = keyRing.getPubKeyRing();
-        boolean isBuyer = ownPubKeyRing.equals(contract.getBuyerPubKeyRing());
+        boolean isBuyer = pubKeyRing.equals(contract.getBuyerPubKeyRing());
         PubKeyRing peersPubKeyRing = isBuyer ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
 
         cleanupRetryMap(uid);

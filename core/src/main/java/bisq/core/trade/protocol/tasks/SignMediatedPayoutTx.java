@@ -15,20 +15,18 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.tasks;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
-
-import com.google.common.base.Preconditions;
 
 import java.util.Arrays;
 
@@ -38,10 +36,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsMakerSignPayoutTx extends TradeTask {
+public class SignMediatedPayoutTx extends TradeTask {
 
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public BuyerAsMakerSignPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SignMediatedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -49,30 +47,35 @@ public class BuyerAsMakerSignPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Preconditions.checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
-            Preconditions.checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+
+            String tradeId = trade.getId();
+            Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
+            Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "tradeAmount must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
-            String id = processModel.getOffer().getId();
 
-            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
-            Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
+            Coin totalPayoutAmount = offer.getBuyerSecurityDeposit().add(tradeAmount).add(offer.getSellerSecurityDeposit());
+            Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
+            Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
+            checkArgument(totalPayoutAmount.equals(buyerPayoutAmount.add(sellerPayoutAmount)),
+                    "Payout amount does not match buyerPayoutAmount=" + buyerPayoutAmount.toFriendlyString() +
+                            "; sellerPayoutAmount=" + sellerPayoutAmount);
 
-            String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(id,
+            String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId,
                     AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-            final String sellerPayoutAddressString = processModel.getTradingPeer().getPayoutAddressString();
+            String sellerPayoutAddressString = processModel.getTradingPeer().getPayoutAddressString();
 
-            DeterministicKey buyerMultiSigKeyPair = walletService.getMultiSigKeyPair(id, processModel.getMyMultiSigPubKey());
+            DeterministicKey buyerMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, processModel.getMyMultiSigPubKey());
 
             byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(buyerMultiSigPubKey,
-                    walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
-                    "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
-            final byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
+                    walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
+                    "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
+            byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
 
-            byte[] payoutTxSignature = processModel.getTradeWalletService().buyerSignsPayoutTx(
-                    trade.getDepositTx(),
+            byte[] payoutTxSignature = processModel.getTradeWalletService().traderSignsPayoutTx(
+                    depositTx,
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     buyerPayoutAddressString,

@@ -27,6 +27,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
@@ -431,6 +432,8 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
+        log.error("updateDisputeState: disputeState={}", disputeState);
+        deactivatePaymentButtons(false);
         Optional<Dispute> ownDispute;
         switch (disputeState) {
             case NO_DISPUTE:
@@ -506,9 +509,75 @@ public abstract class TradeStepView extends AnchorPane {
                 });
                 break;
             case MEDIATION_CLOSED:
-                // TODO
+                deactivatePaymentButtons(true);
+                showMediationResult();
+
                 break;
         }
+    }
+
+    private void showMediationResult() {
+        log.error("showMediationResult");
+        if (notificationGroup != null) {
+            notificationGroup.setLabelAndHeadlineVisible(true);
+            notificationGroup.setButtonVisible(true);
+            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.mediationResult.headline"));
+            notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info"));
+            notificationGroup.button.setText(Res.get("portfolio.pending.mediationResult.button"));
+            notificationGroup.setButtonVisible(true);
+            notificationGroup.button.setOnAction(e -> {
+                notificationGroup.button.setDisable(true);
+                openMediationResultPopup();
+            });
+            openMediationResultPopup();
+        }
+    }
+
+    private void openMediationResultPopup() {
+        String tradeId = trade.getId();
+        Optional<Dispute> optionalDispute = model.dataModel.mediationManager.findDispute(tradeId);
+        if (optionalDispute.isPresent()) {
+            DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
+            String buyerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount());
+            String sellerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount());
+            new Popup<>().width(900)
+                    .headLine(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()))
+                    .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
+                            buyerPayoutAmount, sellerPayoutAmount))
+                    .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
+                    .onAction(() -> {
+                        log.error("accept");
+                        model.dataModel.mediationManager.onAcceptMediationResult(trade,
+                                () -> {
+                                    log.info("onAcceptMediationResult completed");
+                                },
+                                errorMessage -> log.error("onAcceptMediationResult failed: {}", errorMessage));
+
+                        trade.getTradeProtocol().onAcceptMediationResult(
+                                () -> {
+                                    log.info("onAcceptMediationResult completed");
+                                },
+                                errorMessage -> log.error("onAcceptMediationResult failed: {}", errorMessage));
+                        notificationGroup.button.setDisable(false);
+                    })
+                    .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
+                    .onSecondaryAction(() -> {
+                        log.error("reject");
+                        //model.dataModel.mediationManager.traderRejectsResult(tradeId);
+                        notificationGroup.button.setDisable(false);
+                    })
+                    .onClose(() -> {
+                        notificationGroup.button.setDisable(false);
+                    })
+                    .show();
+        } else {
+            log.error("Mediation result is not present");
+            new Popup<>().error(Res.get("portfolio.pending.mediationResult.error.resultNotPresent")).show();
+        }
+    }
+
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+        log.error("deactivatePaymentButtons");
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {

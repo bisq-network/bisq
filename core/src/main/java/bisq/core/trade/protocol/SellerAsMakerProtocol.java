@@ -22,6 +22,7 @@ import bisq.core.trade.SellerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
+import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
@@ -110,7 +111,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage tradeMessage, NodeAddress sender, ErrorMessageHandler errorMessageHandler) {
+    public void handleTakeOfferRequest(TradeMessage tradeMessage,
+                                       NodeAddress sender,
+                                       ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), tradeMessage);
         checkArgument(tradeMessage instanceof PayDepositRequest);
         processModel.setTradeMessage(tradeMessage);
@@ -146,7 +149,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
+    protected void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -241,6 +244,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -254,6 +258,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
+            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
         } else {
             log.error("Incoming tradeMessage not supported. " + tradeMessage);
         }

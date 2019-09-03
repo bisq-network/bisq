@@ -793,7 +793,54 @@ public class TradeWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Dispute
+    // Mediation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public byte[] traderSignsPayoutTx(Transaction depositTx,
+                                      Coin buyerPayoutAmount,
+                                      Coin sellerPayoutAmount,
+                                      String buyerPayoutAddressString,
+                                      String sellerPayoutAddressString,
+                                      DeterministicKey multiSigKeyPair,
+                                      byte[] buyerPubKey,
+                                      byte[] sellerPubKey,
+                                      byte[] arbitratorPubKey)
+            throws AddressFormatException, TransactionVerificationException {
+        log.trace("sellerSignsPayoutTx called");
+        log.trace("depositTx {}", depositTx.toString());
+        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
+        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
+        log.trace("multiSigKeyPair (not displayed for security reasons)");
+        log.info("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
+        log.info("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
+        log.info("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
+        Transaction preparedPayoutTx = createPayoutTx(depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString);
+        // MS redeemScript
+        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        // MS output from prev. tx is index 0
+        Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+        checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
+        if (multiSigKeyPair.isEncrypted())
+            checkNotNull(aesKey);
+
+        ECKey.ECDSASignature buyerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+
+        WalletService.printTx("prepared payoutTx", preparedPayoutTx);
+
+        WalletService.verifyTransaction(preparedPayoutTx);
+
+        return buyerSignature.encodeToDER();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Arbitration
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
