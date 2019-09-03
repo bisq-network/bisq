@@ -31,12 +31,9 @@ public abstract class SupportSession {
     @Getter
     private boolean isClient;
 
-    @Getter
-    private boolean isBuyer;
 
-    protected SupportSession(boolean isClient, boolean isBuyer) {
+    protected SupportSession(boolean isClient) {
         this.isClient = isClient;
-        this.isBuyer = isBuyer;
     }
 
     protected SupportSession() {
