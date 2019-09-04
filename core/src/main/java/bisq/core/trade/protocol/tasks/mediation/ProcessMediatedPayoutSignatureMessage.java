@@ -17,8 +17,9 @@
 
 package bisq.core.trade.protocol.tasks.mediation;
 
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
+import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 
@@ -40,17 +41,17 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
-            MediatedPayoutSignatureMessage message = (MediatedPayoutSignatureMessage) processModel.getTradeMessage();
+            MediatedPayoutTxSignatureMessage message = (MediatedPayoutTxSignatureMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);
 
-            processModel.getTradingPeer().setTxSignatureFromMediation(checkNotNull(message.getTxSignature()));
+            processModel.getTradingPeer().setMediatedPayoutTxSignature(checkNotNull(message.getTxSignature()));
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
             processModel.removeMailboxMessageAfterProcessing(trade);
 
-            trade.setDisputeState(Trade.DisputeState.MEDIATION_TX_SIG_RECEIVED);
+            trade.setMediationResultState(MediationResultState.RECEIVED_SIG_MSG);
 
             complete();
         } catch (Throwable t) {

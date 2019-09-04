@@ -804,12 +804,12 @@ public class TradeWalletService {
                                        Coin sellerPayoutAmount,
                                        String buyerPayoutAddressString,
                                        String sellerPayoutAddressString,
-                                       DeterministicKey multiSigKeyPair,
+                                       DeterministicKey myMultiSigKeyPair,
                                        byte[] buyerPubKey,
                                        byte[] sellerPubKey,
                                        byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
-        log.trace("signMediatedPayoutTx called");
+        log.error("signMediatedPayoutTx called");
         log.trace("depositTx {}", depositTx.toString());
         log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
@@ -828,17 +828,17 @@ public class TradeWalletService {
         Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
-        checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
-        if (multiSigKeyPair.isEncrypted())
+        checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
+        if (myMultiSigKeyPair.isEncrypted())
             checkNotNull(aesKey);
 
-        ECKey.ECDSASignature buyerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
 
-        WalletService.printTx("prepared payoutTx", preparedPayoutTx);
+        WalletService.printTx("prepared mediated payoutTx for sig creation", preparedPayoutTx);
 
         WalletService.verifyTransaction(preparedPayoutTx);
 
-        return buyerSignature.encodeToDER();
+        return mySignature.encodeToDER();
     }
 
     public Transaction finalizeMediatedPayoutTx(Transaction depositTx,
@@ -853,7 +853,7 @@ public class TradeWalletService {
                                                 byte[] sellerPubKey,
                                                 byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException {
-        log.trace("finalizeMediatedPayoutTx called");
+        log.error("finalizeMediatedPayoutTx called");
         log.trace("depositTx {}", depositTx.toString());
         log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
         log.trace("buyerSignature s {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
@@ -889,7 +889,7 @@ public class TradeWalletService {
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
 
-        WalletService.printTx("payoutTx", payoutTx);
+        WalletService.printTx("mediated payoutTx", payoutTx);
 
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);

@@ -145,7 +145,7 @@ public class ProcessModel implements Model, PersistablePayload {
     // Added in v.1.1.6
     @Nullable
     @Setter
-    private byte[] txSignatureFromMediation;
+    private byte[] mediatedPayoutTxSignature;
     @Setter
     private long buyerPayoutAmountFromMediation;
     @Setter
@@ -187,7 +187,7 @@ public class ProcessModel implements Model, PersistablePayload {
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
-        Optional.ofNullable(txSignatureFromMediation).ifPresent(e -> builder.setTxSignatureFromMediation(ByteString.copyFrom(e)));
+        Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
         return builder.build();
     }
 
@@ -225,7 +225,7 @@ public class ProcessModel implements Model, PersistablePayload {
         String paymentStartedMessageState = proto.getPaymentStartedMessageState().isEmpty() ? MessageState.UNDEFINED.name() : proto.getPaymentStartedMessageState();
         ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
         paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
-        processModel.setTxSignatureFromMediation(ProtoUtil.byteArrayOrNullFromProto(proto.getTxSignatureFromMediation()));
+        processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
         return processModel;
     }
 

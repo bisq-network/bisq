@@ -236,11 +236,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else //noinspection StatementWithEmptyBody
-            if (tradeMessage instanceof PayDepositRequest) {
-                // do nothing as we get called the handleTakeOfferRequest method from outside
-            } else {
-                log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
-            }
+        }
     }
 }

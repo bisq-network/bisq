@@ -69,7 +69,7 @@ message NetworkEnvelope {
         GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
 
         BundleOfEnvelopes bundle_of_envelopes = 43;
-        MediatedPayoutSignatureMessage mediated_payout_signature_message = 44;
+        MediatedPayoutTxSignatureMessage mediated_payout_tx_signature_message = 44;
         MediatedPayoutTxPublishedMessage mediated_payout_tx_published_message = 45;
     }
 }
@@ -278,7 +278,7 @@ message MediatedPayoutTxPublishedMessage {
     string uid = 4;
 }
 
-message MediatedPayoutSignatureMessage {
+message MediatedPayoutTxSignatureMessage {
     string uid = 1;
     bytes tx_signature = 2;
     string trade_id = 3;
@@ -1258,11 +1258,6 @@ message Trade {
         MEDIATION_REQUESTED = 5;
         MEDIATION_STARTED_BY_PEER = 6;
         MEDIATION_CLOSED = 7;
-        MEDIATION_RESULT_ACCEPTED = 8;
-        MEDIATION_RESULT_REJECTED = 9;
-        MEDIATION_TX_SIG_RECEIVED = 10;
-        MEDIATION_PEER_REJECTED = 11;
-        MEDIATION_PAYOUT_COMPLETE = 12;
     }
 
     enum TradePeriodState {
@@ -1338,7 +1333,7 @@ message ProcessModel {
     bytes my_multi_sig_pub_key = 15;
     NodeAddress temp_trading_peer_node_address = 16;
     string payment_started_message_state = 17;
-    bytes tx_signature_from_mediation = 18;
+    bytes mediated_payout_tx_signature = 18;
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
 }
@@ -1358,7 +1353,7 @@ message TradingPeer {
     bytes account_age_witness_nonce = 12;
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;
-    bytes tx_signature_from_mediation = 15;
+    bytes mediated_payout_tx_signature = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1371,6 +1366,25 @@ message DisputeList {
 
 message MediationDisputeList {
     repeated Dispute dispute = 1;
+}
+
+enum MediationResultState {
+    PB_ERROR_MEDIATION_RESULT = 0;
+    UNDEFINED_MEDIATION_RESULT = 1;
+    MEDIATION_RESULT_ACCEPTED = 2;
+    MEDIATION_RESULT_REJECTED = 3;
+    SIG_MSG_SENT = 4;
+    SIG_MSG_ARRIVED = 5;
+    SIG_MSG_IN_MAILBOX = 6;
+    SIG_MSG_SEND_FAILED = 7;
+    RECEIVED_SIG_MSG = 8;
+    PAYOUT_TX_PUBLISHED = 9;
+    PAYOUT_TX_PUBLISHED_MSG_SENT = 10;
+    PAYOUT_TX_PUBLISHED_MSG_ARRIVED = 11;
+    PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX = 12;
+    PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED = 13;
+    RECEIVED_PAYOUT_TX_PUBLISHED_MSG = 14;
+    PAYOUT_TX_SEEN_IN_NETWORK = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

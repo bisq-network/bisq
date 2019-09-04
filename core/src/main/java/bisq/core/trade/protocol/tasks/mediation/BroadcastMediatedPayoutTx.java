@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.mediation;
 
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.BroadcastPayoutTx;
 
@@ -44,5 +45,6 @@ public class BroadcastMediatedPayoutTx extends BroadcastPayoutTx {
 
     @Override
     protected void setState() {
+        trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED);
     }
 }

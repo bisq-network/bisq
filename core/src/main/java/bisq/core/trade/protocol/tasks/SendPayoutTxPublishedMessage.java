@@ -18,14 +18,12 @@
 package bisq.core.trade.protocol.tasks;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.TradeMessage;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
-
-import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +34,9 @@ public abstract class SendPayoutTxPublishedMessage extends TradeTask {
         super(taskHandler, trade);
     }
 
-    protected abstract void setPublishedState();
+    protected abstract TradeMessage getMessage(String id);
+
+    protected abstract void setStateSent();
 
     protected abstract void setStateArrived();
 
@@ -49,14 +49,9 @@ public abstract class SendPayoutTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getPayoutTx() != null) {
-                final String id = processModel.getOfferId();
-                final MediatedPayoutTxPublishedMessage message = new MediatedPayoutTxPublishedMessage(
-                        id,
-                        trade.getPayoutTx().bitcoinSerialize(),
-                        processModel.getMyNodeAddress(),
-                        UUID.randomUUID().toString()
-                );
-                setPublishedState();
+                String id = processModel.getOfferId();
+                TradeMessage message = getMessage(id);
+                setStateSent();
                 NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
                 log.info("Send {} to peer {}. tradeId={}, uid={}",
                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());

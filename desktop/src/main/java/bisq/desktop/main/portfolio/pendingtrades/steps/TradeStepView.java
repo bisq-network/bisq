@@ -20,6 +20,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
@@ -32,6 +33,7 @@ import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.common.ClockWatcher;
+import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
@@ -89,6 +91,7 @@ public abstract class TradeStepView extends AnchorPane {
     private ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
+    private Overlay acceptMediationResultPopup;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -517,7 +520,6 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void showMediationResult() {
-        log.error("showMediationResult");
         if (notificationGroup != null) {
             notificationGroup.setLabelAndHeadlineVisible(true);
             notificationGroup.setButtonVisible(true);
@@ -526,10 +528,18 @@ public abstract class TradeStepView extends AnchorPane {
             notificationGroup.button.setText(Res.get("portfolio.pending.mediationResult.button"));
             notificationGroup.setButtonVisible(true);
             notificationGroup.button.setOnAction(e -> {
-                notificationGroup.button.setDisable(true);
-                openMediationResultPopup();
+                if (trade.isDepositConfirmed()) {
+                    notificationGroup.button.setDisable(true);
+                    openMediationResultPopup();
+                } else {
+                    new Popup<>().warning(Res.get("portfolio.pending.mediationResult.error.depositNotConfirmed"))
+                            .show();
+                }
             });
-            openMediationResultPopup();
+
+            if (trade.isDepositConfirmed()) {
+                openMediationResultPopup();
+            }
         }
     }
 
@@ -540,44 +550,45 @@ public abstract class TradeStepView extends AnchorPane {
             DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
             String buyerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount());
             String sellerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount());
-            new Popup<>().width(900)
+            acceptMediationResultPopup = new Popup<>().width(900)
                     .headLine(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()))
                     .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
                             buyerPayoutAmount, sellerPayoutAmount))
                     .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
                     .onAction(() -> {
-                        log.error("accept");
                         model.dataModel.mediationManager.onAcceptMediationResult(trade,
                                 () -> {
                                     log.info("onAcceptMediationResult completed");
                                 },
-                                errorMessage -> log.error("onAcceptMediationResult failed: {}", errorMessage));
+                                errorMessage -> {
+                                    UserThread.execute(() -> {
+                                        new Popup<>().error(errorMessage).show();
+                                        if (acceptMediationResultPopup != null) {
+                                            acceptMediationResultPopup.hide();
+                                        }
+                                    });
+                                });
 
-                        trade.getTradeProtocol().onAcceptMediationResult(
-                                () -> {
-                                    log.info("onAcceptMediationResult completed");
-                                },
-                                errorMessage -> log.error("onAcceptMediationResult failed: {}", errorMessage));
+
                         notificationGroup.button.setDisable(false);
                     })
                     .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
                     .onSecondaryAction(() -> {
-                        log.error("reject");
-                        //model.dataModel.mediationManager.traderRejectsResult(tradeId);
+                        model.dataModel.mediationManager.onRejectMediationResult(trade);
                         notificationGroup.button.setDisable(false);
+                        model.dataModel.onOpenDispute();
                     })
                     .onClose(() -> {
                         notificationGroup.button.setDisable(false);
-                    })
-                    .show();
+                    });
+
+            acceptMediationResultPopup.show();
         } else {
-            log.error("Mediation result is not present");
             new Popup<>().error(Res.get("portfolio.pending.mediationResult.error.resultNotPresent")).show();
         }
     }
 
     protected void deactivatePaymentButtons(boolean isDisabled) {
-        log.error("deactivatePaymentButtons");
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {

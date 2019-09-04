@@ -32,14 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Value
 @EqualsAndHashCode(callSuper = true)
-public class MediatedPayoutSignatureMessage extends TradeMessage implements MailboxMessage {
+public class MediatedPayoutTxSignatureMessage extends TradeMessage implements MailboxMessage {
     private final byte[] txSignature;
     private final NodeAddress senderNodeAddress;
 
-    public MediatedPayoutSignatureMessage(byte[] txSignature,
-                                          String tradeId,
-                                          NodeAddress senderNodeAddress,
-                                          String uid) {
+    public MediatedPayoutTxSignatureMessage(byte[] txSignature,
+                                            String tradeId,
+                                            NodeAddress senderNodeAddress,
+                                            String uid) {
         this(txSignature,
                 tradeId,
                 senderNodeAddress,
@@ -52,11 +52,11 @@ public class MediatedPayoutSignatureMessage extends TradeMessage implements Mail
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private MediatedPayoutSignatureMessage(byte[] txSignature,
-                                           String tradeId,
-                                           NodeAddress senderNodeAddress,
-                                           String uid,
-                                           int messageVersion) {
+    private MediatedPayoutTxSignatureMessage(byte[] txSignature,
+                                             String tradeId,
+                                             NodeAddress senderNodeAddress,
+                                             String uid,
+                                             int messageVersion) {
         super(messageVersion, tradeId, uid);
         this.txSignature = txSignature;
         this.senderNodeAddress = senderNodeAddress;
@@ -65,7 +65,7 @@ public class MediatedPayoutSignatureMessage extends TradeMessage implements Mail
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setMediatedPayoutSignatureMessage(protobuf.MediatedPayoutSignatureMessage.newBuilder()
+                .setMediatedPayoutTxSignatureMessage(protobuf.MediatedPayoutTxSignatureMessage.newBuilder()
                         .setTxSignature(ByteString.copyFrom(txSignature))
                         .setTradeId(tradeId)
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
@@ -73,9 +73,9 @@ public class MediatedPayoutSignatureMessage extends TradeMessage implements Mail
                 .build();
     }
 
-    public static MediatedPayoutSignatureMessage fromProto(protobuf.MediatedPayoutSignatureMessage proto,
-                                                           int messageVersion) {
-        return new MediatedPayoutSignatureMessage(proto.getTxSignature().toByteArray(),
+    public static MediatedPayoutTxSignatureMessage fromProto(protobuf.MediatedPayoutTxSignatureMessage proto,
+                                                             int messageVersion) {
+        return new MediatedPayoutTxSignatureMessage(proto.getTxSignature().toByteArray(),
                 proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),

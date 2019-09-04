@@ -32,6 +32,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
@@ -213,17 +214,15 @@ public abstract class Trade implements Tradable, Model {
 
     public enum DisputeState {
         NO_DISPUTE,
-        DISPUTE_REQUESTED,             // arbitration
-        DISPUTE_STARTED_BY_PEER,       // arbitration
-        DISPUTE_CLOSED,                // arbitration
+        // arbitration
+        DISPUTE_REQUESTED,
+        DISPUTE_STARTED_BY_PEER,
+        DISPUTE_CLOSED,
+
+        // mediation
         MEDIATION_REQUESTED,
         MEDIATION_STARTED_BY_PEER,
-        MEDIATION_CLOSED,
-        MEDIATION_RESULT_ACCEPTED,
-        MEDIATION_RESULT_REJECTED,
-        MEDIATION_TX_SIG_RECEIVED,
-        MEDIATION_PEER_REJECTED,
-        MEDIATION_PAYOUT_COMPLETE;
+        MEDIATION_CLOSED;
 
         public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
@@ -377,6 +376,11 @@ public abstract class Trade implements Tradable, Model {
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
     final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
+
+    //Added in v1.1.6
+    @Getter
+    private MediationResultState mediationResultState = MediationResultState.UNDEFINED;
+    transient final private ObjectProperty<MediationResultState> mediationResultStateProperty = new SimpleObjectProperty<>(mediationResultState);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -676,6 +680,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setDisputeState(DisputeState disputeState) {
+        log.error("setDisputeState: {}", disputeState);
         boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
@@ -683,8 +688,18 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
+    public void setMediationResultState(MediationResultState mediationResultState) {
+        log.error("setDisputeState: {}", mediationResultState);
+        boolean changed = this.mediationResultState != mediationResultState;
+        this.mediationResultState = mediationResultState;
+        mediationResultStateProperty.set(mediationResultState);
+        if (changed)
+            persist();
+    }
+
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
+        log.error("setTradePeriodState: {}", tradePeriodState);
         boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
         tradePeriodStateProperty.set(tradePeriodState);

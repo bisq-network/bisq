@@ -34,6 +34,8 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.protocol.ProcessModel;
+import bisq.core.trade.protocol.TradeProtocol;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -179,13 +181,35 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     public void onAcceptMediationResult(Trade trade,
                                         ResultHandler resultHandler,
                                         ErrorMessageHandler errorMessageHandler) {
-        Optional<Dispute> optionalDispute = findDispute(trade.getId());
+        String tradeId = trade.getId();
+        Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");
         DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
         Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
-        trade.getProcessModel().setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
-        trade.getProcessModel().setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
-        trade.getTradeProtocol().onAcceptMediationResult(resultHandler, errorMessageHandler);
+        ProcessModel processModel = trade.getProcessModel();
+        processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
+        processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
+        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+
+        trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
+
+        // If we have not got yes the peers signature we sign and send to the peer our signature.
+        // Otherwise we sign and complete with the peers signature the payout tx.
+        if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
+            tradeProtocol.onAcceptMediationResult(() -> {
+                tradeManager.closeDisputedTrade(tradeId);
+                resultHandler.handleResult();
+            }, errorMessageHandler);
+        } else {
+            tradeProtocol.onFinalizeMediationResultPayout(() -> {
+                tradeManager.closeDisputedTrade(tradeId);
+                resultHandler.handleResult();
+            }, errorMessageHandler);
+        }
+    }
+
+    public void onRejectMediationResult(Trade trade) {
+        trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
     }
 }

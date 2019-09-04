@@ -33,7 +33,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +52,7 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            Transaction depositTx = checkNotNull(trade.getDepositTx());
             String tradeId = trade.getId();
             TradingPeer tradingPeer = processModel.getTradingPeer();
             BtcWalletService walletService = processModel.getBtcWalletService();
@@ -63,9 +63,9 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
             checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
 
 
-            byte[] mySignature = checkNotNull(processModel.getTxSignatureFromMediation(),
+            byte[] mySignature = checkNotNull(processModel.getMediatedPayoutTxSignature(),
                     "processModel.getTxSignatureFromMediation must not be null");
-            byte[] peersSignature = checkNotNull(tradingPeer.getTxSignatureFromMediation(),
+            byte[] peersSignature = checkNotNull(tradingPeer.getMediatedPayoutTxSignature(),
                     "tradingPeer.getTxSignatureFromMediation must not be null");
 
             PubKeyRing myPubKeyRing = processModel.getPubKeyRing();
@@ -79,22 +79,26 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
                     "Payout amount does not match buyerPayoutAmount=" + buyerPayoutAmount.toFriendlyString() +
                             "; sellerPayoutAmount=" + sellerPayoutAmount);
 
-            String buyerPayoutAddressString = tradingPeer.getPayoutAddressString();
-            String sellerPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId,
-                    AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+            boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
 
-            byte[] buyerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
-            byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            String myPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+            String peersPayoutAddressString = tradingPeer.getPayoutAddressString();
+            String buyerPayoutAddressString = isMyRoleBuyer ? myPayoutAddressString : peersPayoutAddressString;
+            String sellerPayoutAddressString = isMyRoleBuyer ? peersPayoutAddressString : myPayoutAddressString;
 
-            Optional<AddressEntry> MultiSigAddressEntryOptional = walletService.getAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG);
-            checkArgument(MultiSigAddressEntryOptional.isPresent() && Arrays.equals(sellerMultiSigPubKey,
-                    MultiSigAddressEntryOptional.get().getPubKey()),
-                    "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
+            byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+            byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
+            byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
 
             DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, sellerMultiSigPubKey);
 
+            checkArgument(Arrays.equals(myMultiSigPubKey,
+                    walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
+                    "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
+
             Transaction transaction = processModel.getTradeWalletService().finalizeMediatedPayoutTx(
-                    trade.getDepositTx(),
+                    depositTx,
                     buyerSignature,
                     sellerSignature,
                     buyerPayoutAmount,

@@ -242,8 +242,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
-        } else {
-            log.error("Incoming message not supported. " + tradeMessage);
         }
     }
 }
