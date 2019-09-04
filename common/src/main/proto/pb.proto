@@ -796,6 +796,7 @@ enum AvailabilityResult {
     NO_ARBITRATORS = 6;
     NO_MEDIATORS = 7;
     USER_IGNORED = 8;
+    MISSING_MANDATORY_CAPABILITY = 9;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1035,7 +1036,7 @@ message PersistableEnvelope {
 
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
-        DisputeList dispute_list = 8; // mapped to java class ArbitrationDisputeList
+        DisputeList dispute_list = 8; // mapped to java class ArbitrationDisputeList  We cannot rename protobuf definition because it would break backward compatibility
 
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;

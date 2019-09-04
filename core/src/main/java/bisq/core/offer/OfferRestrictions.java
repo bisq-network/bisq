@@ -20,9 +20,22 @@ package bisq.core.offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Coin;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 public class OfferRestrictions {
+    // The date when traders who have not updated cannot take offers from updated clients and their offers become
+    // invisible for updated clients.
+    private static final Date REQUIRE_UPDATE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 13);
+
+    public static boolean requiresUpdate() {
+        return new Date().after(REQUIRE_UPDATE_DATE);
+    }
+
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
 
     public static boolean isOfferRisky(Offer offer) {

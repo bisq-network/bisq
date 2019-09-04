@@ -511,9 +511,20 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
-        // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or
-        // in case of arbitration disputeState == Trade.DisputeState.ARBITRATION_REQUESTED
-        if (disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED) {
+        boolean useMediation;
+        boolean useArbitration;
+        // If mediation is not activated we use arbitration
+        if (MediationManager.isMediationActivated()) {
+            // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or
+            useMediation = disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED;
+            // in case of arbitration disputeState == Trade.DisputeState.ARBITRATION_REQUESTED
+            useArbitration = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.DISPUTE_REQUESTED;
+        } else {
+            useMediation = false;
+            useArbitration = true;
+        }
+        log.error("useMediation={}, useArbitration={}", useMediation, useArbitration);
+        if (useMediation) {
             // If no dispute state set we start with mediation
             disputeManager = mediationManager;
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
@@ -541,7 +552,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false, disputeManager);
-        } else if (disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.DISPUTE_REQUESTED) {
+        } else if (useArbitration) {
             // Only if we have completed mediation we allow arbitration
             disputeManager = arbitrationManager;
             PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();

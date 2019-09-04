@@ -41,6 +41,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
+import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
@@ -123,8 +124,14 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         return dispute.getContract().getArbitratorNodeAddress();
     }
 
+    @Override
     protected Trade.DisputeState getDisputeState_StartedByPeer() {
         return Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
+    }
+
+    @Override
+    protected AckMessageSourceType getAckMessageSourceType() {
+        return AckMessageSourceType.ARBITRATION_MESSAGE;
     }
 
 

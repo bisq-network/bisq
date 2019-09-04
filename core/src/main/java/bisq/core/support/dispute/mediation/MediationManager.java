@@ -37,6 +37,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 
+import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
@@ -45,12 +46,15 @@ import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +65,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class MediationManager extends DisputeManager<MediationDisputeList> {
+
+    // The date when mediation is activated
+    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 16);
+
+    public static boolean isMediationActivated() {
+        return new Date().after(MEDIATION_ACTIVATED_DATE);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -109,8 +121,14 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
     }
 
+    @Override
     protected Trade.DisputeState getDisputeState_StartedByPeer() {
         return Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+    }
+
+    @Override
+    protected AckMessageSourceType getAckMessageSourceType() {
+        return AckMessageSourceType.MEDIATION_MESSAGE;
     }
 
 
