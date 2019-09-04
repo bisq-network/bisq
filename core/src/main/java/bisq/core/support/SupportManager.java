@@ -153,7 +153,7 @@ public abstract class SupportManager {
 
     private void onAckMessage(AckMessage ackMessage,
                               @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (ackMessage.getSourceType() == AckMessageSourceType.DISPUTE_MESSAGE) {
+        if (ackMessage.getSourceType() == getAckMessageSourceType()) {
             if (ackMessage.isSuccess()) {
                 log.info("Received AckMessage for {} with tradeId {} and uid {}",
                         ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
@@ -176,6 +176,8 @@ public abstract class SupportManager {
                 p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
         }
     }
+
+    protected abstract AckMessageSourceType getAckMessageSourceType();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +230,7 @@ public abstract class SupportManager {
         String tradeId = supportMessage.getTradeId();
         String uid = supportMessage.getUid();
         AckMessage ackMessage = new AckMessage(p2PService.getNetworkNode().getNodeAddress(),
-                AckMessageSourceType.DISPUTE_MESSAGE,
+                getAckMessageSourceType(),
                 supportMessage.getClass().getSimpleName(),
                 uid,
                 tradeId,

@@ -27,6 +27,7 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 
+import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
@@ -134,6 +135,11 @@ public class TraderChatManager extends SupportManager {
                         message.getUid(), message.getTradeId());
             }
         });
+    }
+
+    @Override
+    protected AckMessageSourceType getAckMessageSourceType() {
+        return AckMessageSourceType.TRADE_CHAT_MESSAGE;
     }
 
 

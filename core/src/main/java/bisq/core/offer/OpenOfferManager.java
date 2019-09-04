@@ -49,6 +49,8 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -584,21 +586,30 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                             mediatorNodeAddress = DisputeResolverSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
                             openOffer.setMediatorNodeAddress(mediatorNodeAddress);
-
-                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                            // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                            // losses and therefore an outdated market price.
-                            try {
-                                offer.checkTradePriceTolerance(request.getTakersTradePrice());
-                            } catch (TradePriceOutOfToleranceException e) {
-                                log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                            } catch (MarketPriceNotAvailableException e) {
-                                log.warn(e.getMessage());
-                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                            } catch (Throwable e) {
-                                log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                            Capabilities supportedCapabilities = request.getSupportedCapabilities();
+                            if (!OfferRestrictions.requiresUpdate() ||
+                                    (supportedCapabilities != null &&
+                                            Capabilities.hasMandatoryCapability(supportedCapabilities, Capability.MEDIATION))) {
+                                try {
+                                    // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                                    // in trade price between the peers. Also here poor connectivity might cause market price API connection
+                                    // losses and therefore an outdated market price.
+                                    offer.checkTradePriceTolerance(request.getTakersTradePrice());
+                                } catch (TradePriceOutOfToleranceException e) {
+                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                                } catch (MarketPriceNotAvailableException e) {
+                                    log.warn(e.getMessage());
+                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                                } catch (Throwable e) {
+                                    log.warn("Trade price check failed. " + e.getMessage());
+                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                                }
+                            } else {
+                                log.warn("Taker has not mandatory capability MEDIATION");
+                                // Because an old peer has not AvailabilityResult.MISSING_MANDATORY_CAPABILITY and we
+                                // have not set the UNDEFINED fallback in AvailabilityResult the user will get a null value.
+                                availabilityResult = AvailabilityResult.MISSING_MANDATORY_CAPABILITY;
                             }
                         } else {
                             log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);

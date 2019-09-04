@@ -72,7 +72,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Market price might be different at maker's and takers side so we need a bit of tolerance.
     // The tolerance will get smaller once we have multiple price feeds avoiding fast price fluctuations
     // from one provider.
-    final static double PRICE_TOLERANCE = 0.01;
+    private final static double PRICE_TOLERANCE = 0.01;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
@@ -375,6 +376,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public String getErrorMessage() {
         return errorMessageProperty.get();
+    }
+
+    public boolean isValid() {
+        return !OfferRestrictions.requiresUpdate() ||
+                !offerPayload.getArbitratorNodeAddresses().toString().equals(offerPayload.getMediatorNodeAddresses().toString());
     }
 
 

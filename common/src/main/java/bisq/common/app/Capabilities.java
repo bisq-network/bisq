@@ -19,6 +19,7 @@ package bisq.common.app;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +44,7 @@ public class Capabilities {
 
     // Defines which most recent capability any node need to support.
     // This helps to clean network from very old inactive but still running nodes.
-    private static final Capability mandatoryCapability = Capability.DAO_STATE;
+    private static final Capability MANDATORY_CAPABILITY = Capability.DAO_STATE;
 
     protected final Set<Capability> capabilities = new HashSet<>();
 
@@ -101,7 +102,7 @@ public class Capabilities {
      * @return int list of Capability ordinals
      */
     public static List<Integer> toIntList(Capabilities capabilities) {
-        return capabilities.capabilities.stream().map(capability -> capability.ordinal()).sorted().collect(Collectors.toList());
+        return capabilities.capabilities.stream().map(Enum::ordinal).sorted().collect(Collectors.toList());
     }
 
     /**
@@ -118,12 +119,23 @@ public class Capabilities {
     }
 
     public static boolean hasMandatoryCapability(Capabilities capabilities) {
+        return hasMandatoryCapability(capabilities, MANDATORY_CAPABILITY);
+    }
+
+    public static boolean hasMandatoryCapability(Capabilities capabilities, Capability mandatoryCapability) {
         return capabilities.capabilities.stream().anyMatch(c -> c == mandatoryCapability);
     }
 
     @Override
     public String toString() {
         return Arrays.toString(Capabilities.toIntList(this).toArray());
+    }
+
+    public String prettyPrint() {
+        return capabilities.stream()
+                .sorted(Comparator.comparingInt(Enum::ordinal))
+                .map(e -> e.name() + " [" + e.ordinal() + "]")
+                .collect(Collectors.joining(", "));
     }
 
     public int size() {

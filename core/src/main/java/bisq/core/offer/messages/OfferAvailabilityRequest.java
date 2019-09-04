@@ -28,6 +28,7 @@ import java.util.UUID;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
@@ -35,6 +36,7 @@ import javax.annotation.Nullable;
 // to the trading peer
 @EqualsAndHashCode(callSuper = true)
 @Value
+@Slf4j
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     private final PubKeyRing pubKeyRing;
     private final long takersTradePrice;
