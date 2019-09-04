@@ -64,8 +64,7 @@ public class Sig {
             log.trace("Generate msgSignatureKeyPair needed {} ms", System.currentTimeMillis() - ts);
             return keyPair;
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            log.error(e.toString());
+            log.error("Could not create key.", e);
             throw new RuntimeException("Could not create key.");
         }
     }
