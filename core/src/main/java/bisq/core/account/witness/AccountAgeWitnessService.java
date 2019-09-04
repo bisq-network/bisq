@@ -527,7 +527,7 @@ public class AccountAgeWitnessService {
     }
 
     // Check if my account has a signed witness
-    public boolean hasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
+    public boolean myHasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
         return signedWitnessService.isValidAccountAgeWitness(getMyWitness(paymentAccountPayload));
     }
 

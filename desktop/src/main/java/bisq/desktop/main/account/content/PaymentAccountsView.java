@@ -112,7 +112,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         if (item != null && !empty) {
                             label.setText(item.getAccountName());
                             removeButton.setOnAction(e -> onDeleteAccount(item));
-                            String signedWitnessId = accountAgeWitnessService.hasSignedWitness(
+                            String signedWitnessId = accountAgeWitnessService.myHasSignedWitness(
                                     item.paymentAccountPayload) ? "image-tick" : "rejected";
                             signed.setId(signedWitnessId);
                             setGraphic(pane);
