@@ -17,6 +17,8 @@
 
 package bisq.common.crypto;
 
+import bisq.common.util.Hex;
+
 import com.google.common.base.Charsets;
 
 import org.bouncycastle.bcpg.BCPGKey;
@@ -27,7 +29,6 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
-import org.bouncycastle.util.encoders.Hex;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -71,7 +72,7 @@ public class PGP {
                                 log.debug(pgpPublicKey.getClass().getName()
                                         + " KeyID: " + Long.toHexString(pgpPublicKey.getKeyID())
                                         + " type: " + pgpPublicKey.getAlgorithm()
-                                        + " fingerprint: " + new String(Hex.encode(pgpPublicKey.getFingerprint())));
+                                        + " fingerprint: " + Hex.encode(pgpPublicKey.getFingerprint()));
 
                                 BCPGKey bcKey = pgpPublicKey.getPublicKeyPacket().getKey();
                                 log.debug(bcKey.getClass().getName());

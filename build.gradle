@@ -158,7 +158,6 @@ configure(project(':assets')) {
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
-        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
     }
 }
 
@@ -196,7 +195,6 @@ configure(project(':common')) {
             exclude(module: 'protobuf-java')
         }
         compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
         compile "commons-io:commons-io:$ioVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
@@ -393,7 +391,6 @@ configure(project(':seednode')) {
 
     dependencies {
         compile project(':core')
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.springframework:spring-test:$springVersion"

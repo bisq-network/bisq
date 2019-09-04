@@ -18,8 +18,7 @@
 package bisq.common.crypto;
 
 import bisq.common.util.Utilities;
-
-import org.bouncycastle.util.encoders.Hex;
+import bisq.common.util.Hex;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -177,7 +176,7 @@ public class Encryption {
 
     public static byte[] decryptPayloadWithHmac(byte[] encryptedPayloadWithHmac, SecretKey secretKey) throws CryptoException {
         byte[] payloadWithHmac = decrypt(encryptedPayloadWithHmac, secretKey);
-        String payloadWithHmacAsHex = Hex.toHexString(payloadWithHmac);
+        String payloadWithHmacAsHex = Hex.encode(payloadWithHmac);
         // first part is raw message
         int length = payloadWithHmacAsHex.length();
         int sep = length - 64;

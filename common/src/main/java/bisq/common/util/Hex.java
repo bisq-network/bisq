@@ -15,26 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.common.crypto;
+package bisq.common.util;
 
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.spec.X509EncodedKeySpec;
+import com.google.common.io.BaseEncoding;
 
-import java.util.Base64;
+public class Hex {
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
-public class CryptoUtils {
-    public static String pubKeyToString(PublicKey publicKey) {
-        final X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-        return Base64.getEncoder().encodeToString(x509EncodedKeySpec.getEncoded());
+    public static byte[] decode(String hex) {
+        return BaseEncoding.base16().lowerCase().decode(hex.toLowerCase());
     }
 
-    public static byte[] getRandomBytes(int size) {
-        byte[] bytes = new byte[size];
-        new SecureRandom().nextBytes(bytes);
-        return bytes;
+    public static String encode(byte[] bytes) {
+        return BaseEncoding.base16().lowerCase().encode(bytes);
     }
 }
