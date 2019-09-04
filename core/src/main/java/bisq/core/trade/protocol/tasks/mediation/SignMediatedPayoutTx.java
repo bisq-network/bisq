@@ -15,12 +15,14 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks;
+package bisq.core.trade.protocol.tasks.mediation;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
+import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -48,6 +50,10 @@ public class SignMediatedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
+            TradingPeer tradingPeer = processModel.getTradingPeer();
+            checkArgument(processModel.getTxSignatureFromMediation() == null,
+                    "processModel.getTxSignatureFromMediation is already set");
+
             String tradeId = trade.getId();
             Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
@@ -64,7 +70,7 @@ public class SignMediatedPayoutTx extends TradeTask {
 
             String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId,
                     AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-            String sellerPayoutAddressString = processModel.getTradingPeer().getPayoutAddressString();
+            String sellerPayoutAddressString = tradingPeer.getPayoutAddressString();
 
             DeterministicKey buyerMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, processModel.getMyMultiSigPubKey());
 
@@ -72,9 +78,9 @@ public class SignMediatedPayoutTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
-            byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
+            byte[] sellerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
 
-            byte[] payoutTxSignature = processModel.getTradeWalletService().traderSignsPayoutTx(
+            byte[] payoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
                     depositTx,
                     buyerPayoutAmount,
                     sellerPayoutAmount,

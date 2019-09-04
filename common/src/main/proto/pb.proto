@@ -70,6 +70,7 @@ message NetworkEnvelope {
 
         BundleOfEnvelopes bundle_of_envelopes = 43;
         MediatedPayoutSignatureMessage mediated_payout_signature_message = 44;
+        MediatedPayoutTxPublishedMessage mediated_payout_tx_published_message = 45;
     }
 }
 
@@ -264,6 +265,13 @@ message FinalizePayoutTxRequest {
 }
 
 message PayoutTxPublishedMessage {
+    string trade_id = 1;
+    bytes payout_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+message MediatedPayoutTxPublishedMessage {
     string trade_id = 1;
     bytes payout_tx = 2;
     NodeAddress sender_node_address = 3;

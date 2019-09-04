@@ -15,10 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks;
+package bisq.core.trade.protocol.tasks.mediation;
 
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
+import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;

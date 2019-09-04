@@ -22,7 +22,6 @@ import bisq.core.trade.SellerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
-import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
@@ -251,6 +250,8 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
@@ -258,8 +259,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
-            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
         } else {
             log.error("Incoming tradeMessage not supported. " + tradeMessage);
         }

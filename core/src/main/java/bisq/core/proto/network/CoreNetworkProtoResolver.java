@@ -48,6 +48,7 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
+import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PublishDepositTxRequest;
@@ -143,6 +144,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
                 case PAYOUT_TX_PUBLISHED_MESSAGE:
                     return PayoutTxPublishedMessage.fromProto(proto.getPayoutTxPublishedMessage(), messageVersion);
+                case MEDIATED_PAYOUT_TX_PUBLISHED_MESSAGE:
+                    return MediatedPayoutTxPublishedMessage.fromProto(proto.getMediatedPayoutTxPublishedMessage(), messageVersion);
                 case MEDIATED_PAYOUT_SIGNATURE_MESSAGE:
                     return MediatedPayoutSignatureMessage.fromProto(proto.getMediatedPayoutSignatureMessage(), messageVersion);
 
