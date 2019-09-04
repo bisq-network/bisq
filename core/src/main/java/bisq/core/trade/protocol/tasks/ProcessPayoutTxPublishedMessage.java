@@ -34,7 +34,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class ProcessPayoutTxPublishedMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public ProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

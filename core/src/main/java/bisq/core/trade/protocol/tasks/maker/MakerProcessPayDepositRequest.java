@@ -38,7 +38,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MakerProcessPayDepositRequest extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public MakerProcessPayDepositRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

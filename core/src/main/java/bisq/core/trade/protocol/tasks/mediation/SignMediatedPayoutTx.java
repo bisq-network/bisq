@@ -40,7 +40,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SignMediatedPayoutTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SignMediatedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

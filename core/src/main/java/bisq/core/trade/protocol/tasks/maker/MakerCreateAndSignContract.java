@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MakerCreateAndSignContract extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public MakerCreateAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

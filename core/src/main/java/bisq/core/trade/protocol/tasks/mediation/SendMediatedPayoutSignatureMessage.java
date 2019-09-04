@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SendMediatedPayoutSignatureMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SendMediatedPayoutSignatureMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class SendPayoutTxPublishedMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
