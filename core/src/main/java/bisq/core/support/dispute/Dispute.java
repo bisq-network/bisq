@@ -40,7 +40,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -179,6 +181,8 @@ public final class Dispute implements NetworkPayload {
 
     @Override
     public protobuf.Dispute toProtoMessage() {
+        // Needed to avoid ConcurrentModificationException
+        List<ChatMessage> clonedChatMessages = new ArrayList<>(chatMessages);
         protobuf.Dispute.Builder builder = protobuf.Dispute.newBuilder()
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
@@ -190,7 +194,7 @@ public final class Dispute implements NetworkPayload {
                 .setContractAsJson(contractAsJson)
                 .setArbitratorPubKeyRing(agentPubKeyRing.toProtoMessage()) // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
                 .setIsSupportTicket(isSupportTicket)
-                .addAllDisputeCommunicationMessages(chatMessages.stream()
+                .addAllDisputeCommunicationMessages(clonedChatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                         .collect(Collectors.toList()))
                 .setIsClosed(isClosedProperty.get())

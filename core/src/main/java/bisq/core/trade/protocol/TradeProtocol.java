@@ -21,10 +21,9 @@ import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayDepositRequest;
-import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
@@ -124,10 +123,10 @@ public abstract class TradeProtocol {
     // Trader has not yet received the peer's signature but has clicked the accept button.
     public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (!trade.isDepositConfirmed()) {
-            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet. tradeState=" + trade.getState());
+            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet.");
             return;
         }
-        if (trade.getProcessModel().getTradingPeer().getTxSignatureFromMediation() != null) {
+        if (trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null) {
             errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
             return;
         }
@@ -154,19 +153,11 @@ public abstract class TradeProtocol {
     // Trader has already received the peer's signature and has clicked the accept button as well.
     public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (!trade.isDepositConfirmed()) {
-            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet. tradeState=" + trade.getState());
+            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet.");
             return;
         }
         if (trade.isPayoutPublished()) {
-            errorMessageHandler.handleErrorMessage("Payout tx is already published. tradeState=" + trade.getState());
-            return;
-        }
-        if (trade.getProcessModel().getTradingPeer().getTxSignatureFromMediation() != null) {
-            errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
-            return;
-        }
-        if (trade.getProcessModel().getTxSignatureFromMediation() == null) {
-            errorMessageHandler.handleErrorMessage("We have received set our signature.");
+            errorMessageHandler.handleErrorMessage("Payout tx is already published.");
             return;
         }
 
@@ -194,7 +185,7 @@ public abstract class TradeProtocol {
     // Mediation: incoming message
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void handle(MediatedPayoutSignatureMessage tradeMessage, NodeAddress sender) {
+    protected void handle(MediatedPayoutTxSignatureMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -228,9 +219,9 @@ public abstract class TradeProtocol {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
-        if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
-            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+        if (tradeMessage instanceof MediatedPayoutTxSignatureMessage) {
+            handle((MediatedPayoutTxSignatureMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
         }
     }

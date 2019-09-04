@@ -17,9 +17,10 @@
 
 package bisq.core.trade.protocol.tasks.mediation;
 
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
+import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
@@ -53,13 +54,14 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
             NodeAddress peersNodeAddress = contract.getPeersNodeAddress(pubKeyRing);
             log.error("sendBuyerSendPayoutSignatureMessage to peerAddress " + peersNodeAddress);
             P2PService p2PService = processModel.getP2PService();
-            MediatedPayoutSignatureMessage message = new MediatedPayoutSignatureMessage(processModel.getTxSignatureFromMediation(),
+            MediatedPayoutTxSignatureMessage message = new MediatedPayoutTxSignatureMessage(processModel.getMediatedPayoutTxSignature(),
                     trade.getId(),
                     p2PService.getAddress(),
                     UUID.randomUUID().toString());
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
+            trade.setMediationResultState(MediationResultState.SIG_MSG_SENT);
             p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
                     peersPubKeyRing,
                     message,
@@ -69,7 +71,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-                            trade.setDisputeState(Trade.DisputeState.MEDIATION_RESULT_ACCEPTED);
+                            trade.setMediationResultState(MediationResultState.SIG_MSG_ARRIVED);
                             complete();
                         }
 
@@ -78,7 +80,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                             log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-                            trade.setDisputeState(Trade.DisputeState.MEDIATION_RESULT_ACCEPTED);
+                            trade.setMediationResultState(MediationResultState.SIG_MSG_IN_MAILBOX);
                             complete();
                         }
 
@@ -86,6 +88,7 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
+                            trade.setMediationResultState(MediationResultState.SIG_MSG_SEND_FAILED);
                             appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                             failed(errorMessage);
                         }

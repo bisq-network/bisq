@@ -17,12 +17,22 @@
 
 package bisq.core.trade.protocol.tasks.mediation;
 
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.SendPayoutTxPublishedMessage;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 @Slf4j
 public class SendMediatedPayoutTxPublishedMessage extends SendPayoutTxPublishedMessage {
@@ -32,19 +42,34 @@ public class SendMediatedPayoutTxPublishedMessage extends SendPayoutTxPublishedM
     }
 
     @Override
-    protected void setPublishedState() {
+    protected TradeMessage getMessage(String id) {
+        Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
+        return new MediatedPayoutTxPublishedMessage(
+                id,
+                payoutTx.bitcoinSerialize(),
+                processModel.getMyNodeAddress(),
+                UUID.randomUUID().toString()
+        );
+    }
+
+    @Override
+    protected void setStateSent() {
+        trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_SENT);
     }
 
     @Override
     protected void setStateArrived() {
+        trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_ARRIVED);
     }
 
     @Override
     protected void setStateStoredInMailbox() {
+        trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX);
     }
 
     @Override
     protected void setStateFault() {
+        trade.setMediationResultState(MediationResultState.PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED);
     }
 
     @Override

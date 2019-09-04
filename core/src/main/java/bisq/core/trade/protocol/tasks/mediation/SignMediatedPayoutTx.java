@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.tasks.mediation;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -51,46 +52,54 @@ public class SignMediatedPayoutTx extends TradeTask {
             runInterceptHook();
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
-            checkArgument(processModel.getTxSignatureFromMediation() == null,
-                    "processModel.getTxSignatureFromMediation is already set");
+            if (processModel.getMediatedPayoutTxSignature() != null) {
+                log.warn("processModel.getTxSignatureFromMediation is already set");
+            }
 
             String tradeId = trade.getId();
+            BtcWalletService walletService = processModel.getBtcWalletService();
             Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
             Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "tradeAmount must not be null");
-
-            BtcWalletService walletService = processModel.getBtcWalletService();
+            Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
 
             Coin totalPayoutAmount = offer.getBuyerSecurityDeposit().add(tradeAmount).add(offer.getSellerSecurityDeposit());
             Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
             Coin sellerPayoutAmount = Coin.valueOf(processModel.getSellerPayoutAmountFromMediation());
+
             checkArgument(totalPayoutAmount.equals(buyerPayoutAmount.add(sellerPayoutAmount)),
                     "Payout amount does not match buyerPayoutAmount=" + buyerPayoutAmount.toFriendlyString() +
                             "; sellerPayoutAmount=" + sellerPayoutAmount);
 
-            String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId,
-                    AddressEntry.Context.TRADE_PAYOUT).getAddressString();
-            String sellerPayoutAddressString = tradingPeer.getPayoutAddressString();
+            boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
 
-            DeterministicKey buyerMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, processModel.getMyMultiSigPubKey());
+            String myPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
+            String peersPayoutAddressString = tradingPeer.getPayoutAddressString();
+            String buyerPayoutAddressString = isMyRoleBuyer ? myPayoutAddressString : peersPayoutAddressString;
+            String sellerPayoutAddressString = isMyRoleBuyer ? peersPayoutAddressString : myPayoutAddressString;
 
-            byte[] buyerMultiSigPubKey = processModel.getMyMultiSigPubKey();
-            checkArgument(Arrays.equals(buyerMultiSigPubKey,
+            byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+            byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
+            byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
+
+            DeterministicKey myMultiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
+
+            checkArgument(Arrays.equals(myMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
-                    "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
-            byte[] sellerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+                    "myMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + tradeId);
 
-            byte[] payoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
+            byte[] mediatedPayoutTxSignature = processModel.getTradeWalletService().signMediatedPayoutTx(
                     depositTx,
                     buyerPayoutAmount,
                     sellerPayoutAmount,
                     buyerPayoutAddressString,
                     sellerPayoutAddressString,
-                    buyerMultiSigKeyPair,
+                    myMultiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
                     trade.getArbitratorBtcPubKey());
-            processModel.setPayoutTxSignature(payoutTxSignature);
+            processModel.setMediatedPayoutTxSignature(mediatedPayoutTxSignature);
 
             complete();
         } catch (Throwable t) {

@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.mediation;
 
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
 
@@ -45,5 +46,7 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
 
     @Override
     protected void setState() {
+        trade.setMediationResultState(MediationResultState.PAYOUT_TX_SEEN_IN_NETWORK);
+        processModel.getTradeManager().closeDisputedTrade(trade.getId());
     }
 }

@@ -225,8 +225,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else {
-            log.error("Incoming message not supported. " + tradeMessage);
         }
     }
 }
