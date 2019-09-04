@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

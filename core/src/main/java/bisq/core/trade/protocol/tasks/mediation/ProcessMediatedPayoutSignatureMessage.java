@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public ProcessMediatedPayoutSignatureMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

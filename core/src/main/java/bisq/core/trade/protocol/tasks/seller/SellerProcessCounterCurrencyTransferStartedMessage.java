@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerProcessCounterCurrencyTransferStartedMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SellerProcessCounterCurrencyTransferStartedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

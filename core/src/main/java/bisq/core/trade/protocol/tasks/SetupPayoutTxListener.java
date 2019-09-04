@@ -40,7 +40,7 @@ public abstract class SetupPayoutTxListener extends TradeTask {
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SetupPayoutTxListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
