@@ -39,8 +39,10 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyUtil;
@@ -118,6 +120,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final BSFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
@@ -144,7 +147,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                   OfferDetailsWindow offerDetailsWindow,
                   BSFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
-                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
+                  AccountAgeWitnessService accountAgeWitnessService) {
         super(model);
 
         this.navigation = navigation;
@@ -152,6 +156,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
+        this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
     @Override
@@ -333,7 +338,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     return null;
                 });
 
-        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {});
+        currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
+        });
 
         tableView.setItems(model.getOfferList());
 
@@ -827,7 +833,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             private OfferBookListItem offerBookListItem;
                             final ChangeListener<Number> listener = new ChangeListener<>() {
                                 @Override
-                                public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                                public void changed(ObservableValue<? extends Number> observable,
+                                                    Number oldValue,
+                                                    Number newValue) {
                                     if (offerBookListItem != null && offerBookListItem.getOffer().getVolume() != null) {
                                         setText("");
                                         setGraphic(new ColoredDecimalPlacesWithZerosText(model.getVolume(offerBookListItem),
@@ -885,10 +893,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
+                                    GridPane pane = new GridPane();
                                     field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
-                                    setGraphic(field);
+
+                                    // Check witness status
+                                    ImageView signed = accountAgeWitnessService.hasSignedWitness(item.getOffer()) ?
+                                            ImageUtil.getImageViewById("image-tick") :
+                                            ImageUtil.getImageViewById("rejected");
+
+                                    pane.add(field, 0, 0);
+                                    pane.add(signed, 1, 0);
+                                    setGraphic(pane);
                                 } else {
                                     setGraphic(null);
                                     if (field != null)

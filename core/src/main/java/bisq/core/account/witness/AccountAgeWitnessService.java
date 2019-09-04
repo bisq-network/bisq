@@ -184,12 +184,20 @@ public class AccountAgeWitnessService {
         return new AccountAgeWitness(hash, new Date().getTime());
     }
 
-    private Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+    private Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
+                                                    PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
 
         return getWitnessByHash(hash);
+    }
+
+    private Optional<AccountAgeWitness> findWitness(Offer offer) {
+        final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
+        return accountAgeWitnessHash.isPresent() ?
+                getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+                Optional.empty();
     }
 
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
@@ -300,18 +308,14 @@ public class AccountAgeWitnessService {
                 new Date());
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Peers witness
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Return -1 if witness data is not found (old versions)
     public long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
-        final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
-        final Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
-                getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
-                Optional.empty();
-        return witnessByHashAsHex
+        final Optional<AccountAgeWitness> optionalAccountAgeWitness = findWitness(offer);
+        return optionalAccountAgeWitness
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
                 .orElse(-1L);
     }
@@ -512,7 +516,7 @@ public class AccountAgeWitnessService {
     private BuyerDataItem getBuyerData(Dispute dispute) {
         PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
         PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
-        return getAccountAgeWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
+        return findWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
                 .map(witness -> new BuyerDataItem(
                         buyerPaymentAccountPaload,
                         witness,
@@ -521,14 +525,14 @@ public class AccountAgeWitnessService {
                 .orElse(null);
     }
 
-    private Optional<AccountAgeWitness> getAccountAgeWitness(PaymentAccountPayload buyerPaymentAccountPaload,
-                                                             PubKeyRing buyerPubKeyRing) {
-        return findWitness(buyerPaymentAccountPaload, buyerPubKeyRing);
-    }
-
     // Check if my account has a signed witness
     public boolean myHasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
         return signedWitnessService.isValidAccountAgeWitness(getMyWitness(paymentAccountPayload));
     }
 
+    public boolean hasSignedWitness(Offer offer) {
+        return findWitness(offer)
+                .map(signedWitnessService::isValidAccountAgeWitness)
+                .orElse(false);
+    }
 }
