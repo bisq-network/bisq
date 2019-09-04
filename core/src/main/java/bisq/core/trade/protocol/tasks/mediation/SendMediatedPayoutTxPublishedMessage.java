@@ -15,20 +15,36 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller;
+package bisq.core.trade.protocol.tasks.mediation;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.tasks.BroadcastPayoutTx;
+import bisq.core.trade.protocol.tasks.SendPayoutTxPublishedMessage;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerBroadcastPayoutTx extends BroadcastPayoutTx {
+public class SendMediatedPayoutTxPublishedMessage extends SendPayoutTxPublishedMessage {
     @SuppressWarnings({"WeakerAccess", "unused"})
-    public SellerBroadcastPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SendMediatedPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
+    }
+
+    @Override
+    protected void setPublishedState() {
+    }
+
+    @Override
+    protected void setStateArrived() {
+    }
+
+    @Override
+    protected void setStateStoredInMailbox() {
+    }
+
+    @Override
+    protected void setStateFault() {
     }
 
     @Override
@@ -40,10 +56,5 @@ public class SellerBroadcastPayoutTx extends BroadcastPayoutTx {
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    @Override
-    protected void setState() {
-        trade.setState(Trade.State.SELLER_PUBLISHED_PAYOUT_TX);
     }
 }

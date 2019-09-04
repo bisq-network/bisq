@@ -341,7 +341,10 @@ public class TradeWalletService {
      * @return A data container holding the inputs, the output value and address
      * @throws TransactionVerificationException
      */
-    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Transaction takeOfferFeeTx, Coin inputAmount, Coin txFee, Address takersAddress) throws
+    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Transaction takeOfferFeeTx,
+                                                              Coin inputAmount,
+                                                              Coin txFee,
+                                                              Address takersAddress) throws
             TransactionVerificationException {
         log.debug("takerCreatesDepositsTxInputs called");
         log.debug("inputAmount {}", inputAmount.toFriendlyString());
@@ -796,17 +799,17 @@ public class TradeWalletService {
     // Mediation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public byte[] traderSignsPayoutTx(Transaction depositTx,
-                                      Coin buyerPayoutAmount,
-                                      Coin sellerPayoutAmount,
-                                      String buyerPayoutAddressString,
-                                      String sellerPayoutAddressString,
-                                      DeterministicKey multiSigKeyPair,
-                                      byte[] buyerPubKey,
-                                      byte[] sellerPubKey,
-                                      byte[] arbitratorPubKey)
+    public byte[] signMediatedPayoutTx(Transaction depositTx,
+                                       Coin buyerPayoutAmount,
+                                       Coin sellerPayoutAmount,
+                                       String buyerPayoutAddressString,
+                                       String sellerPayoutAddressString,
+                                       DeterministicKey multiSigKeyPair,
+                                       byte[] buyerPubKey,
+                                       byte[] sellerPubKey,
+                                       byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
-        log.trace("sellerSignsPayoutTx called");
+        log.trace("signMediatedPayoutTx called");
         log.trace("depositTx {}", depositTx.toString());
         log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
@@ -836,6 +839,64 @@ public class TradeWalletService {
         WalletService.verifyTransaction(preparedPayoutTx);
 
         return buyerSignature.encodeToDER();
+    }
+
+    public Transaction finalizeMediatedPayoutTx(Transaction depositTx,
+                                                byte[] buyerSignature,
+                                                byte[] sellerSignature,
+                                                Coin buyerPayoutAmount,
+                                                Coin sellerPayoutAmount,
+                                                String buyerPayoutAddressString,
+                                                String sellerPayoutAddressString,
+                                                DeterministicKey multiSigKeyPair,
+                                                byte[] buyerPubKey,
+                                                byte[] sellerPubKey,
+                                                byte[] arbitratorPubKey)
+            throws AddressFormatException, TransactionVerificationException, WalletException {
+        log.trace("finalizeMediatedPayoutTx called");
+        log.trace("depositTx {}", depositTx.toString());
+        log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
+        log.trace("buyerSignature s {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
+        log.trace("sellerSignature r {}", ECKey.ECDSASignature.decodeFromDER(sellerSignature).r.toString());
+        log.trace("sellerSignature s {}", ECKey.ECDSASignature.decodeFromDER(sellerSignature).s.toString());
+        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
+        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
+        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
+        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
+        log.trace("multiSigKeyPair (not displayed for security reasons)");
+        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
+
+        Transaction payoutTx = createPayoutTx(depositTx,
+                buyerPayoutAmount,
+                sellerPayoutAmount,
+                buyerPayoutAddressString,
+                sellerPayoutAddressString);
+        // MS redeemScript
+        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        // MS output from prev. tx is index 0
+        checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
+
+        TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
+                Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(sellerSignature),
+                Transaction.SigHash.ALL, false);
+
+        // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (arbitrator, seller, buyer)
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
+
+        TransactionInput input = payoutTx.getInput(0);
+        input.setScriptSig(inputScript);
+
+        WalletService.printTx("payoutTx", payoutTx);
+
+        WalletService.verifyTransaction(payoutTx);
+        WalletService.checkWalletConsistency(wallet);
+        WalletService.checkScriptSig(payoutTx, input, 0);
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        input.verify(input.getConnectedOutput());
+        return payoutTx;
     }
 
 
@@ -1174,7 +1235,9 @@ public class TradeWalletService {
     }
 
     @NotNull
-    private TransactionInput getTransactionInput(Transaction depositTx, byte[] scriptProgram, RawTransactionInput rawTransactionInput) {
+    private TransactionInput getTransactionInput(Transaction depositTx,
+                                                 byte[] scriptProgram,
+                                                 RawTransactionInput rawTransactionInput) {
         return new TransactionInput(params,
                 depositTx,
                 scriptProgram,
@@ -1238,7 +1301,10 @@ public class TradeWalletService {
         }
     }
 
-    private void addAvailableInputsAndChangeOutputs(Transaction transaction, Address address, Address changeAddress, Coin txFee) throws WalletException {
+    private void addAvailableInputsAndChangeOutputs(Transaction transaction,
+                                                    Address address,
+                                                    Address changeAddress,
+                                                    Coin txFee) throws WalletException {
         SendRequest sendRequest = null;
         try {
             // Lets let the framework do the work to find the right inputs

@@ -17,25 +17,16 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
-import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.util.Validator;
+import bisq.core.trade.protocol.tasks.ProcessPayoutTxPublishedMessage;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Transaction;
-
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
-public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+public class BuyerProcessPayoutTxPublishedMessage extends ProcessPayoutTxPublishedMessage {
+    @SuppressWarnings({"unused"})
     public BuyerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -44,29 +35,15 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getState());
-            PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
-            checkNotNull(message);
-            checkArgument(message.getPayoutTx() != null);
 
-            // update to the latest peer address of our peer if the message is correct
-            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-
-            if (trade.getPayoutTx() == null) {
-                Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.getPayoutTx());
-                trade.setPayoutTx(walletTx);
-                BtcWalletService.printTx("payoutTx received from peer", walletTx);
-
-                trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
-                processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-            } else {
-                log.info("We got the payout tx already set from BuyerSetupPayoutTxListener and do nothing here. trade ID={}", trade.getId());
-            }
-            processModel.removeMailboxMessageAfterProcessing(trade);
-            complete();
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }
+    }
+
+    @Override
+    protected void setState() {
+        trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
     }
 }

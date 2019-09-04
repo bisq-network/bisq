@@ -20,7 +20,6 @@ package bisq.core.trade.protocol;
 
 import bisq.core.trade.BuyerAsTakerTrade;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
@@ -217,6 +216,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
@@ -224,8 +225,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
-            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
         } else {
             log.error("Incoming message not supported. " + tradeMessage);
         }

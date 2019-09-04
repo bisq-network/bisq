@@ -20,7 +20,6 @@ package bisq.core.trade.protocol;
 import bisq.core.trade.BuyerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
-import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
@@ -228,6 +227,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
@@ -235,8 +236,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
-            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
         } else //noinspection StatementWithEmptyBody
             if (tradeMessage instanceof PayDepositRequest) {
                 // do nothing as we get called the handleTakeOfferRequest method from outside

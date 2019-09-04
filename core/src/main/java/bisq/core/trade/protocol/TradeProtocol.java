@@ -22,13 +22,19 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.MediatedPayoutSignatureMessage;
+import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.ProcessMediatedPayoutSignatureMessage;
-import bisq.core.trade.protocol.tasks.SendMediatedPayoutSignatureMessage;
-import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
-import bisq.core.trade.protocol.tasks.SignMediatedPayoutTx;
+import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
+import bisq.core.trade.protocol.tasks.mediation.FinalizeMediatedPayoutTx;
+import bisq.core.trade.protocol.tasks.mediation.ProcessMediatedPayoutSignatureMessage;
+import bisq.core.trade.protocol.tasks.mediation.ProcessMediatedPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.mediation.SendMediatedPayoutSignatureMessage;
+import bisq.core.trade.protocol.tasks.mediation.SendMediatedPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.mediation.SetupMediatedPayoutTxListener;
+import bisq.core.trade.protocol.tasks.mediation.SignMediatedPayoutTx;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
@@ -115,27 +121,72 @@ public abstract class TradeProtocol {
     // Mediation: Called from UI if trader accepts mediation result
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // Trader has not yet received the peer's signature but has clicked the accept button.
     public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.isDepositConfirmed()) {
-            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> {
-                        resultHandler.handleResult();
-                        handleTaskRunnerSuccess("onAcceptMediationResult");
-                    },
-                    (errorMessage) -> {
-                        errorMessageHandler.handleErrorMessage(errorMessage);
-                        handleTaskRunnerFault(errorMessage);
-                    });
-            taskRunner.addTasks(
-                    ApplyFilter.class,
-                    SignMediatedPayoutTx.class,
-                    SendMediatedPayoutSignatureMessage.class,
-                    SetupPayoutTxListener.class
-            );
-            taskRunner.run();
-        } else {
-            log.warn("deposit tx is not confirmed yet. tradeState=" + trade.getState());
+        if (!trade.isDepositConfirmed()) {
+            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet. tradeState=" + trade.getState());
+            return;
         }
+        if (trade.getProcessModel().getTradingPeer().getTxSignatureFromMediation() != null) {
+            errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
+            return;
+        }
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onAcceptMediationResult");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
+        taskRunner.addTasks(
+                ApplyFilter.class,
+                SignMediatedPayoutTx.class,
+                SendMediatedPayoutSignatureMessage.class,
+                SetupMediatedPayoutTxListener.class
+        );
+        taskRunner.run();
+    }
+
+
+    // Trader has already received the peer's signature and has clicked the accept button as well.
+    public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        if (!trade.isDepositConfirmed()) {
+            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet. tradeState=" + trade.getState());
+            return;
+        }
+        if (trade.isPayoutPublished()) {
+            errorMessageHandler.handleErrorMessage("Payout tx is already published. tradeState=" + trade.getState());
+            return;
+        }
+        if (trade.getProcessModel().getTradingPeer().getTxSignatureFromMediation() != null) {
+            errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
+            return;
+        }
+        if (trade.getProcessModel().getTxSignatureFromMediation() == null) {
+            errorMessageHandler.handleErrorMessage("We have received set our signature.");
+            return;
+        }
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                () -> {
+                    resultHandler.handleResult();
+                    handleTaskRunnerSuccess("onAcceptMediationResult");
+                },
+                (errorMessage) -> {
+                    errorMessageHandler.handleErrorMessage(errorMessage);
+                    handleTaskRunnerFault(errorMessage);
+                });
+        taskRunner.addTasks(
+                ApplyFilter.class,
+                SignMediatedPayoutTx.class,
+                FinalizeMediatedPayoutTx.class,
+                BroadcastMediatedPayoutTx.class,
+                SendMediatedPayoutTxPublishedMessage.class
+        );
+        taskRunner.run();
     }
 
 
@@ -155,6 +206,33 @@ public abstract class TradeProtocol {
                 ProcessMediatedPayoutSignatureMessage.class
         );
         taskRunner.run();
+    }
+
+    protected void handle(MediatedPayoutTxPublishedMessage tradeMessage, NodeAddress sender) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(sender);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "handle PayoutTxPublishedMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                ProcessMediatedPayoutTxPublishedMessage.class
+        );
+        taskRunner.run();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dispatcher
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        if (tradeMessage instanceof MediatedPayoutSignatureMessage) {
+            handle((MediatedPayoutSignatureMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+            handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
+        }
     }
 
 
@@ -190,8 +268,6 @@ public abstract class TradeProtocol {
     }
 
     protected abstract void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade);
-
-    protected abstract void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress);
 
     protected void startTimeout() {
         stopTimeout();

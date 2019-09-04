@@ -35,7 +35,7 @@ import org.fxmisc.easybind.Subscription;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SetupPayoutTxListener extends TradeTask {
+public abstract class SetupPayoutTxListener extends TradeTask {
     // Use instance fields to not get eaten up by the GC
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
@@ -44,6 +44,9 @@ public class SetupPayoutTxListener extends TradeTask {
     public SetupPayoutTxListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
+
+
+    protected abstract void setState();
 
     @Override
     protected void run() {
@@ -90,7 +93,7 @@ public class SetupPayoutTxListener extends TradeTask {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
             trade.setPayoutTx(walletTx);
             BtcWalletService.printTx("payoutTx received from network", walletTx);
-            updateTradeState();
+            setState();
         } else {
             log.info("We had the payout tx already set. tradeId={}, state={}", trade.getId(), trade.getState());
         }
@@ -99,10 +102,6 @@ public class SetupPayoutTxListener extends TradeTask {
 
         // need delay as it can be called inside the handler before the listener and tradeStateSubscription are actually set.
         UserThread.execute(this::unSubscribe);
-    }
-
-    protected void updateTradeState() {
-        //trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
     }
 
     private void swapMultiSigEntry() {

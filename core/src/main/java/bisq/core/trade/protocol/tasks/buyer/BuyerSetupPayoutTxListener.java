@@ -44,7 +44,7 @@ public class BuyerSetupPayoutTxListener extends SetupPayoutTxListener {
     }
 
     @Override
-    protected void updateTradeState() {
+    protected void setState() {
         trade.setState(Trade.State.BUYER_SAW_PAYOUT_TX_IN_NETWORK);
     }
 
