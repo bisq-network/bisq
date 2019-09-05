@@ -587,18 +587,29 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        if (model.isBootstrapped()) {
-            if (offer.getDirection() == OfferPayload.Direction.SELL &&
-                    offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
-                new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
-                        .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
-                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
-                        .show();
-            } else {
-                offerActionHandler.onTakeOffer(offer);
-            }
-        } else {
+        if (!model.isBootstrapped()) {
             new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            return;
+        }
+
+        if (!model.hasAcceptedArbitrators()) {
+            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+            return;
+        }
+
+        if (!model.hasAcceptedMediators()) {
+            new Popup<>().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
+            return;
+        }
+
+        if (offer.getDirection() == OfferPayload.Direction.SELL &&
+                offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
+            new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
+                    .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
+                    .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                    .show();
+        } else {
+            offerActionHandler.onTakeOffer(offer);
         }
     }
 
