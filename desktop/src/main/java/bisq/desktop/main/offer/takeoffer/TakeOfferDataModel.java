@@ -17,14 +17,17 @@
 
 package bisq.desktop.main.offer.takeoffer;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -42,13 +45,13 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
+
+import bisq.network.p2p.P2PService;
 
 import bisq.common.util.Tuple2;
 
@@ -64,7 +67,6 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.ObservableList;
 
-import java.util.List;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
@@ -89,6 +91,9 @@ class TakeOfferDataModel extends OfferDataModel {
     private final TxFeeEstimationService txFeeEstimationService;
     private final PriceFeedService priceFeedService;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final Navigation navigation;
+    private final P2PService p2PService;
+    private final WalletsSetup walletsSetup;
 
     private Coin txFeeFromFeeService;
     private Coin securityDeposit;
@@ -125,7 +130,11 @@ class TakeOfferDataModel extends OfferDataModel {
                        Preferences preferences,
                        TxFeeEstimationService txFeeEstimationService,
                        PriceFeedService priceFeedService,
-                       AccountAgeWitnessService accountAgeWitnessService) {
+                       AccountAgeWitnessService accountAgeWitnessService,
+                       Navigation navigation,
+                       P2PService p2PService,
+                       WalletsSetup walletsSetup
+    ) {
         super(btcWalletService);
 
         this.tradeManager = tradeManager;
@@ -137,8 +146,9 @@ class TakeOfferDataModel extends OfferDataModel {
         this.txFeeEstimationService = txFeeEstimationService;
         this.priceFeedService = priceFeedService;
         this.accountAgeWitnessService = accountAgeWitnessService;
-
-        // isMainNet.set(preferences.getBaseCryptoNetwork() == BitcoinNetwork.BTC_MAINNET);
+        this.navigation = navigation;
+        this.p2PService = p2PService;
+        this.walletsSetup = walletsSetup;
     }
 
     @Override
@@ -159,10 +169,12 @@ class TakeOfferDataModel extends OfferDataModel {
         if (isTabSelected)
             priceFeedService.setCurrencyCode(offer.getCurrencyCode());
 
-        tradeManager.checkOfferAvailability(offer,
-                () -> {
-                },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+        if (canTakeOffer()) {
+            tradeManager.checkOfferAvailability(offer,
+                    () -> {
+                    },
+                    errorMessage -> new Popup<>().warning(errorMessage).show());
+        }
     }
 
     @Override
@@ -171,6 +183,7 @@ class TakeOfferDataModel extends OfferDataModel {
         if (offer != null)
             tradeManager.onCancelAvailabilityRequest(offer);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -424,21 +437,16 @@ class TakeOfferDataModel extends OfferDataModel {
                 .orElse(firstItem);
     }
 
-    boolean hasAcceptedArbitrators() {
-        final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
-        return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
-    }
-
-    boolean hasAcceptedMediators() {
-        final List<Mediator> acceptedMediators = user.getAcceptedMediators();
-        return acceptedMediators != null && acceptedMediators.size() > 0;
-    }
-
     long getMaxTradeLimit() {
         if (paymentAccount != null)
             return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, offer, getCurrencyCode(), getDirection());
         else
             return 0;
+    }
+
+    boolean canTakeOffer() {
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+                GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
 

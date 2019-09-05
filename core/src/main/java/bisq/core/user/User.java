@@ -411,6 +411,14 @@ public class User implements PersistedDataHost {
         return userPayload.getAcceptedMediators();
     }
 
+    public boolean hasAcceptedArbitrators() {
+        return getAcceptedArbitrators() != null && !getAcceptedArbitrators().isEmpty();
+    }
+
+    public boolean hasAcceptedMediators() {
+        return getAcceptedMediators() != null && !getAcceptedMediators().isEmpty();
+    }
+
     @Nullable
     public List<NodeAddress> getAcceptedMediatorAddresses() {
         return userPayload.getAcceptedMediators() != null ? userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList()) : null;

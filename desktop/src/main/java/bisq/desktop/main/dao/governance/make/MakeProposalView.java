@@ -492,10 +492,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void setMakeProposalButtonHandler() {
         makeProposalButton.setOnAction(event -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 publishMyProposal(selectedProposalType);
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

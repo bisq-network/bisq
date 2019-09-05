@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.account.register.mediator;
 
-import bisq.desktop.main.account.register.DisputeResolverRegistrationViewModel;
+import bisq.desktop.main.account.register.AgentRegistrationViewModel;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 
-class MediatorRegistrationViewModel extends DisputeResolverRegistrationViewModel<Mediator, MediatorManager> {
+class MediatorRegistrationViewModel extends AgentRegistrationViewModel<Mediator, MediatorManager> {
 
     @Inject
     public MediatorRegistrationViewModel(MediatorManager disputeResolverManager,

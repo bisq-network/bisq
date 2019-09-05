@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.openoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -116,7 +117,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return item != null && item.getOpenOffer() != null && item.getOpenOffer().isDeactivated();
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 }

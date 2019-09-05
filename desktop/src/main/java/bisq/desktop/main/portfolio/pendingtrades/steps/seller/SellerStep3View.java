@@ -274,14 +274,11 @@ public class SellerStep3View extends TradeStepView {
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentReceived() {
         // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
         // are well connected to the Bitcoin network before triggering the broadcast.
         if (model.dataModel.isReadyForTxBroadcast()) {
-            //noinspection UnusedAssignment
             String key = "confirmPaymentReceived";
-            //noinspection ConstantConditions
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
@@ -309,15 +306,11 @@ public class SellerStep3View extends TradeStepView {
             } else {
                 confirmPaymentReceived();
             }
-        } else {
-            model.dataModel.showNotReadyForTxBroadcastPopups();
         }
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-        //noinspection UnusedAssignment
         String key = "confirmPayment" + trade.getId();
         String message = "";
         String tradeVolumeWithCode = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());

@@ -503,31 +503,25 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onCreateOffer() {
-        if (!model.hasPaymentAccount()) {
-            openPopupForMissingAccountSetup(Res.get("popup.warning.noTradingAccountSetup.headline"),
-                    Res.get("popup.warning.noTradingAccountSetup.msg"),
-                    FiatAccountsView.class,
-                    "navigation.account");
-        } else if (!model.hasPaymentAccountForCurrency()) {
-            new Popup<>().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
-                    .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
-                    .actionButtonText(Res.get("offerbook.yesCreateOffer"))
-                    .onAction(() -> {
-                        createOfferButton.setDisable(true);
-                        offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
-                    })
-                    .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
-                    .onSecondaryAction(() -> {
-                        navigation.setReturnPath(navigation.getCurrentPath());
-                        navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
-                    })
-                    .width(725)
-                    .show();
-        } else if (!model.hasAcceptedArbitrators()) {
-            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
-        } else if (!model.hasAcceptedMediators()) {
-            new Popup<>().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
-        } else {
+        if (model.canCreateOrTakeOffer()) {
+            if (!model.hasPaymentAccountForCurrency()) {
+                new Popup<>().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
+                        .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
+                        .actionButtonText(Res.get("offerbook.yesCreateOffer"))
+                        .onAction(() -> {
+                            createOfferButton.setDisable(true);
+                            offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+                        })
+                        .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
+                        .onSecondaryAction(() -> {
+                            navigation.setReturnPath(navigation.getCurrentPath());
+                            navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                        })
+                        .width(725)
+                        .show();
+                return;
+            }
+
             createOfferButton.setDisable(true);
             offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
         }
@@ -587,46 +581,32 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onTakeOffer(Offer offer) {
-        if (!model.isBootstrapped()) {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
-            return;
-        }
-
-        if (!model.hasAcceptedArbitrators()) {
-            new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
-            return;
-        }
-
-        if (!model.hasAcceptedMediators()) {
-            new Popup<>().warning(Res.get("popup.warning.noMediatorsAvailable")).show();
-            return;
-        }
-
-        if (offer.getDirection() == OfferPayload.Direction.SELL &&
-                offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
-            new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
-                    .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
-                    .onAction(() -> offerActionHandler.onTakeOffer(offer))
-                    .show();
-        } else {
-            offerActionHandler.onTakeOffer(offer);
+        if (model.canCreateOrTakeOffer()) {
+            if (offer.getDirection() == OfferPayload.Direction.SELL &&
+                    offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
+                new Popup<>().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
+                        .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
+                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                        .show();
+            } else {
+                offerActionHandler.onTakeOffer(offer);
+            }
         }
     }
 
     private void onRemoveOpenOffer(Offer offer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
-            if (DontShowAgainLookup.showAgain(key))
+            if (DontShowAgainLookup.showAgain(key)) {
                 new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
                         .dontShowAgainId(key)
                         .show();
-            else
+            } else {
                 doRemoveOffer(offer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            }
         }
     }
 

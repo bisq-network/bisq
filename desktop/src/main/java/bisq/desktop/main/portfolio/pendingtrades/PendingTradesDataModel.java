@@ -360,15 +360,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         return getOffer() != null ? getOffer().getShortId() : "";
     }
 
-    public boolean isReadyForTxBroadcast() {
-        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
-    }
-
-    public void showNotReadyForTxBroadcastPopups() {
-        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -497,8 +488,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return;
         }
 
-        if (!p2PService.isBootstrapped()) {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+        if (!GUIUtil.isBootstrappedOrShowPopup(p2PService)) {
             return;
         }
 
@@ -603,6 +593,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         new Popup<>().warning(errorMessage).show();
                     }
                 });
+    }
+
+    public boolean isReadyForTxBroadcast() {
+        return GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup);
+    }
+
+    public boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 }
 
