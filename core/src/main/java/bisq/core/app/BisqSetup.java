@@ -598,12 +598,15 @@ public class BisqSetup {
                 .filter(e -> tradeManager.getSetOfAllTradeIds().contains(e.getOfferId()) &&
                         e.getContext() == AddressEntry.Context.MULTI_SIG)
                 .forEach(e -> {
-                    final Coin balance = e.getCoinLockedInMultiSig();
-                    final String message = Res.get("popup.warning.lockedUpFunds",
-                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                    log.warn(message);
-                    if (lockedUpFundsHandler != null)
-                        lockedUpFundsHandler.accept(message);
+                    Coin balance = e.getCoinLockedInMultiSig();
+                    if (balance.isPositive()) {
+                        String message = Res.get("popup.warning.lockedUpFunds",
+                                formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                        log.warn(message);
+                        if (lockedUpFundsHandler != null) {
+                            lockedUpFundsHandler.accept(message);
+                        }
+                    }
                 });
     }
 
