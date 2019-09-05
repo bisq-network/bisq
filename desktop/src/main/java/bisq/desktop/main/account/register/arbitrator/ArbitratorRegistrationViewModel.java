@@ -37,17 +37,17 @@ import java.util.Date;
 public class ArbitratorRegistrationViewModel extends AgentRegistrationViewModel<Arbitrator, ArbitratorManager> {
 
     @Inject
-    public ArbitratorRegistrationViewModel(ArbitratorManager disputeResolverManager,
+    public ArbitratorRegistrationViewModel(ArbitratorManager arbitratorManager,
                                            User user,
                                            P2PService p2PService,
                                            BtcWalletService walletService,
                                            KeyRing keyRing) {
-        super(disputeResolverManager, user, p2PService, walletService, keyRing);
+        super(arbitratorManager, user, p2PService, walletService, keyRing);
     }
 
     @Override
-    protected Arbitrator getDisputeResolver(String registrationSignature,
-                                            String emailAddress) {
+    protected Arbitrator getDisputeAgent(String registrationSignature,
+                                         String emailAddress) {
         AddressEntry arbitratorAddressEntry = walletService.getArbitratorAddressEntry();
         return new Arbitrator(
                 p2PService.getAddress(),
@@ -65,7 +65,7 @@ public class ArbitratorRegistrationViewModel extends AgentRegistrationViewModel<
     }
 
     @Override
-    protected Arbitrator getRegisteredDisputeResolverFromUser() {
+    protected Arbitrator getRegisteredDisputeAgentFromUser() {
         return user.getRegisteredArbitrator();
     }
 }

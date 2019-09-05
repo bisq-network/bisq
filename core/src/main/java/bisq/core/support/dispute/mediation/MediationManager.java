@@ -206,9 +206,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         return dispute.getContract().getMediatorNodeAddress();
     }
 
-    public void onAcceptMediationResult(Trade trade,
-                                        ResultHandler resultHandler,
-                                        ErrorMessageHandler errorMessageHandler) {
+    public void acceptMediationResult(Trade trade,
+                                      ResultHandler resultHandler,
+                                      ErrorMessageHandler errorMessageHandler) {
         String tradeId = trade.getId();
         Optional<Dispute> optionalDispute = findDispute(tradeId);
         checkArgument(optionalDispute.isPresent(), "dispute must be present");
@@ -241,7 +241,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
     }
 
-    public void onRejectMediationResult(Trade trade) {
+    public void rejectMediationResult(Trade trade) {
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
     }
 }

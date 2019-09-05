@@ -39,7 +39,7 @@ import javafx.beans.value.ChangeListener;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTopLabelInputTextFieldWithVBox;
 
-public class UnlockDisputeResolverRegistrationWindow extends Overlay<UnlockDisputeResolverRegistrationWindow> {
+public class UnlockDisputeAgentRegistrationWindow extends Overlay<UnlockDisputeAgentRegistrationWindow> {
     private final boolean useDevPrivilegeKeys;
     private Button unlockButton;
     private InputTextField keyInputTextField;
@@ -60,7 +60,7 @@ public class UnlockDisputeResolverRegistrationWindow extends Overlay<UnlockDispu
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public UnlockDisputeResolverRegistrationWindow(boolean useDevPrivilegeKeys) {
+    public UnlockDisputeAgentRegistrationWindow(boolean useDevPrivilegeKeys) {
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         if (keyInputTextField != null)
             keyInputTextField.textProperty().addListener(changeListener);
@@ -85,7 +85,7 @@ public class UnlockDisputeResolverRegistrationWindow extends Overlay<UnlockDispu
         display();
     }
 
-    public UnlockDisputeResolverRegistrationWindow onKey(PrivKeyHandler privKeyHandler) {
+    public UnlockDisputeAgentRegistrationWindow onKey(PrivKeyHandler privKeyHandler) {
         this.privKeyHandler = privKeyHandler;
         return this;
     }

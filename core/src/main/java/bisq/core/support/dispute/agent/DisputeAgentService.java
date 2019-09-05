@@ -37,7 +37,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Used to store disputeResolvers profile and load map of disputeResolvers
+ * Used to store disputeAgents profile and load map of disputeAgents
  */
 @Slf4j
 public abstract class DisputeAgentService<T extends DisputeAgent> {
@@ -58,34 +58,34 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
         p2PService.addHashSetChangedListener(hashMapChangedListener);
     }
 
-    public void addDisputeResolver(T disputeResolver,
-                                   ResultHandler resultHandler,
-                                   ErrorMessageHandler errorMessageHandler) {
-        log.debug("addDisputeResolver disputeResolver.hashCode() " + disputeResolver.hashCode());
+    public void addDisputeAgent(T disputeAgent,
+                                ResultHandler resultHandler,
+                                ErrorMessageHandler errorMessageHandler) {
+        log.debug("addDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
         if (!BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ||
-                !Utilities.encodeToHex(disputeResolver.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
-            boolean result = p2PService.addProtectedStorageEntry(disputeResolver, true);
+                !Utilities.encodeToHex(disputeAgent.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
+            boolean result = p2PService.addProtectedStorageEntry(disputeAgent, true);
             if (result) {
-                log.trace("Add disputeResolver to network was successful. DisputeResolver.hashCode() = " + disputeResolver.hashCode());
+                log.trace("Add disputeAgent to network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
                 resultHandler.handleResult();
             } else {
-                errorMessageHandler.handleErrorMessage("Add disputeResolver failed");
+                errorMessageHandler.handleErrorMessage("Add disputeAgent failed");
             }
         } else {
-            log.error("Attempt to publish dev disputeResolver on mainnet.");
-            errorMessageHandler.handleErrorMessage("Add disputeResolver failed. Attempt to publish dev disputeResolver on mainnet.");
+            log.error("Attempt to publish dev disputeAgent on mainnet.");
+            errorMessageHandler.handleErrorMessage("Add disputeAgent failed. Attempt to publish dev disputeAgent on mainnet.");
         }
     }
 
-    public void removeDisputeResolver(T disputeResolver,
-                                      ResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
-        log.debug("removeDisputeResolver disputeResolver.hashCode() " + disputeResolver.hashCode());
-        if (p2PService.removeData(disputeResolver, true)) {
-            log.trace("Remove disputeResolver from network was successful. DisputeResolver.hashCode() = " + disputeResolver.hashCode());
+    public void removeDisputeAgent(T disputeAgent,
+                                   ResultHandler resultHandler,
+                                   ErrorMessageHandler errorMessageHandler) {
+        log.debug("removeDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
+        if (p2PService.removeData(disputeAgent, true)) {
+            log.trace("Remove disputeAgent from network was successful. DisputeAgent.hashCode() = " + disputeAgent.hashCode());
             resultHandler.handleResult();
         } else {
-            errorMessageHandler.handleErrorMessage("Remove disputeResolver failed");
+            errorMessageHandler.handleErrorMessage("Remove disputeAgent failed");
         }
     }
 
@@ -93,29 +93,29 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
         return p2PService;
     }
 
-    public Map<NodeAddress, T> getDisputeResolvers() {
-        final List<String> bannedDisputeResolvers;
+    public Map<NodeAddress, T> getDisputeAgents() {
+        final List<String> bannedDisputeAgents;
         if (filterManager.getFilter() != null) {
-            bannedDisputeResolvers = getDisputeResolversFromFilter();
+            bannedDisputeAgents = getDisputeAgentsFromFilter();
         } else {
-            bannedDisputeResolvers = null;
+            bannedDisputeAgents = null;
         }
-        if (bannedDisputeResolvers != null)
-            log.warn("bannedDisputeResolvers=" + bannedDisputeResolvers);
-        Set<T> disputeResolverSet = getDisputeResolverSet(bannedDisputeResolvers);
+        if (bannedDisputeAgents != null)
+            log.warn("bannedDisputeAgents=" + bannedDisputeAgents);
+        Set<T> disputeAgentSet = getDisputeAgentSet(bannedDisputeAgents);
 
         Map<NodeAddress, T> map = new HashMap<>();
-        for (T disputeResolver : disputeResolverSet) {
-            NodeAddress disputeResolverNodeAddress = disputeResolver.getNodeAddress();
-            if (!map.containsKey(disputeResolverNodeAddress))
-                map.put(disputeResolverNodeAddress, disputeResolver);
+        for (T disputeAgent : disputeAgentSet) {
+            NodeAddress disputeAgentNodeAddress = disputeAgent.getNodeAddress();
+            if (!map.containsKey(disputeAgentNodeAddress))
+                map.put(disputeAgentNodeAddress, disputeAgent);
             else
-                log.warn("disputeResolverAddress already exist in disputeResolver map. Seems an disputeResolver object is already registered with the same address.");
+                log.warn("disputeAgentAddress already exist in disputeAgent map. Seems an disputeAgent object is already registered with the same address.");
         }
         return map;
     }
 
-    protected abstract Set<T> getDisputeResolverSet(List<String> bannedDisputeResolvers);
+    protected abstract Set<T> getDisputeAgentSet(List<String> bannedDisputeAgents);
 
-    protected abstract List<String> getDisputeResolversFromFilter();
+    protected abstract List<String> getDisputeAgentsFromFilter();
 }

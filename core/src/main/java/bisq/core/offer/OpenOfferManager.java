@@ -21,7 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
-import bisq.core.offer.availability.DisputeResolverSelection;
+import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
@@ -581,10 +581,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            arbitratorNodeAddress = DisputeResolverSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                            arbitratorNodeAddress = DisputeAgentSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
                             openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
-                            mediatorNodeAddress = DisputeResolverSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
+                            mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
                             openOffer.setMediatorNodeAddress(mediatorNodeAddress);
                             Capabilities supportedCapabilities = request.getSupportedCapabilities();
                             if (!OfferRestrictions.requiresUpdate() ||

@@ -24,7 +24,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.UnlockDisputeResolverRegistrationWindow;
+import bisq.desktop.main.overlays.windows.UnlockDisputeAgentRegistrationWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
@@ -80,7 +80,7 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
     private int gridRow = 0;
 
     private ChangeListener<R> changeListener;
-    private UnlockDisputeResolverRegistrationWindow unlockDisputeResolverRegistrationWindow;
+    private UnlockDisputeAgentRegistrationWindow unlockDisputeAgentRegistrationWindow;
     private ListChangeListener<String> listChangeListener;
 
 
@@ -109,24 +109,24 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
 
     @Override
     protected void deactivate() {
-        model.myDisputeResolverProperty.removeListener(changeListener);
+        model.myDisputeAgentProperty.removeListener(changeListener);
         languagesListView.getItems().removeListener(listChangeListener);
     }
 
     public void onTabSelection(boolean isSelectedTab) {
         if (isSelectedTab) {
-            model.myDisputeResolverProperty.addListener(changeListener);
+            model.myDisputeAgentProperty.addListener(changeListener);
             updateLanguageList();
 
-            if (model.registrationPubKeyAsHex.get() == null && unlockDisputeResolverRegistrationWindow == null) {
-                unlockDisputeResolverRegistrationWindow = new UnlockDisputeResolverRegistrationWindow(useDevPrivilegeKeys);
-                unlockDisputeResolverRegistrationWindow.onClose(() -> unlockDisputeResolverRegistrationWindow = null)
+            if (model.registrationPubKeyAsHex.get() == null && unlockDisputeAgentRegistrationWindow == null) {
+                unlockDisputeAgentRegistrationWindow = new UnlockDisputeAgentRegistrationWindow(useDevPrivilegeKeys);
+                unlockDisputeAgentRegistrationWindow.onClose(() -> unlockDisputeAgentRegistrationWindow = null)
                         .onKey(model::setPrivKeyAndCheckPubKey)
                         .width(700)
                         .show();
             }
         } else {
-            model.myDisputeResolverProperty.removeListener(changeListener);
+            model.myDisputeAgentProperty.removeListener(changeListener);
         }
     }
 

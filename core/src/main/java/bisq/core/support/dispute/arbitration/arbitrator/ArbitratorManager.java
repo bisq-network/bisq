@@ -40,11 +40,11 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
 
     @Inject
     public ArbitratorManager(KeyRing keyRing,
-                             ArbitratorService disputeResolverService,
+                             ArbitratorService arbitratorService,
                              User user,
                              FilterManager filterManager,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(keyRing, disputeResolverService, user, filterManager, useDevPrivilegeKeys);
+        super(keyRing, arbitratorService, user, filterManager, useDevPrivilegeKeys);
     }
 
     @Override
@@ -72,32 +72,32 @@ public class ArbitratorManager extends DisputeAgentManager<Arbitrator> {
     }
 
     @Override
-    protected void addAcceptedDisputeResolverToUser(Arbitrator disputeResolver) {
-        user.addAcceptedArbitrator(disputeResolver);
+    protected void addAcceptedDisputeAgentToUser(Arbitrator disputeAgent) {
+        user.addAcceptedArbitrator(disputeAgent);
     }
 
     @Override
-    protected void removeAcceptedDisputeResolverFromUser(ProtectedStorageEntry data) {
+    protected void removeAcceptedDisputeAgentFromUser(ProtectedStorageEntry data) {
         user.removeAcceptedArbitrator((Arbitrator) data.getProtectedStoragePayload());
     }
 
     @Override
-    protected List<Arbitrator> getAcceptedDisputeResolversFromUser() {
+    protected List<Arbitrator> getAcceptedDisputeAgentsFromUser() {
         return user.getAcceptedArbitrators();
     }
 
     @Override
-    protected void clearAcceptedDisputeResolversAtUser() {
+    protected void clearAcceptedDisputeAgentsAtUser() {
         user.clearAcceptedArbitrators();
     }
 
     @Override
-    protected Arbitrator getRegisteredDisputeResolverFromUser() {
+    protected Arbitrator getRegisteredDisputeAgentFromUser() {
         return user.getRegisteredArbitrator();
     }
 
     @Override
-    protected void setRegisteredDisputeResolverAtUser(Arbitrator disputeResolver) {
-        user.setRegisteredArbitrator(disputeResolver);
+    protected void setRegisteredDisputeAgentAtUser(Arbitrator disputeAgent) {
+        user.setRegisteredArbitrator(disputeAgent);
     }
 }
