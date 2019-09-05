@@ -33,7 +33,6 @@ import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationResultState;
-import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
@@ -318,17 +317,22 @@ public abstract class Trade implements Tradable, Model {
     private String makerContractSignature;
     @Nullable
     @Getter
+    @Setter
     private NodeAddress arbitratorNodeAddress;
     @Nullable
+    @Setter
     private byte[] arbitratorBtcPubKey;
     @Nullable
     @Getter
+    @Setter
     private PubKeyRing arbitratorPubKeyRing;
     @Nullable
     @Getter
+    @Setter
     private NodeAddress mediatorNodeAddress;
     @Nullable
     @Getter
+    @Setter
     private PubKeyRing mediatorPubKeyRing;
     @Nullable
     @Getter
@@ -494,8 +498,8 @@ public abstract class Trade implements Tradable, Model {
         trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()));
         trade.setTakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()));
         trade.setMakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()));
-        trade.applyArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
-        trade.applyMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
+        trade.setArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
+        trade.setMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
         trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
         trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
@@ -508,18 +512,6 @@ public abstract class Trade implements Tradable, Model {
                 .collect(Collectors.toList()));
 
         return trade;
-    }
-
-    private void setArbitratorBtcPubKey(byte[] arbitratorBtcPubKey) {
-        this.arbitratorBtcPubKey = arbitratorBtcPubKey;
-    }
-
-    private void setMediatorPubKeyRing(PubKeyRing mediatorPubKeyRing) {
-        this.mediatorPubKeyRing = mediatorPubKeyRing;
-    }
-
-    private void setArbitratorPubKeyRing(PubKeyRing arbitratorPubKeyRing) {
-        this.arbitratorPubKeyRing = arbitratorPubKeyRing;
     }
 
 
@@ -572,7 +564,7 @@ public abstract class Trade implements Tradable, Model {
             persist();
         });
 
-        mediatorManager.getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(mediator -> {
+        mediatorManager.getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
             mediatorPubKeyRing = mediator.getPubKeyRing();
             persist();
         });
@@ -593,12 +585,11 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
-    public void updateDepositTxFromWallet() {
+    void updateDepositTxFromWallet() {
         if (getDepositTx() != null)
             setDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setDepositTx(Transaction tx) {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
@@ -617,7 +608,7 @@ public abstract class Trade implements Tradable, Model {
     // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
     // will received it again at next startup. Such might happen in edge cases when the user shuts down after we
     // received the msb but before the init is called.
-    public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
@@ -712,7 +703,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
 
-    public void setTradePeriodState(TradePeriodState tradePeriodState) {
+    void setTradePeriodState(TradePeriodState tradePeriodState) {
         log.error("setTradePeriodState: {}", tradePeriodState);
         boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
@@ -721,7 +712,6 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
         if (tradingPeerNodeAddress == null)
             log.error("tradingPeerAddress=null");
@@ -729,7 +719,6 @@ public abstract class Trade implements Tradable, Model {
             this.tradingPeerNodeAddress = tradingPeerNodeAddress;
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
         tradeAmountAsLong = tradeAmount.value;
@@ -737,48 +726,14 @@ public abstract class Trade implements Tradable, Model {
         getTradeVolumeProperty().set(getTradeVolume());
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
         payoutTxId = payoutTx.getHashAsString();
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
-    }
-
-    public void applyArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
-        this.arbitratorNodeAddress = arbitratorNodeAddress;
-        if (processModel.getUser() != null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            persist();
-        }
-    }
-
-    public void applyArbitratorPubKeyRing(NodeAddress arbitratorNodeAddress) {
-        this.arbitratorNodeAddress = arbitratorNodeAddress;
-        if (processModel.getUser() != null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            persist();
-        }
-    }
-
-    public void applyMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
-        this.mediatorNodeAddress = mediatorNodeAddress;
-        if (processModel.getUser() != null) {
-            Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
-            checkNotNull(mediator, "mediator must not be null");
-            mediatorPubKeyRing = mediator.getPubKeyRing();
-            persist();
-        }
     }
 
 
