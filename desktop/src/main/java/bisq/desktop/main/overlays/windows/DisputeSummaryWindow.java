@@ -59,14 +59,12 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.VPos;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -78,7 +76,10 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.add2ButtonsWithBox;
+import static bisq.desktop.util.FormBuilder.addConfirmationLabelLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
@@ -205,9 +206,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         addInfoPane();
 
-        if (!dispute.isSupportTicket())
-            addCheckboxes();
-
         addTradeAmountPayoutControls();
         addPayoutAmountTextFields();
         addReasonControls();
@@ -296,27 +294,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
     }
 
-    private void addCheckboxes() {
-        Label evidenceLabel = addLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.evidence"), 10);
-        GridPane.setValignment(evidenceLabel, VPos.TOP);
-        CheckBox tamperProofCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.evidence.tamperProof"));
-        CheckBox idVerificationCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.evidence.id"));
-        CheckBox screenCastCheckBox = new AutoTooltipCheckBox(Res.get("disputeSummaryWindow.evidence.video"));
-
-        tamperProofCheckBox.selectedProperty().bindBidirectional(disputeResult.tamperProofEvidenceProperty());
-        idVerificationCheckBox.selectedProperty().bindBidirectional(disputeResult.idVerificationProperty());
-        screenCastCheckBox.selectedProperty().bindBidirectional(disputeResult.screenCastProperty());
-
-        FlowPane checkBoxPane = new FlowPane();
-        checkBoxPane.setHgap(20);
-        checkBoxPane.setVgap(5);
-        checkBoxPane.getChildren().addAll(tamperProofCheckBox, idVerificationCheckBox, screenCastCheckBox);
-        GridPane.setRowIndex(checkBoxPane, rowIndex);
-        GridPane.setColumnIndex(checkBoxPane, 1);
-        GridPane.setMargin(checkBoxPane, new Insets(10, 0, 0, 0));
-        gridPane.getChildren().add(checkBoxPane);
-    }
-
     private void addTradeAmountPayoutControls() {
         buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount",
                 Res.get("shared.buyer")));
@@ -335,7 +312,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 customRadioButton);
 
         addTopLabelWithVBox(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.payout"),
-                radioButtonPane, 10);
+                radioButtonPane, 0);
 
         tradeAmountToggleGroup = new ToggleGroup();
         buyerGetsTradeAmountRadioButton.setToggleGroup(tradeAmountToggleGroup);
@@ -581,12 +558,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             dispute.setIsClosed(true);
             String text = Res.get("disputeSummaryWindow.close.msg",
                     formatter.formatDateTime(disputeResult.getCloseDate()),
-                    role,
-                    formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
-                    role,
-                    formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
-                    role,
-                    formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
                     formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                     formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                     disputeResult.summaryNotesProperty().get());
