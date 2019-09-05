@@ -161,9 +161,9 @@ public class TorNetworkNode extends NetworkNode {
     private void deleteHiddenServiceDir(File dir) {
         try {
             Files.walk(dir.toPath())
-                    .sorted()
+                    .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
-                    .forEach(File::deleteOnExit);
+                    .forEach(File::delete);
         } catch (IOException e) {
             log.error("Error while trying to delete deprecated hidden service directory", e);
         }
