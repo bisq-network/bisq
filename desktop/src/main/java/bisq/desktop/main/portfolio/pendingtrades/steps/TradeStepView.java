@@ -533,7 +533,7 @@ public abstract class TradeStepView extends AnchorPane {
                 openMediationResultPopup();
             });
 
-            if (trade.isDepositConfirmed()) {
+            if (trade.getProcessModel().getMediatedPayoutTxSignature() == null) {
                 openMediationResultPopup();
             }
         }

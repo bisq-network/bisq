@@ -67,7 +67,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class MediationManager extends DisputeManager<MediationDisputeList> {
 
     // The date when mediation is activated
-    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1);
+    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 11);
 
     public static boolean isMediationActivated() {
         return new Date().after(MEDIATION_ACTIVATED_DATE);
@@ -133,7 +133,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     public void cleanupDisputes() {
-        disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED));
+        disputeListService.cleanupDisputes(tradeId -> {
+            tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
+                    .ifPresent(trade -> {
+                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+                    });
+        });
     }
 
 
@@ -228,7 +233,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
             }, errorMessageHandler);
         } else {
             tradeProtocol.onFinalizeMediationResultPayout(() -> {
-                tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+                if (trade.getPayoutTx() != null) {
+                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+                }
                 resultHandler.handleResult();
             }, errorMessageHandler);
         }
