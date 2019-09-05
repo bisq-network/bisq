@@ -73,7 +73,6 @@ public class TakerSendPayDepositRequest extends TradeTask {
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
 
-
             checkArgument(walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).isPresent(),
                     "TRADE_PAYOUT addressEntry must have been already set here.");
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);

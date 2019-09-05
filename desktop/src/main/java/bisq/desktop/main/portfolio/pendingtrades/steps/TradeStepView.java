@@ -558,7 +558,7 @@ public abstract class TradeStepView extends AnchorPane {
                             myPayoutAmount, peersPayoutAmount))
                     .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
                     .onAction(() -> {
-                        model.dataModel.mediationManager.onAcceptMediationResult(trade,
+                        model.dataModel.mediationManager.acceptMediationResult(trade,
                                 () -> {
                                     log.info("onAcceptMediationResult completed");
                                 },
@@ -576,7 +576,7 @@ public abstract class TradeStepView extends AnchorPane {
                     })
                     .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
                     .onSecondaryAction(() -> {
-                        model.dataModel.mediationManager.onRejectMediationResult(trade);
+                        model.dataModel.mediationManager.rejectMediationResult(trade);
                         notificationGroup.button.setDisable(false);
                         model.dataModel.onOpenDispute();
                     })

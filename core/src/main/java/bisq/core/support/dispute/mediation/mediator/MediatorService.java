@@ -46,21 +46,21 @@ public class MediatorService extends DisputeAgentService<Mediator> {
     }
 
     @Override
-    protected Set<Mediator> getDisputeResolverSet(List<String> bannedDisputeResolvers) {
+    protected Set<Mediator> getDisputeAgentSet(List<String> bannedDisputeAgents) {
         return p2PService.getDataMap().values().stream()
                 .filter(data -> data.getProtectedStoragePayload() instanceof Mediator)
                 .map(data -> (Mediator) data.getProtectedStoragePayload())
-                .filter(a -> bannedDisputeResolvers == null ||
-                        !bannedDisputeResolvers.contains(a.getNodeAddress().getFullAddress()))
+                .filter(a -> bannedDisputeAgents == null ||
+                        !bannedDisputeAgents.contains(a.getNodeAddress().getFullAddress()))
                 .collect(Collectors.toSet());
     }
 
     @Override
-    protected List<String> getDisputeResolversFromFilter() {
+    protected List<String> getDisputeAgentsFromFilter() {
         return filterManager.getFilter() != null ? filterManager.getFilter().getMediators() : new ArrayList<>();
     }
 
     public Map<NodeAddress, Mediator> getMediators() {
-        return super.getDisputeResolvers();
+        return super.getDisputeAgents();
     }
 }

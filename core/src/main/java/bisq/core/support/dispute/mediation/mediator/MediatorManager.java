@@ -38,11 +38,11 @@ public class MediatorManager extends DisputeAgentManager<Mediator> {
 
     @Inject
     public MediatorManager(KeyRing keyRing,
-                           MediatorService disputeResolverService,
+                           MediatorService mediatorService,
                            User user,
                            FilterManager filterManager,
                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(keyRing, disputeResolverService, user, filterManager, useDevPrivilegeKeys);
+        super(keyRing, mediatorService, user, filterManager, useDevPrivilegeKeys);
     }
 
     //TODO Before release set new keys from maintainer who manages keys
@@ -71,32 +71,32 @@ public class MediatorManager extends DisputeAgentManager<Mediator> {
     }
 
     @Override
-    protected void addAcceptedDisputeResolverToUser(Mediator disputeResolver) {
-        user.addAcceptedMediator(disputeResolver);
+    protected void addAcceptedDisputeAgentToUser(Mediator disputeAgent) {
+        user.addAcceptedMediator(disputeAgent);
     }
 
     @Override
-    protected void removeAcceptedDisputeResolverFromUser(ProtectedStorageEntry data) {
+    protected void removeAcceptedDisputeAgentFromUser(ProtectedStorageEntry data) {
         user.removeAcceptedMediator((Mediator) data.getProtectedStoragePayload());
     }
 
     @Override
-    protected List<Mediator> getAcceptedDisputeResolversFromUser() {
+    protected List<Mediator> getAcceptedDisputeAgentsFromUser() {
         return user.getAcceptedMediators();
     }
 
     @Override
-    protected void clearAcceptedDisputeResolversAtUser() {
+    protected void clearAcceptedDisputeAgentsAtUser() {
         user.clearAcceptedMediators();
     }
 
     @Override
-    protected Mediator getRegisteredDisputeResolverFromUser() {
+    protected Mediator getRegisteredDisputeAgentFromUser() {
         return user.getRegisteredMediator();
     }
 
     @Override
-    protected void setRegisteredDisputeResolverAtUser(Mediator disputeResolver) {
-        user.setRegisteredMediator(disputeResolver);
+    protected void setRegisteredDisputeAgentAtUser(Mediator disputeAgent) {
+        user.setRegisteredMediator(disputeAgent);
     }
 }

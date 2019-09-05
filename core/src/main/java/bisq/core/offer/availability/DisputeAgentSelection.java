@@ -41,25 +41,25 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class DisputeResolverSelection {
+public class DisputeAgentSelection {
 
     public static <T extends DisputeAgent> T getLeastUsedArbitrator(TradeStatisticsManager tradeStatisticsManager,
                                                                     DisputeAgentManager<T> disputeAgentManager) {
-        return getLeastUsedDisputeResolver(tradeStatisticsManager,
+        return getLeastUsedDisputeAgent(tradeStatisticsManager,
                 disputeAgentManager,
                 TradeStatistics2.ARBITRATOR_ADDRESS);
     }
 
     public static <T extends DisputeAgent> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
                                                                   DisputeAgentManager<T> disputeAgentManager) {
-        return getLeastUsedDisputeResolver(tradeStatisticsManager,
+        return getLeastUsedDisputeAgent(tradeStatisticsManager,
                 disputeAgentManager,
                 TradeStatistics2.MEDIATOR_ADDRESS);
     }
 
-    private static <T extends DisputeAgent> T getLeastUsedDisputeResolver(TradeStatisticsManager tradeStatisticsManager,
-                                                                          DisputeAgentManager<T> disputeAgentManager,
-                                                                          String extraMapKey) {
+    private static <T extends DisputeAgent> T getLeastUsedDisputeAgent(TradeStatisticsManager tradeStatisticsManager,
+                                                                       DisputeAgentManager<T> disputeAgentManager,
+                                                                       String extraMapKey) {
         // We take last 100 entries from trade statistics
         List<TradeStatistics2> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
         list.sort(Comparator.comparing(TradeStatistics2::getTradeDate));
@@ -69,33 +69,33 @@ public class DisputeResolverSelection {
             list = list.subList(0, max);
         }
 
-        // We stored only first 4 chars of disputeResolvers onion address
+        // We stored only first 4 chars of disputeAgents onion address
         List<String> lastAddressesUsedInTrades = list.stream()
                 .filter(tradeStatistics2 -> tradeStatistics2.getExtraDataMap() != null)
                 .map(tradeStatistics2 -> tradeStatistics2.getExtraDataMap().get(extraMapKey))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        Set<String> disputeResolvers = disputeAgentManager.getObservableMap().values().stream()
-                .map(disputeResolver -> disputeResolver.getNodeAddress().getFullAddress())
+        Set<String> disputeAgents = disputeAgentManager.getObservableMap().values().stream()
+                .map(disputeAgent -> disputeAgent.getNodeAddress().getFullAddress())
                 .collect(Collectors.toSet());
 
-        String result = getLeastUsedDisputeResolver(lastAddressesUsedInTrades, disputeResolvers);
+        String result = getLeastUsedDisputeAgent(lastAddressesUsedInTrades, disputeAgents);
 
-        Optional<T> optionalDisputeResolver = disputeAgentManager.getObservableMap().values().stream()
+        Optional<T> optionalDisputeAgent = disputeAgentManager.getObservableMap().values().stream()
                 .filter(e -> e.getNodeAddress().getFullAddress().equals(result))
                 .findAny();
-        checkArgument(optionalDisputeResolver.isPresent(), "optionalDisputeResolver has to be present");
-        return optionalDisputeResolver.get();
+        checkArgument(optionalDisputeAgent.isPresent(), "optionalDisputeAgent has to be present");
+        return optionalDisputeAgent.get();
     }
 
     @VisibleForTesting
-    static String getLeastUsedDisputeResolver(List<String> lastAddressesUsedInTrades, Set<String> disputeResolvers) {
-        checkArgument(!disputeResolvers.isEmpty(), "disputeResolvers must not be empty");
-        List<Tuple2<String, AtomicInteger>> disputeResolverTuples = disputeResolvers.stream()
+    static String getLeastUsedDisputeAgent(List<String> lastAddressesUsedInTrades, Set<String> disputeAgents) {
+        checkArgument(!disputeAgents.isEmpty(), "disputeAgents must not be empty");
+        List<Tuple2<String, AtomicInteger>> disputeAgentTuples = disputeAgents.stream()
                 .map(e -> new Tuple2<>(e, new AtomicInteger(0)))
                 .collect(Collectors.toList());
-        disputeResolverTuples.forEach(tuple -> {
+        disputeAgentTuples.forEach(tuple -> {
             int count = (int) lastAddressesUsedInTrades.stream()
                     .filter(tuple.first::startsWith) // we use only first 4 chars for comparing
                     .mapToInt(e -> 1)
@@ -103,8 +103,8 @@ public class DisputeResolverSelection {
             tuple.second.set(count);
         });
 
-        disputeResolverTuples.sort(Comparator.comparing(e -> e.first));
-        disputeResolverTuples.sort(Comparator.comparingInt(e -> e.second.get()));
-        return disputeResolverTuples.get(0).first;
+        disputeAgentTuples.sort(Comparator.comparing(e -> e.first));
+        disputeAgentTuples.sort(Comparator.comparingInt(e -> e.second.get()));
+        return disputeAgentTuples.get(0).first;
     }
 }

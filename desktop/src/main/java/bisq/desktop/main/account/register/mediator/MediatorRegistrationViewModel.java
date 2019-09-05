@@ -36,17 +36,17 @@ import java.util.Date;
 class MediatorRegistrationViewModel extends AgentRegistrationViewModel<Mediator, MediatorManager> {
 
     @Inject
-    public MediatorRegistrationViewModel(MediatorManager disputeResolverManager,
+    public MediatorRegistrationViewModel(MediatorManager mediatorManager,
                                          User user,
                                          P2PService p2PService,
                                          BtcWalletService walletService,
                                          KeyRing keyRing) {
-        super(disputeResolverManager, user, p2PService, walletService, keyRing);
+        super(mediatorManager, user, p2PService, walletService, keyRing);
     }
 
     @Override
-    protected Mediator getDisputeResolver(String registrationSignature,
-                                          String emailAddress) {
+    protected Mediator getDisputeAgent(String registrationSignature,
+                                       String emailAddress) {
         return new Mediator(
                 p2PService.getAddress(),
                 keyRing.getPubKeyRing(),
@@ -61,7 +61,7 @@ class MediatorRegistrationViewModel extends AgentRegistrationViewModel<Mediator,
     }
 
     @Override
-    protected Mediator getRegisteredDisputeResolverFromUser() {
+    protected Mediator getRegisteredDisputeAgentFromUser() {
         return user.getRegisteredMediator();
     }
 }

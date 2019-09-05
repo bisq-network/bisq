@@ -34,6 +34,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
@@ -45,7 +46,6 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -320,18 +320,15 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     private NodeAddress arbitratorNodeAddress;
     @Nullable
-    @Setter
     private byte[] arbitratorBtcPubKey;
     @Nullable
     @Getter
-    @Setter
     private PubKeyRing arbitratorPubKeyRing;
     @Nullable
     @Getter
     private NodeAddress mediatorNodeAddress;
     @Nullable
     @Getter
-    @Setter
     private PubKeyRing mediatorPubKeyRing;
     @Nullable
     @Getter
@@ -497,8 +494,8 @@ public abstract class Trade implements Tradable, Model {
         trade.setContractHash(ProtoUtil.byteArrayOrNullFromProto(proto.getContractHash()));
         trade.setTakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()));
         trade.setMakerContractSignature(ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()));
-        trade.setArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
-        trade.setMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
+        trade.applyArbitratorNodeAddress(proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
+        trade.applyMediatorNodeAddress(proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
         trade.setArbitratorBtcPubKey(ProtoUtil.byteArrayOrNullFromProto(proto.getArbitratorBtcPubKey()));
         trade.setTakerPaymentAccountId(ProtoUtil.stringOrNullFromProto(proto.getTakerPaymentAccountId()));
         trade.setErrorMessage(ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()));
@@ -511,6 +508,18 @@ public abstract class Trade implements Tradable, Model {
                 .collect(Collectors.toList()));
 
         return trade;
+    }
+
+    private void setArbitratorBtcPubKey(byte[] arbitratorBtcPubKey) {
+        this.arbitratorBtcPubKey = arbitratorBtcPubKey;
+    }
+
+    private void setMediatorPubKeyRing(PubKeyRing mediatorPubKeyRing) {
+        this.mediatorPubKeyRing = mediatorPubKeyRing;
+    }
+
+    private void setArbitratorPubKeyRing(PubKeyRing arbitratorPubKeyRing) {
+        this.arbitratorPubKeyRing = arbitratorPubKeyRing;
     }
 
 
@@ -535,10 +544,11 @@ public abstract class Trade implements Tradable, Model {
                      AccountAgeWitnessService accountAgeWitnessService,
                      TradeStatisticsManager tradeStatisticsManager,
                      ArbitratorManager arbitratorManager,
+                     MediatorManager mediatorManager,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
-        processModel.onAllServicesInitialized(offer,
+        processModel.onAllServicesInitialized(checkNotNull(offer, "offer must not be null"),
                 tradeManager,
                 openOfferManager,
                 p2PService,
@@ -551,17 +561,21 @@ public abstract class Trade implements Tradable, Model {
                 accountAgeWitnessService,
                 tradeStatisticsManager,
                 arbitratorManager,
+                mediatorManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
 
-        Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getDisputeResolverByNodeAddress(arbitratorNodeAddress);
-        if (optionalArbitrator.isPresent()) {
-            Arbitrator arbitrator = optionalArbitrator.get();
+        arbitratorManager.getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            UserThread.runAfter(this::persist, 1);
-        }
+            persist();
+        });
+
+        mediatorManager.getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(mediator -> {
+            mediatorPubKeyRing = mediator.getPubKeyRing();
+            persist();
+        });
 
         createTradeProtocol();
 
@@ -735,9 +749,7 @@ public abstract class Trade implements Tradable, Model {
         errorMessageProperty.set(errorMessage);
     }
 
-    //TODO can be removed after new rule is actiavted
-    @SuppressWarnings("NullableProblems")
-    public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
+    public void applyArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         if (processModel.getUser() != null) {
             Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
@@ -748,8 +760,18 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
-    @SuppressWarnings("NullableProblems")
-    public void setMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
+    public void applyArbitratorPubKeyRing(NodeAddress arbitratorNodeAddress) {
+        this.arbitratorNodeAddress = arbitratorNodeAddress;
+        if (processModel.getUser() != null) {
+            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+            checkNotNull(arbitrator, "arbitrator must not be null");
+            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
+            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
+            persist();
+        }
+    }
+
+    public void applyMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
         this.mediatorNodeAddress = mediatorNodeAddress;
         if (processModel.getUser() != null) {
             Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);

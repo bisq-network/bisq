@@ -48,7 +48,7 @@ import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
 public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T extends DisputeAgentManager<R>> extends ActivatableViewModel {
-    private final T disputeResolverManager;
+    private final T disputeAgentManager;
     protected final User user;
     protected final P2PService p2PService;
     protected final BtcWalletService walletService;
@@ -56,7 +56,7 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
 
     final BooleanProperty registrationEditDisabled = new SimpleBooleanProperty(true);
     final BooleanProperty revokeButtonDisabled = new SimpleBooleanProperty(true);
-    final ObjectProperty<R> myDisputeResolverProperty = new SimpleObjectProperty<>();
+    final ObjectProperty<R> myDisputeAgentProperty = new SimpleObjectProperty<>();
 
     protected final ObservableList<String> languageCodes = FXCollections.observableArrayList(LanguageUtil.getDefaultLanguageLocaleAsCode());
     final ObservableList<String> allLanguageCodes = FXCollections.observableArrayList(LanguageUtil.getAllLanguageCodes());
@@ -70,25 +70,25 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AgentRegistrationViewModel(T disputeResolverManager,
+    public AgentRegistrationViewModel(T disputeAgentManager,
                                       User user,
                                       P2PService p2PService,
                                       BtcWalletService walletService,
                                       KeyRing keyRing) {
-        this.disputeResolverManager = disputeResolverManager;
+        this.disputeAgentManager = disputeAgentManager;
         this.user = user;
         this.p2PService = p2PService;
         this.walletService = walletService;
         this.keyRing = keyRing;
 
         mapChangeListener = change -> {
-            R registeredDisputeResolverFromUser = getRegisteredDisputeResolverFromUser();
-            myDisputeResolverProperty.set(registeredDisputeResolverFromUser);
+            R registeredDisputeAgentFromUser = getRegisteredDisputeAgentFromUser();
+            myDisputeAgentProperty.set(registeredDisputeAgentFromUser);
 
-            // We don't reset the languages in case of revocation, as its likely that the disputeResolver will use the
+            // We don't reset the languages in case of revocation, as its likely that the disputeAgent will use the
             // same again when he re-activate registration later
-            if (registeredDisputeResolverFromUser != null)
-                languageCodes.setAll(registeredDisputeResolverFromUser.getLanguageCodes());
+            if (registeredDisputeAgentFromUser != null)
+                languageCodes.setAll(registeredDisputeAgentFromUser.getLanguageCodes());
 
             updateDisableStates();
         };
@@ -96,16 +96,16 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
 
     @Override
     protected void activate() {
-        disputeResolverManager.getObservableMap().addListener(mapChangeListener);
-        myDisputeResolverProperty.set(getRegisteredDisputeResolverFromUser());
+        disputeAgentManager.getObservableMap().addListener(mapChangeListener);
+        myDisputeAgentProperty.set(getRegisteredDisputeAgentFromUser());
         updateDisableStates();
     }
 
-    protected abstract R getRegisteredDisputeResolverFromUser();
+    protected abstract R getRegisteredDisputeAgentFromUser();
 
     @Override
     protected void deactivate() {
-        disputeResolverManager.getObservableMap().removeListener(mapChangeListener);
+        disputeAgentManager.getObservableMap().removeListener(mapChangeListener);
     }
 
 
@@ -128,10 +128,10 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
     }
 
     boolean setPrivKeyAndCheckPubKey(String privKeyString) {
-        ECKey registrationKey = disputeResolverManager.getRegistrationKey(privKeyString);
+        ECKey registrationKey = disputeAgentManager.getRegistrationKey(privKeyString);
         if (registrationKey != null) {
             String _registrationPubKeyAsHex = Utils.HEX.encode(registrationKey.getPubKey());
-            boolean isKeyValid = disputeResolverManager.isPublicKeyInList(_registrationPubKeyAsHex);
+            boolean isKeyValid = disputeAgentManager.isPublicKeyInList(_registrationPubKeyAsHex);
             if (isKeyValid) {
                 this.registrationKey = registrationKey;
                 registrationPubKeyAsHex.set(_registrationPubKeyAsHex);
@@ -144,18 +144,18 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
         }
     }
 
-    protected abstract R getDisputeResolver(String registrationSignature, String emailAddress);
+    protected abstract R getDisputeAgent(String registrationSignature, String emailAddress);
 
     void onRegister(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         updateDisableStates();
         if (allDataValid) {
-            String registrationSignature = disputeResolverManager.signStorageSignaturePubKey(registrationKey);
+            String registrationSignature = disputeAgentManager.signStorageSignaturePubKey(registrationKey);
             // TODO not impl in UI
             String emailAddress = null;
             @SuppressWarnings("ConstantConditions")
-            R disputeResolver = getDisputeResolver(registrationSignature, emailAddress);
+            R disputeAgent = getDisputeAgent(registrationSignature, emailAddress);
 
-            disputeResolverManager.addDisputeResolver(disputeResolver,
+            disputeAgentManager.addDisputeAgent(disputeAgent,
                     () -> {
                         updateDisableStates();
                         resultHandler.handleResult();
@@ -168,7 +168,7 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
     }
 
     void onRevoke(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        disputeResolverManager.removeDisputeResolver(
+        disputeAgentManager.removeDisputeAgent(
                 () -> {
                     updateDisableStates();
                     resultHandler.handleResult();
@@ -181,8 +181,8 @@ public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T exten
 
     private void updateDisableStates() {
         allDataValid = languageCodes.size() > 0 && registrationKey != null && registrationPubKeyAsHex.get() != null;
-        registrationEditDisabled.set(!allDataValid || myDisputeResolverProperty.get() != null);
-        revokeButtonDisabled.set(!allDataValid || myDisputeResolverProperty.get() == null);
+        registrationEditDisabled.set(!allDataValid || myDisputeAgentProperty.get() != null);
+        revokeButtonDisabled.set(!allDataValid || myDisputeAgentProperty.get() == null);
     }
 
     boolean isBootstrappedOrShowPopup() {

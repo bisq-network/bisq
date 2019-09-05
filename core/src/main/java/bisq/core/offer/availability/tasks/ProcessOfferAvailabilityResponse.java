@@ -19,7 +19,7 @@ package bisq.core.offer.availability.tasks;
 
 import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
-import bisq.core.offer.availability.DisputeResolverSelection;
+import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 
@@ -60,7 +60,7 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             NodeAddress mediator = offerAvailabilityResponse.getMediator();
             if (mediator == null) {
                 // We do not get a mediator from old clients so we need to handle the null case.
-                mediator = DisputeResolverSelection.getLeastUsedMediator(model.getTradeStatisticsManager(), model.getMediatorManager()).getNodeAddress();
+                mediator = DisputeAgentSelection.getLeastUsedMediator(model.getTradeStatisticsManager(), model.getMediatorManager()).getNodeAddress();
             }
             model.setSelectedMediator(mediator);
             complete();

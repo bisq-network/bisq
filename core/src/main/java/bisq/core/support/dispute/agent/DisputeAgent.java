@@ -98,7 +98,7 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
 
     @Override
     public String toString() {
-        return "DisputeResolver{" +
+        return "DisputeAgent{" +
                 "\n     nodeAddress=" + nodeAddress +
                 ",\n     pubKeyRing=" + pubKeyRing +
                 ",\n     languageCodes=" + languageCodes +

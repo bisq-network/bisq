@@ -30,6 +30,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -83,6 +84,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private AccountAgeWitnessService accountAgeWitnessService;
     transient private TradeStatisticsManager tradeStatisticsManager;
     transient private ArbitratorManager arbitratorManager;
+    transient private MediatorManager mediatorManager;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
     transient private ReferralIdService referralIdService;
@@ -247,6 +249,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          AccountAgeWitnessService accountAgeWitnessService,
                                          TradeStatisticsManager tradeStatisticsManager,
                                          ArbitratorManager arbitratorManager,
+                                         MediatorManager mediatorManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
@@ -262,6 +265,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;

@@ -64,10 +64,10 @@ public class ArbitratorManagerTest {
                 languagesTwo, 0L, null, "", null,
                 null, null);
 
-        manager.addDisputeResolver(one, () -> {
+        manager.addDisputeAgent(one, () -> {
         }, errorMessage -> {
         });
-        manager.addDisputeResolver(two, () -> {
+        manager.addDisputeAgent(two, () -> {
         }, errorMessage -> {
         });
 
@@ -104,15 +104,15 @@ public class ArbitratorManagerTest {
             add(two.getNodeAddress());
         }};
 
-        manager.addDisputeResolver(one, () -> {
+        manager.addDisputeAgent(one, () -> {
         }, errorMessage -> {
         });
-        manager.addDisputeResolver(two, () -> {
+        manager.addDisputeAgent(two, () -> {
         }, errorMessage -> {
         });
 
-        assertThat(manager.getDisputeResolverLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
-        assertThat(manager.getDisputeResolverLanguages(nodeAddresses), not(containsInAnyOrder("de")));
+        assertThat(manager.getDisputeAgentLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
+        assertThat(manager.getDisputeAgentLanguages(nodeAddresses), not(containsInAnyOrder("de")));
     }
 
 }

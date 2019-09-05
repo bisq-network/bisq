@@ -82,7 +82,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     protected final User user;
     protected final FilterManager filterManager;
     protected final ObservableMap<NodeAddress, T> observableMap = FXCollections.observableHashMap();
-    protected List<T> persistedAcceptedDisputeResolvers;
+    protected List<T> persistedAcceptedDisputeAgents;
     protected Timer republishTimer, retryRepublishTimer;
 
 
@@ -111,17 +111,17 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
 
     protected abstract boolean isExpectedInstance(ProtectedStorageEntry data);
 
-    protected abstract void addAcceptedDisputeResolverToUser(T disputeResolver);
+    protected abstract void addAcceptedDisputeAgentToUser(T disputeAgent);
 
-    protected abstract T getRegisteredDisputeResolverFromUser();
+    protected abstract T getRegisteredDisputeAgentFromUser();
 
-    protected abstract void clearAcceptedDisputeResolversAtUser();
+    protected abstract void clearAcceptedDisputeAgentsAtUser();
 
-    protected abstract List<T> getAcceptedDisputeResolversFromUser();
+    protected abstract List<T> getAcceptedDisputeAgentsFromUser();
 
-    protected abstract void removeAcceptedDisputeResolverFromUser(ProtectedStorageEntry data);
+    protected abstract void removeAcceptedDisputeAgentFromUser(ProtectedStorageEntry data);
 
-    protected abstract void setRegisteredDisputeResolverAtUser(T disputeResolver);
+    protected abstract void setRegisteredDisputeAgentAtUser(T disputeAgent);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -141,23 +141,23 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
             public void onRemoved(ProtectedStorageEntry data) {
                 if (isExpectedInstance(data)) {
                     updateMap();
-                    removeAcceptedDisputeResolverFromUser(data);
+                    removeAcceptedDisputeAgentFromUser(data);
                 }
             }
         });
 
-        persistedAcceptedDisputeResolvers = new ArrayList<>(getAcceptedDisputeResolversFromUser());
-        clearAcceptedDisputeResolversAtUser();
+        persistedAcceptedDisputeAgents = new ArrayList<>(getAcceptedDisputeAgentsFromUser());
+        clearAcceptedDisputeAgentsAtUser();
 
-        if (getRegisteredDisputeResolverFromUser() != null) {
+        if (getRegisteredDisputeAgentFromUser() != null) {
             P2PService p2PService = disputeAgentService.getP2PService();
             if (p2PService.isBootstrapped())
-                startRepublishDisputeResolver();
+                startRepublishDisputeAgent();
             else
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
                     public void onUpdatedDataReceived() {
-                        startRepublishDisputeResolver();
+                        startRepublishDisputeAgent();
                     }
                 });
         }
@@ -168,11 +168,11 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     }
 
     public void shutDown() {
-        stopRepublishDisputeResolverTimer();
-        stopRetryRepublishDisputeResolverTimer();
+        stopRepublishTimer();
+        stopRetryRepublishTimer();
     }
 
-    protected void startRepublishDisputeResolver() {
+    protected void startRepublishDisputeAgent() {
         if (republishTimer == null) {
             republishTimer = UserThread.runPeriodically(this::republish, REPUBLISH_MILLIS, TimeUnit.MILLISECONDS);
             UserThread.runAfter(this::republish, REPEATED_REPUBLISH_AT_STARTUP_SEC);
@@ -181,7 +181,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     }
 
     public void updateMap() {
-        Map<NodeAddress, T> map = disputeAgentService.getDisputeResolvers();
+        Map<NodeAddress, T> map = disputeAgentService.getDisputeAgents();
         observableMap.clear();
         Map<NodeAddress, T> filtered = map.values().stream()
                 .filter(e -> {
@@ -193,7 +193,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());
                         else
-                            log.warn("We got an disputeResolver which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
+                            log.warn("We got an disputeAgent which is not in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());
                     }
@@ -201,7 +201,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                             e.getRegistrationPubKey(),
                             e.getRegistrationSignature());
                     if (!isSigValid)
-                        log.warn("Sig check for disputeResolver failed. DisputeResolver={}", e.toString());
+                        log.warn("Sig check for disputeAgent failed. DisputeAgent={}", e.toString());
 
                     return isInPublicKeyInList && isSigValid;
                 })
@@ -211,24 +211,24 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
 
         //TODO check and test, seems it does not make sense
 //        observableMap.values().stream()
-//                .filter(persistedAcceptedDisputeResolvers::contains)
-//                .forEach(this::addAcceptedDisputeResolverToUser);
+//                .filter(persistedAcceptedDisputeAgents::contains)
+//                .forEach(this::addAcceptedDisputeAgentToUser);
 
 
-        observableMap.values().forEach(this::addAcceptedDisputeResolverToUser);
+        observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
 
-        log.info("Available disputeResolvers: {}", observableMap.keySet());
+        log.info("Available disputeAgents: {}", observableMap.keySet());
     }
 
 
-    public void addDisputeResolver(T disputeResolver,
-                                   ResultHandler resultHandler,
-                                   ErrorMessageHandler errorMessageHandler) {
-        setRegisteredDisputeResolverAtUser(disputeResolver);
-        observableMap.put(disputeResolver.getNodeAddress(), disputeResolver);
-        disputeAgentService.addDisputeResolver(disputeResolver,
+    public void addDisputeAgent(T disputeAgent,
+                                ResultHandler resultHandler,
+                                ErrorMessageHandler errorMessageHandler) {
+        setRegisteredDisputeAgentAtUser(disputeAgent);
+        observableMap.put(disputeAgent.getNodeAddress(), disputeAgent);
+        disputeAgentService.addDisputeAgent(disputeAgent,
                 () -> {
-                    log.info("DisputeResolver successfully saved in P2P network");
+                    log.info("DisputeAgent successfully saved in P2P network");
                     resultHandler.handleResult();
 
                     if (observableMap.size() > 0)
@@ -238,14 +238,14 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     }
 
 
-    public void removeDisputeResolver(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        T registeredDisputeResolver = getRegisteredDisputeResolverFromUser();
-        if (registeredDisputeResolver != null) {
-            setRegisteredDisputeResolverAtUser(null);
-            observableMap.remove(registeredDisputeResolver.getNodeAddress());
-            disputeAgentService.removeDisputeResolver(registeredDisputeResolver,
+    public void removeDisputeAgent(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        T registeredDisputeAgent = getRegisteredDisputeAgentFromUser();
+        if (registeredDisputeAgent != null) {
+            setRegisteredDisputeAgentAtUser(null);
+            observableMap.remove(registeredDisputeAgent.getNodeAddress());
+            disputeAgentService.removeDisputeAgent(registeredDisputeAgent,
                     () -> {
-                        log.debug("DisputeResolver successfully removed from P2P network");
+                        log.debug("DisputeAgent successfully removed from P2P network");
                         resultHandler.handleResult();
                     },
                     errorMessageHandler);
@@ -256,8 +256,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
         return observableMap;
     }
 
-    // A protected key is handed over to selected disputeResolvers for registration.
-    // An invited disputeResolver will sign at registration his storageSignaturePubKey with that protected key and attach the signature and pubKey to his data.
+    // A protected key is handed over to selected disputeAgents for registration.
+    // An invited disputeAgent will sign at registration his storageSignaturePubKey with that protected key and attach the signature and pubKey to his data.
     // Other users will check the signature with the list of public keys hardcoded in the app.
     public String signStorageSignaturePubKey(ECKey key) {
         String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRing().getSignaturePubKey().getEncoded());
@@ -282,15 +282,15 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                 agent.getLanguageCodes().stream().anyMatch(lc -> lc.equals(languageCode)));
     }
 
-    public List<String> getDisputeResolverLanguages(List<NodeAddress> nodeAddresses) {
+    public List<String> getDisputeAgentLanguages(List<NodeAddress> nodeAddresses) {
         return observableMap.values().stream()
-                .filter(disputeResolver -> nodeAddresses.stream().anyMatch(nodeAddress -> nodeAddress.equals(disputeResolver.getNodeAddress())))
-                .flatMap(disputeResolver -> disputeResolver.getLanguageCodes().stream())
+                .filter(disputeAgent -> nodeAddresses.stream().anyMatch(nodeAddress -> nodeAddress.equals(disputeAgent.getNodeAddress())))
+                .flatMap(disputeAgent -> disputeAgent.getLanguageCodes().stream())
                 .distinct()
                 .collect(Collectors.toList());
     }
 
-    public Optional<T> getDisputeResolverByNodeAddress(NodeAddress nodeAddress) {
+    public Optional<T> getDisputeAgentByNodeAddress(NodeAddress nodeAddress) {
         return observableMap.containsKey(nodeAddress) ?
                 Optional.of(observableMap.get(nodeAddress)) :
                 Optional.empty();
@@ -301,14 +301,14 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void republish() {
-        T registeredDisputeResolver = getRegisteredDisputeResolverFromUser();
-        if (registeredDisputeResolver != null) {
-            addDisputeResolver(registeredDisputeResolver,
+        T registeredDisputeAgent = getRegisteredDisputeAgentFromUser();
+        if (registeredDisputeAgent != null) {
+            addDisputeAgent(registeredDisputeAgent,
                     this::updateMap,
                     errorMessage -> {
                         if (retryRepublishTimer == null)
                             retryRepublishTimer = UserThread.runPeriodically(() -> {
-                                stopRetryRepublishDisputeResolverTimer();
+                                stopRetryRepublishTimer();
                                 republish();
                             }, RETRY_REPUBLISH_SEC);
                     }
@@ -329,14 +329,14 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     }
 
 
-    protected void stopRetryRepublishDisputeResolverTimer() {
+    protected void stopRetryRepublishTimer() {
         if (retryRepublishTimer != null) {
             retryRepublishTimer.stop();
             retryRepublishTimer = null;
         }
     }
 
-    protected void stopRepublishDisputeResolverTimer() {
+    protected void stopRepublishTimer() {
         if (republishTimer != null) {
             republishTimer.stop();
             republishTimer = null;

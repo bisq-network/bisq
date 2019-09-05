@@ -76,8 +76,8 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             tradingPeer.setAccountAgeWitnessSignature(payDepositRequest.getAccountAgeWitnessSignatureOfOfferId());
             tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
 
-            trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
-            trade.setMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
+            trade.applyArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
+            trade.applyMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
 
             try {
                 long takersTradePrice = payDepositRequest.getTradePrice();

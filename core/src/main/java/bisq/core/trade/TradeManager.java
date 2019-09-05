@@ -370,6 +370,7 @@ public class TradeManager implements PersistedDataHost {
                 accountAgeWitnessService,
                 tradeStatisticsManager,
                 arbitratorManager,
+                mediatorManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);

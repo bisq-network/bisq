@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.offer.Offer;
-import bisq.core.offer.availability.DisputeResolverSelection;
+import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 
@@ -62,7 +62,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             String id = offer.getId();
             BtcWalletService walletService = model.getWalletService();
 
-            Arbitrator arbitrator = DisputeResolverSelection.getLeastUsedArbitrator(model.getTradeStatisticsManager(),
+            Arbitrator arbitrator = DisputeAgentSelection.getLeastUsedArbitrator(model.getTradeStatisticsManager(),
                     model.getArbitratorManager());
 
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();
