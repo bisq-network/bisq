@@ -91,7 +91,7 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
             byte[] buyerMultiSigPubKey = isMyRoleBuyer ? myMultiSigPubKey : peersMultiSigPubKey;
             byte[] sellerMultiSigPubKey = isMyRoleBuyer ? peersMultiSigPubKey : myMultiSigPubKey;
 
-            DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, sellerMultiSigPubKey);
+            DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
 
             checkArgument(Arrays.equals(myMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.MULTI_SIG).getPubKey()),
