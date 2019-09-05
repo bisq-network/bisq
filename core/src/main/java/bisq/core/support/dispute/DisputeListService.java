@@ -53,8 +53,6 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     @Nullable
     @Getter
     private T disputeList;
-    private final Map<String, Dispute> openDisputes = new HashMap<>();
-    private final Map<String, Dispute> closedDisputes = new HashMap<>();
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
@@ -92,37 +90,20 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
     // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void cleanupDisputes(@Nullable Consumer<String> closeTradeHandler) {
+    public void cleanupDisputes(@Nullable Consumer<String> closedDisputeHandler) {
         if (disputeList != null) {
             disputeList.stream().forEach(dispute -> {
                 dispute.setStorage(storage);
+                String tradeId = dispute.getTradeId();
                 if (dispute.isClosed()) {
-                    closedDisputes.put(dispute.getTradeId(), dispute);
-                    if (closeTradeHandler != null) {
-                        closeTradeHandler.accept(dispute.getTradeId());
+                    if (closedDisputeHandler != null) {
+                        closedDisputeHandler.accept(tradeId);
                     }
-                } else {
-                    openDisputes.put(dispute.getTradeId(), dispute);
                 }
             });
         } else {
             log.warn("disputes is null");
         }
-
-        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator
-        // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
-        openDisputes.forEach((key, dispute) -> {
-            if (closedDisputes.containsKey(key)) {
-                Dispute closedDispute = closedDisputes.get(key);
-                // We need to check if is from the same peer, we don't want to close the peers dispute
-                if (closedDispute.getTraderId() == dispute.getTraderId()) {
-                    dispute.setIsClosed(true);
-                    if (closeTradeHandler != null) {
-                        closeTradeHandler.accept(dispute.getTradeId());
-                    }
-                }
-            }
-        });
     }
 
 
