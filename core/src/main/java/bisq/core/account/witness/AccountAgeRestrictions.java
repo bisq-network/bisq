@@ -37,17 +37,29 @@ public class AccountAgeRestrictions {
 
     public static boolean isMakersAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, Offer offer) {
         long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMakersAccountAge(offer, new Date());
-        return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+        if (accountCreationDate < SAFE_ACCOUNT_AGE_DATE) {
+            return false;
+        }
+        return accountAgeWitnessService.getWitnessSignAge(offer, new Date()) < 0;
     }
 
-    public static boolean isTradePeersAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, Trade trade) {
+    public static boolean isTradePeersAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService,
+                                                         Trade trade) {
         long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getTradingPeersAccountAge(trade);
-        return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+        if (accountCreationDate < SAFE_ACCOUNT_AGE_DATE) {
+            return false;
+        }
+        return accountAgeWitnessService.getWitnessSignAge(trade, new Date()) < 0;
     }
 
-    public static boolean isMyAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService, PaymentAccount myPaymentAccount) {
+    public static boolean isMyAccountAgeImmature(AccountAgeWitnessService accountAgeWitnessService,
+                                                 PaymentAccount myPaymentAccount) {
         long accountCreationDate = new Date().getTime() - accountAgeWitnessService.getMyAccountAge(myPaymentAccount.getPaymentAccountPayload());
-        return accountCreationDate > SAFE_ACCOUNT_AGE_DATE;
+        // Safe account creation date is always considered mature, signed or not
+        if (accountCreationDate < SAFE_ACCOUNT_AGE_DATE) {
+            return false;
+        }
+        return accountAgeWitnessService.getMyWitnessSignAge(myPaymentAccount.getPaymentAccountPayload(), new Date()) < 0;
     }
 
     public static long getMyTradeLimitAtCreateOffer(AccountAgeWitnessService accountAgeWitnessService,

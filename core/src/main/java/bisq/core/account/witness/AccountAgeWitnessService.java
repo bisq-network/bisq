@@ -214,15 +214,64 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Witness age
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
         log.debug("getAccountAge now={}, accountAgeWitness.getDate()={}", now.getTime(), accountAgeWitness.getDate());
         return now.getTime() - accountAgeWitness.getDate();
     }
 
+    // Return -1 if no witness found
     public long getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         return findWitness(paymentAccountPayload, pubKeyRing)
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
                 .orElse(-1L);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Signed age
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Return -1 if not signed
+    public long getWitnessSignAge(AccountAgeWitness accountAgeWitness, Date now) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return now.getTime() - dates.get(0);
+        }
+    }
+
+    // Return -1 if not signed
+    long getWitnessSignAge(Offer offer, Date now) {
+        return findWitness(offer)
+                .map(witness -> getWitnessSignAge(witness, now))
+                .orElse(-1L);
+    }
+
+    // Return -1 if not signed
+    long getWitnessSignAge(Trade trade, Date now) {
+        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
+            // unexpected
+            return -1;
+        }
+
+        return findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing())
+                .map(witness -> getWitnessSignAge(witness, now))
+                .orElse(-1L);
+    }
+
+    // Return -1 if not signed
+    long getMyWitnessSignAge(PaymentAccountPayload myPaymentAccountPayload, Date now) {
+        List<Long> dates = signedWitnessService.getWitnessDateList(getMyWitness(myPaymentAccountPayload));
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return now.getTime() - dates.get(0);
+        }
     }
 
     public AccountAge getAccountAgeCategory(long accountAge) {
@@ -469,7 +518,7 @@ public class AccountAgeWitnessService {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Signed witness
+    // Witness signing
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SignedWitness signAccountAgeWitness(Coin tradeAmount,
@@ -477,25 +526,6 @@ public class AccountAgeWitnessService {
                                                ECKey key,
                                                PublicKey peersPubKey) {
         return signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
-    }
-
-
-    public long getWitnessSignAge(AccountAgeWitness accountAgeWitness, Date now) {
-        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
-        if (dates.isEmpty()) {
-            return -1L;
-        } else {
-            return now.getTime() - dates.get(0);
-        }
-    }
-
-    public long getMyWitnessSignAge(PaymentAccountPayload myPaymentAccountPayload, Date now) {
-        List<Long> dates = signedWitnessService.getWitnessDateList(getMyWitness(myPaymentAccountPayload));
-        if (dates.isEmpty()) {
-            return -1L;
-        } else {
-            return now.getTime() - dates.get(0);
-        }
     }
 
     // Arbitrator signing
