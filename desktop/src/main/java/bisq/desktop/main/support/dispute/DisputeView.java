@@ -315,7 +315,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     @Override
     protected void activate() {
         filterTextField.textProperty().addListener(filterTextFieldListener);
-        disputeManager.cleanupDisputes();
 
         filteredList = new FilteredList<>(disputeManager.getDisputesAsObservableList());
         applyFilteredListPredicate(filterTextField.getText());

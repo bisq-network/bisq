@@ -122,10 +122,6 @@ public abstract class TradeProtocol {
 
     // Trader has not yet received the peer's signature but has clicked the accept button.
     public void onAcceptMediationResult(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (!trade.isDepositConfirmed()) {
-            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet.");
-            return;
-        }
         if (trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null) {
             errorMessageHandler.handleErrorMessage("We have received already the signature from the peer.");
             return;
@@ -152,10 +148,6 @@ public abstract class TradeProtocol {
 
     // Trader has already received the peer's signature and has clicked the accept button as well.
     public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (!trade.isDepositConfirmed()) {
-            errorMessageHandler.handleErrorMessage("deposit tx is not confirmed yet.");
-            return;
-        }
         if (trade.isPayoutPublished()) {
             errorMessageHandler.handleErrorMessage("Payout tx is already published.");
             return;

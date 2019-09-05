@@ -689,7 +689,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setMediationResultState(MediationResultState mediationResultState) {
-        log.error("setDisputeState: {}", mediationResultState);
+        log.error("setMediationResultState: {}", mediationResultState);
         boolean changed = this.mediationResultState != mediationResultState;
         this.mediationResultState = mediationResultState;
         mediationResultStateProperty.set(mediationResultState);

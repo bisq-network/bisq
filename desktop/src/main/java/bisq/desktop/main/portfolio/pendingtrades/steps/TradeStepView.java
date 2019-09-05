@@ -29,6 +29,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
@@ -528,13 +529,8 @@ public abstract class TradeStepView extends AnchorPane {
             notificationGroup.button.setText(Res.get("portfolio.pending.mediationResult.button"));
             notificationGroup.setButtonVisible(true);
             notificationGroup.button.setOnAction(e -> {
-                if (trade.isDepositConfirmed()) {
-                    notificationGroup.button.setDisable(true);
-                    openMediationResultPopup();
-                } else {
-                    new Popup<>().warning(Res.get("portfolio.pending.mediationResult.error.depositNotConfirmed"))
-                            .show();
-                }
+                notificationGroup.button.setDisable(true);
+                openMediationResultPopup();
             });
 
             if (trade.isDepositConfirmed()) {
@@ -548,12 +544,18 @@ public abstract class TradeStepView extends AnchorPane {
         Optional<Dispute> optionalDispute = model.dataModel.mediationManager.findDispute(tradeId);
         if (optionalDispute.isPresent()) {
             DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
+
+            Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
+            boolean isMyRoleBuyer = contract.isMyRoleBuyer(model.dataModel.getPubKeyRing());
             String buyerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount());
             String sellerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount());
+            String myPayoutAmount = isMyRoleBuyer ? buyerPayoutAmount : sellerPayoutAmount;
+            String peersPayoutAmount = isMyRoleBuyer ? sellerPayoutAmount : buyerPayoutAmount;
+
             acceptMediationResultPopup = new Popup<>().width(900)
                     .headLine(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()))
                     .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
-                            buyerPayoutAmount, sellerPayoutAmount))
+                            myPayoutAmount, peersPayoutAmount))
                     .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
                     .onAction(() -> {
                         model.dataModel.mediationManager.onAcceptMediationResult(trade,

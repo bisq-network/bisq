@@ -108,8 +108,7 @@ public abstract class TradeSubView extends HBox {
         TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
                 Layout.GROUP_DISTANCE);
         noticeTitledGroupBg.getStyleClass().add("last");
-        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", 50);
         openDisputeButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
         GridPane.setColumnIndex(openDisputeButton, 0);
         openDisputeButton.setId("open-dispute-button");

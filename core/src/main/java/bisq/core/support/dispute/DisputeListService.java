@@ -89,12 +89,48 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Public
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void cleanupDisputes(@Nullable Consumer<String> closeTradeHandler) {
+        if (disputeList != null) {
+            disputeList.stream().forEach(dispute -> {
+                dispute.setStorage(storage);
+                if (dispute.isClosed()) {
+                    closedDisputes.put(dispute.getTradeId(), dispute);
+                    if (closeTradeHandler != null) {
+                        closeTradeHandler.accept(dispute.getTradeId());
+                    }
+                } else {
+                    openDisputes.put(dispute.getTradeId(), dispute);
+                }
+            });
+        } else {
+            log.warn("disputes is null");
+        }
+
+        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator
+        // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
+        openDisputes.forEach((key, dispute) -> {
+            if (closedDisputes.containsKey(key)) {
+                Dispute closedDispute = closedDisputes.get(key);
+                // We need to check if is from the same peer, we don't want to close the peers dispute
+                if (closedDispute.getTraderId() == dispute.getTraderId()) {
+                    dispute.setIsClosed(true);
+                    if (closeTradeHandler != null) {
+                        closeTradeHandler.accept(dispute.getTradeId());
+                    }
+                }
+            }
+        });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void onAllServicesInitialized() {
-        cleanupDisputes(null);
-
         if (disputeList != null) {
             disputeList.getList().addListener((ListChangeListener<Dispute>) change -> {
                 change.next();
@@ -130,37 +166,6 @@ public abstract class DisputeListService<T extends DisputeList<? extends Dispute
             return FXCollections.observableArrayList();
         }
         return disputeList.getList();
-    }
-
-
-    void cleanupDisputes(@Nullable Consumer<String> closeDisputedTradeHandler) {
-        if (disputeList != null) {
-            disputeList.stream().forEach(dispute -> {
-                dispute.setStorage(storage);
-                if (dispute.isClosed()) {
-                    closedDisputes.put(dispute.getTradeId(), dispute);
-                } else {
-                    openDisputes.put(dispute.getTradeId(), dispute);
-                }
-            });
-        } else {
-            log.warn("disputes is null");
-        }
-
-        // If we have duplicate disputes we close the second one (might happen if both traders opened a dispute and arbitrator
-        // was offline, so could not forward msg to other peer, then the arbitrator might have 4 disputes open for 1 trade)
-        openDisputes.forEach((key, openDispute) -> {
-            if (closedDisputes.containsKey(key)) {
-                Dispute closedDispute = closedDisputes.get(key);
-                // We need to check if is from the same peer, we don't want to close the peers dispute
-                if (closedDispute.getTraderId() == openDispute.getTraderId()) {
-                    openDispute.setIsClosed(true);
-                    if (closeDisputedTradeHandler != null) {
-                        closeDisputedTradeHandler.accept(openDispute.getTradeId());
-                    }
-                }
-            }
-        });
     }
 
 

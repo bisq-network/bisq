@@ -21,7 +21,6 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;
-import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportManager;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
@@ -66,7 +65,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     protected final ClosedTradableManager closedTradableManager;
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
-    private final DisputeListService<T> disputeListService;
+    protected final DisputeListService<T> disputeListService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -162,6 +161,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     protected abstract Trade.DisputeState getDisputeState_StartedByPeer();
 
+    public abstract void cleanupDisputes();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates for disputeListService
@@ -173,10 +174,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     public Storage<? extends DisputeList> getStorage() {
         return disputeListService.getStorage();
-    }
-
-    public void cleanupDisputes() {
-        disputeListService.cleanupDisputes(tradeManager::closeDisputedTrade);
     }
 
     public ObservableList<Dispute> getDisputesAsObservableList() {
@@ -218,6 +215,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         });
 
         tryApplyMessages();
+        cleanupDisputes();
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -633,16 +631,6 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void updateTradeOrOpenOfferManager(String tradeId) {
-        // set state after payout as we call swapTradeEntryToAvailableEntry
-        if (tradeManager.getTradeById(tradeId).isPresent()) {
-            tradeManager.closeDisputedTrade(tradeId);
-        } else {
-            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
-            openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
-        }
-    }
 
     private Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
         PubKeyRing receiverPubKeyRing = null;

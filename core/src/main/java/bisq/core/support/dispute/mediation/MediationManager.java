@@ -67,7 +67,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class MediationManager extends DisputeManager<MediationDisputeList> {
 
     // The date when mediation is activated
-    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 16);
+    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1);
 
     public static boolean isMediationActivated() {
         return new Date().after(MEDIATION_ACTIVATED_DATE);
@@ -129,6 +129,11 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     @Override
     protected AckMessageSourceType getAckMessageSourceType() {
         return AckMessageSourceType.MEDIATION_MESSAGE;
+    }
+
+    @Override
+    public void cleanupDisputes() {
+        disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED));
     }
 
 
@@ -212,16 +217,18 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
 
-        // If we have not got yes the peers signature we sign and send to the peer our signature.
+        // If we have not got yet the peers signature we sign and send to the peer our signature.
         // Otherwise we sign and complete with the peers signature the payout tx.
         if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
             tradeProtocol.onAcceptMediationResult(() -> {
-                tradeManager.closeDisputedTrade(tradeId);
+                if (trade.getPayoutTx() != null) {
+                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+                }
                 resultHandler.handleResult();
             }, errorMessageHandler);
         } else {
             tradeProtocol.onFinalizeMediationResultPayout(() -> {
-                tradeManager.closeDisputedTrade(tradeId);
+                tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
                 resultHandler.handleResult();
             }, errorMessageHandler);
         }
