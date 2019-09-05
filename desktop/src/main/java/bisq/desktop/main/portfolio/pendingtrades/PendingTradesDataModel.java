@@ -48,7 +48,6 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
@@ -85,7 +84,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
-    private final KeyRing keyRing;
     public final ArbitrationManager arbitrationManager;
     public final MediationManager mediationManager;
     private final P2PService p2PService;
@@ -108,6 +106,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private boolean activated;
     private ChangeListener<Trade.State> tradeStateChangeListener;
     private Trade selectedTrade;
+    @Getter
+    private PubKeyRing pubKeyRing;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -116,7 +116,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     @Inject
     public PendingTradesDataModel(TradeManager tradeManager,
                                   BtcWalletService btcWalletService,
-                                  KeyRing keyRing,
+                                  PubKeyRing pubKeyRing,
                                   ArbitrationManager arbitrationManager,
                                   MediationManager mediationManager,
                                   TraderChatManager traderChatManager,
@@ -129,7 +129,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   NotificationCenter notificationCenter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
-        this.keyRing = keyRing;
+        this.pubKeyRing = pubKeyRing;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
         this.traderChatManager = traderChatManager;
@@ -533,10 +533,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             String depositTxHashAsString = depositTx.getHashAsString();
             Dispute dispute = new Dispute(disputeManager.getStorage(),
                     trade.getId(),
-                    keyRing.getPubKeyRing().hashCode(), // traderId
+                    pubKeyRing.hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
                     isMaker,
-                    keyRing.getPubKeyRing(),
+                    pubKeyRing,
                     trade.getDate().getTime(),
                     trade.getContract(),
                     trade.getContractHash(),
@@ -561,10 +561,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             String depositTxHashAsString = depositTx.getHashAsString();
             Dispute dispute = new Dispute(disputeManager.getStorage(),
                     trade.getId(),
-                    keyRing.getPubKeyRing().hashCode(), // traderId
+                    pubKeyRing.hashCode(), // traderId
                     (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
                     isMaker,
-                    keyRing.getPubKeyRing(),
+                    pubKeyRing,
                     trade.getDate().getTime(),
                     trade.getContract(),
                     trade.getContractHash(),

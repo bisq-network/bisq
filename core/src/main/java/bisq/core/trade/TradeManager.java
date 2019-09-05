@@ -556,12 +556,11 @@ public class TradeManager implements PersistedDataHost {
     // Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void closeDisputedTrade(String tradeId) {
+    public void closeDisputedTrade(String tradeId, Trade.DisputeState disputeState) {
         Optional<Trade> tradeOptional = getTradeById(tradeId);
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
-            // We only get called from arbitration so we set DISPUTE_CLOSED
-            trade.setDisputeState(Trade.DisputeState.DISPUTE_CLOSED);
+            trade.setDisputeState(disputeState);
             addTradeToClosedTrades(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         }

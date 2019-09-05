@@ -29,18 +29,19 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
-import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -137,6 +138,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         createGridPane();
         addContent();
         display();
+
+        if (DevEnv.isDevMode()) {
+            UserThread.execute(() -> {
+                summaryNotesTextArea.setText("dummy result....");
+                buyerGetsTradeAmountRadioButton.setSelected(true);
+            });
+        }
     }
 
     public DisputeSummaryWindow onFinalizeDispute(Runnable finalizeDisputeHandler) {
@@ -585,7 +593,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
             getDisputeManager(dispute).sendDisputeResultMessage(disputeResult, dispute, text);
 
-            if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed()) {
+            if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
                 UserThread.runAfter(() -> new Popup<>()
                                 .attention(Res.get("disputeSummaryWindow.close.closePeer"))
                                 .show(),

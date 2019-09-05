@@ -180,13 +180,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio").toUpperCase());
         ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds").toUpperCase());
 
-        ToggleButton disputesButton = new NavButton(SupportView.class, Res.get("mainView.menu.support"));
+        ToggleButton supportButton = new NavButton(SupportView.class, Res.get("mainView.menu.support"));
         ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
-        JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
+        JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
         JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
         daoButtonWithBadge.getStyleClass().add("new");
 
@@ -209,7 +209,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
                         fundsButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
-                        disputesButton.fire();
+                        supportButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
                         settingsButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
@@ -316,7 +316,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
                 getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
@@ -359,7 +359,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         baseApplicationContainer.setBottom(createFooter());
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
-        setupBadge(disputesButtonWithBadge, model.getNumOpenDisputes(), model.getShowOpenDisputesNotification());
+        setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
         setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
 
         navigation.addListener(viewPath -> {

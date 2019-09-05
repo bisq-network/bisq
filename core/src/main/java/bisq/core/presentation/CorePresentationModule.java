@@ -32,7 +32,7 @@ public class CorePresentationModule extends AppModule {
     protected void configure() {
         bind(BalancePresentation.class).in(Singleton.class);
         bind(TradePresentation.class).in(Singleton.class);
-        bind(DisputePresentation.class).in(Singleton.class);
+        bind(SupportTicketsPresentation.class).in(Singleton.class);
     }
 }
 

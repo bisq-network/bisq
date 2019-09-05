@@ -30,7 +30,7 @@ import java.util.GregorianCalendar;
 public class OfferRestrictions {
     // The date when traders who have not updated cannot take offers from updated clients and their offers become
     // invisible for updated clients.
-    private static final Date REQUIRE_UPDATE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 13);
+    private static final Date REQUIRE_UPDATE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1);
 
     public static boolean requiresUpdate() {
         return new Date().after(REQUIRE_UPDATE_DATE);

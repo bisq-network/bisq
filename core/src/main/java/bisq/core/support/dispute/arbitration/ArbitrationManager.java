@@ -24,6 +24,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
@@ -132,6 +133,11 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Override
     protected AckMessageSourceType getAckMessageSourceType() {
         return AckMessageSourceType.ARBITRATION_MESSAGE;
+    }
+
+    @Override
+    public void cleanupDisputes() {
+        disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED));
     }
 
 
@@ -370,5 +376,15 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                     }
                 }
         );
+    }
+
+    private void updateTradeOrOpenOfferManager(String tradeId) {
+        // set state after payout as we call swapTradeEntryToAvailableEntry
+        if (tradeManager.getTradeById(tradeId).isPresent()) {
+            tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED);
+        } else {
+            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
+            openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
+        }
     }
 }
