@@ -34,8 +34,6 @@ import javafx.scene.text.Text;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,13 +51,12 @@ public class InfoTextField extends AnchorPane {
     private final StringProperty text = new SimpleStringProperty();
     protected final Label infoIcon;
     private Label currentIcon;
-    private Boolean hidePopover;
-    private PopOver popover;
+    private PopOverWrapper popoverWrapper = new PopOverWrapper();
     private PopOver.ArrowLocation arrowLocation;
 
     public InfoTextField() {
 
-        arrowLocation = PopOver.ArrowLocation.RIGHT_TOP;;
+        arrowLocation = PopOver.ArrowLocation.RIGHT_TOP;
         textField = new BisqTextField();
         textField.setLabelFloat(true);
         textField.setEditable(false);
@@ -124,27 +121,14 @@ public class InfoTextField extends AnchorPane {
         currentIcon.setVisible(true);
 
         // As we don't use binding here we need to recreate it on mouse over to reflect the current state
-        currentIcon.setOnMouseEntered(e -> {
-            hidePopover = false;
-            showPopOver(node);
-        });
-        currentIcon.setOnMouseExited(e -> {
-            if (popover != null)
-                popover.hide();
-            hidePopover = true;
-            UserThread.runAfter(() -> {
-                if (hidePopover) {
-                    popover.hide();
-                    hidePopover = false;
-                }
-            }, 250, TimeUnit.MILLISECONDS);
-        });
+        currentIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createPopOver(node)));
+        currentIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
     }
 
-    private void showPopOver(Node node) {
+    private PopOver createPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
-        popover = new PopOver(node);
+        PopOver popover = new PopOver(node);
         if (currentIcon.getScene() != null) {
             popover.setDetachable(false);
             popover.setArrowLocation(arrowLocation);
@@ -152,6 +136,7 @@ public class InfoTextField extends AnchorPane {
 
             popover.show(currentIcon, -17);
         }
+        return popover;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
