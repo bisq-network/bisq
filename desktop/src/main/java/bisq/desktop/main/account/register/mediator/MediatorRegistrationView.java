@@ -19,7 +19,7 @@ package bisq.desktop.main.account.register.mediator;
 
 
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.account.register.DisputeResolverRegistrationView;
+import bisq.desktop.main.account.register.AgentRegistrationView;
 
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
@@ -30,7 +30,7 @@ import com.google.inject.name.Named;
 import javax.inject.Inject;
 
 @FxmlView
-public class MediatorRegistrationView extends DisputeResolverRegistrationView<Mediator, MediatorRegistrationViewModel> {
+public class MediatorRegistrationView extends AgentRegistrationView<Mediator, MediatorRegistrationViewModel> {
 
     @Inject
     public MediatorRegistrationView(MediatorRegistrationViewModel model,

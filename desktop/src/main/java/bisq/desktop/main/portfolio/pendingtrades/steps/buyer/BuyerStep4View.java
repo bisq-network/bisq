@@ -184,10 +184,9 @@ public class BuyerStep4View extends TradeStepView {
         useSavingsWalletButton.getStyleClass().remove("action-button");
 
         withdrawToExternalWalletButton.setOnAction(e -> {
-            if (model.dataModel.isReadyForTxBroadcast())
+            if (model.dataModel.isReadyForTxBroadcast()) {
                 reviewWithdrawal();
-            else
-                model.dataModel.showNotReadyForTxBroadcastPopups();
+            }
         });
 
     }
@@ -273,7 +272,12 @@ public class BuyerStep4View extends TradeStepView {
             doWithdrawRequest(toAddress, amount, fee, null, resultHandler, faultHandler);
     }
 
-    private void doWithdrawRequest(String toAddress, Coin amount, Coin fee, KeyParameter aesKey, ResultHandler resultHandler, FaultHandler faultHandler) {
+    private void doWithdrawRequest(String toAddress,
+                                   Coin amount,
+                                   Coin fee,
+                                   KeyParameter aesKey,
+                                   ResultHandler resultHandler,
+                                   FaultHandler faultHandler) {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);
         model.dataModel.onWithdrawRequest(toAddress,

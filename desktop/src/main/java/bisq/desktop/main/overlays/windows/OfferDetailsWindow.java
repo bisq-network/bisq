@@ -21,7 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -32,8 +32,6 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 
@@ -72,6 +70,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final BSFormatter formatter;
     private final User user;
     private final KeyRing keyRing;
+    private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
     private Price tradePrice;
@@ -90,6 +89,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.formatter = formatter;
         this.user = user;
         this.keyRing = keyRing;
+        this.navigation = navigation;
         type = Type.Confirmation;
     }
 
@@ -391,8 +391,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         placeOfferTuple.forth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
-            boolean hasAcceptedArbitrators = hasAcceptedArbitrators();
-            if (hasAcceptedArbitrators && hasAcceptedMediators()) {
+            if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();
@@ -403,22 +402,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     spinnerInfoLabel.setText(Res.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
                     takeOfferHandlerOptional.ifPresent(Runnable::run);
                 }
-            } else {
-                String message = !hasAcceptedArbitrators ?
-                        Res.get("popup.warning.noArbitratorsAvailable") :
-                        Res.get("popup.warning.noMediatorsAvailable");
-                new Popup<>().warning(message).show();
             }
         });
-    }
-
-    private boolean hasAcceptedArbitrators() {
-        final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
-        return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
-    }
-
-    private boolean hasAcceptedMediators() {
-        final List<Mediator> acceptedMediators = user.getAcceptedMediators();
-        return acceptedMediators != null && acceptedMediators.size() > 0;
     }
 }

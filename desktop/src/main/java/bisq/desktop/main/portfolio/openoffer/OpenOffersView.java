@@ -144,45 +144,40 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onDeactivateOpenOffer(openOffer,
                     () -> log.debug("Deactivate offer was successful"),
                     (message) -> {
                         log.error(message);
                         new Popup<>().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
                     });
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onActivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onActivateOpenOffer(openOffer,
                     () -> log.debug("Activate offer was successful"),
                     (message) -> {
                         log.error(message);
                         new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
                     });
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onRemoveOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
-            if (DontShowAgainLookup.showAgain(key))
+            if (DontShowAgainLookup.showAgain(key)) {
                 new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
                         .dontShowAgainId(key)
                         .show();
-            else
+            } else {
                 doRemoveOpenOffer(openOffer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            }
         }
     }
 
@@ -194,12 +189,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     tableView.refresh();
 
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
-                    if (DontShowAgainLookup.showAgain(key))
+                    if (DontShowAgainLookup.showAgain(key)) {
                         new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
                                 .show();
+                    }
                 },
                 (message) -> {
                     log.error(message);
@@ -208,10 +204,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onEditOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             openOfferActionHandler.onEditOpenOffer(openOffer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 

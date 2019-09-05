@@ -21,8 +21,12 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.ViewLoader;
 
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
+
+import bisq.network.p2p.P2PService;
 
 import javax.inject.Inject;
 
@@ -30,8 +34,20 @@ import javax.inject.Inject;
 public class SellOfferView extends OfferView {
 
     @Inject
-    public SellOfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences, ArbitratorManager arbitratorManager) {
-        super(viewLoader, navigation, preferences, arbitratorManager);
+    public SellOfferView(ViewLoader viewLoader,
+                         Navigation navigation,
+                         Preferences preferences,
+                         ArbitratorManager arbitratorManager,
+                         User user,
+                         WalletsSetup walletsSetup,
+                         P2PService p2PService) {
+        super(viewLoader,
+                navigation,
+                preferences,
+                arbitratorManager,
+                user,
+                walletsSetup,
+                p2PService);
     }
 }
 

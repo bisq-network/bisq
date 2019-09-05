@@ -185,8 +185,8 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
         observableMap.clear();
         Map<NodeAddress, T> filtered = map.values().stream()
                 .filter(e -> {
-                    final String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
-                    final boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
+                    String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
+                    boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
                     if (!isInPublicKeyInList) {
                         if (DevEnv.DEV_PRIVILEGE_PUB_KEY.equals(pubKeyAsHex))
                             log.info("We got the DEV_PRIVILEGE_PUB_KEY in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
@@ -277,9 +277,9 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
         return publicKeys.contains(pubKeyAsHex);
     }
 
-    public boolean isDisputeResolverAvailableForLanguage(String languageCode) {
-        return observableMap.values().stream().anyMatch(disputeResolver ->
-                disputeResolver.getLanguageCodes().stream().anyMatch(lc -> lc.equals(languageCode)));
+    public boolean isAgentAvailableForLanguage(String languageCode) {
+        return observableMap.values().stream().anyMatch(agent ->
+                agent.getLanguageCodes().stream().anyMatch(lc -> lc.equals(languageCode)));
     }
 
     public List<String> getDisputeResolverLanguages(List<NodeAddress> nodeAddresses) {

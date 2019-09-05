@@ -232,7 +232,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
         sendBsqButton.setOnAction((event) -> {
             // TODO break up in methods
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
                 Coin receiverAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
                 try {
@@ -259,8 +259,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 } catch (Throwable t) {
                     handleError(t);
                 }
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }
@@ -292,7 +290,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         sendBtcButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.wallet.send.sendBtc"));
 
         sendBtcButton.setOnAction((event) -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 String receiversAddressString = receiversBtcAddressInputTextField.getText();
                 Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
                 try {
@@ -324,8 +322,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 } catch (Throwable t) {
                     handleError(t);
                 }
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

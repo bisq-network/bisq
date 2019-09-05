@@ -17,12 +17,16 @@
 
 package bisq.desktop.main.offer;
 
+import bisq.desktop.Navigation;
+import bisq.desktop.util.GUIUtil;
+
 import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -41,8 +45,6 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
-import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
@@ -108,6 +110,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final ReferralIdService referralIdService;
     private final BSFormatter btcFormatter;
     private MakerFeeProvider makerFeeProvider;
+    private final WalletsSetup walletsSetup;
+    private final Navigation navigation;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
@@ -160,7 +164,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  TxFeeEstimationService txFeeEstimationService,
                                  ReferralIdService referralIdService,
                                  BSFormatter btcFormatter,
-                                 MakerFeeProvider makerFeeProvider) {
+                                 MakerFeeProvider makerFeeProvider,
+                                 WalletsSetup walletsSetup,
+                                 Navigation navigation) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -177,6 +183,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.referralIdService = referralIdService;
         this.btcFormatter = btcFormatter;
         this.makerFeeProvider = makerFeeProvider;
+        this.walletsSetup = walletsSetup;
+        this.navigation = navigation;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
                 UUID.randomUUID().toString() + "-" +
@@ -557,24 +565,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return paymentAccount;
     }
 
-    boolean hasAcceptedArbitrators() {
-        final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
-        return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
-    }
-
-    boolean hasAcceptedMediators() {
-        final List<Mediator> acceptedMediators = user.getAcceptedMediators();
-        return acceptedMediators != null && acceptedMediators.size() > 0;
-    }
-
     protected void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
         this.useMarketBasedPrice.set(useMarketBasedPrice);
         preferences.setUsePercentageBasedPrice(useMarketBasedPrice);
     }
-
-    /*boolean isFeeFromFundingTxSufficient() {
-        return !isMainNet.get() || feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
-    }*/
 
     public ObservableList<PaymentAccount> getPaymentAccounts() {
         return paymentAccounts;
@@ -836,5 +830,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public boolean isHalCashAccount() {
         return paymentAccount instanceof HalCashAccount;
+    }
+
+    public boolean canPlaceOffer() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
+                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
     }
 }

@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.account.register.arbitrator;
 
-import bisq.desktop.main.account.register.DisputeResolverRegistrationViewModel;
+import bisq.desktop.main.account.register.AgentRegistrationViewModel;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class ArbitratorRegistrationViewModel extends DisputeResolverRegistrationViewModel<Arbitrator, ArbitratorManager> {
+public class ArbitratorRegistrationViewModel extends AgentRegistrationViewModel<Arbitrator, ArbitratorManager> {
 
     @Inject
     public ArbitratorRegistrationViewModel(ArbitratorManager disputeResolverManager,

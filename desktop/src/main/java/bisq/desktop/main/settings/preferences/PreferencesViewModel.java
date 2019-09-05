@@ -40,7 +40,7 @@ public class PreferencesViewModel extends ActivatableViewModel {
     }
 
     boolean needsArbitrationLanguageWarning() {
-        return !arbitratorManager.isDisputeResolverAvailableForLanguage(preferences.getUserLanguage());
+        return !arbitratorManager.isAgentAvailableForLanguage(preferences.getUserLanguage());
     }
 
     String getArbitrationLanguages() {

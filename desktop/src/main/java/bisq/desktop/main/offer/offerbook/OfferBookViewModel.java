@@ -25,6 +25,7 @@ import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
@@ -100,6 +101,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
+    private final WalletsSetup walletsSetup;
     final BSFormatter formatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
 
@@ -143,6 +145,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
+                              WalletsSetup walletsSetup,
                               BSFormatter formatter) {
         super();
 
@@ -156,6 +159,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
+        this.walletsSetup = walletsSetup;
         this.formatter = formatter;
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
@@ -322,8 +326,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         return allTradeCurrencies;
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
     TradeCurrency getSelectedTradeCurrency() {
@@ -478,6 +482,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -502,10 +507,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    boolean hasPaymentAccount() {
-        return user.currentPaymentAccountProperty().get() != null;
-    }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
         return user.getPaymentAccounts() != null &&
@@ -534,12 +535,9 @@ class OfferBookViewModel extends ActivatableViewModel {
                         PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
     }
 
-    boolean hasAcceptedArbitrators() {
-        return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
-    }
-
-    boolean hasAcceptedMediators() {
-        return user.getAcceptedMediators() != null && !user.getAcceptedMediators().isEmpty();
+    boolean canCreateOrTakeOffer() {
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+                GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
 

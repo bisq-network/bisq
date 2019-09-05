@@ -359,32 +359,21 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void onPlaceOffer() {
-        if (model.isReadyForTxBroadcast()) {
+        if (model.getDataModel().canPlaceOffer()) {
             if (model.getDataModel().isMakerFeeValid()) {
-                boolean hasAcceptedArbitrators = model.hasAcceptedArbitrators();
-                if (hasAcceptedArbitrators && model.hasAcceptedMediators()) {
-                    Offer offer = model.createAndGetOffer();
-                    //noinspection PointlessBooleanExpression
-                    if (!DevEnv.isDevMode()) {
-                        offerDetailsWindow.onPlaceOffer(() ->
-                                model.onPlaceOffer(offer, offerDetailsWindow::hide))
-                                .show(offer);
-                    } else {
-                        balanceSubscription.unsubscribe();
-                        model.onPlaceOffer(offer, () -> {
-                        });
-                    }
+                Offer offer = model.createAndGetOffer();
+                if (!DevEnv.isDevMode()) {
+                    offerDetailsWindow.onPlaceOffer(() ->
+                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
+                            .show(offer);
                 } else {
-                    String message = !hasAcceptedArbitrators ?
-                            Res.get("popup.warning.noArbitratorsAvailable") :
-                            Res.get("popup.warning.noMediatorsAvailable");
-                    new Popup<>().warning(message).show();
+                    balanceSubscription.unsubscribe();
+                    model.onPlaceOffer(offer, () -> {
+                    });
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
-        } else {
-            model.showNotReadyForTxBroadcastPopups();
         }
     }
 

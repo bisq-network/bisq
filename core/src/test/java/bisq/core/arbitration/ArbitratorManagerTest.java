@@ -71,8 +71,8 @@ public class ArbitratorManagerTest {
         }, errorMessage -> {
         });
 
-        assertTrue(manager.isDisputeResolverAvailableForLanguage("en"));
-        assertFalse(manager.isDisputeResolverAvailableForLanguage("th"));
+        assertTrue(manager.isAgentAvailableForLanguage("en"));
+        assertFalse(manager.isAgentAvailableForLanguage("th"));
     }
 
     @Test

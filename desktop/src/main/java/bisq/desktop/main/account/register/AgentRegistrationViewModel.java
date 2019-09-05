@@ -18,6 +18,7 @@
 package bisq.desktop.main.account.register;
 
 import bisq.desktop.common.model.ActivatableViewModel;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.LanguageUtil;
@@ -46,7 +47,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 
-public abstract class DisputeResolverRegistrationViewModel<R extends DisputeAgent, T extends DisputeAgentManager<R>> extends ActivatableViewModel {
+public abstract class AgentRegistrationViewModel<R extends DisputeAgent, T extends DisputeAgentManager<R>> extends ActivatableViewModel {
     private final T disputeResolverManager;
     protected final User user;
     protected final P2PService p2PService;
@@ -69,11 +70,11 @@ public abstract class DisputeResolverRegistrationViewModel<R extends DisputeAgen
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeResolverRegistrationViewModel(T disputeResolverManager,
-                                                User user,
-                                                P2PService p2PService,
-                                                BtcWalletService walletService,
-                                                KeyRing keyRing) {
+    public AgentRegistrationViewModel(T disputeResolverManager,
+                                      User user,
+                                      P2PService p2PService,
+                                      BtcWalletService walletService,
+                                      KeyRing keyRing) {
         this.disputeResolverManager = disputeResolverManager;
         this.user = user;
         this.p2PService = p2PService;
@@ -184,7 +185,7 @@ public abstract class DisputeResolverRegistrationViewModel<R extends DisputeAgen
         revokeButtonDisabled.set(!allDataValid || myDisputeResolverProperty.get() == null);
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 }

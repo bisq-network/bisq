@@ -71,7 +71,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 //  @ripcurlx how it is for translators if we change key of string?
 //  I fear they will see the old key removed and need to add the new one again.
 @FxmlView
-public abstract class DisputeResolverRegistrationView<R, T extends DisputeResolverRegistrationViewModel> extends ActivatableViewAndModel<VBox, T> {
+public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewModel> extends ActivatableViewAndModel<VBox, T> {
 
     private final boolean useDevPrivilegeKeys;
     private ListView<String> languagesListView;
@@ -88,8 +88,8 @@ public abstract class DisputeResolverRegistrationView<R, T extends DisputeResolv
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisputeResolverRegistrationView(T model,
-                                           @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public AgentRegistrationView(T model,
+                                 @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -250,24 +250,20 @@ public abstract class DisputeResolverRegistrationView<R, T extends DisputeResolv
     }
 
     private void onRevoke() {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onRevoke(
                     () -> new Popup<>().feedback(Res.get("account.arbitratorRegistration.removedSuccess")).show(),
                     (errorMessage) -> new Popup<>().error(Res.get("account.arbitratorRegistration.removedFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onRegister() {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onRegister(
                     () -> new Popup<>().feedback(Res.get("account.arbitratorRegistration.registerSuccess")).show(),
                     (errorMessage) -> new Popup<>().error(Res.get("account.arbitratorRegistration.registerFailed",
                             Res.get("shared.errorMessageInline", errorMessage))).show());
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 }

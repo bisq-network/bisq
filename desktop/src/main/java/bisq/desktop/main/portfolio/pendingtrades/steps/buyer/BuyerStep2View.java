@@ -364,7 +364,7 @@ public class BuyerStep2View extends TradeStepView {
 
     @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentStarted() {
-        if (model.p2PService.isBootstrapped()) {
+        if (model.dataModel.isBootstrappedOrShowPopup()) {
             if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
                 //noinspection UnusedAssignment
                 String key = "confirmPaperReceiptSent";
@@ -439,8 +439,6 @@ public class BuyerStep2View extends TradeStepView {
             } else {
                 showConfirmPaymentStartedPopup();
             }
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
