@@ -106,10 +106,24 @@ public class SignedWitnessService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<Long> getVerifiedWitnessAgeList(AccountAgeWitness accountAgeWitness) {
-        return signedWitnessMap.values().stream()
-                .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
+    /**
+     * List of dates as long when accountAgeWitness was signed
+     */
+    public List<Long> getVerifiedWitnessDateList(AccountAgeWitness accountAgeWitness) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
                 .filter(this::verifySignature)
+                .map(SignedWitness::getDate)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * List of dates as long when accountAgeWitness was signed
+     * Not verifying that signatures are correct
+     */
+    public List<Long> getWitnessDateList(AccountAgeWitness accountAgeWitness) {
+        // We do not validate as it would not make sense to cheat one self...
+        return getSignedWitnessSet(accountAgeWitness).stream()
                 .map(SignedWitness::getDate)
                 .sorted()
                 .collect(Collectors.toList());
@@ -188,7 +202,7 @@ public class SignedWitnessService {
         }
     }
 
-    public Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
+    private Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
                 .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());

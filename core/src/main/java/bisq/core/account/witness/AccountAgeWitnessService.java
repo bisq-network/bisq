@@ -242,11 +242,11 @@ public class AccountAgeWitnessService {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
-            final long accountAge = accountAgeWitnessOptional
-                    .map(ageWitness -> getAccountAge((ageWitness), now))
+            final long accountSignAge = accountAgeWitnessOptional
+                    .map(ageWitness -> getWitnessSignAge(ageWitness, now))
                     .orElse(0L);
             AccountAge accountAgeCategory = accountAgeWitnessOptional
-                    .map(accountAgeWitness -> getAccountAgeCategory(accountAge))
+                    .map(accountAgeWitness -> getAccountAgeCategory(accountSignAge))
                     .orElse(AccountAge.LESS_ONE_MONTH);
 
             switch (accountAgeCategory) {
@@ -263,9 +263,9 @@ public class AccountAgeWitnessService {
             }
 
             final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            log.debug("accountAgeCategory={}, accountAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
+            log.debug("accountAgeCategory={}, accountSignAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
                     accountAgeCategory,
-                    accountAge / TimeUnit.DAYS.toMillis(1) + " days",
+                    accountSignAge / TimeUnit.DAYS.toMillis(1) + " days",
                     Coin.valueOf(limit).toFriendlyString(),
                     factor,
                     accountAgeWitnessOptional.map(accountAgeWitness -> Utilities.bytesAsHexString(accountAgeWitness.getHash())).orElse("accountAgeWitnessOptional not present"));
@@ -468,9 +468,10 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    ///////////////////////////////////////////////////////////////
-    // Signing
-    ///////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Signed witness
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public SignedWitness signAccountAgeWitness(Coin tradeAmount,
                                                AccountAgeWitness accountAgeWitness,
                                                ECKey key,
@@ -478,13 +479,23 @@ public class AccountAgeWitnessService {
         return signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
     }
 
-    public List<Long> getMyWitnessAgeList(PaymentAccountPayload myPaymentAccountPayload) {
-        AccountAgeWitness accountAgeWitness = getMyWitness(myPaymentAccountPayload);
-        // We do not validate as it would not make sense to cheat one self...
-        return signedWitnessService.getSignedWitnessSet(accountAgeWitness).stream()
-                .map(SignedWitness::getDate)
-                .sorted()
-                .collect(Collectors.toList());
+
+    public long getWitnessSignAge(AccountAgeWitness accountAgeWitness, Date now) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return now.getTime() - dates.get(0);
+        }
+    }
+
+    public long getMyWitnessSignAge(PaymentAccountPayload myPaymentAccountPayload, Date now) {
+        List<Long> dates = signedWitnessService.getWitnessDateList(getMyWitness(myPaymentAccountPayload));
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return now.getTime() - dates.get(0);
+        }
     }
 
     // Arbitrator signing

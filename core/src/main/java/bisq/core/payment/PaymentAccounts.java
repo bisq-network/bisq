@@ -17,6 +17,7 @@
 
 package bisq.core.payment;
 
+import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
@@ -61,7 +62,7 @@ class PaymentAccounts {
     }
 
     private List<PaymentAccount> sortValidAccounts(Offer offer) {
-        Comparator<PaymentAccount> comparator = this::compareByAge;
+        Comparator<PaymentAccount> comparator = this::compareBySignAgeOrMatureAccount;
         return accounts.stream()
                 .filter(account -> validator.apply(offer, account))
                 .sorted(comparator.reversed())
@@ -91,15 +92,24 @@ class PaymentAccounts {
         }
     }
 
-    private int compareByAge(PaymentAccount left, PaymentAccount right) {
+    // Accounts created before
+    private int compareBySignAgeOrMatureAccount(PaymentAccount left, PaymentAccount right) {
+        // Mature accounts count as infinite sign age
+        if (!AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, left)) {
+            return AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, right) ? 1 : 0;
+        }
+        if (!AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, right)) {
+            return -1;
+        }
+
         AccountAgeWitness leftWitness = accountAgeWitnessService.getMyWitness(left.getPaymentAccountPayload());
         AccountAgeWitness rightWitness = accountAgeWitnessService.getMyWitness(right.getPaymentAccountPayload());
 
         Date now = new Date();
 
-        long leftAge = accountAgeWitnessService.getAccountAge(leftWitness, now);
-        long rightAge = accountAgeWitnessService.getAccountAge(rightWitness, now);
+        long leftSignAge = accountAgeWitnessService.getWitnessSignAge(leftWitness, now);
+        long rightSignAge = accountAgeWitnessService.getWitnessSignAge(rightWitness, now);
 
-        return Long.compare(leftAge, rightAge);
+        return Long.compare(leftSignAge, rightSignAge);
     }
 }
