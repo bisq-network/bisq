@@ -47,6 +47,8 @@ public class SetupMediatedPayoutTxListener extends SetupPayoutTxListener {
     @Override
     protected void setState() {
         trade.setMediationResultState(MediationResultState.PAYOUT_TX_SEEN_IN_NETWORK);
-        processModel.getTradeManager().closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED);
+        if (trade.getPayoutTx() != null) {
+            processModel.getTradeManager().closeDisputedTrade(trade.getId(), Trade.DisputeState.MEDIATION_CLOSED);
+        }
     }
 }
