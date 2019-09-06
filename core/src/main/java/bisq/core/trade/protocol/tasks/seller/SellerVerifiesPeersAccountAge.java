@@ -39,11 +39,13 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
         try {
             runInterceptHook();
 
+            boolean isTradeRisky = OfferRestrictions.isTradeRisky(trade);
+            boolean isTradePeersAccountAgeImmature = AccountAgeRestrictions.isTradePeersAccountAgeImmature(
+                    processModel.getAccountAgeWitnessService(), trade);
             log.debug("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}",
-                    OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(
-                            processModel.getAccountAgeWitnessService(), trade));
-            if (OfferRestrictions.isTradeRisky(trade) &&
-                    AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
+                    isTradeRisky, isTradePeersAccountAgeImmature);
+            if (isTradeRisky &&
+                    isTradePeersAccountAgeImmature) {
                 failed("Violation of security restrictions:\n" +
                         "  - The peer's account was created after March 1st 2019\n" +
                         "  - The trade amount is above 0.01 BTC\n" +
