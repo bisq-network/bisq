@@ -225,7 +225,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForAmount.intValue());
     }
 
@@ -239,7 +239,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(6, model.maxPlacesForAmount.intValue());
@@ -257,7 +257,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(15, model.maxPlacesForAmount.intValue());
@@ -276,7 +276,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForVolume.intValue());
     }
 
@@ -290,7 +290,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(8, model.maxPlacesForVolume.intValue());
@@ -308,7 +308,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(15, model.maxPlacesForVolume.intValue());
@@ -327,7 +327,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForPrice.intValue());
     }
 
@@ -341,7 +341,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(7, model.maxPlacesForPrice.intValue());
@@ -359,7 +359,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, null, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         assertEquals(0, model.maxPlacesForMarketPriceMargin.intValue());
     }
 
@@ -387,7 +387,7 @@ public class OfferBookViewModelTest {
         offerBookListItems.addAll(item1, item2);
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, priceFeedService,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
         model.activate();
 
         assertEquals(8, model.maxPlacesForMarketPriceMargin.intValue()); //" (1.97%)"
@@ -408,7 +408,7 @@ public class OfferBookViewModelTest {
         when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
 
         final OfferBookViewModel model = new OfferBookViewModel(null, openOfferManager, offerBook, empty, null, null,
-                null, null, null, null, new BSFormatter());
+                null, null, null, null, null, new BSFormatter());
 
         final OfferBookListItem item = make(btcBuyItem.but(
                 with(useMarketBasedPrice, true),
@@ -446,7 +446,10 @@ public class OfferBookViewModelTest {
         return paymentAccount;
     }
 
-    private PaymentAccount getSepaAccount(String currencyCode, String countryCode, String bic, ArrayList<String> countryCodes) {
+    private PaymentAccount getSepaAccount(String currencyCode,
+                                          String countryCode,
+                                          String bic,
+                                          ArrayList<String> countryCodes) {
         CountryBasedPaymentAccount paymentAccount = new SepaAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
@@ -471,7 +474,10 @@ public class OfferBookViewModelTest {
         return paymentAccount;
     }
 
-    private PaymentAccount getSpecificBanksAccount(String currencyCode, String countryCode, String bankId, ArrayList<String> bankIds) {
+    private PaymentAccount getSpecificBanksAccount(String currencyCode,
+                                                   String countryCode,
+                                                   String bankId,
+                                                   ArrayList<String> bankIds) {
         SpecificBanksAccount paymentAccount = new SpecificBanksAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
@@ -499,7 +505,10 @@ public class OfferBookViewModelTest {
                 null);
     }
 
-    private Offer getSEPAPaymentMethod(String currencyCode, String countryCode, ArrayList<String> countryCodes, String bankId) {
+    private Offer getSEPAPaymentMethod(String currencyCode,
+                                       String countryCode,
+                                       ArrayList<String> countryCodes,
+                                       String bankId) {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.SEPA_ID,
                 countryCode,
@@ -526,7 +535,10 @@ public class OfferBookViewModelTest {
                 new ArrayList<>(Collections.singletonList(bankId)));
     }
 
-    private Offer getSpecificBanksPaymentMethod(String currencyCode, String countryCode, String bankId, ArrayList<String> bankIds) {
+    private Offer getSpecificBanksPaymentMethod(String currencyCode,
+                                                String countryCode,
+                                                String bankId,
+                                                ArrayList<String> bankIds) {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.SPECIFIC_BANKS_ID,
                 countryCode,
@@ -535,7 +547,12 @@ public class OfferBookViewModelTest {
                 bankIds);
     }
 
-    private Offer getPaymentMethod(String currencyCode, String paymentMethodId, String countryCode, ArrayList<String> countryCodes, String bankId, ArrayList<String> bankIds) {
+    private Offer getPaymentMethod(String currencyCode,
+                                   String paymentMethodId,
+                                   String countryCode,
+                                   ArrayList<String> countryCodes,
+                                   String bankId,
+                                   ArrayList<String> bankIds) {
         return getOffer(currencyCode,
                 paymentMethodId,
                 countryCode,
@@ -545,7 +562,12 @@ public class OfferBookViewModelTest {
     }
 
 
-    private Offer getOffer(String tradeCurrencyCode, String paymentMethodId, String countryCode, ArrayList<String> acceptedCountryCodes, String bankId, ArrayList<String> acceptedBanks) {
+    private Offer getOffer(String tradeCurrencyCode,
+                           String paymentMethodId,
+                           String countryCode,
+                           ArrayList<String> acceptedCountryCodes,
+                           String bankId,
+                           ArrayList<String> acceptedBanks) {
         return new Offer(new OfferPayload(null,
                 0,
                 null,
