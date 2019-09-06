@@ -743,7 +743,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             });
 
             if (marketPriceMargin.get() == null && amount.get() != null && volume.get() != null) {
-                updateMarketPriceAToManual();
+                updateMarketPriceToManual();
             }
         }
     }
@@ -862,7 +862,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             }
 
             if (marketPriceMargin.get() == null && amount.get() != null && volume.get() != null) {
-                updateMarketPriceAToManual();
+                updateMarketPriceToManual();
             }
         }
     }
@@ -1217,23 +1217,20 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 
-    private void updateMarketPriceAToManual() {
+    private void updateMarketPriceToManual() {
         final String currencyCode = dataModel.getTradeCurrencyCode().get();
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
         if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
             double marketPriceAsDouble = marketPrice.getPrice();
             double amountAsDouble = btcFormatter.parseNumberStringToDouble(amount.get());
             double volumeAsDouble =  btcFormatter.parseNumberStringToDouble(volume.get());
-            double manualPriceAsDouble =  volumeAsDouble / amountAsDouble;
-            double percentage = MathUtils.roundDouble(manualPriceAsDouble / marketPriceAsDouble, 4);
+            double manualPriceAsDouble = dataModel.calculateMarketPriceManual(marketPriceAsDouble, volumeAsDouble, amountAsDouble);
 
             final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
             int precision = isCryptoCurrency ?
                     Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
-            // protect from triggering unwanted updates
             price.set(btcFormatter.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
             setPriceToModel();
-            dataModel.setMarketPriceMargin(percentage);
             dataModel.calculateTotalToPay();
             updateButtonDisableState();
             applyMakerFee();

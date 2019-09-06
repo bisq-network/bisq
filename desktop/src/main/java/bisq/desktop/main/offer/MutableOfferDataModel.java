@@ -53,6 +53,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -592,6 +593,15 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    double calculateMarketPriceManual(double marketPrice, double volumeAsDouble, double amountAsDouble) {
+        double manualPriceAsDouble = volumeAsDouble / amountAsDouble;
+        double percentage = MathUtils.roundDouble(manualPriceAsDouble / marketPrice, 4);
+        
+        setMarketPriceMargin(percentage);
+
+        return manualPriceAsDouble;
+    }
 
     void calculateVolume() {
         if (price.get() != null &&
