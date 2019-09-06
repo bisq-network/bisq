@@ -24,8 +24,6 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.bouncycastle.openpgp.PGPKeyPair;
-
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -54,8 +52,6 @@ import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-
 // TODO: use a password protection for key storage
 @Singleton
 public class KeyStorage {
@@ -65,9 +61,7 @@ public class KeyStorage {
 
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),
-        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO),
-        // TODO not impl
-        PGP("pgp", null);
+        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO);
 
         private final String fileName;
         private final String algorithm;
@@ -110,14 +104,6 @@ public class KeyStorage {
     private boolean fileExists(KeyEntry keyEntry) {
         return new File(storageDir + "/" + keyEntry.getFileName() + ".key").exists();
     }
-
-    // TODO not impl
-    @SuppressWarnings({"SameParameterValue", "SameReturnValue", "UnusedParameters"})
-    @Nullable
-    public PGPKeyPair loadPgpKeyPair(KeyEntry keyEntry) {
-        return null;
-    }
-
 
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
         FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key", 20);
