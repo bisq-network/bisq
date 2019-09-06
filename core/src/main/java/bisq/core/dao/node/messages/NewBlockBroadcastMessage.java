@@ -30,6 +30,7 @@ import bisq.common.proto.network.NetworkEnvelope;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+// This message is sent only to lite DAO nodes (full nodes get block from their local bitcoind)
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class NewBlockBroadcastMessage extends BroadcastMessage implements CapabilityRequiringPayload {
