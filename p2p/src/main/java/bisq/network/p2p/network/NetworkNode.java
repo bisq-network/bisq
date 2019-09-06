@@ -98,8 +98,9 @@ public abstract class NetworkNode implements MessageListener {
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress,
                                                   NetworkEnvelope networkEnvelope) {
-        if (log.isDebugEnabled())
+        if (log.isDebugEnabled()) {
             log.debug("sendMessage: peersNodeAddress=" + peersNodeAddress + "\n\tmessage=" + Utilities.toTruncatedString(networkEnvelope));
+        }
         checkNotNull(peersNodeAddress, "peerAddress must not be null");
 
         Connection connection = getOutboundConnection(peersNodeAddress);
@@ -124,13 +125,15 @@ public abstract class NetworkNode implements MessageListener {
                 try {
                     // can take a while when using tor
                     long startTs = System.currentTimeMillis();
-                    if (log.isDebugEnabled())
+                    if (log.isDebugEnabled()) {
                         log.debug("Start create socket to peersNodeAddress {}", peersNodeAddress.getFullAddress());
+                    }
                     Socket socket = createSocket(peersNodeAddress);
                     long duration = System.currentTimeMillis() - startTs;
-                    if (log.isDebugEnabled())
+                    if (log.isDebugEnabled()) {
                         log.debug("Socket creation to peersNodeAddress {} took {} ms", peersNodeAddress.getFullAddress(),
                                 duration);
+                    }
 
                     if (duration > CREATE_SOCKET_TIMEOUT)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
@@ -142,12 +145,14 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection = getOutboundConnection(peersNodeAddress);
 
                     if (existingConnection != null) {
-                        if (log.isDebugEnabled())
+                        if (log.isDebugEnabled()) {
                             log.debug("We found in the meantime a connection for peersNodeAddress {}, " +
-                                        "so we use that for sending the message.\n" +
-                                        "That can happen if Tor needs long for creating a new outbound connection.\n" +
-                                        "We might have got a new inbound or outbound connection.",
-                                peersNodeAddress.getFullAddress());
+                                            "so we use that for sending the message.\n" +
+                                            "That can happen if Tor needs long for creating a new outbound connection.\n" +
+                                            "We might have got a new inbound or outbound connection.",
+                                    peersNodeAddress.getFullAddress());
+
+                        }
                         try {
                             socket.close();
                         } catch (Throwable throwable) {
@@ -188,7 +193,7 @@ public abstract class NetworkNode implements MessageListener {
                                 peersNodeAddress,
                                 networkProtoResolver);
 
-                        if (log.isDebugEnabled())
+                        if (log.isDebugEnabled()) {
                             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                     "NetworkNode created new outbound connection:"
                                     + "\nmyNodeAddress=" + getNodeAddress()
@@ -196,7 +201,7 @@ public abstract class NetworkNode implements MessageListener {
                                     + "\nuid=" + outboundConnection.getUid()
                                     + "\nmessage=" + networkEnvelope
                                     + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
-
+                        }
                         // can take a while when using tor
                         outboundConnection.sendMessage(networkEnvelope);
                         return outboundConnection;
