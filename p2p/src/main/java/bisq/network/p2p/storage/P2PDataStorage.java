@@ -57,7 +57,6 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
-import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
