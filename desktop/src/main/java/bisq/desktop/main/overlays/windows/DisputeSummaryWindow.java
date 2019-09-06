@@ -143,7 +143,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (DevEnv.isDevMode()) {
             UserThread.execute(() -> {
                 summaryNotesTextArea.setText("dummy result....");
-                buyerGetsTradeAmountRadioButton.setSelected(true);
             });
         }
     }

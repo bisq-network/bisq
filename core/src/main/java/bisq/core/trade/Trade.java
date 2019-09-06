@@ -380,7 +380,8 @@ public abstract class Trade implements Tradable, Model {
 
     //Added in v1.1.6
     @Getter
-    private MediationResultState mediationResultState = MediationResultState.UNDEFINED;
+    @Nullable
+    private MediationResultState mediationResultState = MediationResultState.UNDEFINED_MEDIATION_RESULT;
     transient final private ObjectProperty<MediationResultState> mediationResultStateProperty = new SimpleObjectProperty<>(mediationResultState);
 
 
@@ -449,7 +450,7 @@ public abstract class Trade implements Tradable, Model {
     @Override
     public Message toProtoMessage() {
         final protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
-                .setOffer(offer.toProtoMessage())
+                .setOffer(checkNotNull(offer).toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
@@ -457,9 +458,9 @@ public abstract class Trade implements Tradable, Model {
                 .setProcessModel(processModel.toProtoMessage())
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
-                .setState(protobuf.Trade.State.valueOf(state.name()))
-                .setDisputeState(protobuf.Trade.DisputeState.valueOf(disputeState.name()))
-                .setTradePeriodState(protobuf.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
+                .setState(Trade.State.toProtoMessage(state))
+                .setDisputeState(Trade.DisputeState.toProtoMessage(disputeState))
+                .setTradePeriodState(Trade.TradePeriodState.toProtoMessage(tradePeriodState))
                 .addAllCommunicationMessages(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
                         .collect(Collectors.toList()));
@@ -481,6 +482,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
+        Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
         return builder.build();
     }
 
@@ -506,6 +508,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
+        trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
 
         trade.chatMessages.addAll(proto.getCommunicationMessagesList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -855,6 +858,10 @@ public abstract class Trade implements Tradable, Model {
 
     public ReadOnlyObjectProperty<DisputeState> disputeStateProperty() {
         return disputeStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<MediationResultState> mediationResultStateProperty() {
+        return mediationResultStateProperty;
     }
 
     public ReadOnlyObjectProperty<TradePeriodState> tradePeriodStateProperty() {

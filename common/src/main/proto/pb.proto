@@ -1298,6 +1298,7 @@ message Trade {
     string counter_currency_tx_id = 28;
     // ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
     repeated DisputeCommunicationMessage communication_messages = 29;
+    MediationResultState mediation_result_state = 30;
 }
 
 message BuyerAsMakerTrade {

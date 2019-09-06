@@ -17,9 +17,11 @@
 
 package bisq.core.support.dispute.mediation;
 
+import bisq.common.proto.ProtoUtil;
+
 public enum MediationResultState {
-    UNDEFINED,
-    MEDIATION_RESULT_ACCEPTED,
+    UNDEFINED_MEDIATION_RESULT,
+    MEDIATION_RESULT_ACCEPTED(),
     MEDIATION_RESULT_REJECTED,
     SIG_MSG_SENT,
     SIG_MSG_ARRIVED,
@@ -32,5 +34,13 @@ public enum MediationResultState {
     PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX,
     PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED,
     RECEIVED_PAYOUT_TX_PUBLISHED_MSG,
-    PAYOUT_TX_SEEN_IN_NETWORK
+    PAYOUT_TX_SEEN_IN_NETWORK;
+
+    public static MediationResultState fromProto(protobuf.MediationResultState mediationResultState) {
+        return ProtoUtil.enumFromProto(MediationResultState.class, mediationResultState.name());
+    }
+
+    public static protobuf.MediationResultState toProtoMessage(MediationResultState mediationResultState) {
+        return protobuf.MediationResultState.valueOf(mediationResultState.name());
+    }
 }
