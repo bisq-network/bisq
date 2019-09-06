@@ -278,10 +278,21 @@ public class OfferUtil {
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             Preferences preferences, PriceFeedService priceFeedService,
                                                             BsqFormatter bsqFormatter) {
-        // We use the users currency derived from his selected country.
-        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
         String countryCode = preferences.getUserCountry().code;
         String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        return getFeeInUserFiatCurrency(makerFee,
+                isCurrencyForMakerFeeBtc,
+                userCurrencyCode,
+                priceFeedService,
+                bsqFormatter);
+    }
+
+    public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                            String userCurrencyCode, PriceFeedService priceFeedService,
+                                                            BsqFormatter bsqFormatter) {
+        // We use the users currency derived from his selected country.
+        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
+
         MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
         if (marketPrice != null && makerFee != null) {
             long marketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));

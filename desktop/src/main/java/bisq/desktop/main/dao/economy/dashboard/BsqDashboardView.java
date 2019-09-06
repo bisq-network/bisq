@@ -20,21 +20,23 @@ package bisq.desktop.main.dao.economy.dashboard;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
+import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -67,7 +69,12 @@ import java.time.format.FormatStyle;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,9 +85,6 @@ import static bisq.desktop.util.FormBuilder.addLabelWithSubText;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 
 
-
-import java.sql.Date;
-
 @FxmlView
 public class BsqDashboardView extends ActivatableView<GridPane, Void> implements DaoStateListener {
 
@@ -90,18 +94,15 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final DaoFacade daoFacade;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final PriceFeedService priceFeedService;
-    private final DaoStateService daoStateService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
 
     private ChangeListener<Number> priceChangeListener;
 
     private AreaChart bsqPriceChart;
-    private XYChart.Series<Number, Number> seriesBSQAdded, seriesBSQBurnt;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
-    private TextField marketCapTextField, availableAmountTextField;
+    private TextField avgPrice90TextField, medianPrice90TextField, marketCapTextField, availableAmountTextField;
     private Label marketPriceLabel;
 
     private Coin availableAmount;
@@ -116,17 +117,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private BsqDashboardView(DaoFacade daoFacade,
                              TradeStatisticsManager tradeStatisticsManager,
                              PriceFeedService priceFeedService,
-                             DaoStateService daoStateService,
                              Preferences preferences,
-                             BsqFormatter bsqFormatter,
-                             BSFormatter btcFormatter) {
+                             BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.priceFeedService = priceFeedService;
-        this.daoStateService = daoStateService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
-        this.btcFormatter = btcFormatter;
     }
 
     @Override
@@ -137,7 +134,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         createKPIs();
         createChart();
 
-        priceChangeListener = (observable, oldValue, newValue) -> updatePrice();
+        priceChangeListener = (observable, oldValue, newValue) -> {
+            updatePrice();
+            updateAverageAndMedianPrice();
+        };
     }
 
     private void createKPIs() {
@@ -147,6 +147,12 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         marketPriceLabel.getStyleClass().add("dao-kpi-big");
 
         marketPriceBox.second.getStyleClass().add("dao-kpi-subtext");
+
+        avgPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
+                Res.get("dao.factsAndFigures.dashboard.avgPrice90")).second;
+
+        medianPrice90TextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.medianPrice90")).second;
 
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
@@ -165,6 +171,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateWithBsqBlockChainData();
         updatePrice();
         updateChartData();
+        updateAverageAndMedianPrice();
     }
 
 
@@ -236,8 +243,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         bsqPriceChart.setLegendVisible(false);
         bsqPriceChart.setAnimated(false);
         bsqPriceChart.setId("charts-dao");
-        bsqPriceChart.setMinHeight(385);
-        bsqPriceChart.setPrefHeight(385);
+        bsqPriceChart.setMinHeight(335);
+        bsqPriceChart.setPrefHeight(bsqPriceChart.getMinHeight());
         bsqPriceChart.setCreateSymbols(true);
         bsqPriceChart.setPadding(new Insets(0));
         bsqPriceChart.getData().addAll(seriesBSQPrice);
@@ -260,16 +267,16 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void updateChartData() {
-        updateBSQPriceData();
+        updateBsqPriceData();
     }
 
-    private void updateBSQPriceData() {
+    private void updateBsqPriceData() {
         seriesBSQPrice.getData().clear();
 
         Map<LocalDate, List<TradeStatistics2>> bsqPriceByDate = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrencyCode().equals("BSQ"))
                 .sorted(Comparator.comparing(TradeStatistics2::getTradeDate))
-                .collect(Collectors.groupingBy(item -> new Date(item.getTradeDate().getTime()).toLocalDate()
+                .collect(Collectors.groupingBy(item -> new java.sql.Date(item.getTradeDate().getTime()).toLocalDate()
                         .with(ADJUSTERS.get(DAY))));
 
         List<XYChart.Data<Number, Number>> updatedBSQPrice = bsqPriceByDate.keySet().stream()
@@ -320,6 +327,57 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
             marketPriceLabel.setText(Res.get("shared.na"));
             marketCapTextField.setText(Res.get("shared.na"));
         }
+    }
+
+    private void updateAverageAndMedianPrice() {
+        Date past90 = getPastDate(90);
+        List<TradeStatistics2> bsqTradePast90Days = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+                .filter(e -> e.getCurrencyCode().equals("BSQ"))
+                .filter(e -> e.getTradeDate().after(past90))
+                .collect(Collectors.toList());
+        Tuple2<Long, Long> averageAndMedian = getAverageAndMedian(bsqTradePast90Days);
+        Coin oneBsq = Coin.valueOf(100);
+
+        Price avgPrice = Price.valueOf("BSQ", averageAndMedian.first);
+        String avg = bsqFormatter.formatPrice(avgPrice);
+        String bsqInUsdAvg = GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter);
+        avgPrice90TextField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
+
+        Price medianPrice = Price.valueOf("BSQ", averageAndMedian.second);
+        String median = bsqFormatter.formatPrice(medianPrice);
+        String bsqInUsdMedian = GUIUtil.getBsqInUsd(medianPrice, oneBsq, priceFeedService, bsqFormatter);
+        medianPrice90TextField.setText(median + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdMedian + ")");
+    }
+
+    private Tuple2<Long, Long> getAverageAndMedian(List<TradeStatistics2> list) {
+        long accumulatedVolume = 0;
+        long accumulatedAmount = 0;
+        List<Long> tradePrices = new ArrayList<>(list.size());
+
+        for (TradeStatistics2 item : list) {
+            item.getTradeVolume();
+            accumulatedVolume += item.getTradeVolume().getValue();
+            accumulatedAmount += item.getTradeAmount().getValue();
+            tradePrices.add(item.getTradePrice().getValue());
+        }
+        Collections.sort(tradePrices);
+        list.sort(Comparator.comparingLong(o -> o.getTradeDate().getTime()));
+
+        long averagePrice;
+        Long[] prices = new Long[tradePrices.size()];
+        tradePrices.toArray(prices);
+        long medianPrice = MathUtils.getMedian(prices);
+        double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
+        averagePrice = MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume);
+
+        return new Tuple2<>(averagePrice, medianPrice);
+    }
+
+    private Date getPastDate(int days) {
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(new Date());
+        cal.add(Calendar.DAY_OF_MONTH, -1 * days);
+        return cal.getTime();
     }
 }
 

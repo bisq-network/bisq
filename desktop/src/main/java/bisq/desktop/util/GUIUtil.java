@@ -31,10 +31,14 @@ import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -51,6 +55,7 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -59,6 +64,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import com.googlecode.jcsv.CSVStrategy;
@@ -1021,5 +1027,23 @@ public class GUIUtil {
     public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
         if (txId != null)
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
+    }
+
+    public static String getBsqInUsd(Price bsqPrice,
+                                     Coin bsqAmount,
+                                     PriceFeedService priceFeedService,
+                                     BsqFormatter bsqFormatter) {
+        MarketPrice usdMarketPrice = priceFeedService.getMarketPrice("USD");
+        if (usdMarketPrice == null) {
+            return Res.get("shared.na");
+        }
+        long usdMarketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(usdMarketPrice.getPrice(),
+                Fiat.SMALLEST_UNIT_EXPONENT));
+        Price usdPrice = Price.valueOf("USD", usdMarketPriceAsLong);
+        String bsqAmountAsString = bsqFormatter.formatCoin(bsqAmount);
+        Volume bsqAmountAsVolume = Volume.parse(bsqAmountAsString, "BSQ");
+        Coin requiredBtc = bsqPrice.getAmountByVolume(bsqAmountAsVolume);
+        Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
+        return bsqFormatter.formatVolumeWithCode(volumeByAmount);
     }
 }
