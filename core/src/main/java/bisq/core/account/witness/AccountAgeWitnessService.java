@@ -245,14 +245,14 @@ public class AccountAgeWitnessService {
     }
 
     // Return -1 if not signed
-    long getWitnessSignAge(Offer offer, Date now) {
+    public long getWitnessSignAge(Offer offer, Date now) {
         return findWitness(offer)
                 .map(witness -> getWitnessSignAge(witness, now))
                 .orElse(-1L);
     }
 
     // Return -1 if not signed
-    long getWitnessSignAge(Trade trade, Date now) {
+    public long getWitnessSignAge(Trade trade, Date now) {
         TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
         if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
             // unexpected
@@ -362,14 +362,14 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Return -1 if witness data is not found (old versions)
-    public long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
+    long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
         final Optional<AccountAgeWitness> optionalAccountAgeWitness = findWitness(offer);
         return optionalAccountAgeWitness
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
                 .orElse(-1L);
     }
 
-    public long getTradingPeersAccountAge(Trade trade) {
+    long getTradingPeersAccountAge(Trade trade) {
         TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
         if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
             // unexpected

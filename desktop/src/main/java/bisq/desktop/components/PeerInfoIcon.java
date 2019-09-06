@@ -250,11 +250,11 @@ public class PeerInfoIcon extends Group {
                 return -1;
             }
 
-            return accountAgeWitnessService.getTradingPeersAccountAge(trade);
+            return accountAgeWitnessService.getWitnessSignAge(trade, new Date());
         } else {
             checkNotNull(offer, "Offer must not be null if trade is null.");
 
-            return accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+            return accountAgeWitnessService.getWitnessSignAge(offer, new Date());
         }
     }
 
