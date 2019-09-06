@@ -106,8 +106,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private Label marketPriceLabel;
 
     private Coin availableAmount;
-    private int gridRow = 0;
 
+    private int gridRow = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -128,6 +128,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     @Override
     public void initialize() {
+
         ADJUSTERS.put(DAY, TemporalAdjusters.ofDateAdjuster(d -> d));
 
         createKPIs();
@@ -140,6 +141,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void createKPIs() {
+
         Tuple3<Label, Label, VBox> marketPriceBox = addLabelWithSubText(root, gridRow++, "0.004000 BSQ/BTC", "Latest BSQ/BTC trade price (in Bisq)");
         marketPriceLabel = marketPriceBox.first;
         marketPriceLabel.getStyleClass().add("dao-kpi-big");
@@ -157,7 +159,9 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         availableAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.dashboard.availableAmount")).second;
+
     }
+
 
     @Override
     protected void activate() {
@@ -170,12 +174,12 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateAverageAndMedianPrice();
     }
 
+
     @Override
     protected void deactivate() {
         daoFacade.removeBsqStateListener(this);
         priceFeedService.updateCounterProperty().removeListener(priceChangeListener);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener

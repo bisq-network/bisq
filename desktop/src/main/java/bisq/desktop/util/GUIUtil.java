@@ -195,12 +195,8 @@ public class GUIUtil {
         }
     }
 
-    public static void exportAccounts(ArrayList<PaymentAccount> accounts,
-                                      String fileName,
-                                      Preferences preferences,
-                                      Stage stage,
-                                      PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName,
+                                      Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (directory != null && !directory.isEmpty()) {
@@ -214,12 +210,8 @@ public class GUIUtil {
         }
     }
 
-    public static void importAccounts(User user,
-                                      String fileName,
-                                      Preferences preferences,
-                                      Stage stage,
-                                      PersistenceProtoResolver persistenceProtoResolver,
-                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
+                                      PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -365,8 +357,7 @@ public class GUIUtil {
         };
     }
 
-    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle,
-                                                                                                                  String postFixMulti,
+    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle, String postFixMulti,
                                                                                                                   Preferences preferences) {
         return p -> new ListCell<>() {
             @Override
@@ -598,9 +589,7 @@ public class GUIUtil {
         };
     }
 
-    public static void updateConfidence(TransactionConfidence confidence,
-                                        Tooltip tooltip,
-                                        TxConfidenceIndicator txConfidenceIndicator) {
+    public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
@@ -872,13 +861,8 @@ public class GUIUtil {
         }
     }
 
-    public static void showBsqFeeInfoPopup(Coin fee,
-                                           Coin miningFee,
-                                           Coin btcForIssuance,
-                                           int txSize,
-                                           BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter,
-                                           String type,
+    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, Coin btcForIssuance, int txSize, BsqFormatter bsqFormatter,
+                                           BSFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
         String confirmationMessage;
 
@@ -915,11 +899,7 @@ public class GUIUtil {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
-    public static void setFitToRowsForTableView(TableView tableView,
-                                                int rowHeight,
-                                                int headerHeight,
-                                                int minNumRows,
-                                                int maxNumRows) {
+    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minNumRows, int maxNumRows) {
         int size = tableView.getItems().size();
         int minHeight = rowHeight * minNumRows + headerHeight;
         int maxHeight = rowHeight * maxNumRows + headerHeight;
@@ -1025,9 +1005,7 @@ public class GUIUtil {
     }
 
     @NotNull
-    public static <T> ListCell<T> getComboBoxButtonCell(String title,
-                                                        ComboBox<T> comboBox,
-                                                        Boolean hideOriginalPrompt) {
+    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox, Boolean hideOriginalPrompt) {
         return new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {

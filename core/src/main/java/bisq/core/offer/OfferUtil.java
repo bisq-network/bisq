@@ -116,9 +116,7 @@ public class OfferUtil {
      * @param amount
      * @return
      */
-    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences,
-                                                   BsqWalletService bsqWalletService,
-                                                   Coin amount) {
+    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -154,9 +152,7 @@ public class OfferUtil {
         }
     }
 
-    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences,
-                                                   BsqWalletService bsqWalletService,
-                                                   Coin amount) {
+    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForTakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -321,9 +317,7 @@ public class OfferUtil {
         }
     }
 
-    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin,
-                                              Optional<Volume> optionalFeeInFiat,
-                                              BSFormatter formatter) {
+    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
         String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         String feeInFiatAsString;
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
