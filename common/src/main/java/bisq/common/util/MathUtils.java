@@ -92,4 +92,15 @@ public class MathUtils {
     public static double exactMultiply(double value1, double value2) {
         return BigDecimal.valueOf(value1).multiply(BigDecimal.valueOf(value2)).doubleValue();
     }
+
+    public static Long getMedian(Long[] list) {
+        int middle = list.length / 2;
+        long median;
+        if (list.length % 2 == 1) {
+            median = list[middle];
+        } else {
+            median = MathUtils.roundDoubleToLong((list[middle - 1] + list[middle]) / 2.0);
+        }
+        return median;
+    }
 }

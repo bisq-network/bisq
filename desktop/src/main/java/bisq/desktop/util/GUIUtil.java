@@ -31,10 +31,14 @@ import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -51,6 +55,7 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -59,6 +64,7 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.wallet.DeterministicSeed;
 
 import com.googlecode.jcsv.CSVStrategy;
@@ -189,8 +195,12 @@ public class GUIUtil {
         }
     }
 
-    public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName,
-                                      Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+    public static void exportAccounts(ArrayList<PaymentAccount> accounts,
+                                      String fileName,
+                                      Preferences preferences,
+                                      Stage stage,
+                                      PersistenceProtoResolver persistenceProtoResolver,
+                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (directory != null && !directory.isEmpty()) {
@@ -204,8 +214,12 @@ public class GUIUtil {
         }
     }
 
-    public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
-                                      PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+    public static void importAccounts(User user,
+                                      String fileName,
+                                      Preferences preferences,
+                                      Stage stage,
+                                      PersistenceProtoResolver persistenceProtoResolver,
+                                      CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -351,7 +365,8 @@ public class GUIUtil {
         };
     }
 
-    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle, String postFixMulti,
+    public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle,
+                                                                                                                  String postFixMulti,
                                                                                                                   Preferences preferences) {
         return p -> new ListCell<>() {
             @Override
@@ -583,7 +598,9 @@ public class GUIUtil {
         };
     }
 
-    public static void updateConfidence(TransactionConfidence confidence, Tooltip tooltip, TxConfidenceIndicator txConfidenceIndicator) {
+    public static void updateConfidence(TransactionConfidence confidence,
+                                        Tooltip tooltip,
+                                        TxConfidenceIndicator txConfidenceIndicator) {
         if (confidence != null) {
             switch (confidence.getConfidenceType()) {
                 case UNKNOWN:
@@ -855,8 +872,13 @@ public class GUIUtil {
         }
     }
 
-    public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, Coin btcForIssuance, int txSize, BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter, String type,
+    public static void showBsqFeeInfoPopup(Coin fee,
+                                           Coin miningFee,
+                                           Coin btcForIssuance,
+                                           int txSize,
+                                           BsqFormatter bsqFormatter,
+                                           BSFormatter btcFormatter,
+                                           String type,
                                            Runnable actionHandler) {
         String confirmationMessage;
 
@@ -893,7 +915,11 @@ public class GUIUtil {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
-    public static void setFitToRowsForTableView(TableView tableView, int rowHeight, int headerHeight, int minNumRows, int maxNumRows) {
+    public static void setFitToRowsForTableView(TableView tableView,
+                                                int rowHeight,
+                                                int headerHeight,
+                                                int minNumRows,
+                                                int maxNumRows) {
         int size = tableView.getItems().size();
         int minHeight = rowHeight * minNumRows + headerHeight;
         int maxHeight = rowHeight * maxNumRows + headerHeight;
@@ -999,7 +1025,9 @@ public class GUIUtil {
     }
 
     @NotNull
-    public static <T> ListCell<T> getComboBoxButtonCell(String title, ComboBox<T> comboBox, Boolean hideOriginalPrompt) {
+    public static <T> ListCell<T> getComboBoxButtonCell(String title,
+                                                        ComboBox<T> comboBox,
+                                                        Boolean hideOriginalPrompt) {
         return new ListCell<>() {
             @Override
             protected void updateItem(T item, boolean empty) {
@@ -1021,5 +1049,23 @@ public class GUIUtil {
     public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
         if (txId != null)
             GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
+    }
+
+    public static String getBsqInUsd(Price bsqPrice,
+                                     Coin bsqAmount,
+                                     PriceFeedService priceFeedService,
+                                     BsqFormatter bsqFormatter) {
+        MarketPrice usdMarketPrice = priceFeedService.getMarketPrice("USD");
+        if (usdMarketPrice == null) {
+            return Res.get("shared.na");
+        }
+        long usdMarketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(usdMarketPrice.getPrice(),
+                Fiat.SMALLEST_UNIT_EXPONENT));
+        Price usdPrice = Price.valueOf("USD", usdMarketPriceAsLong);
+        String bsqAmountAsString = bsqFormatter.formatCoin(bsqAmount);
+        Volume bsqAmountAsVolume = Volume.parse(bsqAmountAsString, "BSQ");
+        Coin requiredBtc = bsqPrice.getAmountByVolume(bsqAmountAsVolume);
+        Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
+        return bsqFormatter.formatVolumeWithCode(volumeByAmount);
     }
 }

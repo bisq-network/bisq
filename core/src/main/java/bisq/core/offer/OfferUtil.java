@@ -116,7 +116,9 @@ public class OfferUtil {
      * @param amount
      * @return
      */
-    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences,
+                                                   BsqWalletService bsqWalletService,
+                                                   Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -152,7 +154,9 @@ public class OfferUtil {
         }
     }
 
-    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences,
+                                                   BsqWalletService bsqWalletService,
+                                                   Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForTakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -278,10 +282,21 @@ public class OfferUtil {
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             Preferences preferences, PriceFeedService priceFeedService,
                                                             BsqFormatter bsqFormatter) {
-        // We use the users currency derived from his selected country.
-        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
         String countryCode = preferences.getUserCountry().code;
         String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
+        return getFeeInUserFiatCurrency(makerFee,
+                isCurrencyForMakerFeeBtc,
+                userCurrencyCode,
+                priceFeedService,
+                bsqFormatter);
+    }
+
+    public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
+                                                            String userCurrencyCode, PriceFeedService priceFeedService,
+                                                            BsqFormatter bsqFormatter) {
+        // We use the users currency derived from his selected country.
+        // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
+
         MarketPrice marketPrice = priceFeedService.getMarketPrice(userCurrencyCode);
         if (marketPrice != null && makerFee != null) {
             long marketPriceAsLong = MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(marketPrice.getPrice(), Fiat.SMALLEST_UNIT_EXPONENT));
@@ -306,7 +321,9 @@ public class OfferUtil {
         }
     }
 
-    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
+    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin,
+                                              Optional<Volume> optionalFeeInFiat,
+                                              BSFormatter formatter) {
         String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         String feeInFiatAsString;
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
