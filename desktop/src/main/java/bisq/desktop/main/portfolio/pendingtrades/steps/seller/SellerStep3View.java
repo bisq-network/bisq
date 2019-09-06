@@ -246,12 +246,11 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setWarningHeadline();
+    protected String getFistHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_seller.warn.part1b");
-        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute);
 
 
     }
@@ -261,13 +260,12 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step3_seller.openForDispute");
     }
 
     @Override
     protected void applyOnDisputeOpened() {
-        // confirmButton.setDisable(true);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////

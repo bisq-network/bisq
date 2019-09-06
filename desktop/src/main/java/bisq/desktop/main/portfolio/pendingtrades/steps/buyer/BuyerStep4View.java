@@ -80,48 +80,23 @@ public class BuyerStep4View extends TradeStepView {
 
     public BuyerStep4View(PendingTradesViewModel model) {
         super(model);
-
-       /* focusedPropertyListener = (ov, oldValue, newValue) -> {
-            if (oldValue && !newValue)
-                model.withdrawAddressFocusOut(withdrawAddressTextField.getText());
-        };*/
     }
 
     @Override
     public void activate() {
         super.activate();
-
-        // TODO valid. handler need improvement
-        //withdrawAddressTextField.focusedProperty().addListener(focusedPropertyListener);
-        //withdrawAddressTextField.setValidator(model.getBtcAddressValidator());
-        // withdrawButton.disableProperty().bind(model.getWithdrawalButtonDisable());
-
-        // We need to handle both cases: Address not set and address already set (when returning from other view)
-        // We get address validation after focus out, so first make sure we loose focus and then set it again as hint for user to put address in
-        //TODO app wide focus
-       /* UserThread.execute(() -> {
-            withdrawAddressTextField.requestFocus();
-           UserThread.execute(() -> {
-                this.requestFocus();
-                UserThread.execute(() -> withdrawAddressTextField.requestFocus());
-            });
-        });*/
-
-        hideNotificationGroup();
     }
 
     @Override
     public void deactivate() {
         super.deactivate();
-        //withdrawAddressTextField.focusedProperty().removeListener(focusedPropertyListener);
-        // withdrawButton.disableProperty().unbind();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Content
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void addContent() {
         gridPane.getColumnConstraints().get(1).setHgrow(Priority.SOMETIMES);

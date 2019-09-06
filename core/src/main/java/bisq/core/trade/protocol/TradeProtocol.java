@@ -148,7 +148,7 @@ public abstract class TradeProtocol {
 
     // Trader has already received the peer's signature and has clicked the accept button as well.
     public void onFinalizeMediationResultPayout(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        if (trade.isPayoutPublished()) {
+        if (trade.getPayoutTx() != null) {
             errorMessageHandler.handleErrorMessage("Payout tx is already published.");
             return;
         }

@@ -23,7 +23,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
-import bisq.desktop.main.portfolio.pendingtrades.TradeSubView;
+import bisq.desktop.main.portfolio.pendingtrades.TradeStepInfo;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
@@ -82,11 +82,10 @@ public abstract class TradeStepView extends AnchorPane {
 
     private Subscription tradePeriodStateSubscription, disputeStateSubscription, mediationResultStateSubscription;
     protected int gridRow = 0;
-    private TitledGroupBg tradeInfoTitledGroupBg;
     private TextField timeLeftTextField;
     private ProgressBar timeLeftProgressBar;
     private TxIdTextField txIdTextField;
-    private TradeSubView.NotificationGroup notificationGroup;
+    private TradeStepInfo tradeStepInfo;
     private Subscription txIdSubscription;
     private ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
@@ -140,7 +139,7 @@ public abstract class TradeStepView extends AnchorPane {
 
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
-                showSupportFields();
+                new Popup<>().error(newValue).show();
         };
 
         clockListener = new ClockWatcher.Listener() {
@@ -169,6 +168,16 @@ public abstract class TradeStepView extends AnchorPane {
         }
         trade.errorMessageProperty().addListener(errorMessageListener);
 
+        if (!isMediationClosedState()) {
+            tradeStepInfo.setOnAction(e -> {
+                new Popup<>().attention(Res.get("portfolio.pending.support.popup.info"))
+                        .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
+                        .onAction(this::openSupportTicket)
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+            });
+        }
+
         disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
             if (newValue != null)
                 updateDisputeState(newValue);
@@ -188,6 +197,11 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (infoLabel != null)
             infoLabel.setText(getInfoText());
+    }
+
+    private void openSupportTicket() {
+        applyOnDisputeOpened();
+        model.dataModel.onOpenDispute();
     }
 
     public void deactivate() {
@@ -212,8 +226,8 @@ public abstract class TradeStepView extends AnchorPane {
         if (clockListener != null)
             model.clockWatcher.removeListener(clockListener);
 
-        if (notificationGroup != null)
-            notificationGroup.button.setOnAction(null);
+        if (tradeStepInfo != null)
+            tradeStepInfo.setOnAction(null);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -226,7 +240,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected void addTradeInfoBlock() {
-        tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
+        TitledGroupBg tradeInfoTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 3,
                 Res.get("portfolio.pending.tradeInformation"));
         GridPane.setColumnSpan(tradeInfoTitledGroupBg, 2);
 
@@ -316,76 +330,11 @@ public abstract class TradeStepView extends AnchorPane {
 
     // We have the dispute button and text field on the left side, but we handle the content here as it
     // is trade state specific
-    public void setNotificationGroup(TradeSubView.NotificationGroup notificationGroup) {
-        this.notificationGroup = notificationGroup;
-    }
+    public void setTradeStepInfo(TradeStepInfo tradeStepInfo) {
+        this.tradeStepInfo = tradeStepInfo;
 
-    private void showDisputeInfoLabel() {
-        if (notificationGroup != null)
-            notificationGroup.setLabelAndHeadlineVisible(true);
-    }
-
-    private void showOpenDisputeButton() {
-        if (notificationGroup != null) {
-            notificationGroup.setButtonVisible(true);
-            notificationGroup.button.setOnAction(e -> {
-                notificationGroup.button.setDisable(true);
-                onDisputeOpened();
-                model.dataModel.onOpenDispute();
-            });
-        }
-    }
-
-    protected void setWarningHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("shared.warning"));
-        }
-    }
-
-    protected void setInformationHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.notification"));
-        }
-    }
-
-    protected void setOpenDisputeHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.openDispute"));
-        }
-    }
-
-    protected void setDisputeOpenedHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.disputeOpened"));
-        }
-    }
-
-    protected void setRequestSupportHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.openSupport"));
-        }
-    }
-
-    protected void setSupportOpenedHeadline() {
-        if (notificationGroup != null) {
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.supportTicketOpened"));
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Support
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void showSupportFields() {
-        if (notificationGroup != null) {
-            notificationGroup.button.updateText(Res.get("portfolio.pending.requestSupport"));
-            notificationGroup.button.setId("open-support-button");
-            notificationGroup.button.setOnAction(e -> model.dataModel.onOpenSupportTicket());
-        }
-        new Popup<>().warning(trade.errorMessageProperty().getValue()
-                + "\n\n" + Res.get("portfolio.pending.error.requestSupport"))
-                .show();
-
+        tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+        tradeStepInfo.setPeriodOverWarnTextSupplier(this::getPeriodOverWarnText);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -393,54 +342,30 @@ public abstract class TradeStepView extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void showWarning() {
-        showDisputeInfoLabel();
-
-        if (notificationGroup != null)
-            notificationGroup.label.setText(getWarningText());
+        if (tradeStepInfo != null) {
+            tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+            tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
+        }
     }
 
-    private void removeWarning() {
-        hideNotificationGroup();
-    }
 
-    protected String getWarningText() {
+    protected String getFistHalfOverWarnText() {
         return "";
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onOpenForDispute() {
-        showDisputeInfoLabel();
-        showOpenDisputeButton();
-        setOpenDisputeHeadline();
 
-        if (notificationGroup != null)
-            notificationGroup.label.setText(getOpenForDisputeText());
-    }
-
-    private void onDisputeOpened() {
-        showDisputeInfoLabel();
-        showOpenDisputeButton();
-        applyOnDisputeOpened();
-        setDisputeOpenedHeadline();
-
-        if (notificationGroup != null)
-            notificationGroup.button.setDisable(true);
-    }
-
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return "";
     }
 
     protected void applyOnDisputeOpened() {
     }
 
-    protected void hideNotificationGroup() {
-        notificationGroup.setLabelAndHeadlineVisible(false);
-        notificationGroup.setButtonVisible(false);
-    }
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
         log.error("updateDisputeState: disputeState={}", disputeState);
@@ -450,79 +375,72 @@ public abstract class TradeStepView extends AnchorPane {
             case NO_DISPUTE:
                 break;
             case DISPUTE_REQUESTED:
-                onDisputeOpened();
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
                 ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket()) {
-                        setSupportOpenedHeadline();
-                        msg = Res.get("portfolio.pending.supportTicketOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    } else {
-                        setDisputeOpenedHeadline();
-                        msg = Res.get("portfolio.pending.disputeOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    }
-                    if (notificationGroup != null)
-                        notificationGroup.label.setText(msg);
+                    if (tradeStepInfo != null)
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_ARBITRATION_SELF_REQUESTED);
                 });
 
                 break;
             case DISPUTE_STARTED_BY_PEER:
-                onDisputeOpened();
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
                 ownDispute = model.dataModel.arbitrationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket()) {
-                        setSupportOpenedHeadline();
-                        msg = Res.get("portfolio.pending.supportTicketOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    } else {
-                        setDisputeOpenedHeadline();
-                        msg = Res.get("portfolio.pending.disputeOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    }
-                    if (notificationGroup != null)
-                        notificationGroup.label.setText(msg);
+                    if (tradeStepInfo != null)
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_ARBITRATION_PEER_REQUESTED);
                 });
                 break;
             case DISPUTE_CLOSED:
                 break;
             case MEDIATION_REQUESTED:
-                // TODO
-                onDisputeOpened();
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
                 ownDispute = model.dataModel.mediationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket()) {
-                        setSupportOpenedHeadline();
-                        msg = Res.get("portfolio.pending.supportTicketOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    } else {
-                        setDisputeOpenedHeadline();
-                        msg = Res.get("portfolio.pending.disputeOpenedMyUser", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    }
-                    if (notificationGroup != null)
-                        notificationGroup.label.setText(msg);
+                    if (tradeStepInfo != null)
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_MEDIATION_SELF_REQUESTED);
                 });
 
                 break;
             case MEDIATION_STARTED_BY_PEER:
-                // TODO
-                onDisputeOpened();
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                }
+                applyOnDisputeOpened();
+
                 ownDispute = model.dataModel.mediationManager.findOwnDispute(trade.getId());
                 ownDispute.ifPresent(dispute -> {
-                    String msg;
-                    if (dispute.isSupportTicket()) {
-                        setSupportOpenedHeadline();
-                        msg = Res.get("portfolio.pending.supportTicketOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
-                    } else {
-                        setDisputeOpenedHeadline();
-                        msg = Res.get("portfolio.pending.disputeOpenedByPeer", Res.get("portfolio.pending.communicateWithArbitrator"));
+                    if (tradeStepInfo != null) {
+                        tradeStepInfo.setState(TradeStepInfo.State.IN_MEDIATION_PEER_REQUESTED);
                     }
-                    if (notificationGroup != null)
-                        notificationGroup.label.setText(msg);
                 });
                 break;
             case MEDIATION_CLOSED:
                 deactivatePaymentButtons(true);
-                showMediationResult();
 
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setOnAction(e -> {
+                        updateMediationResultState();
+                    });
+                }
+
+                if (tradeStepInfo != null) {
+                    tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT);
+                }
+
+                updateMediationResultState();
                 break;
         }
     }
@@ -533,18 +451,16 @@ public abstract class TradeStepView extends AnchorPane {
             // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
             log.error("updateMediationResultState");
             if (hasSelfAccepted()) {
-                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.selfAccepted"));
+                tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_SELF_ACCEPTED);
             } else if (peerAccepted()) {
-                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.peerAccepted"));
+                tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_PEER_ACCEPTED);
                 if (acceptMediationResultPopup == null) {
                     openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline.peerAccepted", trade.getShortId()));
                 }
             } else {
-                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.noneAccepted"));
+                tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT);
                 openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
             }
-
-            notificationGroup.button.setDisable(hasSelfAccepted());
         }
     }
 
@@ -561,27 +477,6 @@ public abstract class TradeStepView extends AnchorPane {
         return trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null;
     }
 
-    private void showMediationResult() {
-        log.error("showMediationResult");
-        if (isMediationClosedState()) {
-            if (notificationGroup != null) {
-                notificationGroup.setLabelAndHeadlineVisible(true);
-                notificationGroup.setButtonVisible(true);
-                notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.mediationResult.headline"));
-                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.noneAccepted"));
-                notificationGroup.button.setText(Res.get("portfolio.pending.mediationResult.button").toUpperCase());
-                notificationGroup.button.setId(null);
-                notificationGroup.button.getStyleClass().add("action-button");
-                notificationGroup.setButtonVisible(true);
-                notificationGroup.button.setOnAction(e -> {
-                    updateMediationResultState();
-                });
-
-                updateMediationResultState();
-            }
-        }
-    }
-
     private void openMediationResultPopup(String headLine) {
         if (acceptMediationResultPopup != null) {
             return;
@@ -589,6 +484,10 @@ public abstract class TradeStepView extends AnchorPane {
 
         Optional<Dispute> optionalDispute = model.dataModel.mediationManager.findDispute(trade.getId());
         if (!optionalDispute.isPresent()) {
+            return;
+        }
+
+        if (trade.getPayoutTx() != null) {
             return;
         }
 
@@ -646,10 +545,13 @@ public abstract class TradeStepView extends AnchorPane {
                     if (!trade.isFiatReceived())
                         showWarning();
                     else
-                        removeWarning();
+                        tradeStepInfo.setState(TradeStepInfo.State.SHOW_GET_HELP_BUTTON);
                     break;
                 case TRADE_PERIOD_OVER:
-                    onOpenForDispute();
+                    if (tradeStepInfo != null) {
+                        tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getPeriodOverWarnText);
+                        tradeStepInfo.setState(TradeStepInfo.State.WARN_PERIOD_OVER);
+                    }
                     break;
             }
         }
