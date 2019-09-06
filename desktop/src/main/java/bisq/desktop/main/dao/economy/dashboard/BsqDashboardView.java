@@ -23,7 +23,6 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateListener;
-import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
@@ -32,7 +31,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple3;
@@ -90,15 +88,12 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final DaoFacade daoFacade;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final PriceFeedService priceFeedService;
-    private final DaoStateService daoStateService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
 
     private ChangeListener<Number> priceChangeListener;
 
     private AreaChart bsqPriceChart;
-    private XYChart.Series<Number, Number> seriesBSQAdded, seriesBSQBurnt;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
     private TextField marketCapTextField, availableAmountTextField;
@@ -116,17 +111,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private BsqDashboardView(DaoFacade daoFacade,
                              TradeStatisticsManager tradeStatisticsManager,
                              PriceFeedService priceFeedService,
-                             DaoStateService daoStateService,
                              Preferences preferences,
-                             BsqFormatter bsqFormatter,
-                             BSFormatter btcFormatter) {
+                             BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.priceFeedService = priceFeedService;
-        this.daoStateService = daoStateService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
-        this.btcFormatter = btcFormatter;
     }
 
     @Override
