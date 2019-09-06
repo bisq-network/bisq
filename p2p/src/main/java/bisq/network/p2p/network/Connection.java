@@ -140,7 +140,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final ConnectionListener connectionListener;
     @Getter
     private final String uid;
-    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
     // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
