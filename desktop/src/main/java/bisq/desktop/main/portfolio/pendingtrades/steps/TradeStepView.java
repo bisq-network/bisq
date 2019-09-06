@@ -402,7 +402,6 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
-        log.error("updateDisputeState: disputeState={}", disputeState);
         deactivatePaymentButtons(false);
         Optional<Dispute> ownDispute;
         switch (disputeState) {
@@ -483,7 +482,6 @@ public abstract class TradeStepView extends AnchorPane {
         if (isMediationClosedState()) {
             // We do not use the state itself as it is not guaranteed the last state reflects relevant information
             // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
-            log.error("updateMediationResultState");
             if (hasSelfAccepted()) {
                 tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_SELF_ACCEPTED);
             } else if (peerAccepted()) {
@@ -499,7 +497,6 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private boolean isMediationClosedState() {
-        log.error("trade.getDisputeState()  {}", trade.getDisputeState());
         return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED;
     }
 

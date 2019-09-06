@@ -513,7 +513,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             useMediation = false;
             useArbitration = true;
         }
-        log.error("useMediation={}, useArbitration={}", useMediation, useArbitration);
         if (useMediation) {
             // If no dispute state set we start with mediation
             disputeManager = mediationManager;

@@ -94,7 +94,6 @@ public class TradeStepInfo {
 
     public void setState(State state) {
         this.state = state;
-        log.error("setTradeStepInfoState {}", state);
         switch (state) {
             case UNDEFINED:
                 break;

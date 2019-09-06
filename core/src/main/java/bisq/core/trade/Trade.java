@@ -688,7 +688,6 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setDisputeState(DisputeState disputeState) {
-        log.error("setDisputeState: {}", disputeState);
         boolean changed = this.disputeState != disputeState;
         this.disputeState = disputeState;
         disputeStateProperty.set(disputeState);
@@ -697,7 +696,6 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void setMediationResultState(MediationResultState mediationResultState) {
-        log.error("setMediationResultState: {}", mediationResultState);
         boolean changed = this.mediationResultState != mediationResultState;
         this.mediationResultState = mediationResultState;
         mediationResultStateProperty.set(mediationResultState);
@@ -707,7 +705,6 @@ public abstract class Trade implements Tradable, Model {
 
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
-        log.error("setTradePeriodState: {}", tradePeriodState);
         boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
         tradePeriodStateProperty.set(tradePeriodState);
