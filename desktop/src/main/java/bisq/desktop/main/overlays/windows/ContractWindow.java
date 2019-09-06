@@ -178,6 +178,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
+        // TODO update in next release to shared.selectedArbitrator and delete shared.arbitrator entry
         String title = dispute.isMediationDispute() ? Res.get("shared.selectedMediator") : Res.get("shared.arbitrator");
         String agentNodeAddress = getDisputeManager(dispute).getAgentNodeAddress(dispute).getFullAddress();
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress);

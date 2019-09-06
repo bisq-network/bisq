@@ -31,6 +31,7 @@ import javafx.event.EventHandler;
 
 import java.util.function.Supplier;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,6 +60,7 @@ public class TradeStepInfo {
     @Nullable
     @Setter
     private Trade trade;
+    @Getter
     private State state = State.UNDEFINED;
     private Supplier<String> fistHalfOverWarnTextSupplier = () -> "";
     private Supplier<String> periodOverWarnTextSupplier = () -> Res.get("portfolio.pending.support.text.getHelp");
@@ -164,7 +166,7 @@ public class TradeStepInfo {
                 // orange button
                 titledGroupBg.setText(Res.get("shared.warning"));
                 label.setText(fistHalfOverWarnTextSupplier.get());
-                button.setText(Res.get("portfolio.pending.openDispute").toUpperCase());
+                button.setText(Res.get("portfolio.pending.openSupport").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
                 button.setDisable(false);
@@ -173,7 +175,7 @@ public class TradeStepInfo {
                 // red button
                 titledGroupBg.setText(Res.get("shared.warning"));
                 label.setText(fistHalfOverWarnTextSupplier.get());
-                button.setText(Res.get("portfolio.pending.openDispute").toUpperCase());
+                button.setText(Res.get("portfolio.pending.openSupport").toUpperCase());
                 button.setId("open-dispute-button");
                 button.getStyleClass().remove("action-button");
                 button.setDisable(false);

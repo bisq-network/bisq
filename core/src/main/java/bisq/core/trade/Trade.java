@@ -706,7 +706,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
 
-    void setTradePeriodState(TradePeriodState tradePeriodState) {
+    public void setTradePeriodState(TradePeriodState tradePeriodState) {
         log.error("setTradePeriodState: {}", tradePeriodState);
         boolean changed = this.tradePeriodState != tradePeriodState;
         this.tradePeriodState = tradePeriodState;
