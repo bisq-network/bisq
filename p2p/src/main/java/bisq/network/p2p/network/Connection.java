@@ -704,9 +704,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastReadTimeStamp;
                     if (elapsed < 10) {
-                        log.debug("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
-                                        "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
-                                lastReadTimeStamp, now, elapsed);
+                        if (log.isDebugEnabled())
+                            log.debug("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
+                                            "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
+                                    lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
                     }
 
@@ -724,7 +725,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     NetworkEnvelope networkEnvelope = networkProtoResolver.fromProto(proto);
                     lastReadTimeStamp = now;
-                    log.debug("<< Received networkEnvelope of type: " + networkEnvelope.getClass().getSimpleName());
+                    if (log.isDebugEnabled())
+                        log.debug("<< Received networkEnvelope of type: " + networkEnvelope.getClass().getSimpleName());
 
                     int size = proto.getSerializedSize();
                     // We comment out that part as only debug and trace log level is used. For debugging purposes
@@ -761,7 +763,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     boolean exceeds;
                     if (networkEnvelope instanceof ExtendedDataSizePermission) {
                         exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
-                        log.debug("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
+                        if (log.isDebugEnabled())
+                            log.debug("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
                     } else {
                         exceeds = size > PERMITTED_MESSAGE_SIZE;
                     }
@@ -819,7 +822,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
                         // If we get a CloseConnectionMessage we shut down
-                        log.debug("CloseConnectionMessage received. Reason={}\n\t" +
+                        if (log.isDebugEnabled())
+                            log.debug("CloseConnectionMessage received. Reason={}\n\t" +
                                 "connection={}", proto.getCloseConnectionMessage().getReason(), this);
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                             log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
