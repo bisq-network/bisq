@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// This message is sent only to full DAO nodes
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j

@@ -23,14 +23,14 @@ package bisq.common.app;
 // We don't use the Enum in any serialized data, as changes in the enum would break backwards compatibility. We use the ordinal integer instead.
 // Sequence in the enum must not be changed (append only).
 public enum Capability {
-    TRADE_STATISTICS,
-    TRADE_STATISTICS_2,
-    ACCOUNT_AGE_WITNESS,
+    @Deprecated TRADE_STATISTICS,       // Not required anymore as no old clients out there not having that support
+    @Deprecated TRADE_STATISTICS_2,     // Not required anymore as no old clients out there not having that support
+    @Deprecated ACCOUNT_AGE_WITNESS,    // Not required anymore as no old clients out there not having that support
     SEED_NODE,
     DAO_FULL_NODE,
     PROPOSAL,
     BLIND_VOTE,
-    ACK_MSG,
+    @Deprecated ACK_MSG,                // Not required anymore as no old clients out there not having that support
     RECEIVE_BSQ_BLOCK,
     DAO_STATE,
     BUNDLE_OF_ENVELOPES,
