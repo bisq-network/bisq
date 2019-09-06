@@ -80,14 +80,13 @@ public abstract class TradeStepView extends AnchorPane {
     protected final Preferences preferences;
     protected final GridPane gridPane;
 
-    private Subscription disputeStateSubscription;
-    private Subscription tradePeriodStateSubscription;
+    private Subscription tradePeriodStateSubscription, disputeStateSubscription, mediationResultStateSubscription;
     protected int gridRow = 0;
-    protected TitledGroupBg tradeInfoTitledGroupBg;
+    private TitledGroupBg tradeInfoTitledGroupBg;
     private TextField timeLeftTextField;
     private ProgressBar timeLeftProgressBar;
     private TxIdTextField txIdTextField;
-    protected TradeSubView.NotificationGroup notificationGroup;
+    private TradeSubView.NotificationGroup notificationGroup;
     private Subscription txIdSubscription;
     private ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
@@ -175,6 +174,11 @@ public abstract class TradeStepView extends AnchorPane {
                 updateDisputeState(newValue);
         });
 
+        mediationResultStateSubscription = EasyBind.subscribe(trade.mediationResultStateProperty(), newValue -> {
+            if (newValue != null)
+                updateMediationResultState();
+        });
+
         tradePeriodStateSubscription = EasyBind.subscribe(trade.tradePeriodStateProperty(), newValue -> {
             if (newValue != null)
                 updateTradePeriodState(newValue);
@@ -198,6 +202,9 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (disputeStateSubscription != null)
             disputeStateSubscription.unsubscribe();
+
+        if (mediationResultStateSubscription != null)
+            mediationResultStateSubscription.unsubscribe();
 
         if (tradePeriodStateSubscription != null)
             tradePeriodStateSubscription.unsubscribe();
@@ -520,74 +527,111 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
-    private void showMediationResult() {
-        if (notificationGroup != null) {
-            notificationGroup.setLabelAndHeadlineVisible(true);
-            notificationGroup.setButtonVisible(true);
-            notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.mediationResult.headline"));
-            notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info"));
-            notificationGroup.button.setText(Res.get("portfolio.pending.mediationResult.button"));
-            notificationGroup.setButtonVisible(true);
-            notificationGroup.button.setOnAction(e -> {
-                notificationGroup.button.setDisable(true);
-                openMediationResultPopup();
-            });
+    private void updateMediationResultState() {
+        if (isMediationClosedState()) {
+            // We do not use the state itself as it is not guaranteed the last state reflects relevant information
+            // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
+            log.error("updateMediationResultState");
+            if (hasSelfAccepted()) {
+                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.selfAccepted"));
+            } else if (peerAccepted()) {
+                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.peerAccepted"));
+                if (acceptMediationResultPopup == null) {
+                    openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline.peerAccepted", trade.getShortId()));
+                }
+            } else {
+                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.noneAccepted"));
+                openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+            }
 
-            if (trade.getProcessModel().getMediatedPayoutTxSignature() == null) {
-                openMediationResultPopup();
+            notificationGroup.button.setDisable(hasSelfAccepted());
+        }
+    }
+
+    private boolean isMediationClosedState() {
+        log.error("trade.getDisputeState()  {}", trade.getDisputeState());
+        return trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED;
+    }
+
+    private boolean hasSelfAccepted() {
+        return trade.getProcessModel().getMediatedPayoutTxSignature() != null;
+    }
+
+    private boolean peerAccepted() {
+        return trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null;
+    }
+
+    private void showMediationResult() {
+        log.error("showMediationResult");
+        if (isMediationClosedState()) {
+            if (notificationGroup != null) {
+                notificationGroup.setLabelAndHeadlineVisible(true);
+                notificationGroup.setButtonVisible(true);
+                notificationGroup.titledGroupBg.setText(Res.get("portfolio.pending.mediationResult.headline"));
+                notificationGroup.label.setText(Res.get("portfolio.pending.mediationResult.info.noneAccepted"));
+                notificationGroup.button.setText(Res.get("portfolio.pending.mediationResult.button").toUpperCase());
+                notificationGroup.button.setId(null);
+                notificationGroup.button.getStyleClass().add("action-button");
+                notificationGroup.setButtonVisible(true);
+                notificationGroup.button.setOnAction(e -> {
+                    updateMediationResultState();
+                });
+
+                updateMediationResultState();
             }
         }
     }
 
-    private void openMediationResultPopup() {
-        String tradeId = trade.getId();
-        Optional<Dispute> optionalDispute = model.dataModel.mediationManager.findDispute(tradeId);
-        if (optionalDispute.isPresent()) {
-            DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
-
-            Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
-            boolean isMyRoleBuyer = contract.isMyRoleBuyer(model.dataModel.getPubKeyRing());
-            String buyerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount());
-            String sellerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount());
-            String myPayoutAmount = isMyRoleBuyer ? buyerPayoutAmount : sellerPayoutAmount;
-            String peersPayoutAmount = isMyRoleBuyer ? sellerPayoutAmount : buyerPayoutAmount;
-
-            acceptMediationResultPopup = new Popup<>().width(900)
-                    .headLine(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()))
-                    .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
-                            myPayoutAmount, peersPayoutAmount))
-                    .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
-                    .onAction(() -> {
-                        model.dataModel.mediationManager.acceptMediationResult(trade,
-                                () -> {
-                                    log.info("onAcceptMediationResult completed");
-                                },
-                                errorMessage -> {
-                                    UserThread.execute(() -> {
-                                        new Popup<>().error(errorMessage).show();
-                                        if (acceptMediationResultPopup != null) {
-                                            acceptMediationResultPopup.hide();
-                                        }
-                                    });
-                                });
-
-
-                        notificationGroup.button.setDisable(false);
-                    })
-                    .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
-                    .onSecondaryAction(() -> {
-                        model.dataModel.mediationManager.rejectMediationResult(trade);
-                        notificationGroup.button.setDisable(false);
-                        model.dataModel.onOpenDispute();
-                    })
-                    .onClose(() -> {
-                        notificationGroup.button.setDisable(false);
-                    });
-
-            acceptMediationResultPopup.show();
-        } else {
-            new Popup<>().error(Res.get("portfolio.pending.mediationResult.error.resultNotPresent")).show();
+    private void openMediationResultPopup(String headLine) {
+        if (acceptMediationResultPopup != null) {
+            return;
         }
+
+        Optional<Dispute> optionalDispute = model.dataModel.mediationManager.findDispute(trade.getId());
+        if (!optionalDispute.isPresent()) {
+            return;
+        }
+
+        DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
+        Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
+        boolean isMyRoleBuyer = contract.isMyRoleBuyer(model.dataModel.getPubKeyRing());
+        String buyerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount());
+        String sellerPayoutAmount = model.btcFormatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount());
+        String myPayoutAmount = isMyRoleBuyer ? buyerPayoutAmount : sellerPayoutAmount;
+        String peersPayoutAmount = isMyRoleBuyer ? sellerPayoutAmount : buyerPayoutAmount;
+
+        acceptMediationResultPopup = new Popup<>().width(900)
+                .headLine(headLine)
+                .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
+                        myPayoutAmount, peersPayoutAmount))
+                .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
+                .onAction(() -> {
+                    model.dataModel.mediationManager.acceptMediationResult(trade,
+                            () -> {
+                                log.info("onAcceptMediationResult completed");
+                                acceptMediationResultPopup = null;
+                            },
+                            errorMessage -> {
+                                UserThread.execute(() -> {
+                                    new Popup<>().error(errorMessage).show();
+                                    if (acceptMediationResultPopup != null) {
+                                        acceptMediationResultPopup.hide();
+                                        acceptMediationResultPopup = null;
+                                    }
+                                });
+                            });
+                })
+                .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
+                .onSecondaryAction(() -> {
+                    model.dataModel.mediationManager.rejectMediationResult(trade);
+                    model.dataModel.onOpenDispute();
+                    acceptMediationResultPopup = null;
+                })
+                .onClose(() -> {
+                    acceptMediationResultPopup = null;
+                });
+
+        acceptMediationResultPopup.show();
     }
 
     protected void deactivatePaymentButtons(boolean isDisabled) {

@@ -25,7 +25,6 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
-import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
@@ -68,9 +67,9 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
             byte[] peersSignature = checkNotNull(tradingPeer.getMediatedPayoutTxSignature(),
                     "tradingPeer.getTxSignatureFromMediation must not be null");
 
-            PubKeyRing myPubKeyRing = processModel.getPubKeyRing();
-            byte[] buyerSignature = contract.isMyRoleBuyer(myPubKeyRing) ? mySignature : peersSignature;
-            byte[] sellerSignature = contract.isMyRoleBuyer(myPubKeyRing) ? peersSignature : mySignature;
+            boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
+            byte[] buyerSignature = isMyRoleBuyer ? mySignature : peersSignature;
+            byte[] sellerSignature = isMyRoleBuyer ? peersSignature : mySignature;
 
             Coin totalPayoutAmount = offer.getBuyerSecurityDeposit().add(tradeAmount).add(offer.getSellerSecurityDeposit());
             Coin buyerPayoutAmount = Coin.valueOf(processModel.getBuyerPayoutAmountFromMediation());
@@ -78,8 +77,6 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
             checkArgument(totalPayoutAmount.equals(buyerPayoutAmount.add(sellerPayoutAmount)),
                     "Payout amount does not match buyerPayoutAmount=" + buyerPayoutAmount.toFriendlyString() +
                             "; sellerPayoutAmount=" + sellerPayoutAmount);
-
-            boolean isMyRoleBuyer = contract.isMyRoleBuyer(processModel.getPubKeyRing());
 
             String myPayoutAddressString = walletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT).getAddressString();
             String peersPayoutAddressString = tradingPeer.getPayoutAddressString();
