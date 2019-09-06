@@ -45,6 +45,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
 
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
@@ -101,6 +102,7 @@ public abstract class TradeStepView extends AnchorPane {
 
     // TODO remove before release. Only in for making dev testing easier
     private EventHandler<KeyEvent> keyEventEventHandler;
+    private Scene scene;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +192,8 @@ public abstract class TradeStepView extends AnchorPane {
 
     public void activate() {
         // TODO remove before relase. Only in for making dev testing easier
-        if (Version.VERSION.equals("1.1.5") && getScene() != null) {
+        scene = getScene();
+        if (Version.VERSION.equals("1.1.5") && scene != null) {
             getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
 
@@ -245,8 +248,8 @@ public abstract class TradeStepView extends AnchorPane {
 
     public void deactivate() {
         // TODO remove before relase. Only in for making dev testing easier
-        if (Version.VERSION.equals("1.1.5") && getScene() != null) {
-            getScene().removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+        if (Version.VERSION.equals("1.1.5") && scene != null) {
+            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
 
         if (txIdSubscription != null)
@@ -381,17 +384,6 @@ public abstract class TradeStepView extends AnchorPane {
         tradeStepInfo.setPeriodOverWarnTextSupplier(this::getPeriodOverWarnText);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Warning
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void showWarning() {
-        if (tradeStepInfo != null) {
-            tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
-            tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
-        }
-    }
-
 
     protected String getFistHalfOverWarnText() {
         return "";
@@ -402,14 +394,12 @@ public abstract class TradeStepView extends AnchorPane {
     // Dispute
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     protected String getPeriodOverWarnText() {
         return "";
     }
 
     protected void applyOnDisputeOpened() {
     }
-
 
     private void updateDisputeState(Trade.DisputeState disputeState) {
         log.error("updateDisputeState: disputeState={}", disputeState);
@@ -589,6 +579,7 @@ public abstract class TradeStepView extends AnchorPane {
                         tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
                     } else if (tradeStepInfo.getState() == TradeStepInfo.State.WARN_HALF_PERIOD) {
                         tradeStepInfo.setState(TradeStepInfo.State.SHOW_GET_HELP_BUTTON);
+                        tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
                     }
                     break;
                 case SECOND_HALF:
