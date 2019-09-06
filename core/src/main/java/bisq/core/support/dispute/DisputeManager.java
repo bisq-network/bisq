@@ -244,7 +244,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             return;
         }
 
-        String errorMessage;
+        String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
         Contract contractFromOpener = dispute.getContract();
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
@@ -256,9 +256,9 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     disputeList.add(dispute);
                     errorMessage = sendPeerOpenedDisputeMessage(dispute, contractFromOpener, peersPubKeyRing);
                 } else {
-                    errorMessage = "We got a dispute already open for that trade and trading peer.\n" +
-                            "TradeId = " + dispute.getTradeId();
-                    log.warn(errorMessage);
+                    // valid case if both have opened a dispute and agent was not online.
+                    log.debug("We got a dispute already open for that trade and trading peer. TradeId = {}",
+                            dispute.getTradeId());
                 }
             } else {
                 errorMessage = "We got a dispute msg what we have already stored. TradeId = " + dispute.getTradeId();
