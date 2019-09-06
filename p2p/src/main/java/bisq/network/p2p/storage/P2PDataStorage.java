@@ -49,7 +49,6 @@ import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -58,9 +57,9 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
-import bisq.common.util.Hex;
 
 import com.google.protobuf.ByteString;
 
@@ -86,8 +85,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import org.slf4j.LoggerFactory;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -804,7 +801,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     private void printData(String info) {
-        if (LoggerFactory.getLogger(Log.class).isInfoEnabled() || LoggerFactory.getLogger(Log.class).isDebugEnabled()) {
+        if (log.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder("\n\n------------------------------------------------------------\n");
             sb.append("Data set ").append(info).append(" operation");
             // We print the items sorted by hash with the payload class name and id
