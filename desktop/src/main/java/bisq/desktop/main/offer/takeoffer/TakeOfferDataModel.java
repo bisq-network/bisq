@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.takeoffer;
 import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
@@ -429,10 +428,12 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     long getMaxTradeLimit() {
-        if (paymentAccount != null)
-            return AccountAgeRestrictions.getMyTradeLimitAtTakeOffer(accountAgeWitnessService, paymentAccount, offer, getCurrencyCode(), getDirection());
-        else
+        if (paymentAccount != null) {
+            return accountAgeWitnessService.getMyTradeLimitAtTakeOffer(paymentAccount, offer, getCurrencyCode(),
+                    getDirection());
+        } else {
             return 0;
+        }
     }
 
 

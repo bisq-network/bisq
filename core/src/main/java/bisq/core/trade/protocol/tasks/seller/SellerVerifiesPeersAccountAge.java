@@ -17,7 +17,6 @@
 
 package bisq.core.trade.protocol.tasks.seller;
 
-import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -40,10 +39,10 @@ public class SellerVerifiesPeersAccountAge extends TradeTask {
             runInterceptHook();
 
             log.debug("SellerVerifiesPeersAccountAge isOfferRisky={} isTradePeersAccountAgeImmature={}",
-                    OfferRestrictions.isTradeRisky(trade), AccountAgeRestrictions.isTradePeersAccountAgeImmature(
-                            processModel.getAccountAgeWitnessService(), trade));
+                    OfferRestrictions.isTradeRisky(trade),
+                    processModel.getAccountAgeWitnessService().isTradePeersAccountAgeImmature(trade));
             if (OfferRestrictions.isTradeRisky(trade) &&
-                    AccountAgeRestrictions.isTradePeersAccountAgeImmature(processModel.getAccountAgeWitnessService(), trade)) {
+                    processModel.getAccountAgeWitnessService().isTradePeersAccountAgeImmature(trade)) {
                 failed("Violation of security restrictions:\n" +
                         "  - The peer's account was created after March 1st 2019\n" +
                         "  - The trade amount is above 0.01 BTC\n" +

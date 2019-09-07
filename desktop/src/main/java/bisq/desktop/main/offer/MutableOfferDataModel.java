@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.offer;
 
-import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
@@ -583,10 +582,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     long getMaxTradeLimit() {
-        if (paymentAccount != null)
-            return AccountAgeRestrictions.getMyTradeLimitAtCreateOffer(accountAgeWitnessService, paymentAccount, tradeCurrencyCode.get(), direction);
-        else
+        if (paymentAccount != null) {
+            return accountAgeWitnessService.getMyTradeLimitAtCreateOffer(paymentAccount, tradeCurrencyCode.get(),
+                    direction);
+        } else {
             return 0;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

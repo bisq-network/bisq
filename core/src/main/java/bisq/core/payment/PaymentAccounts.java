@@ -17,7 +17,6 @@
 
 package bisq.core.payment;
 
-import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
@@ -95,10 +94,10 @@ class PaymentAccounts {
     // Accounts created before
     private int compareBySignAgeOrMatureAccount(PaymentAccount left, PaymentAccount right) {
         // Mature accounts count as infinite sign age
-        if (!AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, left)) {
-            return AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, right) ? 1 : 0;
+        if (!accountAgeWitnessService.isMyAccountAgeImmature(left)) {
+            return accountAgeWitnessService.isMyAccountAgeImmature(right) ? 1 : 0;
         }
-        if (!AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, right)) {
+        if (!accountAgeWitnessService.isMyAccountAgeImmature(right)) {
             return -1;
         }
 

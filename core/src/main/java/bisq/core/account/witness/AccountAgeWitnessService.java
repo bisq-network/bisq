@@ -24,6 +24,8 @@ import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeResult;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.PaymentAccount;
@@ -77,6 +79,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
+    private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1).getTime();
 
     public enum AccountAge {
         LESS_ONE_MONTH,
@@ -200,6 +203,12 @@ public class AccountAgeWitnessService {
                 Optional.empty();
     }
 
+    private Optional<AccountAgeWitness> findTradePeerWitness(Trade trade) {
+        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        return (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) ?
+                Optional.empty() : findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
+    }
+
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
@@ -291,6 +300,7 @@ public class AccountAgeWitnessService {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
+            // TODO handle signed vs mature accounts
             final long accountSignAge = accountAgeWitnessOptional
                     .map(ageWitness -> getWitnessSignAge(ageWitness, now))
                     .orElse(0L);
@@ -324,7 +334,60 @@ public class AccountAgeWitnessService {
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mature witness checks
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private boolean isImmature(Optional<AccountAgeWitness> accountAgeWitness) {
+        return accountAgeWitness
+                .map(witness -> witness.getDate() > SAFE_ACCOUNT_AGE_DATE &&
+                        getWitnessSignAge(witness, new Date()) < 0)
+                .orElse(true);
+    }
+
+    public boolean isMakersAccountAgeImmature(Offer offer) {
+        return isImmature(findWitness(offer));
+    }
+
+    public boolean isTradePeersAccountAgeImmature(Trade trade) {
+        return isImmature(findTradePeerWitness(trade));
+    }
+
+    public boolean isMyAccountAgeImmature(PaymentAccount myPaymentAccount) {
+        return isImmature(Optional.of(getMyWitness(myPaymentAccount.getPaymentAccountPayload())));
+    }
+
+    public long getMyTradeLimitAtCreateOffer(PaymentAccount paymentAccount,
+                                             String currencyCode,
+                                             OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.BUY &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
+                isMyAccountAgeImmature(paymentAccount)) {
+            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        } else {
+            return getMyTradeLimit(paymentAccount, currencyCode);
+        }
+    }
+
+    public long getMyTradeLimitAtTakeOffer(PaymentAccount paymentAccount,
+                                           Offer offer,
+                                           String currencyCode,
+                                           OfferPayload.Direction direction) {
+        if (direction == OfferPayload.Direction.BUY &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
+                isMakersAccountAgeImmature(offer)) {
+            // Taker is seller
+            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        } else if (direction == OfferPayload.Direction.SELL &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
+                isMyAccountAgeImmature(paymentAccount)) {
+            // Taker is buyer
+            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+        } else {
+            // Offers with no chargeback risk or mature buyer accounts
+            return getMyTradeLimit(paymentAccount, currencyCode);
+        }
+    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // My witness
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -356,29 +419,6 @@ public class AccountAgeWitnessService {
                 witnessOptional,
                 new Date());
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Peers witness
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Return -1 if witness data is not found (old versions)
-    long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
-        final Optional<AccountAgeWitness> optionalAccountAgeWitness = findWitness(offer);
-        return optionalAccountAgeWitness
-                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
-                .orElse(-1L);
-    }
-
-    long getTradingPeersAccountAge(Trade trade) {
-        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
-        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
-            // unexpected
-            return -1;
-        }
-
-        return getAccountAge(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Verification
