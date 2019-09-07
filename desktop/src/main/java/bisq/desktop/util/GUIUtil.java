@@ -165,6 +165,8 @@ public class GUIUtil {
         GUIUtil.preferences = preferences;
     }
 
+    public static String getUserLanguage() { return preferences.getUserLanguage(); }
+
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
         if (node instanceof ScrollBar) {
