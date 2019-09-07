@@ -242,11 +242,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         try {
             PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
         } catch (Throwable t) {
+            log.error("Error at PersistedDataHost.apply: {}", t.toString(), t);
             // If we are in dev mode we want to get the exception if some db files are corrupted
             // We need to delay it as the stage is not created yet and so popups would not be shown.
             if (DevEnv.isDevMode())
                 UserThread.runAfter(() -> {
-                    log.error("Error at PersistedDataHost.apply: {}", t.toString());
                     throw t;
                 }, 2);
         }
