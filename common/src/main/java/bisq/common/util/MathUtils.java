@@ -93,7 +93,11 @@ public class MathUtils {
         return BigDecimal.valueOf(value1).multiply(BigDecimal.valueOf(value2)).doubleValue();
     }
 
-    public static Long getMedian(Long[] list) {
+    public static long getMedian(Long[] list) {
+        if (list.length == 0) {
+            return 0L;
+        }
+
         int middle = list.length / 2;
         long median;
         if (list.length % 2 == 1) {
