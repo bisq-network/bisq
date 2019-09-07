@@ -31,6 +31,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.security.PublicKey;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -71,10 +72,17 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     }
 
     // Keys for extra map
+    // Only set for fiat offers
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
     public static final String REFERRAL_ID = "referralId";
+    // Only used in payment method F2F
     public static final String F2F_CITY = "f2fCity";
     public static final String F2F_EXTRA_INFO = "f2fExtraInfo";
+
+    // Comma separated list of ordinal of a bisq.common.app.Capability. E.g. ordinal of
+    // Capability.SIGNED_ACCOUNT_AGE_WITNESS is 11 and Capability.MEDIATION is 12 so if we want to signal that maker
+    // of the offer supports both capabilities we ass "11,12" to capabilities.
+    public static final String CAPABILITIES = "capabilities";
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -300,9 +308,9 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     public static OfferPayload fromProto(protobuf.OfferPayload proto) {
         checkArgument(!proto.getOfferFeePaymentTxId().isEmpty(), "OfferFeePaymentTxId must be set in PB.OfferPayload");
         List<String> acceptedBankIds = proto.getAcceptedBankIdsList().isEmpty() ?
-                null : proto.getAcceptedBankIdsList().stream().collect(Collectors.toList());
+                null : new ArrayList<>(proto.getAcceptedBankIdsList());
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
-                null : proto.getAcceptedCountryCodesList().stream().collect(Collectors.toList());
+                null : new ArrayList<>(proto.getAcceptedCountryCodesList());
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
         Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
                 null : proto.getExtraDataMap();

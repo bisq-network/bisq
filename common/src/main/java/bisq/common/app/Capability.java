@@ -20,7 +20,8 @@ package bisq.common.app;
 // We can define here special features the client is supporting.
 // Useful for updates to new versions where a new data type would break backwards compatibility or to
 // limit a node to certain behaviour and roles like the seed nodes.
-// We don't use the Enum in any serialized data, as changes in the enum would break backwards compatibility. We use the ordinal integer instead.
+// We don't use the Enum in any serialized data, as changes in the enum would break backwards compatibility.
+// We use the ordinal integer instead.
 // Sequence in the enum must not be changed (append only).
 public enum Capability {
     @Deprecated TRADE_STATISTICS,       // Not required anymore as no old clients out there not having that support

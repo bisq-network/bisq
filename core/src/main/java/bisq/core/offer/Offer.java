@@ -378,11 +378,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return errorMessageProperty.get();
     }
 
-    public boolean isValid() {
-        return !OfferRestrictions.requiresUpdate() ||
-                !offerPayload.getArbitratorNodeAddresses().toString().equals(offerPayload.getMediatorNodeAddresses().toString());
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)

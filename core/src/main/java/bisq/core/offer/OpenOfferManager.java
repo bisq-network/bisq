@@ -155,7 +155,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     @Override
     public void readPersisted() {
         openOffers = new TradableList<>(openOfferTradableListStorage, "OpenOffers");
-        openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
+        openOffers.forEach(e -> {
+            Offer offer = e.getOffer();
+            offer.setPriceFeedService(priceFeedService);
+        });
     }
 
     public void onAllServicesInitialized() {
@@ -263,6 +266,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void onBootstrapComplete() {
         stopped = false;
+
+        maybeUpdatePersistedOffers();
 
         // Republish means we send the complete offer object
         republishOffers();
@@ -700,6 +705,98 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     }
                 }
         );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Update persisted offer if a new capability is required after a software update
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void maybeUpdatePersistedOffers() {
+        // We need to clone to avoid ConcurrentModificationException
+        ArrayList<OpenOffer> openOffersClone = new ArrayList<>(openOffers.getList());
+        openOffersClone.forEach(openOffer -> {
+            Offer originalOffer = openOffer.getOffer();
+
+            OfferPayload originalOfferPayload = originalOffer.getOfferPayload();
+            // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and want to rewrite a
+            // persisted offer after the user has updated to 1.1.6 so their offer will be accepted by the network.
+
+            if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION)) {
+                // We rewrite our offer with the additional capabilities entry
+
+                Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
+                Map<String, String> updatedExtraDataMap = new HashMap<>();
+
+                if (originalExtraDataMap != null) {
+                    updatedExtraDataMap.putAll(originalExtraDataMap);
+                }
+
+                // We overwrite any entry with our current capabilities
+                updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+                OfferPayload updatedPayload = new OfferPayload(originalOfferPayload.getId(),
+                        originalOfferPayload.getDate(),
+                        originalOfferPayload.getOwnerNodeAddress(),
+                        originalOfferPayload.getPubKeyRing(),
+                        originalOfferPayload.getDirection(),
+                        originalOfferPayload.getPrice(),
+                        originalOfferPayload.getMarketPriceMargin(),
+                        originalOfferPayload.isUseMarketBasedPrice(),
+                        originalOfferPayload.getAmount(),
+                        originalOfferPayload.getMinAmount(),
+                        originalOfferPayload.getBaseCurrencyCode(),
+                        originalOfferPayload.getCounterCurrencyCode(),
+                        originalOfferPayload.getArbitratorNodeAddresses(),
+                        originalOfferPayload.getMediatorNodeAddresses(),
+                        originalOfferPayload.getPaymentMethodId(),
+                        originalOfferPayload.getMakerPaymentAccountId(),
+                        originalOfferPayload.getOfferFeePaymentTxId(),
+                        originalOfferPayload.getCountryCode(),
+                        originalOfferPayload.getAcceptedCountryCodes(),
+                        originalOfferPayload.getBankId(),
+                        originalOfferPayload.getAcceptedBankIds(),
+                        originalOfferPayload.getVersionNr(),
+                        originalOfferPayload.getBlockHeightAtOfferCreation(),
+                        originalOfferPayload.getTxFee(),
+                        originalOfferPayload.getMakerFee(),
+                        originalOfferPayload.isCurrencyForMakerFeeBtc(),
+                        originalOfferPayload.getBuyerSecurityDeposit(),
+                        originalOfferPayload.getSellerSecurityDeposit(),
+                        originalOfferPayload.getMaxTradeLimit(),
+                        originalOfferPayload.getMaxTradePeriod(),
+                        originalOfferPayload.isUseAutoClose(),
+                        originalOfferPayload.isUseReOpenAfterAutoClose(),
+                        originalOfferPayload.getLowerClosePrice(),
+                        originalOfferPayload.getUpperClosePrice(),
+                        originalOfferPayload.isPrivateOffer(),
+                        originalOfferPayload.getHashOfChallenge(),
+                        updatedExtraDataMap,
+                        originalOfferPayload.getProtocolVersion());
+
+                // Save states from original data to use the for updated
+                Offer.State originalOfferState = originalOffer.getState();
+                OpenOffer.State originalOpenOfferState = openOffer.getState();
+
+                // remove old offer
+                originalOffer.setState(Offer.State.REMOVED);
+                openOffer.setState(OpenOffer.State.CANCELED);
+                openOffer.setStorage(openOfferTradableListStorage);
+                openOffers.remove(openOffer);
+
+                // Create new Offer
+                Offer updatedOffer = new Offer(updatedPayload);
+                updatedOffer.setPriceFeedService(priceFeedService);
+                updatedOffer.setState(originalOfferState);
+
+                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer, openOfferTradableListStorage);
+                updatedOpenOffer.setState(originalOpenOfferState);
+                updatedOpenOffer.setStorage(openOfferTradableListStorage);
+                openOffers.add(updatedOpenOffer);
+
+                log.error("Converted offer to support new Capability.MEDIATION capability. id={}", originalOffer.getId());
+            }
+        });
     }
 
 

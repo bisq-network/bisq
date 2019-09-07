@@ -28,6 +28,7 @@ import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
+import bisq.common.app.Capability;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.JsonFileManager;
@@ -92,7 +93,7 @@ public class OfferBookService {
                     if (data.getProtectedStoragePayload() instanceof OfferPayload) {
                         OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
-                        if (offer.isValid()) {
+                        if (showOffer(offer)) {
                             offer.setPriceFeedService(priceFeedService);
                             listener.onAdded(offer);
                         }
@@ -132,6 +133,11 @@ public class OfferBookService {
                 }
             });
         }
+    }
+
+    private boolean showOffer(Offer offer) {
+        return !OfferRestrictions.requiresUpdate() ||
+                OfferRestrictions.hasOfferMandatoryCapability(offer, Capability.MEDIATION);
     }
 
 
@@ -202,7 +208,7 @@ public class OfferBookService {
                     offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })
-                .filter(Offer::isValid)
+                .filter(this::showOffer)
                 .collect(Collectors.toList());
     }
 
