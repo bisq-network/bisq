@@ -17,11 +17,16 @@
 
 package bisq.common.app;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 
 import org.junit.Test;
 
-import static bisq.common.app.Capability.*;
+import static bisq.common.app.Capability.SEED_NODE;
+import static bisq.common.app.Capability.TRADE_STATISTICS;
+import static bisq.common.app.Capability.TRADE_STATISTICS_2;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -59,5 +64,48 @@ public class CapabilitiesTest {
         assertFalse(DUT.containsAll(new Capabilities(SEED_NODE)));
         assertTrue(DUT.containsAll(new Capabilities(TRADE_STATISTICS, TRADE_STATISTICS_2)));
         assertFalse(DUT.containsAll(new Capabilities(SEED_NODE, TRADE_STATISTICS_2)));
+    }
+
+    @Test
+    public void testToIntList() {
+        assertEquals(Collections.emptyList(), Capabilities.toIntList(new Capabilities()));
+        assertEquals(Collections.singletonList(12), Capabilities.toIntList(new Capabilities(Capability.MEDIATION)));
+        assertEquals(Arrays.asList(6, 12), Capabilities.toIntList(new Capabilities(Capability.MEDIATION, Capability.BLIND_VOTE)));
+    }
+
+    @Test
+    public void testFromIntList() {
+        assertEquals(new Capabilities(), Capabilities.fromIntList(Collections.emptyList()));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromIntList(Collections.singletonList(12)));
+        assertEquals(new Capabilities(Capability.BLIND_VOTE, Capability.MEDIATION), Capabilities.fromIntList(Arrays.asList(6, 12)));
+
+        assertEquals(new Capabilities(), Capabilities.fromIntList(Collections.singletonList(-1)));
+        assertEquals(new Capabilities(), Capabilities.fromIntList(Collections.singletonList(99)));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromIntList(Arrays.asList(-6, 12)));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromIntList(Arrays.asList(12, 99)));
+    }
+
+    @Test
+    public void testToStringList() {
+        assertEquals("", new Capabilities().toStringList());
+        assertEquals("12", new Capabilities(Capability.MEDIATION).toStringList());
+        assertEquals("6, 12", new Capabilities(Capability.BLIND_VOTE, Capability.MEDIATION).toStringList());
+        // capabilities gets sorted, independent of our order
+        assertEquals("6, 12", new Capabilities(Capability.MEDIATION, Capability.BLIND_VOTE).toStringList());
+    }
+
+    @Test
+    public void testFromStringList() {
+        assertEquals(new Capabilities(), Capabilities.fromStringList(null));
+        assertEquals(new Capabilities(), Capabilities.fromStringList(""));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromStringList("12"));
+        assertEquals(new Capabilities(Capability.BLIND_VOTE, Capability.MEDIATION), Capabilities.fromStringList("6,12"));
+        assertEquals(new Capabilities(Capability.BLIND_VOTE, Capability.MEDIATION), Capabilities.fromStringList("12, 6"));
+        assertEquals(new Capabilities(), Capabilities.fromStringList("a"));
+        assertEquals(new Capabilities(), Capabilities.fromStringList("99"));
+        assertEquals(new Capabilities(), Capabilities.fromStringList("-1"));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromStringList("12, a"));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromStringList("12, 99"));
+        assertEquals(new Capabilities(Capability.MEDIATION), Capabilities.fromStringList("a,12, 99"));
     }
 }

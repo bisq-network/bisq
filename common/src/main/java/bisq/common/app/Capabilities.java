@@ -17,11 +17,14 @@
 
 package bisq.common.app;
 
+import com.google.common.base.Joiner;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -114,8 +117,39 @@ public class Capabilities {
     public static Capabilities fromIntList(List<Integer> capabilities) {
         return new Capabilities(capabilities.stream()
                 .filter(integer -> integer < Capability.values().length)
+                .filter(integer -> integer >= 0)
                 .map(integer -> Capability.values()[integer])
                 .collect(Collectors.toSet()));
+    }
+
+    /**
+     *
+     * @param list      Comma separated list of Capability ordinals.
+     * @return Capabilities
+     */
+    public static Capabilities fromStringList(String list) {
+        if (list == null || list.isEmpty())
+            return new Capabilities();
+
+        List<String> entries = List.of(list.replace(" ", "").split(","));
+        List<Integer> capabilitiesList = entries.stream()
+                .map(c -> {
+                    try {
+                        return Integer.parseInt(c);
+                    } catch (Throwable e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return Capabilities.fromIntList(capabilitiesList);
+    }
+
+    /**
+     * @return Converts capabilities to list of ordinals as comma separated strings
+     */
+    public String toStringList() {
+        return Joiner.on(", ").join(Capabilities.toIntList(this));
     }
 
     public static boolean hasMandatoryCapability(Capabilities capabilities) {
