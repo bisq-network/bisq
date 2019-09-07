@@ -26,13 +26,16 @@ public enum Capability {
     @Deprecated TRADE_STATISTICS,       // Not required anymore as no old clients out there not having that support
     @Deprecated TRADE_STATISTICS_2,     // Not required anymore as no old clients out there not having that support
     @Deprecated ACCOUNT_AGE_WITNESS,    // Not required anymore as no old clients out there not having that support
-    SEED_NODE,
-    DAO_FULL_NODE,
-    PROPOSAL,
-    BLIND_VOTE,
+    SEED_NODE,                          // Node is a seed node
+    DAO_FULL_NODE,                      // DAO full node can deliver BSQ blocks
+    @Deprecated PROPOSAL,               // Not required anymore as no old clients out there not having that support
+    @Deprecated BLIND_VOTE,             // Not required anymore as no old clients out there not having that support
     @Deprecated ACK_MSG,                // Not required anymore as no old clients out there not having that support
-    RECEIVE_BSQ_BLOCK,
-    DAO_STATE,
-    BUNDLE_OF_ENVELOPES,
-    SIGNED_ACCOUNT_AGE_WITNESS
+    RECEIVE_BSQ_BLOCK,                  // Signaling that node which wants to receive BSQ blocks (DAO lite node)
+    @Deprecated DAO_STATE,              // Not required anymore as no old clients out there not having that support
+
+    //TODO can be set deprecated after v1.1.6 as we enforce update there
+    BUNDLE_OF_ENVELOPES,                // Supports bundling of messages if many messages are sent in short interval
+
+    SIGNED_ACCOUNT_AGE_WITNESS          // Supports the signed account age witness feature
 }
