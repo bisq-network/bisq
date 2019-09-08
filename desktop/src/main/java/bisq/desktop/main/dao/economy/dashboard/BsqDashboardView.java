@@ -336,8 +336,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void updateAveragePriceFields() {
-        long average90 = updateAveragePriceField(avgPrice90TextField, 30);
-        long average30 = updateAveragePriceField(avgPrice30TextField.getTextField(), 90);
+        long average90 = updateAveragePriceField(avgPrice90TextField, 90);
+        long average30 = updateAveragePriceField(avgPrice30TextField.getTextField(), 30);
         boolean trendUp = average30 > average90;
         boolean trendDown = average30 < average90;
 
