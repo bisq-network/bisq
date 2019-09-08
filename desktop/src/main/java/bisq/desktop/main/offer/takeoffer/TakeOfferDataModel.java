@@ -27,7 +27,6 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -93,7 +92,6 @@ class TakeOfferDataModel extends OfferDataModel {
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final P2PService p2PService;
-    private final WalletsSetup walletsSetup;
 
     private Coin txFeeFromFeeService;
     private Coin securityDeposit;
@@ -132,8 +130,7 @@ class TakeOfferDataModel extends OfferDataModel {
                        PriceFeedService priceFeedService,
                        AccountAgeWitnessService accountAgeWitnessService,
                        Navigation navigation,
-                       P2PService p2PService,
-                       WalletsSetup walletsSetup
+                       P2PService p2PService
     ) {
         super(btcWalletService);
 
@@ -148,7 +145,6 @@ class TakeOfferDataModel extends OfferDataModel {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.p2PService = p2PService;
-        this.walletsSetup = walletsSetup;
     }
 
     @Override

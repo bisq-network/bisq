@@ -139,7 +139,6 @@ public class BuyerStep4View extends TradeStepView {
         withdrawToExternalWalletButton.setOnAction(e -> onWithdrawal());
 
         String key = "tradeCompleted" + trade.getId();
-        //noinspection ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
@@ -166,7 +165,6 @@ public class BuyerStep4View extends TradeStepView {
 
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void reviewWithdrawal() {
         Coin amount = trade.getPayoutAmount();
         BtcWalletService walletService = model.dataModel.btcWalletService;
@@ -179,7 +177,6 @@ public class BuyerStep4View extends TradeStepView {
             try {
                 Transaction feeEstimationTransaction = walletService.getFeeEstimationTransaction(fromAddresses, toAddresses, amount, AddressEntry.Context.TRADE_PAYOUT);
                 Coin fee = feeEstimationTransaction.getFee();
-                //noinspection UnusedAssignment
                 Coin receiverAmount = amount.subtract(fee);
                 if (balance.isZero()) {
                     new Popup<>().warning(Res.get("portfolio.pending.step5_buyer.alreadyWithdrawn")).show();
@@ -263,7 +260,6 @@ public class BuyerStep4View extends TradeStepView {
                 faultHandler);
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void handleTradeCompleted() {
         useSavingsWalletButton.setDisable(true);
         withdrawToExternalWalletButton.setDisable(true);

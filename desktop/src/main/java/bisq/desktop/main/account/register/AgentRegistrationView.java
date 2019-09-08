@@ -67,9 +67,8 @@ import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
-// TODO translation string keys should be more generic.
-//  @ripcurlx how it is for translators if we change key of string?
-//  I fear they will see the old key removed and need to add the new one again.
+// TODO translation string keys should renamed to be more generic.
+// Lets do it for 1.1.7 the translator have time to add new string.
 @FxmlView
 public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewModel> extends ActivatableViewAndModel<VBox, T> {
 
@@ -88,8 +87,7 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public AgentRegistrationView(T model,
-                                 @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public AgentRegistrationView(T model, @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -207,7 +205,7 @@ public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewMo
         });
         languageComboBox.setOnAction(e -> onAddLanguage());
 
-        final Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++gridRow,
+        Tuple2<Button, Button> buttonButtonTuple2 = add2ButtonsAfterGroup(gridPane, ++gridRow,
                 Res.get("account.arbitratorRegistration.register"), Res.get("account.arbitratorRegistration.revoke"));
         Button registerButton = buttonButtonTuple2.first;
         registerButton.disableProperty().bind(model.registrationEditDisabled);

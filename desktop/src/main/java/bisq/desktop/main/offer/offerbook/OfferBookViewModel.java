@@ -25,7 +25,6 @@ import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
@@ -101,7 +100,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    private final WalletsSetup walletsSetup;
     final BSFormatter formatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
 
@@ -133,7 +131,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookViewModel(User user,
                               OpenOfferManager openOfferManager,
@@ -145,7 +142,6 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              WalletsSetup walletsSetup,
                               BSFormatter formatter) {
         super();
 
@@ -159,7 +155,6 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
-        this.walletsSetup = walletsSetup;
         this.formatter = formatter;
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());

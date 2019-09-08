@@ -81,7 +81,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
 
     // Comma separated list of ordinal of a bisq.common.app.Capability. E.g. ordinal of
     // Capability.SIGNED_ACCOUNT_AGE_WITNESS is 11 and Capability.MEDIATION is 12 so if we want to signal that maker
-    // of the offer supports both capabilities we ass "11,12" to capabilities.
+    // of the offer supports both capabilities we add "11, 12" to capabilities.
     public static final String CAPABILITIES = "capabilities";
 
 
@@ -113,9 +113,11 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final String baseCurrencyCode;
     private final String counterCurrencyCode;
 
-    @Deprecated // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility
+    @Deprecated
+    // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
     private final List<NodeAddress> arbitratorNodeAddresses;
-    @Deprecated // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility
+    @Deprecated
+    // Not used anymore but we cannot set it Nullable or remove it to not break backward compatibility (diff. hash)
     private final List<NodeAddress> mediatorNodeAddresses;
     private final String paymentMethodId;
     private final String makerPaymentAccountId;

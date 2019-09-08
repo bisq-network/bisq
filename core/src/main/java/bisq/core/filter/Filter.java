@@ -234,7 +234,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         return TimeUnit.DAYS.toMillis(180);
     }
 
-    public void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
+    void setSigAndPubKey(String signatureAsBase64, PublicKey ownerPubKey) {
         this.signatureAsBase64 = signatureAsBase64;
         this.ownerPubKey = ownerPubKey;
 

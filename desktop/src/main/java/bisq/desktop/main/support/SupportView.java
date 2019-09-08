@@ -225,4 +225,3 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         }
     }
 }
-

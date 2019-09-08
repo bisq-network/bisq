@@ -248,7 +248,7 @@ public class NotificationCenter {
                 default:
                     if (DevEnv.isDevMode()) {
                         log.error("arbitrationDisputeManager must not contain mediation disputes");
-                        //throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
+                        throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
                     }
                     break;
             }
@@ -273,7 +273,7 @@ public class NotificationCenter {
                 default:
                     if (DevEnv.isDevMode()) {
                         log.error("mediationDisputeManager must not contain arbitration disputes");
-                        //throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
+                        throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
                     }
                     break;
             }

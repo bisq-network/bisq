@@ -794,7 +794,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOpenOffer.setStorage(openOfferTradableListStorage);
                 openOffers.add(updatedOpenOffer);
 
-                log.error("Converted offer to support new Capability.MEDIATION capability. id={}", originalOffer.getId());
+                log.info("Converted offer to support new Capability.MEDIATION capability. id={}", originalOffer.getId());
             }
         });
     }

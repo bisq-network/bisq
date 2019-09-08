@@ -208,13 +208,6 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                 .collect(Collectors.toMap(DisputeAgent::getNodeAddress, Function.identity()));
 
         observableMap.putAll(filtered);
-
-        //TODO check and test, seems it does not make sense
-//        observableMap.values().stream()
-//                .filter(persistedAcceptedDisputeAgents::contains)
-//                .forEach(this::addAcceptedDisputeAgentToUser);
-
-
         observableMap.values().forEach(this::addAcceptedDisputeAgentToUser);
 
         log.info("Available disputeAgents: {}", observableMap.keySet());

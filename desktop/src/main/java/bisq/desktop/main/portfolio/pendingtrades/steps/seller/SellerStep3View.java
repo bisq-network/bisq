@@ -320,7 +320,6 @@ public class SellerStep3View extends TradeStepView {
             String explorerOrWalletString = trade.getOffer().getCurrencyCode().equals("XMR") ?
                     Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
                     Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);
-            //noinspection UnusedAssignment
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
@@ -345,11 +344,9 @@ public class SellerStep3View extends TradeStepView {
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
-                //noinspection UnusedAssignment
                 message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
         }
-        //noinspection ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))

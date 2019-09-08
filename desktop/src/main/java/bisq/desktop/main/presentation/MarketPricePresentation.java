@@ -87,7 +87,6 @@ public class MarketPricePresentation {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public MarketPricePresentation(BtcWalletService btcWalletService,
                                    PriceFeedService priceFeedService,

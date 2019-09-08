@@ -107,7 +107,7 @@ public class CreateOfferViewModelTest {
         CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService,
                 bsqWalletService, empty, user, null, null, priceFeedService, null,
                 accountAgeWitnessService, feeService, txFeeEstimationService,
-                null, bsFormatter, mock(MakerFeeProvider.class), null, null);
+                null, bsFormatter, mock(MakerFeeProvider.class), null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 

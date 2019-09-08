@@ -68,5 +68,3 @@ public class MediationClientView extends DisputeClientView {
         return new MediationSession(dispute, disputeManager.isTrader(dispute));
     }
 }
-
-

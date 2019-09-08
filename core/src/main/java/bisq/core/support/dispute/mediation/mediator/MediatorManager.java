@@ -45,7 +45,6 @@ public class MediatorManager extends DisputeAgentManager<Mediator> {
         super(keyRing, mediatorService, user, filterManager, useDevPrivilegeKeys);
     }
 
-    //TODO Before release set new keys from maintainer who manages keys
     @Override
     protected List<String> getPubKeyList() {
         return List.of("03be5471ff9090d322110d87912eefe89871784b1754d0707fdb917be5d88d3809",

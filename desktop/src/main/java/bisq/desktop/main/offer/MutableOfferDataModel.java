@@ -26,7 +26,6 @@ import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -110,7 +109,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final ReferralIdService referralIdService;
     private final BSFormatter btcFormatter;
     private MakerFeeProvider makerFeeProvider;
-    private final WalletsSetup walletsSetup;
     private final Navigation navigation;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
@@ -165,7 +163,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  ReferralIdService referralIdService,
                                  BSFormatter btcFormatter,
                                  MakerFeeProvider makerFeeProvider,
-                                 WalletsSetup walletsSetup,
                                  Navigation navigation) {
         super(btcWalletService);
 
@@ -183,7 +180,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.referralIdService = referralIdService;
         this.btcFormatter = btcFormatter;
         this.makerFeeProvider = makerFeeProvider;
-        this.walletsSetup = walletsSetup;
         this.navigation = navigation;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +

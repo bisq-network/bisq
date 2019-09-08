@@ -94,7 +94,7 @@ public abstract class DisputeList<T extends PersistableEnvelope> implements Pers
         return list.isEmpty();
     }
 
-    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "SuspiciousMethodCalls"})
+    @SuppressWarnings({"SuspiciousMethodCalls"})
     public boolean contains(Object o) {
         return list.contains(o);
     }

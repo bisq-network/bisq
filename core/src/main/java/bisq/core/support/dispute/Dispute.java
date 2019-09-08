@@ -192,7 +192,7 @@ public final class Dispute implements NetworkPayload {
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
-                .setAgentPubKeyRing(agentPubKeyRing.toProtoMessage()) // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
+                .setAgentPubKeyRing(agentPubKeyRing.toProtoMessage())
                 .setIsSupportTicket(isSupportTicket)
                 .addAllChatMessage(clonedChatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
@@ -229,7 +229,7 @@ public final class Dispute implements NetworkPayload {
                 proto.getContractAsJson(),
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
-                PubKeyRing.fromProto(proto.getAgentPubKeyRing()), // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
+                PubKeyRing.fromProto(proto.getAgentPubKeyRing()),
                 proto.getIsSupportTicket());
 
         dispute.chatMessages.addAll(proto.getChatMessageList().stream()

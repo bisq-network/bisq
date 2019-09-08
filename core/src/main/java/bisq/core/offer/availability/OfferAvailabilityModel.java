@@ -79,7 +79,7 @@ public class OfferAvailabilityModel implements Model {
         return peerNodeAddress;
     }
 
-    public void setPeerNodeAddress(NodeAddress peerNodeAddress) {
+    void setPeerNodeAddress(NodeAddress peerNodeAddress) {
         this.peerNodeAddress = peerNodeAddress;
     }
 

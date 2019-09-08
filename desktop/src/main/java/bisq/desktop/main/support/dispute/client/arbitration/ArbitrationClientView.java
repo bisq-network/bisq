@@ -68,5 +68,3 @@ public class ArbitrationClientView extends DisputeClientView {
         return new ArbitrationSession(dispute, disputeManager.isTrader(dispute));
     }
 }
-
-

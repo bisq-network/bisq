@@ -172,7 +172,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
         navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     @Override
     protected void activate() {
         navigation.addListener(navigationListener);
@@ -205,7 +204,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
         }
 
-        //noinspection UnusedAssignment
         String key = "accountPrivacyInfo";
         if (!DevEnv.isDevMode())
             new Popup<>()

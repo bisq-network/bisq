@@ -135,7 +135,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public MainViewModel(BisqSetup bisqSetup,
                          WalletsSetup walletsSetup,

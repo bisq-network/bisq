@@ -28,7 +28,6 @@ import bisq.desktop.main.offer.takeoffer.TakeOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
@@ -68,7 +67,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final Navigation navigation;
     private final Preferences preferences;
     private final User user;
-    private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final OfferPayload.Direction direction;
     private final ArbitratorManager arbitratorManager;
@@ -85,13 +83,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         Preferences preferences,
                         ArbitratorManager arbitratorManager,
                         User user,
-                        WalletsSetup walletsSetup,
                         P2PService p2PService) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
         this.user = user;
-        this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.direction = (this instanceof BuyOfferView) ? OfferPayload.Direction.BUY : OfferPayload.Direction.SELL;
         this.arbitratorManager = arbitratorManager;

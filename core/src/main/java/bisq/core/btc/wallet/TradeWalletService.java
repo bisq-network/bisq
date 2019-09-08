@@ -809,16 +809,16 @@ public class TradeWalletService {
                                        byte[] sellerPubKey,
                                        byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
-        log.error("signMediatedPayoutTx called");
+        log.trace("signMediatedPayoutTx called");
         log.trace("depositTx {}", depositTx.toString());
         log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
         log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
         log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
-        log.info("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
-        log.info("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
+        log.trace("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
+        log.trace("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
+        log.trace("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
         Transaction preparedPayoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,
                 sellerPayoutAmount,
@@ -853,7 +853,7 @@ public class TradeWalletService {
                                                 byte[] sellerPubKey,
                                                 byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException {
-        log.error("finalizeMediatedPayoutTx called");
+        log.trace("finalizeMediatedPayoutTx called");
         log.trace("depositTx {}", depositTx.toString());
         log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
         log.trace("buyerSignature s {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
@@ -864,9 +864,9 @@ public class TradeWalletService {
         log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
         log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
         log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.trace("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
+        log.trace("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
+        log.trace("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         Transaction payoutTx = createPayoutTx(depositTx,
                 buyerPayoutAmount,

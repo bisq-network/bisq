@@ -44,7 +44,6 @@ import bisq.core.support.dispute.mediation.MediationDisputeListService;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorService;
-import bisq.core.support.traderchat.TradeChatListService;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -152,7 +151,6 @@ public class GuiceSetupTest {
         assertSingleton(MediationManager.class);
         assertSingleton(MediationDisputeListService.class);
         assertSingleton(TraderChatManager.class);
-        assertSingleton(TradeChatListService.class);
 
         assertNotSingleton(Storage.class);
     }
