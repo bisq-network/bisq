@@ -56,8 +56,6 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.MapChangeListener;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @FxmlView
 public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
@@ -131,9 +129,6 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
                 .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
         boolean isActiveMediator = mediatorManager.getObservableMap().values().stream()
                 .anyMatch(e -> e.getPubKeyRing() != null && e.getPubKeyRing().equals(myPubKeyRing));
-
-        if (isActiveArbitrator)
-            checkArgument(!isActiveMediator, "We do not support that arbitrators are mediators as well");
 
         if (arbitratorTab == null) {
             // In case a arbitrator has become inactive he still might get disputes from pending trades
