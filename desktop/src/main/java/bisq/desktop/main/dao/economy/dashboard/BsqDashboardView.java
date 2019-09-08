@@ -19,6 +19,7 @@ package bisq.desktop.main.dao.economy.dashboard;
 
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
@@ -42,6 +43,8 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
+
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -55,6 +58,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Side;
 
 import javafx.beans.value.ChangeListener;
+
+import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
 
@@ -82,6 +87,7 @@ import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addLabelWithSubText;
 import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithIcon;
 
 
 @FxmlView
@@ -101,7 +107,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private AreaChart bsqPriceChart;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
-    private TextField avgPrice90TextField, avgPrice30TextField, marketCapTextField, availableAmountTextField;
+    private TextField avgPrice90TextField, marketCapTextField, availableAmountTextField;
+    private TextFieldWithIcon avgPrice30TextField;
     private Label marketPriceLabel;
 
     private Coin availableAmount;
@@ -150,15 +157,15 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         avgPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.avgPrice90")).second;
 
-        avgPrice30TextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.dashboard.avgPrice30")).second;
+        avgPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.avgPrice30"), 0).second;
+        AnchorPane.setRightAnchor(avgPrice30TextField.getIconLabel(), 10d);
 
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
 
         availableAmountTextField = FormBuilder.addTopLabelReadOnlyTextField(root, gridRow, 1,
                 Res.get("dao.factsAndFigures.dashboard.availableAmount")).second;
-
     }
 
 
@@ -242,7 +249,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         bsqPriceChart.setLegendVisible(false);
         bsqPriceChart.setAnimated(false);
         bsqPriceChart.setId("charts-dao");
-        bsqPriceChart.setMinHeight(335);
+        bsqPriceChart.setMinHeight(320);
         bsqPriceChart.setPrefHeight(bsqPriceChart.getMinHeight());
         bsqPriceChart.setCreateSymbols(true);
         bsqPriceChart.setPadding(new Insets(0));
@@ -329,25 +336,44 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     }
 
     private void updateAveragePriceFields() {
-        updateAveragePriceField(avgPrice90TextField, 90);
-        updateAveragePriceField(avgPrice30TextField, 30);
+        long average90 = updateAveragePriceField(avgPrice90TextField, 30);
+        long average30 = updateAveragePriceField(avgPrice30TextField.getTextField(), 90);
+        boolean trendUp = average30 > average90;
+        boolean trendDown = average30 < average90;
+
+        Label iconLabel = avgPrice30TextField.getIconLabel();
+        ObservableList<String> styleClass = iconLabel.getStyleClass();
+        if (trendUp) {
+            avgPrice30TextField.setVisible(true);
+            avgPrice30TextField.setIcon(AwesomeIcon.CIRCLE_ARROW_UP);
+            styleClass.remove("price-trend-down");
+            styleClass.add("price-trend-up");
+        } else if (trendDown) {
+            avgPrice30TextField.setVisible(true);
+            avgPrice30TextField.setIcon(AwesomeIcon.CIRCLE_ARROW_DOWN);
+            styleClass.remove("price-trend-up");
+            styleClass.add("price-trend-down");
+        } else {
+            iconLabel.setVisible(false);
+        }
     }
 
-    private void updateAveragePriceField(TextField textField, int days) {
+    private long updateAveragePriceField(TextField textField, int days) {
         Date past90 = getPastDate(days);
         List<TradeStatistics2> bsqTradePast90Days = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrencyCode().equals("BSQ"))
                 .filter(e -> e.getTradeDate().after(past90))
                 .collect(Collectors.toList());
-        Long average = getAverage(bsqTradePast90Days);
+        long average = getAverage(bsqTradePast90Days);
         Coin oneBsq = Coin.valueOf(100);
         Price avgPrice = Price.valueOf("BSQ", average);
         String avg = bsqFormatter.formatPrice(avgPrice);
         String bsqInUsdAvg = average > 0 ? GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter) : Res.get("shared.na");
         textField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
+        return average;
     }
 
-    private Long getAverage(List<TradeStatistics2> list) {
+    private long getAverage(List<TradeStatistics2> list) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
         List<Long> tradePrices = new ArrayList<>(list.size());
