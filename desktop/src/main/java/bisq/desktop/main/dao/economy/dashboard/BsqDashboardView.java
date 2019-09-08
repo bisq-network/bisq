@@ -36,7 +36,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.MathUtils;
-import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
@@ -102,7 +101,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private AreaChart bsqPriceChart;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
-    private TextField avgPrice90TextField, medianPrice90TextField, marketCapTextField, availableAmountTextField;
+    private TextField avgPrice90TextField, avgPrice30TextField, marketCapTextField, availableAmountTextField;
     private Label marketPriceLabel;
 
     private Coin availableAmount;
@@ -136,7 +135,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
         priceChangeListener = (observable, oldValue, newValue) -> {
             updatePrice();
-            updateAverageAndMedianPrice();
+            updateAveragePriceFields();
         };
     }
 
@@ -151,8 +150,8 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         avgPrice90TextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.avgPrice90")).second;
 
-        medianPrice90TextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.dashboard.medianPrice90")).second;
+        avgPrice30TextField = addTopLabelReadOnlyTextField(root, gridRow, 1,
+                Res.get("dao.factsAndFigures.dashboard.avgPrice30")).second;
 
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
                 Res.get("dao.factsAndFigures.dashboard.marketCap")).second;
@@ -171,7 +170,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         updateWithBsqBlockChainData();
         updatePrice();
         updateChartData();
-        updateAverageAndMedianPrice();
+        updateAveragePriceFields();
     }
 
 
@@ -329,27 +328,26 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         }
     }
 
-    private void updateAverageAndMedianPrice() {
-        Date past90 = getPastDate(90);
+    private void updateAveragePriceFields() {
+        updateAveragePriceField(avgPrice90TextField, 90);
+        updateAveragePriceField(avgPrice30TextField, 30);
+    }
+
+    private void updateAveragePriceField(TextField textField, int days) {
+        Date past90 = getPastDate(days);
         List<TradeStatistics2> bsqTradePast90Days = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrencyCode().equals("BSQ"))
                 .filter(e -> e.getTradeDate().after(past90))
                 .collect(Collectors.toList());
-        Tuple2<Long, Long> averageAndMedian = getAverageAndMedian(bsqTradePast90Days);
+        Long average = getAverage(bsqTradePast90Days);
         Coin oneBsq = Coin.valueOf(100);
-
-        Price avgPrice = Price.valueOf("BSQ", averageAndMedian.first);
+        Price avgPrice = Price.valueOf("BSQ", average);
         String avg = bsqFormatter.formatPrice(avgPrice);
-        String bsqInUsdAvg = GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter);
-        avgPrice90TextField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
-
-        Price medianPrice = Price.valueOf("BSQ", averageAndMedian.second);
-        String median = bsqFormatter.formatPrice(medianPrice);
-        String bsqInUsdMedian = GUIUtil.getBsqInUsd(medianPrice, oneBsq, priceFeedService, bsqFormatter);
-        medianPrice90TextField.setText(median + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdMedian + ")");
+        String bsqInUsdAvg = average > 0 ? GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter) : Res.get("shared.na");
+        textField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
     }
 
-    private Tuple2<Long, Long> getAverageAndMedian(List<TradeStatistics2> list) {
+    private Long getAverage(List<TradeStatistics2> list) {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
         List<Long> tradePrices = new ArrayList<>(list.size());
@@ -366,11 +364,10 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         long averagePrice;
         Long[] prices = new Long[tradePrices.size()];
         tradePrices.toArray(prices);
-        long medianPrice = MathUtils.getMedian(prices);
         double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
-        averagePrice = MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume);
+        averagePrice = accumulatedVolume > 0 ? MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume) : 0;
 
-        return new Tuple2<>(averagePrice, medianPrice);
+        return averagePrice;
     }
 
     private Date getPastDate(int days) {
