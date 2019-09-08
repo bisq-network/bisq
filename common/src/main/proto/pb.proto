@@ -1186,7 +1186,7 @@ message OpenOffer {
     Offer offer = 1;
     State state = 2;
     NodeAddress arbitrator_node_address = 3;
-    NodeAddress mediatrator_node_address = 4;
+    NodeAddress mediator_node_address = 4;
 }
 
 message Tradable {
