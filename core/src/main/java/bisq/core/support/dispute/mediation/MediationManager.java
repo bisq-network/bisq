@@ -188,7 +188,11 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
         Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
         if (tradeOptional.isPresent()) {
-            tradeOptional.get().setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
+            Trade trade = tradeOptional.get();
+            if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_REQUESTED ||
+                    trade.getDisputeState() == Trade.DisputeState.MEDIATION_STARTED_BY_PEER) {
+                trade.setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
+            }
         } else {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));

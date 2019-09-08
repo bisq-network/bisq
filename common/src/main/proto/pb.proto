@@ -1249,9 +1249,9 @@ message Trade {
     enum DisputeState {
         PB_ERROR_DISPUTE_STATE = 0;
         NO_DISPUTE = 1;
-        DISPUTE_REQUESTED = 2; // arbitration
-        DISPUTE_STARTED_BY_PEER = 3; // arbitration
-        DISPUTE_CLOSED = 4; // arbitration
+        DISPUTE_REQUESTED = 2; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_STARTED_BY_PEER = 3; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_CLOSED = 4; // arbitration  We use the enum name for resolving enums so it cannot be renamed
         MEDIATION_REQUESTED = 5;
         MEDIATION_STARTED_BY_PEER = 6;
         MEDIATION_CLOSED = 7;

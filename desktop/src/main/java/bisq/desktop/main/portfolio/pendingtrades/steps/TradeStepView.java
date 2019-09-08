@@ -479,7 +479,13 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private void updateMediationResultState() {
-        if (isMediationClosedState()) {
+        if (isInArbitration()) {
+            if (isArbitrationStartedByPeer()) {
+                tradeStepInfo.setState(TradeStepInfo.State.IN_ARBITRATION_PEER_REQUESTED);
+            } else if (isArbitrationSelfStarted()) {
+                tradeStepInfo.setState(TradeStepInfo.State.IN_ARBITRATION_SELF_REQUESTED);
+            }
+        } else if (isMediationClosedState()) {
             // We do not use the state itself as it is not guaranteed the last state reflects relevant information
             // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
             if (hasSelfAccepted()) {
@@ -494,6 +500,18 @@ public abstract class TradeStepView extends AnchorPane {
                 openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
             }
         }
+    }
+
+    private boolean isInArbitration() {
+        return isArbitrationStartedByPeer() || isArbitrationSelfStarted();
+    }
+
+    private boolean isArbitrationStartedByPeer() {
+        return trade.getDisputeState() == Trade.DisputeState.DISPUTE_STARTED_BY_PEER;
+    }
+
+    private boolean isArbitrationSelfStarted() {
+        return trade.getDisputeState() == Trade.DisputeState.DISPUTE_REQUESTED;
     }
 
     private boolean isMediationClosedState() {
