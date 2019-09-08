@@ -44,8 +44,7 @@ message NetworkEnvelope {
 
         OpenNewDisputeMessage open_new_dispute_message = 22;
         PeerOpenedDisputeMessage peer_opened_dispute_message = 23;
-        // ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
-        DisputeCommunicationMessage dispute_communication_message = 24;
+        ChatMessage chat_message = 24;
         DisputeResultMessage dispute_result_message = 25;
         PeerPublishedDisputePayoutTxMessage peer_published_dispute_payout_tx_message = 26;
 
@@ -307,8 +306,7 @@ message PeerOpenedDisputeMessage {
     SupportType type = 4;
 }
 
-// ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
-message DisputeCommunicationMessage {
+message ChatMessage {
     int64 date = 1;
     string trade_id = 2;
     int32 trader_id = 3;
@@ -704,10 +702,9 @@ message Dispute {
     string contract_as_json = 15;
     string maker_contract_signature = 16;
     string taker_contract_signature = 17;
-    PubKeyRing arbitrator_pub_key_ring = 18; // Is agentPubKeyRing in java, but we cannot rename because of backward compatibility
+    PubKeyRing agent_pub_key_ring = 18;
     bool is_support_ticket = 19;
-    // ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
-    repeated DisputeCommunicationMessage dispute_communication_messages = 20;
+    repeated ChatMessage chat_message = 20;
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
@@ -744,8 +741,7 @@ message DisputeResult {
     bool id_verification = 6;
     bool screen_cast = 7;
     string summary_notes = 8;
-    // ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
-    DisputeCommunicationMessage dispute_communication_message = 9;
+    ChatMessage chat_message = 9;
     bytes arbitrator_signature = 10;
     int64 buyer_payout_amount = 11;
     int64 seller_payout_amount = 12;
@@ -1036,7 +1032,7 @@ message PersistableEnvelope {
 
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
-        DisputeList dispute_list = 8; // mapped to java class ArbitrationDisputeList  We cannot rename protobuf definition because it would break backward compatibility
+        ArbitrationDisputeList arbitration_dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
@@ -1296,8 +1292,7 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
-    // ChatMessage in java class. We cannot rename protobuf definition because it would break backward compatibility
-    repeated DisputeCommunicationMessage communication_messages = 29;
+    repeated ChatMessage chat_message = 29;
     MediationResultState mediation_result_state = 30;
 }
 
@@ -1362,7 +1357,7 @@ message TradingPeer {
 // Dispute
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message DisputeList {
+message ArbitrationDisputeList {
     repeated Dispute dispute = 1;
 }
 

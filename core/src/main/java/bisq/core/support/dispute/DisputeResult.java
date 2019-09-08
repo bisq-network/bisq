@@ -138,7 +138,7 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getIdVerification(),
                 proto.getScreenCast(),
                 proto.getSummaryNotes(),
-                proto.getDisputeCommunicationMessage() == null ? null : ChatMessage.fromPayloadProto(proto.getDisputeCommunicationMessage()),
+                proto.getChatMessage() == null ? null : ChatMessage.fromPayloadProto(proto.getChatMessage()),
                 proto.getArbitratorSignature().toByteArray(),
                 proto.getBuyerPayoutAmount(),
                 proto.getSellerPayoutAmount(),
@@ -166,7 +166,7 @@ public final class DisputeResult implements NetworkPayload {
         Optional.ofNullable(arbitratorPubKey).ifPresent(arbitratorPubKey -> builder.setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey)));
         Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(protobuf.DisputeResult.Winner.valueOf(winner.name())));
         Optional.ofNullable(chatMessage).ifPresent(chatMessage ->
-                builder.setDisputeCommunicationMessage(chatMessage.toProtoNetworkEnvelope().getDisputeCommunicationMessage()));
+                builder.setChatMessage(chatMessage.toProtoNetworkEnvelope().getChatMessage()));
 
         return builder.build();
     }

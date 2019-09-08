@@ -192,10 +192,10 @@ public final class Dispute implements NetworkPayload {
                 .setTradeDate(tradeDate)
                 .setContract(contract.toProtoMessage())
                 .setContractAsJson(contractAsJson)
-                .setArbitratorPubKeyRing(agentPubKeyRing.toProtoMessage()) // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
+                .setAgentPubKeyRing(agentPubKeyRing.toProtoMessage()) // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
                 .setIsSupportTicket(isSupportTicket)
-                .addAllDisputeCommunicationMessages(clonedChatMessages.stream()
-                        .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                .addAllChatMessage(clonedChatMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
                 .setIsClosed(isClosedProperty.get())
                 .setOpeningDate(openingDate)
@@ -229,10 +229,10 @@ public final class Dispute implements NetworkPayload {
                 proto.getContractAsJson(),
                 ProtoUtil.stringOrNullFromProto(proto.getMakerContractSignature()),
                 ProtoUtil.stringOrNullFromProto(proto.getTakerContractSignature()),
-                PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()), // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
+                PubKeyRing.fromProto(proto.getAgentPubKeyRing()), // We renamed to agentPubKeyRing but need to keep protobuf as it was to be backward compatible
                 proto.getIsSupportTicket());
 
-        dispute.chatMessages.addAll(proto.getDisputeCommunicationMessagesList().stream()
+        dispute.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 

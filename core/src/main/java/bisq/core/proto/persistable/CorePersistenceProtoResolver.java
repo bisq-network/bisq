@@ -33,10 +33,10 @@ import bisq.core.dao.state.DaoStateStore;
 import bisq.core.dao.state.model.governance.BallotList;
 import bisq.core.dao.state.model.governance.MeritList;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
-import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
-import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
+import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.statistics.TradeStatistics2Store;
 import bisq.core.user.PreferencesPayload;
@@ -102,8 +102,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                             btcWalletService.get());
                 case TRADE_STATISTICS_LIST:
                     throw new ProtobufferRuntimeException("TRADE_STATISTICS_LIST is not used anymore");
-                case DISPUTE_LIST:
-                    return ArbitrationDisputeList.fromProto(proto.getDisputeList(),
+                case ARBITRATION_DISPUTE_LIST:
+                    return ArbitrationDisputeList.fromProto(proto.getArbitrationDisputeList(),
                             this,
                             new Storage<>(storageDir, this, corruptedDatabaseFilesHandler));
                 case MEDIATION_DISPUTE_LIST:

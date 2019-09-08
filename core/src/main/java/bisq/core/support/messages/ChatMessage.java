@@ -204,7 +204,7 @@ public final class ChatMessage extends SupportMessage {
     // We cannot rename protobuf definition because it would break backward compatibility
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        protobuf.DisputeCommunicationMessage.Builder builder = protobuf.DisputeCommunicationMessage.newBuilder()
+        protobuf.ChatMessage.Builder builder = protobuf.ChatMessage.newBuilder()
                 .setType(SupportType.toProtoMessage(supportType))
                 .setTradeId(tradeId)
                 .setTraderId(traderId)
@@ -222,12 +222,12 @@ public final class ChatMessage extends SupportMessage {
         Optional.ofNullable(sendMessageErrorProperty.get()).ifPresent(builder::setSendMessageError);
         Optional.ofNullable(ackErrorProperty.get()).ifPresent(builder::setAckError);
         return getNetworkEnvelopeBuilder()
-                .setDisputeCommunicationMessage(builder)
+                .setChatMessage(builder)
                 .build();
     }
 
-    // The protobuf definition DisputeCommunicationMessage cannot be changed as it would break backward compatibility.
-    public static ChatMessage fromProto(protobuf.DisputeCommunicationMessage proto,
+    // The protobuf definition ChatMessage cannot be changed as it would break backward compatibility.
+    public static ChatMessage fromProto(protobuf.ChatMessage proto,
                                         int messageVersion) {
         // If we get a msg from an old client type will be ordinal 0 which is the dispute entry and as we only added
         // the trade case it is the desired behaviour.
@@ -252,7 +252,7 @@ public final class ChatMessage extends SupportMessage {
         return chatMessage;
     }
 
-    public static ChatMessage fromPayloadProto(protobuf.DisputeCommunicationMessage proto) {
+    public static ChatMessage fromPayloadProto(protobuf.ChatMessage proto) {
         // We have the case that an envelope got wrapped into a payload.
         // We don't check the message version here as it was checked in the carrier envelope already (in connection class)
         // Payloads don't have a message version and are also used for persistence
@@ -265,7 +265,7 @@ public final class ChatMessage extends SupportMessage {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addAllAttachments(List<Attachment> attachments) {
+    private void addAllAttachments(List<Attachment> attachments) {
         this.attachments.addAll(attachments);
     }
 

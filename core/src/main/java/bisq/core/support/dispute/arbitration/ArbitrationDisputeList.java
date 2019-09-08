@@ -67,11 +67,11 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
 
     @Override
     public Message toProtoMessage() {
-        return protobuf.PersistableEnvelope.newBuilder().setDisputeList(protobuf.DisputeList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder().setArbitrationDisputeList(protobuf.ArbitrationDisputeList.newBuilder()
                 .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list)))).build();
     }
 
-    public static ArbitrationDisputeList fromProto(protobuf.DisputeList proto,
+    public static ArbitrationDisputeList fromProto(protobuf.ArbitrationDisputeList proto,
                                                    CoreProtoResolver coreProtoResolver,
                                                    Storage<ArbitrationDisputeList> storage) {
         List<Dispute> list = proto.getDisputeList().stream()

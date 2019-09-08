@@ -461,8 +461,8 @@ public abstract class Trade implements Tradable, Model {
                 .setState(Trade.State.toProtoMessage(state))
                 .setDisputeState(Trade.DisputeState.toProtoMessage(disputeState))
                 .setTradePeriodState(Trade.TradePeriodState.toProtoMessage(tradePeriodState))
-                .addAllCommunicationMessages(chatMessages.stream()
-                        .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                .addAllChatMessage(chatMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()));
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
@@ -510,7 +510,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
 
-        trade.chatMessages.addAll(proto.getCommunicationMessagesList().stream()
+        trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
