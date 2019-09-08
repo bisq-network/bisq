@@ -390,9 +390,16 @@ public class FormBuilder {
     // Label  + TextFieldWithIcon
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple2<Label, TextFieldWithIcon> addTopLabelTextFieldWithIcon(GridPane gridPane,
+                                                                                int rowIndex,
+                                                                                String title,
+                                                                                double top) {
+        return addTopLabelTextFieldWithIcon(gridPane, rowIndex, 0, title, top);
+    }
 
     public static Tuple2<Label, TextFieldWithIcon> addTopLabelTextFieldWithIcon(GridPane gridPane,
                                                                                 int rowIndex,
+                                                                                int columnIndex,
                                                                                 String title,
                                                                                 double top) {
 
@@ -400,7 +407,7 @@ public class FormBuilder {
         textFieldWithIcon.setMouseTransparent(true);
         textFieldWithIcon.setFocusTraversable(false);
 
-        return new Tuple2<>(addTopLabelWithVBox(gridPane, rowIndex, title, textFieldWithIcon, top).first, textFieldWithIcon);
+        return new Tuple2<>(addTopLabelWithVBox(gridPane, rowIndex, columnIndex, title, textFieldWithIcon, top).first, textFieldWithIcon);
     }
 
 
@@ -1102,15 +1109,26 @@ public class FormBuilder {
         return label;
     }
 
+    public static Tuple2<Label, VBox> addTopLabelWithVBox(GridPane gridPane,
+                                                          int rowIndex,
+                                                          String title,
+                                                          Node node,
+                                                          double top) {
+        return addTopLabelWithVBox(gridPane, rowIndex, 0, title, node, top);
+    }
+
     @NotNull
-    public static Tuple2<Label, VBox> addTopLabelWithVBox(GridPane gridPane, int rowIndex,
-                                                          String title, Node node,
+    public static Tuple2<Label, VBox> addTopLabelWithVBox(GridPane gridPane,
+                                                          int rowIndex,
+                                                          int columnIndex,
+                                                          String title,
+                                                          Node node,
                                                           double top) {
         final Tuple2<Label, VBox> topLabelWithVBox = getTopLabelWithVBox(title, node);
         VBox vBox = topLabelWithVBox.second;
 
         GridPane.setRowIndex(vBox, rowIndex);
-        GridPane.setColumnIndex(vBox, 0);
+        GridPane.setColumnIndex(vBox, columnIndex);
         GridPane.setMargin(vBox, new Insets(top + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(vBox);
 
