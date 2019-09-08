@@ -490,6 +490,7 @@ public abstract class TradeStepView extends AnchorPane {
             // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
             if (hasSelfAccepted()) {
                 tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_SELF_ACCEPTED);
+                openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
             } else if (peerAccepted()) {
                 tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_PEER_ACCEPTED);
                 if (acceptMediationResultPopup == null) {
@@ -552,7 +553,7 @@ public abstract class TradeStepView extends AnchorPane {
                 .headLine(headLine)
                 .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
                         myPayoutAmount, peersPayoutAmount))
-                .actionButtonText(Res.get("portfolio.pending.mediationResult.popup.accept"))
+                .actionButtonText(Res.get("shared.accept"))
                 .onAction(() -> {
                     model.dataModel.mediationManager.acceptMediationResult(trade,
                             () -> {

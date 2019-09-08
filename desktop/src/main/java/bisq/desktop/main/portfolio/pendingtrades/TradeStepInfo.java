@@ -140,7 +140,7 @@ public class TradeStepInfo {
                 button.setText(Res.get("portfolio.pending.mediationResult.button").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().add("action-button");
-                button.setDisable(true);
+                button.setDisable(false);
                 break;
             case MEDIATION_RESULT_PEER_ACCEPTED:
                 // green button
