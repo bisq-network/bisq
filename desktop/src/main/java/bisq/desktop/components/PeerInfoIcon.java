@@ -18,6 +18,7 @@
 package bisq.desktop.components;
 
 import bisq.desktop.main.overlays.editor.PeerInfoWithTagEditor;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
@@ -26,7 +27,8 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -75,7 +77,6 @@ public class PeerInfoIcon extends Group {
                         Offer offer,
                         Preferences preferences,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        BSFormatter formatter,
                         boolean useDevPrivilegeKeys) {
         this(nodeAddress,
                 role,
@@ -85,7 +86,6 @@ public class PeerInfoIcon extends Group {
                 null,
                 preferences,
                 accountAgeWitnessService,
-                formatter,
                 useDevPrivilegeKeys);
 
     }
@@ -97,7 +97,6 @@ public class PeerInfoIcon extends Group {
                         Trade trade,
                         Preferences preferences,
                         AccountAgeWitnessService accountAgeWitnessService,
-                        BSFormatter formatter,
                         boolean useDevPrivilegeKeys) {
         this(nodeAddress,
                 role,
@@ -107,7 +106,6 @@ public class PeerInfoIcon extends Group {
                 trade,
                 preferences,
                 accountAgeWitnessService,
-                formatter,
                 useDevPrivilegeKeys);
     }
 
@@ -119,7 +117,6 @@ public class PeerInfoIcon extends Group {
                          @Nullable Trade trade,
                          Preferences preferences,
                          AccountAgeWitnessService accountAgeWitnessService,
-                         BSFormatter formatter,
                          boolean useDevPrivilegeKeys) {
         this.numTrades = numTrades;
         this.accountAgeWitnessService = accountAgeWitnessService;
@@ -141,7 +138,7 @@ public class PeerInfoIcon extends Group {
         boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
 
         String accountAge = isFiatCurrency ?
-                peersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(peersAccountAge)) :
+                peersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(peersAccountAge)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
         tooltipText = hasTraded ?
@@ -239,7 +236,7 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
+        addMouseListener(numTrades, privateNotificationManager, offer, preferences, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
     }
 
     private long getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
@@ -262,13 +259,12 @@ public class PeerInfoIcon extends Group {
                                     PrivateNotificationManager privateNotificationManager,
                                     Offer offer,
                                     Preferences preferences,
-                                    BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
                                     long makersAccountAge) {
         final String accountAgeTagEditor = isFiatCurrency ?
                 makersAccountAge > -1 ?
-                        formatter.formatAccountAge(makersAccountAge) :
+                        DisplayUtils.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)

@@ -38,9 +38,10 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinUtil;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
@@ -680,13 +681,13 @@ public class GUIUtil {
         }
     }
 
-    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        return " (" + getPercentage(fee, tradeAmount, formatter) +
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount) {
+        return " (" + getPercentage(fee, tradeAmount) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
-    public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
-        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
+    public static String getPercentage(Coin part, Coin total) {
+        return FormattingUtils.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {
@@ -752,7 +753,7 @@ public class GUIUtil {
             log.warn("showNotReadyForTxBroadcastPopups called but no case matched. This should never happen if isReadyForTxBroadcast was called before.");
     }
 
-    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, BSFormatter btcFormatter) {
+    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, CoinFormatter btcFormatter) {
         new Popup<>().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
                 btcFormatter.formatCoinWithCode(amount))).show();
     }
@@ -856,7 +857,7 @@ public class GUIUtil {
     }
 
     public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, Coin btcForIssuance, int txSize, BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter, String type,
+                                           CoinFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
         String confirmationMessage;
 
@@ -888,7 +889,7 @@ public class GUIUtil {
     }
 
     public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txSize, BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter, String type,
+                                           CoinFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }

@@ -17,8 +17,11 @@
 
 package bisq.desktop.main.settings.network;
 
+import bisq.desktop.util.DisplayUtils;
+
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.OutboundConnection;
@@ -44,7 +47,6 @@ public class P2pNetworkListItem {
     private final Connection connection;
     private final Subscription sentBytesSubscription, receivedBytesSubscription, onionAddressSubscription, roundTripTimeSubscription;
     private final ClockWatcher clockWatcher;
-    private final BSFormatter formatter;
 
     private final StringProperty lastActivity = new SimpleStringProperty();
     private final StringProperty sentBytes = new SimpleStringProperty();
@@ -55,16 +57,15 @@ public class P2pNetworkListItem {
     private final StringProperty onionAddress = new SimpleStringProperty();
     private final ClockWatcher.Listener listener;
 
-    public P2pNetworkListItem(Connection connection, ClockWatcher clockWatcher, BSFormatter formatter) {
+    public P2pNetworkListItem(Connection connection, ClockWatcher clockWatcher) {
         this.connection = connection;
         this.clockWatcher = clockWatcher;
-        this.formatter = formatter;
         this.statistic = connection.getStatistic();
 
         sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty(),
-                e -> sentBytes.set(formatter.formatBytes((long) e)));
+                e -> sentBytes.set(FormattingUtils.formatBytes((long) e)));
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
-                e -> receivedBytes.set(formatter.formatBytes((long) e)));
+                e -> receivedBytes.set(FormattingUtils.formatBytes((long) e)));
         onionAddressSubscription = EasyBind.subscribe(connection.getPeersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : Res.get("settings.net.notKnownYet")));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
@@ -118,7 +119,7 @@ public class P2pNetworkListItem {
     }
 
     public String getCreationDate() {
-        return formatter.formatDateTime(statistic.getCreationDate());
+        return DisplayUtils.formatDateTime(statistic.getCreationDate());
     }
 
     public String getOnionAddress() {

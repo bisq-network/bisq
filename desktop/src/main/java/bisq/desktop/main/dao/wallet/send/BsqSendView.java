@@ -27,6 +27,7 @@ import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.BsqAddressHelper;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqAddressValidator;
@@ -44,9 +45,12 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -58,6 +62,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -76,7 +81,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
+    private final BsqAddressHelper bsqAddressHelper;
+    private final CoinFormatter btcFormatter;
     private final Navigation navigation;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
@@ -104,11 +110,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         WalletsSetup walletsSetup,
                         P2PService p2PService,
                         BsqFormatter bsqFormatter,
-                        BSFormatter btcFormatter,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                         Navigation navigation,
                         BsqBalanceUtil bsqBalanceUtil,
                         BsqValidator bsqValidator,
                         BtcValidator btcValidator,
+                        BsqAddressHelper bsqAddressHelper,
                         BsqAddressValidator bsqAddressValidator,
                         BtcAddressValidator btcAddressValidator) {
         this.bsqWalletService = bsqWalletService;
@@ -117,6 +124,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;
         this.bsqFormatter = bsqFormatter;
+        this.bsqAddressHelper = bsqAddressHelper;
         this.btcFormatter = btcFormatter;
         this.navigation = navigation;
         this.bsqBalanceUtil = bsqBalanceUtil;
@@ -233,8 +241,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         sendBsqButton.setOnAction((event) -> {
             // TODO break up in methods
             if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
-                String receiversAddressString = bsqFormatter.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
-                Coin receiverAmount = bsqFormatter.parseToCoin(amountInputTextField.getText());
+                String receiversAddressString = bsqAddressHelper.getAddressFromBsqAddress(receiversAddressInputTextField.getText()).toString();
+                Coin receiverAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
                 try {
                     Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(receiversAddressString, receiverAmount);
                     Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, true);
@@ -350,8 +358,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     TxType txType,
                                     Coin miningFee,
                                     int txSize, String address,
-                                    BSFormatter amountFormatter, // can be BSQ or BTC formatter
-                                    BSFormatter feeFormatter,
+                                    CoinFormatter amountFormatter, // can be BSQ or BTC formatter
+                                    CoinFormatter feeFormatter,
                                     ResultHandler resultHandler) {
         new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                 .confirmation(Res.get("dao.wallet.send.sendFunds.details",

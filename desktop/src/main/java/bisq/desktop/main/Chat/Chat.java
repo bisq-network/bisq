@@ -24,6 +24,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.arbitration.Attachment;
@@ -32,7 +33,8 @@ import bisq.core.chat.ChatManager;
 import bisq.core.chat.ChatSession;
 import bisq.core.locale.Res;
 import bisq.core.trade.TradeChatSession;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -137,11 +139,11 @@ public class Chat extends AnchorPane {
     private ChangeListener<Boolean> storedInMailboxPropertyListener, arrivedPropertyListener;
     private ChangeListener<String> sendMessageErrorPropertyListener;
 
-    protected final BSFormatter formatter;
+    protected final CoinFormatter formatter;
     private EventHandler<KeyEvent> keyEventEventHandler;
     private ChatManager chatManager;
 
-    public Chat(ChatManager chatManager, BSFormatter formatter) {
+    public Chat(ChatManager chatManager, CoinFormatter formatter) {
         this.chatManager = chatManager;
         this.formatter = formatter;
         this.p2PService = chatManager.getP2PService();
@@ -404,7 +406,7 @@ public class Chat extends AnchorPane {
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
-                            headerLabel.setText(formatter.formatDateTime(new Date(message.getDate())));
+                            headerLabel.setText(DisplayUtils.formatDateTime(new Date(message.getDate())));
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
                             if (allowAttachments &&

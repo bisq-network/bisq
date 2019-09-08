@@ -32,8 +32,9 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.Tuple3;
 
@@ -93,7 +94,6 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
     private final DaoStateService daoStateService;
     private final Preferences preferences;
     private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
 
     private ChangeListener<Number> priceChangeListener;
 
@@ -118,15 +118,13 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
                              PriceFeedService priceFeedService,
                              DaoStateService daoStateService,
                              Preferences preferences,
-                             BsqFormatter bsqFormatter,
-                             BSFormatter btcFormatter) {
+                             BsqFormatter bsqFormatter) {
         this.daoFacade = daoFacade;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.priceFeedService = priceFeedService;
         this.daoStateService = daoStateService;
         this.preferences = preferences;
         this.bsqFormatter = bsqFormatter;
-        this.btcFormatter = btcFormatter;
     }
 
     @Override
@@ -308,7 +306,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         Optional<Price> optionalBsqPrice = priceFeedService.getBsqPrice();
         if (optionalBsqPrice.isPresent()) {
             Price bsqPrice = optionalBsqPrice.get();
-            marketPriceLabel.setText(bsqFormatter.formatPrice(bsqPrice) + " BSQ/BTC");
+            marketPriceLabel.setText(FormattingUtils.formatPrice(bsqPrice) + " BSQ/BTC");
 
             marketCapTextField.setText(bsqFormatter.formatMarketCap(priceFeedService.getMarketPrice("BSQ"),
                     priceFeedService.getMarketPrice(preferences.getPreferredTradeCurrency().getCode()),

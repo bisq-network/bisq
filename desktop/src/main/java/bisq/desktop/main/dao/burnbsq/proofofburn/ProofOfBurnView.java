@@ -36,8 +36,11 @@ import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.app.DevEnv;
@@ -47,6 +50,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -81,7 +85,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     private final ProofOfBurnService proofOfBurnService;
     private final MyProofOfBurnListService myProofOfBurnListService;
     private final Preferences preferences;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
     private final BsqValidator bsqValidator;
@@ -116,7 +120,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                             ProofOfBurnService proofOfBurnService,
                             MyProofOfBurnListService myProofOfBurnListService,
                             Preferences preferences,
-                            BSFormatter btcFormatter) {
+                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;
@@ -273,7 +277,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     }
 
     private Coin getAmountFee() {
-        return bsqFormatter.parseToCoin(amountInputTextField.getText());
+        return ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
     }
 
     private void doPublishFeeTx(Transaction transaction, String preImageAsString) {

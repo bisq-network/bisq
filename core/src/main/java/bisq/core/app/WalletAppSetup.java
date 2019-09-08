@@ -21,7 +21,9 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
 
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
@@ -57,7 +59,6 @@ public class WalletAppSetup {
     private final WalletsSetup walletsSetup;
     private final BisqEnvironment bisqEnvironment;
     private final Preferences preferences;
-    private final BSFormatter formatter;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<String> btcInfoBinding;
@@ -79,13 +80,11 @@ public class WalletAppSetup {
     public WalletAppSetup(WalletsManager walletsManager,
                           WalletsSetup walletsSetup,
                           BisqEnvironment bisqEnvironment,
-                          Preferences preferences,
-                          BSFormatter formatter) {
+                          Preferences preferences) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.bisqEnvironment = bisqEnvironment;
         this.preferences = preferences;
-        this.formatter = formatter;
         this.useTorForBTC.set(preferences.getUseTorForBitcoinJ());
     }
 
@@ -120,7 +119,7 @@ public class WalletAppSetup {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + formatter.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,

@@ -38,7 +38,9 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -104,7 +106,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private NumberAxis xAxis;
     private XYChart.Series seriesBuy, seriesSell;
     private final Navigation navigation;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private TableView<OfferListItem> buyOfferTableView;
     private TableView<OfferListItem> sellOfferTableView;
     private AreaChart<Number, Number> areaChart;
@@ -135,7 +137,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, BSFormatter formatter,
+    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.navigation = navigation;
@@ -223,15 +225,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                                final String withCryptoPrecision = formatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                final String withCryptoPrecision = FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 if (withCryptoPrecision.equals("0.000")) {
                                     cryptoPrecision = 8;
-                                    return formatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                    return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 } else {
                                     return withCryptoPrecision;
                                 }
                             } else {
-                                return formatter.formatRoundedDoubleWithPrecision(doubleValue, 2);
+                                return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 2);
                             }
                         }
 
@@ -268,7 +270,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
-                    xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
+                    xAxis.setLabel(CurrencyUtil.getPriceWithCurrencyCode(code));
 
                     seriesBuy.setName(leftHeaderLabel.getText() + "   ");
                     seriesSell.setName(rightHeaderLabel.getText());
@@ -596,7 +598,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                             offer,
                                             model.preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
 //                                    setAlignment(Pos.CENTER);
                                     setGraphic(peerInfoIcon);

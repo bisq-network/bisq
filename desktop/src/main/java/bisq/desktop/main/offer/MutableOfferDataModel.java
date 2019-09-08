@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.offer;
 
+import bisq.desktop.util.DisplayUtils;
+
 import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Arbitrator;
@@ -46,8 +48,9 @@ import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -60,6 +63,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import com.google.common.collect.Lists;
 
@@ -105,7 +110,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final FeeService feeService;
     private final TxFeeEstimationService txFeeEstimationService;
     private final ReferralIdService referralIdService;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private MakerFeeProvider makerFeeProvider;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
@@ -158,7 +163,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  FeeService feeService,
                                  TxFeeEstimationService txFeeEstimationService,
                                  ReferralIdService referralIdService,
-                                 BSFormatter btcFormatter,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  MakerFeeProvider makerFeeProvider) {
         super(btcWalletService);
 
@@ -646,7 +651,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !price.get().isZero() &&
                 allowAmountUpdate) {
             try {
-                Coin value = btcFormatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
+                Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 if (isHalCashAccount())
                     value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))

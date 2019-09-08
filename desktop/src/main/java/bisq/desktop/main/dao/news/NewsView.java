@@ -4,13 +4,13 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.util.BsqAddressHelper;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple3;
 
@@ -37,15 +37,15 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
     private final Preferences preferences;
     private final BsqWalletService bsqWalletService;
-    private final BsqFormatter bsqFormatter;
+    private final BsqAddressHelper bsqAddressHelper;
     private BsqAddressTextField addressTextField;
 
     @Inject
     private NewsView(Preferences preferences, BsqWalletService bsqWalletService,
-                     BsqFormatter bsqFormatter) {
+                     BsqAddressHelper bsqFormatter) {
         this.preferences = preferences;
         this.bsqWalletService = bsqWalletService;
-        this.bsqFormatter = bsqFormatter;
+        this.bsqAddressHelper = bsqFormatter;
     }
 
     @Override
@@ -156,7 +156,7 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
     @Override
     protected void activate() {
-        addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
+        addressTextField.setAddress(bsqAddressHelper.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
     }
 
     @Override

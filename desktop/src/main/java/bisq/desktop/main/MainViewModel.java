@@ -32,6 +32,7 @@ import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -54,7 +55,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
@@ -117,7 +118,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
-    private final BSFormatter formatter;
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
@@ -157,8 +157,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                          BisqEnvironment bisqEnvironment,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler,
-                         BSFormatter formatter) {
+                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -179,7 +178,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
-        this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -218,7 +216,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                 DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;
@@ -228,7 +226,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                 DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;

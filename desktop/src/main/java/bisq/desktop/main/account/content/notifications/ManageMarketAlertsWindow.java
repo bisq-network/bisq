@@ -26,9 +26,13 @@ import bisq.desktop.util.ImageUtil;
 import bisq.core.locale.Res;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.market.MarketAlerts;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
+
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -53,11 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> {
 
     private final MarketAlerts marketAlerts;
-    private final BSFormatter formatter;
 
-    ManageMarketAlertsWindow(MarketAlerts marketAlerts, BSFormatter formatter) {
+    ManageMarketAlertsWindow(MarketAlerts marketAlerts) {
         this.marketAlerts = marketAlerts;
-        this.formatter = formatter;
         type = Type.Attention;
     }
 
@@ -140,7 +142,7 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
                             public void updateItem(final MarketAlertFilter item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(formatter.formatPercentagePrice(item.getTriggerValue() / 10000d));
+                                    setText(FormattingUtils.formatPercentagePrice(item.getTriggerValue() / 10000d));
                                 } else {
                                     setText("");
                                 }

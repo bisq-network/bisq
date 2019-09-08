@@ -37,6 +37,7 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -54,7 +55,9 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -115,7 +118,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
 
@@ -142,7 +145,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
                   OfferDetailsWindow offerDetailsWindow,
-                  BSFormatter formatter,
+                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
                   @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
@@ -226,8 +229,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.setPlaceholder(placeholder);
 
         marketColumn.setComparator((o1, o2) -> {
-            String str1 = formatter.getCurrencyPair(o1.getOffer().getCurrencyCode());
-            String str2 = formatter.getCurrencyPair(o2.getOffer().getCurrencyCode());
+            String str1 = CurrencyUtil.getCurrencyPair(o1.getOffer().getCurrencyCode());
+            String str2 = CurrencyUtil.getCurrencyPair(o2.getOffer().getCurrencyCode());
             return str1 != null && str2 != null ? str1.compareTo(str2) : 0;
         });
         priceColumn.setComparator((o1, o2) -> {
@@ -324,7 +327,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             tableView.getColumns().add(0, marketColumn);
                     } else {
                         volumeColumn.setTitleWithHelpText(Res.get("offerbook.volume", code), Res.get("shared.amountHelp"));
-                        priceColumn.setTitle(formatter.getPriceWithCurrencyCode(code));
+                        priceColumn.setTitle(CurrencyUtil.getPriceWithCurrencyCode(code));
                         priceColumn.getStyleClass().add("first-column");
 
                         tableView.getColumns().remove(marketColumn);
@@ -573,7 +576,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(), offer.getCurrencyCode());
                 new Popup<>()
                         .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
-                                formatter.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
+                                DisplayUtils.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
                                 formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
                                 formatter.formatCoinWithCode(offer.getMinAmount())))
                         .show();
@@ -603,7 +606,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrapped()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key))
-                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
+                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.btcFormatter.formatCoinWithCode(offer.getMakerFee())))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -693,7 +696,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty)
-                                    setText(formatter.getCurrencyPair(item.getOffer().getCurrencyCode()));
+                                    setText(CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode()));
                                 else
                                     setText("");
                             }
@@ -1077,7 +1080,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             offer,
                                             model.preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
                                     setGraphic(peerInfoIcon);
                                 } else {

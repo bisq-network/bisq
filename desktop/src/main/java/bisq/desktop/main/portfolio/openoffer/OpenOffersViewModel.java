@@ -19,12 +19,16 @@ package bisq.desktop.main.portfolio.openoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
@@ -33,17 +37,19 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
-    final BSFormatter formatter;
+    final CoinFormatter formatter;
 
 
     @Inject
     public OpenOffersViewModel(OpenOffersDataModel dataModel,
                                P2PService p2PService,
-                               BSFormatter formatter) {
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(dataModel);
 
         this.p2PService = p2PService;
@@ -71,7 +77,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getAmount(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatAmount(item.getOffer()) : "";
+        return (item != null) ? DisplayUtils.formatAmount(item.getOffer(), formatter) : "";
     }
 
     String getPrice(OpenOfferListItem item) {
@@ -83,33 +89,33 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if (price != null) {
             String postFix = "";
             if (offer.isUseMarketBasedPrice())
-                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            return formatter.formatPrice(price) + postFix;
+                postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+            return FormattingUtils.formatPrice(price) + postFix;
         } else {
             return Res.get("shared.na");
         }
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
+        return (item != null) ? DisplayUtils.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
+        return DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
     }
 
     String getMarketLabel(OpenOfferListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode());
     }
 
     String getDate(OpenOfferListItem item) {
-        return formatter.formatDateTime(item.getOffer().getDate());
+        return DisplayUtils.formatDateTime(item.getOffer().getDate());
     }
 
     boolean isDeactivated(OpenOfferListItem item) {

@@ -37,13 +37,14 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -139,7 +140,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
-    private final BSFormatter formatter;
 
     private final ToggleGroup navButtons = new ToggleGroup();
     private ChangeListener<String> walletServiceErrorMsgListener;
@@ -159,12 +159,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     CachingViewLoader viewLoader,
                     Navigation navigation,
                     Transitions transitions,
-                    BSFormatter formatter,
                     DaoStateMonitoringService daoStateMonitoringService) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
-        this.formatter = formatter;
         MainView.transitions = transitions;
         this.daoStateMonitoringService = daoStateMonitoringService;
     }
@@ -522,14 +520,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             res = Res.get("mainView.marketPrice.tooltip",
                     "https://bitcoinaverage.com",
                     "",
-                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
+                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
                     model.getPriceFeedService().getProviderNodeAddress());
         } else {
             String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
             res = Res.get("mainView.marketPrice.tooltip",
                     "https://poloniex.com",
                     altcoinExtra,
-                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
+                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
                     model.getPriceFeedService().getProviderNodeAddress());
         }
         return res;

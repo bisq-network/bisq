@@ -24,6 +24,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.arbitration.Dispute;
 import bisq.core.arbitration.DisputeManager;
@@ -35,7 +36,10 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
@@ -45,6 +49,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -79,7 +84,7 @@ import static bisq.desktop.util.FormBuilder.*;
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
 
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final DisputeManager disputeManager;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
@@ -109,7 +114,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryWindow(BSFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService,
+    public DisputeSummaryWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, DisputeManager disputeManager, BtcWalletService walletService,
                                 TradeWalletService tradeWalletService) {
 
         this.formatter = formatter;
@@ -249,7 +254,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, 17, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
@@ -265,9 +270,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                formatter.formatPrice(contract.getTradePrice()));
+                FormattingUtils.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
-                formatter.formatVolumeWithCode(contract.getTradeVolume()));
+                DisplayUtils.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(contract.getOfferPayload().getBuyerSecurityDeposit()) +
@@ -356,8 +361,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean isPayoutAmountValid() {
-        Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
-        Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
+        Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+        Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
         Offer offer = new Offer(contract.getOfferPayload());
@@ -370,8 +375,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyCustomAmounts(InputTextField inputTextField) {
         Contract contract = dispute.getContract();
-        Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
-        Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
+        Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+        Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
         Offer offer = new Offer(contract.getOfferPayload());
         Coin available = contract.getTradeAmount().
                 add(offer.getBuyerSecurityDeposit())
@@ -566,13 +571,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
                     disputeResult.setCloseDate(new Date());
                     String text = Res.get("disputeSummaryWindow.close.msg",
-                            formatter.formatDateTime(disputeResult.getCloseDate()),
+                            DisplayUtils.formatDateTime(disputeResult.getCloseDate()),
                             role,
-                            formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
+                            DisplayUtils.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
                             role,
-                            formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
+                            DisplayUtils.booleanToYesNo(disputeResult.idVerificationProperty().get()),
                             role,
-                            formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
+                            DisplayUtils.booleanToYesNo(disputeResult.screenCastProperty().get()),
                             formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                             formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                             disputeResult.summaryNotesProperty().get());

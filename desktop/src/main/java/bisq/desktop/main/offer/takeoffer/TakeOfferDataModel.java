@@ -47,7 +47,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.util.Tuple2;
 

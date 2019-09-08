@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.wallet.tx;
 
 import bisq.desktop.components.TxConfidenceListItem;
+import bisq.desktop.util.BsqAddressHelper;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -25,7 +26,6 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Data
 class BsqTxListItem extends TxConfidenceListItem {
     private final DaoFacade daoFacade;
-    private final BsqFormatter bsqFormatter;
+    private final BsqAddressHelper addressHelper;
     private final Date date;
     private final boolean isBurnedBsqTx;
     private final boolean withdrawalToBTCWallet;
@@ -61,13 +61,13 @@ class BsqTxListItem extends TxConfidenceListItem {
                   BtcWalletService btcWalletService,
                   DaoFacade daoFacade,
                   Date date,
-                  BsqFormatter bsqFormatter) {
+                  BsqAddressHelper bsqAddressHelper) {
         super(transaction, bsqWalletService);
 
         this.daoFacade = daoFacade;
         this.isBurnedBsqTx = daoFacade.hasTxBurntFee(transaction.getHashAsString());
         this.date = date;
-        this.bsqFormatter = bsqFormatter;
+        this.addressHelper = bsqAddressHelper;
 
         checkNotNull(transaction, "transaction must not be null as we only have list items from transactions " +
                 "which are available in the wallet");
@@ -102,7 +102,7 @@ class BsqTxListItem extends TxConfidenceListItem {
                     WalletService.isOutputScriptConvertibleToAddress(output)) {
                 // We don't support send txs with multiple outputs to multiple receivers, so we can
                 // assume that only one output is not from our own wallets.
-                sendToAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
+                sendToAddress = bsqAddressHelper.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
                 break;
             }
         }
@@ -113,7 +113,7 @@ class BsqTxListItem extends TxConfidenceListItem {
         if (sendToAddress != null) {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (WalletService.isOutputScriptConvertibleToAddress(output)) {
-                    receivedWithAddress = bsqFormatter.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
+                    receivedWithAddress = bsqAddressHelper.getBsqAddressStringFromAddress(WalletService.getAddressFromOutput(output));
                     break;
                 }
             }

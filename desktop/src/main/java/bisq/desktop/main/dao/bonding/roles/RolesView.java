@@ -33,7 +33,7 @@ import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import javax.inject.Inject;
 

@@ -17,19 +17,21 @@
 
 package bisq.desktop.util.validation;
 
+import bisq.desktop.util.BsqAddressHelper;
+
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javax.inject.Inject;
 
 public final class BsqAddressValidator extends InputValidator {
 
-    private final BsqFormatter bsqFormatter;
+    private final BsqAddressHelper helper;
 
     @Inject
-    public BsqAddressValidator(BsqFormatter bsqFormatter) {
-        this.bsqFormatter = bsqFormatter;
+    public BsqAddressValidator(BsqAddressHelper addressHelper) {
+        this.helper = addressHelper;
     }
 
     @Override
@@ -44,7 +46,7 @@ public final class BsqAddressValidator extends InputValidator {
 
     private ValidationResult validateBsqAddress(String input) {
         try {
-            bsqFormatter.getAddressFromBsqAddress(input);
+            helper.getAddressFromBsqAddress(input);
             return new ValidationResult(true);
         } catch (Throwable e) {
             return new ValidationResult(false, Res.get("validation.bsq.invalidFormat"));

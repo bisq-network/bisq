@@ -22,11 +22,12 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.util.BsqAddressHelper;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
@@ -45,7 +46,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
 
     private BsqAddressTextField addressTextField;
     private final BsqWalletService bsqWalletService;
-    private final BsqFormatter bsqFormatter;
+    private final BsqAddressHelper bsqAddressHelper;
     private final BsqBalanceUtil bsqBalanceUtil;
     private int gridRow = 0;
 
@@ -54,9 +55,9 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BsqReceiveView(BsqWalletService bsqWalletService, BsqFormatter bsqFormatter, BsqBalanceUtil bsqBalanceUtil) {
+    private BsqReceiveView(BsqWalletService bsqWalletService, BsqAddressHelper bsqAddressHelper, BsqBalanceUtil bsqBalanceUtil) {
         this.bsqWalletService = bsqWalletService;
-        this.bsqFormatter = bsqFormatter;
+        this.bsqAddressHelper = bsqAddressHelper;
         this.bsqBalanceUtil = bsqBalanceUtil;
     }
 
@@ -82,7 +83,7 @@ public class BsqReceiveView extends ActivatableView<GridPane, Void> {
         if (DevEnv.isDaoActivated())
             bsqBalanceUtil.activate();
 
-        addressTextField.setAddress(bsqFormatter.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
+        addressTextField.setAddress(bsqAddressHelper.getBsqAddressStringFromAddress(bsqWalletService.getUnusedAddress()));
     }
 
     @Override

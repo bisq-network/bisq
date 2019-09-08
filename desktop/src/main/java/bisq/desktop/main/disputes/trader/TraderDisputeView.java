@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -43,10 +44,10 @@ import bisq.core.locale.Res;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
@@ -109,12 +110,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     private final DisputeManager disputeManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
-    protected final BSFormatter formatter;
+    protected final CoinFormatter formatter;
     private final DisputeSummaryWindow disputeSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
-    private final P2PService p2PService;
 
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final boolean useDevPrivilegeKeys;
@@ -145,12 +145,11 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
     public TraderDisputeView(DisputeManager disputeManager,
                              KeyRing keyRing,
                              TradeManager tradeManager,
-                             BSFormatter formatter,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              DisputeSummaryWindow disputeSummaryWindow,
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,
                              TradeDetailsWindow tradeDetailsWindow,
-                             P2PService p2PService,
                              AccountAgeWitnessService accountAgeWitnessService,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.disputeManager = disputeManager;
@@ -161,7 +160,6 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         this.privateNotificationManager = privateNotificationManager;
         this.contractWindow = contractWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
-        this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -224,7 +222,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
         dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
         buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
         sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
-        marketColumn.setComparator((o1, o2) -> formatter.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
+        marketColumn.setComparator((o1, o2) -> CurrencyUtil.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -257,7 +255,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             .append(dispute0.getTradeId())
                             .append("\n")
                             .append("## Date: ")
-                            .append(formatter.formatDateTime(dispute0.getOpeningDate()))
+                            .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
                             .append("\n")
                             .append("## Is support ticket: ")
                             .append(dispute0.isSupportTicket())
@@ -582,7 +580,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.formatDateTime(item.getOpeningDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getOpeningDate()));
                                 else
                                     setText("");
                             }
@@ -693,7 +691,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (buyerNodeAddress != null) {
                 String nrOfDisputes = disputeManager.getNrOfDisputes(true, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-                String age = formatter.formatAccountAge(accountAge);
+                String age = DisplayUtils.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
                 return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
             } else
@@ -710,7 +708,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (sellerNodeAddress != null) {
                 String nrOfDisputes = disputeManager.getNrOfDisputes(false, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
-                String age = formatter.formatAccountAge(accountAge);
+                String age = DisplayUtils.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
                 return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
             } else
@@ -736,7 +734,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(formatter.getCurrencyPair(item.getContract().getOfferPayload().getCurrencyCode()));
+                                    setText(CurrencyUtil.getCurrencyPair(item.getContract().getOfferPayload().getCurrencyCode()));
                                 else
                                     setText("");
                             }

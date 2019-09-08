@@ -21,6 +21,7 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.Layout;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.Dispute;
@@ -32,7 +33,9 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Contract;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
@@ -40,6 +43,7 @@ import bisq.common.crypto.PubKeyRing;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -68,7 +72,7 @@ import static bisq.desktop.util.FormBuilder.*;
 public class ContractWindow extends Overlay<ContractWindow> {
     private final DisputeManager disputeManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private Dispute dispute;
 
 
@@ -78,7 +82,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
     @Inject
     public ContractWindow(DisputeManager disputeManager, AccountAgeWitnessService accountAgeWitnessService,
-                          BSFormatter formatter) {
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.disputeManager = disputeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
@@ -133,16 +137,16 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
-                formatter.formatDateTime(offer.getDate()) + " / " + formatter.formatDateTime(dispute.getTradeDate()));
+                DisplayUtils.formatDateTime(offer.getDate()) + " / " + DisplayUtils.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.offerType"),
-                formatter.getDirectionBothSides(offer.getDirection(), currencyCode));
+                DisplayUtils.getDirectionBothSides(offer.getDirection(), currencyCode));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                formatter.formatPrice(contract.getTradePrice()));
+                FormattingUtils.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode, ":"),
-                formatter.formatVolumeWithCode(contract.getTradeVolume()));
+        addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode, ":"),
+                DisplayUtils.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
@@ -261,7 +265,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     private String getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing, String currencyCode) {
         long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
         return CurrencyUtil.isFiatCurrency(currencyCode) ?
-                age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
     }

@@ -26,6 +26,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -39,7 +40,9 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -100,7 +103,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     private final OfferDetailsWindow offerDetailsWindow;
     private Preferences preferences;
-    private final BSFormatter formatter;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private SortedList<ClosedTradableListItem> sortedList;
@@ -113,14 +115,12 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
-                            BSFormatter formatter,
                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
-        this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -317,7 +317,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
             Offer offer = item.getTradable().getOffer();
             boolean matchesId = offer.getId().contains(filterString);
-            boolean matchesOfferDate = formatter.formatDate(offer.getDate()).contains(filterString);
+            boolean matchesOfferDate = DisplayUtils.formatDate(offer.getDate()).contains(filterString);
             boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
 
             if (item.getTradable() instanceof Trade) {
@@ -327,7 +327,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 boolean matchesSellersPaymentAccountData = false;
 
                 Trade trade = (Trade) item.getTradable();
-                boolean matchesTradeDate = formatter.formatDate(trade.getTakeOfferDate()).contains(filterString);
+                boolean matchesTradeDate = DisplayUtils.formatDate(trade.getTakeOfferDate()).contains(filterString);
                 Contract contract = trade.getContract();
                 if (contract != null) {
                     isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
@@ -467,7 +467,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             trade,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);

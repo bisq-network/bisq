@@ -36,7 +36,8 @@ import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -74,7 +75,7 @@ public class F2FForm extends PaymentMethodForm {
 
     public F2FForm(PaymentAccount paymentAccount,
                    AccountAgeWitnessService accountAgeWitnessService, F2FValidator f2fValidator,
-                   InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+                   InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
 
         this.f2fAccount = (F2FAccount) paymentAccount;
