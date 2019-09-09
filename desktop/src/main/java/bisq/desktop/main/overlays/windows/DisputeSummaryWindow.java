@@ -358,34 +358,35 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyCustomAmounts(InputTextField inputTextField) {
         Contract contract = dispute.getContract();
-        Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
-        Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
         Offer offer = new Offer(contract.getOfferPayload());
-        Coin available = contract.getTradeAmount().
-                add(offer.getBuyerSecurityDeposit())
+        Coin available = contract.getTradeAmount()
+                .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
-        Coin totalAmount = buyerAmount.add(sellerAmount);
-
-        if (totalAmount.compareTo(available) > 0) {
-            new Popup<>().warning(Res.get("disputeSummaryWindow.payout.adjustAmount", available.toFriendlyString()))
-                    .show();
-
-            if (inputTextField == buyerPayoutAmountInputTextField) {
-                buyerAmount = available.subtract(sellerAmount);
-                inputTextField.setText(formatter.formatCoin(buyerAmount));
-            } else if (inputTextField == sellerPayoutAmountInputTextField) {
-                sellerAmount = available.subtract(buyerAmount);
-                inputTextField.setText(formatter.formatCoin(sellerAmount));
-            }
+        Coin enteredAmount = formatter.parseToCoin(inputTextField.getText());
+        if (enteredAmount.compareTo(available) > 0) {
+            enteredAmount = available;
+            Coin finalEnteredAmount = enteredAmount;
+            inputTextField.setText(formatter.formatCoin(finalEnteredAmount));
+        }
+        Coin counterPartAsCoin = available.subtract(enteredAmount);
+        String formattedCounterPartAmount = formatter.formatCoin(counterPartAsCoin);
+        Coin buyerAmount;
+        Coin sellerAmount;
+        if (inputTextField == buyerPayoutAmountInputTextField) {
+            buyerAmount = enteredAmount;
+            sellerAmount = counterPartAsCoin;
+            sellerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+        } else {
+            sellerAmount = enteredAmount;
+            buyerAmount = counterPartAsCoin;
+            buyerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
         }
 
         disputeResult.setBuyerPayoutAmount(buyerAmount);
         disputeResult.setSellerPayoutAmount(sellerAmount);
-
-        if (buyerAmount.compareTo(sellerAmount) > 0)
-            disputeResult.setWinner(DisputeResult.Winner.BUYER);
-        else
-            disputeResult.setWinner(DisputeResult.Winner.SELLER);
+        disputeResult.setWinner(buyerAmount.compareTo(sellerAmount) > 0 ?
+                DisputeResult.Winner.BUYER :
+                DisputeResult.Winner.SELLER);
     }
 
     private void addPayoutAmountTextFields() {
