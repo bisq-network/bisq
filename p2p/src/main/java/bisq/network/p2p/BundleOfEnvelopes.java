@@ -17,6 +17,10 @@
 
 package bisq.network.p2p;
 
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
+
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -32,7 +36,7 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class BundleOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission {
+public final class BundleOfEnvelopes extends NetworkEnvelope implements ExtendedDataSizePermission, CapabilityRequiringPayload {
 
     private final List<NetworkEnvelope> envelopes;
 
@@ -77,5 +81,14 @@ public final class BundleOfEnvelopes extends NetworkEnvelope implements Extended
                 .collect(Collectors.toList());
 
         return new BundleOfEnvelopes(envelopes, messageVersion);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // CapabilityRequiringPayload
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.BUNDLE_OF_ENVELOPES);
     }
 }
