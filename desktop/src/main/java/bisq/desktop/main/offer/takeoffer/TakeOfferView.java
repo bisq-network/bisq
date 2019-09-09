@@ -400,10 +400,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     // called form parent as the view does not get notified when the tab is closed
-    @SuppressWarnings("PointlessBooleanExpression")
     public void onClose() {
         Coin balance = model.dataModel.getBalance().get();
-        //noinspection ConstantConditions,ConstantConditions
         if (balance != null && balance.isPositive() && !model.takeOfferCompleted.get() && !DevEnv.isDevMode()) {
             model.dataModel.swapTradeToSavings();
             new Popup<>().information(Res.get("takeOffer.alreadyFunded.movedFunds"))
@@ -426,36 +424,28 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void onTakeOffer() {
-        if (model.isReadyForTxBroadcast()) {
+        if (model.dataModel.canTakeOffer()) {
             if (model.dataModel.isTakerFeeValid()) {
-                if (model.hasAcceptedArbitrators()) {
-                    if (!DevEnv.isDevMode()) {
-                        offerDetailsWindow.onTakeOffer(() ->
-                                model.onTakeOffer(() -> {
-                                    offerDetailsWindow.hide();
-                                    offerDetailsWindowDisplayed = false;
-                                })
-                        ).show(model.getOffer(), model.dataModel.getAmount().get(), model.dataModel.tradePrice);
-                        offerDetailsWindowDisplayed = true;
-                    } else {
-                        balanceSubscription.unsubscribe();
-                        model.onTakeOffer(() -> {
-                        });
-                    }
+                if (!DevEnv.isDevMode()) {
+                    offerDetailsWindow.onTakeOffer(() ->
+                            model.onTakeOffer(() -> {
+                                offerDetailsWindow.hide();
+                                offerDetailsWindowDisplayed = false;
+                            })
+                    ).show(model.getOffer(), model.dataModel.getAmount().get(), model.dataModel.tradePrice);
+                    offerDetailsWindowDisplayed = true;
                 } else {
-                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+                    balanceSubscription.unsubscribe();
+                    model.onTakeOffer(() -> {
+                    });
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
-        } else {
-            model.showNotReadyForTxBroadcastPopups();
         }
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void onShowPayFundsScreen() {
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 

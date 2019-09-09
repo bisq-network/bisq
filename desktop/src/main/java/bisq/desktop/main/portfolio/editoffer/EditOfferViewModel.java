@@ -26,14 +26,11 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
-
-import bisq.network.p2p.P2PService;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -43,8 +40,30 @@ import com.google.inject.Inject;
 class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
 
     @Inject
-    public EditOfferViewModel(EditOfferDataModel dataModel, FiatVolumeValidator fiatVolumeValidator, FiatPriceValidator fiatPriceValidator, AltcoinValidator altcoinValidator, BtcValidator btcValidator, BsqValidator bsqValidator, SecurityDepositValidator securityDepositValidator, P2PService p2PService, WalletsSetup walletsSetup, PriceFeedService priceFeedService, Navigation navigation, Preferences preferences, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
-        super(dataModel, fiatVolumeValidator, fiatPriceValidator, altcoinValidator, btcValidator, bsqValidator, securityDepositValidator, p2PService, walletsSetup, priceFeedService, navigation, preferences, btcFormatter, bsqFormatter);
+    public EditOfferViewModel(EditOfferDataModel dataModel,
+                              FiatVolumeValidator fiatVolumeValidator,
+                              FiatPriceValidator fiatPriceValidator,
+                              AltcoinValidator altcoinValidator,
+                              BtcValidator btcValidator,
+                              BsqValidator bsqValidator,
+                              SecurityDepositValidator securityDepositValidator,
+                              PriceFeedService priceFeedService,
+                              Navigation navigation,
+                              Preferences preferences,
+                              BSFormatter btcFormatter,
+                              BsqFormatter bsqFormatter) {
+        super(dataModel,
+                fiatVolumeValidator,
+                fiatPriceValidator,
+                altcoinValidator,
+                btcValidator,
+                bsqValidator,
+                securityDepositValidator,
+                priceFeedService,
+                navigation,
+                preferences,
+                btcFormatter,
+                bsqFormatter);
         syncMinAmountWithAmount = false;
     }
 

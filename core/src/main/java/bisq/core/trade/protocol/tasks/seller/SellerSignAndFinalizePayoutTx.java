@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SellerSignAndFinalizePayoutTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SellerSignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

@@ -18,10 +18,6 @@
 package bisq.core.trade;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.Mediator;
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -34,6 +30,11 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.MediationResultState;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -44,7 +45,6 @@ import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
-import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -213,9 +213,15 @@ public abstract class Trade implements Tradable, Model {
 
     public enum DisputeState {
         NO_DISPUTE,
+        // arbitration
         DISPUTE_REQUESTED,
         DISPUTE_STARTED_BY_PEER,
-        DISPUTE_CLOSED;
+        DISPUTE_CLOSED,
+
+        // mediation
+        MEDIATION_REQUESTED,
+        MEDIATION_STARTED_BY_PEER,
+        MEDIATION_CLOSED;
 
         public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
@@ -311,6 +317,7 @@ public abstract class Trade implements Tradable, Model {
     private String makerContractSignature;
     @Nullable
     @Getter
+    @Setter
     private NodeAddress arbitratorNodeAddress;
     @Nullable
     @Setter
@@ -321,6 +328,7 @@ public abstract class Trade implements Tradable, Model {
     private PubKeyRing arbitratorPubKeyRing;
     @Nullable
     @Getter
+    @Setter
     private NodeAddress mediatorNodeAddress;
     @Nullable
     @Getter
@@ -337,7 +345,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     private String counterCurrencyTxId;
     @Getter
-    private final ObservableList<DisputeCommunicationMessage> communicationMessages = FXCollections.observableArrayList();
+    private final ObservableList<ChatMessage> chatMessages = FXCollections.observableArrayList();
 
     // Transient
     // Immutable
@@ -370,6 +378,12 @@ public abstract class Trade implements Tradable, Model {
     transient private ObjectProperty<Volume> tradeVolumeProperty;
     final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
+    //Added in v1.1.6
+    @Getter
+    @Nullable
+    private MediationResultState mediationResultState = MediationResultState.UNDEFINED_MEDIATION_RESULT;
+    transient final private ObjectProperty<MediationResultState> mediationResultStateProperty = new SimpleObjectProperty<>(mediationResultState);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -381,6 +395,7 @@ public abstract class Trade implements Tradable, Model {
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
                     @Nullable NodeAddress arbitratorNodeAddress,
+                    @Nullable NodeAddress mediatorNodeAddress,
                     Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
         this.offer = offer;
@@ -390,6 +405,7 @@ public abstract class Trade implements Tradable, Model {
         this.storage = storage;
         this.btcWalletService = btcWalletService;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
+        this.mediatorNodeAddress = mediatorNodeAddress;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
@@ -408,10 +424,18 @@ public abstract class Trade implements Tradable, Model {
                     long tradePrice,
                     NodeAddress tradingPeerNodeAddress,
                     @Nullable NodeAddress arbitratorNodeAddress,
+                    @Nullable NodeAddress mediatorNodeAddress,
                     Storage<? extends TradableList> storage,
                     BtcWalletService btcWalletService) {
 
-        this(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+        this(offer,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                storage,
+                btcWalletService);
         this.tradePrice = tradePrice;
         this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
@@ -426,7 +450,7 @@ public abstract class Trade implements Tradable, Model {
     @Override
     public Message toProtoMessage() {
         final protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
-                .setOffer(offer.toProtoMessage())
+                .setOffer(checkNotNull(offer).toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
                 .setTxFeeAsLong(txFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
@@ -434,11 +458,11 @@ public abstract class Trade implements Tradable, Model {
                 .setProcessModel(processModel.toProtoMessage())
                 .setTradeAmountAsLong(tradeAmountAsLong)
                 .setTradePrice(tradePrice)
-                .setState(protobuf.Trade.State.valueOf(state.name()))
-                .setDisputeState(protobuf.Trade.DisputeState.valueOf(disputeState.name()))
-                .setTradePeriodState(protobuf.Trade.TradePeriodState.valueOf(tradePeriodState.name()))
-                .addAllCommunicationMessages(communicationMessages.stream()
-                        .map(msg -> msg.toProtoNetworkEnvelope().getDisputeCommunicationMessage())
+                .setState(Trade.State.toProtoMessage(state))
+                .setDisputeState(Trade.DisputeState.toProtoMessage(disputeState))
+                .setTradePeriodState(Trade.TradePeriodState.toProtoMessage(tradePeriodState))
+                .addAllChatMessage(chatMessages.stream()
+                        .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()));
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
@@ -458,6 +482,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(arbitratorPubKeyRing).ifPresent(e -> builder.setArbitratorPubKeyRing(arbitratorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
+        Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
         return builder.build();
     }
 
@@ -483,9 +508,10 @@ public abstract class Trade implements Tradable, Model {
         trade.setArbitratorPubKeyRing(proto.hasArbitratorPubKeyRing() ? PubKeyRing.fromProto(proto.getArbitratorPubKeyRing()) : null);
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
+        trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
 
-        trade.communicationMessages.addAll(proto.getCommunicationMessagesList().stream()
-                .map(DisputeCommunicationMessage::fromPayloadProto)
+        trade.chatMessages.addAll(proto.getChatMessageList().stream()
+                .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
         return trade;
@@ -513,10 +539,11 @@ public abstract class Trade implements Tradable, Model {
                      AccountAgeWitnessService accountAgeWitnessService,
                      TradeStatisticsManager tradeStatisticsManager,
                      ArbitratorManager arbitratorManager,
+                     MediatorManager mediatorManager,
                      KeyRing keyRing,
                      boolean useSavingsWallet,
                      Coin fundsNeededForTrade) {
-        processModel.onAllServicesInitialized(offer,
+        processModel.onAllServicesInitialized(checkNotNull(offer, "offer must not be null"),
                 tradeManager,
                 openOfferManager,
                 p2PService,
@@ -529,17 +556,21 @@ public abstract class Trade implements Tradable, Model {
                 accountAgeWitnessService,
                 tradeStatisticsManager,
                 arbitratorManager,
+                mediatorManager,
                 keyRing,
                 useSavingsWallet,
                 fundsNeededForTrade);
 
-        Optional<Arbitrator> optionalArbitrator = processModel.getArbitratorManager().getArbitratorByNodeAddress(arbitratorNodeAddress);
-        if (optionalArbitrator.isPresent()) {
-            Arbitrator arbitrator = optionalArbitrator.get();
+        arbitratorManager.getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            UserThread.runAfter(this::persist, 1);
-        }
+            persist();
+        });
+
+        mediatorManager.getDisputeAgentByNodeAddress(mediatorNodeAddress).ifPresent(mediator -> {
+            mediatorPubKeyRing = mediator.getPubKeyRing();
+            persist();
+        });
 
         createTradeProtocol();
 
@@ -557,12 +588,11 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
-    public void updateDepositTxFromWallet() {
+    void updateDepositTxFromWallet() {
         if (getDepositTx() != null)
             setDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setDepositTx(Transaction tx) {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
@@ -581,7 +611,7 @@ public abstract class Trade implements Tradable, Model {
     // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
     // will received it again at next startup. Such might happen in edge cases when the user shuts down after we
     // received the msb but before the init is called.
-    public void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
+    void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);
 
@@ -598,12 +628,12 @@ public abstract class Trade implements Tradable, Model {
             decryptedMessageWithPubKeySet.remove(decryptedMessageWithPubKey);
     }
 
-    public void addCommunicationMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        if (!communicationMessages.contains(disputeCommunicationMessage)) {
-            communicationMessages.add(disputeCommunicationMessage);
+    public void addAndPersistChatMessage(ChatMessage chatMessage) {
+        if (!chatMessages.contains(chatMessage)) {
+            chatMessages.add(chatMessage);
             storage.queueUpForSave();
         } else {
-            log.error("Trade DisputeCommunicationMessage already exists");
+            log.error("Trade ChatMessage already exists");
         }
     }
 
@@ -628,9 +658,9 @@ public abstract class Trade implements Tradable, Model {
     // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract protected void createTradeProtocol();
+    protected abstract void createTradeProtocol();
 
-    abstract public Coin getPayoutAmount();
+    public abstract Coin getPayoutAmount();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -665,6 +695,14 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
+    public void setMediationResultState(MediationResultState mediationResultState) {
+        boolean changed = this.mediationResultState != mediationResultState;
+        this.mediationResultState = mediationResultState;
+        mediationResultStateProperty.set(mediationResultState);
+        if (changed)
+            persist();
+    }
+
 
     public void setTradePeriodState(TradePeriodState tradePeriodState) {
         boolean changed = this.tradePeriodState != tradePeriodState;
@@ -674,7 +712,6 @@ public abstract class Trade implements Tradable, Model {
             persist();
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
         if (tradingPeerNodeAddress == null)
             log.error("tradingPeerAddress=null");
@@ -682,7 +719,6 @@ public abstract class Trade implements Tradable, Model {
             this.tradingPeerNodeAddress = tradingPeerNodeAddress;
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
         tradeAmountAsLong = tradeAmount.value;
@@ -690,40 +726,14 @@ public abstract class Trade implements Tradable, Model {
         getTradeVolumeProperty().set(getTradeVolume());
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
         payoutTxId = payoutTx.getHashAsString();
     }
 
-    @SuppressWarnings("NullableProblems")
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
         errorMessageProperty.set(errorMessage);
-    }
-
-    //TODO can be removed after new rule is actiavted
-    @SuppressWarnings("NullableProblems")
-    public void setArbitratorNodeAddress(NodeAddress arbitratorNodeAddress) {
-        this.arbitratorNodeAddress = arbitratorNodeAddress;
-        if (processModel.getUser() != null) {
-            Arbitrator arbitrator = processModel.getUser().getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-            checkNotNull(arbitrator, "arbitrator must not be null");
-            arbitratorBtcPubKey = arbitrator.getBtcPubKey();
-            arbitratorPubKeyRing = arbitrator.getPubKeyRing();
-            persist();
-        }
-    }
-
-    @SuppressWarnings("NullableProblems")
-    public void setMediatorNodeAddress(NodeAddress mediatorNodeAddress) {
-        this.mediatorNodeAddress = mediatorNodeAddress;
-        if (processModel.getUser() != null) {
-            Mediator mediator = processModel.getUser().getAcceptedMediatorByAddress(mediatorNodeAddress);
-            checkNotNull(mediator, "mediator must not be null");
-            mediatorPubKeyRing = mediator.getPubKeyRing();
-            persist();
-        }
     }
 
 
@@ -845,6 +855,10 @@ public abstract class Trade implements Tradable, Model {
 
     public ReadOnlyObjectProperty<DisputeState> disputeStateProperty() {
         return disputeStateProperty;
+    }
+
+    public ReadOnlyObjectProperty<MediationResultState> mediationResultStateProperty() {
+        return mediationResultStateProperty;
     }
 
     public ReadOnlyObjectProperty<TradePeriodState> tradePeriodStateProperty() {
@@ -1012,7 +1026,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     decryptedMessageWithPubKeySet=" + decryptedMessageWithPubKeySet +
                 ",\n     arbitratorPubKeyRing=" + arbitratorPubKeyRing +
                 ",\n     mediatorPubKeyRing=" + mediatorPubKeyRing +
-                ",\n     communicationMessages=" + communicationMessages +
+                ",\n     chatMessages=" + chatMessages +
                 "\n}";
     }
 }

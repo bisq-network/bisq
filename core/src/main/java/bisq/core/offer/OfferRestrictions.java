@@ -20,9 +20,25 @@ package bisq.core.offer;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
+import bisq.common.util.Utilities;
+
 import org.bitcoinj.core.Coin;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Map;
+
 public class OfferRestrictions {
+    // The date when traders who have not updated cannot take offers from updated clients and their offers become
+    // invisible for updated clients.
+    private static final Date REQUIRE_UPDATE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1);
+
+    static boolean requiresUpdate() {
+        return new Date().after(REQUIRE_UPDATE_DATE);
+    }
+
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
 
     public static boolean isOfferRisky(Offer offer) {
@@ -53,7 +69,17 @@ public class OfferRestrictions {
         return isAmountRisky(offer.getMinAmount());
     }
 
-    public static boolean isAmountRisky(Coin amount) {
+    private static boolean isAmountRisky(Coin amount) {
         return amount.isGreaterThan(TOLERATED_SMALL_TRADE_AMOUNT);
+    }
+
+    static boolean hasOfferMandatoryCapability(Offer offer, Capability mandatoryCapability) {
+        Map<String, String> extraDataMap = offer.getOfferPayload().getExtraDataMap();
+        if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.CAPABILITIES)) {
+            String commaSeparatedOrdinals = extraDataMap.get(OfferPayload.CAPABILITIES);
+            Capabilities capabilities = Capabilities.fromStringList(commaSeparatedOrdinals);
+            return Capabilities.hasMandatoryCapability(capabilities, mandatoryCapability);
+        }
+        return false;
     }
 }

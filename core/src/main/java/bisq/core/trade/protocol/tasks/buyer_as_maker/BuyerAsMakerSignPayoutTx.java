@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.tasks.buyer_as_maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -34,11 +35,12 @@ import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerAsMakerSignPayoutTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public BuyerAsMakerSignPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -49,12 +51,13 @@ public class BuyerAsMakerSignPayoutTx extends TradeTask {
             runInterceptHook();
             Preconditions.checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
             Preconditions.checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+            Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            Coin buyerPayoutAmount = trade.getOffer().getBuyerSecurityDeposit().add(trade.getTradeAmount());
-            Coin sellerPayoutAmount = trade.getOffer().getSellerSecurityDeposit();
+            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
+            Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
 
             String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(id,
                     AddressEntry.Context.TRADE_PAYOUT).getAddressString();

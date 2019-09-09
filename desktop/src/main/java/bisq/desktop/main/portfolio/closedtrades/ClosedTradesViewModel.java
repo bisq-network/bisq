@@ -109,7 +109,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (tradable.getOffer() != null)
             return formatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
         else
-        	return "";
+            return "";
     }
 
     String getSellerSecurityDeposit(ClosedTradableListItem item) {
@@ -119,7 +119,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (tradable.getOffer() != null)
             return formatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
         else
-        	return "";
+            return "";
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
@@ -146,9 +146,11 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     return Res.get("portfolio.closed.completed");
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
                     return Res.get("portfolio.closed.ticketClosed");
+                } else if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
+                    return Res.get("portfolio.closed.mediationTicketClosed");
                 } else {
-                    log.error("That must not happen. We got a pending state but we are in the closed trades list.");
-                    return trade.getState().toString();
+                    log.error("That must not happen. We got a pending state but we are in the closed trades list. state={}", trade.getState().toString());
+                    return Res.get("shared.na");
                 }
             } else if (item.getTradable() instanceof OpenOffer) {
                 OpenOffer.State state = ((OpenOffer) item.getTradable()).getState();

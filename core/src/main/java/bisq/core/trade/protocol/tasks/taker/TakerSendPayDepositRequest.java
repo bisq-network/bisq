@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakerSendPayDepositRequest extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public TakerSendPayDepositRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -72,7 +72,6 @@ public class TakerSendPayDepositRequest extends TradeTask {
             AddressEntry addressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] takerMultiSigPubKey = addressEntry.getPubKey();
             processModel.setMyMultiSigPubKey(takerMultiSigPubKey);
-
 
             checkArgument(walletService.getAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).isPresent(),
                     "TRADE_PAYOUT addressEntry must have been already set here.");

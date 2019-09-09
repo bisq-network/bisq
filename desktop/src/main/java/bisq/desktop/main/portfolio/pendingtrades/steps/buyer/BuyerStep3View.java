@@ -28,7 +28,6 @@ import bisq.core.network.MessageState;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
-import javafx.scene.paint.Paint;
 
 import javafx.beans.value.ChangeListener;
 
@@ -129,12 +128,11 @@ public class BuyerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setInformationHeadline();
+    protected String getFistHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_buyer.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_buyer.warn.part1b");
-        return Res.get("portfolio.pending.step3_buyer.warn.part2", substitute, model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step3_buyer.warn.part2", substitute);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +140,7 @@ public class BuyerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step3_buyer.openForDispute");
     }
 

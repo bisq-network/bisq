@@ -155,7 +155,9 @@ public final class PayDepositRequest extends TradeMessage {
         return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
     }
 
-    public static PayDepositRequest fromProto(protobuf.PayDepositRequest proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static PayDepositRequest fromProto(protobuf.PayDepositRequest proto,
+                                              CoreProtoResolver coreProtoResolver,
+                                              int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))

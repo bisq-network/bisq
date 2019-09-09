@@ -131,7 +131,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookViewModel(User user,
                               OpenOfferManager openOfferManager,
@@ -322,8 +321,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         return allTradeCurrencies;
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
     TradeCurrency getSelectedTradeCurrency() {
@@ -478,6 +477,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -502,10 +502,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    boolean hasPaymentAccount() {
-        return user.currentPaymentAccountProperty().get() != null;
-    }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
         return user.getPaymentAccounts() != null &&
@@ -534,9 +530,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                         PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
     }
 
-    boolean hasAcceptedArbitrators() {
-        return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
+    boolean canCreateOrTakeOffer() {
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+                GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Filters

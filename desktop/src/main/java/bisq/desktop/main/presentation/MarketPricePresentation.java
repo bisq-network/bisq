@@ -19,7 +19,7 @@ package bisq.desktop.main.presentation;
 
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
-import bisq.desktop.main.PriceFeedComboBoxItem;
+import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
@@ -87,7 +87,6 @@ public class MarketPricePresentation {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public MarketPricePresentation(BtcWalletService btcWalletService,
                                    PriceFeedService priceFeedService,

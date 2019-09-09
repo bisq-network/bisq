@@ -47,9 +47,17 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              Coin takeOfferFee,
                              boolean isCurrencyForTakerFeeBtc,
                              @Nullable NodeAddress arbitratorNodeAddress,
+                             @Nullable NodeAddress mediatorNodeAddress,
                              Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                txFee,
+                takeOfferFee,
+                isCurrencyForTakerFeeBtc,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                storage,
+                btcWalletService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +83,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 Coin.valueOf(proto.getTakerFeeAsLong()),
                 proto.getIsCurrencyForTakerFeeBtc(),
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
                 storage,
                 btcWalletService);
 
@@ -98,7 +107,9 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     }
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker, ErrorMessageHandler errorMessageHandler) {
+    public void handleTakeOfferRequest(TradeMessage message,
+                                       NodeAddress taker,
+                                       ErrorMessageHandler errorMessageHandler) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker, errorMessageHandler);
     }
 }

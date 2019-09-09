@@ -38,6 +38,7 @@ import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.Capabilities;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
@@ -116,7 +117,9 @@ public class OfferUtil {
      * @param amount
      * @return
      */
-    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+    public static boolean isCurrencyForMakerFeeBtc(Preferences preferences,
+                                                   BsqWalletService bsqWalletService,
+                                                   Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForMakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -152,7 +155,9 @@ public class OfferUtil {
         }
     }
 
-    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences, BsqWalletService bsqWalletService, Coin amount) {
+    public static boolean isCurrencyForTakerFeeBtc(Preferences preferences,
+                                                   BsqWalletService bsqWalletService,
+                                                   Coin amount) {
         boolean payFeeInBtc = preferences.getPayFeeInBtc();
         boolean bsqForFeeAvailable = isBsqForTakerFeeAvailable(bsqWalletService, amount);
         return payFeeInBtc || !bsqForFeeAvailable;
@@ -317,7 +322,9 @@ public class OfferUtil {
         }
     }
 
-    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
+    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin,
+                                              Optional<Volume> optionalFeeInFiat,
+                                              BSFormatter formatter) {
         String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         String feeInFiatAsString;
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
@@ -333,27 +340,24 @@ public class OfferUtil {
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
                                                       String currencyCode) {
-        Map<String, String> extraDataMap = null;
+        Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            extraDataMap = new HashMap<>();
-            final String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
+            String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());
             extraDataMap.put(OfferPayload.ACCOUNT_AGE_WITNESS_HASH, myWitnessHashAsHex);
         }
 
         if (referralIdService.getOptionalReferralId().isPresent()) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
             extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
         }
 
         if (paymentAccount instanceof F2FAccount) {
-            if (extraDataMap == null)
-                extraDataMap = new HashMap<>();
             extraDataMap.put(OfferPayload.F2F_CITY, ((F2FAccount) paymentAccount).getCity());
             extraDataMap.put(OfferPayload.F2F_EXTRA_INFO, ((F2FAccount) paymentAccount).getExtraInfo());
         }
 
-        return extraDataMap;
+        extraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+        return extraDataMap.isEmpty() ? null : extraDataMap;
     }
 
     public static void validateOfferData(FilterManager filterManager,

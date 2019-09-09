@@ -21,7 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -70,6 +70,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final BSFormatter formatter;
     private final User user;
     private final KeyRing keyRing;
+    private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
     private Price tradePrice;
@@ -88,6 +89,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.formatter = formatter;
         this.user = user;
         this.keyRing = keyRing;
+        this.navigation = navigation;
         type = Type.Confirmation;
     }
 
@@ -293,7 +295,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             textArea.setEditable(false);
         }
 
-        rows = 4;
+        rows = 3;
         if (countryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxId() != null)
@@ -321,8 +323,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
                     CountryUtil.getNameAndCode(countryCode));
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
-                formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
@@ -391,20 +391,17 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         placeOfferTuple.forth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
-            if (user.getAcceptedArbitrators() != null &&
-                    user.getAcceptedArbitrators().size() > 0) {
+            if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();
                 if (isPlaceOffer) {
                     spinnerInfoLabel.setText(Res.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
-                    placeOfferHandlerOptional.get().run();
+                    placeOfferHandlerOptional.ifPresent(Runnable::run);
                 } else {
                     spinnerInfoLabel.setText(Res.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
-                    takeOfferHandlerOptional.get().run();
+                    takeOfferHandlerOptional.ifPresent(Runnable::run);
                 }
-            } else {
-                new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             }
         });
     }

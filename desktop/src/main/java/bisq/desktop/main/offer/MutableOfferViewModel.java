@@ -34,7 +34,6 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
-import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -53,8 +52,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
-
-import bisq.network.p2p.P2PService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -86,8 +83,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private final BtcValidator btcValidator;
     private final BsqValidator bsqValidator;
     protected final SecurityDepositValidator securityDepositValidator;
-    private final P2PService p2PService;
-    private final WalletsSetup walletsSetup;
     private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final Preferences preferences;
@@ -187,8 +182,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                  BtcValidator btcValidator,
                                  BsqValidator bsqValidator,
                                  SecurityDepositValidator securityDepositValidator,
-                                 P2PService p2PService,
-                                 WalletsSetup walletsSetup,
                                  PriceFeedService priceFeedService,
                                  Navigation navigation,
                                  Preferences preferences,
@@ -202,8 +195,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         this.btcValidator = btcValidator;
         this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
-        this.p2PService = p2PService;
-        this.walletsSetup = walletsSetup;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.preferences = preferences;
@@ -223,8 +214,8 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public void activate() {
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
-                amount.set("1");
-                price.set("0.03");
+                amount.set("0.001");
+                price.set("75000"); // for CNY
                 minAmount.set(amount.get());
                 onFocusOutPriceAsPercentageTextField(true, false);
                 applyMakerFee();
@@ -1040,21 +1031,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return offer;
     }
 
-    boolean hasAcceptedArbitrators() {
-        return dataModel.hasAcceptedArbitrators();
-    }
-
-    boolean isReadyForTxBroadcast() {
-        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
-    }
-
-    void showNotReadyForTxBroadcastPopups() {
-        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-    }
-
     public M getDataModel() {
         return dataModel;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

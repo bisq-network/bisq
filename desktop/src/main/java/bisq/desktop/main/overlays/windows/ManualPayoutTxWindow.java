@@ -171,7 +171,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             }
         };
         onAction(() -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 try {
                     tradeWalletService.emergencySignAndPublishPayoutTx(depositTxHex.getText(),
                             Coin.parseCoin(buyerPayoutAmount.getText()),
@@ -194,8 +194,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                     e.printStackTrace();
                     UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
                 }
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

@@ -18,10 +18,16 @@
 package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
+import bisq.core.offer.Offer;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.user.User;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -38,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MakerProcessPayDepositRequest extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public MakerProcessPayDepositRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -72,16 +78,34 @@ public class MakerProcessPayDepositRequest extends TradeTask {
                 failed("acceptedArbitratorNodeAddresses must not be empty");
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
-            tradingPeer.setAccountAgeWitnessNonce(trade.getOffer().getId().getBytes(Charsets.UTF_8));
+            tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
             tradingPeer.setAccountAgeWitnessSignature(payDepositRequest.getAccountAgeWitnessSignatureOfOfferId());
             tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
 
-            trade.setArbitratorNodeAddress(checkNotNull(payDepositRequest.getArbitratorNodeAddress()));
-            trade.setMediatorNodeAddress(checkNotNull(payDepositRequest.getMediatorNodeAddress()));
+            User user = checkNotNull(processModel.getUser(), "User must not be null");
 
+            NodeAddress arbitratorNodeAddress = checkNotNull(payDepositRequest.getArbitratorNodeAddress(),
+                    "payDepositRequest.getArbitratorNodeAddress() must not be null");
+            trade.setArbitratorNodeAddress(arbitratorNodeAddress);
+            Arbitrator arbitrator = checkNotNull(user.getAcceptedArbitratorByAddress(arbitratorNodeAddress),
+                    "user.getAcceptedArbitratorByAddress(arbitratorNodeAddress) must not be null");
+            trade.setArbitratorBtcPubKey(checkNotNull(arbitrator.getBtcPubKey(),
+                    "arbitrator.getBtcPubKey() must not be null"));
+            trade.setArbitratorPubKeyRing(checkNotNull(arbitrator.getPubKeyRing(),
+                    "arbitrator.getPubKeyRing() must not be null"));
+
+            NodeAddress mediatorNodeAddress = checkNotNull(payDepositRequest.getMediatorNodeAddress(),
+                    "payDepositRequest.getMediatorNodeAddress() must not be null");
+            trade.setMediatorNodeAddress(mediatorNodeAddress);
+            Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
+                    "user.getAcceptedArbitratorByAddress(arbitratorNodeAddress) must not be null");
+            trade.setMediatorPubKeyRing(checkNotNull(mediator.getPubKeyRing(),
+                    "mediator.getPubKeyRing() must not be null"));
+
+            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             try {
                 long takersTradePrice = payDepositRequest.getTradePrice();
-                trade.getOffer().checkTradePriceTolerance(takersTradePrice);
+                offer.checkTradePriceTolerance(takersTradePrice);
                 trade.setTradePrice(takersTradePrice);
             } catch (TradePriceOutOfToleranceException e) {
                 failed(e.getMessage());
@@ -93,6 +117,8 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             trade.setTradeAmount(Coin.valueOf(payDepositRequest.getTradeAmount()));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+
+            trade.persist();
 
             processModel.removeMailboxMessageAfterProcessing(trade);
 
