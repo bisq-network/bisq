@@ -1992,10 +1992,12 @@ textfield */
 
 .price-trend-up {
     -fx-text-fill: -bs-color-primary;
+    -fx-padding: 2 0 0 0;
 }
 
 .price-trend-down {
     -fx-text-fill: -bs-red;
+    -fx-padding: 2 0 0 0;
 }
 
 /********************************************************************************************************************

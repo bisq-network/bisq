@@ -148,7 +148,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private void createKPIs() {
 
-        Tuple3<Label, Label, VBox> marketPriceBox = addLabelWithSubText(root, gridRow++, "0.004000 BSQ/BTC", "Latest BSQ/BTC trade price (in Bisq)");
+        Tuple3<Label, Label, VBox> marketPriceBox = addLabelWithSubText(root, gridRow++, "", "");
         marketPriceLabel = marketPriceBox.first;
         marketPriceLabel.getStyleClass().add("dao-kpi-big");
 
@@ -158,7 +158,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
                 Res.get("dao.factsAndFigures.dashboard.avgPrice90")).second;
 
         avgPrice30TextField = addTopLabelTextFieldWithIcon(root, gridRow, 1,
-                Res.get("dao.factsAndFigures.dashboard.avgPrice30"), 0).second;
+                Res.get("dao.factsAndFigures.dashboard.avgPrice30"), -15).second;
         AnchorPane.setRightAnchor(avgPrice30TextField.getIconLabel(), 10d);
 
         marketCapTextField = addTopLabelReadOnlyTextField(root, ++gridRow,
