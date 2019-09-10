@@ -17,9 +17,7 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.core.util.validation.InputValidator;
-
-public final class HalCashValidator extends InputValidator {
+public final class HalCashValidator extends PhoneNumberValidator {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
@@ -27,7 +25,6 @@ public final class HalCashValidator extends InputValidator {
 
     @Override
     public ValidationResult validate(String input) {
-        // TODO
         return super.validate(input);
     }
 

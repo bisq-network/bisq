@@ -836,6 +836,7 @@ message CountryBasedPaymentAccountPayload {
         WesternUnionAccountPayload western_union_account_payload = 5;
         SepaInstantAccountPayload sepa_instant_account_payload = 6;
         F2FAccountPayload f2f_account_payload = 7;
+        HalCashAccountPayload hal_cash_account_payload = 8;
     }
 }
 
@@ -888,6 +889,7 @@ message MoneyGramAccountPayload {
 
 message HalCashAccountPayload {
     string mobile_nr = 1;
+    repeated string accepted_country_codes = 2;
 }
 
 message WesternUnionAccountPayload {

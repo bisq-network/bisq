@@ -34,6 +34,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CountryUtil {
+    public static List<Country> getAllHalCashCountries() {
+        List<Country> list = new ArrayList<>();
+        String[] codes = {"ES", "PL"};
+        populateCountryListByCodes(list, codes);
+        list.sort((a, b) -> a.name.compareTo(b.name));
+        return list;
+    }
+
     public static List<Country> getAllSepaEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"AT", "BE", "CY", "DE", "EE", "FI", "FR", "GR", "IE",

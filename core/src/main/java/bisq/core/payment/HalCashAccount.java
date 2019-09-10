@@ -17,15 +17,18 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.CountryUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class HalCashAccount extends PaymentAccount {
+public final class HalCashAccount extends CountryBasedPaymentAccount {
     public HalCashAccount() {
         super(PaymentMethod.HAL_CASH);
         setSingleTradeCurrency(new FiatCurrency("EUR"));
@@ -33,14 +36,26 @@ public final class HalCashAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new HalCashAccountPayload(paymentMethod.getId(), id);
+        return new HalCashAccountPayload(paymentMethod.getId(), id, CountryUtil.getAllHalCashCountries());
     }
 
-    public void setMobileNr(String mobileNr) {
-        ((HalCashAccountPayload) paymentAccountPayload).setMobileNr(mobileNr);
+    public List<String> getAcceptedCountryCodes() {
+        return ((HalCashAccountPayload) paymentAccountPayload).getAcceptedCountryCodes();
+    }
+
+    public void addAcceptedCountry(String countryCode) {
+        ((HalCashAccountPayload) paymentAccountPayload).addAcceptedCountry(countryCode);
+    }
+
+    public void removeAcceptedCountry(String countryCode) {
+        ((HalCashAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
     }
 
     public String getMobileNr() {
         return ((HalCashAccountPayload) paymentAccountPayload).getMobileNr();
+    }
+
+    public void setMobileNr(String mobileNr) {
+        ((HalCashAccountPayload) paymentAccountPayload).setMobileNr(mobileNr);
     }
 }
