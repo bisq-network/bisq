@@ -25,6 +25,7 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.dao.governance.result.VoteListItem;
 import bisq.desktop.main.overlays.TabbedOverlay;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -34,7 +35,6 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple2;
@@ -241,7 +241,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(BSFormatter.formatDateTime(item.getBlindVoteDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getBlindVoteDate()));
                                 } else {
                                     setText("");
                                 }

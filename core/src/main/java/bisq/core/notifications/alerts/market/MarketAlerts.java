@@ -181,7 +181,7 @@ public class MarketAlerts {
                             String msg = Res.get("account.notifications.marketAlert.message.msg",
                                     direction,
                                     BSFormatter.getCurrencyPair(currencyCode),
-                                    formatter.formatPrice(offerPrice),
+                                    BSFormatter.formatPrice(offerPrice),
                                     BSFormatter.formatToPercentWithSymbol(ratio / 10000d),
                                     marketDir,
                                     Res.get(offer.getPaymentMethod().getId()),

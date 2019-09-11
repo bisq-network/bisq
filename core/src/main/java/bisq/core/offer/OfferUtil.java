@@ -306,17 +306,6 @@ public class OfferUtil {
         }
     }
 
-    public static String getFeeWithFiatAmount(Coin makerFeeAsCoin, Optional<Volume> optionalFeeInFiat, BSFormatter formatter) {
-        String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
-        String feeInFiatAsString;
-        if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {
-            feeInFiatAsString = formatter.formatVolumeWithCode(optionalFeeInFiat.get());
-        } else {
-            feeInFiatAsString = Res.get("shared.na");
-        }
-        return Res.get("feeOptionWindow.fee", fee, feeInFiatAsString);
-    }
-
 
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,

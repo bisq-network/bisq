@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -170,49 +171,49 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         double firstRowDistance = Layout.TWICE_FIRST_ROW_DISTANCE;
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    BSFormatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
+                    DisplayUtils.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    BSFormatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
+                    DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
         } else {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    BSFormatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
+                    DisplayUtils.getDirectionBothSides(direction, currencyCode), firstRowDistance);
         }
         String btcAmount = Res.get("shared.btcAmount");
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(tradeAmount));
-            addConfirmationLabelLabel(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
-                    formatter.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
+            addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
+                    DisplayUtils.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
             addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(offer.getAmount()));
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
                     formatter.formatCoinWithCode(offer.getMinAmount()));
-            String volume = formatter.formatVolumeWithCode(offer.getVolume());
+            String volume = DisplayUtils.formatVolumeWithCode(offer.getVolume());
             String minVolume = "";
             if (offer.getVolume() != null && offer.getMinVolume() != null &&
                     !offer.getVolume().equals(offer.getMinVolume()))
-                minVolume = " " + Res.get("offerDetailsWindow.min", formatter.formatVolumeWithCode(offer.getMinVolume()));
+                minVolume = " " + Res.get("offerDetailsWindow.min", DisplayUtils.formatVolumeWithCode(offer.getMinVolume()));
             addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
+                    DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
         }
 
         String priceLabel = Res.get("shared.price");
         if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(tradePrice));
+            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(tradePrice));
         } else {
             Price price = offer.getPrice();
             if (offer.isUseMarketBasedPrice()) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
                         BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin())));
             } else {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price));
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
@@ -307,7 +308,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
                 offer.getMakerNodeAddress().getFullAddress());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
-                BSFormatter.formatDateTime(offer.getDate()));
+                DisplayUtils.formatDateTime(offer.getDate()));
         String value = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +

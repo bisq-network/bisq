@@ -30,6 +30,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.dao.governance.PhasesView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SelectProposalWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
@@ -718,7 +719,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(BSFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getProposal().getCreationDateAsDate()));
                                 else
                                     setText("");
                             }

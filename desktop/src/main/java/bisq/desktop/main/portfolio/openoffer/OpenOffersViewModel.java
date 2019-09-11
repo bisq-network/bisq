@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.openoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
@@ -71,7 +72,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getAmount(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatAmount(item.getOffer()) : "";
+        return (item != null) ? DisplayUtils.formatAmount(item.getOffer(), formatter) : "";
     }
 
     String getPrice(OpenOfferListItem item) {
@@ -84,21 +85,21 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
             String postFix = "";
             if (offer.isUseMarketBasedPrice())
                 postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            return formatter.formatPrice(price) + postFix;
+            return BSFormatter.formatPrice(price) + postFix;
         } else {
             return Res.get("shared.na");
         }
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
+        return (item != null) ? DisplayUtils.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {
         if ((item == null))
             return "";
 
-        return BSFormatter.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
+        return DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
     }
 
     String getMarketLabel(OpenOfferListItem item) {
@@ -109,7 +110,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getDate(OpenOfferListItem item) {
-        return BSFormatter.formatDateTime(item.getOffer().getDate());
+        return DisplayUtils.formatDateTime(item.getOffer().getDate());
     }
 
     boolean isDeactivated(OpenOfferListItem item) {

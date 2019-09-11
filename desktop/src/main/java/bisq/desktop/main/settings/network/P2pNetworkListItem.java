@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.settings.network;
 
+import bisq.desktop.util.DisplayUtils;
+
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 
@@ -118,7 +120,7 @@ public class P2pNetworkListItem {
     }
 
     public String getCreationDate() {
-        return BSFormatter.formatDateTime(statistic.getCreationDate());
+        return DisplayUtils.formatDateTime(statistic.getCreationDate());
     }
 
     public String getOnionAddress() {

@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -233,7 +234,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getDateForOpenDispute() {
-        return BSFormatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
+        return DisplayUtils.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
     }
 
     public boolean showWarning() {
@@ -278,7 +279,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getFiatVolume() {
-        return dataModel.getTrade() != null ? btcFormatter.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
+        return dataModel.getTrade() != null ? DisplayUtils.formatVolumeWithCode(dataModel.getTrade().getTradeVolume()) : "";
     }
 
     public String getTxFee() {

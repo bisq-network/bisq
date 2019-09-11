@@ -17,9 +17,10 @@
 
 package bisq.desktop.main.dao.burnbsq.proofofburn;
 
+import bisq.desktop.util.DisplayUtils;
+
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.state.model.blockchain.Tx;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Utilities;
@@ -47,6 +48,6 @@ class ProofOfBurnListItem {
         hashAsHex = Utilities.bytesAsHexString(proofOfBurnService.getHashFromOpReturnData(tx));
         pubKey = Utilities.bytesAsHexString(proofOfBurnService.getPubKey(txId));
         date = new Date(tx.getTime());
-        dateAsString = BSFormatter.formatDateTime(date);
+        dateAsString = DisplayUtils.formatDateTime(date);
     }
 }

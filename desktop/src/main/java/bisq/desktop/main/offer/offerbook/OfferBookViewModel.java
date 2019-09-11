@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -341,7 +342,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private String formatAmount(Offer offer, boolean decimalAligned) {
-        return formatter.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get());
+        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), formatter);
     }
 
 
@@ -363,7 +364,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
-        return formatter.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
+        return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
     }
 
     private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
@@ -390,7 +391,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (offerVolume != null && minOfferVolume != null) {
             String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
             decimalAligned = decimalAligned && !showAllTradeCurrenciesProperty.get();
-            return formatter.formatVolume(offer, decimalAligned, maxPlacesForVolume.get()) + postFix;
+            return DisplayUtils.formatVolume(offer, decimalAligned, maxPlacesForVolume.get()) + postFix;
         } else {
             return Res.get("shared.na");
         }

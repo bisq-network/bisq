@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
@@ -38,7 +39,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.Timer;
@@ -368,7 +368,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(BSFormatter.formatDateTime(item.getDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getDate()));
                                 } else {
                                     setText("");
                                 }
@@ -631,7 +631,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = BSFormatter.formatDateTime(new Date(blockTime));
+                                                String formattedDate = DisplayUtils.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuanceFromCompReq.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;
@@ -645,7 +645,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = BSFormatter.formatDateTime(new Date(blockTime));
+                                                String formattedDate = DisplayUtils.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuanceFromReimbursement.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;

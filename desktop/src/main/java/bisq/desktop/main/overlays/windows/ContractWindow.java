@@ -20,6 +20,7 @@ package bisq.desktop.main.overlays.windows;
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -133,16 +134,16 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
-                BSFormatter.formatDateTime(offer.getDate()) + " / " + BSFormatter.formatDateTime(dispute.getTradeDate()));
+                DisplayUtils.formatDateTime(offer.getDate()) + " / " + DisplayUtils.formatDateTime(dispute.getTradeDate()));
         String currencyCode = offer.getCurrencyCode();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.offerType"),
-                BSFormatter.getDirectionBothSides(offer.getDirection(), currencyCode));
+                DisplayUtils.getDirectionBothSides(offer.getDirection(), currencyCode));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                formatter.formatPrice(contract.getTradePrice()));
+                BSFormatter.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, BSFormatter.formatVolumeLabel(currencyCode, ":"),
-                formatter.formatVolumeWithCode(contract.getTradeVolume()));
+        addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode, ":"),
+                DisplayUtils.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
@@ -261,7 +262,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     private String getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing, String currencyCode) {
         long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
         return CurrencyUtil.isFiatCurrency(currencyCode) ?
-                age > -1 ? Res.get("peerInfoIcon.tooltip.age", BSFormatter.formatAccountAge(age)) :
+                age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
     }

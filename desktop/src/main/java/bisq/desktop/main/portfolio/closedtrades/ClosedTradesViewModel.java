@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
@@ -68,14 +69,14 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatPrice(((Trade) tradable).getTradePrice());
+            return BSFormatter.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return formatter.formatPrice(tradable.getOffer().getPrice());
+            return BSFormatter.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
-            return formatter.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
+            return DisplayUtils.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
         else if (item != null && item.getTradable() instanceof OpenOffer)
             return "-";
         else
@@ -123,11 +124,11 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
-        return (item != null) ? BSFormatter.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
+        return (item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
     }
 
     String getDate(ClosedTradableListItem item) {
-        return BSFormatter.formatDateTime(item.getTradable().getDate());
+        return DisplayUtils.formatDateTime(item.getTradable().getDate());
     }
 
     String getMarketLabel(ClosedTradableListItem item) {

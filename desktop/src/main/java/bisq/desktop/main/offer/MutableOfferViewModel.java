@@ -25,6 +25,7 @@ import bisq.desktop.main.funds.deposit.DepositView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
@@ -441,7 +442,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         priceListener = (ov, oldValue, newValue) -> {
             ignorePriceStringListener = true;
             if (newValue != null)
-                price.set(btcFormatter.formatPrice(newValue));
+                price.set(BSFormatter.formatPrice(newValue));
             else
                 price.set("");
 
@@ -451,7 +452,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         volumeListener = (ov, oldValue, newValue) -> {
             ignoreVolumeStringListener = true;
             if (newValue != null)
-                volume.set(btcFormatter.formatVolume(newValue));
+                volume.set(DisplayUtils.formatVolume(newValue));
             else
                 volume.set("");
 
@@ -492,7 +493,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             Coin makerFeeInBtc = dataModel.getMakerFeeInBtc();
             Optional<Volume> optionalBtcFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBtc,
                     true, preferences, priceFeedService, bsqFormatter);
-            String btcFeeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
+            String btcFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBtc, optionalBtcFeeInFiat, btcFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBtcWithFiat.set(btcFeeWithFiatAmount);
             } else {
@@ -502,14 +503,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             Coin makerFeeInBsq = dataModel.getMakerFeeInBsq();
             Optional<Volume> optionalBsqFeeInFiat = OfferUtil.getFeeInUserFiatCurrency(makerFeeInBsq,
                     false, preferences, priceFeedService, bsqFormatter);
-            String bsqFeeWithFiatAmount = OfferUtil.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
+            String bsqFeeWithFiatAmount = DisplayUtils.getFeeWithFiatAmount(makerFeeInBsq, optionalBsqFeeInFiat, bsqFormatter);
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBsqWithFiat.set(bsqFeeWithFiatAmount);
             } else {
                 // Before DAO is enabled we show fee as fiat and % in second line
                 String feeInFiatAsString;
                 if (optionalBtcFeeInFiat != null && optionalBtcFeeInFiat.isPresent()) {
-                    feeInFiatAsString = btcFormatter.formatVolumeWithCode(optionalBtcFeeInFiat.get());
+                    feeInFiatAsString = DisplayUtils.formatVolumeWithCode(optionalBtcFeeInFiat.get());
                 } else {
                     feeInFiatAsString = Res.get("shared.na");
                 }
@@ -757,7 +758,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
                 if (dataModel.getMinVolume().get() != null) {
                     InputValidator.ValidationResult minVolumeResult = isVolumeInputValid(
-                            btcFormatter.formatVolume(dataModel.getMinVolume().get()));
+                            DisplayUtils.formatVolume(dataModel.getMinVolume().get()));
 
                     volumeValidationResult.set(minVolumeResult);
 
@@ -788,7 +789,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 setPriceToModel();
                 ignorePriceStringListener = true;
                 if (dataModel.getPrice().get() != null)
-                    price.set(btcFormatter.formatPrice(dataModel.getPrice().get()));
+                    price.set(BSFormatter.formatPrice(dataModel.getPrice().get()));
                 ignorePriceStringListener = false;
                 dataModel.calculateVolume();
                 dataModel.calculateAmount();
@@ -836,7 +837,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
                         volume = OfferUtil.getRoundedFiatVolume(volume);
 
-                    this.volume.set(btcFormatter.formatVolume(volume));
+                    this.volume.set(DisplayUtils.formatVolume(volume));
                 }
 
                 ignoreVolumeStringListener = false;
@@ -1062,7 +1063,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private void setAmountToModel() {
         if (amount.get() != null && !amount.get().isEmpty()) {
-            Coin amount = btcFormatter.parseToCoinWith4Decimals(this.amount.get());
+            Coin amount = DisplayUtils.parseToCoinWith4Decimals(this.amount.get(), btcFormatter);
 
             long maxTradeLimit = dataModel.getMaxTradeLimit();
             Price price = dataModel.getPrice().get();
@@ -1086,7 +1087,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private void setMinAmountToModel() {
         if (minAmount.get() != null && !minAmount.get().isEmpty()) {
-            Coin minAmount = btcFormatter.parseToCoinWith4Decimals(this.minAmount.get());
+            Coin minAmount = DisplayUtils.parseToCoinWith4Decimals(this.minAmount.get(), btcFormatter);
 
             Price price = dataModel.getPrice().get();
             long maxTradeLimit = dataModel.getMaxTradeLimit();
@@ -1188,7 +1189,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 dataModel.getPrice().get() != null &&
                 dataModel.getPrice().get().getValue() != 0 &&
                 isVolumeInputValid(volume.get()).isValid &&
-                isVolumeInputValid(btcFormatter.formatVolume(dataModel.getMinVolume().get())).isValid &&
+                isVolumeInputValid(DisplayUtils.formatVolume(dataModel.getMinVolume().get())).isValid &&
                 dataModel.isMinAmountLessOrEqualAmount();
 
         isNextButtonDisabled.set(!inputDataValid);
@@ -1207,4 +1208,5 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private BSFormatter getFormatterForMakerFee() {
         return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
+
 }

@@ -18,13 +18,13 @@
 package bisq.desktop.main.dao.bonding.roles;
 
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -98,6 +98,6 @@ class RoleDetailsWindow extends Overlay<RoleDetailsWindow> {
                 bondedRoleType.getLink(), bondedRoleType.getLink(), 0);
 
         FormBuilder.addTopLabelTextField(gridPane, ++rowIndex, Res.get("dao.bond.details.isSingleton"),
-                BSFormatter.booleanToYesNo(bondedRoleType.isAllowMultipleHolders()));
+                DisplayUtils.booleanToYesNo(bondedRoleType.isAllowMultipleHolders()));
     }
 }
