@@ -34,6 +34,7 @@ public class LanguageUtil {
             "el", // Greek
             "es", // Spanish
             "pt", // Portuguese
+            "pt_BR", // Brazilian Portuguese
             "zh", // Chinese
             "ru", // Russian
             "fr", // French
@@ -118,6 +119,8 @@ public class LanguageUtil {
             // Serbia
             // shows it in russian by default
             return "Srpski";
+        } else if (locale.getLanguage().equals("pt_br")) {
+            return "português (Brasil)";
         } else {
             return locale.getDisplayName(locale);
         }
