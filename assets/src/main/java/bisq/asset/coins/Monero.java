@@ -25,6 +25,6 @@ import bisq.asset.CryptoNoteAddressValidator;
 public class Monero extends Coin {
 
     public Monero() {
-        super("Monero", "XMR", new CryptoNoteAddressValidator(18, 42));
+        super("Monero", "XMR", new CryptoNoteAddressValidator(18, 19, 42));
     }
 }
