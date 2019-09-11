@@ -52,7 +52,6 @@ public class SendMediatedPayoutSignatureMessage extends TradeTask {
             Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
             PubKeyRing peersPubKeyRing = contract.getPeersPubKeyRing(pubKeyRing);
             NodeAddress peersNodeAddress = contract.getPeersNodeAddress(pubKeyRing);
-            log.error("sendBuyerSendPayoutSignatureMessage to peerAddress " + peersNodeAddress);
             P2PService p2PService = processModel.getP2PService();
             MediatedPayoutTxSignatureMessage message = new MediatedPayoutTxSignatureMessage(processModel.getMediatedPayoutTxSignature(),
                     trade.getId(),
