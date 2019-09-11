@@ -104,56 +104,11 @@ public class BSFormatter {
         return FormattingUtils.formatCoinWithCode(Coin.valueOf(value), monetaryFormat);
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // FIAT
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static Fiat parseToFiat(String input, String currencyCode) {
-        if (input != null && input.length() > 0) {
-            try {
-                return Fiat.parseFiat(currencyCode, ParsingUtils.cleanDoubleInput(input));
-            } catch (Exception e) {
-                log.warn("Exception at parseToFiat: " + e.toString());
-                return Fiat.valueOf(currencyCode, 0);
-            }
-
-        } else {
-            return Fiat.valueOf(currencyCode, 0);
-        }
-    }
-
-    /**
-     * Converts to a fiat with max. 2 decimal places. Last place gets rounded.
-     * 0.234 -> 0.23
-     * 0.235 -> 0.24
-     *
-     * @param input
-     * @return
-     */
-
-    public static Fiat parseToFiatWithPrecision(String input, String currencyCode) {
-        if (input != null && input.length() > 0) {
-            try {
-                return parseToFiat(new BigDecimal(ParsingUtils.cleanDoubleInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
-                        currencyCode);
-            } catch (Throwable t) {
-                log.warn("Exception at parseToFiatWithPrecision: " + t.toString());
-                return Fiat.valueOf(currencyCode, 0);
-            }
-
-        }
-        return Fiat.valueOf(currencyCode, 0);
-    }
-
     public static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
             return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
-    }
-
-    public static String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
-        return nodeAddresses.stream().map(NodeAddress::getFullAddress).collect(Collectors.joining(", "));
     }
 
     public static String getDateFromBlockHeight(long blockHeight) {
