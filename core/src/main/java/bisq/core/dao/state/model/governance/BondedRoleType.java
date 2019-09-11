@@ -53,7 +53,6 @@ public enum BondedRoleType {
 
     // operators
     WEBSITE_OPERATOR(50, 110, "https://bisq.network/roles/12", true),
-    ANALYTICS_OPERATOR(2, 110, "https://bisq.network/roles/88", true),
     FORUM_OPERATOR(50, 110, "https://bisq.network/roles/19", true),
     SEED_NODE_OPERATOR(20, 110, "https://bisq.network/roles/15", true),
     DATA_RELAY_NODE_OPERATOR(20, 110, "https://bisq.network/roles/14", true),
