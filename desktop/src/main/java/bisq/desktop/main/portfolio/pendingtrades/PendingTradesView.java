@@ -32,6 +32,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
@@ -124,7 +125,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private Map<String, Button> buttonByTrade = new HashMap<>();
     private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
     private Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
-    private TraderChatManager.DisputeStateListener disputeStateListener;
+    private ChangeListener<Trade.State> tradeStateListener;
+    private ChangeListener<Trade.DisputeState> disputeStateListener;
+    private ChangeListener<MediationResultState> mediationResultStateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -354,12 +357,30 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
         TradeChatSession tradeChatSession = new TradeChatSession(trade, isTaker);
 
-        disputeStateListener = tradeId -> {
-            if (trade.getId().equals(tradeId)) {
+        tradeStateListener = (observable, oldValue, newValue) -> {
+            if (trade.isPayoutPublished()) {
+                if (chatPopupStage.isShowing()) {
+                    chatPopupStage.hide();
+                }
+            }
+        };
+        trade.stateProperty().addListener(tradeStateListener);
+
+        disputeStateListener = (observable, oldValue, newValue) -> {
+            if (newValue == Trade.DisputeState.DISPUTE_CLOSED) {
                 chatPopupStage.hide();
             }
         };
-        traderChatManager.addDisputeStateListener(disputeStateListener);
+        trade.disputeStateProperty().addListener(disputeStateListener);
+
+        mediationResultStateListener = (observable, oldValue, newValue) -> {
+            if (newValue == MediationResultState.PAYOUT_TX_PUBLISHED ||
+                    newValue == MediationResultState.RECEIVED_PAYOUT_TX_PUBLISHED_MSG ||
+                    newValue == MediationResultState.PAYOUT_TX_SEEN_IN_NETWORK) {
+                chatPopupStage.hide();
+            }
+        };
+        trade.mediationResultStateProperty().addListener(mediationResultStateListener);
 
         chatView.display(tradeChatSession, pane.widthProperty());
 
@@ -386,9 +407,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             if (yPositionListener != null) {
                 chatPopupStage.xProperty().removeListener(yPositionListener);
             }
-            if (disputeStateListener != null) {
-                traderChatManager.removeDisputeStateListener(disputeStateListener);
-            }
+
+            trade.stateProperty().removeListener(tradeStateListener);
+            trade.disputeStateProperty().addListener(disputeStateListener);
+            trade.mediationResultStateProperty().addListener(mediationResultStateListener);
         });
 
         Scene scene = new Scene(pane);
