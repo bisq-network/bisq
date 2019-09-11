@@ -21,7 +21,6 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.Res;
 import bisq.core.support.SupportManager;
 import bisq.core.support.SupportType;
-import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
@@ -39,7 +38,6 @@ import javax.inject.Singleton;
 import javafx.collections.ObservableList;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -49,13 +47,6 @@ import lombok.extern.slf4j.Slf4j;
 public class TraderChatManager extends SupportManager {
     private final TradeManager tradeManager;
     private final PubKeyRing pubKeyRing;
-
-    public interface DisputeStateListener {
-        void onDisputeClosed(String tradeId);
-    }
-
-    // Needed to avoid ConcurrentModificationException as we remove a listener at the handler call
-    private List<DisputeStateListener> disputeStateListeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,23 +138,12 @@ public class TraderChatManager extends SupportManager {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addDisputeStateListener(TraderChatManager.DisputeStateListener disputeStateListener) {
-        disputeStateListeners.add(disputeStateListener);
-    }
-
-    public void removeDisputeStateListener(TraderChatManager.DisputeStateListener disputeStateListener) {
-        disputeStateListeners.remove(disputeStateListener);
-    }
-
     public void dispatchMessage(SupportMessage message) {
         if (canProcessMessage(message)) {
             log.info("Received {} with tradeId {} and uid {}",
                     message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
             if (message instanceof ChatMessage) {
                 onChatMessage((ChatMessage) message);
-            } else if (message instanceof DisputeResultMessage) {
-                // We notify about dispute closed state
-                disputeStateListeners.forEach(e -> e.onDisputeClosed(message.getTradeId()));
             } else {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }

@@ -668,7 +668,7 @@ public abstract class Trade implements Tradable, Model {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
-        log.debug("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
+        log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
             String message = "We got a state change to a previous phase.\n" +
                     "Old state is: " + this.state + ". New state is: " + state;
