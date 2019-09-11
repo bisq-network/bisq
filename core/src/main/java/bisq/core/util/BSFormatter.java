@@ -20,7 +20,6 @@ package bisq.core.util;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
-import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -64,8 +63,7 @@ import org.jetbrains.annotations.NotNull;
 public class BSFormatter {
     public final static String RANGE_SEPARATOR = " - ";
 
-    protected boolean useMilliBit;
-    protected int scale = 3;
+    protected final static int scale = 3;
 
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
@@ -76,10 +74,10 @@ public class BSFormatter {
 
     //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
-    protected final MonetaryFormat fiatPriceFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
-    protected final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
-    protected final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
-    protected final DecimalFormat decimalFormat = new DecimalFormat("#.#");
+    protected static final MonetaryFormat fiatPriceFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
+    protected static final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
+    protected static final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
+    protected static final DecimalFormat decimalFormat = new DecimalFormat("#.#");
 
 
     @Inject
@@ -109,7 +107,11 @@ public class BSFormatter {
         return formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits, coinFormat);
     }
 
-    public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits, MonetaryFormat coinFormat) {
+    public static String formatCoin(Coin coin,
+                                    int decimalPlaces,
+                                    boolean decimalAligned,
+                                    int maxNumberOfDigits,
+                                    MonetaryFormat coinFormat) {
         String formattedCoin = "";
 
         if (coin != null) {
@@ -139,11 +141,11 @@ public class BSFormatter {
         return formatCoinWithCode(Coin.valueOf(value), coinFormat);
     }
 
-    public String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
+    public static String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
         return formatCoinWithCode(Coin.valueOf(value), coinFormat);
     }
 
-    public String formatCoinWithCode(Coin coin, MonetaryFormat coinFormat) {
+    public static String formatCoinWithCode(Coin coin, MonetaryFormat coinFormat) {
         if (coin != null) {
             try {
                 // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and
@@ -213,7 +215,7 @@ public class BSFormatter {
     // FIAT
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatFiat(Fiat fiat, MonetaryFormat format, boolean appendCurrencyCode) {
+    private static String formatFiat(Fiat fiat, MonetaryFormat format, boolean appendCurrencyCode) {
         if (fiat != null) {
             try {
                 final String res = format.noCode().format(fiat).toString();
@@ -230,7 +232,7 @@ public class BSFormatter {
         }
     }
 
-    protected Fiat parseToFiat(String input, String currencyCode) {
+    protected static Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
                 return Fiat.parseFiat(currencyCode, cleanDoubleInput(input));
@@ -253,7 +255,7 @@ public class BSFormatter {
      * @return
      */
 
-    public Fiat parseToFiatWithPrecision(String input, String currencyCode) {
+    public static Fiat parseToFiatWithPrecision(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
                 return parseToFiat(new BigDecimal(cleanDoubleInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
@@ -267,24 +269,12 @@ public class BSFormatter {
         return Fiat.valueOf(currencyCode, 0);
     }
 
-    public boolean isFiatAlteredWhenPrecisionApplied(String input, String currencyCode) {
-        return parseToFiat(input, currencyCode).equals(parseToFiatWithPrecision(input, currencyCode));
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Altcoin
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatAltcoin(Altcoin altcoin) {
-        return formatAltcoin(altcoin, false);
-    }
-
-    public String formatAltcoinWithCode(Altcoin altcoin) {
-        return formatAltcoin(altcoin, true);
-    }
-
-    public String formatAltcoin(Altcoin altcoin, boolean appendCurrencyCode) {
+    private static String formatAltcoin(Altcoin altcoin, boolean appendCurrencyCode) {
         if (altcoin != null) {
             try {
                 String res = altcoinFormat.noCode().format(altcoin).toString();
@@ -320,7 +310,7 @@ public class BSFormatter {
     }
 
     @NotNull
-    public String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
+    public static String fillUpPlacesWithEmptyStrings(String formattedNumber, int maxNumberOfDigits) {
         //FIXME: temporary deactivate adding spaces in front of numbers as we don't use a monospace font right now.
         /*int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
         for (int i = 0; i < numberOfPlacesToFill; i++) {
@@ -337,7 +327,7 @@ public class BSFormatter {
         return formatVolume(volume, fiatVolumeFormat, true);
     }
 
-    public String formatVolume(Volume volume, MonetaryFormat fiatVolumeFormat, boolean appendCurrencyCode) {
+    private static String formatVolume(Volume volume, MonetaryFormat fiatVolumeFormat, boolean appendCurrencyCode) {
         if (volume != null) {
             Monetary monetary = volume.getMonetary();
             if (monetary instanceof Fiat)
@@ -349,7 +339,7 @@ public class BSFormatter {
         }
     }
 
-    public String formatAltcoinVolume(Altcoin altcoin, boolean appendCurrencyCode) {
+    private static String formatAltcoinVolume(Altcoin altcoin, boolean appendCurrencyCode) {
         if (altcoin != null) {
             try {
                 // TODO quick hack...
@@ -371,11 +361,11 @@ public class BSFormatter {
         }
     }
 
-    public String formatVolumeLabel(String currencyCode) {
+    public static String formatVolumeLabel(String currencyCode) {
         return formatVolumeLabel(currencyCode, "");
     }
 
-    public String formatVolumeLabel(String currencyCode, String postFix) {
+    public static String formatVolumeLabel(String currencyCode, String postFix) {
         return Res.get("formatter.formatVolumeLabel",
                 currencyCode, postFix);
     }
@@ -411,7 +401,7 @@ public class BSFormatter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public String formatPrice(Price price, MonetaryFormat fiatPriceFormat, boolean appendCurrencyCode) {
+    public static String formatPrice(Price price, MonetaryFormat fiatPriceFormat, boolean appendCurrencyCode) {
         if (price != null) {
             Monetary monetary = price.getMonetary();
             if (monetary instanceof Fiat)
@@ -444,14 +434,14 @@ public class BSFormatter {
     // Market price
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatMarketPrice(double price, String currencyCode) {
+    public static String formatMarketPrice(double price, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return formatMarketPrice(price, 2);
         else
             return formatMarketPrice(price, 8);
     }
 
-    public String formatMarketPrice(double price, int precision) {
+    public static String formatMarketPrice(double price, int precision) {
         return formatRoundedDoubleWithPrecision(price, precision);
     }
 
@@ -460,39 +450,35 @@ public class BSFormatter {
     // Other
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String formatRoundedDoubleWithPrecision(double value, int precision) {
+    public static String formatRoundedDoubleWithPrecision(double value, int precision) {
         decimalFormat.setMinimumFractionDigits(precision);
         decimalFormat.setMaximumFractionDigits(precision);
         return decimalFormat.format(MathUtils.roundDouble(value, precision)).replace(",", ".");
     }
 
-    public String getDirectionWithCode(OfferPayload.Direction direction, String currencyCode) {
+    public static String getDirectionWithCode(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyCurrency", Res.getBaseCurrencyCode()) : Res.get("shared.sellCurrency", Res.getBaseCurrencyCode());
         else
             return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
 
-    public String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
+    public static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
             return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
-    public String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
+    public static String arbitratorAddressesToString(List<NodeAddress> nodeAddresses) {
         return nodeAddresses.stream().map(NodeAddress::getFullAddress).collect(Collectors.joining(", "));
     }
 
-    public String languageCodesToString(List<String> languageLocales) {
-        return languageLocales.stream().map(LanguageUtil::getDisplayName).collect(Collectors.joining(", "));
-    }
-
-    public String formatDateTime(Date date) {
+    public static String formatDateTime(Date date) {
         return formatDateTime(date, true);
     }
 
-    public String formatDateTime(Date date, boolean useLocaleAndLocalTimezone) {
+    public static String formatDateTime(Date date, boolean useLocaleAndLocalTimezone) {
         Locale locale = useLocaleAndLocalTimezone ? getLocale() : Locale.US;
         DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
         DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
@@ -503,7 +489,7 @@ public class BSFormatter {
         return formatDateTime(date, dateInstance, timeInstance);
     }
 
-    public String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
+    public static String formatDateTime(Date date, DateFormat dateFormatter, DateFormat timeFormatter) {
         if (date != null) {
             return dateFormatter.format(date) + " " + timeFormatter.format(date);
         } else {
@@ -511,7 +497,7 @@ public class BSFormatter {
         }
     }
 
-    public String formatDateTimeSpan(Date dateFrom, Date dateTo) {
+    public static String formatDateTimeSpan(Date dateFrom, Date dateTo) {
         if (dateFrom != null && dateTo != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
             DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
@@ -521,7 +507,7 @@ public class BSFormatter {
         }
     }
 
-    public String formatTime(Date date) {
+    public static String formatTime(Date date) {
         if (date != null) {
             DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale());
             return timeFormatter.format(date);
@@ -530,7 +516,7 @@ public class BSFormatter {
         }
     }
 
-    public String formatDate(Date date) {
+    public static String formatDate(Date date) {
         if (date != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale());
             return dateFormatter.format(date);
@@ -539,40 +525,43 @@ public class BSFormatter {
         }
     }
 
-    public String formatToPercentWithSymbol(double value) {
+    public static String formatToPercentWithSymbol(double value) {
         return formatToPercent(value) + "%";
     }
 
-    public String formatPercentagePrice(double value) {
+    public static String formatPercentagePrice(double value) {
         return formatToPercentWithSymbol(value);
     }
 
-    public String formatToPercent(double value) {
+    public static String formatToPercent(double value) {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
         decimalFormat.setMinimumFractionDigits(2);
         decimalFormat.setMaximumFractionDigits(2);
         return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
     }
 
-    public double parseNumberStringToDouble(String input) throws NumberFormatException {
+    public static double parseNumberStringToDouble(String input) throws NumberFormatException {
         return Double.parseDouble(cleanDoubleInput(input));
     }
 
-    public double parsePercentStringToDouble(String percentString) throws NumberFormatException {
+    public static double parsePercentStringToDouble(String percentString) throws NumberFormatException {
         String input = percentString.replace("%", "");
         input = cleanDoubleInput(input);
         double value = Double.parseDouble(input);
         return MathUtils.roundDouble(value / 100d, 4);
     }
 
-    public long parsePriceStringToLong(String currencyCode, String amount, int precision) {
+    public static long parsePriceStringToLong(BSFormatter bsFormatter,
+                                              String currencyCode,
+                                              String amount,
+                                              int precision) {
         if (amount == null || amount.isEmpty())
             return 0;
 
         long value = 0;
         try {
             double amountValue = Double.parseDouble(amount);
-            amount = formatRoundedDoubleWithPrecision(amountValue, precision);
+            amount = BSFormatter.formatRoundedDoubleWithPrecision(amountValue, precision);
             value = Price.parse(currencyCode, amount).getValue();
         } catch (NumberFormatException ignore) {
             // expected NumberFormatException if input is not a number
@@ -590,7 +579,7 @@ public class BSFormatter {
         return input.replace(",", ".");
     }
 
-    protected String cleanDoubleInput(String input) {
+    protected static String cleanDoubleInput(String input) {
         input = convertCharsForNumber(input);
         if (input.equals("."))
             input = input.replace(".", "0.");
@@ -605,7 +594,7 @@ public class BSFormatter {
         return input;
     }
 
-    public String formatAccountAge(long durationMillis) {
+    public static String formatAccountAge(long durationMillis) {
         durationMillis = Math.max(0, durationMillis);
         String day = Res.get("time.day").toLowerCase();
         String days = Res.get("time.days");
@@ -613,11 +602,11 @@ public class BSFormatter {
         return StringUtils.replaceOnce(DurationFormatUtils.formatDuration(durationMillis, format), "1 " + days, "1 " + day);
     }
 
-    public String formatDurationAsWords(long durationMillis) {
+    public static String formatDurationAsWords(long durationMillis) {
         return formatDurationAsWords(durationMillis, false, true);
     }
 
-    public String formatDurationAsWords(long durationMillis, boolean showSeconds, boolean showZeroValues) {
+    public static String formatDurationAsWords(long durationMillis, boolean showSeconds, boolean showZeroValues) {
         String format = "";
         String second = Res.get("time.second");
         String minute = Res.get("time.minute");
@@ -657,11 +646,11 @@ public class BSFormatter {
         return duration.trim();
     }
 
-    public String booleanToYesNo(boolean value) {
+    public static String booleanToYesNo(boolean value) {
         return value ? Res.get("shared.yes") : Res.get("shared.no");
     }
 
-    public String getDirectionBothSides(OfferPayload.Direction direction, String currencyCode) {
+    public static String getDirectionBothSides(OfferPayload.Direction direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             currencyCode = Res.getBaseCurrencyCode();
             return direction == OfferPayload.Direction.BUY ?
@@ -674,7 +663,7 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
+    public static String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String code = Res.getBaseCurrencyCode();
             return isMyOffer ?
@@ -687,7 +676,7 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionForSeller(boolean isMyOffer, String currencyCode) {
+    public static String getDirectionForSeller(boolean isMyOffer, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String code = Res.getBaseCurrencyCode();
             return isMyOffer ?
@@ -700,7 +689,7 @@ public class BSFormatter {
         }
     }
 
-    public String getDirectionForTakeOffer(OfferPayload.Direction direction, String currencyCode) {
+    public static String getDirectionForTakeOffer(OfferPayload.Direction direction, String currencyCode) {
         String baseCurrencyCode = Res.getBaseCurrencyCode();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             return direction == OfferPayload.Direction.BUY ?
@@ -714,7 +703,7 @@ public class BSFormatter {
         }
     }
 
-    public String getOfferDirectionForCreateOffer(OfferPayload.Direction direction, String currencyCode) {
+    public static String getOfferDirectionForCreateOffer(OfferPayload.Direction direction, String currencyCode) {
         String baseCurrencyCode = Res.getBaseCurrencyCode();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             return direction == OfferPayload.Direction.BUY ?
@@ -727,7 +716,7 @@ public class BSFormatter {
         }
     }
 
-    public String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
+    public static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String baseCurrencyCode = Res.getBaseCurrencyCode();
             if (isBuyerMakerAndSellerTaker)
@@ -751,7 +740,7 @@ public class BSFormatter {
 
     }
 
-    public String formatBytes(long bytes) {
+    public static String formatBytes(long bytes) {
         double kb = 1024;
         double mb = kb * kb;
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
@@ -763,47 +752,32 @@ public class BSFormatter {
             return decimalFormat.format(bytes / mb) + " MB";
     }
 
-    public String getCurrencyPair(String currencyCode) {
+    public static String getCurrencyPair(String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return Res.getBaseCurrencyCode() + "/" + currencyCode;
         else
             return currencyCode + "/" + Res.getBaseCurrencyCode();
     }
 
-    public String getCounterCurrency(String currencyCode) {
+    public static String getCounterCurrency(String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return currencyCode;
         else
             return Res.getBaseCurrencyCode();
     }
 
-    public String getBaseCurrency(String currencyCode) {
-        if (CurrencyUtil.isCryptoCurrency(currencyCode))
-            return currencyCode;
-        else
-            return Res.getBaseCurrencyCode();
-    }
-
-    public String getCounterCurrencyAndCurrencyPair(String currencyCode) {
-        return getCounterCurrency(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
-    }
-
-    public String getCurrencyNameAndCurrencyPair(String currencyCode) {
-        return CurrencyUtil.getNameByCode(currencyCode) + " (" + getCurrencyPair(currencyCode) + ")";
-    }
-
-    public String getPriceWithCurrencyCode(String currencyCode) {
+    public static String getPriceWithCurrencyCode(String currencyCode) {
         return getPriceWithCurrencyCode(currencyCode, "shared.priceInCurForCur");
     }
 
-    public String getPriceWithCurrencyCode(String currencyCode, String translationKey) {
+    public static String getPriceWithCurrencyCode(String currencyCode, String translationKey) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode))
             return Res.get(translationKey, Res.getBaseCurrencyCode(), currencyCode);
         else
             return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
     }
 
-    public Locale getLocale() {
+    private static Locale getLocale() {
         return GlobalSettings.getLocale();
     }
 }

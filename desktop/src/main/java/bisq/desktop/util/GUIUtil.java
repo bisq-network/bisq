@@ -686,7 +686,7 @@ public class GUIUtil {
     }
 
     public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
-        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
+        return BSFormatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {

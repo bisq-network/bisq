@@ -141,7 +141,7 @@ public class PeerInfoIcon extends Group {
         boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
 
         String accountAge = isFiatCurrency ?
-                peersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(peersAccountAge)) :
+                peersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", BSFormatter.formatAccountAge(peersAccountAge)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
         tooltipText = hasTraded ?
@@ -268,7 +268,7 @@ public class PeerInfoIcon extends Group {
                                     long makersAccountAge) {
         final String accountAgeTagEditor = isFiatCurrency ?
                 makersAccountAge > -1 ?
-                        formatter.formatAccountAge(makersAccountAge) :
+                        BSFormatter.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)

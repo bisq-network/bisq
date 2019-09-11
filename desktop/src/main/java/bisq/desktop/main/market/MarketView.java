@@ -183,8 +183,8 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                 .map(trade -> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Trade ID: ").append(trade.getOfferId()).append("\n")
-                            .append("Date: ").append(formatter.formatDateTime(trade.getTradeDate())).append("\n")
-                            .append("Market: ").append(formatter.getCurrencyPair(trade.getCurrencyCode())).append("\n")
+                            .append("Date: ").append(BSFormatter.formatDateTime(trade.getTradeDate())).append("\n")
+                            .append("Market: ").append(BSFormatter.getCurrencyPair(trade.getCurrencyCode())).append("\n")
                             .append("Price: ").append(formatter.formatPrice(trade.getTradePrice())).append("\n")
                             .append("Amount: ").append(formatter.formatCoin(trade.getTradeAmount())).append("\n")
                             .append("Volume: ").append(formatter.formatVolume(trade.getTradeVolume())).append("\n")
@@ -205,7 +205,7 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Offer ID: ").append(offer.getId()).append("\n")
                             .append("Type: ").append(offer.getDirection().name()).append("\n")
-                            .append("Market: ").append(formatter.getCurrencyPair(offer.getCurrencyCode())).append("\n")
+                            .append("Market: ").append(BSFormatter.getCurrencyPair(offer.getCurrencyCode())).append("\n")
                             .append("Price: ").append(formatter.formatPrice(offer.getPrice())).append("\n")
                             .append("Amount: ").append(formatter.formatAmount(offer)).append(" BTC\n")
                             .append("Payment method: ").append(Res.get(offer.getPaymentMethod().getId())).append("\n")

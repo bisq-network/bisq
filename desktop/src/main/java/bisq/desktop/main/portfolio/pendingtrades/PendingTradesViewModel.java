@@ -198,7 +198,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if ((item == null))
             return "";
 
-        return btcFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     private long getMaxTradePeriod() {
@@ -220,7 +220,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return btcFormatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return BSFormatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
     }
 
     public double getRemainingTradeDurationAsPercentage() {
@@ -233,7 +233,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getDateForOpenDispute() {
-        return btcFormatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
+        return BSFormatter.formatDateTime(new Date(new Date().getTime() + getRemainingTradeDuration()));
     }
 
     public boolean showWarning() {
@@ -251,7 +251,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return btcFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return BSFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }

@@ -57,6 +57,7 @@ import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.UserThread;
@@ -637,7 +638,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             public void updateItem(final ProposalListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
+                                    setText(BSFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
                                 else
                                     setText("");
                             }

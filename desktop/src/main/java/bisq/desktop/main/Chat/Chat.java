@@ -404,7 +404,7 @@ public class Chat extends AnchorPane {
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
-                            headerLabel.setText(formatter.formatDateTime(new Date(message.getDate())));
+                            headerLabel.setText(BSFormatter.formatDateTime(new Date(message.getDate())));
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
                             if (allowAttachments &&

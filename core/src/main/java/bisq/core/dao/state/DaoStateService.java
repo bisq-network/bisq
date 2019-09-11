@@ -35,6 +35,7 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ParamChange;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -923,7 +924,7 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public double getParamValueAsPercentDouble(String paramValue) {
-        return bsqFormatter.parsePercentStringToDouble(paramValue);
+        return BSFormatter.parsePercentStringToDouble(paramValue);
     }
 
     public int getParamValueAsBlock(String paramValue) {

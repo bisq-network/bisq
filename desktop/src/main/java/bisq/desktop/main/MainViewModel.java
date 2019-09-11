@@ -218,7 +218,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                 DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        BSFormatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;
@@ -228,7 +228,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                 DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        BSFormatter.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;

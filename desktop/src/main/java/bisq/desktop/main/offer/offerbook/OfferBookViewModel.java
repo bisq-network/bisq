@@ -359,7 +359,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getAbsolutePriceMargin(Offer offer) {
-        return formatter.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
+        return BSFormatter.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
@@ -369,12 +369,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
         String postFix = "";
         if (offer.isUseMarketBasedPrice()) {
-            postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+            postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
 
         }
 
         if (decimalAligned) {
-            postFix = formatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
+            postFix = BSFormatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
         }
 
         return postFix;
@@ -471,7 +471,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getDirectionLabelTooltip(Offer offer) {
-        return formatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
+        return BSFormatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
     Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {

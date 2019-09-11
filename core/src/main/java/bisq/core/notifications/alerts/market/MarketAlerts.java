@@ -180,9 +180,9 @@ public class MarketAlerts {
                             ratio = Math.abs(ratio);
                             String msg = Res.get("account.notifications.marketAlert.message.msg",
                                     direction,
-                                    formatter.getCurrencyPair(currencyCode),
+                                    BSFormatter.getCurrencyPair(currencyCode),
                                     formatter.formatPrice(offerPrice),
-                                    formatter.formatToPercentWithSymbol(ratio / 10000d),
+                                    BSFormatter.formatToPercentWithSymbol(ratio / 10000d),
                                     marketDir,
                                     Res.get(offer.getPaymentMethod().getId()),
                                     shortOfferId);

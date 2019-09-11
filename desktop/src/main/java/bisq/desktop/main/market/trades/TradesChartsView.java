@@ -239,7 +239,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         String code = selectedTradeCurrency.getCode();
                         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", code)));
 
-                        priceColumnLabel.set(formatter.getPriceWithCurrencyCode(code));
+                        priceColumnLabel.set(BSFormatter.getPriceWithCurrencyCode(code));
 
                         tableView.getColumns().remove(marketColumn);
                     }
@@ -345,7 +345,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 double doubleValue = (double) object;
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                     final double value = MathUtils.scaleDownByPowerOf10(doubleValue, 8);
-                    return formatter.formatRoundedDoubleWithPrecision(value, 8);
+                    return BSFormatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
                     return formatter.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
                 }
@@ -362,7 +362,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             public String toString(Number object) {
                 if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                     final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
-                    return formatter.formatRoundedDoubleWithPrecision(value, 8);
+                    return BSFormatter.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
                     return formatter.formatPrice(Price.valueOf(model.getCurrencyCode(), (long) object));
                 }
@@ -568,7 +568,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.formatDateTime(item.getTradeDate()));
+                                    setText(BSFormatter.formatDateTime(item.getTradeDate()));
                                 else
                                     setText("");
                             }
@@ -597,7 +597,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(formatter.getCurrencyPair(item.getCurrencyCode()));
+                                    setText(BSFormatter.getCurrencyPair(item.getCurrencyCode()));
                                 else
                                     setText("");
                             }
@@ -744,7 +744,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @NotNull
     private String getDirectionLabel(TradeStatistics2 item) {
-        return formatter.getDirectionWithCode(OfferPayload.Direction.valueOf(item.getDirection().name()), item.getCurrencyCode());
+        return BSFormatter.getDirectionWithCode(OfferPayload.Direction.valueOf(item.getDirection().name()), item.getCurrencyCode());
     }
 
     @NotNull

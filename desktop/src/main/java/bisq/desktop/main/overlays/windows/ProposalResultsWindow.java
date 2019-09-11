@@ -34,6 +34,7 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Tuple2;
@@ -240,7 +241,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(bsqFormatter.formatDateTime(item.getBlindVoteDate()));
+                                    setText(BSFormatter.formatDateTime(item.getBlindVoteDate()));
                                 } else {
                                     setText("");
                                 }

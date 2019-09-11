@@ -228,7 +228,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             if (getTradable(item).isPresent())
-                                setGraphic(new AutoTooltipLabel(formatter.formatDateTime(getTradable(item).get().getDate())));
+                                setGraphic(new AutoTooltipLabel(BSFormatter.formatDateTime(getTradable(item).get().getDate())));
                             else
                                 setGraphic(new AutoTooltipLabel(Res.get("shared.noDateAvailable")));
                         } else {

@@ -65,18 +65,18 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     }
 
     String getDirectionLabel(FailedTradesListItem item) {
-        return (item != null) ? formatter.getDirectionWithCode(dataModel.getDirection(item.getTrade().getOffer()), item.getTrade().getOffer().getCurrencyCode()) : "";
+        return (item != null) ? BSFormatter.getDirectionWithCode(dataModel.getDirection(item.getTrade().getOffer()), item.getTrade().getOffer().getCurrencyCode()) : "";
     }
 
     String getMarketLabel(FailedTradesListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     String getDate(FailedTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getDate());
+        return BSFormatter.formatDateTime(item.getTrade().getDate());
     }
 
     String getState(FailedTradesListItem item) {

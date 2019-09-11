@@ -134,12 +134,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         String offerType = Res.get("shared.offerType");
         if (tradeManager.isBuyer(offer)) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerType,
-                    formatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
+                    BSFormatter.getDirectionForBuyer(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
             fiatDirectionInfo = toSpend;
             btcDirectionInfo = toReceive;
         } else {
             addConfirmationLabelLabel(gridPane, rowIndex, offerType,
-                    formatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
+                    BSFormatter.getDirectionForSeller(myOffer, offer.getCurrencyCode()), Layout.TWICE_FIRST_ROW_DISTANCE);
             fiatDirectionInfo = toReceive;
             btcDirectionInfo = toSpend;
         }
@@ -198,7 +198,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.tradeId"),
                 trade.getId(), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeDate"),
-                formatter.formatDateTime(trade.getDate()));
+                BSFormatter.formatDateTime(trade.getDate()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
@@ -226,7 +226,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 String paymentDetails = buyerPaymentAccountPayload.getPaymentDetails();
                 long age = accountAgeWitnessService.getAccountAge(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
                 buyersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
-                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", BSFormatter.formatAccountAge(age)) :
                                 Res.get("peerInfoIcon.tooltip.unknownAge") :
                         "";
 
@@ -240,7 +240,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 String paymentDetails = sellerPaymentAccountPayload.getPaymentDetails();
                 long age = accountAgeWitnessService.getAccountAge(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
                 sellersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
-                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", formatter.formatAccountAge(age)) :
+                        age > -1 ? Res.get("peerInfoIcon.tooltip.age", BSFormatter.formatAccountAge(age)) :
                                 Res.get("peerInfoIcon.tooltip.unknownAge") :
                         "";
                 String postFix = sellersAccountAge.isEmpty() ? "" : " / " + sellersAccountAge;

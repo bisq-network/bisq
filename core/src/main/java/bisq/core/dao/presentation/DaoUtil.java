@@ -40,8 +40,8 @@ public class DaoUtil {
         long now = new Date().getTime();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String startDateTime = BSFormatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = BSFormatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
 
         return Res.get("dao.cycle.phaseDurationWithoutBlocks", start, end, startDateTime, endDateTime);
     }
@@ -53,9 +53,9 @@ public class DaoUtil {
         long now = new Date().getTime();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String startDateTime = formatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String endDateTime = formatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
-        String durationTime = formatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
+        String startDateTime = BSFormatter.formatDateTime(new Date(now + (start - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String endDateTime = BSFormatter.formatDateTime(new Date(now + (end - height) * 10 * 60 * 1000L), dateFormatter, timeFormatter);
+        String durationTime = BSFormatter.formatDurationAsWords(duration * 10 * 60 * 1000, false, false);
         return Res.get("dao.cycle.phaseDuration", duration, durationTime, start, end, startDateTime, endDateTime);
     }
 }

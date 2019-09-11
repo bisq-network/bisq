@@ -277,8 +277,8 @@ public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activ
         totalTrafficTextField.textProperty().bind(EasyBind.combine(Statistic.totalSentBytesProperty(),
                 Statistic.totalReceivedBytesProperty(),
                 (sent, received) -> Res.get("settings.net.sentReceived",
-                        formatter.formatBytes((long) sent),
-                        formatter.formatBytes((long) received))));
+                        BSFormatter.formatBytes((long) sent),
+                        BSFormatter.formatBytes((long) received))));
 
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);

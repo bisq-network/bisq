@@ -83,7 +83,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if (price != null) {
             String postFix = "";
             if (offer.isUseMarketBasedPrice())
-                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+                postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
             return formatter.formatPrice(price) + postFix;
         } else {
             return Res.get("shared.na");
@@ -98,18 +98,18 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if ((item == null))
             return "";
 
-        return formatter.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
+        return BSFormatter.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
     }
 
     String getMarketLabel(OpenOfferListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getOffer().getCurrencyCode());
+        return BSFormatter.getCurrencyPair(item.getOffer().getCurrencyCode());
     }
 
     String getDate(OpenOfferListItem item) {
-        return formatter.formatDateTime(item.getOffer().getDate());
+        return BSFormatter.formatDateTime(item.getOffer().getDate());
     }
 
     boolean isDeactivated(OpenOfferListItem item) {
