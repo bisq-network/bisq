@@ -52,6 +52,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +67,8 @@ public class BSFormatter {
     // Input of a group separator (1,123,45) lead to an validation error.
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
-    protected MonetaryFormat coinFormat;
+    @Getter
+    protected MonetaryFormat monetaryFormat;
 
     //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
@@ -77,7 +79,7 @@ public class BSFormatter {
 
     @Inject
     public BSFormatter() {
-        coinFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+        monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
     }
 
 
@@ -99,7 +101,7 @@ public class BSFormatter {
     }
 
     public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
-        return formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits, coinFormat);
+        return formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits, monetaryFormat);
     }
 
     public static String formatCoin(Coin coin,
@@ -129,11 +131,11 @@ public class BSFormatter {
     }
 
     public String formatCoinWithCode(Coin coin) {
-        return formatCoinWithCode(coin, coinFormat);
+        return formatCoinWithCode(coin, monetaryFormat);
     }
 
     public String formatCoinWithCode(long value) {
-        return formatCoinWithCode(Coin.valueOf(value), coinFormat);
+        return formatCoinWithCode(Coin.valueOf(value), monetaryFormat);
     }
 
     public static String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
@@ -154,24 +156,6 @@ public class BSFormatter {
             return "";
         }
     }
-
-    public Coin parseToCoin(String input) {
-        return parseToCoin(input, coinFormat);
-    }
-
-    public Coin parseToCoin(String input, MonetaryFormat coinFormat) {
-        if (input != null && input.length() > 0) {
-            try {
-                return coinFormat.parse(cleanDoubleInput(input));
-            } catch (Throwable t) {
-                log.warn("Exception at parseToBtc: " + t.toString());
-                return Coin.ZERO;
-            }
-        } else {
-            return Coin.ZERO;
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // FIAT
@@ -194,10 +178,10 @@ public class BSFormatter {
         }
     }
 
-    protected static Fiat parseToFiat(String input, String currencyCode) {
+    private static Fiat parseToFiat(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
-                return Fiat.parseFiat(currencyCode, cleanDoubleInput(input));
+                return Fiat.parseFiat(currencyCode, ParsingUtils.cleanDoubleInput(input));
             } catch (Exception e) {
                 log.warn("Exception at parseToFiat: " + e.toString());
                 return Fiat.valueOf(currencyCode, 0);
@@ -220,7 +204,7 @@ public class BSFormatter {
     public static Fiat parseToFiatWithPrecision(String input, String currencyCode) {
         if (input != null && input.length() > 0) {
             try {
-                return parseToFiat(new BigDecimal(cleanDoubleInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
+                return parseToFiat(new BigDecimal(ParsingUtils.cleanDoubleInput(input)).setScale(2, BigDecimal.ROUND_HALF_UP).toString(),
                         currencyCode);
             } catch (Throwable t) {
                 log.warn("Exception at parseToFiatWithPrecision: " + t.toString());
@@ -385,60 +369,6 @@ public class BSFormatter {
         decimalFormat.setMinimumFractionDigits(2);
         decimalFormat.setMaximumFractionDigits(2);
         return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
-    }
-
-    public static double parseNumberStringToDouble(String input) throws NumberFormatException {
-        return Double.parseDouble(cleanDoubleInput(input));
-    }
-
-    public static double parsePercentStringToDouble(String percentString) throws NumberFormatException {
-        String input = percentString.replace("%", "");
-        input = cleanDoubleInput(input);
-        double value = Double.parseDouble(input);
-        return MathUtils.roundDouble(value / 100d, 4);
-    }
-
-    public static long parsePriceStringToLong(BSFormatter bsFormatter,
-                                              String currencyCode,
-                                              String amount,
-                                              int precision) {
-        if (amount == null || amount.isEmpty())
-            return 0;
-
-        long value = 0;
-        try {
-            double amountValue = Double.parseDouble(amount);
-            amount = BSFormatter.formatRoundedDoubleWithPrecision(amountValue, precision);
-            value = Price.parse(currencyCode, amount).getValue();
-        } catch (NumberFormatException ignore) {
-            // expected NumberFormatException if input is not a number
-        } catch (Throwable t) {
-            log.error("parsePriceStringToLong: " + t.toString());
-        }
-
-        return value;
-    }
-
-    public static String convertCharsForNumber(String input) {
-        // Some languages like finnish use the long dash for the minus
-        input = input.replace("−", "-");
-        input = StringUtils.deleteWhitespace(input);
-        return input.replace(",", ".");
-    }
-
-    public static String cleanDoubleInput(String input) {
-        input = convertCharsForNumber(input);
-        if (input.equals("."))
-            input = input.replace(".", "0.");
-        if (input.equals("-."))
-            input = input.replace("-.", "-0.");
-        // don't use String.valueOf(Double.parseDouble(input)) as return value as it gives scientific
-        // notation (1.0E-6) which screw up coinFormat.parse
-        //noinspection ResultOfMethodCallIgnored
-        // Just called to check if we have a valid double, throws exception otherwise
-        //noinspection ResultOfMethodCallIgnored
-        Double.parseDouble(input);
-        return input;
     }
 
     public static String formatDurationAsWords(long durationMillis) {

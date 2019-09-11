@@ -47,6 +47,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.IntegerValidator;
 
 import bisq.common.UserThread;
@@ -314,7 +315,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         deviationListener = (observable, oldValue, newValue) -> {
             try {
-                double value = BSFormatter.parsePercentStringToDouble(newValue);
+                double value = ParsingUtils.parsePercentStringToDouble(newValue);
                 final double maxDeviation = 0.5;
                 if (value <= maxDeviation) {
                     preferences.setMaxPriceDistanceInPercent(value);

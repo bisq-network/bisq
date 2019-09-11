@@ -53,6 +53,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.network.p2p.P2PService;
@@ -316,7 +317,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                         if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
                             double marketPriceAsDouble = marketPrice.getPrice();
                             try {
-                                double priceAsDouble = BSFormatter.parseNumberStringToDouble(price.get());
+                                double priceAsDouble = ParsingUtils.parseNumberStringToDouble(price.get());
                                 double relation = priceAsDouble / marketPriceAsDouble;
                                 final OfferPayload.Direction compareDirection = CurrencyUtil.isCryptoCurrency(currencyCode) ?
                                         OfferPayload.Direction.SELL :
@@ -342,7 +343,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             if (inputIsMarketBasedPrice) {
                 try {
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
-                        double percentage = BSFormatter.parsePercentStringToDouble(newValue);
+                        double percentage = ParsingUtils.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
                             new Popup<>().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
                                     Res.get("popup.warning.examplePercentageValue"))
@@ -866,7 +867,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             if (result.isValid) {
                 double defaultSecurityDeposit = Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount());
                 String key = "buyerSecurityDepositIsLowerAsDefault";
-                double depositAsDouble = BSFormatter.parsePercentStringToDouble(buyerSecurityDeposit.get());
+                double depositAsDouble = ParsingUtils.parsePercentStringToDouble(buyerSecurityDeposit.get());
                 if (preferences.showAgain(key) && depositAsDouble < defaultSecurityDeposit) {
                     String postfix = dataModel.isBuyOffer() ?
                             Res.get("createOffer.tooLowSecDeposit.makerIsBuyer") :
@@ -906,7 +907,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public boolean isPriceInRange() {
         if (marketPriceMargin.get() != null && !marketPriceMargin.get().isEmpty()) {
-            if (Math.abs(BSFormatter.parsePercentStringToDouble(marketPriceMargin.get())) > preferences.getMaxPriceDistanceInPercent()) {
+            if (Math.abs(ParsingUtils.parsePercentStringToDouble(marketPriceMargin.get())) > preferences.getMaxPriceDistanceInPercent()) {
                 displayPriceOutOfRangePopup();
                 return false;
             } else {
@@ -1130,7 +1131,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     private void setBuyerSecurityDepositToModel() {
         if (buyerSecurityDeposit.get() != null && !buyerSecurityDeposit.get().isEmpty()) {
-            dataModel.setBuyerSecurityDeposit(BSFormatter.parsePercentStringToDouble(buyerSecurityDeposit.get()));
+            dataModel.setBuyerSecurityDeposit(ParsingUtils.parsePercentStringToDouble(buyerSecurityDeposit.get()));
         } else {
             dataModel.setBuyerSecurityDeposit(Restrictions.getDefaultBuyerSecurityDepositAsPercent(getPaymentAccount()));
         }

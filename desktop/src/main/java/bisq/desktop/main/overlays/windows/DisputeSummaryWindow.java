@@ -37,6 +37,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
@@ -357,8 +358,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean isPayoutAmountValid() {
-        Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
-        Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
+        Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+        Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
         Offer offer = new Offer(contract.getOfferPayload());
@@ -371,8 +372,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private void applyCustomAmounts(InputTextField inputTextField) {
         Contract contract = dispute.getContract();
-        Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
-        Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
+        Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+        Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
         Offer offer = new Offer(contract.getOfferPayload());
         Coin available = contract.getTradeAmount().
                 add(offer.getBuyerSecurityDeposit())

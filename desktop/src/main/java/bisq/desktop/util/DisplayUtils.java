@@ -9,6 +9,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
@@ -265,7 +266,7 @@ public class DisplayUtils {
      */
     public static Coin parseToCoinWith4Decimals(String input, BSFormatter bsFormatter) {
         try {
-            return Coin.valueOf(new BigDecimal(bsFormatter.parseToCoin(BSFormatter.cleanDoubleInput(input)).value).setScale(-scale - 1,
+            return Coin.valueOf(new BigDecimal(ParsingUtils.parseToCoin(ParsingUtils.cleanDoubleInput(input), bsFormatter).value).setScale(-scale - 1,
                     BigDecimal.ROUND_HALF_UP).setScale(scale + 1, BigDecimal.ROUND_HALF_UP).toBigInteger().longValue());
         } catch (Throwable t) {
             if (input != null && input.length() > 0)
@@ -275,7 +276,7 @@ public class DisplayUtils {
     }
 
     public static boolean hasBtcValidDecimals(String input, BSFormatter bsFormatter) {
-        return bsFormatter.parseToCoin(input).equals(parseToCoinWith4Decimals(input, bsFormatter));
+        return ParsingUtils.parseToCoin(input, bsFormatter).equals(parseToCoinWith4Decimals(input, bsFormatter));
     }
 
     /**
@@ -286,6 +287,6 @@ public class DisplayUtils {
      * @return The transformed coin
      */
     public static Coin reduceTo4Decimals(Coin coin, BSFormatter bsFormatter) {
-        return bsFormatter.parseToCoin(bsFormatter.formatCoin(coin));
+        return ParsingUtils.parseToCoin(bsFormatter.formatCoin(coin), bsFormatter);
     }
 }

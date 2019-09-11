@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import javax.inject.Inject;
 
@@ -58,7 +59,7 @@ public class SecurityDepositValidator extends NumberValidator {
 
     private ValidationResult validateIfNotTooLowPercentageValue(String input) {
         try {
-            double percentage = BSFormatter.parsePercentStringToDouble(input);
+            double percentage = ParsingUtils.parsePercentStringToDouble(input);
             double minPercentage = Restrictions.getMinBuyerSecurityDepositAsPercent(paymentAccount);
             if (percentage < minPercentage)
                 return new ValidationResult(false,
@@ -72,7 +73,7 @@ public class SecurityDepositValidator extends NumberValidator {
 
     private ValidationResult validateIfNotTooHighPercentageValue(String input) {
         try {
-            double percentage = BSFormatter.parsePercentStringToDouble(input);
+            double percentage = ParsingUtils.parsePercentStringToDouble(input);
             double maxPercentage = Restrictions.getMaxBuyerSecurityDepositAsPercent(paymentAccount);
             if (percentage > maxPercentage)
                 return new ValidationResult(false,

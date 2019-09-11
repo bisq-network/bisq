@@ -48,6 +48,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
@@ -347,7 +348,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
 
     private void onAddMarketAlert() {
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
-        double percentAsDouble = BSFormatter.parsePercentStringToDouble(marketAlertTriggerInputTextField.getText());
+        double percentAsDouble = ParsingUtils.parsePercentStringToDouble(marketAlertTriggerInputTextField.getText());
         int triggerValue = (int) Math.round(percentAsDouble * 10000);
         boolean isBuyOffer = offerTypeRadioButtonsToggleGroup.getSelectedToggle() == buyOffersRadioButton;
         MarketAlertFilter marketAlertFilter = new MarketAlertFilter(paymentAccount, triggerValue, isBuyOffer);
@@ -510,7 +511,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         marketAlertTriggerFocusListener = (observable, oldValue, newValue) -> {
             if (oldValue && !newValue) {
                 try {
-                    double percentAsDouble = BSFormatter.parsePercentStringToDouble(marketAlertTriggerInputTextField.getText()) * 100;
+                    double percentAsDouble = ParsingUtils.parsePercentStringToDouble(marketAlertTriggerInputTextField.getText()) * 100;
                     marketAlertTriggerInputTextField.setText(BSFormatter.formatRoundedDoubleWithPrecision(percentAsDouble, 2) + "%");
                 } catch (Throwable ignore) {
                 }
@@ -747,7 +748,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         try {
             String inputValue = inputTextField.getText();
             if (inputValue != null && !inputValue.isEmpty() && selectedPriceAlertTradeCurrency != null) {
-                double priceAsDouble = BSFormatter.parseNumberStringToDouble(inputValue);
+                double priceAsDouble = ParsingUtils.parseNumberStringToDouble(inputValue);
                 String currencyCode = selectedPriceAlertTradeCurrency;
                 int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
                         Altcoin.SMALLEST_UNIT_EXPONENT : 2;
@@ -755,7 +756,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 // E.g. if input is 5555.5555 it will be rounded to  5555.55 and we use that as the value for comparing
                 // low and high price...
                 String stringValue = BSFormatter.formatRoundedDoubleWithPrecision(priceAsDouble, precision);
-                return BSFormatter.parsePriceStringToLong(formatter, currencyCode, stringValue, precision);
+                return ParsingUtils.parsePriceStringToLong(currencyCode, stringValue, precision);
             } else {
                 return 0;
             }
@@ -768,7 +769,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         try {
             String inputValue = inputTextField.getText();
             if (inputValue != null && !inputValue.isEmpty() && selectedPriceAlertTradeCurrency != null) {
-                double priceAsDouble = BSFormatter.parseNumberStringToDouble(inputValue);
+                double priceAsDouble = ParsingUtils.parseNumberStringToDouble(inputValue);
                 String currencyCode = selectedPriceAlertTradeCurrency;
                 int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
                         Altcoin.SMALLEST_UNIT_EXPONENT : 2;
