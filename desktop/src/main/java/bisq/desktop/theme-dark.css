@@ -12,7 +12,7 @@
     -fx-accent: #25b135;
     -fx-box-border: #1d1d21;
     -fx-focus-color: #2ea33c;
-    -fx-faint-focus-color: rgba(11, 76, 96, 0.13);
+    -fx-faint-focus-color: #0f87c3;
     -fx-selection-bar: #1a6e1e;
     -fx-selection-bar-non-focused: #2a7e2e;
     -fx-default-button: derive(-fx-accent, 95%);

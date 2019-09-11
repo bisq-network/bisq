@@ -95,7 +95,7 @@
     -bs-green-soft: derive(-bs-rd-green, 60%);
     -bs-red-soft: derive(-bs-rd-error-red, 60%);
     -fx-focus-color: -fx-accent;
-    -fx-faint-focus-color: #0f87c322;
+    -fx-faint-focus-color: #0f87c3;
     -fx-selection-bar: #e1f5e3;
     -fx-selection-bar-non-focused: -fx-selection-bar;
     -fx-default-button: derive(-fx-accent, 95%);
