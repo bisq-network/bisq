@@ -1389,6 +1389,30 @@ textfield */
     -fx-fill: -bs-color-primary-dark;
 }
 
+.trade-msg-state-undefined {
+    -fx-text-fill: -bs-yellow;
+}
+
+.trade-msg-state-sent {
+    -fx-text-fill: -bs-yellow-light;
+}
+
+.trade-msg-state-arrived {
+    -fx-text-fill: -bs-turquoise;
+}
+
+.trade-msg-state-stored {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.trade-msg-state-acknowledged {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.trade-msg-state-failed {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
 #open-support-button {
     -fx-font-weight: bold;
     -fx-font-size: 1.077em;
@@ -2008,4 +2032,8 @@ textfield */
 #notification-erase-button {
     -fx-background-color: -bs-red-soft;
     -fx-text-fill: -bs-background-color;
+}
+
+.status-icon {
+    -fx-text-fill: -fx-faint-focus-color;
 }
