@@ -38,6 +38,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.Timer;
@@ -367,7 +368,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(bsqFormatter.formatDateTime(item.getDate()));
+                                    setText(BSFormatter.formatDateTime(item.getDate()));
                                 } else {
                                     setText("");
                                 }
@@ -630,7 +631,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
+                                                String formattedDate = BSFormatter.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuanceFromCompReq.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;
@@ -644,7 +645,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                                 style = "dao-tx-type-issuance-icon";
                                                 int issuanceBlockHeight = daoFacade.getIssuanceBlockHeight(txId);
                                                 long blockTime = daoFacade.getBlockTime(issuanceBlockHeight);
-                                                String formattedDate = bsqFormatter.formatDateTime(new Date(blockTime));
+                                                String formattedDate = BSFormatter.formatDateTime(new Date(blockTime));
                                                 toolTipText = Res.get("dao.tx.issuanceFromReimbursement.tooltip", formattedDate);
                                             } else {
                                                 awesomeIcon = AwesomeIcon.FILE_TEXT;

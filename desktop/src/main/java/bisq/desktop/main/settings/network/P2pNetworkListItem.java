@@ -62,9 +62,9 @@ public class P2pNetworkListItem {
         this.statistic = connection.getStatistic();
 
         sentBytesSubscription = EasyBind.subscribe(statistic.sentBytesProperty(),
-                e -> sentBytes.set(formatter.formatBytes((long) e)));
+                e -> sentBytes.set(BSFormatter.formatBytes((long) e)));
         receivedBytesSubscription = EasyBind.subscribe(statistic.receivedBytesProperty(),
-                e -> receivedBytes.set(formatter.formatBytes((long) e)));
+                e -> receivedBytes.set(BSFormatter.formatBytes((long) e)));
         onionAddressSubscription = EasyBind.subscribe(connection.getPeersNodeAddressProperty(),
                 nodeAddress -> onionAddress.set(nodeAddress != null ? nodeAddress.getFullAddress() : Res.get("settings.net.notKnownYet")));
         roundTripTimeSubscription = EasyBind.subscribe(statistic.roundTripTimeProperty(),
@@ -118,7 +118,7 @@ public class P2pNetworkListItem {
     }
 
     public String getCreationDate() {
-        return formatter.formatDateTime(statistic.getCreationDate());
+        return BSFormatter.formatDateTime(statistic.getCreationDate());
     }
 
     public String getOnionAddress() {

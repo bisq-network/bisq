@@ -182,7 +182,7 @@ public abstract class PaymentMethodForm {
                 Res.get("payment.maxPeriodAndLimit",
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
-                        formatter.formatAccountAge(accountAge));
+                        BSFormatter.formatAccountAge(accountAge));
 
         if (isDisplayForm)
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);

@@ -170,17 +170,17 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         double firstRowDistance = Layout.TWICE_FIRST_ROW_DISTANCE;
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
+                    BSFormatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
+                    BSFormatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
         } else {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
+                    BSFormatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
         }
         String btcAmount = Res.get("shared.btcAmount");
         if (takeOfferHandlerOptional.isPresent()) {
@@ -210,7 +210,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             if (offer.isUseMarketBasedPrice()) {
                 addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
-                        formatter.formatPercentagePrice(offer.getMarketPriceMargin())));
+                        BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin())));
             } else {
                 addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price));
             }
@@ -307,7 +307,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
                 offer.getMakerNodeAddress().getFullAddress());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
-                formatter.formatDateTime(offer.getDate()));
+                BSFormatter.formatDateTime(offer.getDate()));
         String value = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
@@ -322,7 +322,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
                     CountryUtil.getNameAndCode(countryCode));
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
-                formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
+                BSFormatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 

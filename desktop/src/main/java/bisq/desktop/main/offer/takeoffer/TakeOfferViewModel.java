@@ -206,7 +206,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         amountRange = btcFormatter.formatCoin(offer.getMinAmount()) + " - " + btcFormatter.formatCoin(offer.getAmount());
         price = btcFormatter.formatPrice(dataModel.tradePrice);
-        marketPriceMargin = btcFormatter.formatToPercent(offer.getMarketPriceMargin());
+        marketPriceMargin = BSFormatter.formatToPercent(offer.getMarketPriceMargin());
         paymentLabel = Res.get("takeOffer.fundsBox.paymentLabel", offer.getShortId());
 
         checkNotNull(dataModel.getAddressEntry(), "dataModel.getAddressEntry() must not be null");
@@ -316,7 +316,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
                 tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
                         feeInFiatAsString,
-                        btcFormatter.formatToPercentWithSymbol(percent)));
+                        BSFormatter.formatToPercentWithSymbol(percent)));
             }
         }
         tradeFeeDescription.set(DevEnv.isDaoActivated() ? Res.get("createOffer.tradeFee.descriptionBSQEnabled") :

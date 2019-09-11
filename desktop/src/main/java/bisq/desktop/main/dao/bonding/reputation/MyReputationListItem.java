@@ -21,6 +21,7 @@ import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
 import bisq.core.dao.governance.bond.reputation.MyReputation;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Utilities;
@@ -57,7 +58,7 @@ class MyReputationListItem {
         txId = myBondedReputation.getLockupTxId();
         amount = bsqFormatter.formatCoin(Coin.valueOf(myBondedReputation.getAmount()));
         lockupDate = new Date(myBondedReputation.getLockupDate());
-        lockupDateString = bsqFormatter.formatDateTime(lockupDate);
+        lockupDateString = BSFormatter.formatDateTime(lockupDate);
         lockTime = Integer.toString(myBondedReputation.getLockTime());
         lockupTxId = myBondedReputation.getLockupTxId();
         bondState = myBondedReputation.getBondState();

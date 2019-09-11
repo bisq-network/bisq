@@ -718,7 +718,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                             public void updateItem(final ProposalsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(bsqFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
+                                    setText(BSFormatter.formatDateTime(item.getProposal().getCreationDateAsDate()));
                                 else
                                     setText("");
                             }

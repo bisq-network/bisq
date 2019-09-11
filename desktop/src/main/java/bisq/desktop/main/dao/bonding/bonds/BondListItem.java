@@ -21,6 +21,7 @@ import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.locale.Res;
+import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Utilities;
@@ -58,7 +59,7 @@ class BondListItem {
             bondDetails = Utilities.bytesAsHexString(bond.getBondedAsset().getHash());
         }
         lockupTxId = bond.getLockupTxId();
-        lockupDateString = bond.getLockupDate() > 0 ? bsqFormatter.formatDateTime(new Date(bond.getLockupDate())) : "-";
+        lockupDateString = bond.getLockupDate() > 0 ? BSFormatter.formatDateTime(new Date(bond.getLockupDate())) : "-";
         bondState = bond.getBondState();
         bondStateString = Res.get("dao.bond.bondState." + bond.getBondState().name());
     }

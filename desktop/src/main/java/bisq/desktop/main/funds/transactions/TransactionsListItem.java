@@ -239,7 +239,7 @@ class TransactionsListItem {
         }
         // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
         date = transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime();
-        dateString = formatter.formatDateTime(date);
+        dateString = BSFormatter.formatDateTime(date);
 
         isDustAttackTx = received && valueSentToMe.value < ignoreDustThreshold;
         if (isDustAttackTx) {

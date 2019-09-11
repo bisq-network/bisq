@@ -249,7 +249,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, 17, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), BSFormatter.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
@@ -566,13 +566,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     disputeResult.setLoserPublisher(isLoserPublisherCheckBox.isSelected());
                     disputeResult.setCloseDate(new Date());
                     String text = Res.get("disputeSummaryWindow.close.msg",
-                            formatter.formatDateTime(disputeResult.getCloseDate()),
+                            BSFormatter.formatDateTime(disputeResult.getCloseDate()),
                             role,
-                            formatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
+                            BSFormatter.booleanToYesNo(disputeResult.tamperProofEvidenceProperty().get()),
                             role,
-                            formatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
+                            BSFormatter.booleanToYesNo(disputeResult.idVerificationProperty().get()),
                             role,
-                            formatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
+                            BSFormatter.booleanToYesNo(disputeResult.screenCastProperty().get()),
                             formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                             formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                             disputeResult.summaryNotesProperty().get());
