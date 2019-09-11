@@ -98,7 +98,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
                     "payDepositRequest.getMediatorNodeAddress() must not be null");
             trade.setMediatorNodeAddress(mediatorNodeAddress);
             Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
-                    "user.getAcceptedArbitratorByAddress(arbitratorNodeAddress) must not be null");
+                    "user.getAcceptedMediatorByAddress(mediatorNodeAddress) must not be null");
             trade.setMediatorPubKeyRing(checkNotNull(mediator.getPubKeyRing(),
                     "mediator.getPubKeyRing() must not be null"));
 
