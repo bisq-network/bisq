@@ -17,11 +17,12 @@
 
 package bisq.desktop.main.dao.burnbsq.proofofburn;
 
+import bisq.desktop.util.DisplayUtils;
+
 import bisq.core.dao.governance.proofofburn.MyProofOfBurn;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.common.util.Utilities;
@@ -53,7 +54,7 @@ class MyProofOfBurnListItem {
         if (optionalTx.isPresent()) {
             Tx tx = optionalTx.get();
             date = new Date(tx.getTime());
-            dateAsString = BSFormatter.formatDateTime(date);
+            dateAsString = DisplayUtils.formatDateTime(date);
             amount = proofOfBurnService.getAmount(tx);
             amountAsString = bsqFormatter.formatCoinWithCode(Coin.valueOf(amount));
             txId = tx.getId();

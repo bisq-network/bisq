@@ -77,8 +77,8 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     }
 
     public void onInvalidatePrice() {
-        price.set(btcFormatter.formatPrice(null));
-        price.set(btcFormatter.formatPrice(dataModel.getPrice().get()));
+        price.set(BSFormatter.formatPrice(null));
+        price.set(BSFormatter.formatPrice(dataModel.getPrice().get()));
     }
 
     public boolean isSecurityDepositValid() {

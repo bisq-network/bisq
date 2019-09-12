@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipCheckBox;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
@@ -182,7 +183,7 @@ public abstract class PaymentMethodForm {
                 Res.get("payment.maxPeriodAndLimit",
                         getTimeText(hours),
                         formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
-                        BSFormatter.formatAccountAge(accountAge));
+                        DisplayUtils.formatAccountAge(accountAge));
 
         if (isDisplayForm)
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);

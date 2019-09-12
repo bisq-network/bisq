@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -257,7 +258,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             .append(dispute0.getTradeId())
                             .append("\n")
                             .append("## Date: ")
-                            .append(BSFormatter.formatDateTime(dispute0.getOpeningDate()))
+                            .append(DisplayUtils.formatDateTime(dispute0.getOpeningDate()))
                             .append("\n")
                             .append("## Is support ticket: ")
                             .append(dispute0.isSupportTicket())
@@ -582,7 +583,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
                             public void updateItem(final Dispute item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setText(BSFormatter.formatDateTime(item.getOpeningDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getOpeningDate()));
                                 else
                                     setText("");
                             }
@@ -693,7 +694,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (buyerNodeAddress != null) {
                 String nrOfDisputes = disputeManager.getNrOfDisputes(true, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing());
-                String age = BSFormatter.formatAccountAge(accountAge);
+                String age = DisplayUtils.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
                 return buyerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
             } else
@@ -710,7 +711,7 @@ public class TraderDisputeView extends ActivatableView<VBox, Void> {
             if (sellerNodeAddress != null) {
                 String nrOfDisputes = disputeManager.getNrOfDisputes(false, contract);
                 long accountAge = accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
-                String age = BSFormatter.formatAccountAge(accountAge);
+                String age = DisplayUtils.formatAccountAge(accountAge);
                 String postFix = CurrencyUtil.isFiatCurrency(item.getContract().getOfferPayload().getCurrencyCode()) ? " / " + age : "";
                 return sellerNodeAddress.getHostNameWithoutPostFix() + " (" + nrOfDisputes + postFix + ")";
             } else

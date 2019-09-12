@@ -37,6 +37,7 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -573,7 +574,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(), offer.getCurrencyCode());
                 new Popup<>()
                         .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
-                                BSFormatter.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
+                                DisplayUtils.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),
                                 formatter.formatCoinWithCode(Coin.valueOf(tradeLimit)),
                                 formatter.formatCoinWithCode(offer.getMinAmount())))
                         .show();

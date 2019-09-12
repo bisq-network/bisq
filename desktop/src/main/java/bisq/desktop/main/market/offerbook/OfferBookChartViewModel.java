@@ -26,6 +26,7 @@ import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -254,7 +255,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
-        return formatter.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
+        return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyPrice.get() : maxPlacesForSellPrice.get());
     }
 
     public String getVolume(Offer offer) {
@@ -262,7 +263,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     }
 
     private String formatVolume(Offer offer, boolean decimalAligned) {
-        return formatter.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
+        return DisplayUtils.formatVolume(offer, decimalAligned, offer.isBuyOffer() ? maxPlacesForBuyVolume.get() : maxPlacesForSellVolume.get(), false);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

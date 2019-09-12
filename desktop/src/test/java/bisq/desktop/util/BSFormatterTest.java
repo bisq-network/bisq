@@ -60,17 +60,6 @@ public class BSFormatterTest {
     }
 
     @Test
-    public void testIsValid() {
-        assertEquals("0 days", BSFormatter.formatAccountAge(TimeUnit.HOURS.toMillis(23)));
-        assertEquals("0 days", BSFormatter.formatAccountAge(0));
-        assertEquals("0 days", BSFormatter.formatAccountAge(-1));
-        assertEquals("1 day", BSFormatter.formatAccountAge(TimeUnit.DAYS.toMillis(1)));
-        assertEquals("2 days", BSFormatter.formatAccountAge(TimeUnit.DAYS.toMillis(2)));
-        assertEquals("30 days", BSFormatter.formatAccountAge(TimeUnit.DAYS.toMillis(30)));
-        assertEquals("60 days", BSFormatter.formatAccountAge(TimeUnit.DAYS.toMillis(60)));
-    }
-
-    @Test
     public void testFormatDurationAsWords() {
         long oneDay = TimeUnit.DAYS.toMillis(1);
         long oneHour = TimeUnit.HOURS.toMillis(1);
@@ -98,8 +87,8 @@ public class BSFormatterTest {
 
     @Test
     public void testFormatPrice() {
-        assertEquals("100.0000", formatter.formatPrice(make(usdPrice)));
-        assertEquals("7098.4700", formatter.formatPrice(make(usdPrice.but(with(priceString, "7098.4700")))));
+        assertEquals("100.0000", BSFormatter.formatPrice(make(usdPrice)));
+        assertEquals("7098.4700", BSFormatter.formatPrice(make(usdPrice.but(with(priceString, "7098.4700")))));
     }
 
     @Test
@@ -109,91 +98,5 @@ public class BSFormatterTest {
         assertEquals("1.00", formatter.formatCoin(oneBitcoin, 5));
         assertEquals("0.000001", formatter.formatCoin(make(a(CoinMaker.Coin).but(with(satoshis, 100L)))));
         assertEquals("0.00000001", formatter.formatCoin(make(a(CoinMaker.Coin).but(with(satoshis, 1L)))));
-    }
-
-    @Test
-    public void testFormatVolume() {
-        assertEquals("1.00", formatter.formatVolume(make(btcUsdOffer), true, 4));
-        assertEquals("100.00", formatter.formatVolume(make(usdVolume)));
-        assertEquals("1774.62", formatter.formatVolume(make(usdVolume.but(with(volumeString, "1774.62")))));
-    }
-
-    @Test
-    public void testFormatSameVolume() {
-        Offer offer = mock(Offer.class);
-        Volume btc = Volume.parse("0.10", "BTC");
-        when(offer.getMinVolume()).thenReturn(btc);
-        when(offer.getVolume()).thenReturn(btc);
-
-        assertEquals("0.10000000", formatter.formatVolume(offer.getVolume()));
-    }
-
-    @Test
-    public void testFormatDifferentVolume() {
-        Offer offer = mock(Offer.class);
-        Volume btcMin = Volume.parse("0.10", "BTC");
-        Volume btcMax = Volume.parse("0.25", "BTC");
-        when(offer.isRange()).thenReturn(true);
-        when(offer.getMinVolume()).thenReturn(btcMin);
-        when(offer.getVolume()).thenReturn(btcMax);
-
-        assertEquals("0.10000000 - 0.25000000", formatter.formatVolume(offer, false, 0));
-    }
-
-    @Test
-    public void testFormatNullVolume() {
-        Offer offer = mock(Offer.class);
-        when(offer.getMinVolume()).thenReturn(null);
-        when(offer.getVolume()).thenReturn(null);
-
-        assertEquals("", formatter.formatVolume(offer.getVolume()));
-    }
-
-    @Test
-    public void testFormatSameAmount() {
-        Offer offer = mock(Offer.class);
-        when(offer.getMinAmount()).thenReturn(Coin.valueOf(10000000));
-        when(offer.getAmount()).thenReturn(Coin.valueOf(10000000));
-
-        assertEquals("0.10", formatter.formatAmount(offer));
-    }
-
-    @Test
-    public void testFormatDifferentAmount() {
-        OfferPayload offerPayload = mock(OfferPayload.class);
-        Offer offer = new Offer(offerPayload);
-        when(offerPayload.getMinAmount()).thenReturn(10000000L);
-        when(offerPayload.getAmount()).thenReturn(20000000L);
-
-        assertEquals("0.10 - 0.20", formatter.formatAmount(offer));
-    }
-
-    @Test
-    public void testFormatAmountWithAlignmenWithDecimals() {
-        OfferPayload offerPayload = mock(OfferPayload.class);
-        Offer offer = new Offer(offerPayload);
-        when(offerPayload.getMinAmount()).thenReturn(10000000L);
-        when(offerPayload.getAmount()).thenReturn(20000000L);
-
-        assertEquals("0.1000 - 0.2000", formatter.formatAmount(offer, 4, true, 15));
-    }
-
-    @Test
-    public void testFormatAmountWithAlignmenWithDecimalsNoRange() {
-        OfferPayload offerPayload = mock(OfferPayload.class);
-        Offer offer = new Offer(offerPayload);
-        when(offerPayload.getMinAmount()).thenReturn(10000000L);
-        when(offerPayload.getAmount()).thenReturn(10000000L);
-
-        assertEquals("0.1000", formatter.formatAmount(offer, 4, true, 15));
-    }
-
-    @Test
-    public void testFormatNullAmount() {
-        Offer offer = mock(Offer.class);
-        when(offer.getMinAmount()).thenReturn(null);
-        when(offer.getAmount()).thenReturn(null);
-
-        assertEquals("", formatter.formatAmount(offer));
     }
 }
