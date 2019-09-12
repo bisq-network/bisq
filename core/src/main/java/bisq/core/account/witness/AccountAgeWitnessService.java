@@ -345,23 +345,25 @@ public class AccountAgeWitnessService {
     // Mature witness checks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isImmature(Optional<AccountAgeWitness> accountAgeWitness) {
-        return accountAgeWitness
-                .map(witness -> witness.getDate() > SAFE_ACCOUNT_AGE_DATE &&
-                        getWitnessSignAge(witness, new Date()) < 0)
-                .orElse(true);
+    private boolean isImmature(AccountAgeWitness accountAgeWitness) {
+        return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE &&
+                getWitnessSignAge(accountAgeWitness, new Date()) < 0;
     }
 
     public boolean isMakersAccountAgeImmature(Offer offer) {
-        return isImmature(findWitness(offer));
+        return findWitness(offer)
+                .map(this::isImmature)
+                .orElse(true);
     }
 
     public boolean isTradePeersAccountAgeImmature(Trade trade) {
-        return isImmature(findTradePeerWitness(trade));
+        return findTradePeerWitness(trade)
+                .map(this::isImmature)
+                .orElse(true);
     }
 
     public boolean isMyAccountAgeImmature(PaymentAccount myPaymentAccount) {
-        return isImmature(Optional.of(getMyWitness(myPaymentAccount.getPaymentAccountPayload())));
+        return isImmature(getMyWitness(myPaymentAccount.getPaymentAccountPayload()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -391,7 +393,7 @@ public class AccountAgeWitnessService {
 
         AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccount.getPaymentAccountPayload());
         Coin maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
-        if (!isImmature(Optional.of(accountAgeWitness))) {
+        if (!isImmature(accountAgeWitness)) {
             return maxTradeLimit.value;
         }
         return getTradeLimit(maxTradeLimit,
@@ -505,7 +507,7 @@ public class AccountAgeWitnessService {
         final String currencyCode = offer.getCurrencyCode();
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
-        if (isImmature(Optional.of(peersWitness))) {
+        if (isImmature(peersWitness)) {
             peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness, peersCurrentDate,
                     offer.isMyOffer(keyRing) ? offer.getMirroredDirection() : offer.getDirection());
         }
