@@ -151,7 +151,7 @@ public class PeerInfoIcon extends Group {
         // outer circle
         Color ringColor;
         if (isFiatCurrency) {
-            switch (accountAgeWitnessService.getAccountAgeCategory(peersAccountAge)) {
+            switch (accountAgeWitnessService.getPeersAccountAgeCategory(peersAccountAge, offer)) {
                 case TWO_MONTHS_OR_MORE:
                     ringColor = Color.rgb(0, 225, 0); // > 2 months green
                     break;
@@ -159,8 +159,11 @@ public class PeerInfoIcon extends Group {
                     ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
                     break;
                 case LESS_ONE_MONTH:
-                default:
                     ringColor = Color.rgb(255, 140, 0); //< 1 month orange
+                    break;
+                case UNVERIFIED:
+                default:
+                    ringColor = Color.rgb(255, 0, 0); // not signed, red
                     break;
             }
 

@@ -576,7 +576,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         } else if (isInsufficientTradeLimit) {
             final Optional<PaymentAccount> account = model.getMostMaturePaymentAccountForOffer(offer);
             if (account.isPresent()) {
-                final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(), offer.getCurrencyCode());
+                final long tradeLimit = model.accountAgeWitnessService.getMyTradeLimit(account.get(),
+                        offer.getCurrencyCode(), offer.getMirroredDirection());
                 new Popup<>()
                         .warning(Res.get("offerbook.warning.tradeLimitNotMatching",
                                 formatter.formatAccountAge(model.accountAgeWitnessService.getMyAccountAge(account.get().getPaymentAccountPayload())),

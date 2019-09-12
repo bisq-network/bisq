@@ -25,7 +25,6 @@ import bisq.core.arbitration.DisputeResult;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.PaymentAccount;
@@ -284,8 +283,14 @@ public class AccountAgeWitnessService {
         }
     }
 
-    public AccountAge getAccountAgeCategory(long accountAge) {
-        if (accountAge < 0) {
+    public AccountAge getPeersAccountAgeCategory(long peersAccountAge, Offer offer) {
+        return getAccountAgeCategory(peersAccountAge, offer.isMyOffer(keyRing) ? offer.getMirroredDirection() :
+                offer.getDirection());
+    }
+
+    private AccountAge getAccountAgeCategory(long accountAge, OfferPayload.Direction direction) {
+        if (accountAge < 0 && direction == OfferPayload.Direction.BUY) {
+            // We only care about the limit of unverified accounts for buyers
             return AccountAge.UNVERIFIED;
         } else if (accountAge < TimeUnit.DAYS.toMillis(30)) {
             return AccountAge.LESS_ONE_MONTH;
@@ -300,12 +305,13 @@ public class AccountAgeWitnessService {
     private long getTradeLimit(Coin maxTradeLimit,
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
-                               Date now) {
+                               Date now,
+                               OfferPayload.Direction direction) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
             final long accountSignAge = getWitnessSignAge(accountAgeWitness, now);
-            AccountAge accountAgeCategory = getAccountAgeCategory(accountSignAge);
+            AccountAge accountAgeCategory = getAccountAgeCategory(accountSignAge, direction);
 
             switch (accountAgeCategory) {
                 case TWO_MONTHS_OR_MORE:
@@ -358,37 +364,6 @@ public class AccountAgeWitnessService {
         return isImmature(Optional.of(getMyWitness(myPaymentAccount.getPaymentAccountPayload())));
     }
 
-    public long getMyTradeLimitAtCreateOffer(PaymentAccount paymentAccount,
-                                             String currencyCode,
-                                             OfferPayload.Direction direction) {
-        if (direction == OfferPayload.Direction.BUY &&
-                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
-                isMyAccountAgeImmature(paymentAccount)) {
-            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-        } else {
-            return getMyTradeLimit(paymentAccount, currencyCode);
-        }
-    }
-
-    public long getMyTradeLimitAtTakeOffer(PaymentAccount paymentAccount,
-                                           Offer offer,
-                                           String currencyCode,
-                                           OfferPayload.Direction direction) {
-        if (direction == OfferPayload.Direction.BUY &&
-                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
-                isMakersAccountAgeImmature(offer)) {
-            // Taker is seller
-            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-        } else if (direction == OfferPayload.Direction.SELL &&
-                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
-                isMyAccountAgeImmature(paymentAccount)) {
-            // Taker is buyer
-            return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-        } else {
-            // Offers with no chargeback risk or mature buyer accounts
-            return getMyTradeLimit(paymentAccount, currencyCode);
-        }
-    }
     ///////////////////////////////////////////////////////////////////////////////////////////
     // My witness
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -410,7 +385,7 @@ public class AccountAgeWitnessService {
         return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
-    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction direction) {
         if (paymentAccount == null)
             return 0;
 
@@ -422,7 +397,8 @@ public class AccountAgeWitnessService {
         return getTradeLimit(maxTradeLimit,
                 currencyCode,
                 accountAgeWitness,
-                new Date());
+                new Date(),
+                direction);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -530,7 +506,8 @@ public class AccountAgeWitnessService {
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
         if (isImmature(Optional.of(peersWitness))) {
-            peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness, peersCurrentDate);
+            peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness, peersCurrentDate,
+                    offer.isMyOffer(keyRing) ? offer.getMirroredDirection() : offer.getDirection());
         }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;

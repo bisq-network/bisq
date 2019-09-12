@@ -583,8 +583,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     long getMaxTradeLimit() {
         if (paymentAccount != null) {
-            return accountAgeWitnessService.getMyTradeLimitAtCreateOffer(paymentAccount, tradeCurrencyCode.get(),
-                    direction);
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrencyCode.get(), direction);
         } else {
             return 0;
         }
