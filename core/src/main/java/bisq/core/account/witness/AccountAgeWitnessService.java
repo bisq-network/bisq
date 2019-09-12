@@ -82,6 +82,7 @@ public class AccountAgeWitnessService {
     private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1).getTime();
 
     public enum AccountAge {
+        UNVERIFIED,
         LESS_ONE_MONTH,
         ONE_TO_TWO_MONTHS,
         TWO_MONTHS_OR_MORE
@@ -284,7 +285,9 @@ public class AccountAgeWitnessService {
     }
 
     public AccountAge getAccountAgeCategory(long accountAge) {
-        if (accountAge < TimeUnit.DAYS.toMillis(30)) {
+        if (accountAge < 0) {
+            return AccountAge.UNVERIFIED;
+        } else if (accountAge < TimeUnit.DAYS.toMillis(30)) {
             return AccountAge.LESS_ONE_MONTH;
         } else if (accountAge < TimeUnit.DAYS.toMillis(60)) {
             return AccountAge.ONE_TO_TWO_MONTHS;
@@ -293,6 +296,7 @@ public class AccountAgeWitnessService {
         }
     }
 
+    // Checks trade limit based on time since signing of AccountAgeWitness
     private long getTradeLimit(Coin maxTradeLimit,
                                String currencyCode,
                                Optional<AccountAgeWitness> accountAgeWitnessOptional,
@@ -300,10 +304,9 @@ public class AccountAgeWitnessService {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
 
-            // TODO handle signed vs mature accounts
             final long accountSignAge = accountAgeWitnessOptional
                     .map(ageWitness -> getWitnessSignAge(ageWitness, now))
-                    .orElse(0L);
+                    .orElse(-1L);
             AccountAge accountAgeCategory = accountAgeWitnessOptional
                     .map(accountAgeWitness -> getAccountAgeCategory(accountSignAge))
                     .orElse(AccountAge.LESS_ONE_MONTH);
@@ -316,9 +319,11 @@ public class AccountAgeWitnessService {
                     factor = 0.5;
                     break;
                 case LESS_ONE_MONTH:
-                default:
                     factor = 0.25;
                     break;
+                case UNVERIFIED:
+                default:
+                    factor = 0.04;
             }
 
             final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
@@ -414,7 +419,11 @@ public class AccountAgeWitnessService {
             return 0;
 
         Optional<AccountAgeWitness> witnessOptional = Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload()));
-        return getTradeLimit(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode),
+        Coin maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
+        if  (!isImmature(witnessOptional)) {
+            return maxTradeLimit.value;
+        }
+        return getTradeLimit(maxTradeLimit,
                 currencyCode,
                 witnessOptional,
                 new Date());
@@ -523,7 +532,10 @@ public class AccountAgeWitnessService {
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
-        long peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, Optional.of(peersWitness), peersCurrentDate);
+        long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
+        if (isImmature(Optional.of(peersWitness))) {
+            peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, Optional.of(peersWitness), peersCurrentDate);
+        }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;
         if (!result) {
