@@ -42,7 +42,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
 @Slf4j
-public final class PaymentMethod implements PersistablePayload, Comparable {
+public final class PaymentMethod implements PersistablePayload, Comparable<PaymentMethod> {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
@@ -311,11 +311,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     }
 
     @Override
-    public int compareTo(@NotNull Object other) {
-        if (id != null)
-            return id.compareTo(((PaymentMethod) other).id);
-        else
-            return 0;
+    public int compareTo(@NotNull PaymentMethod other) {
+        return id.compareTo(other.id);
     }
 
     public boolean isAsset() {
