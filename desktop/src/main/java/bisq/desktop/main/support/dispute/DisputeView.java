@@ -237,7 +237,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                 });
                 List<List<Dispute>> disputeGroups = new ArrayList<>();
                 map.forEach((key, value) -> disputeGroups.add(value));
-                disputeGroups.sort((o1, o2) -> !o1.isEmpty() && !o2.isEmpty() ? o1.get(0).getOpeningDate().compareTo(o2.get(0).getOpeningDate()) : 0);
+                disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
                 StringBuilder stringBuilder = new StringBuilder();
 
                 // We don't translate that as it is not intended for the public

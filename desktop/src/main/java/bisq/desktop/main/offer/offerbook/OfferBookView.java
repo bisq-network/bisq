@@ -48,8 +48,6 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -226,22 +224,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         placeholder.setWrapText(true);
         tableView.setPlaceholder(placeholder);
 
-        marketColumn.setComparator((o1, o2) -> {
-            String str1 = BSFormatter.getCurrencyPair(o1.getOffer().getCurrencyCode());
-            String str2 = BSFormatter.getCurrencyPair(o2.getOffer().getCurrencyCode());
-            return str1 != null && str2 != null ? str1.compareTo(str2) : 0;
-        });
-        priceColumn.setComparator((o1, o2) -> {
-            Price price1 = o1.getOffer().getPrice();
-            Price price2 = o2.getOffer().getPrice();
-            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
-        });
+        marketColumn.setComparator(Comparator.comparing(
+                o -> BSFormatter.getCurrencyPair(o.getOffer().getCurrencyCode()),
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
+        priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
-        volumeColumn.setComparator((o1, o2) -> {
-            Volume offerVolume1 = o1.getOffer().getVolume();
-            Volume offerVolume2 = o2.getOffer().getVolume();
-            return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
-        });
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPaymentMethod()));
         avatarColumn.setComparator(Comparator.comparing(o -> o.getOffer().getOwnerNodeAddress().getFullAddress()));
 

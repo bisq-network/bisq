@@ -180,27 +180,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
-        volumeColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
-                return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
-            else
-                return 0;
-        });
-        amountColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
-                return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
-            else
-                return 0;
-        });
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
-        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getTrade().getOffer() != null ?
-                o.getTrade().getOffer().getPaymentMethod().getId() : null));
-        avatarColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
-                return o1.getTrade().getTradingPeerNodeAddress().getFullAddress().compareTo(o2.getTrade().getTradingPeerNodeAddress().getFullAddress());
-            else
-                return 0;
-        });
+        paymentMethodColumn.setComparator(Comparator.comparing(
+                o -> o.getTrade().getOffer() != null ? o.getTrade().getOffer().getPaymentMethod().getId() : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
+        avatarColumn.setComparator(Comparator.comparing(
+                o -> o.getTrade().getTradingPeerNodeAddress() != null ? o.getTrade().getTradingPeerNodeAddress().getFullAddress() : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
         roleColumn.setComparator(Comparator.comparing(model::getMyRole));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 

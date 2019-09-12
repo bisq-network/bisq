@@ -64,6 +64,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -123,12 +124,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         addressColumn.setComparator(Comparator.comparing(ReservedListItem::getAddressString));
         detailsColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getId()));
         balanceColumn.setComparator(Comparator.comparing(ReservedListItem::getBalance));
-        dateColumn.setComparator((o1, o2) -> {
-            if (getTradable(o1).isPresent() && getTradable(o2).isPresent())
-                return getTradable(o2).get().getDate().compareTo(getTradable(o1).get().getDate());
-            else
-                return 0;
-        });
+        dateColumn.setComparator(Comparator.comparing(o -> getTradable(o).map(Tradable::getDate).orElse(new Date(0))));
         tableView.getSortOrder().add(dateColumn);
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
 
