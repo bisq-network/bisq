@@ -63,7 +63,7 @@ do
 
     echo `date` "(Re)-starting node"
 
-    JAVA_OPTS='-XX:+UseG1GC -Xms512m -Xmx2000m' ./build/app/bin/bisq-seednode $ARGS 2>./error.log
+    JAVA_OPTS='-Xms512M -Xmx2000M -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=6969 -Dcom.sun.management.jmxremote.rmi.port=6969 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false' ./build/app/bin/bisq-seednode $ARGS 2>./error.log
 
     echo `date` "node terminated unexpectedly!!"
 
