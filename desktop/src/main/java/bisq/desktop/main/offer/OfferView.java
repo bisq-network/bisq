@@ -298,4 +298,3 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         void close();
     }
 }
-

@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
@@ -143,6 +144,7 @@ public class BisqSetup {
     private final KeyRing keyRing;
     private final BisqEnvironment bisqEnvironment;
     private final AccountAgeWitnessService accountAgeWitnessService;
+    private final SignedWitnessService signedWitnessService;
     private final MobileNotificationService mobileNotificationService;
     private final MyOfferTakenEvents myOfferTakenEvents;
     private final TradeEvents tradeEvents;
@@ -221,6 +223,7 @@ public class BisqSetup {
                      KeyRing keyRing,
                      BisqEnvironment bisqEnvironment,
                      AccountAgeWitnessService accountAgeWitnessService,
+                     SignedWitnessService signedWitnessService,
                      MobileNotificationService mobileNotificationService,
                      MyOfferTakenEvents myOfferTakenEvents,
                      TradeEvents tradeEvents,
@@ -261,6 +264,7 @@ public class BisqSetup {
         this.keyRing = keyRing;
         this.bisqEnvironment = bisqEnvironment;
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.signedWitnessService = signedWitnessService;
         this.mobileNotificationService = mobileNotificationService;
         this.myOfferTakenEvents = myOfferTakenEvents;
         this.tradeEvents = tradeEvents;
@@ -285,6 +289,11 @@ public class BisqSetup {
     }
 
     public void start() {
+        if (log.isDebugEnabled()) {
+            UserThread.runPeriodically(() -> {
+                log.debug("1 second heartbeat");
+            }, 1);
+        }
         maybeReSyncSPVChain();
         maybeShowTac();
     }
@@ -425,11 +434,8 @@ public class BisqSetup {
                 bisqEnvironment.getIgnoreLocalBtcNode()) {
             step3();
         } else {
-            Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
-                Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
-                Socket socket = null;
-                try {
-                    socket = new Socket();
+            new Thread(() -> {
+                try (Socket socket = new Socket()) {
                     socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
                             BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
                     log.info("Localhost Bitcoin node detected.");
@@ -439,16 +445,8 @@ public class BisqSetup {
                     });
                 } catch (Throwable e) {
                     UserThread.execute(BisqSetup.this::step3);
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                    }
                 }
-            });
-            checkIfLocalHostNodeIsRunningThread.start();
+            }, "checkIfLocalHostNodeIsRunningThread").start();
         }
     }
 
@@ -465,9 +463,8 @@ public class BisqSetup {
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
         // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        Thread checkCryptoThread = new Thread(() -> {
+        new Thread(() -> {
             try {
-                Thread.currentThread().setName("checkCryptoThread");
                 // just use any simple dummy msg
                 Ping payload = new Ping(1, 1);
                 SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
@@ -487,8 +484,7 @@ public class BisqSetup {
                 if (cryptoSetupFailedHandler != null)
                     cryptoSetupFailedHandler.accept(msg);
             }
-        });
-        checkCryptoThread.start();
+        }, "checkCryptoThread").start();
     }
 
     private void startP2pNetworkAndWallet() {
@@ -647,6 +643,7 @@ public class BisqSetup {
         assetService.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
+        signedWitnessService.onAllServicesInitialized();
 
         priceFeedService.setCurrencyCodeOnInit();
 

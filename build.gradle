@@ -3,11 +3,12 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.5'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.2'
         classpath files('gradle/witness/gradle-witness.jar')
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.41"
     }
 }
 
@@ -21,21 +22,25 @@ configure(rootProject) {
 }
 
 configure(subprojects) {
+    apply plugin: 'kotlin'
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
 
     sourceCompatibility = 1.10
 
-    ext {
+    ext { // in alphabetical order
         bcVersion = '1.56'
         bitcoinjVersion = 'a88d36d'
-        btcdCli4jVersion = '065d3786'
+        btcdCli4jVersion = '975ff5d4'
         codecVersion = '1.9'
         controlsfxVersion = '8.0.6_20'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
         findbugsVersion = '3.0.2'
         firebaseVersion = '6.2.0'
+        fontawesomefxVersion = '8.0.0'
+        fontawesomefxCommonsVersion = '9.1.2'
+        fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
         guavaVersion = '20.0'
         guiceVersion = '4.2.2'
         hamcrestVersion = '1.3'
@@ -49,13 +54,14 @@ configure(subprojects) {
         jsonsimpleVersion = '1.1.1'
         junitVersion = '4.12'
         jupiterVersion = '5.3.2'
+        kotlinVersion = '1.3.41'
         knowmXchangeVersion = '4.3.3'
         langVersion = '3.4'
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.5.1'
-        protobufVersion = '3.5.1'
+        netlayerVersion = '0.6.5.2'
+        protobufVersion = '3.9.1'
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
         reactfxVersion = '2.0-M3'
@@ -151,9 +157,7 @@ configure(project(':assets')) {
         }
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "commons-codec:commons-codec:$codecVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
-        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
     }
 }
 
@@ -170,13 +174,11 @@ configure(project(':common')) {
     }
 
     dependencies {
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
         compile "org.openjfx:javafx-base:11:$os"
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
-        compile("com.googlecode.json-simple:json-simple:$jsonsimpleVersion") {
-            exclude(module: 'junit')
-        }
         compile "org.springframework:spring-core:$springVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
@@ -184,7 +186,7 @@ configure(project(':common')) {
         compile "com.google.code.findbugs:jsr305:$findbugsVersion"
         compile "com.google.guava:guava:$guavaVersion"
         compile("com.google.inject:guice:$guiceVersion") {
-            exclude (module: 'guava')
+            exclude(module: 'guava')
         }
         compile("com.github.bisq-network.bitcoinj:bitcoinj-core:$bitcoinjVersion") {
             exclude(module: 'jsr305')
@@ -193,7 +195,6 @@ configure(project(':common')) {
             exclude(module: 'protobuf-java')
         }
         compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
         compile "commons-io:commons-io:$ioVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
@@ -222,7 +223,6 @@ configure(project(':p2p')) {
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile("org.mockito:mockito-core:$mockitoVersion")
-
     }
 }
 
@@ -257,7 +257,7 @@ configure(project(':core')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile("org.mockito:mockito-core:$mockitoVersion")
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: "$hamcrestVersion"
@@ -288,15 +288,13 @@ configure(project(':desktop')) {
     sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
     dependencies {
-        compile project(':p2p')
         compile project(':core')
-        compile project(':common')
         compile "org.controlsfx:controlsfx:$controlsfxVersion"
         compile "org.reactfx:reactfx:$reactfxVersion"
         compile "net.glxn:qrgen:$qrgenVersion"
-        compile 'de.jensd:fontawesomefx:8.0.0'
-        compile 'de.jensd:fontawesomefx-commons:9.1.2'
-        compile 'de.jensd:fontawesomefx-materialdesignfont:2.0.26-9.1.2'
+        compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
+        compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
+        compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
         compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
         compile "com.github.sarxos:webcam-capture:$sarxosVersion"
         compile "org.openjfx:javafx-controls:11:$os"
@@ -307,8 +305,7 @@ configure(project(':desktop')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile("org.mockito:mockito-core:$mockitoVersion") {
-        }
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
@@ -394,7 +391,6 @@ configure(project(':seednode')) {
 
     dependencies {
         compile project(':core')
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.springframework:spring-test:$springVersion"

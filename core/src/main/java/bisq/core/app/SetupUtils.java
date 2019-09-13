@@ -49,40 +49,35 @@ public class SetupUtils {
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
         // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        Thread checkCryptoThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    Thread.currentThread().setName("checkCryptoThread");
-                    // just use any simple dummy msg
-                    Ping payload = new Ping(1, 1);
-                    SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
-                            keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
-                    DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned,
-                            keyRing.getEncryptionKeyPair().getPrivate());
-                    if (tuple.getNetworkEnvelope() instanceof Ping &&
-                            ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
-                            ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
-                        log.debug("Crypto test succeeded");
+        Thread checkCryptoThread = new Thread(() -> {
+            try {
+                // just use any simple dummy msg
+                Ping payload = new Ping(1, 1);
+                SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
+                        keyRing.getSignatureKeyPair(), keyRing.getPubKeyRing().getEncryptionPubKey());
+                DecryptedDataTuple tuple = encryptionService.decryptHybridWithSignature(sealedAndSigned,
+                        keyRing.getEncryptionKeyPair().getPrivate());
+                if (tuple.getNetworkEnvelope() instanceof Ping &&
+                        ((Ping) tuple.getNetworkEnvelope()).getNonce() == payload.getNonce() &&
+                        ((Ping) tuple.getNetworkEnvelope()).getLastRoundTripTime() == payload.getLastRoundTripTime()) {
+                    log.debug("Crypto test succeeded");
 
-                        UserThread.execute(resultHandler::handleResult);
-                    } else {
-                        errorHandler.accept(new CryptoException("Payload not correct after decryption"));
-                    }
-                } catch (CryptoException | ProtobufferException e) {
-                    log.error(e.toString());
-                    e.printStackTrace();
-                    errorHandler.accept(e);
+                    UserThread.execute(resultHandler::handleResult);
+                } else {
+                    errorHandler.accept(new CryptoException("Payload not correct after decryption"));
                 }
+            } catch (CryptoException | ProtobufferException e) {
+                log.error(e.toString());
+                e.printStackTrace();
+                errorHandler.accept(e);
             }
-        };
+        }, "checkCryptoThread");
         checkCryptoThread.start();
     }
 
     public static BooleanProperty readFromResources(P2PDataStorage p2PDataStorage) {
         BooleanProperty result = new SimpleBooleanProperty();
-        Thread thread = new Thread(() -> {
-            Thread.currentThread().setName("readFromResourcesThread");
+        new Thread(() -> {
             // Used to load different files per base currency (EntryMap_BTC_MAINNET, EntryMap_LTC,...)
             final BaseCurrencyNetwork baseCurrencyNetwork = BisqEnvironment.getBaseCurrencyNetwork();
             final String postFix = "_" + baseCurrencyNetwork.name();
@@ -90,8 +85,7 @@ public class SetupUtils {
             p2PDataStorage.readFromResources(postFix);
             log.info("readFromResources took {} ms", (new Date().getTime() - ts));
             UserThread.execute(() -> result.set(true));
-        });
-        thread.start();
+        }, "readFromResourcesThread").start();
         return result;
     }
 }

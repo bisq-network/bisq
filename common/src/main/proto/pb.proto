@@ -282,6 +282,11 @@ message PeerOpenedDisputeMessage {
 }
 
 message DisputeCommunicationMessage {
+    enum Type {
+        MEDIATION = 0;
+        ARBITRATION = 1;
+        TRADE = 2;
+    }
     int64 date = 1;
     string trade_id = 2;
     int32 trader_id = 3;
@@ -296,6 +301,8 @@ message DisputeCommunicationMessage {
     string send_message_error = 12;
     bool acknowledged = 13;
     string ack_error = 14;
+    Type type = 15;
+    bool was_displayed = 16;
 }
 
 message DisputeResultMessage {
@@ -403,7 +410,7 @@ message Peer {
 message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
-    string pgp_pub_key_as_pem = 3;
+    reserved 3;  // WAS: string pgp_pub_key_as_pem = 3;
 }
 
 message SealedAndSigned {
@@ -798,6 +805,7 @@ message PaymentAccountPayload {
         PromptPayAccountPayload prompt_pay_account_payload = 25;
         AdvancedCashAccountPayload advanced_cash_account_payload = 26;
         InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
+        JapanBankAccountPayload japan_bank_account_payload = 28;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -853,6 +861,16 @@ message NationalBankAccountPayload {
 }
 
 message SameBankAccountPayload {
+}
+
+message JapanBankAccountPayload {
+    string bank_name = 1;
+    string bank_code = 2;
+    string bank_branch_name = 3;
+    string bank_branch_code = 4;
+    string bank_account_type = 5;
+    string bank_account_name = 6;
+    string bank_account_number = 7;
 }
 
 message SpecificBanksAccountPayload {
@@ -1257,6 +1275,7 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
+    repeated DisputeCommunicationMessage communication_messages = 29;
 }
 
 message BuyerAsMakerTrade {
@@ -1378,6 +1397,7 @@ message PreferencesPayload {
     int32 ignore_dust_threshold = 51;
     double buyer_security_deposit_as_percent_for_crypto = 52;
     int32 block_notify_port = 53;
+    int32 css_theme = 54;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

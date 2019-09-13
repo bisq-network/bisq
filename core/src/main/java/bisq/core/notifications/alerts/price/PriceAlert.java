@@ -70,8 +70,8 @@ public class PriceAlert {
                 if (priceAsLong > filter.getHigh() || priceAsLong < filter.getLow()) {
                     String msg = Res.get("account.notifications.priceAlert.message.msg",
                             currencyName,
-                            formatter.formatMarketPrice(priceAsDouble, currencyCode),
-                            formatter.getCurrencyPair(currencyCode));
+                            BSFormatter.formatMarketPrice(priceAsDouble, currencyCode),
+                            BSFormatter.getCurrencyPair(currencyCode));
                     MobileMessage message = new MobileMessage(Res.get("account.notifications.priceAlert.message.title", currencyName),
                             msg,
                             MobileMessageType.PRICE);

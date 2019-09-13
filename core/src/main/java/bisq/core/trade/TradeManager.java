@@ -21,9 +21,11 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.chat.ChatManager;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
@@ -55,7 +57,6 @@ import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -64,7 +65,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -77,8 +77,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -103,6 +101,7 @@ public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
     private final User user;
+    @Getter
     private final KeyRing keyRing;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
@@ -129,6 +128,9 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
 
+    @Getter
+    private final ChatManager chatManager;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -144,15 +146,15 @@ public class TradeManager implements PersistedDataHost {
                         ClosedTradableManager closedTradableManager,
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
+                        WalletsSetup walletsSetup,
                         PriceFeedService priceFeedService,
                         FilterManager filterManager,
                         TradeStatisticsManager tradeStatisticsManager,
                         ReferralIdService referralIdService,
-                        PersistenceProtoResolver persistenceProtoResolver,
                         AccountAgeWitnessService accountAgeWitnessService,
                         ArbitratorManager arbitratorManager,
                         ClockWatcher clockWatcher,
-                        @Named(Storage.STORAGE_DIR) File storageDir) {
+                        Storage<TradableList<Trade>> storage) {
         this.user = user;
         this.keyRing = keyRing;
         this.btcWalletService = btcWalletService;
@@ -170,7 +172,10 @@ public class TradeManager implements PersistedDataHost {
         this.arbitratorManager = arbitratorManager;
         this.clockWatcher = clockWatcher;
 
-        tradableListStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        tradableListStorage = storage;
+
+        chatManager = new ChatManager(p2PService, walletsSetup);
+        chatManager.setChatSession(new TradeChatSession(null, true, true, this, chatManager));
 
         p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, peerNodeAddress) -> {
             NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
@@ -244,6 +249,8 @@ public class TradeManager implements PersistedDataHost {
                     log.warn("Swapping pending OFFER_FUNDING entries at startup. offerId={}", addressEntry.getOfferId());
                     btcWalletService.swapTradeEntryToAvailableEntry(addressEntry.getOfferId(), AddressEntry.Context.OFFER_FUNDING);
                 });
+
+        chatManager.onAllServicesInitialized();
     }
 
     public void shutDown() {
@@ -649,5 +656,9 @@ public class TradeManager implements PersistedDataHost {
                 }
             }
         });
+    }
+
+    public void persistTrades() {
+        tradableList.persist();
     }
 }

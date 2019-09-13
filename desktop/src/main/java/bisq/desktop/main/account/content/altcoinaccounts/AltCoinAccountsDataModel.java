@@ -32,6 +32,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
 
@@ -56,6 +57,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "AltcoinPaymentAccounts";
     private final PersistenceProtoResolver persistenceProtoResolver;
+    private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
 
     @Inject
     public AltCoinAccountsDataModel(User user,
@@ -63,13 +65,15 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                                     OpenOfferManager openOfferManager,
                                     TradeManager tradeManager,
                                     AccountAgeWitnessService accountAgeWitnessService,
-                                    PersistenceProtoResolver persistenceProtoResolver) {
+                                    PersistenceProtoResolver persistenceProtoResolver,
+                                    CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
+        this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
         setChangeListener = change -> fillAndSortPaymentAccounts();
     }
 
@@ -144,11 +148,11 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
             ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> paymentAccount instanceof AssetAccount)
                     .collect(Collectors.toList()));
-            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver);
+            GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
         }
     }
 
     public void importAccounts(Stage stage) {
-        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver);
+        GUIUtil.importAccounts(user, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedDatabaseFilesHandler);
     }
 }

@@ -79,8 +79,6 @@ public final class DisputeList implements PersistableEnvelope, PersistedDataHost
     public static DisputeList fromProto(protobuf.DisputeList proto,
                                         CoreProtoResolver coreProtoResolver,
                                         Storage<DisputeList> storage) {
-        log.debug("DisputeList fromProto of {} ", proto);
-
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
                 .collect(Collectors.toList());

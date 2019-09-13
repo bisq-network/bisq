@@ -66,10 +66,10 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
                          long date,
                          long tradeAmount) {
         this.signedByArbitrator = signedByArbitrator;
-        this.witnessHash = witnessHash;
-        this.signature = signature;
-        this.signerPubKey = signerPubKey;
-        this.witnessOwnerPubKey = witnessOwnerPubKey;
+        this.witnessHash = witnessHash.clone();
+        this.signature = signature.clone();
+        this.signerPubKey = signerPubKey.clone();
+        this.witnessOwnerPubKey = witnessOwnerPubKey.clone();
         this.date = date;
         this.tradeAmount = tradeAmount;
 

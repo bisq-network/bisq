@@ -114,7 +114,7 @@ public abstract class ProposalValidator implements ConsensusCritical {
         if (isTxConfirmed) {
             int txHeight = optionalTx.get().getBlockHeight();
             if (!periodService.isTxInCorrectCycle(txHeight, chainHeight)) {
-                log.debug("Tx is not in current cycle. proposal.getTxId()={}", proposal.getTxId());
+                log.trace("Tx is not in current cycle. proposal.getTxId()={}", proposal.getTxId());
                 return false;
             }
             if (!periodService.isInPhase(txHeight, DaoPhase.Phase.PROPOSAL)) {

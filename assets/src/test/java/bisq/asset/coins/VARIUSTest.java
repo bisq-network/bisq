@@ -15,37 +15,29 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.asset;
+package bisq.asset.coins;
 
 import org.junit.Test;
 
-/**
- * Convenient abstract base class for {@link Asset} implementations still using the
- * deprecated {@link DefaultAddressValidator}.
- *
- * @author Bernard Labno
- * @since 0.7.0
- * @see DefaultAddressValidator
- */
-@Deprecated
-public abstract class AbstractAssetWithDefaultValidatorTest extends AbstractAssetTest {
+import bisq.asset.AbstractAssetTest;
 
-    public AbstractAssetWithDefaultValidatorTest(Asset asset) {
-        super(asset);
+public class VARIUSTest extends AbstractAssetTest {
+
+    public VARIUSTest() {
+        super(new VARIUS());
     }
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress(" ");
-        assertValidAddress("1");
-        assertValidAddress("AQJTNtWcP7opxuR52Lf5vmoQTC8EHQ6GxV");
-        assertValidAddress("ALEK7jttmqtx2ZhXHg69Zr426qKBnzYA9E");
-        assertValidAddress("AP1egWUthPoYvZL57aBk4RPqUgjG1fJGn6");
-        assertValidAddress("AST3zfvPdZ35npxAVC8ABgVCxxDLwTmAHU");
+        assertValidAddress("VL85MGBCSfnSeiLxuQwXuvxHArzfr1574H");
+        assertValidAddress("VBKxFQULC6bjzWdb2PhZyoRdePq8fs55fi");
+        assertValidAddress("VXwmVvzX6KMqfkBJXRXu4VUbgzPhLKdBSq");
     }
 
     @Test
     public void testInvalidAddresses() {
-        testBlank();
+        assertInvalidAddress("xLfnSeiLxuQwXuvxHArzfr1574H");
+        assertInvalidAddress("BBKzWdb2PhZyoRdePq8fs55fi");
+        assertInvalidAddress("vXwmVvzX6KMqfkBJXRXu4VUbgzPhLKdBSq");
     }
 }

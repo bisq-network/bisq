@@ -17,6 +17,7 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.TradeLimits;
 
@@ -71,6 +72,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static final String SEPA_INSTANT_ID = "SEPA_INSTANT";
     public static final String FASTER_PAYMENTS_ID = "FASTER_PAYMENTS";
     public static final String NATIONAL_BANK_ID = "NATIONAL_BANK";
+    public static final String JAPAN_BANK_ID = "JAPAN_BANK";
     public static final String SAME_BANK_ID = "SAME_BANK";
     public static final String SPECIFIC_BANKS_ID = "SPECIFIC_BANKS";
     public static final String SWISH_ID = "SWISH";
@@ -107,6 +109,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
     public static PaymentMethod SEPA_INSTANT;
     public static PaymentMethod FASTER_PAYMENTS;
     public static PaymentMethod NATIONAL_BANK;
+    public static PaymentMethod JAPAN_BANK;
     public static PaymentMethod SAME_BANK;
     public static PaymentMethod SPECIFIC_BANKS;
     public static PaymentMethod SWISH;
@@ -174,6 +177,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
             REVOLUT = new PaymentMethod(REVOLUT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             PERFECT_MONEY = new PaymentMethod(PERFECT_MONEY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
             ADVANCED_CASH = new PaymentMethod(ADVANCED_CASH_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+
+            // Japan
+            JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
 
             // China
             ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
@@ -316,11 +322,18 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
     }
 
-    public static boolean hasChargebackRisk(PaymentMethod paymentMethod) {
+    public static boolean hasChargebackRisk(PaymentMethod paymentMethod, String currencyCode) {
         if (paymentMethod == null)
             return false;
 
         String id = paymentMethod.getId();
+        return hasChargebackRisk(id, currencyCode);
+    }
+
+    public static boolean hasChargebackRisk(String id, String currencyCode) {
+        if (CurrencyUtil.getMatureMarketCurrencies().stream()
+            .noneMatch(c -> c.getCode().equals(currencyCode)))
+            return false;
         return id.equals(PaymentMethod.SEPA_ID) ||
                 id.equals(PaymentMethod.SEPA_INSTANT_ID) ||
                 id.equals(PaymentMethod.INTERAC_E_TRANSFER_ID) ||

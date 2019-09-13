@@ -17,6 +17,7 @@
 
 package bisq.desktop.util;
 
+import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 
 public class CurrencyListItem {
@@ -54,5 +55,16 @@ public class CurrencyListItem {
                 "tradeCurrency=" + tradeCurrency +
                 ", numTrades=" + numTrades +
                 '}';
+    }
+
+    public String codeDashNameString() {
+        if (isSpecialShowAllItem())
+            return Res.get(GUIUtil.SHOW_ALL_FLAG);
+        else
+            return tradeCurrency.getCode() + "  -  " + tradeCurrency.getName();
+    }
+
+    private boolean isSpecialShowAllItem() {
+        return tradeCurrency.getCode().equals(GUIUtil.SHOW_ALL_FLAG);
     }
 }

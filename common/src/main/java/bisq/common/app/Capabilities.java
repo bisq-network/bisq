@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * hold a set of capabilities and offers appropriate comparison methods.
@@ -32,12 +33,17 @@ import lombok.EqualsAndHashCode;
  * @author Florian Reimair
  */
 @EqualsAndHashCode
+@Slf4j
 public class Capabilities {
 
     /**
      * The global set of capabilities, i.e. the capabilities if the local app.
      */
     public static final Capabilities app = new Capabilities();
+
+    // Defines which most recent capability any node need to support.
+    // This helps to clean network from very old inactive but still running nodes.
+    private static final Capability mandatoryCapability = Capability.DAO_STATE;
 
     protected final Set<Capability> capabilities = new HashSet<>();
 
@@ -71,7 +77,7 @@ public class Capabilities {
     }
 
     public void addAll(Capabilities capabilities) {
-        if(capabilities != null)
+        if (capabilities != null)
             this.capabilities.addAll(capabilities.capabilities);
     }
 
@@ -109,6 +115,10 @@ public class Capabilities {
                 .filter(integer -> integer < Capability.values().length)
                 .map(integer -> Capability.values()[integer])
                 .collect(Collectors.toSet()));
+    }
+
+    public static boolean hasMandatoryCapability(Capabilities capabilities) {
+        return capabilities.capabilities.stream().anyMatch(c -> c == mandatoryCapability);
     }
 
     @Override

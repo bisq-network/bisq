@@ -84,7 +84,7 @@ public class TacWindow extends Overlay<TacWindow> {
                 "accordance with the Bisq arbitration rules as at present in force. The arbitration is conducted online. " +
                 "The language to be used in the arbitration proceedings shall be English if not otherwise stated.\n\n" +
 
-                "6. The user confirms that he has read and agreed to the rules regarding the dispute process:\n" +
+                "6. The user confirms that they have read and agreed to the rules regarding the dispute process:\n" +
                 "    - You must complete trades within the maximum duration specified for each payment method.\n" +
                 "    - You must enter the trade ID in the \"reason for payment\" text field when doing the fiat payment transfer.\n" +
                 "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +

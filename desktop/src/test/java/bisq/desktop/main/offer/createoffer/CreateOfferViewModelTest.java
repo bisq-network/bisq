@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.offer.createoffer;
 
-import bisq.desktop.main.offer.MakerFeeMaker;
+import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
@@ -104,7 +104,7 @@ public class CreateOfferViewModelTest {
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, feeService, txFeeEstimationService, null, bsFormatter, mock(MakerFeeMaker.class));
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, feeService, txFeeEstimationService, null, bsFormatter, mock(MakerFeeProvider.class));
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 

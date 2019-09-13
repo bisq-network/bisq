@@ -161,7 +161,7 @@ public class GetDataRequestHandler {
                 if (connection.getCapabilities().containsAll(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
                     doAdd = true;
                 else
-                    log.debug("We do not send the message to the peer because he does not support the required capability for that message type.\n" +
+                    log.debug("We do not send the message to the peer because they do not support the required capability for that message type.\n" +
                             "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
             } else {
                 doAdd = true;

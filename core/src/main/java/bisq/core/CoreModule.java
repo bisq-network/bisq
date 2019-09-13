@@ -40,6 +40,8 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.CommonOptionKeys;
 import bisq.common.app.AppModule;
 import bisq.common.crypto.KeyStorage;
+import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.PubKeyRingProvider;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
@@ -96,6 +98,7 @@ public class CoreModule extends AppModule {
         install(alertModule());
         install(filterModule());
         install(corePresentationModule());
+        bind(PubKeyRing.class).toProvider(PubKeyRingProvider.class);
     }
 
     private TradeModule tradeModule() {

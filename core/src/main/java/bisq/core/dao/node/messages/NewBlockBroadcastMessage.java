@@ -64,6 +64,6 @@ public final class NewBlockBroadcastMessage extends BroadcastMessage implements 
 
     @Override
     public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.BSQ_BLOCK);
+        return new Capabilities(Capability.RECEIVE_BSQ_BLOCK);
     }
 }

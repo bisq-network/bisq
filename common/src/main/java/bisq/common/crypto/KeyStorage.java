@@ -24,8 +24,6 @@ import com.google.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.bouncycastle.openpgp.PGPKeyPair;
-
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -54,8 +52,6 @@ import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-
 // TODO: use a password protection for key storage
 @Singleton
 public class KeyStorage {
@@ -65,9 +61,7 @@ public class KeyStorage {
 
     public enum KeyEntry {
         MSG_SIGNATURE("sig", Sig.KEY_ALGO),
-        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO),
-        // TODO not impl
-        PGP("pgp", null);
+        MSG_ENCRYPTION("enc", Encryption.ASYM_KEY_ALGO);
 
         private final String fileName;
         private final String algorithm;
@@ -111,14 +105,6 @@ public class KeyStorage {
         return new File(storageDir + "/" + keyEntry.getFileName() + ".key").exists();
     }
 
-    // TODO not impl
-    @SuppressWarnings({"SameParameterValue", "SameReturnValue", "UnusedParameters"})
-    @Nullable
-    public PGPKeyPair loadPgpKeyPair(KeyEntry keyEntry) {
-        return null;
-    }
-
-
     public KeyPair loadKeyPair(KeyEntry keyEntry) {
         FileUtil.rollingBackup(storageDir, keyEntry.getFileName() + ".key", 20);
         // long now = System.currentTimeMillis();
@@ -136,8 +122,7 @@ public class KeyStorage {
                 PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
                 privateKey = keyFactory.generatePrivate(privateKeySpec);
             } catch (InvalidKeySpecException | IOException e) {
-                log.error(e.getMessage());
-                e.printStackTrace();
+                log.error("Could not load key " + keyEntry.toString(), e.getMessage());
                 throw new RuntimeException("Could not load key " + keyEntry.toString(), e);
             }
 
@@ -161,8 +146,7 @@ public class KeyStorage {
             log.debug("load completed in {} msec", System.currentTimeMillis() - new Date().getTime());
             return new KeyPair(publicKey, privateKey);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
+            log.error("Could not load key " + keyEntry.toString(), e);
             throw new RuntimeException("Could not load key " + keyEntry.toString(), e);
         }
     }
@@ -181,8 +165,7 @@ public class KeyStorage {
         try (FileOutputStream fos = new FileOutputStream(storageDir + "/" + name + ".key")) {
             fos.write(pkcs8EncodedKeySpec.getEncoded());
         } catch (IOException e) {
-            log.error(e.toString());
-            e.printStackTrace();
+            log.error("Could not save key " + name, e);
             throw new RuntimeException("Could not save key " + name, e);
         }
     }

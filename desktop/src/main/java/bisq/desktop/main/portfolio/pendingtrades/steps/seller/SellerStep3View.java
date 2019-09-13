@@ -23,6 +23,7 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -320,7 +321,7 @@ public class SellerStep3View extends TradeStepView {
         //noinspection UnusedAssignment
         String key = "confirmPayment" + trade.getId();
         String message = "";
-        String tradeVolumeWithCode = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
+        String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
         String currencyName = CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode());
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         String id = trade.getShortId();

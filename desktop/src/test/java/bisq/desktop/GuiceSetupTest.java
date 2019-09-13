@@ -32,6 +32,7 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
+import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.TradeLimits;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -46,9 +47,11 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.ClockWatcher;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
+import bisq.common.storage.Storage;
 
 import org.springframework.mock.env.MockPropertySource;
 
@@ -58,6 +61,7 @@ import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.Test;
 
+import static junit.framework.TestCase.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -104,6 +108,7 @@ public class GuiceSetupTest {
         assertSingleton(TradeLimits.class);
         assertSingleton(KeyStorage.class);
         assertSingleton(KeyRing.class);
+        assertSingleton(PubKeyRing.class);
         assertSingleton(User.class);
         assertSingleton(ClockWatcher.class);
         assertSingleton(Preferences.class);
@@ -127,9 +132,16 @@ public class GuiceSetupTest {
         assertSingleton(TradeEvents.class);
         assertSingleton(PriceAlert.class);
         assertSingleton(MarketAlerts.class);
+        assertSingleton(ChargeBackRisk.class);
+
+        assertNotSingleton(Storage.class);
     }
 
     private void assertSingleton(Class<?> type) {
         assertSame(injector.getInstance(type), injector.getInstance(type));
+    }
+
+    private void assertNotSingleton(Class<?> type) {
+        assertNotSame(injector.getInstance(type), injector.getInstance(type));
     }
 }

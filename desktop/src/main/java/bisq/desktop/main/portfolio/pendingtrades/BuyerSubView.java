@@ -39,7 +39,6 @@ public class BuyerSubView extends TradeSubView {
 
     public BuyerSubView(PendingTradesViewModel model) {
         super(model);
-
     }
 
     @Override

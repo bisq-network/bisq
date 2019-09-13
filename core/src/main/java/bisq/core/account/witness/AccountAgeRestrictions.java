@@ -55,7 +55,7 @@ public class AccountAgeRestrictions {
                                                     String currencyCode,
                                                     OfferPayload.Direction direction) {
         if (direction == OfferPayload.Direction.BUY &&
-                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
                 AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, paymentAccount)) {
             return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
         } else {
@@ -68,11 +68,13 @@ public class AccountAgeRestrictions {
                                                   Offer offer,
                                                   String currencyCode,
                                                   OfferPayload.Direction direction) {
-        if (direction == OfferPayload.Direction.BUY && PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) &&
+        if (direction == OfferPayload.Direction.BUY &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
                 AccountAgeRestrictions.isMakersAccountAgeImmature(accountAgeWitnessService, offer)) {
             // Taker is seller
             return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-        } else if (direction == OfferPayload.Direction.SELL && PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod()) &&
+        } else if (direction == OfferPayload.Direction.SELL &&
+                PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), currencyCode) &&
                 AccountAgeRestrictions.isMyAccountAgeImmature(accountAgeWitnessService, paymentAccount)) {
             // Taker is buyer
             return OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;

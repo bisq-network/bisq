@@ -34,7 +34,7 @@ import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
-import bisq.desktop.components.SearchComboBox;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -913,6 +913,21 @@ public class FormBuilder {
         return new Tuple3<>(vBox, label, comboBox);
     }
 
+    public static <T> Tuple3<VBox, Label, AutocompleteComboBox<T>> addTopLabelAutocompleteComboBox(String title) {
+        return addTopLabelAutocompleteComboBox(title, 0);
+    }
+
+    public static <T> Tuple3<VBox, Label, AutocompleteComboBox<T>> addTopLabelAutocompleteComboBox(String title, int top) {
+        Label label = getTopLabel(title);
+        VBox vBox = getTopLabelVBox(top);
+
+        final AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
+
+        vBox.getChildren().addAll(label, comboBox);
+
+        return new Tuple3<>(vBox, label, comboBox);
+    }
+
     @NotNull
     private static VBox getTopLabelVBox(int top) {
         VBox vBox = new VBox();
@@ -984,18 +999,60 @@ public class FormBuilder {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Label  + SearchComboBox
+    // Label  + AutocompleteComboBox
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static <T> Tuple2<Label, ComboBox<T>> addLabelSearchComboBox(GridPane gridPane, int rowIndex, String title, double top) {
-
-        SearchComboBox<T> comboBox = new SearchComboBox<>();
-
+    public static <T> Tuple2<Label, ComboBox<T>> addLabelAutocompleteComboBox(GridPane gridPane, int rowIndex, String title, double top) {
+        AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
         final Tuple2<Label, VBox> labelVBoxTuple2 = addTopLabelWithVBox(gridPane, rowIndex, title, comboBox, top);
-
         return new Tuple2<>(labelVBoxTuple2.first, comboBox);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + TextField + AutocompleteComboBox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> Tuple4<Label, TextField, Label, ComboBox<T>> addTopLabelTextFieldAutocompleteComboBox(
+            GridPane gridPane,
+            int rowIndex,
+            String titleTextfield,
+            String titleCombobox
+            )
+    {
+        return addTopLabelTextFieldAutocompleteComboBox(gridPane, rowIndex, titleTextfield, titleCombobox, 0);
+    }
+
+    public static <T> Tuple4<Label, TextField, Label, ComboBox<T>> addTopLabelTextFieldAutocompleteComboBox(
+            GridPane gridPane,
+            int rowIndex,
+            String titleTextfield,
+            String titleCombobox,
+            double top
+            )
+    {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+
+        final VBox topLabelVBox1 = getTopLabelVBox(5);
+        final Label topLabel1 = getTopLabel(titleTextfield);
+        final TextField textField = new BisqTextField();
+        topLabelVBox1.getChildren().addAll(topLabel1, textField);
+
+        final VBox topLabelVBox2 = getTopLabelVBox(5);
+        final Label topLabel2 = getTopLabel(titleCombobox);
+        AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
+        comboBox.setPromptText(titleCombobox);
+        ((JFXComboBox<T>) comboBox).setLabelFloat(true);
+        topLabelVBox2.getChildren().addAll(topLabel2, comboBox);
+
+        hBox.getChildren().addAll(topLabelVBox1, topLabelVBox2);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple4<>(topLabel1, textField, topLabel2, comboBox);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + ComboBox + ComboBox
