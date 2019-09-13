@@ -32,14 +32,11 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
-import bisq.common.app.Version;
 import bisq.common.util.Tuple3;
-import bisq.common.util.Utilities;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -51,8 +48,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -66,8 +61,6 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import javafx.beans.value.ChangeListener;
-
-import javafx.event.EventHandler;
 
 import java.util.Optional;
 
@@ -101,8 +94,6 @@ public abstract class TradeStepView extends AnchorPane {
     protected Label infoLabel;
     private Overlay acceptMediationResultPopup;
 
-    // TODO remove before release. Only in for making dev testing easier
-    private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
 
 
@@ -165,39 +156,9 @@ public abstract class TradeStepView extends AnchorPane {
                 updateTimeLeft();
             }
         };
-
-        // TODO remove before relase. Only in for making dev testing easier
-        if (Version.VERSION.equals("1.1.5")) {
-            keyEventEventHandler = keyEvent -> {
-                String key;
-                if (Utilities.isAltOrCtrlPressed(KeyCode.UP, keyEvent)) {
-                    if (trade.getTradePeriodState() == Trade.TradePeriodState.FIRST_HALF) {
-                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
-                    } else if (trade.getTradePeriodState() == Trade.TradePeriodState.SECOND_HALF) {
-                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
-                    }
-                } else if (Utilities.isAltOrCtrlPressed(KeyCode.DOWN, keyEvent)) {
-                    if (trade.getTradePeriodState() == Trade.TradePeriodState.TRADE_PERIOD_OVER) {
-                        trade.setTradePeriodState(Trade.TradePeriodState.SECOND_HALF);
-                        key = "displayTradePeriodOver" + trade.getId();
-                        DontShowAgainLookup.dontShowAgain(key, false);
-                    } else if (trade.getTradePeriodState() == Trade.TradePeriodState.SECOND_HALF) {
-                        trade.setTradePeriodState(Trade.TradePeriodState.FIRST_HALF);
-                        key = "displayHalfTradePeriodOver" + trade.getId();
-                        DontShowAgainLookup.dontShowAgain(key, false);
-                    }
-                }
-            };
-        }
     }
 
     public void activate() {
-        // TODO remove before relase. Only in for making dev testing easier
-        scene = getScene();
-        if (Version.VERSION.equals("1.1.5") && scene != null) {
-            getScene().addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
-        }
-
         if (txIdTextField != null) {
             if (txIdSubscription != null)
                 txIdSubscription.unsubscribe();
@@ -249,11 +210,6 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     public void deactivate() {
-        // TODO remove before relase. Only in for making dev testing easier
-        if (Version.VERSION.equals("1.1.5") && scene != null) {
-            scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
-        }
-
         if (txIdSubscription != null)
             txIdSubscription.unsubscribe();
 

@@ -67,7 +67,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class MediationManager extends DisputeManager<MediationDisputeList> {
 
     // The date when mediation is activated
-    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1);
+    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 26);
 
     public static boolean isMediationActivated() {
         return new Date().after(MEDIATION_ACTIVATED_DATE);
