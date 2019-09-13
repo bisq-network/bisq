@@ -24,6 +24,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -202,7 +203,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     private long getMaxTradePeriod() {

@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
@@ -136,7 +137,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
     }
 
     String getState(ClosedTradableListItem item) {

@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -112,7 +113,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode());
     }
 
     String getDate(OpenOfferListItem item) {

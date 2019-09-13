@@ -241,7 +241,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                         String code = selectedTradeCurrency.getCode();
                         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", code)));
 
-                        priceColumnLabel.set(BSFormatter.getPriceWithCurrencyCode(code));
+                        priceColumnLabel.set(CurrencyUtil.getPriceWithCurrencyCode(code));
 
                         tableView.getColumns().remove(marketColumn);
                     }
@@ -596,7 +596,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(BSFormatter.getCurrencyPair(item.getCurrencyCode()));
+                                    setText(CurrencyUtil.getCurrencyPair(item.getCurrencyCode()));
                                 else
                                     setText("");
                             }

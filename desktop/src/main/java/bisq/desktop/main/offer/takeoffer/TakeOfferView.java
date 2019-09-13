@@ -278,7 +278,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         String currencyCode = model.dataModel.getCurrencyCode();
         volumeCurrencyLabel.setText(currencyCode);
-        priceDescriptionLabel.setText(BSFormatter.getPriceWithCurrencyCode(currencyCode));
+        priceDescriptionLabel.setText(CurrencyUtil.getPriceWithCurrencyCode(currencyCode));
         volumeDescriptionLabel.setText(model.volumeDescriptionLabel.get());
 
         if (model.getPossiblePaymentAccounts().size() > 1) {
@@ -599,7 +599,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         totalToPayTextField.textProperty().bind(model.totalToPay);
         addressTextField.amountAsCoinProperty().bind(model.dataModel.getMissingCoin());
         amountTextField.validationResultProperty().bind(model.amountValidationResult);
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> BSFormatter.getCounterCurrency(model.dataModel.getCurrencyCode())));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> CurrencyUtil.getCounterCurrency(model.dataModel.getCurrencyCode())));
         priceAsPercentageLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         nextButton.disableProperty().bind(model.isNextButtonDisabled);
         tradeFeeInBtcLabel.textProperty().bind(model.tradeFeeInBtcWithFiat);

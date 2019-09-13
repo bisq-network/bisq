@@ -143,7 +143,7 @@ public class MarketPricePresentation {
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice,
-                (currencyCode, price) -> BSFormatter.getCurrencyPair(currencyCode) + ": " + price);
+                (currencyCode, price) -> CurrencyUtil.getCurrencyPair(currencyCode) + ": " + price);
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -202,7 +202,7 @@ public class MarketPricePresentation {
                 priceString = Res.get("shared.na");
                 item.setPriceAvailable(false);
             }
-            item.setDisplayString(BSFormatter.getCurrencyPair(currencyCode) + ": " + priceString);
+            item.setDisplayString(CurrencyUtil.getCurrencyPair(currencyCode) + ": " + priceString);
 
             final String code = item.currencyCode;
             if (selectedPriceFeedComboBoxItemProperty.get() != null &&

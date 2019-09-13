@@ -181,7 +181,7 @@ public class MarketAlerts {
                             ratio = Math.abs(ratio);
                             String msg = Res.get("account.notifications.marketAlert.message.msg",
                                     direction,
-                                    BSFormatter.getCurrencyPair(currencyCode),
+                                    CurrencyUtil.getCurrencyPair(currencyCode),
                                     FormattingUtils.formatPrice(offerPrice),
                                     FormattingUtils.formatToPercentWithSymbol(ratio / 10000d),
                                     marketDir,

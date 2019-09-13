@@ -267,7 +267,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
-                    xAxis.setLabel(BSFormatter.getPriceWithCurrencyCode(code));
+                    xAxis.setLabel(CurrencyUtil.getPriceWithCurrencyCode(code));
 
                     seriesBuy.setName(leftHeaderLabel.getText() + "   ");
                     seriesSell.setName(rightHeaderLabel.getText());
