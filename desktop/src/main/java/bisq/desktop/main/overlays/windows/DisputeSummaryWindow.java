@@ -556,6 +556,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                     disputeResult.summaryNotesProperty().get());
 
+            if (dispute.isMediationDispute()) {
+                text += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
+            }
+
             getDisputeManager(dispute).sendDisputeResultMessage(disputeResult, dispute, text);
 
             if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
