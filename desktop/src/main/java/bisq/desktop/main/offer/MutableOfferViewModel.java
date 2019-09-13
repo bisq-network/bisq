@@ -1224,14 +1224,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
         if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
             double marketPriceAsDouble = marketPrice.getPrice();
-            double amountAsDouble = btcFormatter.parseNumberStringToDouble(amount.get());
-            double volumeAsDouble =  btcFormatter.parseNumberStringToDouble(volume.get());
+            double amountAsDouble = ParsingUtils.parseNumberStringToDouble(amount.get());
+            double volumeAsDouble = ParsingUtils.parseNumberStringToDouble(volume.get());
             double manualPriceAsDouble = dataModel.calculateMarketPriceManual(marketPriceAsDouble, volumeAsDouble, amountAsDouble);
 
             final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
             int precision = isCryptoCurrency ?
                     Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
-            price.set(btcFormatter.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
+            price.set(BSFormatter.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
             setPriceToModel();
             dataModel.calculateTotalToPay();
             updateButtonDisableState();
