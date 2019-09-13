@@ -20,20 +20,21 @@ package bisq.core.dao.node.messages;
 import bisq.core.dao.node.full.RawBlock;
 
 import bisq.network.p2p.storage.messages.BroadcastMessage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+// We remove the CapabilityRequiringPayload interface to avoid risks that new BSQ blocks are not well distributed in
+// case the capability is not exchanged at the time when the message is sent. We need to improve the capability handling
+// so that we can be sure that we know the actual capability of the peer.
+
 // This message is sent only to lite DAO nodes (full nodes get block from their local bitcoind)
 @EqualsAndHashCode(callSuper = true)
 @Getter
-public final class NewBlockBroadcastMessage extends BroadcastMessage implements CapabilityRequiringPayload {
+public final class NewBlockBroadcastMessage extends BroadcastMessage /*implements CapabilityRequiringPayload*/ {
     private final RawBlock block;
 
     public NewBlockBroadcastMessage(RawBlock block) {
@@ -63,8 +64,8 @@ public final class NewBlockBroadcastMessage extends BroadcastMessage implements 
                 messageVersion);
     }
 
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.RECEIVE_BSQ_BLOCK);
-    }
+//    @Override
+//    public Capabilities getRequiredCapabilities() {
+//        return new Capabilities(Capability.RECEIVE_BSQ_BLOCK);
+//    }
 }
