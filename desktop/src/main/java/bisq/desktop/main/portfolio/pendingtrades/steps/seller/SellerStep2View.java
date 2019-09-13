@@ -70,7 +70,7 @@ public class SellerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getFistHalfOverWarnText() {
+    protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_seller.warn",
                 model.dataModel.getCurrencyCode(),
                 model.getDateForOpenDispute());

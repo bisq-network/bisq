@@ -85,6 +85,8 @@ public class BuyerStep4View extends TradeStepView {
     @Override
     public void activate() {
         super.activate();
+        // Don't display any trade step info when trade is complete
+        hideTradeStepInfo();
     }
 
     @Override

@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Trade;
 
 import javafx.scene.control.Label;
@@ -51,7 +52,8 @@ public class TradeStepInfo {
         IN_ARBITRATION_SELF_REQUESTED,
         IN_ARBITRATION_PEER_REQUESTED,
         WARN_HALF_PERIOD,
-        WARN_PERIOD_OVER
+        WARN_PERIOD_OVER,
+        TRADE_COMPLETED
     }
 
     private final TitledGroupBg titledGroupBg;
@@ -62,7 +64,7 @@ public class TradeStepInfo {
     private Trade trade;
     @Getter
     private State state = State.UNDEFINED;
-    private Supplier<String> fistHalfOverWarnTextSupplier = () -> "";
+    private Supplier<String> firstHalfOverWarnTextSupplier = () -> "";
     private Supplier<String> periodOverWarnTextSupplier = () -> "";
 
     TradeStepInfo(TitledGroupBg titledGroupBg, Label label, AutoTooltipButton button) {
@@ -84,8 +86,8 @@ public class TradeStepInfo {
         button.setOnAction(e);
     }
 
-    public void setFistHalfOverWarnTextSupplier(Supplier<String> fistHalfOverWarnTextSupplier) {
-        this.fistHalfOverWarnTextSupplier = fistHalfOverWarnTextSupplier;
+    public void setFirstHalfOverWarnTextSupplier(Supplier<String> firstHalfOverWarnTextSupplier) {
+        this.firstHalfOverWarnTextSupplier = firstHalfOverWarnTextSupplier;
     }
 
     public void setPeriodOverWarnTextSupplier(Supplier<String> periodOverWarnTextSupplier) {
@@ -100,7 +102,8 @@ public class TradeStepInfo {
             case SHOW_GET_HELP_BUTTON:
                 // grey button
                 titledGroupBg.setText(Res.get("portfolio.pending.support.headline.getHelp"));
-                label.setText(Res.get("portfolio.pending.support.text.getHelp"));
+                label.setText(MediationManager.isMediationActivated() ?
+                        Res.get("portfolio.pending.support.text.getHelp") : Res.get("portfolio.pending.support.text.getHelp.arbitrator"));
                 button.setText(Res.get("portfolio.pending.support.button.getHelp").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
@@ -172,7 +175,7 @@ public class TradeStepInfo {
             case WARN_HALF_PERIOD:
                 // orange button
                 titledGroupBg.setText(Res.get("portfolio.pending.support.headline.halfPeriodOver"));
-                label.setText(fistHalfOverWarnTextSupplier.get());
+                label.setText(firstHalfOverWarnTextSupplier.get());
                 button.setText(Res.get("portfolio.pending.openSupport").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
@@ -187,6 +190,11 @@ public class TradeStepInfo {
                 button.getStyleClass().remove("action-button");
                 button.setDisable(false);
                 break;
+            case TRADE_COMPLETED:
+                // hide group
+                titledGroupBg.setVisible(false);
+                label.setVisible(false);
+                button.setVisible(false);
         }
 
         if (trade != null && trade.getPayoutTx() != null) {

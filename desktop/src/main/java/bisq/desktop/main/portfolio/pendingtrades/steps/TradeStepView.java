@@ -29,6 +29,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.DontShowAgainLookup;
@@ -212,7 +213,8 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (!isMediationClosedState()) {
             tradeStepInfo.setOnAction(e -> {
-                new Popup<>().attention(Res.get("portfolio.pending.support.popup.info"))
+                new Popup<>().attention(MediationManager.isMediationActivated() ?
+                        Res.get("portfolio.pending.support.popup.info") : Res.get("portfolio.pending.support.popup.info.arbitrator"))
                         .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
                         .onAction(this::openSupportTicket)
                         .closeButtonText(Res.get("shared.cancel"))
@@ -339,7 +341,6 @@ public abstract class TradeStepView extends AnchorPane {
         GridPane.setColumnSpan(titledGroupBg, 2);
 
         infoLabel = addMultilineLabel(gridPane, gridRow, "", Layout.COMPACT_FIRST_ROW_AND_COMPACT_GROUP_DISTANCE);
-//        infoLabel = addMultilineLabel(gridPane, gridRow, "", 0);
         GridPane.setColumnSpan(infoLabel, 2);
     }
 
@@ -380,12 +381,15 @@ public abstract class TradeStepView extends AnchorPane {
     public void setTradeStepInfo(TradeStepInfo tradeStepInfo) {
         this.tradeStepInfo = tradeStepInfo;
 
-        tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+        tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
         tradeStepInfo.setPeriodOverWarnTextSupplier(this::getPeriodOverWarnText);
     }
 
+    protected void hideTradeStepInfo() {
+        tradeStepInfo.setState(TradeStepInfo.State.TRADE_COMPLETED);
+    }
 
-    protected String getFistHalfOverWarnText() {
+    protected String getFirstHalfOverWarnText() {
         return "";
     }
 
@@ -409,7 +413,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_REQUESTED:
                 if (tradeStepInfo != null) {
-                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
                 applyOnDisputeOpened();
 
@@ -422,7 +426,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case DISPUTE_STARTED_BY_PEER:
                 if (tradeStepInfo != null) {
-                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
                 applyOnDisputeOpened();
 
@@ -436,7 +440,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case MEDIATION_REQUESTED:
                 if (tradeStepInfo != null) {
-                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
                 applyOnDisputeOpened();
 
@@ -449,7 +453,7 @@ public abstract class TradeStepView extends AnchorPane {
                 break;
             case MEDIATION_STARTED_BY_PEER:
                 if (tradeStepInfo != null) {
-                    tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                    tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
                 applyOnDisputeOpened();
 
@@ -595,13 +599,13 @@ public abstract class TradeStepView extends AnchorPane {
                         tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
                     } else if (tradeStepInfo.getState() == TradeStepInfo.State.WARN_HALF_PERIOD) {
                         tradeStepInfo.setState(TradeStepInfo.State.SHOW_GET_HELP_BUTTON);
-                        tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                        tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                     }
                     break;
                 case SECOND_HALF:
                     if (!trade.isFiatReceived()) {
                         if (tradeStepInfo != null) {
-                            tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getFistHalfOverWarnText);
+                            tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                             tradeStepInfo.setState(TradeStepInfo.State.WARN_HALF_PERIOD);
                         }
                     } else {
@@ -610,7 +614,7 @@ public abstract class TradeStepView extends AnchorPane {
                     break;
                 case TRADE_PERIOD_OVER:
                     if (tradeStepInfo != null) {
-                        tradeStepInfo.setFistHalfOverWarnTextSupplier(this::getPeriodOverWarnText);
+                        tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getPeriodOverWarnText);
                         tradeStepInfo.setState(TradeStepInfo.State.WARN_PERIOD_OVER);
                     }
                     break;
