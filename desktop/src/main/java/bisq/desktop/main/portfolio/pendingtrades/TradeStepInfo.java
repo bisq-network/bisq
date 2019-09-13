@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Trade;
 
 import javafx.scene.control.Label;
@@ -101,7 +102,8 @@ public class TradeStepInfo {
             case SHOW_GET_HELP_BUTTON:
                 // grey button
                 titledGroupBg.setText(Res.get("portfolio.pending.support.headline.getHelp"));
-                label.setText(Res.get("portfolio.pending.support.text.getHelp"));
+                label.setText(MediationManager.isMediationActivated() ?
+                        Res.get("portfolio.pending.support.text.getHelp") : Res.get("portfolio.pending.support.text.getHelp.arbitrator"));
                 button.setText(Res.get("portfolio.pending.support.button.getHelp").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
