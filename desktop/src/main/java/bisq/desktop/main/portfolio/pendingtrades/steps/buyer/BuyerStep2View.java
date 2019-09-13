@@ -337,7 +337,7 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getFistHalfOverWarnText() {
+    protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_buyer.warn",
                 model.dataModel.getCurrencyCode(),
                 model.getDateForOpenDispute());

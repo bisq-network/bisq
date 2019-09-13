@@ -128,7 +128,7 @@ public class BuyerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getFistHalfOverWarnText() {
+    protected String getFirstHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_buyer.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_buyer.warn.part1b");

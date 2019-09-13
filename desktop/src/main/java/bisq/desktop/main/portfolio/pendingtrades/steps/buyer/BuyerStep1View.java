@@ -51,7 +51,7 @@ public class BuyerStep1View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getFistHalfOverWarnText() {
+    protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step1.warn");
     }
 

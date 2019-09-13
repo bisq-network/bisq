@@ -62,7 +62,7 @@ public class TradeStepInfo {
     private Trade trade;
     @Getter
     private State state = State.UNDEFINED;
-    private Supplier<String> fistHalfOverWarnTextSupplier = () -> "";
+    private Supplier<String> firstHalfOverWarnTextSupplier = () -> "";
     private Supplier<String> periodOverWarnTextSupplier = () -> "";
 
     TradeStepInfo(TitledGroupBg titledGroupBg, Label label, AutoTooltipButton button) {
@@ -84,8 +84,8 @@ public class TradeStepInfo {
         button.setOnAction(e);
     }
 
-    public void setFistHalfOverWarnTextSupplier(Supplier<String> fistHalfOverWarnTextSupplier) {
-        this.fistHalfOverWarnTextSupplier = fistHalfOverWarnTextSupplier;
+    public void setFirstHalfOverWarnTextSupplier(Supplier<String> firstHalfOverWarnTextSupplier) {
+        this.firstHalfOverWarnTextSupplier = firstHalfOverWarnTextSupplier;
     }
 
     public void setPeriodOverWarnTextSupplier(Supplier<String> periodOverWarnTextSupplier) {
@@ -172,7 +172,7 @@ public class TradeStepInfo {
             case WARN_HALF_PERIOD:
                 // orange button
                 titledGroupBg.setText(Res.get("portfolio.pending.support.headline.halfPeriodOver"));
-                label.setText(fistHalfOverWarnTextSupplier.get());
+                label.setText(firstHalfOverWarnTextSupplier.get());
                 button.setText(Res.get("portfolio.pending.openSupport").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
