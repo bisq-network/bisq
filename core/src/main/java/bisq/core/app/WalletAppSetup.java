@@ -120,7 +120,7 @@ public class WalletAppSetup {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + formatter.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + BSFormatter.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,

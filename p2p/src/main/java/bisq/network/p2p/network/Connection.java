@@ -140,7 +140,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final ConnectionListener connectionListener;
     @Getter
     private final String uid;
-    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
     // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
@@ -477,7 +477,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional, closeConnectionReason);
+        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -489,7 +489,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             if (closeConnectionReason.sendCloseMessage) {
                 new Thread(() -> {
-                    Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     try {
                         String reason = closeConnectionReason == CloseConnectionReason.RULE_VIOLATION ?
                                 getRuleViolation().name() : closeConnectionReason.name();
@@ -506,7 +505,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         stopped = true;
                         UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
                     }
-                }).start();
+                }, "Connection:SendCloseConnectionMessage-" + this.uid).start();
             } else {
                 stopped = true;
                 doShutDown(closeConnectionReason, shutDownCompleteHandler);
@@ -724,8 +723,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     NetworkEnvelope networkEnvelope = networkProtoResolver.fromProto(proto);
                     lastReadTimeStamp = now;
-                    log.debug("<< Received networkEnvelope of type: " + networkEnvelope.getClass().getSimpleName());
-
+                    log.debug("<< Received networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
                     int size = proto.getSerializedSize();
                     // We comment out that part as only debug and trace log level is used. For debugging purposes
                     // we leave the code though.
@@ -761,7 +759,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     boolean exceeds;
                     if (networkEnvelope instanceof ExtendedDataSizePermission) {
                         exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
-                        log.debug("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
+                        if (log.isDebugEnabled()) {
+                            log.debug("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
+                        }
                     } else {
                         exceeds = size > PERMITTED_MESSAGE_SIZE;
                     }
@@ -819,8 +819,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                     if (networkEnvelope instanceof CloseConnectionMessage) {
                         // If we get a CloseConnectionMessage we shut down
-                        log.debug("CloseConnectionMessage received. Reason={}\n\t" +
-                                "connection={}", proto.getCloseConnectionMessage().getReason(), this);
+                        if (log.isDebugEnabled()) {
+                            log.debug("CloseConnectionMessage received. Reason={}\n\t" +
+                                    "connection={}", proto.getCloseConnectionMessage().getReason(), this);
+                        }
                         if (CloseConnectionReason.PEER_BANNED.name().equals(proto.getCloseConnectionMessage().getReason())) {
                             log.warn("We got shut down because we are banned by the other peer. (InputHandler.run CloseConnectionMessage)");
                             shutDown(CloseConnectionReason.PEER_BANNED);

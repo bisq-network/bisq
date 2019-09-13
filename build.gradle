@@ -60,7 +60,7 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.5.1'
+        netlayerVersion = '0.6.5.2'
         protobufVersion = '3.9.1'
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
@@ -158,7 +158,6 @@ configure(project(':assets')) {
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
-        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
     }
 }
 
@@ -180,9 +179,6 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
-        compile("com.googlecode.json-simple:json-simple:$jsonsimpleVersion") {
-            exclude(module: 'junit')
-        }
         compile "org.springframework:spring-core:$springVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
@@ -199,7 +195,6 @@ configure(project(':common')) {
             exclude(module: 'protobuf-java')
         }
         compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
         compile "commons-io:commons-io:$ioVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
@@ -396,7 +391,6 @@ configure(project(':seednode')) {
 
     dependencies {
         compile project(':core')
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.springframework:spring-test:$springVersion"

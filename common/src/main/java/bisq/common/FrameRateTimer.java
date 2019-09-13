@@ -54,8 +54,7 @@ public class FrameRateTimer implements Timer, Runnable {
                         stop();
                 }
             } catch (Throwable t) {
-                log.error(t.getMessage());
-                t.printStackTrace();
+                log.error("exception in FrameRateTimer", t);
                 stop();
                 throw t;
             }

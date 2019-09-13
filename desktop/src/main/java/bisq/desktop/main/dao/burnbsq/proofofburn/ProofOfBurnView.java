@@ -38,6 +38,7 @@ import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.app.DevEnv;
@@ -273,7 +274,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     }
 
     private Coin getAmountFee() {
-        return bsqFormatter.parseToCoin(amountInputTextField.getText());
+        return ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
     }
 
     private void doPublishFeeTx(Transaction transaction, String preImageAsString) {

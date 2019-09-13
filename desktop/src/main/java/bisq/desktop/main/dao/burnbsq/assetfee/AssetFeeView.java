@@ -36,6 +36,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.ParsingUtils;
 
 import bisq.common.app.DevEnv;
 
@@ -273,7 +274,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     }
 
     private Coin getListingFee() {
-        return bsqFormatter.parseToCoin(feeAmountInputTextField.getText());
+        return ParsingUtils.parseToCoin(feeAmountInputTextField.getText(), bsqFormatter);
     }
 
     private void doPublishFeeTx(Transaction transaction) {

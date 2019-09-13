@@ -434,11 +434,8 @@ public class BisqSetup {
                 bisqEnvironment.getIgnoreLocalBtcNode()) {
             step3();
         } else {
-            Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
-                Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
-                Socket socket = null;
-                try {
-                    socket = new Socket();
+            new Thread(() -> {
+                try (Socket socket = new Socket()) {
                     socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
                             BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
                     log.info("Localhost Bitcoin node detected.");
@@ -448,16 +445,8 @@ public class BisqSetup {
                     });
                 } catch (Throwable e) {
                     UserThread.execute(BisqSetup.this::step3);
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                    }
                 }
-            });
-            checkIfLocalHostNodeIsRunningThread.start();
+            }, "checkIfLocalHostNodeIsRunningThread").start();
         }
     }
 
@@ -474,9 +463,8 @@ public class BisqSetup {
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
         // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        Thread checkCryptoThread = new Thread(() -> {
+        new Thread(() -> {
             try {
-                Thread.currentThread().setName("checkCryptoThread");
                 // just use any simple dummy msg
                 Ping payload = new Ping(1, 1);
                 SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
@@ -496,8 +484,7 @@ public class BisqSetup {
                 if (cryptoSetupFailedHandler != null)
                     cryptoSetupFailedHandler.accept(msg);
             }
-        });
-        checkCryptoThread.start();
+        }, "checkCryptoThread").start();
     }
 
     private void startP2pNetworkAndWallet() {

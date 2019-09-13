@@ -155,6 +155,8 @@ public class GUIUtil {
         GUIUtil.preferences = preferences;
     }
 
+    public static String getUserLanguage() { return preferences.getUserLanguage(); }
+
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
         if (node instanceof ScrollBar) {
@@ -686,7 +688,7 @@ public class GUIUtil {
     }
 
     public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
-        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
+        return BSFormatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {
