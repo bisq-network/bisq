@@ -214,7 +214,7 @@ public abstract class TradeStepView extends AnchorPane {
         if (!isMediationClosedState()) {
             tradeStepInfo.setOnAction(e -> {
                 new Popup<>().attention(MediationManager.isMediationActivated() ?
-                        Res.get("portfolio.pending.support.popup.info") : Res.get("portfolio.pending.support.popup.info.aribtrator"))
+                        Res.get("portfolio.pending.support.popup.info") : Res.get("portfolio.pending.support.popup.info.arbitrator"))
                         .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
                         .onAction(this::openSupportTicket)
                         .closeButtonText(Res.get("shared.cancel"))
