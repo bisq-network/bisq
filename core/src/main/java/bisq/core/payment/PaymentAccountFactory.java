@@ -44,6 +44,8 @@ public class PaymentAccountFactory {
                 return new SameBankAccount();
             case PaymentMethod.SPECIFIC_BANKS_ID:
                 return new SpecificBanksAccount();
+            case PaymentMethod.JAPAN_BANK_ID:
+                return new JapanBankAccount();
             case PaymentMethod.ALI_PAY_ID:
                 return new AliPayAccount();
             case PaymentMethod.WECHAT_PAY_ID:
