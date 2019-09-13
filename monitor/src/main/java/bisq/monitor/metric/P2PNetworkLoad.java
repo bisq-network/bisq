@@ -38,6 +38,7 @@ import bisq.network.p2p.network.TorNetworkNode;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.keepalive.KeepAliveManager;
 import bisq.network.p2p.peers.peerexchange.PeerExchangeManager;
+import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
@@ -45,6 +46,8 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
+import bisq.common.storage.Storage;
 
 import org.springframework.core.env.PropertySource;
 
@@ -136,13 +139,14 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                         return "";
                     }
                 });
+                CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
                 NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
-                        networkProtoResolver, storageDir);
+                        networkProtoResolver, storageDir, corruptedDatabaseFilesHandler);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(environment, null);
                 PeerManager peerManager = new PeerManager(networkNode, seedNodeRepository, new ClockWatcher(),
-                        persistenceProtoResolver, maxConnections, storageDir);
+                        maxConnections, new Storage<PeerList>(storageDir, persistenceProtoResolver, corruptedDatabaseFilesHandler));
 
                 // init file storage
                 peerManager.readPersisted();

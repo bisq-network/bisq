@@ -25,6 +25,7 @@ import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.ProposalDisplay;
 import bisq.desktop.main.dao.governance.result.VoteListItem;
 import bisq.desktop.main.overlays.TabbedOverlay;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
@@ -240,7 +241,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setText(bsqFormatter.formatDateTime(item.getBlindVoteDate()));
+                                    setText(DisplayUtils.formatDateTime(item.getBlindVoteDate()));
                                 } else {
                                     setText("");
                                 }

@@ -34,14 +34,11 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 
 import com.google.inject.name.Named;
 
 import javax.inject.Inject;
-
-import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -82,7 +79,6 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     @Setter
     private boolean allowDisconnectSeedNodes;
     private Set<Peer> latestLivePeers = new HashSet<>();
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -133,13 +129,12 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public PeerManager(NetworkNode networkNode,
                        SeedNodeRepository seedNodeRepository,
                        ClockWatcher clockWatcher,
-                       PersistenceProtoResolver persistenceProtoResolver,
                        @Named(NetworkOptionKeys.MAX_CONNECTIONS) int maxConnections,
-                       @Named(Storage.STORAGE_DIR) File storageDir) {
+                       Storage<PeerList> storage) {
         this.networkNode = networkNode;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
         this.clockWatcher = clockWatcher;
-        storage = new Storage<>(storageDir, persistenceProtoResolver);
+        this.storage = storage;
 
         this.networkNode.addConnectionListener(this);
 
@@ -226,9 +221,11 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public void onConnection(Connection connection) {
         boolean seedNode = isSeedNode(connection);
         Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.debug("onConnection: peer = {}{}",
-                (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
-                seedNode ? " (SeedNode)" : "");
+        if (log.isDebugEnabled()) {
+            log.debug("onConnection: peer = {}{}",
+                    (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
+                    seedNode ? " (SeedNode)" : "");
+        }
 
         if (seedNode)
             connection.setPeerType(Connection.PeerType.SEED_NODE);
@@ -488,7 +485,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                 List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
                 reportedPeersClone.stream().forEach(e -> result.append("\n").append(e));
                 result.append("\n------------------------------------------------------------\n");
-                log.debug(result.toString());
+                log.trace(result.toString());
             }
             log.debug("Number of reported peers: {}", reportedPeers.size());
         }
@@ -500,7 +497,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
             StringBuilder result = new StringBuilder("We received new reportedPeers:");
             List<Peer> reportedPeersClone = new ArrayList<>(reportedPeers);
             reportedPeersClone.stream().forEach(e -> result.append("\n\t").append(e));
-            log.debug(result.toString());
+            log.trace(result.toString());
         }
         log.debug("Number of new arrived reported peers: {}", reportedPeers.size());
     }

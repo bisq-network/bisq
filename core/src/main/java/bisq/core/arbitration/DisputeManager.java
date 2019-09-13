@@ -18,7 +18,6 @@
 package bisq.core.arbitration;
 
 import bisq.core.arbitration.messages.DisputeCommunicationMessage;
-import bisq.core.arbitration.messages.DisputeMessage;
 import bisq.core.arbitration.messages.DisputeResultMessage;
 import bisq.core.arbitration.messages.OpenNewDisputeMessage;
 import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
@@ -30,6 +29,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.chat.ChatManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -39,10 +39,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
 
-import bisq.network.p2p.AckMessage;
-import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.BootstrapListener;
-import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
@@ -54,9 +51,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
-import bisq.common.proto.persistable.PersistenceProtoResolver;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
 
@@ -65,8 +60,6 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -77,16 +70,12 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
-import java.io.File;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,10 +98,9 @@ public class DisputeManager implements PersistedDataHost {
     private final P2PService p2PService;
     private final KeyRing keyRing;
     private final Storage<DisputeList> disputeStorage;
+    @Getter
     private DisputeList disputes;
     private final String disputeInfo;
-    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedMailboxMessageWithPubKeys = new CopyOnWriteArraySet<>();
-    private final CopyOnWriteArraySet<DecryptedMessageWithPubKey> decryptedDirectMessageWithPubKeys = new CopyOnWriteArraySet<>();
     private final Map<String, Dispute> openDisputes;
     private final Map<String, Dispute> closedDisputes;
     private final Map<String, Timer> delayMsgMap = new HashMap<>();
@@ -120,8 +108,8 @@ public class DisputeManager implements PersistedDataHost {
     private final Map<String, Subscription> disputeIsClosedSubscriptionsMap = new HashMap<>();
     @Getter
     private final IntegerProperty numOpenDisputes = new SimpleIntegerProperty();
-    private boolean servicesInitialized;
-
+    @Getter
+    private final ChatManager chatManager;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -136,8 +124,7 @@ public class DisputeManager implements PersistedDataHost {
                           ClosedTradableManager closedTradableManager,
                           OpenOfferManager openOfferManager,
                           KeyRing keyRing,
-                          PersistenceProtoResolver persistenceProtoResolver,
-                          @Named(Storage.STORAGE_DIR) File storageDir) {
+                          Storage<DisputeList> storage) {
         this.p2PService = p2PService;
         this.tradeWalletService = tradeWalletService;
         this.walletService = walletService;
@@ -147,22 +134,15 @@ public class DisputeManager implements PersistedDataHost {
         this.openOfferManager = openOfferManager;
         this.keyRing = keyRing;
 
-        disputeStorage = new Storage<>(storageDir, persistenceProtoResolver);
+        chatManager = new ChatManager(p2PService, walletsSetup);
+        chatManager.setChatSession(new DisputeChatSession(null, this));
+
+        disputeStorage = storage;
 
         openDisputes = new HashMap<>();
         closedDisputes = new HashMap<>();
 
         disputeInfo = Res.get("support.initialInfo");
-
-        // We get first the message handler called then the onBootstrapped
-        p2PService.addDecryptedDirectMessageListener((decryptedMessageWithPubKey, senderAddress) -> {
-            decryptedDirectMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            tryApplyMessages();
-        });
-        p2PService.addDecryptedMailboxListener((decryptedMessageWithPubKey, senderAddress) -> {
-            decryptedMailboxMessageWithPubKeys.add(decryptedMessageWithPubKey);
-            tryApplyMessages();
-        });
     }
 
 
@@ -178,25 +158,25 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        servicesInitialized = true;
+        chatManager.onAllServicesInitialized();
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
             public void onUpdatedDataReceived() {
-                tryApplyMessages();
+                chatManager.tryApplyMessages();
             }
         });
 
         walletsSetup.downloadPercentageProperty().addListener((observable, oldValue, newValue) -> {
             if (walletsSetup.isDownloadComplete())
-                tryApplyMessages();
+                chatManager.tryApplyMessages();
         });
 
         walletsSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
             if (walletsSetup.hasSufficientPeersForBroadcast())
-                tryApplyMessages();
+                chatManager.tryApplyMessages();
         });
 
-        tryApplyMessages();
+        chatManager.tryApplyMessages();
 
         cleanupDisputes();
 
@@ -207,7 +187,8 @@ public class DisputeManager implements PersistedDataHost {
         onDisputesChangeListener(disputes.getList(), null);
     }
 
-    private void onDisputesChangeListener(List<? extends Dispute> addedList, @Nullable List<? extends Dispute> removedList) {
+    private void onDisputesChangeListener(List<? extends Dispute> addedList,
+                                          @Nullable List<? extends Dispute> removedList) {
         if (removedList != null) {
             removedList.forEach(dispute -> {
                 String id = dispute.getId();
@@ -256,89 +237,6 @@ public class DisputeManager implements PersistedDataHost {
         });
     }
 
-    private void tryApplyMessages() {
-        if (isReadyForTxBroadcast())
-            applyMessages();
-    }
-
-    private boolean isReadyForTxBroadcast() {
-        // Some messages can't be handled until all the services are properly initialized.
-        // In particular it's not possible to complete the signing of a dispute payout
-        // by an encrypted wallet until after it's been decrypted.
-        return p2PService.isBootstrapped() &&
-                walletsSetup.isDownloadComplete() &&
-                walletsSetup.hasSufficientPeersForBroadcast() &&
-                servicesInitialized;
-    }
-
-    private void applyMessages() {
-        decryptedDirectMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            if (networkEnvelope instanceof DisputeMessage) {
-                dispatchMessage((DisputeMessage) networkEnvelope);
-            } else if (networkEnvelope instanceof AckMessage) {
-                processAckMessage((AckMessage) networkEnvelope, null);
-            }
-        });
-        decryptedDirectMessageWithPubKeys.clear();
-
-        decryptedMailboxMessageWithPubKeys.forEach(decryptedMessageWithPubKey -> {
-            NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-            log.debug("decryptedMessageWithPubKey.message " + networkEnvelope);
-            if (networkEnvelope instanceof DisputeMessage) {
-                dispatchMessage((DisputeMessage) networkEnvelope);
-                p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-            } else if (networkEnvelope instanceof AckMessage) {
-                processAckMessage((AckMessage) networkEnvelope, decryptedMessageWithPubKey);
-            }
-        });
-        decryptedMailboxMessageWithPubKeys.clear();
-    }
-
-    private void processAckMessage(AckMessage ackMessage, @Nullable DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
-        if (ackMessage.getSourceType() == AckMessageSourceType.DISPUTE_MESSAGE) {
-            if (ackMessage.isSuccess()) {
-                log.info("Received AckMessage for {} with tradeId {} and uid {}",
-                        ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getSourceUid());
-            } else {
-                log.warn("Received AckMessage with error state for {} with tradeId {} and errorMessage={}",
-                        ackMessage.getSourceMsgClassName(), ackMessage.getSourceId(), ackMessage.getErrorMessage());
-            }
-
-            disputes.getList().stream()
-                    .flatMap(dispute -> dispute.getDisputeCommunicationMessages().stream())
-                    .filter(msg -> msg.getUid().equals(ackMessage.getSourceUid()))
-                    .forEach(msg -> {
-                        if (ackMessage.isSuccess())
-                            msg.setAcknowledged(true);
-                        else
-                            msg.setAckError(ackMessage.getErrorMessage());
-                    });
-            disputes.persist();
-
-            if (decryptedMessageWithPubKey != null)
-                p2PService.removeEntryFromMailbox(decryptedMessageWithPubKey);
-        }
-    }
-
-    private void dispatchMessage(DisputeMessage message) {
-        log.info("Received {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), message.getTradeId(), message.getUid());
-
-        if (message instanceof OpenNewDisputeMessage)
-            onOpenNewDisputeMessage((OpenNewDisputeMessage) message);
-        else if (message instanceof PeerOpenedDisputeMessage)
-            onPeerOpenedDisputeMessage((PeerOpenedDisputeMessage) message);
-        else if (message instanceof DisputeCommunicationMessage)
-            onDisputeDirectMessage((DisputeCommunicationMessage) message);
-        else if (message instanceof DisputeResultMessage)
-            onDisputeResultMessage((DisputeResultMessage) message);
-        else if (message instanceof PeerPublishedDisputePayoutTxMessage)
-            onDisputedPayoutTxMessage((PeerPublishedDisputePayoutTxMessage) message);
-        else
-            log.warn("Unsupported message at dispatchMessage.\nmessage=" + message);
-    }
-
     public void sendOpenNewDisputeMessage(Dispute dispute, boolean reOpen, ResultHandler resultHandler, FaultHandler faultHandler) {
         if (!disputes.contains(dispute)) {
             final Optional<Dispute> storedDisputeOptional = findDispute(dispute.getTradeId(), dispute.getTraderId());
@@ -348,6 +246,7 @@ public class DisputeManager implements PersistedDataHost {
                         : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
                 DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                        chatManager.getChatSession().getType(),
                         dispute.getTradeId(),
                         keyRing.getPubKeyRing().hashCode(),
                         false,
@@ -433,7 +332,9 @@ public class DisputeManager implements PersistedDataHost {
     }
 
     // arbitrator sends that to trading peer when he received openDispute request
-    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener, Contract contractFromOpener, PubKeyRing pubKeyRing) {
+    private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
+                                                Contract contractFromOpener,
+                                                PubKeyRing pubKeyRing) {
         Dispute dispute = new Dispute(
                 disputeStorage,
                 disputeFromOpener.getTradeId(),
@@ -460,6 +361,7 @@ public class DisputeManager implements PersistedDataHost {
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
             DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                    chatManager.getChatSession().getType(),
                     dispute.getTradeId(),
                     keyRing.getPubKeyRing().hashCode(),
                     false,
@@ -538,66 +440,10 @@ public class DisputeManager implements PersistedDataHost {
         }
     }
 
-    // traders send msg to the arbitrator or arbitrator to 1 trader (trader to trader is not allowed)
-    public DisputeCommunicationMessage sendDisputeDirectMessage(Dispute dispute, String text, ArrayList<Attachment> attachments) {
-        DisputeCommunicationMessage message = new DisputeCommunicationMessage(
-                dispute.getTradeId(),
-                dispute.getTraderPubKeyRing().hashCode(),
-                isTrader(dispute),
-                text,
-                p2PService.getAddress()
-        );
-
-        message.addAllAttachments(attachments);
-        Tuple2<NodeAddress, PubKeyRing> tuple = getNodeAddressPubKeyRingTuple(dispute);
-        NodeAddress peersNodeAddress = tuple.first;
-        PubKeyRing receiverPubKeyRing = tuple.second;
-
-        if (isTrader(dispute) ||
-                (isArbitrator(dispute) && !message.isSystemMessage()))
-            dispute.addDisputeCommunicationMessage(message);
-
-        if (receiverPubKeyRing != null) {
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-
-            p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
-                    receiverPubKeyRing,
-                    message,
-                    new SendMailboxMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            message.setArrived(true);
-                            disputes.persist();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            message.setStoredInMailbox(true);
-                            disputes.persist();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                            message.setSendMessageError(errorMessage);
-                            disputes.persist();
-                        }
-                    }
-            );
-        }
-
-        return message;
-    }
-
     // arbitrator send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
         DisputeCommunicationMessage disputeCommunicationMessage = new DisputeCommunicationMessage(
+                chatManager.getChatSession().getType(),
                 dispute.getTradeId(),
                 dispute.getTraderPubKeyRing().hashCode(),
                 false,
@@ -704,53 +550,12 @@ public class DisputeManager implements PersistedDataHost {
         );
     }
 
-    private void sendAckMessage(DisputeMessage disputeMessage, PubKeyRing peersPubKeyRing,
-                                boolean result, @Nullable String errorMessage) {
-        String tradeId = disputeMessage.getTradeId();
-        String uid = disputeMessage.getUid();
-        AckMessage ackMessage = new AckMessage(p2PService.getNetworkNode().getNodeAddress(),
-                AckMessageSourceType.DISPUTE_MESSAGE,
-                disputeMessage.getClass().getSimpleName(),
-                uid,
-                tradeId,
-                result,
-                errorMessage);
-        final NodeAddress peersNodeAddress = disputeMessage.getSenderNodeAddress();
-        log.info("Send AckMessage for {} to peer {}. tradeId={}, uid={}",
-                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, uid);
-        p2PService.sendEncryptedMailboxMessage(
-                peersNodeAddress,
-                peersPubKeyRing,
-                ackMessage,
-                new SendMailboxMessageListener() {
-                    @Override
-                    public void onArrived() {
-                        log.info("AckMessage for {} arrived at peer {}. tradeId={}, uid={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, uid);
-                    }
-
-                    @Override
-                    public void onStoredInMailbox() {
-                        log.info("AckMessage for {} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, uid);
-                    }
-
-                    @Override
-                    public void onFault(String errorMessage) {
-                        log.error("AckMessage for {} failed. Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                ackMessage.getSourceMsgClassName(), peersNodeAddress, tradeId, uid, errorMessage);
-                    }
-                }
-        );
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // arbitrator receives that from trader who opens dispute
-    private void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
+    public void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         String errorMessage;
         Dispute dispute = openNewDisputeMessage.getDispute();
         Contract contractFromOpener = dispute.getContract();
@@ -781,12 +586,12 @@ public class DisputeManager implements PersistedDataHost {
         if (!messages.isEmpty()) {
             DisputeCommunicationMessage msg = messages.get(0);
             PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
-            sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
+            chatManager.sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
         }
     }
 
     // not dispute requester receives that from arbitrator
-    private void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+    public void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         String errorMessage;
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         if (!isArbitrator(dispute)) {
@@ -816,47 +621,14 @@ public class DisputeManager implements PersistedDataHost {
         ObservableList<DisputeCommunicationMessage> messages = peerOpenedDisputeMessage.getDispute().getDisputeCommunicationMessages();
         if (!messages.isEmpty()) {
             DisputeCommunicationMessage msg = messages.get(0);
-            sendAckMessage(msg, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
+            chatManager.sendAckMessage(msg, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
         }
 
-        sendAckMessage(peerOpenedDisputeMessage, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
-    }
-
-    // A trader can receive a msg from the arbitrator or the arbitrator from a trader. Trader to trader is not allowed.
-    private void onDisputeDirectMessage(DisputeCommunicationMessage disputeCommunicationMessage) {
-        final String tradeId = disputeCommunicationMessage.getTradeId();
-        final String uid = disputeCommunicationMessage.getUid();
-        Optional<Dispute> disputeOptional = findDispute(tradeId, disputeCommunicationMessage.getTraderId());
-        if (!disputeOptional.isPresent()) {
-            log.debug("We got a disputeCommunicationMessage but we don't have a matching dispute. TradeId = " + tradeId);
-            if (!delayMsgMap.containsKey(uid)) {
-                Timer timer = UserThread.runAfter(() -> onDisputeDirectMessage(disputeCommunicationMessage), 1);
-                delayMsgMap.put(uid, timer);
-            } else {
-                String msg = "We got a disputeCommunicationMessage after we already repeated to apply the message after a delay. That should never happen. TradeId = " + tradeId;
-                log.warn(msg);
-            }
-            return;
-        }
-
-        cleanupRetryMap(uid);
-        Dispute dispute = disputeOptional.get();
-        Tuple2<NodeAddress, PubKeyRing> tuple = getNodeAddressPubKeyRingTuple(dispute);
-        PubKeyRing receiverPubKeyRing = tuple.second;
-
-        if (!dispute.getDisputeCommunicationMessages().contains(disputeCommunicationMessage))
-            dispute.addDisputeCommunicationMessage(disputeCommunicationMessage);
-        else
-            log.warn("We got a disputeCommunicationMessage what we have already stored. TradeId = " + tradeId);
-
-        // We never get a errorMessage in that method (only if we cannot resolve the receiverPubKeyRing but then we
-        // cannot send it anyway)
-        if (receiverPubKeyRing != null)
-            sendAckMessage(disputeCommunicationMessage, receiverPubKeyRing, true, null);
+        chatManager.sendAckMessage(peerOpenedDisputeMessage, dispute.getArbitratorPubKeyRing(), errorMessage == null, errorMessage);
     }
 
     // We get that message at both peers. The dispute object is in context of the trader
-    private void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
+    public void onDisputeResultMessage(DisputeResultMessage disputeResultMessage) {
         String errorMessage = null;
         boolean success = false;
         PubKeyRing arbitratorsPubKeyRing = null;
@@ -1028,13 +800,13 @@ public class DisputeManager implements PersistedDataHost {
                 // We use the disputeCommunicationMessage as we only persist those not the disputeResultMessage.
                 // If we would use the disputeResultMessage we could not lookup for the msg when we receive the AckMessage.
                 DisputeCommunicationMessage disputeCommunicationMessage = disputeResultMessage.getDisputeResult().getDisputeCommunicationMessage();
-                sendAckMessage(disputeCommunicationMessage, arbitratorsPubKeyRing, success, errorMessage);
+                chatManager.sendAckMessage(disputeCommunicationMessage, arbitratorsPubKeyRing, success, errorMessage);
             }
         }
     }
 
     // Losing trader or in case of 50/50 the seller gets the tx sent from the winner or buyer
-    private void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
+    public void onDisputedPayoutTxMessage(PeerPublishedDisputePayoutTxMessage peerPublishedDisputePayoutTxMessage) {
         final String uid = peerPublishedDisputePayoutTxMessage.getUid();
         final String tradeId = peerPublishedDisputePayoutTxMessage.getTradeId();
         Optional<Dispute> disputeOptional = findOwnDispute(tradeId);
@@ -1063,7 +835,7 @@ public class DisputeManager implements PersistedDataHost {
         BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute
-        sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
+        chatManager.sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);
     }
 
 
@@ -1115,7 +887,7 @@ public class DisputeManager implements PersistedDataHost {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    private Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
+    public Tuple2<NodeAddress, PubKeyRing> getNodeAddressPubKeyRingTuple(Dispute dispute) {
         PubKeyRing receiverPubKeyRing = null;
         NodeAddress peerNodeAddress = null;
         if (isTrader(dispute)) {
@@ -1134,7 +906,7 @@ public class DisputeManager implements PersistedDataHost {
         return new Tuple2<>(peerNodeAddress, receiverPubKeyRing);
     }
 
-    private Optional<Dispute> findDispute(String tradeId, int traderId) {
+    public Optional<Dispute> findDispute(String tradeId, int traderId) {
         return disputes.stream().filter(e -> e.getTradeId().equals(tradeId) && e.getTraderId() == traderId).findAny();
     }
 

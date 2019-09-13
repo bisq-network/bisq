@@ -45,9 +45,10 @@ public class BsqNodeProvider {
                 !preferences.getRpcPw().isEmpty() &&
                 preferences.getBlockNotifyPort() > 0;
         boolean daoFullNode = preferences.isDaoFullNode();
-        if (daoFullNode && !rpcDataSet)
-            log.warn("daoFullNode is set but RPC user and pw are missing");
-
+        if (daoFullNode && !rpcDataSet) {
+            log.warn("daoFullNode is set in preferences but RPC user and pw are missing. We reset daoFullNode in preferences to false.");
+            preferences.setDaoFullNode(false);
+        }
         bsqNode = daoFullNode && rpcDataSet ? bsqFullNode : bsqLiteNode;
     }
 }

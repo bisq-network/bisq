@@ -247,6 +247,7 @@ public abstract class StateMonitorView<StH extends StateHash,
         createColumns();
         GridPane.setRowIndex(tableView, gridRow);
         GridPane.setHgrow(tableView, Priority.ALWAYS);
+        GridPane.setVgrow(tableView, Priority.SOMETIMES);
         GridPane.setMargin(tableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, -25, -10));
         root.getChildren().add(tableView);
 
@@ -267,7 +268,8 @@ public abstract class StateMonitorView<StH extends StateHash,
         createConflictColumns();
         GridPane.setRowIndex(conflictTableView, gridRow);
         GridPane.setHgrow(conflictTableView, Priority.ALWAYS);
-        GridPane.setMargin(conflictTableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, -25, -10));
+        GridPane.setVgrow(conflictTableView, Priority.SOMETIMES);
+        GridPane.setMargin(conflictTableView, new Insets(Layout.FIRST_ROW_AND_GROUP_DISTANCE, -10, 5, -10));
         root.getChildren().add(conflictTableView);
 
         conflictTableView.setItems(sortedConflictList);

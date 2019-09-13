@@ -48,6 +48,7 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.proto.persistable.PersistableList;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.storage.CorruptedDatabaseFilesHandler;
 import bisq.common.storage.FileUtil;
 import bisq.common.storage.Storage;
 import bisq.common.util.Tuple2;
@@ -154,6 +155,8 @@ public class GUIUtil {
         GUIUtil.preferences = preferences;
     }
 
+    public static String getUserLanguage() { return preferences.getUserLanguage(); }
+
     public static double getScrollbarWidth(Node scrollablePane) {
         Node node = scrollablePane.lookup(".scroll-bar");
         if (node instanceof ScrollBar) {
@@ -189,11 +192,11 @@ public class GUIUtil {
     }
 
     public static void exportAccounts(ArrayList<PaymentAccount> accounts, String fileName,
-                                      Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver) {
+                                      Preferences preferences, Stage stage, PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
             if (directory != null && !directory.isEmpty()) {
-                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+                Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
                 paymentAccountsStorage.queueUpForSave();
                 new Popup<>().feedback(Res.get("guiUtil.accountExport.savedToPath", Paths.get(directory, fileName).toAbsolutePath())).show();
@@ -204,7 +207,7 @@ public class GUIUtil {
     }
 
     public static void importAccounts(User user, String fileName, Preferences preferences, Stage stage,
-                                      PersistenceProtoResolver persistenceProtoResolver) {
+                                      PersistenceProtoResolver persistenceProtoResolver, CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         FileChooser fileChooser = new FileChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -217,7 +220,7 @@ public class GUIUtil {
             if (Paths.get(path).getFileName().toString().equals(fileName)) {
                 String directory = Paths.get(path).getParent().toString();
                 preferences.setDirectoryChooserPath(directory);
-                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver);
+                Storage<PaymentAccountList> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 PaymentAccountList persisted = paymentAccountsStorage.initAndGetPersistedWithFileName(fileName, 100);
                 if (persisted != null) {
                     final StringBuilder msg = new StringBuilder();
@@ -685,7 +688,7 @@ public class GUIUtil {
     }
 
     public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
-        return formatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
+        return BSFormatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {

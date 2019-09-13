@@ -42,8 +42,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.storage.CorruptedDatabaseFilesHandler;
-import bisq.common.storage.Storage;
 
 import org.springframework.core.env.JOptCommandLinePropertySource;
 
@@ -232,19 +230,12 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected void applyInjector() {
         setupDevEnv();
 
-        setCorruptedDataBaseFilesHandler();
-
         setupPersistedDataHosts(injector);
     }
 
     protected void setupDevEnv() {
         DevEnv.setDevMode(injector.getInstance(Key.get(Boolean.class, Names.named(CommonOptionKeys.USE_DEV_MODE))));
         DevEnv.setDaoActivated(BisqEnvironment.isDaoActivated(bisqEnvironment));
-    }
-
-    private void setCorruptedDataBaseFilesHandler() {
-        CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
-        Storage.setCorruptedDatabaseFilesHandler(corruptedDatabaseFilesHandler);
     }
 
     protected void setupPersistedDataHosts(Injector injector) {
@@ -290,12 +281,14 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 injector.getInstance(TradeManager.class).shutDown();
                 injector.getInstance(DaoSetup.class).shutDown();
                 injector.getInstance(OpenOfferManager.class).shutDown(() -> {
+                    log.info("OpenOfferManager shutdown completed");
                     injector.getInstance(P2PService.class).shutDown(() -> {
+                        log.info("P2PService shutdown completed");
                         injector.getInstance(WalletsSetup.class).shutDownComplete.addListener((ov, o, n) -> {
+                            log.info("WalletsSetup shutdown completed");
                             module.close(injector);
-                            log.debug("Graceful shutdown completed");
                             resultHandler.handleResult();
-
+                            log.info("Graceful shutdown completed. Exiting now.");
                             System.exit(0);
                         });
                         injector.getInstance(WalletsSetup.class).shutDown();
@@ -551,6 +544,10 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
         parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT,
                 "Bitcoind rpc port for block notifications")
+                .withRequiredArg();
+
+        parser.accepts(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST,
+                "Bitcoind rpc accepted incoming host for block notifications")
                 .withRequiredArg();
 
         parser.accepts(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA,

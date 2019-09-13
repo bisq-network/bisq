@@ -17,26 +17,14 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AbstractAssetTest;
+import bisq.asset.AltCoinAccountDisclaimer;
+import bisq.asset.Coin;
+import bisq.asset.CryptoNoteAddressValidator;
 
-import org.junit.Test;
+@AltCoinAccountDisclaimer("account.altcoin.popup.solo.msg")
+public class Solo extends Coin {
 
-public class ByteballTest extends AbstractAssetTest {
-
-    public ByteballTest() {
-        super(new Byteball());
-    }
-
-    @Test
-    public void testValidAddresses() {
-        assertValidAddress("BN7JXKXWEG4BVJ7NW6Q3Z7SMJNZJYM3G");
-        assertValidAddress("XGKZODTTTRXIUA75TKONWHFDCU6634DE");
-    }
-
-    @Test
-    public void testInvalidAddresses() {
-        assertInvalidAddress("XGKZODTGTRXIUA75TKONWHFDCU6634DE");
-        assertInvalidAddress("XGKZODTTTRXIUA75TKONWHFDCU6634D");
-        assertInvalidAddress("XGKZODTTTRXIUA75TKONWHFDCU6634DZ");
+     public Solo() {
+         super("Solo", "XSL", new CryptoNoteAddressValidator(13975, 23578));
     }
 }

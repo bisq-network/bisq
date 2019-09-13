@@ -38,7 +38,7 @@ public class TooltipUtil {
 
                     // Force tooltip to use color, as it takes in some cases the color of the parent label
                     // and can't be overriden by class or id
-                    tooltip.setStyle("-fx-text-fill: -bs-rd-black;");
+                    tooltip.setStyle("-fx-text-fill: -bs-rd-tooltip-truncated;");
                     labeled.setTooltip(tooltip);
                 }
             }

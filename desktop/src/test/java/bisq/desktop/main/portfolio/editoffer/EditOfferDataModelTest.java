@@ -1,6 +1,6 @@
 package bisq.desktop.main.portfolio.editoffer;
 
-import bisq.desktop.main.offer.MakerFeeMaker;
+import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -93,7 +93,7 @@ public class EditOfferDataModelTest {
                 btcWalletService, bsqWalletService, empty, user,
                 null, null, priceFeedService, null,
                 accountAgeWitnessService, feeService, null, null,
-                null, null, mock(MakerFeeMaker.class));
+                null, null, mock(MakerFeeProvider.class));
     }
 
     @Test

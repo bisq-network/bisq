@@ -295,6 +295,19 @@ public class CurrencyUtil {
         return currencies;
     }
 
+    public static List<TradeCurrency> getMatureMarketCurrencies() {
+        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
+                new FiatCurrency("EUR"),
+                new FiatCurrency("USD"),
+                new FiatCurrency("GBP"),
+                new FiatCurrency("CAD"),
+                new FiatCurrency("AUD"),
+                new FiatCurrency("BRL")
+        ));
+        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
+        return currencies;
+    }
+
     public static boolean isFiatCurrency(String currencyCode) {
         try {
             return currencyCode != null

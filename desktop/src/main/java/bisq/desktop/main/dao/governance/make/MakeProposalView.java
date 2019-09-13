@@ -52,6 +52,7 @@ import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.ParsingUtils;
 
 import bisq.asset.Asset;
 
@@ -395,13 +396,13 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         "proposalDisplay.requestedBsqTextField must not be null");
                 return daoFacade.getCompensationProposalWithTransaction(name,
                         link,
-                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
+                        ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter));
             case REIMBURSEMENT_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
                 return daoFacade.getReimbursementProposalWithTransaction(name,
                         link,
-                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
+                        ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
                         "proposalDisplay.paramComboBox must no tbe null");

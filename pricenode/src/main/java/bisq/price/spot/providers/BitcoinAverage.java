@@ -19,6 +19,7 @@ package bisq.price.spot.providers;
 
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
+import bisq.common.util.Hex;
 
 import org.knowm.xchange.bitcoinaverage.dto.marketdata.BitcoinAverageTicker;
 import org.knowm.xchange.bitcoinaverage.dto.marketdata.BitcoinAverageTickers;
@@ -31,8 +32,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.google.common.base.Charsets;
-
-import org.bouncycastle.util.encoders.Hex;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKey;
@@ -120,7 +119,7 @@ public abstract class BitcoinAverage extends ExchangeRateProvider {
 
     protected String getAuthSignature() {
         String payload = String.format("%s.%s", Instant.now().getEpochSecond(), pubKey);
-        return String.format("%s.%s", payload, Hex.toHexString(mac.doFinal(payload.getBytes(Charsets.UTF_8))));
+        return String.format("%s.%s", payload, Hex.encode(mac.doFinal(payload.getBytes(Charsets.UTF_8))));
     }
 
     private static Mac initMac(String privKey) {

@@ -26,6 +26,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -317,7 +318,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
             Offer offer = item.getTradable().getOffer();
             boolean matchesId = offer.getId().contains(filterString);
-            boolean matchesOfferDate = formatter.formatDate(offer.getDate()).contains(filterString);
+            boolean matchesOfferDate = DisplayUtils.formatDate(offer.getDate()).contains(filterString);
             boolean isMakerOnion = offer.getMakerNodeAddress().getFullAddress().contains(filterString);
 
             if (item.getTradable() instanceof Trade) {
@@ -327,7 +328,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 boolean matchesSellersPaymentAccountData = false;
 
                 Trade trade = (Trade) item.getTradable();
-                boolean matchesTradeDate = formatter.formatDate(trade.getTakeOfferDate()).contains(filterString);
+                boolean matchesTradeDate = DisplayUtils.formatDate(trade.getTakeOfferDate()).contains(filterString);
                 Contract contract = trade.getContract();
                 if (contract != null) {
                     isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);

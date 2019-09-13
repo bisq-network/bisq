@@ -143,6 +143,10 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         listeners.add(listener);
     }
 
+    /**
+     *
+     * @param startBlockHeight      Block height from where we expect new blocks (current block height in bsqState + 1)
+     */
     public void requestBlocks(int startBlockHeight) {
         lastRequestedBlockHeight = startBlockHeight;
         Optional<Connection> connectionToSeedNodeOptional = networkNode.getConfirmedConnections().stream()
@@ -231,8 +235,8 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
             List<String> txIds = newBlockBroadcastMessage.getBlock().getRawTxs().stream().map(BaseTx::getId).collect(Collectors.toList());
             String extBlockId = newBlockBroadcastMessage.getBlock().getHash() + ":" + txIds;
             if (!receivedBlocks.contains(extBlockId)) {
-                log.info("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
-                        connection.getPeersNodeAddressOptional(), extBlockId);
+                log.debug("We received a new message from peer {} and broadcast it to our peers. extBlockId={}",
+                        connection.getPeersNodeAddressOptional().orElse(null), extBlockId);
                 receivedBlocks.add(extBlockId);
                 broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress(), null, false);
                 listeners.forEach(listener -> listener.onNewBlockReceived(newBlockBroadcastMessage));
@@ -259,7 +263,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
                             new RequestBlocksHandler.Listener() {
                                 @Override
                                 public void onComplete(GetBlocksResponse getBlocksResponse) {
-                                    log.info("requestBlocksHandler of outbound connection complete. nodeAddress={}",
+                                    log.debug("requestBlocksHandler of outbound connection complete. nodeAddress={}",
                                             peersNodeAddress);
                                     stopRetryTimer();
 

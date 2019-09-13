@@ -79,6 +79,7 @@ public class BtcNodes {
 
                         // wiz
                         new BtcNode("node100.hnl.wiz.biz", "22tg6ufbwz6o3l2u.onion", "103.99.168.100", BtcNode.DEFAULT_PORT, "@wiz"),
+                        new BtcNode("node130.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
 
                         // others
                         new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke"),

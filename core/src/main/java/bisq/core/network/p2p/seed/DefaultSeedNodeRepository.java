@@ -49,7 +49,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
     //TODO add support for localhost addresses
     private static final Pattern pattern = Pattern.compile("^([a-z0-9]+\\.onion:\\d+)");
     private static final String ENDING = ".seednodes";
-    private static final Collection<NodeAddress> cache = new HashSet<>();
+    private final Collection<NodeAddress> cache = new HashSet<>();
     private final BisqEnvironment bisqEnvironment;
     @Nullable
     private final String seedNodes;
@@ -94,7 +94,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
 
             log.info("Seed nodes: {}", cache);
         } catch (Throwable t) {
-            log.error(t.toString());
+            log.error("exception in DefaultSeedNodeRepository", t);
             t.printStackTrace();
             throw t;
         }

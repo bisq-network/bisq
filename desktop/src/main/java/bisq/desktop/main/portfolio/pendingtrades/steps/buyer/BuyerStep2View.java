@@ -49,6 +49,7 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -500,7 +501,7 @@ public class BuyerStep2View extends TradeStepView {
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
             String paddedId = " " + id + " ";
-            String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
+            String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",

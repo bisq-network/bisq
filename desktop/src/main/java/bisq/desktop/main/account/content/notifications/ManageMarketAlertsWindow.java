@@ -140,7 +140,7 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
                             public void updateItem(final MarketAlertFilter item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(formatter.formatPercentagePrice(item.getTriggerValue() / 10000d));
+                                    setText(BSFormatter.formatPercentagePrice(item.getTriggerValue() / 10000d));
                                 } else {
                                     setText("");
                                 }
