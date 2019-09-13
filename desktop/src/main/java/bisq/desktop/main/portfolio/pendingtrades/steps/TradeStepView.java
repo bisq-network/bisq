@@ -383,6 +383,9 @@ public abstract class TradeStepView extends AnchorPane {
         tradeStepInfo.setPeriodOverWarnTextSupplier(this::getPeriodOverWarnText);
     }
 
+    protected void hideTradeStepInfo() {
+        tradeStepInfo.setState(TradeStepInfo.State.TRADE_COMPLETED);
+    }
 
     protected String getFirstHalfOverWarnText() {
         return "";

@@ -51,7 +51,8 @@ public class TradeStepInfo {
         IN_ARBITRATION_SELF_REQUESTED,
         IN_ARBITRATION_PEER_REQUESTED,
         WARN_HALF_PERIOD,
-        WARN_PERIOD_OVER
+        WARN_PERIOD_OVER,
+        TRADE_COMPLETED
     }
 
     private final TitledGroupBg titledGroupBg;
@@ -187,6 +188,11 @@ public class TradeStepInfo {
                 button.getStyleClass().remove("action-button");
                 button.setDisable(false);
                 break;
+            case TRADE_COMPLETED:
+                // hide group
+                titledGroupBg.setVisible(false);
+                label.setVisible(false);
+                button.setVisible(false);
         }
 
         if (trade != null && trade.getPayoutTx() != null) {
