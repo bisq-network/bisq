@@ -132,8 +132,7 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
         return
         Res.get("payment.japan.bank") + ": " + bankName + "(" + bankCode + ")\n" +
         Res.get("payment.japan.branch") + ": " +  bankBranchName + "(" + bankBranchCode + ")\n" +
-        Res.get("payment.japan.account") + ": " + bankAccountType + " " + bankAccountNumber + "\n" +
-        Res.get("payment.japan.recipient") + ": " +  bankAccountName + "\n";
+        Res.get("payment.japan.account") + ": " + bankAccountType + " " + bankAccountNumber + "\n" + Res.get("payment.japan.recipient") + ": " + bankAccountName;
     }
 
 
