@@ -17,41 +17,41 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.common.util.Tuple4;
-
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.AutocompleteComboBox;
-import bisq.desktop.util.FormBuilder;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.paymentmethods.data.JapanBankData;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.LengthValidator;
-import bisq.desktop.util.validation.RegexValidator;
-import bisq.desktop.util.validation.JapanBankTransferValidator;
+import bisq.desktop.util.validation.JapanBankAccountNameValidator;
+import bisq.desktop.util.validation.JapanBankAccountNumberValidator;
 import bisq.desktop.util.validation.JapanBankBranchCodeValidator;
 import bisq.desktop.util.validation.JapanBankBranchNameValidator;
-import bisq.desktop.util.validation.JapanBankAccountNumberValidator;
-import bisq.desktop.util.validation.JapanBankAccountNameValidator;
-import bisq.desktop.components.paymentmethods.data.JapanBankData;
+import bisq.desktop.util.validation.JapanBankTransferValidator;
+import bisq.desktop.util.validation.LengthValidator;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.JapanBankAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.JapanBankAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
+
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.scene.control.Label;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.GridPane;
+
 import javafx.util.StringConverter;
 
 import static bisq.desktop.util.FormBuilder.*;
@@ -78,31 +78,23 @@ public class JapanBankTransferForm extends PaymentMethodForm
         JapanBankAccountPayload japanBankAccount = ((JapanBankAccountPayload) paymentAccountPayload);
 
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                JapanBankData.getString("payment.account.owner"),
+                Res.get("payment.account.owner"),
                 ((JapanBankAccountPayload) paymentAccountPayload).getBankName());
 
-        TextField bankCodeTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("bank.code"), japanBankAccount.getBankCode()).second;
-        bankCodeTextField.setPrefWidth(30);
-        bankCodeTextField.setEditable(false);
+        String bankText = japanBankAccount.getBankCode() + " " + japanBankAccount.getBankName();
+        TextField bankTextField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.japan.bank"), bankText).second;
+        bankTextField.setEditable(false);
 
-        TextField bankNameTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, JapanBankData.getString("bank.name"), japanBankAccount.getBankName()).second;
-        bankNameTextField.setPrefWidth(70);
-        bankNameTextField.setEditable(false);
+        String branchText = japanBankAccount.getBankBranchCode() + " " + japanBankAccount.getBankBranchName();
+        TextField branchTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.japan.branch"), branchText).second;
+        branchTextField.setEditable(false);
 
-        TextField branchCodeTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("branch.code"), japanBankAccount.getBankBranchCode()).second;
-        branchCodeTextField.setPrefWidth(30);
-        branchCodeTextField.setEditable(false);
+        String accountText = japanBankAccount.getBankAccountType() + " " + japanBankAccount.getBankAccountNumber();
+        TextField accountTextField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.japan.account"), accountText).second;
+        accountTextField.setEditable(false);
 
-        TextField branchNameTextField = addCompactTopLabelTextField(gridPane, ++gridRow, 1, JapanBankData.getString("branch.name"), japanBankAccount.getBankBranchName()).second;
-        branchNameTextField.setPrefWidth(70);
-        branchNameTextField.setEditable(false);
-
-        TextField accountNumberTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("account.number"), japanBankAccount.getBankAccountNumber()).second;
-        accountNumberTextField.setPrefWidth(30);
-        accountNumberTextField.setEditable(false);
-
-        TextField accountNameTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, JapanBankData.getString("account.name"), japanBankAccount.getBankAccountName()).second;
-        accountNameTextField.setPrefWidth(70);
+        String accountNameText = japanBankAccount.getBankAccountName();
+        TextField accountNameTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.japan.recipient"), accountNameText).second;
         accountNameTextField.setEditable(false);
 
         return gridRow;
@@ -193,8 +185,8 @@ public class JapanBankTransferForm extends PaymentMethodForm
 
         // Bank Code (readonly)
         TextField bankCodeField = tuple4.second;
-        bankCodeField.setPrefWidth(175);
-        bankCodeField.setMaxWidth(175);
+        bankCodeField.setPrefWidth(200);
+        bankCodeField.setMaxWidth(200);
         bankCodeField.setEditable(false);
 
         // Bank Selector
@@ -215,8 +207,8 @@ public class JapanBankTransferForm extends PaymentMethodForm
         });
         ((AutocompleteComboBox) bankComboBox).setAutocompleteItems(JapanBankData.prettyPrintBankList());
 
-        bankComboBox.setPrefWidth(425);
-        bankComboBox.setVisibleRowCount(425);
+        bankComboBox.setPrefWidth(430);
+        bankComboBox.setVisibleRowCount(430);
 
         ((AutocompleteComboBox) bankComboBox).setOnChangeConfirmed(e -> {
             // get selected value
@@ -259,8 +251,8 @@ public class JapanBankTransferForm extends PaymentMethodForm
         // branch code
         InputTextField bankBranchCodeInputTextField = tuple2.first;
         bankBranchCodeInputTextField.setValidator(japanBankBranchCodeValidator);
-        bankBranchCodeInputTextField.setPrefWidth(175);
-        bankBranchCodeInputTextField.setMaxWidth(175);
+        bankBranchCodeInputTextField.setPrefWidth(200);
+        bankBranchCodeInputTextField.setMaxWidth(200);
         bankBranchCodeInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             japanBankAccount.setBankBranchCode(newValue);
             updateFromInputs();
@@ -269,8 +261,8 @@ public class JapanBankTransferForm extends PaymentMethodForm
         // branch name
         InputTextField bankBranchNameInputTextField = tuple2.second;
         bankBranchNameInputTextField.setValidator(japanBankBranchNameValidator);
-        bankBranchNameInputTextField.setPrefWidth(425);
-        bankBranchNameInputTextField.setMaxWidth(425);
+        bankBranchNameInputTextField.setPrefWidth(430);
+        bankBranchNameInputTextField.setMaxWidth(430);
         bankBranchNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             japanBankAccount.setBankBranchName(newValue);
             updateFromInputs();
@@ -284,8 +276,8 @@ public class JapanBankTransferForm extends PaymentMethodForm
         // account number
         bankAccountNumberInputTextField = tuple2.first;
         bankAccountNumberInputTextField.setValidator(japanBankAccountNumberValidator);
-        bankAccountNumberInputTextField.setPrefWidth(175);
-        bankAccountNumberInputTextField.setMaxWidth(175);
+        bankAccountNumberInputTextField.setPrefWidth(200);
+        bankAccountNumberInputTextField.setMaxWidth(200);
         bankAccountNumberInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             japanBankAccount.setBankAccountNumber(newValue);
             updateFromInputs();
@@ -294,8 +286,8 @@ public class JapanBankTransferForm extends PaymentMethodForm
         // account name
         InputTextField bankAccountNameInputTextField = tuple2.second;
         bankAccountNameInputTextField.setValidator(japanBankAccountNameValidator);
-        bankAccountNameInputTextField.setPrefWidth(425);
-        bankAccountNameInputTextField.setMaxWidth(425);
+        bankAccountNameInputTextField.setPrefWidth(430);
+        bankAccountNameInputTextField.setMaxWidth(430);
         bankAccountNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             japanBankAccount.setBankAccountName(newValue);
             updateFromInputs();
@@ -308,7 +300,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
 
         TradeCurrency singleTradeCurrency = japanBankAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
-        addCompactTopLabelTextField(gridPane, gridRow, Res.get("shared.currency"), nameAndCode);
+        addCompactTopLabelTextField(gridPane, gridRow, Res.get("shared.currency"), nameAndCode, 20);
 
         // account type
         gridRow++;

@@ -796,7 +796,7 @@ public class JapanBankData
         {
             case "bank":
                 if (ja) return "銀行名 ・金融機関名";
-                return "Japan Bank or Financial Institution";
+                return "Bank or Financial Institution";
             case "bank.select":
                 if (ja) return "金融機関 ・銀行検索 (名称入力検索)";
                 return "Search for Bank or Financial Institution";
@@ -812,7 +812,7 @@ public class JapanBankData
                 return "Bank Branch";
             case "branch.code":
                 if (ja) return "支店コード";
-                return "Zengin Bank Branch Code";
+                return "Zengin Branch Code";
             case "branch.code.validation.error":
                 if (ja) return "入力は3桁の支店コードでなければなりません";
                 return "Input must be a 3 digit branch code";
@@ -822,7 +822,7 @@ public class JapanBankData
 
             case "account":
                 if (ja) return "銀行口座";
-                return "Japan Bank Account";
+                return "Bank Account";
 
             case "account.type":
                 if (ja) return "口座科目";

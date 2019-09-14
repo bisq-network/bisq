@@ -34,9 +34,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-// Cannot be deleted as it would break old trade history entries
-// Removed due too high chargeback risk
-@Deprecated
 @EqualsAndHashCode(callSuper = true)
 @ToString
 @Setter
@@ -132,10 +129,10 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup()
     {
-        return bankName + "(" + bankCode + ")\n" +
-               bankBranchName + "(" + bankBranchCode + ")\n" +
-               bankAccountType + ": " + bankAccountNumber + "\n" +
-               bankAccountName + "\n";
+        return
+        Res.get("payment.japan.bank") + ": " + bankName + "(" + bankCode + ")\n" +
+        Res.get("payment.japan.branch") + ": " +  bankBranchName + "(" + bankBranchCode + ")\n" +
+        Res.get("payment.japan.account") + ": " + bankAccountType + " " + bankAccountNumber + "\n" + Res.get("payment.japan.recipient") + ": " + bankAccountName;
     }
 
 
