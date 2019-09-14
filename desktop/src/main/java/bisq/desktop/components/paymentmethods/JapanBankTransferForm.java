@@ -77,25 +77,17 @@ public class JapanBankTransferForm extends PaymentMethodForm
     {
         JapanBankAccountPayload japanBankAccount = ((JapanBankAccountPayload) paymentAccountPayload);
 
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
-                Res.get("payment.account.owner"),
-                ((JapanBankAccountPayload) paymentAccountPayload).getBankName());
-
         String bankText = japanBankAccount.getBankCode() + " " + japanBankAccount.getBankName();
-        TextField bankTextField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.japan.bank"), bankText).second;
-        bankTextField.setEditable(false);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.japan.bank"), bankText);
 
         String branchText = japanBankAccount.getBankBranchCode() + " " + japanBankAccount.getBankBranchName();
-        TextField branchTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.japan.branch"), branchText).second;
-        branchTextField.setEditable(false);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.japan.branch"), branchText);
 
         String accountText = japanBankAccount.getBankAccountType() + " " + japanBankAccount.getBankAccountNumber();
-        TextField accountTextField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.japan.account"), accountText).second;
-        accountTextField.setEditable(false);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.japan.account"), accountText);
 
         String accountNameText = japanBankAccount.getBankAccountName();
-        TextField accountNameTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.japan.recipient"), accountNameText).second;
-        accountNameTextField.setEditable(false);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.japan.recipient"), accountNameText);
 
         return gridRow;
     } // }}}
