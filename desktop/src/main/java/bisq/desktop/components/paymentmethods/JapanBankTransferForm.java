@@ -17,41 +17,41 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
-import bisq.common.util.Tuple4;
-
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.AutocompleteComboBox;
-import bisq.desktop.util.FormBuilder;
+import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.paymentmethods.data.JapanBankData;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.LengthValidator;
-import bisq.desktop.util.validation.RegexValidator;
-import bisq.desktop.util.validation.JapanBankTransferValidator;
+import bisq.desktop.util.validation.JapanBankAccountNameValidator;
+import bisq.desktop.util.validation.JapanBankAccountNumberValidator;
 import bisq.desktop.util.validation.JapanBankBranchCodeValidator;
 import bisq.desktop.util.validation.JapanBankBranchNameValidator;
-import bisq.desktop.util.validation.JapanBankAccountNumberValidator;
-import bisq.desktop.util.validation.JapanBankAccountNameValidator;
-import bisq.desktop.components.paymentmethods.data.JapanBankData;
+import bisq.desktop.util.validation.JapanBankTransferValidator;
+import bisq.desktop.util.validation.LengthValidator;
+import bisq.desktop.util.validation.RegexValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.JapanBankAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.JapanBankAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
+import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
+
 import org.apache.commons.lang3.StringUtils;
 
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.scene.control.Label;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.GridPane;
+
 import javafx.util.StringConverter;
 
 import static bisq.desktop.util.FormBuilder.*;
@@ -86,7 +86,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
         bankTextField.setEditable(false);
 
         String branchText = japanBankAccount.getBankBranchCode() + " " + japanBankAccount.getBankBranchName();
-        TextField branchTextField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.japan.branch"), branchText).second;
+        TextField branchTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.japan.branch"), branchText).second;
         branchTextField.setEditable(false);
 
         String accountText = japanBankAccount.getBankAccountType() + " " + japanBankAccount.getBankAccountNumber();
@@ -94,7 +94,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
         accountTextField.setEditable(false);
 
         String accountNameText = japanBankAccount.getBankAccountName();
-        TextField accountNameTextField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.japan.recipient"), accountNameText).second;
+        TextField accountNameTextField = addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.japan.recipient"), accountNameText).second;
         accountNameTextField.setEditable(false);
 
         return gridRow;
