@@ -1,5 +1,5 @@
 # first the builder builds the executables
-FROM gradle:jdk11 as builder
+FROM gradle:jdk10 as builder
 ARG SEEDNODE_URL
 ARG SEEDNODE_BRANCH
 RUN git clone $SEEDNODE_URL
