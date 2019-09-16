@@ -21,6 +21,7 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
@@ -338,6 +339,13 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 })
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    public boolean amISigner(boolean asSeller) {
+        AccountAgeWitness witness = accountAgeWitnessService.getMyWitness(asSeller ?
+                dataModel.getSellersPaymentAccountPayload() :
+                dataModel.getBuyersPaymentAccountPayload());
+        return accountAgeWitnessService.accountIsSigner(witness);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

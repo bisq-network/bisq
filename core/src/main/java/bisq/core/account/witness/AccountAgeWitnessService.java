@@ -79,6 +79,7 @@ public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
     private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1).getTime();
+    private static final long SIGNER_AGE = TimeUnit.DAYS.toMillis(60);
 
     public enum AccountAge {
         UNVERIFIED,
@@ -602,5 +603,9 @@ public class AccountAgeWitnessService {
         return findWitness(offer)
                 .map(signedWitnessService::isValidAccountAgeWitness)
                 .orElse(false);
+    }
+
+    public boolean accountIsSigner(AccountAgeWitness accountAgeWitness) {
+        return getWitnessSignAge(accountAgeWitness, new Date()) > SIGNER_AGE;
     }
 }
