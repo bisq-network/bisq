@@ -113,7 +113,7 @@ public class BondingViewUtils {
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
                     BSFormatter formatter = new BSFormatter();
-                    String duration = formatter.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
+                    String duration = BSFormatter.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
                             .confirmation(Res.get("dao.bond.reputation.lockup.details",
                                     bsqFormatter.formatCoinWithCode(lockupAmount),
@@ -174,7 +174,7 @@ public class BondingViewUtils {
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
                     BSFormatter formatter = new BSFormatter();
-                    String duration = formatter.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
+                    String duration = BSFormatter.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),

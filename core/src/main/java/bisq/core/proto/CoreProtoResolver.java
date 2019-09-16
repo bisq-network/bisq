@@ -33,6 +33,7 @@ import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
+import bisq.core.payment.payload.JapanBankAccountPayload;;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.NationalBankAccountPayload;
@@ -113,6 +114,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return FasterPaymentsAccountPayload.fromProto(proto);
                 case INTERAC_E_TRANSFER_ACCOUNT_PAYLOAD:
                     return InteracETransferAccountPayload.fromProto(proto);
+                case JAPAN_BANK_ACCOUNT_PAYLOAD:
+                    return JapanBankAccountPayload.fromProto(proto);
                 case UPHOLD_ACCOUNT_PAYLOAD:
                     return UpholdAccountPayload.fromProto(proto);
                 case MONEY_BEAM_ACCOUNT_PAYLOAD:

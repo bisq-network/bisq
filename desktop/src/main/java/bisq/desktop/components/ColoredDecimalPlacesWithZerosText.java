@@ -33,13 +33,13 @@ public class ColoredDecimalPlacesWithZerosText extends HBox {
         super();
 
         if (numberOfZerosToColorize <= 0) {
-            getChildren().addAll(new Text(number));
+            getChildren().addAll(new Label(number));
         } else if (number.contains(BSFormatter.RANGE_SEPARATOR)) {
             String[] splitNumber = number.split(BSFormatter.RANGE_SEPARATOR);
             Tuple2<Label, Label> numbers = getSplittedNumberNodes(splitNumber[0], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);
 
-            getChildren().add(new Text(BSFormatter.RANGE_SEPARATOR));
+            getChildren().add(new Label(BSFormatter.RANGE_SEPARATOR));
 
             numbers = getSplittedNumberNodes(splitNumber[1], numberOfZerosToColorize);
             getChildren().addAll(numbers.first, numbers.second);

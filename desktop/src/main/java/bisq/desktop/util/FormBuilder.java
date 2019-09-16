@@ -1008,6 +1008,51 @@ public class FormBuilder {
         return new Tuple2<>(labelVBoxTuple2.first, comboBox);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Label + TextField + AutocompleteComboBox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static <T> Tuple4<Label, TextField, Label, ComboBox<T>> addTopLabelTextFieldAutocompleteComboBox(
+            GridPane gridPane,
+            int rowIndex,
+            String titleTextfield,
+            String titleCombobox
+            )
+    {
+        return addTopLabelTextFieldAutocompleteComboBox(gridPane, rowIndex, titleTextfield, titleCombobox, 0);
+    }
+
+    public static <T> Tuple4<Label, TextField, Label, ComboBox<T>> addTopLabelTextFieldAutocompleteComboBox(
+            GridPane gridPane,
+            int rowIndex,
+            String titleTextfield,
+            String titleCombobox,
+            double top
+            )
+    {
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+
+        final VBox topLabelVBox1 = getTopLabelVBox(5);
+        final Label topLabel1 = getTopLabel(titleTextfield);
+        final TextField textField = new BisqTextField();
+        topLabelVBox1.getChildren().addAll(topLabel1, textField);
+
+        final VBox topLabelVBox2 = getTopLabelVBox(5);
+        final Label topLabel2 = getTopLabel(titleCombobox);
+        AutocompleteComboBox<T> comboBox = new AutocompleteComboBox<>();
+        comboBox.setPromptText(titleCombobox);
+        ((JFXComboBox<T>) comboBox).setLabelFloat(true);
+        topLabelVBox2.getChildren().addAll(topLabel2, comboBox);
+
+        hBox.getChildren().addAll(topLabelVBox1, topLabelVBox2);
+
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(hBox);
+
+        return new Tuple4<>(topLabel1, textField, topLabel2, comboBox);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label + ComboBox + ComboBox

@@ -180,9 +180,9 @@ public class TradeWalletService {
                                              boolean doBroadcast,
                                              @Nullable TxBroadcaster.Callback callback)
             throws InsufficientMoneyException, AddressFormatException {
-        log.debug("fundingAddress {}", fundingAddress.toString());
-        log.debug("reservedForTradeAddress {}", reservedForTradeAddress.toString());
-        log.debug("changeAddress {}", changeAddress.toString());
+        log.debug("fundingAddress {}", fundingAddress);
+        log.debug("reservedForTradeAddress {}", reservedForTradeAddress);
+        log.debug("changeAddress {}", changeAddress);
         log.info("reservedFundsForOffer {}", reservedFundsForOffer.toPlainString());
         log.debug("useSavingsWallet {}", useSavingsWallet);
         log.info("tradingFee {}", tradingFee.toPlainString());
@@ -245,9 +245,9 @@ public class TradeWalletService {
             TransactionVerificationException, WalletException,
             InsufficientMoneyException, AddressFormatException {
 
-        log.debug("preparedBsqTx {}", preparedBsqTx.toString());
-        log.debug("fundingAddress {}", fundingAddress.toString());
-        log.debug("changeAddress {}", changeAddress.toString());
+        log.debug("preparedBsqTx {}", preparedBsqTx);
+        log.debug("fundingAddress {}", fundingAddress);
+        log.debug("changeAddress {}", changeAddress);
         log.debug("reservedFundsForOffer {}", reservedFundsForOffer.toPlainString());
         log.debug("useSavingsWallet {}", useSavingsWallet);
         log.debug("txFee {}", txFee.toPlainString());
@@ -343,10 +343,12 @@ public class TradeWalletService {
      */
     public InputsAndChangeOutput takerCreatesDepositsTxInputs(Transaction takeOfferFeeTx, Coin inputAmount, Coin txFee, Address takersAddress) throws
             TransactionVerificationException {
-        log.debug("takerCreatesDepositsTxInputs called");
-        log.debug("inputAmount {}", inputAmount.toFriendlyString());
-        log.debug("txFee {}", txFee.toFriendlyString());
-        log.debug("takersAddress {}", takersAddress.toString());
+        if (log.isDebugEnabled()) {
+            log.debug("takerCreatesDepositsTxInputs called");
+            log.debug("inputAmount {}", inputAmount.toFriendlyString());
+            log.debug("txFee {}", txFee.toFriendlyString());
+            log.debug("takersAddress {}", takersAddress.toString());
+        }
 
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
@@ -445,9 +447,9 @@ public class TradeWalletService {
         log.debug("takerChangeAddressString {}", takerChangeAddressString);
         log.debug("makerAddress {}", makerAddress);
         log.debug("makerChangeAddress {}", makerChangeAddress);
-        log.debug("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.debug("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.debug("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
+        log.debug("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey));
+        log.debug("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey));
+        log.debug("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey));
 
         checkArgument(!takerRawTransactionInputs.isEmpty());
 

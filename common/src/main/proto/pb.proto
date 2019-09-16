@@ -410,7 +410,7 @@ message Peer {
 message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
-    string pgp_pub_key_as_pem = 3;
+    reserved 3;  // WAS: string pgp_pub_key_as_pem = 3;
 }
 
 message SealedAndSigned {
@@ -805,6 +805,7 @@ message PaymentAccountPayload {
         PromptPayAccountPayload prompt_pay_account_payload = 25;
         AdvancedCashAccountPayload advanced_cash_account_payload = 26;
         InstantCryptoCurrencyAccountPayload instant_crypto_currency_account_payload = 27;
+        JapanBankAccountPayload japan_bank_account_payload = 28;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -860,6 +861,16 @@ message NationalBankAccountPayload {
 }
 
 message SameBankAccountPayload {
+}
+
+message JapanBankAccountPayload {
+    string bank_name = 1;
+    string bank_code = 2;
+    string bank_branch_name = 3;
+    string bank_branch_code = 4;
+    string bank_account_type = 5;
+    string bank_account_name = 6;
+    string bank_account_number = 7;
 }
 
 message SpecificBanksAccountPayload {

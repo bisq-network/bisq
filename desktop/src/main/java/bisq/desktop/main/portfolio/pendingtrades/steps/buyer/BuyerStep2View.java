@@ -30,6 +30,7 @@ import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
+import bisq.desktop.components.paymentmethods.JapanBankTransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
@@ -49,6 +50,7 @@ import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -265,6 +267,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.INTERAC_E_TRANSFER_ID:
                 gridRow = InteracETransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.JAPAN_BANK_ID:
+                gridRow = JapanBankTransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
@@ -500,7 +505,7 @@ public class BuyerStep2View extends TradeStepView {
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
             String paddedId = " " + id + " ";
-            String amount = model.btcFormatter.formatVolumeWithCode(trade.getTradeVolume());
+            String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",

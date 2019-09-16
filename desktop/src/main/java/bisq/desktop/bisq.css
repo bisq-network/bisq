@@ -1389,6 +1389,30 @@ textfield */
     -fx-fill: -bs-color-primary-dark;
 }
 
+.trade-msg-state-undefined {
+    -fx-text-fill: -bs-yellow;
+}
+
+.trade-msg-state-sent {
+    -fx-text-fill: -bs-yellow-light;
+}
+
+.trade-msg-state-arrived {
+    -fx-text-fill: -bs-turquoise;
+}
+
+.trade-msg-state-stored {
+    -fx-text-fill: -bs-color-blue-4;
+}
+
+.trade-msg-state-acknowledged {
+    -fx-text-fill: -bs-color-primary;
+}
+
+.trade-msg-state-failed {
+    -fx-text-fill: -bs-rd-error-red;
+}
+
 #open-support-button {
     -fx-font-weight: bold;
     -fx-font-size: 1.077em;
@@ -1547,6 +1571,7 @@ textfield */
 #charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
     -fx-tick-label-fill: -bs-rd-font-lighter;
     -fx-tick-label-font-size: 0.769em;
+    -fx-font-size: 0.880em;
 }
 
 #charts .chart-plot-background, #charts-dao .chart-plot-background {
@@ -1575,6 +1600,9 @@ textfield */
 
 #charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
     -fx-fill: -bs-buy-transparent;
+}
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
 }
 
 #charts .axis-label {
@@ -1994,4 +2022,8 @@ textfield */
 #notification-erase-button {
     -fx-background-color: -bs-red-soft;
     -fx-text-fill: -bs-background-color;
+}
+
+.status-icon {
+    -fx-text-fill: -fx-faint-focus-color;
 }

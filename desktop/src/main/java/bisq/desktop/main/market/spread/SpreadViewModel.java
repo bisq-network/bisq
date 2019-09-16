@@ -185,7 +185,7 @@ class SpreadViewModel extends ActivatableViewModel {
                                 .multiply(BigDecimal.valueOf(10000))
                                 .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
                                 .doubleValue() / 10000;
-                        percentage = formatter.formatPercentagePrice(percentageValue);
+                        percentage = BSFormatter.formatPercentagePrice(percentageValue);
                     }
                 } catch (Throwable t) {
                     try {
