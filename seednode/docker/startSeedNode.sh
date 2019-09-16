@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#SCRIPT_DIR=$(dirname ${BASH_SOURCE[0]})
-#SETUP_SCRIPT=${SCRIPT_DIR}/setup.sh
-#source ${SETUP_SCRIPT}
-
 ARGS=""
 
 if [ ! -z "$MAX_MEMORY" ]; then

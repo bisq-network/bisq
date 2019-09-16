@@ -12,7 +12,7 @@ services:
                 SEEDNODE_BRANCH: ${SEEDNODE_BRANCH}
         image: seednode
         depends_on:
-            - bitcoin-core
+            - btcd
         ports:
             - 8000:8000
             - 9010:9010
@@ -54,11 +54,11 @@ services:
             bisq_net:
                 ipv4_address: 172.28.1.4
 
-    bitcoin-core:
+    btcd:
         build:
             context: .
             dockerfile: docker/prod/Dockerfile-btc
-        image: bisq/bitcoin-core
+        image: bisq/btcd
         container_name: btcd
         restart: unless-stopped
         command:
@@ -71,7 +71,9 @@ services:
             -timeout=30000
             -listen=0
             -rpcuser=${RPC_USER}
-            -rpcallowip=172.28.1.3
+            -rpcallowip=0.0.0.0/0
+            -rpcbind=127.0.0.1
+            -rpcbind=btcd
             -rpcpassword=${RPC_PASSWORD}
             -blocknotify="bash ~/.bitcoin/blocknotify %s"
         ports:
