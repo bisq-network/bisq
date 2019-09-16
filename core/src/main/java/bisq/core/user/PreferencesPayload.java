@@ -284,7 +284,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsPercent(),
                 proto.getIgnoreDustThreshold(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
-                proto.getBlockNotifyPort()),
+                proto.getBlockNotifyPort(),
 	            proto.getUseBisqXmrWallet(),
 	            proto.getXmrUserHost(),
 	            proto.getXmrHostPort(),
