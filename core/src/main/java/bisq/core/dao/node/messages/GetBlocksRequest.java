@@ -39,8 +39,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
-public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, SendersNodeAddressMessage,
-        CapabilityRequiringPayload, SupportedCapabilitiesMessage {
+public final class GetBlocksRequest extends NetworkEnvelope implements DirectMessage, SendersNodeAddressMessage, SupportedCapabilitiesMessage {
     private final int fromBlockHeight;
     private final int nonce;
 
@@ -104,10 +103,15 @@ public final class GetBlocksRequest extends NetworkEnvelope implements DirectMes
                 messageVersion);
     }
 
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.DAO_FULL_NODE);
-    }
+    /**
+     * This GetBlocksRequest is no CapabilityRequiringPayload, because if it is, our DAO sync at startup is not going to work.
+     * That is because when a fresh connection to a seed node is created, the connection does not know its capabilities yet.
+     * A GetBlocksRequest is therefore not sent by the connection class as long as it is a CapabilityRequiringPayload.
+     */
+//    @Override
+//    public Capabilities getRequiredCapabilities() {
+//        return new Capabilities(Capability.DAO_FULL_NODE);
+//    }
 
     @Override
     public String toString() {
