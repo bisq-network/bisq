@@ -138,7 +138,7 @@ public class XmrSendView extends ActivatableView<GridPane, Void> implements Wall
 
     @Override
     public void onUpdateBalances(HashMap<String, Object> walletRpcData) {
-    	log.info("onUpdateBalances => {}", walletRpcData);
+    	log.debug("onUpdateBalances => {}", walletRpcData);
         BigInteger fee = walletRpcData.get("getFee") != null ? (BigInteger) walletRpcData.get("getFee") : BigInteger.ZERO;
         BigInteger unlockedBalance = walletRpcData.get("getUnlockedBalance") != null ? (BigInteger) walletRpcData.get("getUnlockedBalance") : BigInteger.ZERO; 
 		Integer size = walletRpcData.get("getSize") != null ? (Integer) walletRpcData.get("getSize") : 0;

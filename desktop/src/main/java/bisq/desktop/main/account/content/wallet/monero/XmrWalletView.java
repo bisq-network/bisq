@@ -63,7 +63,7 @@ public class XmrWalletView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @Override
     public void initialize() {
-    	log.info("XmrWalletView.initialize({})", selectedTab);
+    	log.debug("XmrWalletView.initialize({})", selectedTab);
     	root.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         xmrSendTab.setText(Res.get("shared.account.wallet.menuItem.send").toUpperCase());
         xmrReceiveTab.setText(Res.get("shared.account.wallet.menuItem.receive").toUpperCase());
@@ -74,7 +74,7 @@ public class XmrWalletView extends ActivatableViewAndModel<TabPane, Activatable>
         }
         selectView();
         navigationListener = viewPath -> {
-        	log.info("XmrWalletView.viewPath={}, size={}", viewPath, viewPath.size());
+        	log.debug("XmrWalletView.viewPath={}, size={}", viewPath, viewPath.size());
             if (viewPath.size() == 4 && navigation.getCurrentPath().get(3) == XmrWalletView.class && 
             		navigation.getCurrentPath().get(2) == AltCoinWalletsView.class && navigation.getCurrentPath().get(1) == AccountView.class) {
             	selectView();
@@ -109,7 +109,7 @@ public class XmrWalletView extends ActivatableViewAndModel<TabPane, Activatable>
 
 	@Override
     protected void activate() {
-    	log.info("XmrWalletView.activate({})", selectedTab);
+    	log.debug("XmrWalletView.activate({})", selectedTab);
     	navigation.addListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
@@ -129,13 +129,13 @@ public class XmrWalletView extends ActivatableViewAndModel<TabPane, Activatable>
 
     @Override
     protected void deactivate() {
-    	log.info("XmrWalletView.deactivate()");
+    	log.debug("XmrWalletView.deactivate()");
         navigation.removeListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
     }
 
     private void loadView(Class<? extends View> viewClass) {
-    	log.info("XmrWalletView.loadView: " + viewClass);
+    	log.debug("XmrWalletView.loadView: " + viewClass);
         if (selectedTab != null && selectedTab.getContent() != null) {
             if (selectedTab.getContent() instanceof ScrollPane) {
                 ((ScrollPane) selectedTab.getContent()).setContent(null);

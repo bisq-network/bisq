@@ -44,12 +44,12 @@ public class AltCoinWalletsView extends ActivatableView<TabPane, Void> {
 
     @Override
     public void initialize() {
-    	log.info("initialize()");
+    	log.debug("initialize()");
         //TODO Update as altcoinWalletsTab.setVisible(Preferences.PreferencesPayload.useBisqXmrWallet)
         
     	root.setPadding(new Insets(20));
         navigationListener = viewPath -> {
-        	log.info("navigationListener.viewPath1=" + viewPath);
+        	log.debug("navigationListener.viewPath1=" + viewPath);
         	if(selectedTab == null) {
         		selectedTab = moneroWalletTab;
         	}
@@ -57,7 +57,7 @@ public class AltCoinWalletsView extends ActivatableView<TabPane, Void> {
         		currentTabView = XmrWalletView.class;
         	}//TODO Tabs for other altcoins added here
         	navigation.navigateTo(MainView.class, AccountView.class, AltCoinWalletsView.class, currentTabView);
-        	log.info("navigationListener.viewPath2=" + viewPath);
+        	log.debug("navigationListener.viewPath2=" + viewPath);
             if (viewPath.size() == 4 && viewPath.indexOf(AccountView.class) == 1) {
             	loadView(viewPath.tip());
             } else {
@@ -66,8 +66,8 @@ public class AltCoinWalletsView extends ActivatableView<TabPane, Void> {
         };
 
         tabChangeListener = (ov, oldValue, newValue) -> {
-        	log.info("tabChangeListener.oldValue=" + oldValue);
-        	log.info("tabChangeListener.newValue=" + newValue);
+        	log.debug("tabChangeListener.oldValue=" + oldValue);
+        	log.debug("tabChangeListener.newValue=" + newValue);
             if (newValue == moneroWalletTab && selectedTab != moneroWalletTab) {
             	loadView(XmrWalletView.class);
             }
@@ -79,7 +79,7 @@ public class AltCoinWalletsView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
-    	log.info("activate()");
+    	log.debug("activate()");
         if(preferences.isUseBisqXmrWallet()) {
             navigation.addListener(navigationListener);
 
@@ -102,7 +102,7 @@ public class AltCoinWalletsView extends ActivatableView<TabPane, Void> {
     }
 
     private void loadView(Class<? extends View> viewClass) {
-    	log.info("loadView({})", viewClass);
+    	log.debug("loadView({})", viewClass);
 
     	
         if(preferences.isUseBisqXmrWallet()) {

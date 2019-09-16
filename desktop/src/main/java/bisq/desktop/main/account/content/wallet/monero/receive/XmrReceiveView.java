@@ -99,7 +99,7 @@ public class XmrReceiveView extends ActivatableView<GridPane, Void> implements W
 
 	@Override
 	public void onUpdateBalances(HashMap<String, Object> walletRpcData) {
-		log.info("onUpdateBalances => {}", walletRpcData);
+		log.debug("onUpdateBalances => {}", walletRpcData);
     	xmrBalanceUtil.onUpdateBalances(walletRpcData);
     	String address = (String) walletRpcData.get("getPrimaryAddress");
 		addressTextField.setAddress(address);

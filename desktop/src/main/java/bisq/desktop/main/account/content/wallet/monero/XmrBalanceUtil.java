@@ -45,14 +45,14 @@ public class XmrBalanceUtil implements WalletBalanceListener {
     }
     
 	public void postSendUpdate(HashMap<String, Object> walletRpcData) {
-		log.info("postSendUpdate => {}", walletRpcData);
+		log.debug("postSendUpdate => {}", walletRpcData);
         actualBalanceTextField.setText(xmrFormatter.formatBigInteger(walletWrapper.getWalletRpc().getBalance()));
         unlockedBalanceTextField.setText(xmrFormatter.formatBigInteger(walletWrapper.getWalletRpc().getUnlockedBalance()));
 	}
     
 	@Override
 	public void onUpdateBalances(HashMap<String, Object> walletRpcData) {
-		log.info("onUpdateBalances => {}", walletRpcData);
+		log.debug("onUpdateBalances => {}", walletRpcData);
 		if(walletRpcData.get("getBalance") != null) {
 			BigInteger balance = (BigInteger) walletRpcData.get("getBalance");
 	        actualBalanceTextField.setText(xmrFormatter.formatBigInteger(balance));

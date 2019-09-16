@@ -153,7 +153,7 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
     @SuppressWarnings("unchecked")
 	@Override
     public void onUpdateBalances(HashMap<String, Object> walletRpcData) {
-    	log.info("onUpdateBalances => {}", walletRpcData.keySet());
+    	log.debug("onUpdateBalances => {}", walletRpcData.keySet());
     	List<XmrTxListItem> txList = (List<XmrTxListItem>) walletRpcData.get("getTxs");
     	if(txList != null) {
         	observableList.setAll(txList);

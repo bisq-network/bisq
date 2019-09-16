@@ -43,7 +43,7 @@ public class XmrTradeAutomationInterceptor implements Serializable {
 /*
 	@Around("@annotation(LogExecutionTime)")
 	public Object transferFundsToSeller(ProceedingJoinPoint joinPoint) throws Throwable {
-		log.info("transferFundsToSeller({})", joinPoint.getArgs());
+		log.debug("transferFundsToSeller({})", joinPoint.getArgs());
 		
 		//TODO Get trade object (an instance of SellerAsMakerTrade or BuyerAsMakerTrade) and check the 
 		//TODO Check if trade automation is active - PreferencesPayload.useBisqXmrWallet = true
