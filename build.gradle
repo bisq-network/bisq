@@ -75,12 +75,14 @@ configure(subprojects) {
     }
 
     repositories {
+    	mavenLocal()
         mavenCentral()
         maven { url 'https://jitpack.io' }
     }
 
     dependencies {
         testCompile "junit:junit:$junitVersion"
+        compile 'woodser:monero-wallet-java:0.0.2-SNAPSHOT'
     }
 
     tasks.withType(JavaCompile) {

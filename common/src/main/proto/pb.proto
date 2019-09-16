@@ -1378,6 +1378,13 @@ message PreferencesPayload {
     int32 ignore_dust_threshold = 51;
     double buyer_security_deposit_as_percent_for_crypto = 52;
     int32 block_notify_port = 53;
+    bool use_bisq_xmr_wallet = 54;
+    string xmr_user_host = 55;
+    string xmr_host_port = 56;
+    string xmr_rpc_user = 57;
+    string xmr_rpc_pwd = 58;
+    repeated string xmr_hosts = 59;
+    int32 xmr_host_option_ordinal = 60;    
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

@@ -103,16 +103,17 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
+    private ComboBox<String> xmrHostComboBox;
     //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, sortMarketCurrenciesNumerically, avoidStandbyMode,
-            useCustomFee;
+            useCustomFee, useBisqXmrWallet;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
     /*referralIdInputTextField,*/
-    rpcUserTextField, blockNotifyPortTextField;
+    rpcUserTextField, blockNotifyPortTextField, xmrHostPortTextField, xmrRpcUserTextField;
     private ToggleButton isDaoFullNodeToggleButton;
-    private PasswordTextField rpcPwTextField;
+    private PasswordTextField rpcPwTextField, xmrRpcPwdTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
     private ChangeListener<Boolean> transactionFeeFocusedListener;
@@ -140,7 +141,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField;
     private ChangeListener<String> deviationListener, ignoreTradersListListener, ignoreDustThresholdListener,
-    /*referralIdListener,*/ rpcUserListener, rpcPwListener, blockNotifyPortListener;
+    /*referralIdListener,*/ rpcUserListener, rpcPwListener, blockNotifyPortListener,
+    xmrHostPortListener, xmrRpcUserListener, xmrRpcPwdListener;
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
@@ -258,7 +260,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 Res.get("setting.preferences.explorer"));
         blockChainExplorerComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("setting.preferences.explorer"),
                 blockChainExplorerComboBox, false));
-
+        
         Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.txFee"), Res.get("setting.preferences.useCustomValue"));
         transactionFeeInputTextField = tuple.second;
@@ -370,6 +372,39 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // AvoidStandbyModeService
         avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.avoidStandbyMode"));
+
+        useBisqXmrWallet = addSlideToggleButton(root, ++gridRow,
+                Res.get("setting.preferences.useBisqXmrWallet"));
+        //TODO(niyid) Only show those below if useBisqXmrWallet toggled on
+        xmrHostComboBox = addComboBox(root, ++gridRow, Res.get("shared.account.wallet.host", "Monero"));
+        xmrHostComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.account.wallet.host", "Monero"), xmrHostComboBox,
+                false));
+        xmrHostPortTextField = addInputTextField(root, ++gridRow, Res.get("shared.account.wallet.port", "Monero"));
+        xmrRpcUserTextField = addInputTextField(root, ++gridRow, Res.get("shared.account.wallet.user", "Monero"));
+        xmrRpcPwdTextField = addPasswordTextField(root, ++gridRow, Res.get("shared.account.wallet.pass", "Monero"));
+        
+        GridPane.setColumnSpan(xmrHostPortTextField, 1);
+        GridPane.setMargin(xmrHostPortTextField, new Insets(20, 0, 0, 0));
+
+        GridPane.setColumnSpan(xmrRpcUserTextField, 1);
+        GridPane.setMargin(xmrRpcUserTextField, new Insets(20, 0, 0, 0));
+
+        GridPane.setColumnSpan(xmrRpcPwdTextField, 1);
+        GridPane.setMargin(xmrRpcPwdTextField, new Insets(20, 0, 0, 0));
+        
+        xmrHostPortListener = (observable, oldValue, newValue) -> {
+        	preferences.setXmrHostPortDelegate(xmrHostPortTextField.getText());
+            try {
+                int port = Integer.parseInt(xmrHostPortTextField.getText());
+                preferences.setXmrHostPortDelegate(String.valueOf(port));
+            } catch (Throwable exception) {
+    			new Popup<>().error(Res.get("validation.notAnInteger")).show();
+            }
+        };
+        
+        xmrRpcUserListener = (observable, oldValue, newValue) -> preferences.setXmrRpcUserDelegate(xmrRpcUserTextField.getText());
+        xmrRpcPwdListener = (observable, oldValue, newValue) -> preferences.setXmrRpcPwdDelegate(xmrRpcPwdTextField.getText());
+
     }
 
     private void initializeSeparator() {
@@ -730,6 +765,29 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
+        xmrHostComboBox.setItems(preferences.getXmrHostsAsObservable());
+        xmrHostComboBox.getSelectionModel().select(preferences.getXmrUserHostDelegate());
+        xmrHostComboBox.setOnAction(e -> {
+            String host = xmrHostComboBox.getSelectionModel().getSelectedItem();
+            if (host != null) {
+                preferences.setXmrUserHostDelegate(host);
+            }
+        });
+
+        //TODO(niyid) here...
+        rpcUserListener = (observable, oldValue, newValue) -> preferences.setRpcUser(rpcUserTextField.getText());
+        rpcPwListener = (observable, oldValue, newValue) -> preferences.setRpcPw(rpcPwTextField.getText());
+
+        rpcUserListener = (observable, oldValue, newValue) -> preferences.setRpcUser(rpcUserTextField.getText());
+        rpcPwListener = (observable, oldValue, newValue) -> preferences.setRpcPw(rpcPwTextField.getText());
+
+        rpcUserListener = (observable, oldValue, newValue) -> preferences.setRpcUser(rpcUserTextField.getText());
+        rpcPwListener = (observable, oldValue, newValue) -> preferences.setRpcPw(rpcPwTextField.getText());
+        
+        xmrHostPortTextField.setText(preferences.getXmrHostPortDelegate());
+        xmrRpcUserTextField.setText(preferences.getXmrRpcUserDelegate());
+        xmrRpcPwdTextField.setText(preferences.getXmrRpcPwdDelegate());
+        
         blockChainExplorerComboBox.setItems(blockExplorers);
         blockChainExplorerComboBox.getSelectionModel().select(preferences.getBlockChainExplorer());
         blockChainExplorerComboBox.setConverter(new StringConverter<>() {
@@ -825,7 +883,20 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
         avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
         avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
-    }
+
+        useBisqXmrWallet.setSelected(preferences.isUseBisqXmrWallet());
+        useBisqXmrWallet.setOnAction(e -> {
+        	preferences.setUseBisqXmrWallet(useBisqXmrWallet.isSelected());
+        	xmrHostComboBox.setVisible(useBisqXmrWallet.isSelected());
+        	xmrHostPortTextField.setVisible(useBisqXmrWallet.isSelected());
+        	xmrRpcUserTextField.setVisible(useBisqXmrWallet.isSelected());
+        	xmrRpcPwdTextField.setVisible(useBisqXmrWallet.isSelected());
+        });
+        
+        xmrHostPortTextField.textProperty().addListener(xmrHostPortListener);
+        xmrRpcUserTextField.textProperty().addListener(xmrRpcUserListener);
+        xmrRpcPwdTextField.textProperty().addListener(xmrRpcPwdListener);
+}
 
     private void activateDaoPreferences() {
         boolean daoFullNode = preferences.isDaoFullNode();
@@ -834,8 +905,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         String rpcPw = preferences.getRpcPw();
         int blockNotifyPort = preferences.getBlockNotifyPort();
         if (daoFullNode && (rpcUser == null || rpcUser.isEmpty() ||
-                rpcPw == null || rpcPw.isEmpty() ||
-                blockNotifyPort <= 0)) {
+                rpcPw == null || rpcPw.isEmpty()) ||
+                blockNotifyPort <= 0) {
             log.warn("You have full DAO node selected but have not provided the rpc username, password and " +
                     "block notify port. We reset daoFullNode to false");
             isDaoFullNodeToggleButton.setSelected(false);

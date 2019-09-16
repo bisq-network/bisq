@@ -124,8 +124,17 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private int ignoreDustThreshold = 600;
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
     private int blockNotifyPort;
-
-
+    
+    
+    private boolean useBisqXmrWallet = false;
+    private String xmrUserHost = "127.0.0.1";
+    private String xmrHostPort = "29088";
+    @Nullable
+    private String xmrRpcUser;
+    @Nullable
+    private String xmrRpcPwd;
+    private List<String> xmrHosts = new ArrayList<>();
+    private int xmrHostOptionOrdinal;    
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,136 +148,151 @@ public final class PreferencesPayload implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Message toProtoMessage() {
-        protobuf.PreferencesPayload.Builder builder = protobuf.PreferencesPayload.newBuilder()
-                .setUserLanguage(userLanguage)
-                .setUserCountry((protobuf.Country) userCountry.toProtoMessage())
-                .addAllFiatCurrencies(fiatCurrencies.stream()
-                        .map(fiatCurrency -> ((protobuf.TradeCurrency) fiatCurrency.toProtoMessage()))
-                        .collect(Collectors.toList()))
-                .addAllCryptoCurrencies(cryptoCurrencies.stream()
-                        .map(cryptoCurrency -> ((protobuf.TradeCurrency) cryptoCurrency.toProtoMessage()))
-                        .collect(Collectors.toList()))
-                .setBlockChainExplorerMainNet((protobuf.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
-                .setBlockChainExplorerTestNet((protobuf.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
-                .setBsqBlockChainExplorer((protobuf.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
-                .setAutoSelectArbitrators(autoSelectArbitrators)
-                .putAllDontShowAgainMap(dontShowAgainMap)
-                .setTacAccepted(tacAccepted)
-                .setUseTorForBitcoinJ(useTorForBitcoinJ)
-                .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
-                .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
-                .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
-                .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
-                .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
-                .setResyncSpvRequested(resyncSpvRequested)
-                .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
-                .setUsePercentageBasedPrice(usePercentageBasedPrice)
-                .putAllPeerTagMap(peerTagMap)
-                .setBitcoinNodes(bitcoinNodes)
-                .addAllIgnoreTradersList(ignoreTradersList)
-                .setDirectoryChooserPath(directoryChooserPath)
-                .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
-                .setUseAnimations(useAnimations)
-                .setPayFeeInBtc(payFeeInBtc)
-                .setBridgeOptionOrdinal(bridgeOptionOrdinal)
-                .setTorTransportOrdinal(torTransportOrdinal)
-                .setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal)
-                .setUseSoundForMobileNotifications(useSoundForMobileNotifications)
-                .setUseTradeNotifications(useTradeNotifications)
-                .setUseMarketNotifications(useMarketNotifications)
-                .setUsePriceNotifications(usePriceNotifications)
-                .setUseStandbyMode(useStandbyMode)
-                .setIsDaoFullNode(isDaoFullNode)
-                .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
-                .setIgnoreDustThreshold(ignoreDustThreshold)
-                .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
-                .setBlockNotifyPort(blockNotifyPort);
-        Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
-        Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
-        Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
-        Optional.ofNullable(tradeChartsScreenCurrencyCode).ifPresent(builder::setTradeChartsScreenCurrencyCode);
-        Optional.ofNullable(buyScreenCurrencyCode).ifPresent(builder::setBuyScreenCurrencyCode);
-        Optional.ofNullable(sellScreenCurrencyCode).ifPresent(builder::setSellScreenCurrencyCode);
-        Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
-                account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
-        Optional.ofNullable(bridgeAddresses).ifPresent(builder::addAllBridgeAddresses);
-        Optional.ofNullable(customBridges).ifPresent(builder::setCustomBridges);
-        Optional.ofNullable(referralId).ifPresent(builder::setReferralId);
-        Optional.ofNullable(phoneKeyAndToken).ifPresent(builder::setPhoneKeyAndToken);
-        Optional.ofNullable(rpcUser).ifPresent(builder::setRpcUser);
-        Optional.ofNullable(rpcPw).ifPresent(builder::setRpcPw);
-        Optional.ofNullable(takeOfferSelectedPaymentAccountId).ifPresent(builder::setTakeOfferSelectedPaymentAccountId);
+	public Message toProtoMessage() {
+	    protobuf.PreferencesPayload.Builder builder = protobuf.PreferencesPayload.newBuilder()
+	            .setUserLanguage(userLanguage)
+	            .setUserCountry((protobuf.Country) userCountry.toProtoMessage())
+	            .addAllFiatCurrencies(fiatCurrencies.stream()
+	                    .map(fiatCurrency -> ((protobuf.TradeCurrency) fiatCurrency.toProtoMessage()))
+	                    .collect(Collectors.toList()))
+	            .addAllCryptoCurrencies(cryptoCurrencies.stream()
+	                    .map(cryptoCurrency -> ((protobuf.TradeCurrency) cryptoCurrency.toProtoMessage()))
+	                    .collect(Collectors.toList()))
+	            .setBlockChainExplorerMainNet((protobuf.BlockChainExplorer) blockChainExplorerMainNet.toProtoMessage())
+	            .setBlockChainExplorerTestNet((protobuf.BlockChainExplorer) blockChainExplorerTestNet.toProtoMessage())
+	            .setBsqBlockChainExplorer((protobuf.BlockChainExplorer) bsqBlockChainExplorer.toProtoMessage())
+	            .setAutoSelectArbitrators(autoSelectArbitrators)
+	            .putAllDontShowAgainMap(dontShowAgainMap)
+	            .setTacAccepted(tacAccepted)
+	            .setUseTorForBitcoinJ(useTorForBitcoinJ)
+	            .setShowOwnOffersInOfferBook(showOwnOffersInOfferBook)
+	            .setWithdrawalTxFeeInBytes(withdrawalTxFeeInBytes)
+	            .setUseCustomWithdrawalTxFee(useCustomWithdrawalTxFee)
+	            .setMaxPriceDistanceInPercent(maxPriceDistanceInPercent)
+	            .setTradeStatisticsTickUnitIndex(tradeStatisticsTickUnitIndex)
+	            .setResyncSpvRequested(resyncSpvRequested)
+	            .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
+	            .setUsePercentageBasedPrice(usePercentageBasedPrice)
+	            .putAllPeerTagMap(peerTagMap)
+	            .setBitcoinNodes(bitcoinNodes)
+	            .addAllIgnoreTradersList(ignoreTradersList)
+	            .setDirectoryChooserPath(directoryChooserPath)
+	            .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
+	            .setUseAnimations(useAnimations)
+	            .setPayFeeInBtc(payFeeInBtc)
+	            .setBridgeOptionOrdinal(bridgeOptionOrdinal)
+	            .setTorTransportOrdinal(torTransportOrdinal)
+	            .setBitcoinNodesOptionOrdinal(bitcoinNodesOptionOrdinal)
+	            .setUseSoundForMobileNotifications(useSoundForMobileNotifications)
+	            .setUseTradeNotifications(useTradeNotifications)
+	            .setUseMarketNotifications(useMarketNotifications)
+	            .setUsePriceNotifications(usePriceNotifications)
+	            .setUseStandbyMode(useStandbyMode)
+	            .setIsDaoFullNode(isDaoFullNode)
+	            .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
+	            .setIgnoreDustThreshold(ignoreDustThreshold)
+	            .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
+	            .setBlockNotifyPort(blockNotifyPort)
+	            .setUseBisqXmrWallet(useBisqXmrWallet)
+	            .setXmrUserHost(xmrUserHost)
+	            .setXmrHostPort(xmrHostPort)
+	            .setXmrRpcUser(xmrRpcUser)
+	            .setXmrRpcPwd(xmrRpcPwd)
+	            .addAllXmrHosts(xmrHosts)
+	            .setXmrHostOptionOrdinal(xmrHostOptionOrdinal);
 
-        return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
-    }
+	    Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
+	    Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
+	    Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
+	    Optional.ofNullable(tradeChartsScreenCurrencyCode).ifPresent(builder::setTradeChartsScreenCurrencyCode);
+	    Optional.ofNullable(buyScreenCurrencyCode).ifPresent(builder::setBuyScreenCurrencyCode);
+	    Optional.ofNullable(sellScreenCurrencyCode).ifPresent(builder::setSellScreenCurrencyCode);
+	    Optional.ofNullable(selectedPaymentAccountForCreateOffer).ifPresent(
+	            account -> builder.setSelectedPaymentAccountForCreateOffer(selectedPaymentAccountForCreateOffer.toProtoMessage()));
+	    Optional.ofNullable(bridgeAddresses).ifPresent(builder::addAllBridgeAddresses);
+	    Optional.ofNullable(customBridges).ifPresent(builder::setCustomBridges);
+	    Optional.ofNullable(referralId).ifPresent(builder::setReferralId);
+	    Optional.ofNullable(phoneKeyAndToken).ifPresent(builder::setPhoneKeyAndToken);
+	    Optional.ofNullable(rpcUser).ifPresent(builder::setRpcUser);
+	    Optional.ofNullable(rpcPw).ifPresent(builder::setRpcPw);
+	    Optional.ofNullable(takeOfferSelectedPaymentAccountId).ifPresent(builder::setTakeOfferSelectedPaymentAccountId);
+	
+	    return protobuf.PersistableEnvelope.newBuilder().setPreferencesPayload(builder).build();
+	}
 
     public static PersistableEnvelope fromProto(protobuf.PreferencesPayload proto, CoreProtoResolver coreProtoResolver) {
-        final protobuf.Country userCountry = proto.getUserCountry();
-        PaymentAccount paymentAccount = null;
-        if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
-            paymentAccount = PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), coreProtoResolver);
-
-        return new PreferencesPayload(
-                proto.getUserLanguage(),
-                Country.fromProto(userCountry),
-                proto.getFiatCurrenciesList().isEmpty() ? new ArrayList<>() :
-                        new ArrayList<>(proto.getFiatCurrenciesList().stream()
-                                .map(FiatCurrency::fromProto)
-                                .collect(Collectors.toList())),
-                proto.getCryptoCurrenciesList().isEmpty() ? new ArrayList<>() :
-                        new ArrayList<>(proto.getCryptoCurrenciesList().stream()
-                                .map(CryptoCurrency::fromProto)
-                                .collect(Collectors.toList())),
-                BlockChainExplorer.fromProto(proto.getBlockChainExplorerMainNet()),
-                BlockChainExplorer.fromProto(proto.getBlockChainExplorerTestNet()),
-                BlockChainExplorer.fromProto(proto.getBsqBlockChainExplorer()),
-                ProtoUtil.stringOrNullFromProto(proto.getBackupDirectory()),
-                proto.getAutoSelectArbitrators(),
-                Maps.newHashMap(proto.getDontShowAgainMapMap()),
-                proto.getTacAccepted(),
-                proto.getUseTorForBitcoinJ(),
-                proto.getShowOwnOffersInOfferBook(),
-                proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
-                proto.getWithdrawalTxFeeInBytes(),
-                proto.getUseCustomWithdrawalTxFee(),
-                proto.getMaxPriceDistanceInPercent(),
-                ProtoUtil.stringOrNullFromProto(proto.getOfferBookChartScreenCurrencyCode()),
-                ProtoUtil.stringOrNullFromProto(proto.getTradeChartsScreenCurrencyCode()),
-                ProtoUtil.stringOrNullFromProto(proto.getBuyScreenCurrencyCode()),
-                ProtoUtil.stringOrNullFromProto(proto.getSellScreenCurrencyCode()),
-                proto.getTradeStatisticsTickUnitIndex(),
-                proto.getResyncSpvRequested(),
-                proto.getSortMarketCurrenciesNumerically(),
-                proto.getUsePercentageBasedPrice(),
-                Maps.newHashMap(proto.getPeerTagMapMap()),
-                proto.getBitcoinNodes(),
-                proto.getIgnoreTradersListList(),
-                proto.getDirectoryChooserPath(),
-                proto.getBuyerSecurityDepositAsLong(),
-                proto.getUseAnimations(),
-                paymentAccount,
-                proto.getPayFeeInBtc(),
-                proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()),
-                proto.getBridgeOptionOrdinal(),
-                proto.getTorTransportOrdinal(),
-                ProtoUtil.stringOrNullFromProto(proto.getCustomBridges()),
-                proto.getBitcoinNodesOptionOrdinal(),
-                proto.getReferralId().isEmpty() ? null : proto.getReferralId(),
-                proto.getPhoneKeyAndToken().isEmpty() ? null : proto.getPhoneKeyAndToken(),
-                proto.getUseSoundForMobileNotifications(),
-                proto.getUseTradeNotifications(),
-                proto.getUseMarketNotifications(),
-                proto.getUsePriceNotifications(),
-                proto.getUseStandbyMode(),
-                proto.getIsDaoFullNode(),
-                proto.getRpcUser().isEmpty() ? null : proto.getRpcUser(),
-                proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
-                proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
-                proto.getBuyerSecurityDepositAsPercent(),
-                proto.getIgnoreDustThreshold(),
-                proto.getBuyerSecurityDepositAsPercentForCrypto(),
-                proto.getBlockNotifyPort());
-
-    }
+	    final protobuf.Country userCountry = proto.getUserCountry();
+	    PaymentAccount paymentAccount = null;
+	    if (proto.hasSelectedPaymentAccountForCreateOffer() && proto.getSelectedPaymentAccountForCreateOffer().hasPaymentMethod())
+	        paymentAccount = PaymentAccount.fromProto(proto.getSelectedPaymentAccountForCreateOffer(), coreProtoResolver);
+	
+	    return new PreferencesPayload(
+	            proto.getUserLanguage(),
+	            Country.fromProto(userCountry),
+	            proto.getFiatCurrenciesList().isEmpty() ? new ArrayList<>() :
+	                    new ArrayList<>(proto.getFiatCurrenciesList().stream()
+	                            .map(FiatCurrency::fromProto)
+	                            .collect(Collectors.toList())),
+	            proto.getCryptoCurrenciesList().isEmpty() ? new ArrayList<>() :
+	                    new ArrayList<>(proto.getCryptoCurrenciesList().stream()
+	                            .map(CryptoCurrency::fromProto)
+	                            .collect(Collectors.toList())),
+	            BlockChainExplorer.fromProto(proto.getBlockChainExplorerMainNet()),
+	            BlockChainExplorer.fromProto(proto.getBlockChainExplorerTestNet()),
+	            BlockChainExplorer.fromProto(proto.getBsqBlockChainExplorer()),
+	            ProtoUtil.stringOrNullFromProto(proto.getBackupDirectory()),
+	            proto.getAutoSelectArbitrators(),
+	            Maps.newHashMap(proto.getDontShowAgainMapMap()),
+	            proto.getTacAccepted(),
+	            proto.getUseTorForBitcoinJ(),
+	            proto.getShowOwnOffersInOfferBook(),
+	            proto.hasPreferredTradeCurrency() ? TradeCurrency.fromProto(proto.getPreferredTradeCurrency()) : null,
+	            proto.getWithdrawalTxFeeInBytes(),
+	            proto.getUseCustomWithdrawalTxFee(),
+	            proto.getMaxPriceDistanceInPercent(),
+	            ProtoUtil.stringOrNullFromProto(proto.getOfferBookChartScreenCurrencyCode()),
+	            ProtoUtil.stringOrNullFromProto(proto.getTradeChartsScreenCurrencyCode()),
+	            ProtoUtil.stringOrNullFromProto(proto.getBuyScreenCurrencyCode()),
+	            ProtoUtil.stringOrNullFromProto(proto.getSellScreenCurrencyCode()),
+	            proto.getTradeStatisticsTickUnitIndex(),
+	            proto.getResyncSpvRequested(),
+	            proto.getSortMarketCurrenciesNumerically(),
+	            proto.getUsePercentageBasedPrice(),
+	            Maps.newHashMap(proto.getPeerTagMapMap()),
+	            proto.getBitcoinNodes(),
+	            proto.getIgnoreTradersListList(),
+	            proto.getDirectoryChooserPath(),
+	            proto.getBuyerSecurityDepositAsLong(),
+	            proto.getUseAnimations(),
+	            paymentAccount,
+	            proto.getPayFeeInBtc(),
+	            proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()),
+	            proto.getBridgeOptionOrdinal(),
+	            proto.getTorTransportOrdinal(),
+	            ProtoUtil.stringOrNullFromProto(proto.getCustomBridges()),
+	            proto.getBitcoinNodesOptionOrdinal(),
+	            proto.getReferralId().isEmpty() ? null : proto.getReferralId(),
+	            proto.getPhoneKeyAndToken().isEmpty() ? null : proto.getPhoneKeyAndToken(),
+	            proto.getUseSoundForMobileNotifications(),
+	            proto.getUseTradeNotifications(),
+	            proto.getUseMarketNotifications(),
+	            proto.getUsePriceNotifications(),
+	            proto.getUseStandbyMode(),
+	            proto.getIsDaoFullNode(),
+	            proto.getRpcUser().isEmpty() ? null : proto.getRpcUser(),
+	            proto.getRpcPw().isEmpty() ? null : proto.getRpcPw(),
+	            proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
+	            proto.getBuyerSecurityDepositAsPercent(),
+	            proto.getIgnoreDustThreshold(),
+	            proto.getBuyerSecurityDepositAsPercentForCrypto(),
+	            proto.getBlockNotifyPort(),
+	            proto.getUseBisqXmrWallet(),
+	            proto.getXmrUserHost(),
+	            proto.getXmrHostPort(),
+	            proto.getXmrRpcUser(),
+	            proto.getXmrRpcPwd(),
+	            proto.getXmrHostsList(),
+	            proto.getXmrHostOptionOrdinal());
+	
+	}
 }

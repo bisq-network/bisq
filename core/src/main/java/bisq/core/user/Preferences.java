@@ -77,6 +77,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class Preferences implements PersistedDataHost, BridgeAddressProvider {
+	//TODO(niyid) Monero Wallet params: XMR_MAIN_NET_EXPLORERS, XMR_TEST_NET_EXPLORERS
+	//TODO(niyid) Monero Wallet params: Local Host(127.0.0.1)/Remote Host node, Port
+	//TODO(niyid) Monero Wallet params: List of available remote nodes
+	//TODO(niyid) Monero Wallet params equivalents of: btcNodesFromOptions, useTorFlagFromOptions, rpcUserFromOptions, rpcPwFromOptions
 
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/tx/", "https://blockstream.info/address/"),
@@ -129,14 +133,19 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final ObservableList<FiatCurrency> fiatCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<CryptoCurrency> cryptoCurrenciesAsObservable = FXCollections.observableArrayList();
     private final ObservableList<TradeCurrency> tradeCurrenciesAsObservable = FXCollections.observableArrayList();
+    private final ObservableList<String> xmrHostsAsObservable = FXCollections.observableArrayList();
     private final ObservableMap<String, Boolean> dontShowAgainMapAsObservable = FXCollections.observableHashMap();
 
     private final Storage<PreferencesPayload> storage;
     private final BisqEnvironment bisqEnvironment;
     private final String btcNodesFromOptions, useTorFlagFromOptions, referralIdFromOptions, fullDaoNodeFromOptions,
             rpcUserFromOptions, rpcPwFromOptions, blockNotifyPortFromOptions;
+            
+    private final String xmrUserHostDelegate, xmrHostPortDelegate, xmrRpcUserDelegate, xmrRpcPwdDelegate;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
+    @Getter
+    private final BooleanProperty useBisqXmrWalletProperty = new SimpleBooleanProperty(prefPayload.isUseBisqXmrWallet());
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +175,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.rpcUserFromOptions = rpcUser;
         this.rpcPwFromOptions = rpcPassword;
         this.blockNotifyPortFromOptions = rpcBlockNotificationPort;
+        
+        xmrUserHostDelegate = "127.0.0.1";
+        xmrHostPortDelegate = "29088";
+        xmrRpcUserDelegate = null;
+        xmrRpcPwdDelegate = null;
 
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
@@ -175,6 +189,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         useStandbyModeProperty.addListener((ov) -> {
             prefPayload.setUseStandbyMode(useStandbyModeProperty.get());
+            persist();
+        });
+
+        useBisqXmrWalletProperty.addListener((ov) -> {
+            prefPayload.setUseBisqXmrWallet(useBisqXmrWalletProperty.get());
             persist();
         });
 
@@ -259,11 +278,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // set all properties
         useAnimationsProperty.set(prefPayload.isUseAnimations());
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
+        useBisqXmrWalletProperty.set(prefPayload.isUseBisqXmrWallet());
         useCustomWithdrawalTxFeeProperty.set(prefPayload.isUseCustomWithdrawalTxFee());
         withdrawalTxFeeInBytesProperty.set(prefPayload.getWithdrawalTxFeeInBytes());
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
+        xmrHostsAsObservable.addAll(prefPayload.getXmrHosts());
         dontShowAgainMapAsObservable.putAll(getDontShowAgainMap());
 
         // Override settings with options if set
@@ -367,6 +388,27 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             log.error("you cannot remove the last currency");
         }
     }
+
+    public void addXmrHost(String host) {
+        if (!xmrHostsAsObservable.contains(host)) {
+        	xmrHostsAsObservable.add(host);
+        }
+    }
+
+    public void removeXmrHost(String host) {
+        if (xmrHostsAsObservable.size() > 1) {
+            if (xmrHostsAsObservable.contains(host))
+            	xmrHostsAsObservable.remove(host);
+
+            if (prefPayload.getXmrUserHost() != null &&
+                    prefPayload.getXmrUserHost().equals(host)) {
+                setXmrUserHost(xmrHostsAsObservable.get(0));
+            }
+        } else {
+            log.error("you cannot remove the last Monero host");
+        }
+    }
+
 
     public void setBlockChainExplorer(BlockChainExplorer blockChainExplorer) {
         if (BisqEnvironment.getBaseCurrencyNetwork().isMainnet())
@@ -608,6 +650,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.useStandbyModeProperty.set(useStandbyMode);
     }
 
+    public void setUseBisqXmrWallet(boolean useBisqXmrWallet) {
+        this.useBisqXmrWalletProperty.set(useBisqXmrWallet);
+    }
+
     public void setTakeOfferSelectedPaymentAccountId(String value) {
         prefPayload.setTakeOfferSelectedPaymentAccountId(value);
         persist();
@@ -635,6 +681,32 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // We only persist if we have not set the program argument
         if (rpcPwFromOptions == null || rpcPwFromOptions.isEmpty()) {
             prefPayload.setRpcPw(value);
+            persist();
+        }
+    }
+
+    public void setXmrUserHostDelegate(String value) {
+    	prefPayload.setXmrUserHost(value);
+        persist();
+    }
+
+    public void setXmrHostPortDelegate(String value) {
+        prefPayload.setXmrHostPort(value);
+        persist();
+    }
+
+    public void setXmrRpcUserDelegate(String value) {
+        // We only persist if we have not set the program argument
+        if (xmrUserHostDelegate == null || xmrUserHostDelegate.isEmpty()) {
+            prefPayload.setXmrRpcUser(value);
+            persist();
+        }
+    }
+
+    public void setXmrRpcPwdDelegate(String value) {
+        // We only persist if we have not set the program argument
+        if (xmrRpcPwdDelegate == null || xmrRpcPwdDelegate.isEmpty()) {
+            prefPayload.setXmrRpcPwd(value);
             persist();
         }
     }
@@ -671,6 +743,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public ObservableList<TradeCurrency> getTradeCurrenciesAsObservable() {
         return tradeCurrenciesAsObservable;
+    }
+    
+    public ObservableList<String> getXmrHostsAsObservable() {
+        return xmrHostsAsObservable;
     }
 
     public ObservableMap<String, Boolean> getDontShowAgainMapAsObservable() {
@@ -788,6 +864,38 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             return rpcPwFromOptions;
         } else {
             return prefPayload.getRpcPw();
+        }
+    }
+
+    public String getXmrUserHostDelegate() {
+        if (xmrUserHostDelegate != null && !xmrUserHostDelegate.isEmpty()) {
+            return xmrUserHostDelegate;
+        } else {
+            return prefPayload.getXmrUserHost();
+        }
+    }
+
+    public String getXmrHostPortDelegate() {
+        if (xmrHostPortDelegate != null && !xmrHostPortDelegate.isEmpty()) {
+            return xmrHostPortDelegate;
+        } else {
+            return prefPayload.getXmrUserHost();
+        }
+    }
+
+    public String getXmrRpcUserDelegate() {
+        if (xmrRpcUserDelegate != null && !xmrRpcUserDelegate.isEmpty()) {
+            return xmrRpcUserDelegate;
+        } else {
+            return prefPayload.getXmrRpcUser();
+        }
+    }
+
+    public String getXmrRpcPwdDelegate() {
+        if (xmrRpcPwdDelegate != null && !xmrRpcPwdDelegate.isEmpty()) {
+            return xmrRpcPwdDelegate;
+        } else {
+            return prefPayload.getXmrRpcPwd();
         }
     }
 
@@ -911,6 +1019,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         long getWithdrawalTxFeeInBytes();
 
         void setUseStandbyMode(boolean useStandbyMode);
+        
+        void setUseBisqXmrWallet(boolean useBisqXmrWallet);
 
         void setTakeOfferSelectedPaymentAccountId(String value);
 

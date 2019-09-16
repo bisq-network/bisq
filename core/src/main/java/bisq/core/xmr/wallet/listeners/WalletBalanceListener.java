@@ -15,26 +15,30 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.presentation;
+package bisq.core.xmr.wallet.listeners;
 
-import bisq.common.app.AppModule;
+import java.util.HashMap;
 
-import bisq.core.xmr.wallet.XmrWalletRpcWrapper;
+public interface WalletBalanceListener {
+	/**
+	 * 
+	 * @param walletRpcData
+	 */
+    void onUpdateBalances(HashMap<String, Object> walletRpcData);
 
-import org.springframework.core.env.Environment;
+    /**
+     * 
+     */
+	void playAnimation();
 
-import com.google.inject.Singleton;
+	/**
+	 * 
+	 */
+	void stopAnimation();
 
-public class CorePresentationModule extends AppModule {
-    public CorePresentationModule(Environment environment) {
-        super(environment);
-    }
-
-    @Override
-    protected void configure() {
-        bind(BalancePresentation.class).in(Singleton.class);
-        bind(TradePresentation.class).in(Singleton.class);
-        bind(DisputePresentation.class).in(Singleton.class);
-    }
+	/**
+	 * 
+	 * @param resourceMessage
+	 */
+	void popupErrorWindow(String resourceMessage);
 }
-

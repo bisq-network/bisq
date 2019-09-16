@@ -18,40 +18,27 @@
   -->
 
 <?import com.jfoenix.controls.JFXTabPane?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
-<?import javafx.scene.layout.AnchorPane?>
-<JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.account.AccountView"
-            prefHeight="630.0" prefWidth="1000.0"
-            AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
-            AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+<JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.account.content.wallet.monero.XmrWalletView"
+            AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="15"
+            AnchorPane.rightAnchor="0" AnchorPane.topAnchor="15"
             xmlns:fx="http://javafx.com/fxml">
-    <Tab fx:id="fiatAccountsTab" closable="false">
+    <Tab fx:id="xmrSendTab" closable="false">
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
-    <Tab fx:id="altcoinAccountsTab" closable="false">
+    <Tab fx:id="xmrReceiveTab" closable="false">
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
-    <Tab fx:id="altcoinWalletsTab" closable="false">
+    <Tab fx:id="xmrTxTab" closable="false">
         <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
                     AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
-    <Tab fx:id="notificationTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-    </Tab>
-    <Tab fx:id="passwordTab" closable="false"/>
-    <Tab fx:id="seedwordsTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
-    </Tab>
-    <Tab fx:id="backupTab" closable="false"/>
-
+            
 </JFXTabPane>
