@@ -342,11 +342,26 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 .size();
     }
 
-    public boolean amISigner(boolean asSeller) {
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // AccountAgeWitness signing
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+
+    public boolean iAmSigner(boolean asSeller) {
         AccountAgeWitness witness = accountAgeWitnessService.getMyWitness(asSeller ?
                 dataModel.getSellersPaymentAccountPayload() :
                 dataModel.getBuyersPaymentAccountPayload());
         return accountAgeWitnessService.accountIsSigner(witness);
+    }
+
+    public boolean peerNeedsSigning() {
+        return !accountAgeWitnessService.peerHasSignedWitness(trade);
+    }
+
+    public void maybeSignWitness(boolean asSeller) {
+        if (iAmSigner(asSeller) && peerNeedsSigning()) {
+            accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

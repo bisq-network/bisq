@@ -79,7 +79,6 @@ public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
     private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1).getTime();
-    private static final long SIGNER_AGE = TimeUnit.DAYS.toMillis(60);
 
     public enum AccountAge {
         UNVERIFIED,
@@ -549,11 +548,27 @@ public class AccountAgeWitnessService {
     // Witness signing
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
-                                               AccountAgeWitness accountAgeWitness,
-                                               ECKey key,
-                                               PublicKey peersPubKey) {
+    public SignedWitness arbitratorSignAccountAgeWitness(Coin tradeAmount,
+                                                         AccountAgeWitness accountAgeWitness,
+                                                         ECKey key,
+                                                         PublicKey peersPubKey) {
         return signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
+    }
+
+    public void traderSignPeersAccountAgeWitness(Trade trade) {
+        AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
+        Coin tradeAmount = trade.getTradeAmount();
+        checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
+        PublicKey peersPubKey = trade.getProcessModel().getTradingPeer().getPubKeyRing().getSignaturePubKey();
+        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}", trade.toString());
+        checkNotNull(tradeAmount, "Trade amount must not be null");
+        checkNotNull(peersPubKey, "Peers pub key must not be null");
+
+        try {
+            signedWitnessService.signAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
+        } catch (CryptoException e) {
+            log.warn("Trader failed to sign witness, exception {}", e.toString());
+        }
     }
 
     // Arbitrator signing
@@ -605,7 +620,13 @@ public class AccountAgeWitnessService {
                 .orElse(false);
     }
 
+    public boolean peerHasSignedWitness(Trade trade) {
+        return findTradePeerWitness(trade)
+                .map(signedWitnessService::isValidAccountAgeWitness)
+                .orElse(false);
+    }
+
     public boolean accountIsSigner(AccountAgeWitness accountAgeWitness) {
-        return getWitnessSignAge(accountAgeWitness, new Date()) > SIGNER_AGE;
+        return getWitnessSignAge(accountAgeWitness, new Date()) > SignedWitnessService.SIGNER_AGE;
     }
 }

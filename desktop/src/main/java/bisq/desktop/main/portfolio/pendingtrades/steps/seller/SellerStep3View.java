@@ -299,7 +299,7 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
-                if (model.amISigner(true)){
+                if (model.iAmSigner(true) && model.peerNeedsSigning()) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
                 }
                 new Popup<>()
@@ -377,6 +377,8 @@ public class SellerStep3View extends TradeStepView {
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+
+        model.maybeSignWitness(true);
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.

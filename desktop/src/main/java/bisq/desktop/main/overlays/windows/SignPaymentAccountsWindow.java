@@ -206,7 +206,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                     if (isKeyValid) {
                         selectedPaymentAccountsList.getItems().forEach(item -> {
                             // Sign accounts
-                            SignedWitness signedWitness = accountAgeWitnessService.signAccountAgeWitness(
+                            SignedWitness signedWitness = accountAgeWitnessService.arbitratorSignAccountAgeWitness(
                                     item.getTradeAmount(),
                                     item.getAccountAgeWitness(),
                                     arbitratorKey,

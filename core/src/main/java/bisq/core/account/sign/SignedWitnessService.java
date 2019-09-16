@@ -56,7 +56,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SignedWitnessService {
-    public static final long CHARGEBACK_SAFETY_DAYS = 30;
+    public static final long SIGNER_AGE_DAYS = 60;
+    public static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -236,6 +237,7 @@ public class SignedWitnessService {
 
     /**
      * Checks whether the accountAgeWitness has a valid signature from a peer/arbitrator.
+     *
      * @param accountAgeWitness accountAgeWitness
      * @return true if accountAgeWitness is valid, false otherwise.
      */
@@ -254,9 +256,10 @@ public class SignedWitnessService {
 
     /**
      * Helper to isValidAccountAgeWitness(accountAgeWitness)
-     * @param signedWitness the signedWitness to validate
+     *
+     * @param signedWitness                the signedWitness to validate
      * @param childSignedWitnessDateMillis the date the child SignedWitness was signed or current time if it is a leave.
-     * @param excludedPubKeys stack to prevent recursive loops
+     * @param excludedPubKeys              stack to prevent recursive loops
      * @return true if signedWitness is valid, false otherwise.
      */
     private boolean isValidSignedWitnessInternal(SignedWitness signedWitness,
@@ -293,7 +296,8 @@ public class SignedWitnessService {
     }
 
     private boolean verifyDate(SignedWitness signedWitness, long childSignedWitnessDateMillis) {
-        long childSignedWitnessDateMinusChargebackPeriodMillis = Instant.ofEpochMilli(childSignedWitnessDateMillis).minus(CHARGEBACK_SAFETY_DAYS, ChronoUnit.DAYS).toEpochMilli();
+        long childSignedWitnessDateMinusChargebackPeriodMillis = Instant.ofEpochMilli(
+                childSignedWitnessDateMillis).minus(SIGNER_AGE, ChronoUnit.MILLIS).toEpochMilli();
         long signedWitnessDateMillis = signedWitness.getDate();
         return signedWitnessDateMillis <= childSignedWitnessDateMinusChargebackPeriodMillis;
     }
