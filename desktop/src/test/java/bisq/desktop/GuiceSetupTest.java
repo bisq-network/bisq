@@ -59,7 +59,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertNotSame;
