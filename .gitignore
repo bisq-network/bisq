@@ -32,4 +32,3 @@ deploy
 /monitor/TorHiddenServiceStartupTimeTests/*
 /monitor/monitor-tor/*
 .java-version
-/.metadata/
