@@ -40,7 +40,9 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+
 import bisq.core.xmr.wallet.XmrWalletRpcWrapper;
+
 import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
