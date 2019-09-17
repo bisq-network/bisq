@@ -57,8 +57,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
-import org.reactfx.EventStreams;
-
 import javafx.application.Application;
 
 import javafx.stage.Modality;
@@ -79,6 +77,8 @@ import java.awt.Rectangle;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+
+import com.sun.javafx.perf.PerformanceTracker;
 
 import org.slf4j.LoggerFactory;
 
@@ -404,14 +404,12 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
 
     private void showFPSWindow(Scene scene) {
         Label label = new AutoTooltipLabel();
-        EventStreams.animationTicks()
-                .latestN(100)
-                .map(ticks -> {
-                    int n = ticks.size() - 1;
-                    return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
-                })
-                .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
-                .feedTo(label.textProperty());
+
+        PerformanceTracker performance = PerformanceTracker.getSceneTracker(scene);
+        UserThread.runPeriodically(() -> {
+            float fps = performance.getInstantPulses();
+            label.setText(String.format("FPS: %.1f", fps));
+        }, 1000, TimeUnit.MILLISECONDS);
 
         Pane root = new StackPane();
         root.getChildren().add(label);
