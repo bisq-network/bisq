@@ -15,6 +15,8 @@ public class OSXStandbyModeDisabler {
         long pid = ProcessHandle.current().pid();
         try {
             String[] params = {"/usr/bin/caffeinate", "-w", "" + pid};
+
+            // we only start the process. caffeinate blocks until we exit.
             new ProcessBuilder(params).start();
             log.info("disabled power management via " + String.join(" ", params));
         } catch (IOException e) {
