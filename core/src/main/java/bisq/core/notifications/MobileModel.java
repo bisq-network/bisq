@@ -22,6 +22,8 @@ import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Arrays;
+
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +109,12 @@ public class MobileModel {
         iPhone 8
         iPhone 8 Plus
         iPhone X
+        iPhone XS
+        iPhone XS Max
+        iPhone XR
+        iPhone 11
+        iPhone 11 Pro
+        iPhone 11 Pro Max
         iPad 2
         iPad 3
         iPad 4
@@ -131,9 +139,15 @@ public class MobileModel {
                 String model = descriptorTokens[0];
                 if (model.equals("iPhone")) {
                     String versionString = descriptorTokens[1];
-                    versionString = versionString.substring(0, 1);
-                    if (versionString.equals("X") || versionString.equals("SE"))
+                    String[] validVersions = {"X", "XS", "XR"};
+                    if (Arrays.asList(validVersions).contains(versionString)) {
                         return true;
+                    }
+                    if (versionString.matches("\\d[^\\d]")) {
+                        versionString = versionString.substring(0, 1);
+                    } else if (versionString.matches("\\d{2}[^\\d]")) {
+                        versionString = versionString.substring(0, 2);
+                    }
                     try {
                         int version = Integer.parseInt(versionString);
                         return version > 5;
