@@ -69,6 +69,7 @@ configure(subprojects) {
         reactfxVersion = '2.0-M3'
         sarxosVersion = '0.3.12'
         slf4jVersion = '1.7.22'
+        log4jVersion = '1.2.17'
         sparkVersion = '2.5.2'
         springBootVersion = '1.5.10.RELEASE'
         springVersion = '4.3.6.RELEASE'
@@ -77,14 +78,8 @@ configure(subprojects) {
     }
 
     repositories {
-    	mavenLocal()
         mavenCentral()
         maven { url 'https://jitpack.io' }
-        maven { url "http://repo.maven.apache.org/maven2" }
-    }
-
-    dependencies {
-        compile 'woodser:monero-wallet-java:0.1.1-SNAPSHOT'
     }
 
     tasks.withType(JavaCompile) {
@@ -235,7 +230,8 @@ configure(project(':core')) {
     dependencies {
         compile project(':assets')
         compile project(':p2p')
-        compile "woodser:monero-wallet-java:0.1.1-SNAPSHOT"
+        compile "junit:junit:$junitVersion"
+        compile "log4j:log4j:1.2.17"
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
             exclude(module: 'slf4j-api')
