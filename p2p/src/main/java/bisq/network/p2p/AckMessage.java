@@ -17,11 +17,8 @@
 
 package bisq.network.p2p;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.app.Version;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkEnvelope;
@@ -42,7 +39,7 @@ import javax.annotation.Nullable;
 @Value
 @Slf4j
 public final class AckMessage extends NetworkEnvelope implements MailboxMessage, PersistablePayload,
-        ExpirablePayload, CapabilityRequiringPayload {
+        ExpirablePayload {
 
     private final String uid;
     private final NodeAddress senderNodeAddress;
@@ -147,11 +144,6 @@ public final class AckMessage extends NetworkEnvelope implements MailboxMessage,
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.ACK_MSG);
-    }
 
     @Override
     public long getTTL() {

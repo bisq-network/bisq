@@ -35,7 +35,6 @@ import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishD
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
 import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
@@ -114,7 +113,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                TakerSelectMediator.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 CreateTakerFeeTx.class,
@@ -192,7 +190,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         }
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -212,12 +209,15 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
@@ -225,8 +225,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((PublishDepositTxRequest) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else {
-            log.error("Incoming message not supported. " + tradeMessage);
         }
     }
 }

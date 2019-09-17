@@ -27,22 +27,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CoreNetworkCapabilities {
-    public static void setSupportedCapabilities(BisqEnvironment bisqEnvironment) {
+    static void setSupportedCapabilities(BisqEnvironment bisqEnvironment) {
         Capabilities.app.addAll(
                 Capability.TRADE_STATISTICS,
                 Capability.TRADE_STATISTICS_2,
                 Capability.ACCOUNT_AGE_WITNESS,
                 Capability.ACK_MSG,
-                Capability.BUNDLE_OF_ENVELOPES
+                Capability.PROPOSAL,
+                Capability.BLIND_VOTE,
+                Capability.DAO_STATE,
+                Capability.BUNDLE_OF_ENVELOPES,
+                Capability.MEDIATION
         );
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {
-            Capabilities.app.addAll(
-                    Capability.PROPOSAL,
-                    Capability.BLIND_VOTE,
-                    Capability.DAO_STATE
-            );
-
             maybeApplyDaoFullMode(bisqEnvironment);
         }
     }
@@ -58,6 +56,7 @@ public class CoreNetworkCapabilities {
         } else {
             // A lite node has the capability to receive bsq blocks. We do not want to send BSQ blocks to full nodes
             // as they ignore them anyway.
+            log.info("Set Capability.RECEIVE_BSQ_BLOCK");
             Capabilities.app.addAll(Capability.RECEIVE_BSQ_BLOCK);
         }
     }

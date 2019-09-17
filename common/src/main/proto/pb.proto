@@ -44,7 +44,7 @@ message NetworkEnvelope {
 
         OpenNewDisputeMessage open_new_dispute_message = 22;
         PeerOpenedDisputeMessage peer_opened_dispute_message = 23;
-        DisputeCommunicationMessage dispute_communication_message = 24;
+        ChatMessage chat_message = 24;
         DisputeResultMessage dispute_result_message = 25;
         PeerPublishedDisputePayoutTxMessage peer_published_dispute_payout_tx_message = 26;
 
@@ -68,6 +68,8 @@ message NetworkEnvelope {
         GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
 
         BundleOfEnvelopes bundle_of_envelopes = 43;
+        MediatedPayoutTxSignatureMessage mediated_payout_tx_signature_message = 44;
+        MediatedPayoutTxPublishedMessage mediated_payout_tx_published_message = 45;
     }
 }
 
@@ -141,6 +143,7 @@ message OfferAvailabilityResponse {
     repeated int32 supported_capabilities = 3;
     string uid = 4;
     NodeAddress arbitrator = 5;
+    NodeAddress mediator = 6;
 }
 
 message RefreshOfferMessage {
@@ -267,26 +270,43 @@ message PayoutTxPublishedMessage {
     string uid = 4;
 }
 
+message MediatedPayoutTxPublishedMessage {
+    string trade_id = 1;
+    bytes payout_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+message MediatedPayoutTxSignatureMessage {
+    string uid = 1;
+    bytes tx_signature = 2;
+    string trade_id = 3;
+    NodeAddress sender_node_address = 4;
+}
+
 // dispute
+
+enum SupportType {
+    ARBITRATION = 0;
+    MEDIATION = 1;
+    TRADE = 2;
+}
 
 message OpenNewDisputeMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
+    SupportType type = 4;
 }
 
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
+    SupportType type = 4;
 }
 
-message DisputeCommunicationMessage {
-    enum Type {
-        MEDIATION = 0;
-        ARBITRATION = 1;
-        TRADE = 2;
-    }
+message ChatMessage {
     int64 date = 1;
     string trade_id = 2;
     int32 trader_id = 3;
@@ -301,7 +321,7 @@ message DisputeCommunicationMessage {
     string send_message_error = 12;
     bool acknowledged = 13;
     string ack_error = 14;
-    Type type = 15;
+    SupportType type = 15;
     bool was_displayed = 16;
 }
 
@@ -309,6 +329,7 @@ message DisputeResultMessage {
     string uid = 1;
     DisputeResult dispute_result = 2;
     NodeAddress sender_node_address = 3;
+    SupportType type = 4;
 }
 
 message PeerPublishedDisputePayoutTxMessage {
@@ -316,8 +337,8 @@ message PeerPublishedDisputePayoutTxMessage {
     bytes transaction = 2;
     string trade_id = 3;
     NodeAddress sender_node_address = 4;
+    SupportType type = 5;
 }
-
 
 message PrivateNotificationMessage {
     string uid = 1;
@@ -546,6 +567,7 @@ message Filter {
     bool disable_dao = 14;
     string disable_dao_below_version = 15;
     string disable_trade_below_version = 16;
+    repeated string mediators = 17;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
@@ -614,8 +636,8 @@ message OfferPayload {
     int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
-    repeated NodeAddress arbitrator_node_addresses = 13;
-    repeated NodeAddress mediator_node_addresses = 14;
+    repeated NodeAddress arbitrator_node_addresses = 13 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
+    repeated NodeAddress mediator_node_addresses = 14 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
     string payment_method_id = 15;
     string maker_payment_account_id = 16;
     string offer_fee_payment_tx_id = 17;
@@ -680,9 +702,9 @@ message Dispute {
     string contract_as_json = 15;
     string maker_contract_signature = 16;
     string taker_contract_signature = 17;
-    PubKeyRing arbitrator_pub_key_ring = 18;
+    PubKeyRing agent_pub_key_ring = 18;
     bool is_support_ticket = 19;
-    repeated DisputeCommunicationMessage dispute_communication_messages = 20;
+    repeated ChatMessage chat_message = 20;
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
@@ -719,7 +741,7 @@ message DisputeResult {
     bool id_verification = 6;
     bool screen_cast = 7;
     string summary_notes = 8;
-    DisputeCommunicationMessage dispute_communication_message = 9;
+    ChatMessage chat_message = 9;
     bytes arbitrator_signature = 10;
     int64 buyer_payout_amount = 11;
     int64 seller_payout_amount = 12;
@@ -770,6 +792,7 @@ enum AvailabilityResult {
     NO_ARBITRATORS = 6;
     NO_MEDIATORS = 7;
     USER_IGNORED = 8;
+    MISSING_MANDATORY_CAPABILITY = 9;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1020,7 +1043,7 @@ message PersistableEnvelope {
 
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
-        DisputeList dispute_list = 8;
+        ArbitrationDisputeList arbitration_dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
@@ -1050,6 +1073,7 @@ message PersistableEnvelope {
         MyProofOfBurnList my_proof_of_burn_list = 26;
         UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
         SignedWitnessStore signed_witness_store = 28;
+        MediationDisputeList mediation_dispute_list = 29;
     }
 }
 
@@ -1173,6 +1197,7 @@ message OpenOffer {
     Offer offer = 1;
     State state = 2;
     NodeAddress arbitrator_node_address = 3;
+    NodeAddress mediator_node_address = 4;
 }
 
 message Tradable {
@@ -1235,9 +1260,12 @@ message Trade {
     enum DisputeState {
         PB_ERROR_DISPUTE_STATE = 0;
         NO_DISPUTE = 1;
-        DISPUTE_REQUESTED = 2;
-        DISPUTE_STARTED_BY_PEER = 3;
-        DISPUTE_CLOSED = 4;
+        DISPUTE_REQUESTED = 2; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_STARTED_BY_PEER = 3; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_CLOSED = 4; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        MEDIATION_REQUESTED = 5;
+        MEDIATION_STARTED_BY_PEER = 6;
+        MEDIATION_CLOSED = 7;
     }
 
     enum TradePeriodState {
@@ -1275,7 +1303,8 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
-    repeated DisputeCommunicationMessage communication_messages = 29;
+    repeated ChatMessage chat_message = 29;
+    MediationResultState mediation_result_state = 30;
 }
 
 message BuyerAsMakerTrade {
@@ -1312,6 +1341,9 @@ message ProcessModel {
     bytes my_multi_sig_pub_key = 15;
     NodeAddress temp_trading_peer_node_address = 16;
     string payment_started_message_state = 17;
+    bytes mediated_payout_tx_signature = 18;
+    int64 buyer_payout_amount_from_mediation = 19;
+    int64 seller_payout_amount_from_mediation = 20;
 }
 
 message TradingPeer {
@@ -1329,14 +1361,38 @@ message TradingPeer {
     bytes account_age_witness_nonce = 12;
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;
+    bytes mediated_payout_tx_signature = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Dispute
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message DisputeList {
+message ArbitrationDisputeList {
     repeated Dispute dispute = 1;
+}
+
+message MediationDisputeList {
+    repeated Dispute dispute = 1;
+}
+
+enum MediationResultState {
+    PB_ERROR_MEDIATION_RESULT = 0;
+    UNDEFINED_MEDIATION_RESULT = 1;
+    MEDIATION_RESULT_ACCEPTED = 2;
+    MEDIATION_RESULT_REJECTED = 3;
+    SIG_MSG_SENT = 4;
+    SIG_MSG_ARRIVED = 5;
+    SIG_MSG_IN_MAILBOX = 6;
+    SIG_MSG_SEND_FAILED = 7;
+    RECEIVED_SIG_MSG = 8;
+    PAYOUT_TX_PUBLISHED = 9;
+    PAYOUT_TX_PUBLISHED_MSG_SENT = 10;
+    PAYOUT_TX_PUBLISHED_MSG_ARRIVED = 11;
+    PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX = 12;
+    PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED = 13;
+    RECEIVED_PAYOUT_TX_PUBLISHED_MSG = 14;
+    PAYOUT_TX_SEEN_IN_NETWORK = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

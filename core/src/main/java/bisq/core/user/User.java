@@ -18,14 +18,14 @@
 package bisq.core.user;
 
 import bisq.core.alert.Alert;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.Mediator;
 import bisq.core.filter.Filter;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -409,6 +409,14 @@ public class User implements PersistedDataHost {
     @Nullable
     public List<Mediator> getAcceptedMediators() {
         return userPayload.getAcceptedMediators();
+    }
+
+    public boolean hasAcceptedArbitrators() {
+        return getAcceptedArbitrators() != null && !getAcceptedArbitrators().isEmpty();
+    }
+
+    public boolean hasAcceptedMediators() {
+        return getAcceptedMediators() != null && !getAcceptedMediators().isEmpty();
     }
 
     @Nullable

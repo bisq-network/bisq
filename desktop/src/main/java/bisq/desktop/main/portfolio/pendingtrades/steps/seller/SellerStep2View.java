@@ -70,8 +70,7 @@ public class SellerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setInformationHeadline();
+    protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_seller.warn",
                 model.dataModel.getCurrencyCode(),
                 model.getDateForOpenDispute());
@@ -83,7 +82,7 @@ public class SellerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step2_seller.openForDispute");
     }
 

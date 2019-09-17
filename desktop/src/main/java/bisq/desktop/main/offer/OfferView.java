@@ -26,8 +26,8 @@ import bisq.desktop.main.offer.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.takeoffer.TakeOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.LanguageUtil;
@@ -35,9 +35,11 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 
-import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -64,6 +66,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
     private final Preferences preferences;
+    private final User user;
+    private final P2PService p2PService;
     private final OfferPayload.Direction direction;
     private final ArbitratorManager arbitratorManager;
 
@@ -74,10 +78,17 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
 
-    protected OfferView(ViewLoader viewLoader, Navigation navigation, Preferences preferences, ArbitratorManager arbitratorManager) {
+    protected OfferView(ViewLoader viewLoader,
+                        Navigation navigation,
+                        Preferences preferences,
+                        ArbitratorManager arbitratorManager,
+                        User user,
+                        P2PService p2PService) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
+        this.user = user;
+        this.p2PService = p2PService;
         this.direction = (this instanceof BuyOfferView) ? OfferPayload.Direction.BUY : OfferPayload.Direction.SELL;
         this.arbitratorManager = arbitratorManager;
     }
@@ -168,12 +179,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onCreateOffer(TradeCurrency tradeCurrency) {
                     if (!createOfferViewOpen) {
-                        boolean arbitratorAvailableForLanguage = arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage());
-                        if (!arbitratorAvailableForLanguage) {
-                            showNoArbitratorForUserLocaleWarning();
+                        if (canCreateOrTakeOffer()) {
+                            openCreateOffer(tradeCurrency);
                         }
-                        openCreateOffer(tradeCurrency);
-
                     } else {
                         log.error("You have already a \"Create offer\" tab open.");
                     }
@@ -182,17 +190,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 @Override
                 public void onTakeOffer(Offer offer) {
                     if (!takeOfferViewOpen) {
-                        List<NodeAddress> arbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
-                        List<String> arbitratorLanguages = arbitratorManager.getArbitratorLanguages(arbitratorNodeAddresses);
-                        if (arbitratorLanguages.isEmpty()) {
-                            // In case we get an offer which has been created with arbitrators which are not available
-                            // anymore we don't want to call the showNoArbitratorForUserLocaleWarning
-                            openTakeOffer(offer);
-                        } else {
-                            if (arbitratorLanguages.stream()
-                                    .noneMatch(languages -> languages.equals(preferences.getUserLanguage()))) {
-                                showNoArbitratorForUserLocaleWarning();
-                            }
+                        if (canCreateOrTakeOffer()) {
                             openTakeOffer(offer);
                         }
                     } else {
@@ -233,6 +231,11 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         }
     }
 
+    protected boolean canCreateOrTakeOffer() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
+                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
+    }
+
     private void showNoArbitratorForUserLocaleWarning() {
         String key = "NoArbitratorForUserLocaleWarning";
         new Popup<>().information(Res.get("offerbook.info.noArbitrationInUserLanguage",
@@ -243,7 +246,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private String getArbitrationLanguages() {
-        return arbitratorManager.getArbitratorsObservableMap().values().stream()
+        return arbitratorManager.getObservableMap().values().stream()
                 .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
                 .distinct()
                 .map(languageCode -> LanguageUtil.getDisplayName(languageCode))
@@ -253,15 +256,13 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private void openTakeOffer(Offer offer) {
         OfferView.this.takeOfferViewOpen = true;
         OfferView.this.offer = offer;
-        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
-                TakeOfferView.class);
+        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), TakeOfferView.class);
     }
 
     private void openCreateOffer(TradeCurrency tradeCurrency) {
         OfferView.this.createOfferViewOpen = true;
         OfferView.this.tradeCurrency = tradeCurrency;
-        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(),
-                CreateOfferView.class);
+        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), CreateOfferView.class);
     }
 
     private void onCreateOfferViewRemoved() {

@@ -94,7 +94,7 @@ public abstract class NetworkNode implements MessageListener {
 
     // Calls this (and other registered) setup listener's ``onTorNodeReady()`` and ``onHiddenServicePublished``
     // when the events happen.
-    abstract public void start(@Nullable SetupListener setupListener);
+    public abstract void start(@Nullable SetupListener setupListener);
 
     public SettableFuture<Connection> sendMessage(@NotNull NodeAddress peersNodeAddress,
                                                   NetworkEnvelope networkEnvelope) {
@@ -462,7 +462,7 @@ public abstract class NetworkNode implements MessageListener {
         log.debug(sb.toString());
     }
 
-    abstract protected Socket createSocket(NodeAddress peersNodeAddress) throws IOException;
+    protected abstract Socket createSocket(NodeAddress peersNodeAddress) throws IOException;
 
     @Nullable
     public NodeAddress getNodeAddress() {

@@ -1298,7 +1298,7 @@ textfield */
 #address-text-field:hover {
     -fx-text-fill: -bs-text-color;
 }
- 
+
 /* Account setup */
 #wizard-item-background-deactivated {
     -fx-body-color: linear-gradient(to bottom, -bs-content-background-gray, -bs-color-gray-aaa);
@@ -2012,6 +2012,16 @@ textfield */
 
 .slider-section-button:selected .text {
     -fx-fill: -bs-rd-green;
+}
+
+.price-trend-up {
+    -fx-text-fill: -bs-color-primary;
+    -fx-padding: 2 0 0 0;
+}
+
+.price-trend-down {
+    -fx-text-fill: -bs-red;
+    -fx-padding: 2 0 0 0;
 }
 
 /********************************************************************************************************************

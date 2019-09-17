@@ -446,7 +446,10 @@ public class OfferBookViewModelTest {
         return paymentAccount;
     }
 
-    private PaymentAccount getSepaAccount(String currencyCode, String countryCode, String bic, ArrayList<String> countryCodes) {
+    private PaymentAccount getSepaAccount(String currencyCode,
+                                          String countryCode,
+                                          String bic,
+                                          ArrayList<String> countryCodes) {
         CountryBasedPaymentAccount paymentAccount = new SepaAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
@@ -471,7 +474,10 @@ public class OfferBookViewModelTest {
         return paymentAccount;
     }
 
-    private PaymentAccount getSpecificBanksAccount(String currencyCode, String countryCode, String bankId, ArrayList<String> bankIds) {
+    private PaymentAccount getSpecificBanksAccount(String currencyCode,
+                                                   String countryCode,
+                                                   String bankId,
+                                                   ArrayList<String> bankIds) {
         SpecificBanksAccount paymentAccount = new SpecificBanksAccount();
         paymentAccount.setSingleTradeCurrency(new FiatCurrency(currencyCode));
         paymentAccount.setCountry(new Country(countryCode, null, null));
@@ -499,7 +505,10 @@ public class OfferBookViewModelTest {
                 null);
     }
 
-    private Offer getSEPAPaymentMethod(String currencyCode, String countryCode, ArrayList<String> countryCodes, String bankId) {
+    private Offer getSEPAPaymentMethod(String currencyCode,
+                                       String countryCode,
+                                       ArrayList<String> countryCodes,
+                                       String bankId) {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.SEPA_ID,
                 countryCode,
@@ -526,7 +535,10 @@ public class OfferBookViewModelTest {
                 new ArrayList<>(Collections.singletonList(bankId)));
     }
 
-    private Offer getSpecificBanksPaymentMethod(String currencyCode, String countryCode, String bankId, ArrayList<String> bankIds) {
+    private Offer getSpecificBanksPaymentMethod(String currencyCode,
+                                                String countryCode,
+                                                String bankId,
+                                                ArrayList<String> bankIds) {
         return getPaymentMethod(currencyCode,
                 PaymentMethod.SPECIFIC_BANKS_ID,
                 countryCode,
@@ -535,7 +547,12 @@ public class OfferBookViewModelTest {
                 bankIds);
     }
 
-    private Offer getPaymentMethod(String currencyCode, String paymentMethodId, String countryCode, ArrayList<String> countryCodes, String bankId, ArrayList<String> bankIds) {
+    private Offer getPaymentMethod(String currencyCode,
+                                   String paymentMethodId,
+                                   String countryCode,
+                                   ArrayList<String> countryCodes,
+                                   String bankId,
+                                   ArrayList<String> bankIds) {
         return getOffer(currencyCode,
                 paymentMethodId,
                 countryCode,
@@ -545,7 +562,12 @@ public class OfferBookViewModelTest {
     }
 
 
-    private Offer getOffer(String tradeCurrencyCode, String paymentMethodId, String countryCode, ArrayList<String> acceptedCountryCodes, String bankId, ArrayList<String> acceptedBanks) {
+    private Offer getOffer(String tradeCurrencyCode,
+                           String paymentMethodId,
+                           String countryCode,
+                           ArrayList<String> acceptedCountryCodes,
+                           String bankId,
+                           ArrayList<String> acceptedBanks) {
         return new Offer(new OfferPayload(null,
                 0,
                 null,

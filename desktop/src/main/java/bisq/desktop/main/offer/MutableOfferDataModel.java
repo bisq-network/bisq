@@ -17,11 +17,12 @@
 
 package bisq.desktop.main.offer;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeRestrictions;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.BsqBalanceListener;
@@ -109,6 +110,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final ReferralIdService referralIdService;
     private final BSFormatter btcFormatter;
     private MakerFeeProvider makerFeeProvider;
+    private final Navigation navigation;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
@@ -161,7 +163,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  TxFeeEstimationService txFeeEstimationService,
                                  ReferralIdService referralIdService,
                                  BSFormatter btcFormatter,
-                                 MakerFeeProvider makerFeeProvider) {
+                                 MakerFeeProvider makerFeeProvider,
+                                 Navigation navigation) {
         super(btcWalletService);
 
         this.openOfferManager = openOfferManager;
@@ -178,6 +181,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.referralIdService = referralIdService;
         this.btcFormatter = btcFormatter;
         this.makerFeeProvider = makerFeeProvider;
+        this.navigation = navigation;
 
         offerId = Utilities.getRandomPrefix(5, 8) + "-" +
                 UUID.randomUUID().toString() + "-" +
@@ -558,19 +562,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return paymentAccount;
     }
 
-    boolean hasAcceptedArbitrators() {
-        final List<Arbitrator> acceptedArbitrators = user.getAcceptedArbitrators();
-        return acceptedArbitrators != null && acceptedArbitrators.size() > 0;
-    }
-
     protected void setUseMarketBasedPrice(boolean useMarketBasedPrice) {
         this.useMarketBasedPrice.set(useMarketBasedPrice);
         preferences.setUsePercentageBasedPrice(useMarketBasedPrice);
     }
-
-    /*boolean isFeeFromFundingTxSufficient() {
-        return !isMainNet.get() || feeFromFundingTxProperty.get().compareTo(FeePolicy.getMinRequiredFeeForFundingTx()) >= 0;
-    }*/
 
     public ObservableList<PaymentAccount> getPaymentAccounts() {
         return paymentAccounts;
@@ -832,5 +827,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     public boolean isHalCashAccount() {
         return paymentAccount instanceof HalCashAccount;
+    }
+
+    public boolean canPlaceOffer() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
+                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
     }
 }

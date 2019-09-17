@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakerVerifyAndSignContract extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public TakerVerifyAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

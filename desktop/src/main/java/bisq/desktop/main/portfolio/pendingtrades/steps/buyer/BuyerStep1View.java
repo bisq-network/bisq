@@ -51,8 +51,7 @@ public class BuyerStep1View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setWarningHeadline();
+    protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step1.warn");
     }
 
@@ -61,7 +60,7 @@ public class BuyerStep1View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step1.openForDispute");
     }
 }

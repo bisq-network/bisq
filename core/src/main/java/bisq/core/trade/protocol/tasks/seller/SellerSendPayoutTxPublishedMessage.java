@@ -19,76 +19,63 @@ package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.TradeTask;
-
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.tasks.SendPayoutTxPublishedMessage;
 
 import bisq.common.taskrunner.TaskRunner;
+
+import org.bitcoinj.core.Transaction;
 
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
-public class SellerSendPayoutTxPublishedMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+public class SellerSendPayoutTxPublishedMessage extends SendPayoutTxPublishedMessage {
+    @SuppressWarnings({"unused"})
     public SellerSendPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
+    }
+
+    @Override
+    protected TradeMessage getMessage(String id) {
+        Transaction payoutTx = checkNotNull(trade.getPayoutTx(), "trade.getPayoutTx() must not be null");
+        return new PayoutTxPublishedMessage(
+                id,
+                payoutTx.bitcoinSerialize(),
+                processModel.getMyNodeAddress(),
+                UUID.randomUUID().toString()
+        );
+    }
+
+    @Override
+    protected void setStateSent() {
+        trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
+    }
+
+    @Override
+    protected void setStateArrived() {
+        trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
+    }
+
+    @Override
+    protected void setStateStoredInMailbox() {
+        trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
+    }
+
+    @Override
+    protected void setStateFault() {
+        trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
     }
 
     @Override
     protected void run() {
         try {
             runInterceptHook();
-            if (trade.getPayoutTx() != null) {
-                final String id = processModel.getOfferId();
-                final PayoutTxPublishedMessage message = new PayoutTxPublishedMessage(
-                        id,
-                        trade.getPayoutTx().bitcoinSerialize(),
-                        processModel.getMyNodeAddress(),
-                        UUID.randomUUID().toString()
-                );
-                trade.setState(Trade.State.SELLER_SENT_PAYOUT_TX_PUBLISHED_MSG);
-                NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-                log.info("Send {} to peer {}. tradeId={}, uid={}",
-                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
 
-                processModel.getP2PService().sendEncryptedMailboxMessage(
-                        peersNodeAddress,
-                        processModel.getTradingPeer().getPubKeyRing(),
-                        message,
-                        new SendMailboxMessageListener() {
-                            @Override
-                            public void onArrived() {
-                                log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                trade.setState(Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);
-                                complete();
-                            }
-
-                            @Override
-                            public void onStoredInMailbox() {
-                                log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_PAYOUT_TX_PUBLISHED_MSG);
-                                complete();
-                            }
-
-                            @Override
-                            public void onFault(String errorMessage) {
-                                log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                        message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                                trade.setState(Trade.State.SELLER_SEND_FAILED_PAYOUT_TX_PUBLISHED_MSG);
-                                appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
-                                failed(errorMessage);
-                            }
-                        }
-                );
-            } else {
-                log.error("trade.getPayoutTx() = " + trade.getPayoutTx());
-                failed("PayoutTx is null");
-            }
+            super.run();
         } catch (Throwable t) {
             failed(t);
         }

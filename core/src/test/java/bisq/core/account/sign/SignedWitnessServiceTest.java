@@ -19,8 +19,8 @@ package bisq.core.account.sign;
 
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
@@ -75,9 +75,9 @@ public class SignedWitnessServiceTest {
     public void setup() throws Exception {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
-        DisputeManager disputeManager = mock(DisputeManager.class);
+        ArbitrationManager arbitrationManager = mock(ArbitrationManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
-        signedWitnessService = new SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService, disputeManager, null);
+        signedWitnessService = new SignedWitnessService(null, null, null, arbitratorManager, null, appendOnlyDataStoreService, arbitrationManager, null);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});

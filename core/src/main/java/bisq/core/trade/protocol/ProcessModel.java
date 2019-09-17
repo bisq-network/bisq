@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -30,6 +29,8 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -83,6 +84,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private AccountAgeWitnessService accountAgeWitnessService;
     transient private TradeStatisticsManager tradeStatisticsManager;
     transient private ArbitratorManager arbitratorManager;
+    transient private MediatorManager mediatorManager;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
     transient private ReferralIdService referralIdService;
@@ -142,6 +144,15 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private NodeAddress tempTradingPeerNodeAddress;
 
+    // Added in v.1.1.6
+    @Nullable
+    @Setter
+    private byte[] mediatedPayoutTxSignature;
+    @Setter
+    private long buyerPayoutAmountFromMediation;
+    @Setter
+    private long sellerPayoutAmountFromMediation;
+
     // The only trade message where we want to indicate the user the state of the message delivery is the
     // CounterCurrencyTransferStartedMessage. We persist the state with the processModel.
     @Setter
@@ -165,7 +176,9 @@ public class ProcessModel implements Model, PersistablePayload {
                 .setChangeOutputValue(changeOutputValue)
                 .setUseSavingsWallet(useSavingsWallet)
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
-                .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name());
+                .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name())
+                .setBuyerPayoutAmountFromMediation(buyerPayoutAmountFromMediation)
+                .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -176,6 +189,7 @@ public class ProcessModel implements Model, PersistablePayload {
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
+        Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
         return builder.build();
     }
 
@@ -188,6 +202,8 @@ public class ProcessModel implements Model, PersistablePayload {
         processModel.setChangeOutputValue(proto.getChangeOutputValue());
         processModel.setUseSavingsWallet(proto.getUseSavingsWallet());
         processModel.setFundsNeededForTradeAsLong(proto.getFundsNeededForTradeAsLong());
+        processModel.setBuyerPayoutAmountFromMediation(proto.getBuyerPayoutAmountFromMediation());
+        processModel.setSellerPayoutAmountFromMediation(proto.getSellerPayoutAmountFromMediation());
 
         // nullable
         processModel.setTakeOfferFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakeOfferFeeTxId()));
@@ -211,6 +227,7 @@ public class ProcessModel implements Model, PersistablePayload {
         String paymentStartedMessageState = proto.getPaymentStartedMessageState().isEmpty() ? MessageState.UNDEFINED.name() : proto.getPaymentStartedMessageState();
         ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
         paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
+        processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
         return processModel;
     }
 
@@ -232,6 +249,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          AccountAgeWitnessService accountAgeWitnessService,
                                          TradeStatisticsManager tradeStatisticsManager,
                                          ArbitratorManager arbitratorManager,
+                                         MediatorManager mediatorManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
@@ -247,6 +265,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;

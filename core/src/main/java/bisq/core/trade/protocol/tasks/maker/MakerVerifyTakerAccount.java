@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MakerVerifyTakerAccount extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public MakerVerifyTakerAccount(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

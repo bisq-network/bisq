@@ -247,12 +247,11 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setWarningHeadline();
+    protected String getFirstHalfOverWarnText() {
         String substitute = model.isBlockChainMethod() ?
                 Res.get("portfolio.pending.step3_seller.warn.part1a", model.dataModel.getCurrencyCode()) :
                 Res.get("portfolio.pending.step3_seller.warn.part1b");
-        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute, model.getDateForOpenDispute());
+        return Res.get("portfolio.pending.step3_seller.warn.part2", substitute);
 
 
     }
@@ -262,27 +261,23 @@ public class SellerStep3View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step3_seller.openForDispute");
     }
 
     @Override
     protected void applyOnDisputeOpened() {
-        // confirmButton.setDisable(true);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentReceived() {
         // The confirmPaymentReceived call will trigger the trade protocol to do the payout tx. We want to be sure that we
         // are well connected to the Bitcoin network before triggering the broadcast.
         if (model.dataModel.isReadyForTxBroadcast()) {
-            //noinspection UnusedAssignment
             String key = "confirmPaymentReceived";
-            //noinspection ConstantConditions
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
                 String message = Res.get("portfolio.pending.step3_seller.onPaymentReceived.part1", CurrencyUtil.getNameByCode(model.dataModel.getCurrencyCode()));
@@ -310,15 +305,11 @@ public class SellerStep3View extends TradeStepView {
             } else {
                 confirmPaymentReceived();
             }
-        } else {
-            model.dataModel.showNotReadyForTxBroadcastPopups();
         }
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
-        //noinspection UnusedAssignment
         String key = "confirmPayment" + trade.getId();
         String message = "";
         String tradeVolumeWithCode = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
@@ -330,7 +321,6 @@ public class SellerStep3View extends TradeStepView {
             String explorerOrWalletString = trade.getOffer().getCurrencyCode().equals("XMR") ?
                     Res.get("portfolio.pending.step3_seller.altcoin.wallet", currencyName) :
                     Res.get("portfolio.pending.step3_seller.altcoin.explorer", currencyName);
-            //noinspection UnusedAssignment
             message = Res.get("portfolio.pending.step3_seller.altcoin", part1, explorerOrWalletString, address, tradeVolumeWithCode, currencyName);
         } else {
             if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
@@ -355,11 +345,9 @@ public class SellerStep3View extends TradeStepView {
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
-                //noinspection UnusedAssignment
                 message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
         }
-        //noinspection ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
             new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
@@ -403,6 +391,11 @@ public class SellerStep3View extends TradeStepView {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+        confirmButton.setDisable(isDisabled);
     }
 }
 

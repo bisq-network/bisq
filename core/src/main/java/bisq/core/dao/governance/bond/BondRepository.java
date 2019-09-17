@@ -198,11 +198,11 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract protected T createBond(R bondedAsset);
+    protected abstract T createBond(R bondedAsset);
 
-    abstract protected void updateBond(T bond, R bondedAsset, TxOutput lockupTxOutput);
+    protected abstract void updateBond(T bond, R bondedAsset, TxOutput lockupTxOutput);
 
-    abstract protected Stream<R> getBondedAssetStream();
+    protected abstract Stream<R> getBondedAssetStream();
 
     protected void update() {
         log.debug("update");

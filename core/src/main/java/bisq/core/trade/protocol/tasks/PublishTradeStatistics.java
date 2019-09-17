@@ -23,6 +23,8 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics2;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -51,8 +53,14 @@ public class PublishTradeStatistics extends TradeTask {
 
                 NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
                 if (arbitratorNodeAddress != null) {
-                    // The first 4 chars are sufficient to identify an arbitrator
-                    String address = arbitratorNodeAddress.getFullAddress().substring(0, 4);
+
+                    // The first 4 chars are sufficient to identify an arbitrator.
+                    // For testing with regtest/localhost we use the full address as its localhost and would result in
+                    // same values for multiple arbitrators.
+                    NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
+                    String address = networkNode instanceof TorNetworkNode ?
+                            arbitratorNodeAddress.getFullAddress().substring(0, 4) :
+                            arbitratorNodeAddress.getFullAddress();
                     extraDataMap.put(TradeStatistics2.ARBITRATOR_ADDRESS, address);
                 }
 

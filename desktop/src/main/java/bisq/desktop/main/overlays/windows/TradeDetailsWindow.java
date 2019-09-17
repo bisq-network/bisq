@@ -25,15 +25,17 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 
@@ -68,7 +70,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     protected static final Logger log = LoggerFactory.getLogger(TradeDetailsWindow.class);
 
     private final BSFormatter formatter;
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
     private final TradeManager tradeManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private Trade trade;
@@ -83,10 +85,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsWindow(BSFormatter formatter, DisputeManager disputeManager, TradeManager tradeManager,
+    public TradeDetailsWindow(BSFormatter formatter,
+                              ArbitrationManager arbitrationManager,
+                              TradeManager tradeManager,
                               AccountAgeWitnessService accountAgeWitnessService) {
         this.formatter = formatter;
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
         this.tradeManager = tradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         type = Type.Confirmation;
@@ -186,8 +190,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             rows++;
         if (trade.getPayoutTx() != null)
             rows++;
-        boolean showDisputedTx = disputeManager.findOwnDispute(trade.getId()).isPresent() &&
-                disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null;
+        boolean showDisputedTx = arbitrationManager.findOwnDispute(trade.getId()).isPresent() &&
+                arbitrationManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId() != null;
         if (showDisputedTx)
             rows++;
         if (trade.hasFailed())
@@ -214,9 +218,13 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 Res.get("shared.takerTxFee", formatter.formatCoinWithCode(offer.getTxFee().multiply(3L)));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
 
-        if (trade.getArbitratorNodeAddress() != null)
-            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"),
-                    trade.getArbitratorNodeAddress().getFullAddress());
+        NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
+        NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
+        if (arbitratorNodeAddress != null && mediatorNodeAddress != null) {
+            addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex,
+                    Res.get("tradeDetailsWindow.agentAddresses"),
+                    arbitratorNodeAddress.getFullAddress() + " / " + mediatorNodeAddress.getFullAddress());
+        }
 
         if (trade.getTradingPeerNodeAddress() != null)
             addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradingPeersOnion"),
@@ -267,7 +275,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     trade.getPayoutTx().getHashAsString());
         if (showDisputedTx)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.disputedPayoutTxId"),
-                    disputeManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
+                    arbitrationManager.findOwnDispute(trade.getId()).get().getDisputePayoutTxId());
 
         if (contract != null) {
             Button viewContractButton = addConfirmationLabelButton(gridPane, ++rowIndex, Res.get("shared.contractAsJson"),

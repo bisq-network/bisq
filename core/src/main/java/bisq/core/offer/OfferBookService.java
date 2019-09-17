@@ -28,6 +28,7 @@ import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
+import bisq.common.app.Capability;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.storage.JsonFileManager;
@@ -42,6 +43,7 @@ import java.io.File;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -91,8 +93,10 @@ public class OfferBookService {
                     if (data.getProtectedStoragePayload() instanceof OfferPayload) {
                         OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
                         Offer offer = new Offer(offerPayload);
-                        offer.setPriceFeedService(priceFeedService);
-                        listener.onAdded(offer);
+                        if (showOffer(offer)) {
+                            offer.setPriceFeedService(priceFeedService);
+                            listener.onAdded(offer);
+                        }
                     }
                 });
             }
@@ -131,6 +135,11 @@ public class OfferBookService {
         }
     }
 
+    private boolean showOffer(Offer offer) {
+        return !OfferRestrictions.requiresUpdate() ||
+                OfferRestrictions.hasOfferMandatoryCapability(offer, Capability.MEDIATION);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -150,7 +159,9 @@ public class OfferBookService {
         }
     }
 
-    public void refreshTTL(OfferPayload offerPayload, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void refreshTTL(OfferPayload offerPayload,
+                           ResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler) {
         if (filterManager.requireUpdateToNewVersionForTrading()) {
             errorMessageHandler.handleErrorMessage(Res.get("popup.warning.mandatoryUpdate.trading"));
             return;
@@ -164,15 +175,21 @@ public class OfferBookService {
         }
     }
 
-    public void activateOffer(Offer offer, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void activateOffer(Offer offer,
+                              @Nullable ResultHandler resultHandler,
+                              @Nullable ErrorMessageHandler errorMessageHandler) {
         addOffer(offer, resultHandler, errorMessageHandler);
     }
 
-    public void deactivateOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void deactivateOffer(OfferPayload offerPayload,
+                                @Nullable ResultHandler resultHandler,
+                                @Nullable ErrorMessageHandler errorMessageHandler) {
         removeOffer(offerPayload, resultHandler, errorMessageHandler);
     }
 
-    public void removeOffer(OfferPayload offerPayload, @Nullable ResultHandler resultHandler, @Nullable ErrorMessageHandler errorMessageHandler) {
+    public void removeOffer(OfferPayload offerPayload,
+                            @Nullable ResultHandler resultHandler,
+                            @Nullable ErrorMessageHandler errorMessageHandler) {
         if (p2PService.removeData(offerPayload, true)) {
             if (resultHandler != null)
                 resultHandler.handleResult();
@@ -191,6 +208,7 @@ public class OfferBookService {
                     offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })
+                .filter(this::showOffer)
                 .collect(Collectors.toList());
     }
 
@@ -236,7 +254,7 @@ public class OfferBookService {
                         return null;
                     }
                 })
-                .filter(e -> e != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         jsonFileManager.writeToDisc(Utilities.objectToJson(offerForJsonList), "offers_statistics");
     }
