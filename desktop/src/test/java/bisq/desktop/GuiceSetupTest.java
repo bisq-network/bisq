@@ -135,6 +135,15 @@ public class GuiceSetupTest {
         assertSingleton(PriceAlert.class);
         assertSingleton(MarketAlerts.class);
         assertSingleton(ChargeBackRisk.class);
+//        assertSingleton(ArbitratorService.class);
+//        assertSingleton(ArbitratorManager.class);
+//        assertSingleton(ArbitrationManager.class);
+//        assertSingleton(ArbitrationDisputeListService.class);
+//        assertSingleton(MediatorService.class);
+//        assertSingleton(MediatorManager.class);
+//        assertSingleton(MediationManager.class);
+//        assertSingleton(MediationDisputeListService.class);
+//        assertSingleton(TraderChatManager.class);
         assertSingleton(XmrWalletRpcWrapper.class);
 
         assertNotSingleton(Storage.class);

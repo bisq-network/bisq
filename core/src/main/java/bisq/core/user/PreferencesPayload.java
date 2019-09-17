@@ -124,7 +124,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private int ignoreDustThreshold = 600;
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
     private int blockNotifyPort;
-    
+    private int cssTheme;
+
     
     private boolean useBisqXmrWallet = false;
     private String xmrUserHost = "127.0.0.1";
@@ -193,6 +194,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setIgnoreDustThreshold(ignoreDustThreshold)
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort)
+                .setCssTheme(cssTheme)
                 .setUseBisqXmrWallet(useBisqXmrWallet)
                 .setXmrUserHost(xmrUserHost)
                 .setXmrHostPort(xmrHostPort)
@@ -285,6 +287,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getIgnoreDustThreshold(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
+                proto.getCssTheme(),
 	            proto.getUseBisqXmrWallet(),
 	            proto.getXmrUserHost(),
 	            proto.getXmrHostPort(),
