@@ -18,6 +18,7 @@
 package bisq.desktop.main.funds.transactions;
 
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
@@ -239,7 +240,7 @@ class TransactionsListItem {
         }
         // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
         date = transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime();
-        dateString = formatter.formatDateTime(date);
+        dateString = DisplayUtils.formatDateTime(date);
 
         isDustAttackTx = received && valueSentToMe.value < ignoreDustThreshold;
         if (isDustAttackTx) {

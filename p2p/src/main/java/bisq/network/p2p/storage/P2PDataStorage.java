@@ -57,6 +57,7 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.storage.Storage;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -67,8 +68,6 @@ import javax.inject.Inject;
 import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.commons.lang3.StringUtils;
-
-import org.bouncycastle.util.encoders.Hex;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -887,7 +886,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         @Override
         public String toString() {
             return "ByteArray{" +
-                    "bytes as Hex=" + Hex.toHexString(bytes) +
+                    "bytes as Hex=" + Hex.encode(bytes) +
                     '}';
         }
 

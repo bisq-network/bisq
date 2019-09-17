@@ -41,6 +41,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.CoinUtil;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -246,7 +247,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountListener = (observable, oldValue, newValue) -> {
             if (amountTextField.focusedProperty().get()) {
                 try {
-                    amountAsCoin = formatter.parseToCoin(amountTextField.getText());
+                    amountAsCoin = ParsingUtils.parseToCoin(amountTextField.getText(), formatter);
                 } catch (Throwable t) {
                     log.error("Error at amountTextField input. " + t.toString());
                 }

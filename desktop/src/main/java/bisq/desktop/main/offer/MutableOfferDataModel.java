@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeRestrictions;
@@ -642,7 +643,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !price.get().isZero() &&
                 allowAmountUpdate) {
             try {
-                Coin value = btcFormatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
+                Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 if (isHalCashAccount())
                     value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))

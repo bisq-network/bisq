@@ -140,7 +140,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final ConnectionListener connectionListener;
     @Getter
     private final String uid;
-    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
     // holder of state shared between InputHandler and Connection
     @Getter
     private final Statistic statistic;
@@ -477,7 +477,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional, closeConnectionReason);
+        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}", this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
         if (!stopped) {
             String peersNodeAddress = peersNodeAddressOptional.map(NodeAddress::toString).orElse("null");
             log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -489,7 +489,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             if (closeConnectionReason.sendCloseMessage) {
                 new Thread(() -> {
-                    Thread.currentThread().setName("Connection:SendCloseConnectionMessage-" + this.uid);
                     try {
                         String reason = closeConnectionReason == CloseConnectionReason.RULE_VIOLATION ?
                                 getRuleViolation().name() : closeConnectionReason.name();
@@ -506,7 +505,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         stopped = true;
                         UserThread.execute(() -> doShutDown(closeConnectionReason, shutDownCompleteHandler));
                     }
-                }).start();
+                }, "Connection:SendCloseConnectionMessage-" + this.uid).start();
             } else {
                 stopped = true;
                 doShutDown(closeConnectionReason, shutDownCompleteHandler);

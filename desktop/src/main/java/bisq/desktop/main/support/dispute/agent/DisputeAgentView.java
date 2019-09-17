@@ -23,6 +23,7 @@ import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.support.dispute.DisputeView;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
@@ -79,7 +80,7 @@ public abstract class DisputeAgentView extends DisputeView {
         // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
         filteredList.setPredicate(dispute -> {
             boolean matchesTradeId = dispute.getTradeId().contains(filterString);
-            boolean matchesDate = formatter.formatDate(dispute.getOpeningDate()).contains(filterString);
+            boolean matchesDate = DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString);
             boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
             boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
             boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);

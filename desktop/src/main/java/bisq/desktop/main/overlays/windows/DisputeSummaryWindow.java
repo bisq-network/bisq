@@ -23,6 +23,7 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
@@ -39,6 +40,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -259,7 +261,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addTitledGroupBg(gridPane, ++rowIndex, 17, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
         addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), formatter.formatDateTime(dispute.getOpeningDate()));
+        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
         if (dispute.isDisputeOpenerIsMaker()) {
             if (dispute.isDisputeOpenerIsBuyer())
                 role = Res.get("support.buyerOfferer");
@@ -275,9 +277,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                formatter.formatPrice(contract.getTradePrice()));
+                BSFormatter.formatPrice(contract.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
-                formatter.formatVolumeWithCode(contract.getTradeVolume()));
+                DisplayUtils.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(contract.getOfferPayload().getBuyerSecurityDeposit()) +
@@ -344,8 +346,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private boolean isPayoutAmountValid() {
-        Coin buyerAmount = formatter.parseToCoin(buyerPayoutAmountInputTextField.getText());
-        Coin sellerAmount = formatter.parseToCoin(sellerPayoutAmountInputTextField.getText());
+        Coin buyerAmount = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+        Coin sellerAmount = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
         Contract contract = dispute.getContract();
         Coin tradeAmount = contract.getTradeAmount();
         Offer offer = new Offer(contract.getOfferPayload());
@@ -362,7 +364,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin available = contract.getTradeAmount()
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
-        Coin enteredAmount = formatter.parseToCoin(inputTextField.getText());
+        Coin enteredAmount = ParsingUtils.parseToCoin(inputTextField.getText(), formatter);
         if (enteredAmount.compareTo(available) > 0) {
             enteredAmount = available;
             Coin finalEnteredAmount = enteredAmount;
@@ -551,7 +553,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             dispute.setDisputeResult(disputeResult);
             dispute.setIsClosed(true);
             String text = Res.get("disputeSummaryWindow.close.msg",
-                    formatter.formatDateTime(disputeResult.getCloseDate()),
+                    DisplayUtils.formatDateTime(disputeResult.getCloseDate()),
                     formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                     formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                     disputeResult.summaryNotesProperty().get());

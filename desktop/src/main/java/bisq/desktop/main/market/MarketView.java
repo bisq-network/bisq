@@ -31,6 +31,7 @@ import bisq.desktop.main.market.trades.TradesChartsView;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferPayload;
@@ -183,11 +184,11 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                 .map(trade -> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Trade ID: ").append(trade.getOfferId()).append("\n")
-                            .append("Date: ").append(formatter.formatDateTime(trade.getTradeDate())).append("\n")
-                            .append("Market: ").append(formatter.getCurrencyPair(trade.getCurrencyCode())).append("\n")
-                            .append("Price: ").append(formatter.formatPrice(trade.getTradePrice())).append("\n")
+                            .append("Date: ").append(DisplayUtils.formatDateTime(trade.getTradeDate())).append("\n")
+                            .append("Market: ").append(BSFormatter.getCurrencyPair(trade.getCurrencyCode())).append("\n")
+                            .append("Price: ").append(BSFormatter.formatPrice(trade.getTradePrice())).append("\n")
                             .append("Amount: ").append(formatter.formatCoin(trade.getTradeAmount())).append("\n")
-                            .append("Volume: ").append(formatter.formatVolume(trade.getTradeVolume())).append("\n")
+                            .append("Volume: ").append(DisplayUtils.formatVolume(trade.getTradeVolume())).append("\n")
                             .append("Payment method: ").append(Res.get(trade.getOfferPaymentMethod())).append("\n")
                             .append("ReferralID: ").append(trade.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
                     return sb.toString();
@@ -205,9 +206,9 @@ public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Offer ID: ").append(offer.getId()).append("\n")
                             .append("Type: ").append(offer.getDirection().name()).append("\n")
-                            .append("Market: ").append(formatter.getCurrencyPair(offer.getCurrencyCode())).append("\n")
-                            .append("Price: ").append(formatter.formatPrice(offer.getPrice())).append("\n")
-                            .append("Amount: ").append(formatter.formatAmount(offer)).append(" BTC\n")
+                            .append("Market: ").append(BSFormatter.getCurrencyPair(offer.getCurrencyCode())).append("\n")
+                            .append("Price: ").append(BSFormatter.formatPrice(offer.getPrice())).append("\n")
+                            .append("Amount: ").append(DisplayUtils.formatAmount(offer, formatter)).append(" BTC\n")
                             .append("Payment method: ").append(Res.get(offer.getPaymentMethod().getId())).append("\n")
                             .append("ReferralID: ").append(offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID));
                     return sb.toString();

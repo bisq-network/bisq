@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.openoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
@@ -72,7 +73,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getAmount(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatAmount(item.getOffer()) : "";
+        return (item != null) ? DisplayUtils.formatAmount(item.getOffer(), formatter) : "";
     }
 
     String getPrice(OpenOfferListItem item) {
@@ -84,33 +85,33 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         if (price != null) {
             String postFix = "";
             if (offer.isUseMarketBasedPrice())
-                postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-            return formatter.formatPrice(price) + postFix;
+                postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+            return BSFormatter.formatPrice(price) + postFix;
         } else {
             return Res.get("shared.na");
         }
     }
 
     String getVolume(OpenOfferListItem item) {
-        return (item != null) ? formatter.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
+        return (item != null) ? DisplayUtils.formatVolume(item.getOffer(), false, 0) + " " + item.getOffer().getCurrencyCode() : "";
     }
 
     String getDirectionLabel(OpenOfferListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
+        return DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getOffer()), item.getOffer().getCurrencyCode());
     }
 
     String getMarketLabel(OpenOfferListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getOffer().getCurrencyCode());
+        return BSFormatter.getCurrencyPair(item.getOffer().getCurrencyCode());
     }
 
     String getDate(OpenOfferListItem item) {
-        return formatter.formatDateTime(item.getOffer().getDate());
+        return DisplayUtils.formatDateTime(item.getOffer().getDate());
     }
 
     boolean isDeactivated(OpenOfferListItem item) {

@@ -24,6 +24,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
@@ -408,7 +409,7 @@ public class ChatView extends AnchorPane {
                                 AnchorPane.setLeftAnchor(statusHBox, padding);
                             }
                             AnchorPane.setBottomAnchor(statusHBox, 7d);
-                            headerLabel.setText(formatter.formatDateTime(new Date(message.getDate())));
+                            headerLabel.setText(DisplayUtils.formatDateTime(new Date(message.getDate())));
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
                             if (allowAttachments &&
