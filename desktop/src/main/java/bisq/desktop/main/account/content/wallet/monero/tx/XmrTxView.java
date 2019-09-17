@@ -404,8 +404,8 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String paymentId = Integer.toString(item.getConfirmations());
-                                    setText(paymentId);
+                                    String confirmations = Long.toString(item.getConfirmations());
+                                    setText(confirmations);
                                 } else {
                                 	setText("");
                                 }

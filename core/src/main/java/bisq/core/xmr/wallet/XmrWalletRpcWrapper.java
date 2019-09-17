@@ -38,6 +38,7 @@ import monero.rpc.MoneroRpcConnection;
 import monero.wallet.MoneroWalletRpc;
 import monero.wallet.model.MoneroSendPriority;
 import monero.wallet.model.MoneroSendRequest;
+import monero.wallet.model.MoneroTxSet;
 import monero.wallet.model.MoneroTxWallet;
 
 @Slf4j
@@ -187,29 +188,33 @@ public class XmrWalletRpcWrapper {
 				long time0 = System.currentTimeMillis();
 				MoneroSendRequest request = new MoneroSendRequest(accountIndex, address, amount, priority);
 				request.setDoNotRelay(doNotRelay);
-				MoneroTxWallet tx = walletRpc.send(request);
-				walletRpcData.put("getBalance", walletRpc.getBalance());
-				walletRpcData.put("getUnlockedBalance", walletRpc.getUnlockedBalance());
-				walletRpcData.put("getDoNotRelay", tx.getDoNotRelay());
-				walletRpcData.put("getExtra", tx.getExtra());
-				walletRpcData.put("getFee", tx.getFee());
-				walletRpcData.put("getId", tx.getId());
-				walletRpcData.put("getKey", tx.getKey());
-				walletRpcData.put("getLastRelayedTimestamp", tx.getLastRelayedTimestamp() != null ? new Date(tx.getLastRelayedTimestamp()) : null);
-				walletRpcData.put("getMixin", tx.getMixin());
-				walletRpcData.put("getNumConfirmations", tx.getNumConfirmations());
-				walletRpcData.put("getOutgoingAmount", tx.getOutgoingAmount());
-				walletRpcData.put("getOutgoingTransfer", tx.getOutgoingTransfer());
-				walletRpcData.put("getPaymentId", tx.getPaymentId());
-				walletRpcData.put("getTimestamp",  tx.getBlock().getTimestamp() != null ? new Date(tx.getBlock().getTimestamp()) : null);
-				walletRpcData.put("getSize", tx.getSize());
-				walletRpcData.put("getUnlockTime", tx.getUnlockTime());
-				walletRpcData.put("getVersion", tx.getVersion());
-				if(doNotRelay) {
-					walletRpcData.put("txToRelay", tx);
+				MoneroTxSet txSet = walletRpc.send(request);
+				
+				if(txSet != null && txSet.getTxs() != null && !txSet.getTxs().isEmpty()) {
+					MoneroTxWallet tx = txSet.getTxs().get(0);
+					walletRpcData.put("getBalance", walletRpc.getBalance());
+					walletRpcData.put("getUnlockedBalance", walletRpc.getUnlockedBalance());
+					walletRpcData.put("getDoNotRelay", tx.getDoNotRelay());
+					walletRpcData.put("getExtra", tx.getExtra());
+					walletRpcData.put("getFee", tx.getFee());
+					walletRpcData.put("getId", tx.getId());
+					walletRpcData.put("getKey", tx.getKey());
+					walletRpcData.put("getLastRelayedTimestamp", tx.getLastRelayedTimestamp() != null ? new Date(tx.getLastRelayedTimestamp()) : null);
+					walletRpcData.put("getMixin", tx.getMixin());
+					walletRpcData.put("getNumConfirmations", tx.getNumConfirmations());
+					walletRpcData.put("getOutgoingAmount", tx.getOutgoingAmount());
+					walletRpcData.put("getOutgoingTransfer", tx.getOutgoingTransfer());
+					walletRpcData.put("getPaymentId", tx.getPaymentId());
+					walletRpcData.put("getTimestamp",  tx.getBlock().getTimestamp() != null ? new Date(tx.getBlock().getTimestamp()) : null);
+					walletRpcData.put("getSize", tx.getSize());
+					walletRpcData.put("getUnlockTime", tx.getUnlockTime());
+					walletRpcData.put("getVersion", tx.getVersion());
+					if(doNotRelay) {
+						walletRpcData.put("txToRelay", tx);
+					}
+					log.debug("MoneroTxWallet => {}", walletRpcData);
+					log.debug("createTx -time: {}ms - createTx: {}", (System.currentTimeMillis() - time0), tx.getSize());
 				}
-				log.debug("MoneroTxWallet => {}", walletRpcData);
-				log.debug("createTx -time: {}ms - createTx: {}", (System.currentTimeMillis() - time0), tx.getSize());
 				listener.onUpdateBalances(walletRpcData);
 				listener.stopAnimation();
 			}

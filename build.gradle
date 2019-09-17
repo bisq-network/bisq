@@ -82,7 +82,7 @@ configure(subprojects) {
 
     dependencies {
         testCompile "junit:junit:$junitVersion"
-        compile 'woodser:monero-wallet-java:0.0.2-SNAPSHOT'
+        compile 'woodser:monero-wallet-java:0.1.1-SNAPSHOT'
     }
 
     tasks.withType(JavaCompile) {

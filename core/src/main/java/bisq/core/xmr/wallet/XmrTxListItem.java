@@ -46,13 +46,13 @@ public class XmrTxListItem {
 	@Getter
 	private boolean confirmed;
 	@Getter
-	private int confirmations = 0;
+	private long confirmations = 0;
 	@Getter
 	private String key;
 	@Getter
 	private Integer mixin;
 	@Getter
-	private Integer unlockTime;
+	private Long unlockTime;
 	@Getter
 	private String destinationAddress;
 
