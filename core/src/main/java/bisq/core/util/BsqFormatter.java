@@ -135,11 +135,11 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatBTCWithCode(long satoshi) {
-        return super.formatCoinWithCode(satoshi, btcCoinFormat);
+        return BSFormatter.formatCoinWithCode(satoshi, btcCoinFormat);
     }
 
     public String formatBTCWithCode(Coin coin) {
-        return super.formatCoinWithCode(coin, btcCoinFormat);
+        return BSFormatter.formatCoinWithCode(coin, btcCoinFormat);
     }
 
     public String formatBTC(Coin coin) {
