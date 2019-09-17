@@ -29,13 +29,14 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
-import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.CssTheme;
+import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -139,6 +140,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 
+            injector.getInstance(OSXStandbyModeDisabler.class).doIt();
             injector.getInstance(AvoidStandbyModeService.class).init();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
