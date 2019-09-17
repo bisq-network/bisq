@@ -94,7 +94,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private long buyerSecurityDepositAsLong;
 
     private boolean useAnimations;
-    private int cssTheme;
     @Nullable
     private PaymentAccount selectedPaymentAccountForCreateOffer;
     private boolean payFeeInBtc = true;
@@ -126,7 +125,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
     private int blockNotifyPort;
     private int cssTheme;
-
     
     private boolean useBisqXmrWallet = false;
     private String xmrUserHost = "127.0.0.1";
@@ -181,7 +179,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setDirectoryChooserPath(directoryChooserPath)
                 .setBuyerSecurityDepositAsLong(buyerSecurityDepositAsLong)
                 .setUseAnimations(useAnimations)
-                .setCssTheme(cssTheme)
                 .setPayFeeInBtc(payFeeInBtc)
                 .setBridgeOptionOrdinal(bridgeOptionOrdinal)
                 .setTorTransportOrdinal(torTransportOrdinal)
@@ -267,7 +264,6 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getDirectoryChooserPath(),
                 proto.getBuyerSecurityDepositAsLong(),
                 proto.getUseAnimations(),
-                proto.getCssTheme(),
                 paymentAccount,
                 proto.getPayFeeInBtc(),
                 proto.getBridgeAddressesList().isEmpty() ? null : new ArrayList<>(proto.getBridgeAddressesList()),

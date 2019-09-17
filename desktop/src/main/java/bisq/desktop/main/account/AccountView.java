@@ -30,14 +30,9 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.account.content.notifications.MobileNotificationsView;
 import bisq.desktop.main.account.content.password.PasswordView;
 import bisq.desktop.main.account.content.seedwords.SeedWordsView;
-<<<<<<< HEAD
 import bisq.desktop.main.account.content.wallet.AltCoinWalletsView;
-//import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
-//import bisq.desktop.main.account.register.mediator.MediatorRegistrationView;
-=======
 import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
 import bisq.desktop.main.account.register.mediator.MediatorRegistrationView;
->>>>>>> 736da2a0062735a2dc3ab076587c88f8af481489
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
