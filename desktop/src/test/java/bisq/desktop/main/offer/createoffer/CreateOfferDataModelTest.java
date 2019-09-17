@@ -61,7 +61,7 @@ public class CreateOfferDataModelTest {
                 null, preferences, user, null,
                 null, priceFeedService, null,
                 null, feeService, feeEstimationService,
-                null, null, makerFeeProvider);
+                null, null, makerFeeProvider, null);
     }
 
     @Test

@@ -23,8 +23,6 @@ import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.btc.Balances;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.setup.WalletsSetup;
@@ -47,6 +45,11 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -127,10 +130,13 @@ public class BisqSetup {
     private final Balances balances;
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
+    private final MediatorManager mediatorManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
+    private final TraderChatManager traderChatManager;
     private final Preferences preferences;
     private final User user;
     private final AlertManager alertManager;
@@ -206,10 +212,13 @@ public class BisqSetup {
                      Balances balances,
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
+                     MediatorManager mediatorManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
-                     DisputeManager disputeManager,
+                     ArbitrationManager arbitrationManager,
+                     MediationManager mediationManager,
+                     TraderChatManager traderChatManager,
                      Preferences preferences,
                      User user,
                      AlertManager alertManager,
@@ -247,10 +256,13 @@ public class BisqSetup {
         this.balances = balances;
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
+        this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.user = user;
         this.alertManager = alertManager;
@@ -289,6 +301,11 @@ public class BisqSetup {
     }
 
     public void start() {
+        if (log.isDebugEnabled()) {
+            UserThread.runPeriodically(() -> {
+                log.debug("1 second heartbeat");
+            }, 1);
+        }
         maybeReSyncSPVChain();
         maybeShowTac();
     }
@@ -429,11 +446,8 @@ public class BisqSetup {
                 bisqEnvironment.getIgnoreLocalBtcNode()) {
             step3();
         } else {
-            Thread checkIfLocalHostNodeIsRunningThread = new Thread(() -> {
-                Thread.currentThread().setName("checkIfLocalHostNodeIsRunningThread");
-                Socket socket = null;
-                try {
-                    socket = new Socket();
+            new Thread(() -> {
+                try (Socket socket = new Socket()) {
                     socket.connect(new InetSocketAddress(InetAddresses.forString("127.0.0.1"),
                             BisqEnvironment.getBaseCurrencyNetwork().getParameters().getPort()), 5000);
                     log.info("Localhost Bitcoin node detected.");
@@ -443,16 +457,8 @@ public class BisqSetup {
                     });
                 } catch (Throwable e) {
                     UserThread.execute(BisqSetup.this::step3);
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                        } catch (IOException ignore) {
-                        }
-                    }
                 }
-            });
-            checkIfLocalHostNodeIsRunningThread.start();
+            }, "checkIfLocalHostNodeIsRunningThread").start();
         }
     }
 
@@ -469,9 +475,8 @@ public class BisqSetup {
         // If users compile themselves they might miss that step and then would get an exception in the trade.
         // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
         // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
-        Thread checkCryptoThread = new Thread(() -> {
+        new Thread(() -> {
             try {
-                Thread.currentThread().setName("checkCryptoThread");
                 // just use any simple dummy msg
                 Ping payload = new Ping(1, 1);
                 SealedAndSigned sealedAndSigned = EncryptionService.encryptHybridWithSignature(payload,
@@ -491,8 +496,7 @@ public class BisqSetup {
                 if (cryptoSetupFailedHandler != null)
                     cryptoSetupFailedHandler.accept(msg);
             }
-        });
-        checkCryptoThread.start();
+        }, "checkCryptoThread").start();
     }
 
     private void startP2pNetworkAndWallet() {
@@ -581,12 +585,15 @@ public class BisqSetup {
                 .filter(e -> tradeManager.getSetOfAllTradeIds().contains(e.getOfferId()) &&
                         e.getContext() == AddressEntry.Context.MULTI_SIG)
                 .forEach(e -> {
-                    final Coin balance = e.getCoinLockedInMultiSig();
-                    final String message = Res.get("popup.warning.lockedUpFunds",
-                            formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                    log.warn(message);
-                    if (lockedUpFundsHandler != null)
-                        lockedUpFundsHandler.accept(message);
+                    Coin balance = e.getCoinLockedInMultiSig();
+                    if (balance.isPositive()) {
+                        String message = Res.get("popup.warning.lockedUpFunds",
+                                formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                        log.warn(message);
+                        if (lockedUpFundsHandler != null) {
+                            lockedUpFundsHandler.accept(message);
+                        }
+                    }
                 });
     }
 
@@ -609,7 +616,9 @@ public class BisqSetup {
 
         tradeLimits.onAllServicesInitialized();
 
-        disputeManager.onAllServicesInitialized();
+        arbitrationManager.onAllServicesInitialized();
+        mediationManager.onAllServicesInitialized();
+        traderChatManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
 
@@ -621,6 +630,7 @@ public class BisqSetup {
         balances.onAllServicesInitialized();
 
         arbitratorManager.onAllServicesInitialized();
+        mediatorManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));

@@ -39,26 +39,24 @@ import javafx.geometry.Orientation;
 
 import org.fxmisc.easybind.Subscription;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
+@Slf4j
 public abstract class TradeSubView extends HBox {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
     protected final PendingTradesViewModel model;
     protected VBox leftVBox;
-    protected AnchorPane contentPane;
-    protected TradeStepView tradeStepView;
-    private AutoTooltipButton openDisputeButton;
-    private NotificationGroup notificationGroup;
-    protected GridPane leftGridPane;
-    protected TitledGroupBg tradeProcessTitledGroupBg;
-    protected int leftGridPaneRowIndex = 0;
-    protected Subscription viewStateSubscription;
+    private AnchorPane contentPane;
+    private TradeStepView tradeStepView;
+    protected TradeStepInfo tradeStepInfo;
+    private GridPane leftGridPane;
+    private TitledGroupBg tradeProcessTitledGroupBg;
+    private int leftGridPaneRowIndex = 0;
+    Subscription viewStateSubscription;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialisation
@@ -81,11 +79,8 @@ public abstract class TradeSubView extends HBox {
         if (tradeStepView != null)
             tradeStepView.deactivate();
 
-        if (openDisputeButton != null)
-            leftGridPane.getChildren().remove(openDisputeButton);
-
-        if (notificationGroup != null)
-            notificationGroup.removeItselfFrom(leftGridPane);
+        if (tradeStepInfo != null)
+            tradeStepInfo.removeItselfFrom(leftGridPane);
     }
 
     private void buildViews() {
@@ -105,60 +100,25 @@ public abstract class TradeSubView extends HBox {
 
         addWizards();
 
-        TitledGroupBg noticeTitledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "",
-                0);
-        noticeTitledGroupBg.getStyleClass().add("last");
-        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "",
-                Layout.FIRST_ROW_DISTANCE);
-        openDisputeButton = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.openDispute"));
-        GridPane.setColumnIndex(openDisputeButton, 0);
-        openDisputeButton.setId("open-dispute-button");
-
-        notificationGroup = new NotificationGroup(noticeTitledGroupBg, label, openDisputeButton);
-        notificationGroup.setLabelAndHeadlineVisible(false);
-        notificationGroup.setButtonVisible(false);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 30);
+        titledGroupBg.getStyleClass().add("last");
+        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", 30);
+        AutoTooltipButton button = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, "");
+        tradeStepInfo = new TradeStepInfo(titledGroupBg, label, button);
     }
 
-    public static class NotificationGroup {
-        public final TitledGroupBg titledGroupBg;
-        public final Label label;
-        public final AutoTooltipButton button;
-
-        public NotificationGroup(TitledGroupBg titledGroupBg, Label label, AutoTooltipButton button) {
-            this.titledGroupBg = titledGroupBg;
-            this.label = label;
-            this.button = button;
-        }
-
-        public void setLabelAndHeadlineVisible(boolean isVisible) {
-            titledGroupBg.setVisible(isVisible);
-            label.setVisible(isVisible);
-            titledGroupBg.setManaged(isVisible);
-            label.setManaged(isVisible);
-        }
-
-        public void setButtonVisible(boolean isVisible) {
-            button.setVisible(isVisible);
-            button.setManaged(isVisible);
-        }
-
-        public void removeItselfFrom(GridPane leftGridPane) {
-            leftGridPane.getChildren().remove(titledGroupBg);
-            leftGridPane.getChildren().remove(label);
-            leftGridPane.getChildren().remove(button);
-        }
-    }
-
-    protected void showItem(TradeWizardItem item) {
+    void showItem(TradeWizardItem item) {
         item.setActive();
         createAndAddTradeStepView(item.getViewClass());
     }
 
-    abstract protected void addWizards();
+    protected abstract void addWizards();
 
-    abstract protected void onViewStateChanged(PendingTradesViewModel.State viewState);
+    protected void onViewStateChanged(PendingTradesViewModel.State viewState) {
+        tradeStepInfo.setTrade(model.getTrade());
+    }
 
-    protected void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
+    void addWizardsToGridPane(TradeWizardItem tradeWizardItem) {
         if (leftGridPaneRowIndex == 0)
             GridPane.setMargin(tradeWizardItem, new Insets(Layout.FIRST_ROW_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
 
@@ -168,7 +128,7 @@ public abstract class TradeSubView extends HBox {
         GridPane.setFillWidth(tradeWizardItem, true);
     }
 
-    protected void addLineSeparatorToGridPane() {
+    void addLineSeparatorToGridPane() {
         final Separator separator = new Separator(Orientation.VERTICAL);
         separator.setMinHeight(22);
         GridPane.setMargin(separator, new Insets(0, 0, 0, 13));
@@ -183,7 +143,7 @@ public abstract class TradeSubView extends HBox {
         try {
             tradeStepView = viewClass.getDeclaredConstructor(PendingTradesViewModel.class).newInstance(model);
             contentPane.getChildren().setAll(tradeStepView);
-            tradeStepView.setNotificationGroup(notificationGroup);
+            tradeStepView.setTradeStepInfo(tradeStepInfo);
             tradeStepView.activate();
         } catch (Exception e) {
             log.error("Creating viewClass {} caused an error {}", viewClass, e.getMessage());

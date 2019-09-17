@@ -17,6 +17,9 @@
 
 package bisq.core.arbitration;
 
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorService;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
@@ -41,7 +44,7 @@ public class ArbitratorManagerTest {
         User user = mock(User.class);
         ArbitratorService arbitratorService = mock(ArbitratorService.class);
 
-        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, null, false);
+        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, false);
 
         ArrayList<String> languagesOne = new ArrayList<String>() {{
             add("en");
@@ -61,15 +64,15 @@ public class ArbitratorManagerTest {
                 languagesTwo, 0L, null, "", null,
                 null, null);
 
-        manager.addArbitrator(one, () -> {
+        manager.addDisputeAgent(one, () -> {
         }, errorMessage -> {
         });
-        manager.addArbitrator(two, () -> {
+        manager.addDisputeAgent(two, () -> {
         }, errorMessage -> {
         });
 
-        assertTrue(manager.isArbitratorAvailableForLanguage("en"));
-        assertFalse(manager.isArbitratorAvailableForLanguage("th"));
+        assertTrue(manager.isAgentAvailableForLanguage("en"));
+        assertFalse(manager.isAgentAvailableForLanguage("th"));
     }
 
     @Test
@@ -77,7 +80,7 @@ public class ArbitratorManagerTest {
         User user = mock(User.class);
         ArbitratorService arbitratorService = mock(ArbitratorService.class);
 
-        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, null, false);
+        ArbitratorManager manager = new ArbitratorManager(null, arbitratorService, user, null, false);
 
         ArrayList<String> languagesOne = new ArrayList<String>() {{
             add("en");
@@ -101,15 +104,15 @@ public class ArbitratorManagerTest {
             add(two.getNodeAddress());
         }};
 
-        manager.addArbitrator(one, () -> {
+        manager.addDisputeAgent(one, () -> {
         }, errorMessage -> {
         });
-        manager.addArbitrator(two, () -> {
+        manager.addDisputeAgent(two, () -> {
         }, errorMessage -> {
         });
 
-        assertThat(manager.getArbitratorLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
-        assertThat(manager.getArbitratorLanguages(nodeAddresses), not(containsInAnyOrder("de")));
+        assertThat(manager.getDisputeAgentLanguages(nodeAddresses), containsInAnyOrder("en", "es"));
+        assertThat(manager.getDisputeAgentLanguages(nodeAddresses), not(containsInAnyOrder("de")));
     }
 
 }

@@ -110,7 +110,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage tradeMessage, NodeAddress sender, ErrorMessageHandler errorMessageHandler) {
+    public void handleTakeOfferRequest(TradeMessage tradeMessage,
+                                       NodeAddress sender,
+                                       ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), tradeMessage);
         checkArgument(tradeMessage instanceof PayDepositRequest);
         processModel.setTradeMessage(tradeMessage);
@@ -146,7 +148,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
+    protected void handle(DepositTxPublishedMessage tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -241,12 +243,15 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
         }
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
@@ -254,8 +259,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
             handle((CounterCurrencyTransferStartedMessage) tradeMessage, sender);
-        } else {
-            log.error("Incoming tradeMessage not supported. " + tradeMessage);
         }
     }
 }

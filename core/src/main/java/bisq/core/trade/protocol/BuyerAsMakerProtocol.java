@@ -115,7 +115,9 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage tradeMessage, NodeAddress peerNodeAddress, ErrorMessageHandler errorMessageHandler) {
+    public void handleTakeOfferRequest(TradeMessage tradeMessage,
+                                       NodeAddress peerNodeAddress,
+                                       ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), tradeMessage);
         checkArgument(tradeMessage instanceof PayDepositRequest);
         processModel.setTradeMessage(tradeMessage);
@@ -225,6 +227,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
@@ -232,11 +236,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
             handle((DepositTxPublishedMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else //noinspection StatementWithEmptyBody
-            if (tradeMessage instanceof PayDepositRequest) {
-                // do nothing as we get called the handleTakeOfferRequest method from outside
-            } else {
-                log.error("Incoming decrypted tradeMessage not supported. " + tradeMessage);
-            }
+        }
     }
 }

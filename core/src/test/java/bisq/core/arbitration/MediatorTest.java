@@ -17,6 +17,8 @@
 
 package bisq.core.arbitration;
 
+import bisq.core.support.dispute.mediation.mediator.Mediator;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
@@ -42,7 +44,7 @@ public class MediatorTest {
 
     public static Mediator getMediatorMock() {
         return new Mediator(new NodeAddress("host", 1000),
-                new PubKeyRing(getBytes(100), getBytes(100), "key"),
+                new PubKeyRing(getBytes(100), getBytes(100)),
                 Lists.newArrayList(),
                 new Date().getTime(),
                 getBytes(100),
@@ -51,6 +53,4 @@ public class MediatorTest {
                 "info",
                 null);
     }
-
-
 }

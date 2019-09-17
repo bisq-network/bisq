@@ -160,7 +160,13 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                         System.currentTimeMillis() - ts);
             }
         }
-        maybeUpdateHashChain(blockHeight);
+        long ts = System.currentTimeMillis();
+        boolean updated = maybeUpdateHashChain(blockHeight);
+        if (updated) {
+            log.info("updateHashChain for block {} took {} ms",
+                    blockHeight,
+                    System.currentTimeMillis() - ts);
+        }
     }
 
     @SuppressWarnings("Duplicates")

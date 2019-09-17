@@ -23,6 +23,7 @@ import org.bitcoinj.core.Coin;
 
 public class CoinUtil {
 
+    // Get the fee per amount
     public static Coin getFeePerBtc(Coin feePerBtc, Coin amount) {
         double feePerBtcAsDouble = feePerBtc != null ? (double) feePerBtc.value : 0;
         double amountAsDouble = amount != null ? (double) amount.value : 0;

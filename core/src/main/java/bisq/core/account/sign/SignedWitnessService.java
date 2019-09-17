@@ -19,13 +19,14 @@ package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.BuyerDataItem;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
-import bisq.core.arbitration.DisputeResult;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.BuyerDataItem;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -74,7 +75,7 @@ public class SignedWitnessService {
     private final P2PService p2PService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
     private final ChargeBackRisk chargeBackRisk;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
@@ -91,13 +92,13 @@ public class SignedWitnessService {
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                DisputeManager disputeManager,
+                                ArbitrationManager arbitrationManager,
                                 ChargeBackRisk chargeBackRisk) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
         this.chargeBackRisk = chargeBackRisk;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
@@ -147,7 +148,10 @@ public class SignedWitnessService {
     }
 
     // Arbitrators sign with EC key
-    public SignedWitness signAccountAgeWitness(Coin tradeAmount, AccountAgeWitness accountAgeWitness, ECKey key, PublicKey peersPubKey) {
+    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
+                                               AccountAgeWitness accountAgeWitness,
+                                               ECKey key,
+                                               PublicKey peersPubKey) {
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
         String signatureBase64 = key.signMessage(accountAgeWitnessHashAsHex);
         SignedWitness signedWitness = new SignedWitness(true,
@@ -162,7 +166,9 @@ public class SignedWitnessService {
     }
 
     // Any peer can sign with DSA key
-    public SignedWitness signAccountAgeWitness(Coin tradeAmount, AccountAgeWitness accountAgeWitness, PublicKey peersPubKey) throws CryptoException {
+    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
+                                               AccountAgeWitness accountAgeWitness,
+                                               PublicKey peersPubKey) throws CryptoException {
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
         SignedWitness signedWitness = new SignedWitness(false,
                 accountAgeWitness.getHash(),
@@ -238,7 +244,8 @@ public class SignedWitnessService {
 
     // We go one level up by using the signer Key to lookup for SignedWitness objects which contain the signerKey as
     // witnessOwnerPubKey
-    public Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey, Stack<P2PDataStorage.ByteArray> excluded) {
+    public Set<SignedWitness> getSignedWitnessSetByOwnerPubKey(byte[] ownerPubKey,
+                                                               Stack<P2PDataStorage.ByteArray> excluded) {
         return signedWitnessMap.values().stream()
                 .filter(e -> Arrays.equals(e.getWitnessOwnerPubKey(), ownerPubKey))
                 .filter(e -> !excluded.contains(new P2PDataStorage.ByteArray(e.getSignerPubKey())))
@@ -270,7 +277,9 @@ public class SignedWitnessService {
      * @param excludedPubKeys stack to prevent recursive loops
      * @return true if signedWitness is valid, false otherwise.
      */
-    private boolean isValidSignedWitnessInternal(SignedWitness signedWitness, long childSignedWitnessDateMillis, Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
+    private boolean isValidSignedWitnessInternal(SignedWitness signedWitness,
+                                                 long childSignedWitnessDateMillis,
+                                                 Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
         if (!verifySignature(signedWitness)) {
             return false;
         }
@@ -323,8 +332,9 @@ public class SignedWitnessService {
     }
 
     // Arbitrator signing
-    public List<BuyerDataItem> getBuyerPaymentAccounts(long safeDate) {
-        return disputeManager.getDisputesAsObservableList().stream()
+    public List<BuyerDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod) {
+        return arbitrationManager.getDisputesAsObservableList().stream()
+                .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)
                 .map(this::getBuyerData)
@@ -335,7 +345,8 @@ public class SignedWitnessService {
     }
 
     private boolean hasChargebackRisk(Dispute dispute) {
-        return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId());
+        return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId(),
+                dispute.getContract().getOfferPayload().getCurrencyCode());
     }
 
     private boolean isBuyerWinner(Dispute dispute) {

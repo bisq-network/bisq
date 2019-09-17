@@ -21,7 +21,8 @@ import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
-import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.BankUtil;
@@ -70,6 +71,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private final BSFormatter formatter;
     private final User user;
     private final KeyRing keyRing;
+    private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
     private Price tradePrice;
@@ -88,6 +90,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         this.formatter = formatter;
         this.user = user;
         this.keyRing = keyRing;
+        this.navigation = navigation;
         type = Type.Confirmation;
     }
 
@@ -170,49 +173,49 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         double firstRowDistance = Layout.TWICE_FIRST_ROW_DISTANCE;
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    formatter.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
+                    DisplayUtils.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    formatter.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
+                    DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
             fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
             btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
         } else {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
-                    formatter.getDirectionBothSides(direction, currencyCode), firstRowDistance);
+                    DisplayUtils.getDirectionBothSides(direction, currencyCode), firstRowDistance);
         }
         String btcAmount = Res.get("shared.btcAmount");
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(tradeAmount));
-            addConfirmationLabelLabel(gridPane, ++rowIndex, formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
-                    formatter.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
+            addConfirmationLabelLabel(gridPane, ++rowIndex, DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo,
+                    DisplayUtils.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount)));
         } else {
             addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmount + btcDirectionInfo,
                     formatter.formatCoinWithCode(offer.getAmount()));
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
                     formatter.formatCoinWithCode(offer.getMinAmount()));
-            String volume = formatter.formatVolumeWithCode(offer.getVolume());
+            String volume = DisplayUtils.formatVolumeWithCode(offer.getVolume());
             String minVolume = "";
             if (offer.getVolume() != null && offer.getMinVolume() != null &&
                     !offer.getVolume().equals(offer.getMinVolume()))
-                minVolume = " " + Res.get("offerDetailsWindow.min", formatter.formatVolumeWithCode(offer.getMinVolume()));
+                minVolume = " " + Res.get("offerDetailsWindow.min", DisplayUtils.formatVolumeWithCode(offer.getMinVolume()));
             addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    formatter.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
+                    DisplayUtils.formatVolumeLabel(currencyCode) + fiatDirectionInfo, volume + minVolume);
         }
 
         String priceLabel = Res.get("shared.price");
         if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(tradePrice));
+            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(tradePrice));
         } else {
             Price price = offer.getPrice();
             if (offer.isUseMarketBasedPrice()) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price) +
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
-                        formatter.formatPercentagePrice(offer.getMarketPriceMargin())));
+                        BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin())));
             } else {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, formatter.formatPrice(price));
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();
@@ -293,7 +296,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             textArea.setEditable(false);
         }
 
-        rows = 4;
+        rows = 3;
         if (countryCode != null)
             rows++;
         if (offer.getOfferFeePaymentTxId() != null)
@@ -307,7 +310,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.makersOnion"),
                 offer.getMakerNodeAddress().getFullAddress());
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.creationDate"),
-                formatter.formatDateTime(offer.getDate()));
+                DisplayUtils.formatDateTime(offer.getDate()));
         String value = Res.getWithColAndCap("shared.buyer") +
                 " " +
                 formatter.formatCoinWithCode(offer.getBuyerSecurityDeposit()) +
@@ -321,8 +324,6 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.countryBank"),
                     CountryUtil.getNameAndCode(countryCode));
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("offerDetailsWindow.acceptedArbitrators"),
-                formatter.arbitratorAddressesToString(offer.getArbitratorNodeAddresses()));
         if (offer.getOfferFeePaymentTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
 
@@ -391,20 +392,17 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         placeOfferTuple.forth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
-            if (user.getAcceptedArbitrators() != null &&
-                    user.getAcceptedArbitrators().size() > 0) {
+            if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {
                 button.setDisable(true);
                 cancelButton.setDisable(true);
                 busyAnimation.play();
                 if (isPlaceOffer) {
                     spinnerInfoLabel.setText(Res.get("createOffer.fundsBox.placeOfferSpinnerInfo"));
-                    placeOfferHandlerOptional.get().run();
+                    placeOfferHandlerOptional.ifPresent(Runnable::run);
                 } else {
                     spinnerInfoLabel.setText(Res.get("takeOffer.fundsBox.takeOfferSpinnerInfo"));
-                    takeOfferHandlerOptional.get().run();
+                    takeOfferHandlerOptional.ifPresent(Runnable::run);
                 }
-            } else {
-                new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             }
         });
     }

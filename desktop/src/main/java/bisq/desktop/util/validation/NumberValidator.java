@@ -18,7 +18,7 @@
 package bisq.desktop.util.validation;
 
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.InputValidator;
 
 /**
@@ -30,7 +30,7 @@ import bisq.core.util.validation.InputValidator;
 public abstract class NumberValidator extends InputValidator {
 
     protected String cleanInput(String input) {
-        return BSFormatter.convertCharsForNumber(input);
+        return ParsingUtils.convertCharsForNumber(input);
     }
 
     protected ValidationResult validateIfNumber(String input) {

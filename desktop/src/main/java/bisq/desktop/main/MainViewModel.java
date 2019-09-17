@@ -32,6 +32,8 @@ import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
+import bisq.desktop.main.shared.PriceFeedComboBoxItem;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -46,7 +48,7 @@ import bisq.core.locale.Res;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.presentation.BalancePresentation;
-import bisq.core.presentation.DisputePresentation;
+import bisq.core.presentation.SupportTicketsPresentation;
 import bisq.core.presentation.TradePresentation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -99,7 +101,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private final User user;
     private final BalancePresentation balancePresentation;
     private final TradePresentation tradePresentation;
-    private final DisputePresentation disputePresentation;
+    private final SupportTicketsPresentation supportTicketsPresentation;
     private final MarketPricePresentation marketPricePresentation;
     private final DaoPresentation daoPresentation;
     private final P2PService p2PService;
@@ -134,7 +136,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public MainViewModel(BisqSetup bisqSetup,
                          WalletsSetup walletsSetup,
@@ -142,7 +143,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                          User user,
                          BalancePresentation balancePresentation,
                          TradePresentation tradePresentation,
-                         DisputePresentation disputePresentation,
+                         SupportTicketsPresentation supportTicketsPresentation,
                          MarketPricePresentation marketPricePresentation,
                          DaoPresentation daoPresentation,
                          P2PService p2PService,
@@ -164,7 +165,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         this.user = user;
         this.balancePresentation = balancePresentation;
         this.tradePresentation = tradePresentation;
-        this.disputePresentation = disputePresentation;
+        this.supportTicketsPresentation = supportTicketsPresentation;
         this.marketPricePresentation = marketPricePresentation;
         this.daoPresentation = daoPresentation;
         this.p2PService = p2PService;
@@ -218,7 +219,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                 DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;
@@ -228,7 +229,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                                 DontShowAgainLookup.dontShowAgain(key, true);
                                 new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
-                                        formatter.formatDateTime(maxTradePeriodDate)))
+                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                         .show();
                             }
                             break;
@@ -506,12 +507,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         return bisqSetup.getNewVersionAvailableProperty();
     }
 
-    StringProperty getNumOpenDisputes() {
-        return disputePresentation.getNumOpenDisputes();
+    StringProperty getNumOpenSupportTickets() {
+        return supportTicketsPresentation.getNumOpenSupportTickets();
     }
 
-    BooleanProperty getShowOpenDisputesNotification() {
-        return disputePresentation.getShowOpenDisputesNotification();
+    BooleanProperty getShowOpenSupportTicketsNotification() {
+        return supportTicketsPresentation.getShowOpenSupportTicketsNotification();
     }
 
     BooleanProperty getShowPendingTradesNotification() {

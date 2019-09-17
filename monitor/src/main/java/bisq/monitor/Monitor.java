@@ -21,11 +21,11 @@ import bisq.monitor.metric.MarketStats;
 import bisq.monitor.metric.P2PMarketStats;
 import bisq.monitor.metric.P2PNetworkLoad;
 import bisq.monitor.metric.P2PRoundTripTime;
+import bisq.monitor.metric.P2PSeedNodeSnapshot;
 import bisq.monitor.metric.PriceNodeStats;
 import bisq.monitor.metric.TorHiddenServiceStartupTime;
 import bisq.monitor.metric.TorRoundTripTime;
 import bisq.monitor.metric.TorStartupTime;
-import bisq.monitor.metric.P2PSeedNodeSnapshot;
 import bisq.monitor.reporter.ConsoleReporter;
 import bisq.monitor.reporter.GraphiteReporter;
 
@@ -114,33 +114,29 @@ public class Monitor {
         configure();
 
         // exit Metrics gracefully on shutdown
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                // set the name of the Thread for debugging purposes
-                setName("shutdownHook");
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    // set the name of the Thread for debugging purposes
+                    log.info("system shutdown initiated");
 
-                log.info("system shutdown initiated");
+                    log.info("shutting down active metrics...");
+                    Metric.haltAllMetrics();
 
-                log.info("shutting down active metrics...");
-                Metric.haltAllMetrics();
+                    try {
+                        log.info("shutting down tor...");
+                        Tor tor = Tor.getDefault();
+                        checkNotNull(tor, "tor must not be null");
+                        tor.shutdown();
+                    } catch (Throwable ignore) {
+                    }
 
-                try {
-                    log.info("shutting down tor...");
-                    Tor tor = Tor.getDefault();
-                    checkNotNull(tor, "tor must not be null");
-                    tor.shutdown();
-                } catch (Throwable ignore) {
-                }
-
-                log.info("system halt");
-            }
-        });
+                    log.info("system halt");
+                }, "Monitor Shutdown Hook ")
+        );
     }
 
     /**
      * Reload the configuration from disk.
-     * 
+     *
      * @throws Exception if something goes wrong
      */
     private void configure() throws Exception {

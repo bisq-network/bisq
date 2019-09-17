@@ -38,6 +38,7 @@ public class TextFieldWithIcon extends AnchorPane {
     public static final Logger log = LoggerFactory.getLogger(TextFieldWithIcon.class);
     @Getter
     private final Label iconLabel;
+    @Getter
     private final TextField textField;
     private final Label dummyTextField;
 

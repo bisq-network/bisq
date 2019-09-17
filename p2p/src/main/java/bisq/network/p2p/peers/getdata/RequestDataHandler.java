@@ -42,21 +42,18 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 class RequestDataHandler implements MessageListener {
@@ -93,10 +90,10 @@ class RequestDataHandler implements MessageListener {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public RequestDataHandler(NetworkNode networkNode,
-                              P2PDataStorage dataStorage,
-                              PeerManager peerManager,
-                              Listener listener) {
+    RequestDataHandler(NetworkNode networkNode,
+                       P2PDataStorage dataStorage,
+                       PeerManager peerManager,
+                       Listener listener) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
@@ -112,7 +109,7 @@ class RequestDataHandler implements MessageListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
+    void requestData(NodeAddress nodeAddress, boolean isPreliminaryDataRequest) {
         peersNodeAddress = nodeAddress;
         if (!stopped) {
             GetDataRequest getDataRequest;
@@ -155,6 +152,7 @@ class RequestDataHandler implements MessageListener {
             log.info("We send a {} to peer {}. ", getDataRequest.getClass().getSimpleName(), nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
+            //noinspection UnstableApiUsage
             Futures.addCallback(future, new FutureCallback<Connection>() {
                 @Override
                 public void onSuccess(Connection connection) {
@@ -198,7 +196,7 @@ class RequestDataHandler implements MessageListener {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
                     Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    dataSet.stream().forEach(e -> {
+                    dataSet.forEach(e -> {
                         final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
                         if (protectedStoragePayload == null) {
                             log.warn("StoragePayload was null: {}", networkEnvelope.toString());
@@ -216,7 +214,7 @@ class RequestDataHandler implements MessageListener {
 
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
                     if (persistableNetworkPayloadSet != null) {
-                        persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+                        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
                             // For logging different data types
                             String className = persistableNetworkPayload.getClass().getSimpleName();
                             if (!payloadByClassName.containsKey(className))
@@ -233,62 +231,57 @@ class RequestDataHandler implements MessageListener {
                     final int items = dataSet.size() +
                             (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
                     sb.append("Received ").append(items).append(" instances\n");
-                    payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
+                    payloadByClassName.forEach((key, value) -> sb.append(key)
                             .append(": ")
-                            .append(e.getValue().size())
+                            .append(value.size())
                             .append("\n"));
                     sb.append("#################################################################");
                     log.info(sb.toString());
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
-                        checkArgument(connection.getPeersNodeAddressOptional().isPresent(),
-                                "RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
-                                        "at that moment");
+                        if (!connection.getPeersNodeAddressOptional().isPresent()) {
+                            log.error("RequestDataHandler.onMessage: connection.getPeersNodeAddressOptional() must be present " +
+                                    "at that moment");
+                            return;
+                        }
 
                         final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
 
-                        List<NetworkPayload> processDelayedItems = new ArrayList<>();
-                        dataSet.stream().forEach(e -> {
-                            if (e.getProtectedStoragePayload() instanceof LazyProcessedPayload) {
-                                processDelayedItems.add(e);
-                            } else {
-                                // We dont broadcast here (last param) as we are only connected to the seed node and would be pointless
-                                dataStorage.addProtectedStorageEntry(e, sender, null, false, false);
-                            }
+                        long ts = System.currentTimeMillis();
+                        AtomicInteger counter = new AtomicInteger();
+                        dataSet.forEach(e -> {
+                            // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
+                            dataStorage.addProtectedStorageEntry(e, sender, null, false, false);
+                            counter.getAndIncrement();
+
                         });
+                        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts);
 
                         if (persistableNetworkPayloadSet != null) {
-                            persistableNetworkPayloadSet.stream().forEach(e -> {
+                            ts = System.currentTimeMillis();
+                            persistableNetworkPayloadSet.forEach(e -> {
                                 if (e instanceof LazyProcessedPayload) {
-                                    processDelayedItems.add(e);
+                                    // We use an optimized method as many checks are not required in that case to avoid
+                                    // performance issues.
+                                    // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
+                                    // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
+                                    // trade stats stats and all account age witness data.
+                                    dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
                                 } else {
-                                    // We dont broadcast here as we are only connected to the seed node and would be pointless
-                                    dataStorage.addPersistableNetworkPayload(e, sender, false, false, false, false);
+                                    // We don't broadcast here as we are only connected to the seed node and would be pointless
+                                    dataStorage.addPersistableNetworkPayload(e, sender, false,
+                                            false, false, false);
                                 }
                             });
+                            log.info("Processing {} persistableNetworkPayloads took {} ms.",
+                                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts);
                         }
-
-                        long ts = System.currentTimeMillis();
-                        processDelayedItems.forEach(item -> {
-                            if (item instanceof ProtectedStorageEntry)
-                                dataStorage.addProtectedStorageEntry((ProtectedStorageEntry) item, sender, null,
-                                        false, false);
-                            else if (item instanceof PersistableNetworkPayload) {
-                                // We use an optimized method as many checks are not required in that case to avoid
-                                // performance issues.
-                                // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
-                                // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
-                                // trade stats stats and all account age witness data.
-                                dataStorage.addPersistableNetworkPayloadFromInitialRequest((PersistableNetworkPayload) item);
-                            }
-                        });
-                        log.info("Processing {} items took {} ms.", processDelayedItems.size(), System.currentTimeMillis() - ts);
 
                         cleanup();
                         listener.onComplete();
                     } else {
-                        log.debug("Nonce not matching. That can happen rarely if we get a response after a canceled " +
+                        log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
                                         "connection was closed).\n\t" +
                                         "We drop that message. nonce={} / requestNonce={}",
@@ -313,7 +306,9 @@ class RequestDataHandler implements MessageListener {
 
 
     @SuppressWarnings("UnusedParameters")
-    private void handleFault(String errorMessage, NodeAddress nodeAddress, CloseConnectionReason closeConnectionReason) {
+    private void handleFault(String errorMessage,
+                             NodeAddress nodeAddress,
+                             CloseConnectionReason closeConnectionReason) {
         cleanup();
         log.info(errorMessage);
         //peerManager.shutDownConnection(nodeAddress, closeConnectionReason);

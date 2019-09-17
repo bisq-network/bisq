@@ -17,7 +17,6 @@
 
 package bisq.core.offer.placeoffer.tasks;
 
-import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -28,8 +27,9 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.offer.Offer;
-import bisq.core.offer.availability.ArbitratorSelection;
+import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 
 import bisq.common.UserThread;
 import bisq.common.taskrunner.Task;
@@ -47,7 +47,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
     private static final Logger log = LoggerFactory.getLogger(CreateMakerFeeTx.class);
     private Transaction tradeFeeTx = null;
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public CreateMakerFeeTx(TaskRunner taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
@@ -62,7 +62,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
             String id = offer.getId();
             BtcWalletService walletService = model.getWalletService();
 
-            Arbitrator arbitrator = ArbitratorSelection.getLeastUsedArbitrator(model.getTradeStatisticsManager(),
+            Arbitrator arbitrator = DisputeAgentSelection.getLeastUsedArbitrator(model.getTradeStatisticsManager(),
                     model.getArbitratorManager());
 
             Address fundingAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.OFFER_FUNDING).getAddress();

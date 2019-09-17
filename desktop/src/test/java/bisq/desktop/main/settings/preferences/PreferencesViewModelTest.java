@@ -19,8 +19,8 @@ package bisq.desktop.main.settings.preferences;
 
 import bisq.desktop.maker.PreferenceMakers;
 
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -70,7 +70,7 @@ public class PreferencesViewModelTest {
 
         Preferences preferences = PreferenceMakers.empty;
 
-        when(arbitratorManager.getArbitratorsObservableMap()).thenReturn(arbitrators);
+        when(arbitratorManager.getObservableMap()).thenReturn(arbitrators);
 
         PreferencesViewModel model = new PreferencesViewModel(preferences, arbitratorManager);
 

@@ -205,7 +205,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
     }
 
     private void doEmptyWallet(KeyParameter aesKey) {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             if (!openOfferManager.getObservableList().isEmpty()) {
                 UserThread.runAfter(() ->
                         new Popup<>().warning(Res.get("emptyWalletWindow.openOffers.warn"))
@@ -215,8 +215,6 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
             } else {
                 doEmptyWallet2(aesKey);
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 

@@ -24,12 +24,9 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.ExtraDataMapValidator;
@@ -63,8 +60,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Value
-public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
+public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
     public static final String ARBITRATOR_ADDRESS = "arbAddr";
+    public static final String MEDIATOR_ADDRESS = "medAddr";
 
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
@@ -212,11 +210,6 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.TRADE_STATISTICS_2);
-    }
 
     @Override
     public byte[] getHash() {

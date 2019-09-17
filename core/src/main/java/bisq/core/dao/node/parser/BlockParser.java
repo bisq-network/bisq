@@ -80,7 +80,7 @@ public class BlockParser {
      */
     public Block parseBlock(RawBlock rawBlock) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
         int blockHeight = rawBlock.getHeight();
-        log.debug("Parse block at height={} ", blockHeight);
+        log.trace("Parse block at height={} ", blockHeight);
 
         validateIfBlockIsConnecting(rawBlock);
 

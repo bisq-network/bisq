@@ -117,6 +117,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     );
     private boolean checkpointFailed;
     private boolean ignoreDevMsg;
+    private int numCalls;
+    private long accumulatedDuration;
 
     private final File storageDir;
 
@@ -176,6 +178,12 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         if (!ignoreDevMsg) {
             verifyCheckpoints();
         }
+
+        log.info("ParseBlockChainComplete: Accumulated updateHashChain() calls for {} block took {} ms " +
+                        "({} ms in average / block)",
+                numCalls,
+                accumulatedDuration,
+                (int) ((double) accumulatedDuration / (double) numCalls));
     }
 
     @Override
@@ -277,6 +285,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateHashChain(Block block) {
+        long ts = System.currentTimeMillis();
         byte[] prevHash;
         int height = block.getHeight();
         if (daoStateBlockChain.isEmpty()) {
@@ -316,6 +325,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             int delayInSec = 5 + new Random().nextInt(10);
             UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
         }
+        long duration = System.currentTimeMillis() - ts;
+        // We don't want to spam the output. We log accumulated time after parsing is completed.
+        log.trace("updateHashChain for block {} took {} ms",
+                block.getHeight(),
+                duration);
+        accumulatedDuration += duration;
+        numCalls++;
     }
 
     private boolean processPeersDaoStateHash(DaoStateHash daoStateHash, Optional<NodeAddress> peersNodeAddress,

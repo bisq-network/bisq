@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
@@ -68,14 +69,14 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatPrice(((Trade) tradable).getTradePrice());
+            return BSFormatter.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return formatter.formatPrice(tradable.getOffer().getPrice());
+            return BSFormatter.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {
         if (item != null && item.getTradable() instanceof Trade)
-            return formatter.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
+            return DisplayUtils.formatVolumeWithCode(((Trade) item.getTradable()).getTradeVolume());
         else if (item != null && item.getTradable() instanceof OpenOffer)
             return "-";
         else
@@ -109,7 +110,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (tradable.getOffer() != null)
             return formatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
         else
-        	return "";
+            return "";
     }
 
     String getSellerSecurityDeposit(ClosedTradableListItem item) {
@@ -119,22 +120,22 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if (tradable.getOffer() != null)
             return formatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
         else
-        	return "";
+            return "";
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
-        return (item != null) ? formatter.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
+        return (item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
     }
 
     String getDate(ClosedTradableListItem item) {
-        return formatter.formatDateTime(item.getTradable().getDate());
+        return DisplayUtils.formatDateTime(item.getTradable().getDate());
     }
 
     String getMarketLabel(ClosedTradableListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
+        return BSFormatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
     }
 
     String getState(ClosedTradableListItem item) {
@@ -146,9 +147,11 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     return Res.get("portfolio.closed.completed");
                 } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
                     return Res.get("portfolio.closed.ticketClosed");
+                } else if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
+                    return Res.get("portfolio.closed.mediationTicketClosed");
                 } else {
-                    log.error("That must not happen. We got a pending state but we are in the closed trades list.");
-                    return trade.getState().toString();
+                    log.error("That must not happen. We got a pending state but we are in the closed trades list. state={}", trade.getState().toString());
+                    return Res.get("shared.na");
                 }
             } else if (item.getTradable() instanceof OpenOffer) {
                 OpenOffer.State state = ((OpenOffer) item.getTradable()).getState();

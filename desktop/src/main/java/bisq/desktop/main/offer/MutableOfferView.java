@@ -181,8 +181,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MutableOfferView(M model, Navigation navigation, Preferences preferences, Transitions transitions,
-                            OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    public MutableOfferView(M model,
+                            Navigation navigation,
+                            Preferences preferences,
+                            Transitions transitions,
+                            OfferDetailsWindow offerDetailsWindow,
+                            BSFormatter btcFormatter,
+                            BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
@@ -354,28 +359,21 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     }
 
     private void onPlaceOffer() {
-        if (model.isReadyForTxBroadcast()) {
+        if (model.getDataModel().canPlaceOffer()) {
             if (model.getDataModel().isMakerFeeValid()) {
-                if (model.hasAcceptedArbitrators()) {
-                    Offer offer = model.createAndGetOffer();
-                    //noinspection PointlessBooleanExpression
-                    if (!DevEnv.isDevMode()) {
-                        offerDetailsWindow.onPlaceOffer(() ->
-                                model.onPlaceOffer(offer, offerDetailsWindow::hide))
-                                .show(offer);
-                    } else {
-                        balanceSubscription.unsubscribe();
-                        model.onPlaceOffer(offer, () -> {
-                        });
-                    }
+                Offer offer = model.createAndGetOffer();
+                if (!DevEnv.isDevMode()) {
+                    offerDetailsWindow.onPlaceOffer(() ->
+                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
+                            .show(offer);
                 } else {
-                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+                    balanceSubscription.unsubscribe();
+                    model.onPlaceOffer(offer, () -> {
+                    });
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
-        } else {
-            model.showNotReadyForTxBroadcastPopups();
         }
     }
 
@@ -567,11 +565,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addBindings() {
-        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
+        priceCurrencyLabel.textProperty().bind(createStringBinding(() -> BSFormatter.getCounterCurrency(model.tradeCurrencyCode.get()), model.tradeCurrencyCode));
 
         marketBasedPriceLabel.prefWidthProperty().bind(priceCurrencyLabel.widthProperty());
         volumeCurrencyLabel.textProperty().bind(model.tradeCurrencyCode);
-        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> btcFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
+        priceDescriptionLabel.textProperty().bind(createStringBinding(() -> BSFormatter.getPriceWithCurrencyCode(model.tradeCurrencyCode.get(), "shared.fixedPriceInCurForCur"), model.tradeCurrencyCode));
         volumeDescriptionLabel.textProperty().bind(createStringBinding(model.volumeDescriptionLabel::get, model.tradeCurrencyCode, model.volumeDescriptionLabel));
         amountTextField.textProperty().bindBidirectional(model.amount);
         minAmountTextField.textProperty().bindBidirectional(model.minAmount);

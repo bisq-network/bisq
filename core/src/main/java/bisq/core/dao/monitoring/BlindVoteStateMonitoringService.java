@@ -157,7 +157,14 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
                         System.currentTimeMillis() - ts);
             }
         }
-        maybeUpdateHashChain(blockHeight);
+
+        long ts = System.currentTimeMillis();
+        boolean updated = maybeUpdateHashChain(blockHeight);
+        if (updated) {
+            log.info("updateHashChain for block {} took {} ms",
+                    blockHeight,
+                    System.currentTimeMillis() - ts);
+        }
     }
 
     @SuppressWarnings("Duplicates")
@@ -241,11 +248,11 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void maybeUpdateHashChain(int blockHeight) {
+    private boolean maybeUpdateHashChain(int blockHeight) {
         // We use first block in blind vote phase to create the hash of our blindVotes. We prefer to wait as long as
         // possible to increase the chance that we have received all blindVotes.
         if (!isFirstBlockOfBlindVotePhase(blockHeight)) {
-            return;
+            return false;
         }
 
         periodService.getCycle(blockHeight).ifPresent(cycle -> {
@@ -281,9 +288,12 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
                 UserThread.runAfter(() -> blindVoteStateNetworkService.broadcastMyStateHash(myBlindVoteStateHash), delayInSec);
             }
         });
+        return true;
     }
 
-    private boolean processPeersBlindVoteStateHash(BlindVoteStateHash blindVoteStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
+    private boolean processPeersBlindVoteStateHash(BlindVoteStateHash blindVoteStateHash,
+                                                   Optional<NodeAddress> peersNodeAddress,
+                                                   boolean notifyListeners) {
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean inConflictWithNonSeedNode = new AtomicBoolean(this.isInConflictWithNonSeedNode);
         AtomicBoolean inConflictWithSeedNode = new AtomicBoolean(this.isInConflictWithSeedNode);

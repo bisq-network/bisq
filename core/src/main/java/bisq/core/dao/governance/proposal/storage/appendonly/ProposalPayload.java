@@ -20,11 +20,8 @@ package bisq.core.dao.governance.proposal.storage.appendonly;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.state.model.governance.Proposal;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
@@ -43,8 +40,7 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 @Slf4j
 @Value
-public class ProposalPayload implements PersistableNetworkPayload, PersistableEnvelope,
-        CapabilityRequiringPayload, ConsensusCritical {
+public class ProposalPayload implements PersistableNetworkPayload, PersistableEnvelope, ConsensusCritical {
     private final Proposal proposal;
     protected final byte[] hash;        // 20 byte
 
@@ -98,16 +94,6 @@ public class ProposalPayload implements PersistableNetworkPayload, PersistableEn
     @Override
     public byte[] getHash() {
         return hash;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // CapabilityRequiringPayload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.PROPOSAL);
     }
 
     @Override

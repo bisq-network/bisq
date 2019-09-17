@@ -192,7 +192,7 @@ public class BisqEnvironment extends StandardEnvironment {
     protected List<String> bannedSeedNodes, bannedBtcNodes, bannedPriceRelayNodes;
 
     protected final String btcNodes, seedNodes, ignoreDevMsg, useDevPrivilegeKeys, useDevMode, useTorForBtc, rpcUser, rpcPassword,
-            rpcHost, rpcPort, rpcBlockNotificationPort, dumpBlockchainData, fullDaoNode,
+            rpcHost, rpcPort, rpcBlockNotificationPort, rpcBlockNotificationHost, dumpBlockchainData, fullDaoNode,
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
@@ -313,6 +313,9 @@ public class BisqEnvironment extends StandardEnvironment {
                 "";
         rpcBlockNotificationPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
+                "";
+        rpcBlockNotificationHost = commandLineProperties.containsProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) ?
+                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) :
                 "";
         dumpBlockchainData = commandLineProperties.containsProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
                 (String) commandLineProperties.getProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) :
@@ -509,6 +512,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(DaoOptionKeys.RPC_HOST, rpcHost);
                 setProperty(DaoOptionKeys.RPC_PORT, rpcPort);
                 setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, rpcBlockNotificationPort);
+                setProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST, rpcBlockNotificationHost);
                 setProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, dumpBlockchainData);
                 setProperty(DaoOptionKeys.FULL_DAO_NODE, fullDaoNode);
                 setProperty(DaoOptionKeys.GENESIS_TX_ID, genesisTxId);

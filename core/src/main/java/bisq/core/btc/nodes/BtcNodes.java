@@ -61,8 +61,8 @@ public class BtcNodes {
                         new BtcNode("bitcoin.christophatteneder.com", "lgkvbvro67jomosw.onion", "174.138.35.229", BtcNode.DEFAULT_PORT, "@Christoph"),
 
                         // mrosseel
-                        new BtcNode("btc.vante.me", "4jyh6llqj264oggs.onion", "138.68.117.247", BtcNode.DEFAULT_PORT, "@miker"),
-                        new BtcNode("btc2.vante.me", "mxdtrjhe2yfsx3pg.onion", "67.207.75.7", BtcNode.DEFAULT_PORT, "@miker"),
+                        new BtcNode("btc.vante.me", "4jyh6llqj264oggs.onion", "94.23.21.80", BtcNode.DEFAULT_PORT, "@miker"),
+                        new BtcNode("btc2.vante.me", "mxdtrjhe2yfsx3pg.onion", "94.23.205.110", BtcNode.DEFAULT_PORT, "@miker"),
 
                         // sqrrm
                         new BtcNode("btc1.sqrrm.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
@@ -82,8 +82,7 @@ public class BtcNodes {
                         new BtcNode("node130.hnl.wiz.biz", "jiuuuislm7ooesic.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
 
                         // others
-                        new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke"),
-                        new BtcNode("bitcoin4-fullnode.csg.uzh.ch", null, "192.41.136.217", BtcNode.DEFAULT_PORT, "@tbocek") // requested onion
+                        new BtcNode("btc.jochen-hoenicke.de", "sslnjjhnmwllysv4.onion", "88.198.39.205", BtcNode.DEFAULT_PORT, "@jhoenicke")
                 ) :
                 new ArrayList<>();
     }

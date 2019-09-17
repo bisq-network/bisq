@@ -29,7 +29,6 @@ import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
-import bisq.desktop.main.disputes.DisputesView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
 import bisq.desktop.main.offer.BuyOfferView;
@@ -37,6 +36,9 @@ import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
+import bisq.desktop.main.shared.PriceFeedComboBoxItem;
+import bisq.desktop.main.support.SupportView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
@@ -179,13 +181,13 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         ToggleButton portfolioButton = new NavButton(PortfolioView.class, Res.get("mainView.menu.portfolio").toUpperCase());
         ToggleButton fundsButton = new NavButton(FundsView.class, Res.get("mainView.menu.funds").toUpperCase());
 
-        ToggleButton disputesButton = new NavButton(DisputesView.class, Res.get("mainView.menu.support"));
+        ToggleButton supportButton = new NavButton(SupportView.class, Res.get("mainView.menu.support"));
         ToggleButton settingsButton = new NavButton(SettingsView.class, Res.get("mainView.menu.settings"));
         ToggleButton accountButton = new NavButton(AccountView.class, Res.get("mainView.menu.account"));
         ToggleButton daoButton = new NavButton(DaoView.class, Res.get("mainView.menu.dao"));
 
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
-        JFXBadge disputesButtonWithBadge = new JFXBadge(disputesButton);
+        JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
         JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
         daoButtonWithBadge.getStyleClass().add("new");
 
@@ -208,7 +210,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT5, keyEvent)) {
                         fundsButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT6, keyEvent)) {
-                        disputesButton.fire();
+                        supportButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT7, keyEvent)) {
                         settingsButton.fire();
                     } else if (Utilities.isAltOrCtrlPressed(KeyCode.DIGIT8, keyEvent)) {
@@ -315,7 +317,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         primaryNav.getStyleClass().add("nav-primary");
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
-        HBox secondaryNav = new HBox(disputesButtonWithBadge, getNavigationSpacer(), settingsButton,
+        HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
                 getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
@@ -358,7 +360,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         baseApplicationContainer.setBottom(createFooter());
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
-        setupBadge(disputesButtonWithBadge, model.getNumOpenDisputes(), model.getShowOpenDisputesNotification());
+        setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
         setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
 
         navigation.addListener(viewPath -> {
@@ -506,7 +508,6 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             } else {
                 label.setText(Res.get("mainView.marketPrice.bisqInternalPrice"));
                 final Tooltip tooltip = new Tooltip(Res.get("mainView.marketPrice.tooltip.bisqInternalPrice"));
-                tooltip.getStyleClass().add("market-price-tooltip");
                 label.setTooltip(tooltip);
             }
         } else {
@@ -523,14 +524,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             res = Res.get("mainView.marketPrice.tooltip",
                     "https://bitcoinaverage.com",
                     "",
-                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
+                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampBtcAverage()),
                     model.getPriceFeedService().getProviderNodeAddress());
         } else {
             String altcoinExtra = "\n" + Res.get("mainView.marketPrice.tooltip.altcoinExtra");
             res = Res.get("mainView.marketPrice.tooltip",
                     "https://poloniex.com",
                     altcoinExtra,
-                    formatter.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
+                    DisplayUtils.formatTime(model.getPriceFeedService().getLastRequestTimeStampPoloniex()),
                     model.getPriceFeedService().getProviderNodeAddress());
         }
         return res;

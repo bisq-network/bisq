@@ -104,11 +104,16 @@ public class CreateOfferViewModelTest {
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, feeService, txFeeEstimationService, null, bsFormatter, mock(MakerFeeProvider.class));
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService,
+                bsqWalletService, empty, user, null, null, priceFeedService, null,
+                accountAgeWitnessService, feeService, txFeeEstimationService,
+                null, bsFormatter, mock(MakerFeeProvider.class), null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
-        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, securityDepositValidator, null, null, priceFeedService, null, preferences, bsFormatter, bsqFormatter);
+        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator,
+                btcValidator, null, securityDepositValidator, priceFeedService, null,
+                preferences, bsFormatter, bsqFormatter);
         model.activate();
     }
 

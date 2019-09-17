@@ -52,6 +52,7 @@ import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.ParsingUtils;
 
 import bisq.asset.Asset;
 
@@ -395,18 +396,18 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         "proposalDisplay.requestedBsqTextField must not be null");
                 return daoFacade.getCompensationProposalWithTransaction(name,
                         link,
-                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
+                        ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter));
             case REIMBURSEMENT_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
                 return daoFacade.getReimbursementProposalWithTransaction(name,
                         link,
-                        bsqFormatter.parseToCoin(proposalDisplay.requestedBsqTextField.getText()));
+                        ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
-                        "proposalDisplay.paramComboBox must no tbe null");
+                        "proposalDisplay.paramComboBox must not be null");
                 checkNotNull(proposalDisplay.paramValueTextField,
-                        "proposalDisplay.paramValueTextField must no tbe null");
+                        "proposalDisplay.paramValueTextField must not be null");
                 Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
                 if (selectedParam == null)
                     throw new ProposalValidationException("selectedParam is null");
@@ -492,10 +493,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void setMakeProposalButtonHandler() {
         makeProposalButton.setOnAction(event -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 publishMyProposal(selectedProposalType);
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

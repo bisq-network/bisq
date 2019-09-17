@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -131,7 +132,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookViewModel(User user,
                               OpenOfferManager openOfferManager,
@@ -280,6 +280,9 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     void onSetPaymentMethod(PaymentMethod paymentMethod) {
+        if (paymentMethod == null)
+            return;
+
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
@@ -319,8 +322,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         return allTradeCurrencies;
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
     TradeCurrency getSelectedTradeCurrency() {
@@ -338,7 +341,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private String formatAmount(Offer offer, boolean decimalAligned) {
-        return formatter.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get());
+        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), formatter);
     }
 
 
@@ -356,22 +359,22 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getAbsolutePriceMargin(Offer offer) {
-        return formatter.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
+        return BSFormatter.formatPercentagePrice(Math.abs(offer.getMarketPriceMargin()));
     }
 
     private String formatPrice(Offer offer, boolean decimalAligned) {
-        return formatter.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
+        return DisplayUtils.formatPrice(offer.getPrice(), decimalAligned, maxPlacesForPrice.get());
     }
 
     private String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
         String postFix = "";
         if (offer.isUseMarketBasedPrice()) {
-            postFix = " (" + formatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
+            postFix = " (" + BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
 
         }
 
         if (decimalAligned) {
-            postFix = formatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
+            postFix = BSFormatter.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
         }
 
         return postFix;
@@ -387,7 +390,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         if (offerVolume != null && minOfferVolume != null) {
             String postFix = showAllTradeCurrenciesProperty.get() ? " " + offer.getCurrencyCode() : "";
             decimalAligned = decimalAligned && !showAllTradeCurrenciesProperty.get();
-            return formatter.formatVolume(offer, decimalAligned, maxPlacesForVolume.get()) + postFix;
+            return DisplayUtils.formatVolume(offer, decimalAligned, maxPlacesForVolume.get()) + postFix;
         } else {
             return Res.get("shared.na");
         }
@@ -468,12 +471,13 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getDirectionLabelTooltip(Offer offer) {
-        return formatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
+        return BSFormatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
     Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
         return PaymentAccountUtil.getMostMaturePaymentAccountForOffer(offer, user.getPaymentAccounts(), accountAgeWitnessService);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -499,10 +503,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    boolean hasPaymentAccount() {
-        return user.currentPaymentAccountProperty().get() != null;
-    }
 
     boolean isAnyPaymentAccountValidForOffer(Offer offer) {
         return user.getPaymentAccounts() != null &&
@@ -531,9 +531,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                         PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
     }
 
-    boolean hasAcceptedArbitrators() {
-        return user.getAcceptedArbitrators() != null && !user.getAcceptedArbitrators().isEmpty();
+    boolean canCreateOrTakeOffer() {
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+                GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Filters

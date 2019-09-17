@@ -60,7 +60,7 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public boolean isMyRole(Role role) {
-        Set<String> myWalletTransactionIds = bsqWalletService.getWalletTransactions().stream()
+        Set<String> myWalletTransactionIds = bsqWalletService.getClonedWalletTransactions().stream()
                 .map(Transaction::getHashAsString)
                 .collect(Collectors.toSet());
         return getAcceptedBondedRoleProposalStream()

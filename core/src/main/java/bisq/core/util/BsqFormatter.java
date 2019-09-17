@@ -61,12 +61,12 @@ public class BsqFormatter extends BSFormatter {
         GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> setFormatter(newValue));
         setFormatter(GlobalSettings.getLocale());
 
-        btcCoinFormat = super.coinFormat;
+        btcCoinFormat = super.monetaryFormat;
 
         final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
             case "BTC":
-                coinFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
+                monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
                 break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
@@ -123,11 +123,11 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatBSQSatoshis(long satoshi) {
-        return super.formatCoin(satoshi, coinFormat);
+        return super.formatCoin(satoshi, monetaryFormat);
     }
 
     public String formatBSQSatoshisWithCode(long satoshi) {
-        return super.formatCoinWithCode(satoshi, coinFormat);
+        return super.formatCoinWithCode(satoshi, monetaryFormat);
     }
 
     public String formatBTCSatoshis(long satoshi) {
@@ -135,11 +135,11 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatBTCWithCode(long satoshi) {
-        return super.formatCoinWithCode(satoshi, btcCoinFormat);
+        return BSFormatter.formatCoinWithCode(satoshi, btcCoinFormat);
     }
 
     public String formatBTCWithCode(Coin coin) {
-        return super.formatCoinWithCode(coin, btcCoinFormat);
+        return BSFormatter.formatCoinWithCode(coin, btcCoinFormat);
     }
 
     public String formatBTC(Coin coin) {
@@ -147,7 +147,7 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public Coin parseToBTC(String input) {
-        return super.parseToCoin(input, btcCoinFormat);
+        return ParsingUtils.parseToCoin(input, btcCoinFormat);
     }
 
     public void validateBtcInput(String input) throws ProposalValidationException {
@@ -155,12 +155,12 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public void validateBsqInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, this.coinFormat);
+        validateCoinInput(input, this.monetaryFormat);
     }
 
     private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ProposalValidationException {
         try {
-            coinFormat.parse(cleanDoubleInput(input));
+            coinFormat.parse(ParsingUtils.cleanDoubleInput(input));
         } catch (Throwable t) {
             throw new ProposalValidationException("Invalid format for a " + coinFormat.code() + " value");
         }
@@ -172,11 +172,11 @@ public class BsqFormatter extends BSFormatter {
                 // In case we add a new param old clients will not know that enum and fall back to UNDEFINED.
                 return Res.get("shared.na");
             case BSQ:
-                return formatCoinWithCode(parseToCoin(value));
+                return formatCoinWithCode(ParsingUtils.parseToCoin(value, this));
             case BTC:
                 return formatBTCWithCode(parseToBTC(value));
             case PERCENT:
-                return formatToPercentWithSymbol(parsePercentStringToDouble(value));
+                return formatToPercentWithSymbol(ParsingUtils.parsePercentStringToDouble(value));
             case BLOCK:
                 return Res.get("dao.param.blocks", Integer.parseInt(value));
             case ADDRESS:
@@ -190,7 +190,7 @@ public class BsqFormatter extends BSFormatter {
     public Coin parseParamValueToCoin(Param param, String inputValue) {
         switch (param.getParamType()) {
             case BSQ:
-                return parseToCoin(inputValue);
+                return ParsingUtils.parseToCoin(inputValue, this);
             case BTC:
                 return parseToBTC(inputValue);
             default:
@@ -216,7 +216,7 @@ public class BsqFormatter extends BSFormatter {
             case BTC:
                 return formatBTC(parseParamValueToCoin(param, inputValue));
             case PERCENT:
-                return formatToPercent(parsePercentStringToDouble(inputValue));
+                return formatToPercent(ParsingUtils.parsePercentStringToDouble(inputValue));
             case BLOCK:
                 return Integer.toString(parseParamValueToBlocks(param, inputValue));
             case ADDRESS:

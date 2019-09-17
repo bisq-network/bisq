@@ -31,7 +31,7 @@ configure(subprojects) {
     ext { // in alphabetical order
         bcVersion = '1.56'
         bitcoinjVersion = 'a88d36d'
-        btcdCli4jVersion = '065d3786'
+        btcdCli4jVersion = '975ff5d4'
         codecVersion = '1.9'
         controlsfxVersion = '8.0.6_20'
         easybindVersion = '1.0.3'
@@ -60,7 +60,7 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.5.1'
+        netlayerVersion = '0.6.5.2'
         protobufVersion = '3.9.1'
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
@@ -159,9 +159,7 @@ configure(project(':assets')) {
         }
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "commons-codec:commons-codec:$codecVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
-        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
     }
 }
 
@@ -183,9 +181,6 @@ configure(project(':common')) {
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
-        compile("com.googlecode.json-simple:json-simple:$jsonsimpleVersion") {
-            exclude(module: 'junit')
-        }
         compile "org.springframework:spring-core:$springVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "ch.qos.logback:logback-core:$logbackVersion"
@@ -202,7 +197,6 @@ configure(project(':common')) {
             exclude(module: 'protobuf-java')
         }
         compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
         compile "commons-io:commons-io:$ioVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
@@ -284,7 +278,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.1.5-SNAPSHOT'
+    version = '1.1.6-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
@@ -296,9 +290,7 @@ configure(project(':desktop')) {
     sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
     dependencies {
-        compile project(':p2p')
         compile project(':core')
-        compile project(':common')
         compile "org.controlsfx:controlsfx:$controlsfxVersion"
         compile "org.reactfx:reactfx:$reactfxVersion"
         compile "net.glxn:qrgen:$qrgenVersion"
@@ -401,7 +393,6 @@ configure(project(':seednode')) {
 
     dependencies {
         compile project(':core')
-        runtime "org.bouncycastle:bcprov-jdk15on:$bcVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompile "org.springframework:spring-test:$springVersion"

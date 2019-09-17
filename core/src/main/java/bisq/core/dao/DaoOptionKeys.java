@@ -25,6 +25,7 @@ public class DaoOptionKeys {
     public static final String RPC_PASSWORD = "rpcPassword";
     public static final String RPC_PORT = "rpcPort";
     public static final String RPC_BLOCK_NOTIFICATION_PORT = "rpcBlockNotificationPort";
+    public static final String RPC_BLOCK_NOTIFICATION_HOST = "rpcBlockNotificationHost";
     public static final String RPC_HOST = "rpcHost";
 
     public static final String DUMP_BLOCKCHAIN_DATA = "dumpBlockchainData";

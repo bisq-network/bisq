@@ -541,7 +541,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void revertTransaction(String txId, @Nullable Tradable tradable) {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
                 btcWalletService.doubleSpendTransaction(txId, () -> {
                     if (tradable != null)
@@ -552,8 +552,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             } catch (Throwable e) {
                 new Popup<>().warning(e.getMessage()).show();
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 
