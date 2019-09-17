@@ -14,14 +14,14 @@ import bisq.common.UserThread;
 import bisq.core.locale.Res;
 import bisq.core.xmr.XmrFormatter;
 import bisq.core.xmr.wallet.XmrWalletRpcWrapper;
-import bisq.core.xmr.wallet.listeners.WalletBalanceListener;
+import bisq.core.xmr.wallet.listeners.WalletUiListener;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
-public class XmrBalanceUtil implements WalletBalanceListener {
+public class XmrBalanceUtil implements WalletUiListener {
     // Displaying general XMR info
     private TextField actualBalanceTextField, unlockedBalanceTextField;
     private XmrWalletRpcWrapper walletWrapper;

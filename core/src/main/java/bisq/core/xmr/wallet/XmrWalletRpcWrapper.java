@@ -27,12 +27,10 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.xmr.wallet.listeners.WalletBalanceListener;
+import bisq.core.xmr.wallet.listeners.WalletUiListener;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextArea;
 import lombok.extern.slf4j.Slf4j;
 import monero.rpc.MoneroRpcConnection;
 import monero.wallet.MoneroWalletRpc;
@@ -84,7 +82,7 @@ public class XmrWalletRpcWrapper {
 		}
     }
         
-    public void update(WalletBalanceListener listener, HashMap<String, Object> walletRpcData) { 
+    public void update(WalletUiListener listener, HashMap<String, Object> walletRpcData) { 
 		Runnable command = new Runnable() {
 			
 			@Override
@@ -149,7 +147,7 @@ public class XmrWalletRpcWrapper {
     	return list.size() > 100 ? list.subList(0, 100) : list;//Reduce transactions to no more than 100.
     }
     
-    public void searchTx(WalletBalanceListener listener, String commaSeparatedIds) {
+    public void searchTx(WalletUiListener listener, String commaSeparatedIds) {
 		Runnable command = new Runnable() {
 			
 			@Override
@@ -177,7 +175,7 @@ public class XmrWalletRpcWrapper {
 		}
     }
     
-    public void createTx(WalletBalanceListener listener, Integer accountIndex, String address, 
+    public void createTx(WalletUiListener listener, Integer accountIndex, String address, 
     		BigInteger amount, MoneroSendPriority priority, boolean doNotRelay, HashMap<String, Object> walletRpcData) { 
 		Runnable command = new Runnable() {
 			
@@ -226,7 +224,7 @@ public class XmrWalletRpcWrapper {
 		}
     }
     
-    public void relayTx(WalletBalanceListener listener, HashMap<String, Object> walletRpcData) { 
+    public void relayTx(WalletUiListener listener, HashMap<String, Object> walletRpcData) { 
 		Runnable command = new Runnable() {
 			
 			@Override
@@ -252,27 +250,8 @@ public class XmrWalletRpcWrapper {
 			listener.popupErrorWindow(Res.get("shared.account.wallet.popup.error.startupFailed"));
 		}
     }
-
-	public void fetchLanguages(WalletBalanceListener listener, ComboBox<String> languageComboBox) {
-    	log.debug("createWalletRpcInstance - {}, {}");
-        ObservableList<String> languageOptions = FXCollections.observableArrayList();
-		Runnable command = new Runnable() {
-			
-			@Override
-			public void run() {
-				checkNotNull(walletRpc, Res.get("mainView.networkWarning.localhostLost", "Monero"));
-        		languageOptions.addAll(walletRpc.getLanguages());
-        		languageComboBox.setItems(languageOptions);
-			}
-		};
-		try {
-			Platform.runLater(command);
-		} catch (Exception e) {
-			listener.popupErrorWindow(Res.get("shared.account.wallet.popup.error.startupFailed"));
-		}
-	}
     
-    public void openWalletRpcInstance(WalletBalanceListener listener) {
+    public void openWalletRpcInstance(WalletUiListener listener) {
     	log.debug("openWalletRpcInstance - {}, {}", HOST, PORT);
         Thread checkIfXmrLocalHostNodeIsRunningThread = new Thread(() -> {
             Thread.currentThread().setName("checkIfXmrLocalHostNodeIsRunningThread");
@@ -306,40 +285,6 @@ public class XmrWalletRpcWrapper {
     public boolean isXmrWalletRpcRunning() {
     	return xmrWalletRpcRunning;
     }
-
-	public void createWalletRpcInstance(WalletBalanceListener listener, String walletFile, String password, String language, TextArea seedWordsTextArea) {
-    	log.debug("createWalletRpcInstance - {}, {}, {}, {}", HOST, PORT, walletFile, password);
-        Thread checkIfXmrLocalHostNodeIsRunningThread = new Thread(() -> {
-            Thread.currentThread().setName("checkIfXmrLocalHostNodeIsRunningThread");
-            Socket socket = null;
-            try {
-                socket = new Socket();
-                socket.connect(new InetSocketAddress(InetAddresses.forString(HOST), PORT), 5000);
-                log.debug("Localhost Monero Wallet RPC detected.");
-                UserThread.execute(() -> {
-                	xmrWalletRpcRunning = true;
-            		walletRpc = new MoneroWalletRpc(new MoneroRpcConnection("http://" + HOST + ":" + PORT));
-            		walletRpc.createWalletRandom(walletFile, password, language);
-            		String mnemonic = walletRpc.getMnemonic();
-            		seedWordsTextArea.setText(mnemonic);
-                });
-            } catch (Throwable e) {
-            	log.debug("createWalletRpcInstance - {}", e.getMessage());
-            	e.printStackTrace();
-            	if(listener != null) {
-                	listener.popupErrorWindow(Res.get("shared.account.wallet.popup.error.startupFailed", "Monero", e.getLocalizedMessage()));
-            	}
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException ignore) {
-                    }
-                }
-            }
-        });
-        checkIfXmrLocalHostNodeIsRunningThread.start();
-	}
 	
 	public void handleTxProof(TxProofHandler handler, String txId, String message) {
 		Runnable command = new Runnable() {

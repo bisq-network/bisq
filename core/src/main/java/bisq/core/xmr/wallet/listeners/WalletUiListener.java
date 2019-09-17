@@ -19,7 +19,7 @@ package bisq.core.xmr.wallet.listeners;
 
 import java.util.HashMap;
 
-public interface WalletBalanceListener {
+public interface WalletUiListener {
 	/**
 	 * 
 	 * @param walletRpcData

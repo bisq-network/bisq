@@ -69,7 +69,6 @@ configure(subprojects) {
         reactfxVersion = '2.0-M3'
         sarxosVersion = '0.3.12'
         slf4jVersion = '1.7.22'
-        log4jVersion = '1.2.17'
         sparkVersion = '2.5.2'
         springBootVersion = '1.5.10.RELEASE'
         springVersion = '4.3.6.RELEASE'
@@ -157,6 +156,8 @@ configure(project(':assets')) {
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
+        compile "junit:junit:$junitVersion"
+        compile "log4j:log4j:1.2.17"
     }
 }
 
@@ -174,6 +175,8 @@ configure(project(':common')) {
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+        compile "junit:junit:$junitVersion"
+        compile "log4j:log4j:1.2.17"
         compile "org.openjfx:javafx-base:11:$os"
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"

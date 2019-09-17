@@ -36,7 +36,7 @@ import bisq.common.util.Tuple4;
 import bisq.core.locale.Res;
 import bisq.core.xmr.XmrFormatter;
 import bisq.core.xmr.wallet.XmrWalletRpcWrapper;
-import bisq.core.xmr.wallet.listeners.WalletBalanceListener;
+import bisq.core.xmr.wallet.listeners.WalletUiListener;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
@@ -64,7 +64,7 @@ import monero.wallet.model.MoneroSendPriority;
 import monero.wallet.model.MoneroTxWallet;
 
 @FxmlView
-public class XmrSendView extends ActivatableView<GridPane, Void> implements WalletBalanceListener {
+public class XmrSendView extends ActivatableView<GridPane, Void> implements WalletUiListener {
 	private final XmrWalletRpcWrapper walletWrapper;
     private final XmrFormatter xmrFormatter;
     private final Navigation navigation;

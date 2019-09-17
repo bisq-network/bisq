@@ -28,7 +28,7 @@ import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
 import bisq.core.locale.Res;
 import bisq.core.xmr.wallet.XmrWalletRpcWrapper;
-import bisq.core.xmr.wallet.listeners.WalletBalanceListener;
+import bisq.core.xmr.wallet.listeners.WalletUiListener;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.BusyAnimation;
@@ -43,7 +43,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 @FxmlView
-public class XmrReceiveView extends ActivatableView<GridPane, Void> implements WalletBalanceListener {
+public class XmrReceiveView extends ActivatableView<GridPane, Void> implements WalletUiListener {
 
     private WalletAddressTextField addressTextField;
     private final XmrWalletRpcWrapper walletWrapper;
