@@ -32,11 +32,11 @@ services:
             - NODE_PORT=8000
             - DAO_ACTIVATED=true
             - FULL_DAO_NODE=true
-            - RPC_HOST=btcd
+            - RPC_HOST=172.28.1.2
             - RPC_PORT=8332
             - RPC_USER=${RPC_USER}
             - RPC_PASSWORD=${RPC_PASSWORD}
-            - RPC_BLOCKNOTIFY_HOST=btcd
+            - RPC_BLOCKNOTIFY_HOST=172.28.1.2
             - RPC_BLOCKNOTIFY_PORT=5120
         networks:
             bisq_net:
@@ -74,7 +74,7 @@ services:
             -rpcuser=${RPC_USER}
             -rpcallowip=0.0.0.0/0
             -rpcbind=127.0.0.1
-            -rpcbind=btcd
+            -rpcbind=172.28.1.2
             -rpcpassword=${RPC_PASSWORD}
             -blocknotify="bash ~/.bitcoin/blocknotify %s"
         ports:
