@@ -38,6 +38,9 @@ fi
 if [ ! -z "$RPC_BLOCKNOTIFY_PORT" ]; then
     ARGS="$ARGS --rpcBlockNotificationPort=$RPC_BLOCKNOTIFY_PORT"
 fi
+if [ ! -z "$RPC_BLOCKNOTIFY_HOST" ]; then
+    ARGS="$ARGS --rpcBlockNotificationHost=$RPC_BLOCKNOTIFY_HOST"
+fi
 
 
 # not used in production atm

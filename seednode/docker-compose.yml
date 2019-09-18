@@ -32,10 +32,11 @@ services:
             - NODE_PORT=8000
             - DAO_ACTIVATED=true
             - FULL_DAO_NODE=true
-            - RPC_HOST=172.28.1.2
+            - RPC_HOST=btcd
             - RPC_PORT=8332
             - RPC_USER=${RPC_USER}
             - RPC_PASSWORD=${RPC_PASSWORD}
+            - RPC_BLOCKNOTIFY_HOST=btcd
             - RPC_BLOCKNOTIFY_PORT=5120
         networks:
             bisq_net:
