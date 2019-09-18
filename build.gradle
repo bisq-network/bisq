@@ -31,6 +31,7 @@ configure(subprojects) {
         bitcoinjVersion = 'a88d36d'
         btcdCli4jVersion = '975ff5d4'
         codecVersion = '1.9'
+        commonProtosVersion = '1.17.0'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
         findbugsVersion = '3.0.2'
@@ -38,6 +39,7 @@ configure(subprojects) {
         fontawesomefxVersion = '8.0.0'
         fontawesomefxCommonsVersion = '9.1.2'
         fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
+        grpcVersion = '1.25.0'
         guavaVersion = '20.0'
         guiceVersion = '4.2.2'
         hamcrestVersion = '1.3'
@@ -58,6 +60,7 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
+        nettyTcNativeVersion = '2.0.27.Final'
         netlayerVersion = '0.6.5.2'
         protobufVersion = '3.9.1'
         pushyVersion = '0.13.2'
@@ -91,7 +94,8 @@ configure([project(':desktop'),
            project(':relay'),
            project(':seednode'),
            project(':statsnode'),
-           project(':pricenode')]) {
+           project(':pricenode'),
+           project(':grpc')]) {
 
     apply plugin: 'application'
 
@@ -267,7 +271,6 @@ configure(project(':core')) {
     }
 }
 
-
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'witness'
@@ -286,6 +289,7 @@ configure(project(':desktop')) {
 
     dependencies {
         compile project(':core')
+        compile project(':grpc')
         compile "net.glxn:qrgen:$qrgenVersion"
         compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
         compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
@@ -400,5 +404,69 @@ configure(project(':statsnode')) {
         compile project(':core')
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+    }
+}
+
+configure(project(':grpc')) {
+    apply plugin: 'com.google.protobuf'
+
+    mainClassName = 'bisq.grpc.BisqGrpcServerMain'
+
+    // FIXME we dont want to have one src dir inside the other....
+    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main"
+    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:$protobufVersion"
+        }
+        plugins {
+            grpc {
+                artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+            }
+        }
+        generateProtoTasks {
+            all()*.plugins {
+                grpc {}
+            }
+        }
+    }
+
+    dependencies {
+        compile project(':core')
+        compile "com.google.protobuf:protobuf-java:$protobufVersion"
+        compile "com.google.api.grpc:proto-google-common-protos:$commonProtosVersion"
+
+        // FIXME Not clear which of the following libs have a newer version of guava which is not compatible with ours
+        compile ("io.grpc:grpc-alts:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        compile ("io.grpc:grpc-netty:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+
+        compile ("io.grpc:grpc-protobuf:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        compile ("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        // Used for TLS in HelloWorldServerTls
+        compile "io.netty:netty-tcnative-boringssl-static:${nettyTcNativeVersion}"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "javax.annotation:javax.annotation-api:1.2"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile "io.grpc:grpc-testing:${grpcVersion}"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }

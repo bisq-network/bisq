@@ -21,6 +21,7 @@ import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.setup.DesktopPersistedDataHost;
 
+import bisq.core.CoreApi;
 import bisq.core.app.BisqExecutable;
 
 import bisq.common.UserThread;
@@ -36,6 +37,12 @@ import javafx.application.Platform;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
+
+
+import bisq.grpc.BisqGrpcServer;
+
 @Slf4j
 public class BisqAppMain extends BisqExecutable {
     private BisqApp application;
@@ -46,9 +53,9 @@ public class BisqAppMain extends BisqExecutable {
 
     /* @Nullable
      private BisqHttpApiServer bisqHttpApiServer;*/
-    /* @Nullable
+    @Nullable
     private BisqGrpcServer bisqGrpcServer;
-    */
+
     public static void main(String[] args) throws Exception {
         if (BisqExecutable.setupInitialOptionParser(args)) {
             // For some reason the JavaFX launch process results in us losing the thread context class loader: reset it.
@@ -138,10 +145,11 @@ public class BisqAppMain extends BisqExecutable {
        /* if (runWithHttpApi()) {
             bisqHttpApiServer = new BisqHttpApiServer();
         }*/
-        /*
+
         if (runWithGrpcApi()) {
-            bisqGrpcServer = new BisqGrpcServer();
-        }*/
+            CoreApi coreApi = injector.getInstance(CoreApi.class);
+            bisqGrpcServer = new BisqGrpcServer(coreApi);
+        }
     }
 
     private boolean runWithHttpApi() {

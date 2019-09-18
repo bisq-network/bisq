@@ -8,5 +8,6 @@ include 'pricenode'
 include 'relay'
 include 'seednode'
 include 'statsnode'
+include 'grpc'
 
 rootProject.name = 'bisq'
