@@ -48,6 +48,7 @@ public class XmrWalletRpcWrapper {
 	private MoneroWalletRpc walletRpc;
 	private boolean xmrWalletRpcRunning = false;
 	private String primaryAddress;
+	private Preferences preferences;
 	
 	//TODO(niyid) onChangeListener to dynamically create and set new walletRpc instance.
 	//TODO(niyid) onChangeListener fires only after any of host, port, user, password have changed
@@ -55,6 +56,7 @@ public class XmrWalletRpcWrapper {
 
     @Inject
     public XmrWalletRpcWrapper(Preferences preferences) {
+    	this.preferences = preferences;
 		log.debug("instantiating MoneroWalletRpc...");
 		HOST = preferences.getXmrUserHostDelegate();
 		PORT = Integer.parseInt(preferences.getXmrHostPortDelegate());
@@ -262,7 +264,7 @@ public class XmrWalletRpcWrapper {
                 log.debug("Localhost Monero Wallet RPC detected.");
                 UserThread.execute(() -> {
                 	xmrWalletRpcRunning = true;
-            		walletRpc = new MoneroWalletRpc(new MoneroRpcConnection("http://" + HOST + ":" + PORT));
+            		walletRpc = new MoneroWalletRpc(new MoneroRpcConnection("http://" + HOST + ":" + PORT, preferences.getXmrRpcUserDelegate(), preferences.getXmrRpcPwdDelegate()));
                 });
             } catch (Throwable e) {
             	log.debug("createWalletRpcInstance - {}", e.getMessage());

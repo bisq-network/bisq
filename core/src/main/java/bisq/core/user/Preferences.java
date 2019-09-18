@@ -711,7 +711,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setXmrRpcUserDelegate(String value) {
         // We only persist if we have not set the program argument
-        if (xmrUserHostDelegate == null || xmrUserHostDelegate.isEmpty()) {
+        if (xmrRpcUserDelegate == null || xmrRpcUserDelegate.isEmpty()) {
             prefPayload.setXmrRpcUser(value);
             persist();
         }
