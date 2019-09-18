@@ -14,7 +14,6 @@ RUN chmod +x ./build/app/bin/bisq-seednode
 FROM openjdk:10
 EXPOSE 8000
 COPY --from=builder /home/gradle/bisq /home/bisq
-COPY ./docker/startSeednode /home/bisq/seednode
+COPY ./docker/startSeedNode.sh /home/bisq/seednode/
 WORKDIR /home/bisq/seednode
 CMD ./startSeedNode.sh
-
