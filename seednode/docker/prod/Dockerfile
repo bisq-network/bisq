@@ -4,7 +4,9 @@ ARG SEEDNODE_URL
 ARG SEEDNODE_BRANCH
 RUN git clone $SEEDNODE_URL
 WORKDIR /home/gradle/bisq/seednode
-RUN git checkout $SEEDNODE_BRANCH
+RUN git config --global user.email "you@example.com"
+RUN git config --global user.name "Your Name"
+RUN git pull origin $SEEDNODE_BRANCH && git checkout $SEEDNODE_BRANCH
 RUN gradle build
 RUN chmod +x ./build/app/bin/bisq-seednode
 
@@ -12,6 +14,7 @@ RUN chmod +x ./build/app/bin/bisq-seednode
 FROM openjdk:10
 EXPOSE 8000
 COPY --from=builder /home/gradle/bisq /home/bisq
+COPY ./docker/startSeednode /home/bisq/seednode
 WORKDIR /home/bisq/seednode
-CMD ./docker/startSeedNode.sh
+CMD ./startSeedNode.sh
 
