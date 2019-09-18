@@ -6,19 +6,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.DigestScheme;
-import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -56,7 +51,6 @@ public class MoneroRpcConnection {
   private HttpClient client;
   private String username;
   private String password;
-  private CredentialsProvider creds;
   
   public MoneroRpcConnection(URI uri) {
     this(uri, null, null);
@@ -76,7 +70,7 @@ public class MoneroRpcConnection {
     this.username = username;
     this.password = password;
     if (username != null || password != null) {
-      creds = new BasicCredentialsProvider();
+      CredentialsProvider creds = new BasicCredentialsProvider();
       creds.setCredentials(new AuthScope(uri.getHost(), uri.getPort()), new UsernamePasswordCredentials(username, password));
       this.client = HttpClients.custom().setDefaultCredentialsProvider(creds).build();
     } else {
@@ -123,21 +117,12 @@ public class MoneroRpcConnection {
       body.put("method", method);
       if (params != null) body.put("params", params);
       LOGGER.debug("Sending json request with method '" + method + "' and body: " + JsonUtils.serialize(body));
-      
-      URI uriObject = URI.create(uri);
-      HttpHost targetHost = new HttpHost(uriObject.getHost(), uriObject.getPort());
-      AuthCache authCache = new BasicAuthCache();
-      DigestScheme digestScheme = new DigestScheme();
-      authCache.put(targetHost, digestScheme);
-      HttpClientContext context = HttpClientContext.create();
-      context.setCredentialsProvider(creds);
-      context.setAuthCache(authCache);
 
       // send http request and validate response
       HttpPost post = new HttpPost(uri.toString() + "/json_rpc");
       HttpEntity entity = new StringEntity(JsonUtils.serialize(body));
       post.setEntity(entity);
-      HttpResponse resp = client.execute(targetHost, post, context);
+      HttpResponse resp = client.execute(post);
       validateHttpResponse(resp);
 
       // deserialize response
