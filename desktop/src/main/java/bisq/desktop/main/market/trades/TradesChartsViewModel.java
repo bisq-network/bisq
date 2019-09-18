@@ -331,7 +331,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         long averagePrice;
         Long[] prices = new Long[tradePrices.size()];
         tradePrices.toArray(prices);
-        long medianPrice = findMedian(prices);
+        long medianPrice = MathUtils.getMedian(prices);
         boolean isBullish;
         if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
             isBullish = close < open;
@@ -351,17 +351,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return new CandleData(tick, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
                 numTrades, isBullish, dateString);
     }
-
-	Long findMedian(Long[] prices) {
-		int middle = prices.length / 2;
-		long median;
-		if (prices.length % 2 == 1) {
-			median = prices[middle];
-		} else {
-			median = MathUtils.roundDoubleToLong((prices[middle - 1] + prices[middle]) / 2.0);
-		}
-		return median;
-	}
 
     Date roundToTick(Date time, TickUnit tickUnit) {
         ZonedDateTime zdt = time.toInstant().atZone(ZoneId.systemDefault());

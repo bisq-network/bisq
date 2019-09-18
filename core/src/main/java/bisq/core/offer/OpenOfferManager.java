@@ -17,17 +17,18 @@
 
 package bisq.core.offer;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
-import bisq.core.offer.availability.ArbitratorSelection;
+import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.offer.placeoffer.PlaceOfferModel;
 import bisq.core.offer.placeoffer.PlaceOfferProtocol;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -48,6 +49,8 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -100,6 +103,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final Preferences preferences;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ArbitratorManager arbitratorManager;
+    private final MediatorManager mediatorManager;
     private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private boolean stopped;
@@ -111,7 +115,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     // Constructor, Initialization
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public OpenOfferManager(KeyRing keyRing,
                             User user,
@@ -125,6 +128,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             Preferences preferences,
                             TradeStatisticsManager tradeStatisticsManager,
                             ArbitratorManager arbitratorManager,
+                            MediatorManager mediatorManager,
                             Storage<TradableList<OpenOffer>> storage) {
         this.keyRing = keyRing;
         this.user = user;
@@ -138,6 +142,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.preferences = preferences;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
+        this.mediatorManager = mediatorManager;
 
         openOfferTradableListStorage = storage;
 
@@ -150,7 +155,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     @Override
     public void readPersisted() {
         openOffers = new TradableList<>(openOfferTradableListStorage, "OpenOffers");
-        openOffers.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
+        openOffers.forEach(e -> {
+            Offer offer = e.getOffer();
+            offer.setPriceFeedService(priceFeedService);
+        });
     }
 
     public void onAllServicesInitialized() {
@@ -182,8 +190,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 });
     }
 
-    @SuppressWarnings("WeakerAccess")
-    public void shutDown() {
+    private void shutDown() {
         shutDown(null);
     }
 
@@ -214,7 +221,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         removeOpenOffers(getObservableList(), completeHandler);
     }
 
-    public void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
+    private void removeOpenOffers(List<OpenOffer> openOffers, @Nullable Runnable completeHandler) {
         final int size = openOffers.size();
         // Copy list as we remove in the loop
         List<OpenOffer> openOffersList = new ArrayList<>(openOffers);
@@ -259,6 +266,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     private void onBootstrapComplete() {
         stopped = false;
+
+        maybeUpdatePersistedOffers();
 
         // Republish means we send the complete offer object
         republishOffers();
@@ -345,7 +354,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
                     }
                 },
-                errorMessageHandler::handleErrorMessage
+                errorMessageHandler
         );
         placeOfferProtocol.placeOffer();
     }
@@ -365,7 +374,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    public void activateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void activateOpenOffer(OpenOffer openOffer,
+                                  ResultHandler resultHandler,
+                                  ErrorMessageHandler errorMessageHandler) {
         if (!offersToBeEdited.containsKey(openOffer.getId())) {
             Offer offer = openOffer.getOffer();
             openOffer.setStorage(openOfferTradableListStorage);
@@ -381,7 +392,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    public void deactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void deactivateOpenOffer(OpenOffer openOffer,
+                                    ResultHandler resultHandler,
+                                    ErrorMessageHandler errorMessageHandler) {
         Offer offer = openOffer.getOffer();
         openOffer.setStorage(openOfferTradableListStorage);
         offerBookService.deactivateOffer(offer.getOfferPayload(),
@@ -393,7 +406,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 errorMessageHandler);
     }
 
-    public void removeOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void removeOpenOffer(OpenOffer openOffer,
+                                ResultHandler resultHandler,
+                                ErrorMessageHandler errorMessageHandler) {
         if (!offersToBeEdited.containsKey(openOffer.getId())) {
             Offer offer = openOffer.getOffer();
             if (openOffer.isDeactivated()) {
@@ -409,7 +424,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    public void editOpenOfferStart(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void editOpenOfferStart(OpenOffer openOffer,
+                                   ResultHandler resultHandler,
+                                   ErrorMessageHandler errorMessageHandler) {
         if (offersToBeEdited.containsKey(openOffer.getId())) {
             log.warn("editOpenOfferStart called for an offer which is already in edit mode.");
             resultHandler.handleResult();
@@ -422,7 +439,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             resultHandler.handleResult();
         } else {
             deactivateOpenOffer(openOffer,
-                    () -> resultHandler.handleResult(),
+                    resultHandler,
                     errorMessage -> {
                         offersToBeEdited.remove(openOffer.getId());
                         errorMessageHandler.handleErrorMessage(errorMessage);
@@ -430,7 +447,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    public void editOpenOfferPublish(Offer editedOffer, OpenOffer.State originalState, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void editOpenOfferPublish(Offer editedOffer,
+                                     OpenOffer.State originalState,
+                                     ResultHandler resultHandler,
+                                     ErrorMessageHandler errorMessageHandler) {
         Optional<OpenOffer> openOfferOptional = getOpenOfferById(editedOffer.getId());
 
         if (openOfferOptional.isPresent()) {
@@ -458,13 +478,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    public void editOpenOfferCancel(OpenOffer openOffer, OpenOffer.State originalState, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    public void editOpenOfferCancel(OpenOffer openOffer,
+                                    OpenOffer.State originalState,
+                                    ResultHandler resultHandler,
+                                    ErrorMessageHandler errorMessageHandler) {
         if (offersToBeEdited.containsKey(openOffer.getId())) {
             offersToBeEdited.remove(openOffer.getId());
             if (originalState.equals(OpenOffer.State.AVAILABLE)) {
-                activateOpenOffer(openOffer, () -> {
-                    resultHandler.handleResult();
-                }, errorMessageHandler);
+                activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
             } else {
                 resultHandler.handleResult();
             }
@@ -555,6 +576,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             Optional<OpenOffer> openOfferOptional = getOpenOfferById(request.offerId);
             AvailabilityResult availabilityResult;
             NodeAddress arbitratorNodeAddress = null;
+            NodeAddress mediatorNodeAddress = null;
             if (openOfferOptional.isPresent()) {
                 OpenOffer openOffer = openOfferOptional.get();
                 if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
@@ -564,23 +586,35 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            arbitratorNodeAddress = ArbitratorSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                            arbitratorNodeAddress = DisputeAgentSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
                             openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
-                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                            // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                            // losses and therefore an outdated market price.
-                            try {
-                                offer.checkTradePriceTolerance(request.getTakersTradePrice());
-                            } catch (TradePriceOutOfToleranceException e) {
-                                log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                            } catch (MarketPriceNotAvailableException e) {
-                                log.warn(e.getMessage());
-                                availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                            } catch (Throwable e) {
-                                log.warn("Trade price check failed. " + e.getMessage());
-                                availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                            mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
+                            openOffer.setMediatorNodeAddress(mediatorNodeAddress);
+                            Capabilities supportedCapabilities = request.getSupportedCapabilities();
+                            if (!OfferRestrictions.requiresUpdate() ||
+                                    (supportedCapabilities != null &&
+                                            Capabilities.hasMandatoryCapability(supportedCapabilities, Capability.MEDIATION))) {
+                                try {
+                                    // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                                    // in trade price between the peers. Also here poor connectivity might cause market price API connection
+                                    // losses and therefore an outdated market price.
+                                    offer.checkTradePriceTolerance(request.getTakersTradePrice());
+                                } catch (TradePriceOutOfToleranceException e) {
+                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
+                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                                } catch (MarketPriceNotAvailableException e) {
+                                    log.warn(e.getMessage());
+                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                                } catch (Throwable e) {
+                                    log.warn("Trade price check failed. " + e.getMessage());
+                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                                }
+                            } else {
+                                log.warn("Taker has not mandatory capability MEDIATION");
+                                // Because an old peer has not AvailabilityResult.MISSING_MANDATORY_CAPABILITY and we
+                                // have not set the UNDEFINED fallback in AvailabilityResult the user will get a null value.
+                                availabilityResult = AvailabilityResult.MISSING_MANDATORY_CAPABILITY;
                             }
                         } else {
                             log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
@@ -597,7 +631,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 availabilityResult = AvailabilityResult.OFFER_TAKEN;
             }
 
-            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId, availabilityResult, arbitratorNodeAddress);
+            OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
+                    availabilityResult,
+                    arbitratorNodeAddress,
+                    mediatorNodeAddress);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     offerAvailabilityResponse.getClass().getSimpleName(), offerAvailabilityResponse.getOfferId(),
                     offerAvailabilityResponse.getUid(), peer);
@@ -608,14 +645,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer: offerId={}; uid={}",
-                                    offerAvailabilityResponse.getClass().getSimpleName(), offerAvailabilityResponse.getOfferId(), offerAvailabilityResponse.getUid());
+                                    offerAvailabilityResponse.getClass().getSimpleName(),
+                                    offerAvailabilityResponse.getOfferId(),
+                                    offerAvailabilityResponse.getUid());
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
                             log.error("Sending {} failed: uid={}; peer={}; error={}",
-                                    offerAvailabilityResponse.getClass().getSimpleName(), offerAvailabilityResponse.getUid(),
-                                    peer, errorMessage);
+                                    offerAvailabilityResponse.getClass().getSimpleName(),
+                                    offerAvailabilityResponse.getUid(),
+                                    peer,
+                                    errorMessage);
                         }
                     });
             result = true;
@@ -628,7 +669,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    private void sendAckMessage(OfferAvailabilityRequest message, NodeAddress sender, boolean result, String errorMessage) {
+    private void sendAckMessage(OfferAvailabilityRequest message,
+                                NodeAddress sender,
+                                boolean result,
+                                String errorMessage) {
         String offerId = message.getOfferId();
         String sourceUid = message.getUid();
         AckMessage ackMessage = new AckMessage(p2PService.getNetworkNode().getNodeAddress(),
@@ -661,6 +705,98 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     }
                 }
         );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Update persisted offer if a new capability is required after a software update
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void maybeUpdatePersistedOffers() {
+        // We need to clone to avoid ConcurrentModificationException
+        ArrayList<OpenOffer> openOffersClone = new ArrayList<>(openOffers.getList());
+        openOffersClone.forEach(openOffer -> {
+            Offer originalOffer = openOffer.getOffer();
+
+            OfferPayload originalOfferPayload = originalOffer.getOfferPayload();
+            // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and want to rewrite a
+            // persisted offer after the user has updated to 1.1.6 so their offer will be accepted by the network.
+
+            if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION)) {
+                // We rewrite our offer with the additional capabilities entry
+
+                Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
+                Map<String, String> updatedExtraDataMap = new HashMap<>();
+
+                if (originalExtraDataMap != null) {
+                    updatedExtraDataMap.putAll(originalExtraDataMap);
+                }
+
+                // We overwrite any entry with our current capabilities
+                updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+                OfferPayload updatedPayload = new OfferPayload(originalOfferPayload.getId(),
+                        originalOfferPayload.getDate(),
+                        originalOfferPayload.getOwnerNodeAddress(),
+                        originalOfferPayload.getPubKeyRing(),
+                        originalOfferPayload.getDirection(),
+                        originalOfferPayload.getPrice(),
+                        originalOfferPayload.getMarketPriceMargin(),
+                        originalOfferPayload.isUseMarketBasedPrice(),
+                        originalOfferPayload.getAmount(),
+                        originalOfferPayload.getMinAmount(),
+                        originalOfferPayload.getBaseCurrencyCode(),
+                        originalOfferPayload.getCounterCurrencyCode(),
+                        originalOfferPayload.getArbitratorNodeAddresses(),
+                        originalOfferPayload.getMediatorNodeAddresses(),
+                        originalOfferPayload.getPaymentMethodId(),
+                        originalOfferPayload.getMakerPaymentAccountId(),
+                        originalOfferPayload.getOfferFeePaymentTxId(),
+                        originalOfferPayload.getCountryCode(),
+                        originalOfferPayload.getAcceptedCountryCodes(),
+                        originalOfferPayload.getBankId(),
+                        originalOfferPayload.getAcceptedBankIds(),
+                        originalOfferPayload.getVersionNr(),
+                        originalOfferPayload.getBlockHeightAtOfferCreation(),
+                        originalOfferPayload.getTxFee(),
+                        originalOfferPayload.getMakerFee(),
+                        originalOfferPayload.isCurrencyForMakerFeeBtc(),
+                        originalOfferPayload.getBuyerSecurityDeposit(),
+                        originalOfferPayload.getSellerSecurityDeposit(),
+                        originalOfferPayload.getMaxTradeLimit(),
+                        originalOfferPayload.getMaxTradePeriod(),
+                        originalOfferPayload.isUseAutoClose(),
+                        originalOfferPayload.isUseReOpenAfterAutoClose(),
+                        originalOfferPayload.getLowerClosePrice(),
+                        originalOfferPayload.getUpperClosePrice(),
+                        originalOfferPayload.isPrivateOffer(),
+                        originalOfferPayload.getHashOfChallenge(),
+                        updatedExtraDataMap,
+                        originalOfferPayload.getProtocolVersion());
+
+                // Save states from original data to use the for updated
+                Offer.State originalOfferState = originalOffer.getState();
+                OpenOffer.State originalOpenOfferState = openOffer.getState();
+
+                // remove old offer
+                originalOffer.setState(Offer.State.REMOVED);
+                openOffer.setState(OpenOffer.State.CANCELED);
+                openOffer.setStorage(openOfferTradableListStorage);
+                openOffers.remove(openOffer);
+
+                // Create new Offer
+                Offer updatedOffer = new Offer(updatedPayload);
+                updatedOffer.setPriceFeedService(priceFeedService);
+                updatedOffer.setState(originalOfferState);
+
+                OpenOffer updatedOpenOffer = new OpenOffer(updatedOffer, openOfferTradableListStorage);
+                updatedOpenOffer.setState(originalOpenOfferState);
+                updatedOpenOffer.setStorage(openOfferTradableListStorage);
+                openOffers.add(updatedOpenOffer);
+
+                log.info("Converted offer to support new Capability.MEDIATION capability. id={}", originalOffer.getId());
+            }
+        });
     }
 
 

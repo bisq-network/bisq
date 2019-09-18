@@ -18,13 +18,10 @@
 package bisq.core.account.witness;
 
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
@@ -43,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 // so only the newly added objects since the last release will be retrieved over the P2P network.
 @Slf4j
 @Value
-public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload, CapabilityRequiringPayload {
+public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, DateTolerantPayload {
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final byte[] hash;                      // Ripemd160(Sha256(concatenated accountHash, signature and sigPubKey)); 20 bytes
@@ -98,12 +95,6 @@ public class AccountAgeWitness implements LazyProcessedPayload, PersistableNetwo
     @Override
     public boolean verifyHashSize() {
         return hash.length == 20;
-    }
-
-    // Pre 0.6 version don't know the new message type and throw an error which leads to disconnecting the peer.
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.ACCOUNT_AGE_WITNESS);
     }
 
     @Override

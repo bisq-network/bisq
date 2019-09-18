@@ -24,14 +24,17 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeList;
+import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
@@ -67,7 +70,8 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private Dispute dispute;
@@ -78,9 +82,12 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, AccountAgeWitnessService accountAgeWitnessService,
+    public ContractWindow(ArbitrationManager arbitrationManager,
+                          MediationManager mediationManager,
+                          AccountAgeWitnessService accountAgeWitnessService,
                           BSFormatter formatter) {
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
         type = Type.Confirmation;
@@ -162,15 +169,20 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing(), offer.getCurrencyCode()) + " / " +
                         getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing(), offer.getCurrencyCode()));
 
+        String nrOfDisputesAsBuyer = getDisputeManager(dispute).getNrOfDisputes(true, contract);
+        String nrOfDisputesAsSeller = getDisputeManager(dispute).getNrOfDisputes(false, contract);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
-                disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+                nrOfDisputesAsBuyer + " / " + nrOfDisputesAsSeller);
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.getArbitratorNodeAddress().getFullAddress());
+        // TODO update in next release to shared.selectedArbitrator and delete shared.arbitrator entry
+        String title = dispute.isMediationDispute() ? Res.get("shared.selectedMediator") : Res.get("shared.arbitrator");
+        String agentNodeAddress = getDisputeManager(dispute).getAgentNodeAddress(dispute).getFullAddress();
+        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress);
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -259,7 +271,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
         });
     }
 
-    private String getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing, String currencyCode) {
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
+        return dispute.isMediationDispute() ? mediationManager : arbitrationManager;
+    }
+
+    private String getAccountAge(PaymentAccountPayload paymentAccountPayload,
+                                 PubKeyRing pubKeyRing,
+                                 String currencyCode) {
         long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
         return CurrencyUtil.isFiatCurrency(currencyCode) ?
                 age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :

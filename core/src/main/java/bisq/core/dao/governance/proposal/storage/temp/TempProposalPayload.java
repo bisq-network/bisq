@@ -19,13 +19,10 @@ package bisq.core.dao.governance.proposal.storage.temp;
 
 import bisq.core.dao.state.model.governance.Proposal;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.ExtraDataMapValidator;
@@ -59,7 +56,7 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class TempProposalPayload implements LazyProcessedPayload, ProtectedStoragePayload,
-        ExpirablePayload, CapabilityRequiringPayload, PersistablePayload {
+        ExpirablePayload, PersistablePayload {
 
     protected final Proposal proposal;
     protected final byte[] ownerPubKeyEncoded;
@@ -119,16 +116,6 @@ public class TempProposalPayload implements LazyProcessedPayload, ProtectedStora
     @Override
     public PublicKey getOwnerPubKey() {
         return ownerPubKey;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // CapabilityRequiringPayload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.PROPOSAL);
     }
 
 

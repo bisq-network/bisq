@@ -19,8 +19,8 @@ package bisq.core.trade.protocol.tasks.buyer_as_taker;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
@@ -44,7 +44,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class BuyerAsTakerSignAndPublishDepositTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public BuyerAsTakerSignAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

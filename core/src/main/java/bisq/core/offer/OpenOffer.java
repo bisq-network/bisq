@@ -60,6 +60,10 @@ public final class OpenOffer implements Tradable {
     @Setter
     @Nullable
     private NodeAddress arbitratorNodeAddress;
+    @Getter
+    @Setter
+    @Nullable
+    private NodeAddress mediatorNodeAddress;
 
     transient private Storage<TradableList<OpenOffer>> storage;
 
@@ -73,10 +77,14 @@ public final class OpenOffer implements Tradable {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private OpenOffer(Offer offer, State state, @Nullable NodeAddress arbitratorNodeAddress) {
+    private OpenOffer(Offer offer,
+                      State state,
+                      @Nullable NodeAddress arbitratorNodeAddress,
+                      @Nullable NodeAddress mediatorNodeAddress) {
         this.offer = offer;
         this.state = state;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
+        this.mediatorNodeAddress = mediatorNodeAddress;
 
         if (this.state == State.RESERVED)
             setState(State.AVAILABLE);
@@ -89,6 +97,7 @@ public final class OpenOffer implements Tradable {
                 .setState(protobuf.OpenOffer.State.valueOf(state.name()));
 
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(nodeAddress -> builder.setArbitratorNodeAddress(nodeAddress.toProtoMessage()));
+        Optional.ofNullable(mediatorNodeAddress).ifPresent(nodeAddress -> builder.setMediatorNodeAddress(nodeAddress.toProtoMessage()));
 
         return protobuf.Tradable.newBuilder().setOpenOffer(builder).build();
     }
@@ -96,7 +105,8 @@ public final class OpenOffer implements Tradable {
     public static Tradable fromProto(protobuf.OpenOffer proto) {
         return new OpenOffer(Offer.fromProto(proto.getOffer()),
                 ProtoUtil.enumFromProto(OpenOffer.State.class, proto.getState().name()),
-                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null);
+                proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null);
     }
 
 
@@ -157,12 +167,15 @@ public final class OpenOffer implements Tradable {
         }
     }
 
+
     @Override
     public String toString() {
         return "OpenOffer{" +
-                "\n\toffer=" + offer +
-                "\n\tstate=" + state +
-                '}';
+                ",\n     offer=" + offer +
+                ",\n     state=" + state +
+                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
+                ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                "\n}";
     }
 }
 

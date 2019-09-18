@@ -36,6 +36,15 @@ import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.TradeLimits;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
+import bisq.core.support.dispute.arbitration.ArbitrationDisputeListService;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorService;
+import bisq.core.support.dispute.mediation.MediationDisputeListService;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.mediation.mediator.MediatorService;
+import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
@@ -133,6 +142,15 @@ public class GuiceSetupTest {
         assertSingleton(PriceAlert.class);
         assertSingleton(MarketAlerts.class);
         assertSingleton(ChargeBackRisk.class);
+        assertSingleton(ArbitratorService.class);
+        assertSingleton(ArbitratorManager.class);
+        assertSingleton(ArbitrationManager.class);
+        assertSingleton(ArbitrationDisputeListService.class);
+        assertSingleton(MediatorService.class);
+        assertSingleton(MediatorManager.class);
+        assertSingleton(MediationManager.class);
+        assertSingleton(MediationDisputeListService.class);
+        assertSingleton(TraderChatManager.class);
 
         assertNotSingleton(Storage.class);
     }

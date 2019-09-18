@@ -18,7 +18,15 @@
 package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.arbitration.ArbitratorManager;
+import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.payment.ChargeBackRisk;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.BuyerDataItem;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -62,6 +70,8 @@ public class SignedWitnessService {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
+    private final ArbitrationManager arbitrationManager;
+    private final ChargeBackRisk chargeBackRisk;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
 
@@ -75,10 +85,14 @@ public class SignedWitnessService {
                                 P2PService p2PService,
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
-                                AppendOnlyDataStoreService appendOnlyDataStoreService) {
+                                AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                ArbitrationManager arbitrationManager,
+                                ChargeBackRisk chargeBackRisk) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
+        this.arbitrationManager = arbitrationManager;
+        this.chargeBackRisk = chargeBackRisk;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);

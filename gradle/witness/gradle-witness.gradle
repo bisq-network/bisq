@@ -15,7 +15,6 @@
 dependencyVerification {
     verify = [
         'org.controlsfx:controlsfx:b98f1c9507c05600f80323674b33d15674926c71b0116f70085b62bdacf1e573',
-        'org.reactfx:reactfx:81ec8fe545d65661222735711114c2ce427e2187a65f1722e8ac4e4805beeca3',
         'net.glxn:qrgen:c85d9d8512d91e8ad11fe56259a7825bd50ce0245447e236cf168d1b17591882',
         'de.jensd:fontawesomefx:73bacc991a0a6f5cf0f911767c8db161e0949dbca61e8371eb4342e3da96887b',
         'de.jensd:fontawesomefx-materialdesignfont:dbad8dfdd1c85e298d5bbae25b2399aec9e85064db57b2427d10f3815aa98752',

@@ -20,7 +20,6 @@ package bisq.core;
 import bisq.core.alert.AlertModule;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.BisqEnvironment;
-import bisq.core.arbitration.ArbitratorModule;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
@@ -90,7 +89,6 @@ public class CoreModule extends AppModule {
         // ordering is used for shut down sequence
         install(tradeModule());
         install(encryptionServiceModule());
-        install(arbitratorModule());
         install(offerModule());
         install(p2pModule());
         install(bitcoinModule());
@@ -107,10 +105,6 @@ public class CoreModule extends AppModule {
 
     private EncryptionServiceModule encryptionServiceModule() {
         return new EncryptionServiceModule(environment);
-    }
-
-    private ArbitratorModule arbitratorModule() {
-        return new ArbitratorModule(environment);
     }
 
     private AlertModule alertModule() {

@@ -19,13 +19,16 @@ package bisq.desktop.main.overlays.notifications;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.disputes.DisputesView;
-import bisq.desktop.main.disputes.trader.TraderDisputeView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
+import bisq.desktop.main.support.SupportView;
+import bisq.desktop.main.support.dispute.client.DisputeClientView;
+import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientView;
+import bisq.desktop.main.support.dispute.client.mediation.MediationClientView;
 
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.SellerTrade;
@@ -35,6 +38,7 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 
 import com.google.inject.Inject;
 
@@ -78,7 +82,8 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final TradeManager tradeManager;
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -91,9 +96,14 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public NotificationCenter(TradeManager tradeManager, DisputeManager disputeManager, Preferences preferences, Navigation navigation) {
+    public NotificationCenter(TradeManager tradeManager,
+                              ArbitrationManager arbitrationManager,
+                              MediationManager mediationManager,
+                              Preferences preferences,
+                              Navigation navigation) {
         this.tradeManager = tradeManager;
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -220,8 +230,8 @@ public class NotificationCenter {
 
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
         String message = null;
-        if (disputeManager.findOwnDispute(trade.getId()).isPresent()) {
-            String disputeOrTicket = disputeManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+        if (arbitrationManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = arbitrationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
                     Res.get("shared.dispute");
             switch (disputeState) {
@@ -235,17 +245,55 @@ public class NotificationCenter {
                 case DISPUTE_CLOSED:
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
+                default:
+                    if (DevEnv.isDevMode()) {
+                        log.error("arbitrationDisputeManager must not contain mediation disputes");
+                        throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
+                    }
+                    break;
             }
             if (message != null) {
-                Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
-                if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(TraderDisputeView.class)) {
-                    notification.actionButtonTextWithGoTo("navigation.support")
-                            .onAction(() -> navigation.navigateTo(MainView.class, DisputesView.class, TraderDisputeView.class))
-                            .show();
-                } else {
-                    notification.show();
-                }
+                goToSupport(trade, message, false);
             }
+        }
+        if (mediationManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = mediationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+                    Res.get("shared.supportTicket") :
+                    Res.get("shared.dispute");
+            switch (disputeState) {
+                // TODO
+                case MEDIATION_REQUESTED:
+                    break;
+                case MEDIATION_STARTED_BY_PEER:
+                    message = Res.get("notification.trade.peerOpenedDispute", disputeOrTicket);
+                    break;
+                case MEDIATION_CLOSED:
+                    message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
+                    break;
+                default:
+                    if (DevEnv.isDevMode()) {
+                        log.error("mediationDisputeManager must not contain arbitration disputes");
+                        throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
+                    }
+                    break;
+            }
+            if (message != null) {
+                goToSupport(trade, message, true);
+            }
+        }
+    }
+
+    private void goToSupport(Trade trade, String message, boolean isMediation) {
+        Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
+        Class<? extends DisputeClientView> viewClass = isMediation ?
+                MediationClientView.class :
+                ArbitrationClientView.class;
+        if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(viewClass)) {
+            notification.actionButtonTextWithGoTo("navigation.support")
+                    .onAction(() -> navigation.navigateTo(MainView.class, SupportView.class, viewClass))
+                    .show();
+        } else {
+            notification.show();
         }
     }
 

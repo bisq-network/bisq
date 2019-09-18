@@ -236,6 +236,31 @@ public final class Contract implements NetworkPayload {
         return Price.valueOf(offerPayload.getCurrencyCode(), tradePrice);
     }
 
+    public NodeAddress getMyNodeAddress(PubKeyRing myPubKeyRing) {
+        if (myPubKeyRing.equals(getBuyerPubKeyRing()))
+            return buyerNodeAddress;
+        else
+            return sellerNodeAddress;
+    }
+
+    public NodeAddress getPeersNodeAddress(PubKeyRing myPubKeyRing) {
+        if (myPubKeyRing.equals(getSellerPubKeyRing()))
+            return buyerNodeAddress;
+        else
+            return sellerNodeAddress;
+    }
+
+    public PubKeyRing getPeersPubKeyRing(PubKeyRing myPubKeyRing) {
+        if (myPubKeyRing.equals(getSellerPubKeyRing()))
+            return getBuyerPubKeyRing();
+        else
+            return getSellerPubKeyRing();
+    }
+
+    public boolean isMyRoleBuyer(PubKeyRing myPubKeyRing) {
+        return getBuyerPubKeyRing().equals(myPubKeyRing);
+    }
+
     public void printDiff(@Nullable String peersContractAsJson) {
         final String json = Utilities.objectToJson(this);
         String diff = StringUtils.difference(json, peersContractAsJson);

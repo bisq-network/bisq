@@ -755,18 +755,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         return dataModel.getLastSelectedPaymentAccount();
     }
 
-    boolean hasAcceptedArbitrators() {
-        return dataModel.hasAcceptedArbitrators();
-    }
-
-    boolean isReadyForTxBroadcast() {
-        return GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup);
-    }
-
-    void showNotReadyForTxBroadcastPopups() {
-        GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
-    }
-
     public void resetOfferWarning() {
         offerWarning.set(null);
     }

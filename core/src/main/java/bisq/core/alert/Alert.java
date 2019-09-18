@@ -99,7 +99,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
     public protobuf.StoragePayload toProtoMessage() {
         checkNotNull(ownerPubKeyBytes, "storagePublicKeyBytes must not be null");
         checkNotNull(signatureAsBase64, "signatureAsBase64 must not be null");
-        final protobuf.Alert.Builder builder = protobuf.Alert.newBuilder()
+        protobuf.Alert.Builder builder = protobuf.Alert.newBuilder()
                 .setMessage(message)
                 .setIsUpdateInfo(isUpdateInfo)
                 .setVersion(version)
@@ -109,7 +109,13 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
         return protobuf.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
+    @Nullable
     public static Alert fromProto(protobuf.Alert proto) {
+        // We got in dev testing sometimes an empty protobuf Alert. Not clear why that happened but as it causes an
+        // exception and corrupted user db file we prefer to set it to null.
+        if (proto.getSignatureAsBase64().isEmpty())
+            return null;
+
         return new Alert(proto.getMessage(),
                 proto.getIsUpdateInfo(),
                 proto.getVersion(),

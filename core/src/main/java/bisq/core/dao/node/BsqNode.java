@@ -202,7 +202,7 @@ public abstract class BsqNode implements DaoSetupService {
         return startBlockHeight;
     }
 
-    abstract protected void startParseBlocks();
+    protected abstract void startParseBlocks();
 
     protected void onParseBlockChainComplete() {
         log.info("onParseBlockChainComplete");

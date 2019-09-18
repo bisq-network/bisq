@@ -18,9 +18,9 @@
 package bisq.core.trade.protocol.tasks.seller_as_maker;
 
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.model.PreparedDepositTxAndMakerInputs;
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SellerAsMakerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

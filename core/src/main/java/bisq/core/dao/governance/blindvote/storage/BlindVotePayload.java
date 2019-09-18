@@ -20,11 +20,8 @@ package bisq.core.dao.governance.blindvote.storage;
 import bisq.core.dao.governance.ConsensusCritical;
 import bisq.core.dao.governance.blindvote.BlindVote;
 
-import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
@@ -46,8 +43,7 @@ import javax.annotation.concurrent.Immutable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class BlindVotePayload implements PersistableNetworkPayload, PersistableEnvelope,
-        CapabilityRequiringPayload, ConsensusCritical {
+public final class BlindVotePayload implements PersistableNetworkPayload, PersistableEnvelope, ConsensusCritical {
 
     private final BlindVote blindVote;
     protected final byte[] hash;        // 20 byte
@@ -99,16 +95,6 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Persis
     @Override
     public byte[] getHash() {
         return hash;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // CapabilityRequiringPayload
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.BLIND_VOTE);
     }
 
     @Override

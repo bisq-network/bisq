@@ -405,9 +405,9 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                         ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter));
             case CHANGE_PARAM:
                 checkNotNull(proposalDisplay.paramComboBox,
-                        "proposalDisplay.paramComboBox must no tbe null");
+                        "proposalDisplay.paramComboBox must not be null");
                 checkNotNull(proposalDisplay.paramValueTextField,
-                        "proposalDisplay.paramValueTextField must no tbe null");
+                        "proposalDisplay.paramValueTextField must not be null");
                 Param selectedParam = proposalDisplay.paramComboBox.getSelectionModel().getSelectedItem();
                 if (selectedParam == null)
                     throw new ProposalValidationException("selectedParam is null");
@@ -493,10 +493,8 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
 
     private void setMakeProposalButtonHandler() {
         makeProposalButton.setOnAction(event -> {
-            if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+            if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 publishMyProposal(selectedProposalType);
-            } else {
-                GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
             }
         });
     }

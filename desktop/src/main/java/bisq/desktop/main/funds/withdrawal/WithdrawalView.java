@@ -320,7 +320,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onWithdraw() {
-        if (GUIUtil.isReadyForTxBroadcast(p2PService, walletsSetup)) {
+        if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             try {
                 // We do not know sendersAmount if senderPaysFee is true. We repeat fee calculation after first attempt if senderPaysFee is true.
                 Transaction feeEstimationTransaction = walletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amountAsCoin);
@@ -386,8 +386,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 log.error(e.toString());
                 new Popup<>().warning(e.toString()).show();
             }
-        } else {
-            GUIUtil.showNotReadyForTxBroadcastPopups(p2PService, walletsSetup);
         }
     }
 

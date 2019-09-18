@@ -18,13 +18,13 @@
 package bisq.core.user;
 
 import bisq.core.alert.Alert;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.Mediator;
 import bisq.core.filter.Filter;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
@@ -95,7 +95,7 @@ public class UserPayload implements PersistableEnvelope {
         Optional.ofNullable(registeredArbitrator)
                 .ifPresent(registeredArbitrator -> builder.setRegisteredArbitrator(registeredArbitrator.toProtoMessage().getArbitrator()));
         Optional.ofNullable(registeredMediator)
-                .ifPresent(developersAlert -> builder.setDevelopersAlert(developersAlert.toProtoMessage().getAlert()));
+                .ifPresent(registeredMediator -> builder.setRegisteredMediator(registeredMediator.toProtoMessage().getMediator()));
         Optional.ofNullable(acceptedArbitrators)
                 .ifPresent(e -> builder.addAllAcceptedArbitrators(ProtoUtil.collectionToProto(acceptedArbitrators,
                         message -> ((protobuf.StoragePayload) message).getArbitrator())));

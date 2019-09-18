@@ -44,7 +44,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public MakerSetupDepositTxListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
