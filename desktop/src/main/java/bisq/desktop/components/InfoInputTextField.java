@@ -18,10 +18,9 @@
 package bisq.desktop.components;
 
 import bisq.common.UserThread;
+import bisq.desktop.components.controlsfx.control.PopOver;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
