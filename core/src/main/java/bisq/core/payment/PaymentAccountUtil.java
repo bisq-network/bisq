@@ -40,12 +40,6 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PaymentAccountUtil {
 
-    public static boolean isRiskyBuyOfferWithImmatureAccountAge(Offer offer,
-                                                                AccountAgeWitnessService accountAgeWitnessService) {
-        return OfferRestrictions.isOfferRisky(offer) &&
-                accountAgeWitnessService.isMakersAccountAgeImmature(offer);
-    }
-
     public static boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature(Offer offer,
                                                                                 Collection<PaymentAccount> takerPaymentAccounts,
                                                                                 AccountAgeWitnessService accountAgeWitnessService) {

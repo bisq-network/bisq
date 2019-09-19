@@ -350,12 +350,6 @@ public class AccountAgeWitnessService {
                 getWitnessSignAge(accountAgeWitness, new Date()) < 0;
     }
 
-    public boolean isMakersAccountAgeImmature(Offer offer) {
-        return findWitness(offer)
-                .map(this::isImmature)
-                .orElse(true);
-    }
-
     public boolean isTradePeersAccountAgeImmature(Trade trade) {
         return findTradePeerWitness(trade)
                 .map(this::isImmature)

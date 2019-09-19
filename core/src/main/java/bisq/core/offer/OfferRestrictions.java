@@ -41,13 +41,6 @@ public class OfferRestrictions {
 
     public static Coin TOLERATED_SMALL_TRADE_AMOUNT = Coin.parseCoin("0.01");
 
-    public static boolean isOfferRisky(Offer offer) {
-        return offer != null &&
-                offer.isBuyOffer() &&
-                PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
-                isMinTradeAmountRisky(offer);
-    }
-
     public static boolean isSellOfferRisky(Offer offer) {
         return offer != null &&
                 PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode()) &&
