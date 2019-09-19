@@ -15,6 +15,9 @@
 }
 .root {
     -fx-font-size: 13;
+}
+
+.root:dir(ltr){
     -fx-font-family: "IBM Plex Sans";
 }
 
