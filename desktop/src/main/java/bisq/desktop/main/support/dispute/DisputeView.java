@@ -124,7 +124,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
-    private EventHandler<KeyEvent> keyEventEventHandler;
+    protected EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
     protected FilteredList<Dispute> filteredList;
     private InputTextField filterTextField;

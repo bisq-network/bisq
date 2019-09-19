@@ -17,6 +17,9 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.BuyerDataItem;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
@@ -24,9 +27,6 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.ArbitratorManager;
-import bisq.core.arbitration.BuyerDataItem;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -75,16 +75,16 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     private ListView<BuyerDataItem> selectedPaymentAccountsList = new ListView<>();
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
 
 
     @Inject
     public SignPaymentAccountsWindow(AccountAgeWitnessService accountAgeWitnessService,
                                      ArbitratorManager arbitratorManager,
-                                     DisputeManager disputeManager) {
+                                     ArbitrationManager arbitrationManager) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
     }
 
     @Override
@@ -184,7 +184,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                 accountAgeWitnessService.getBuyerPaymentAccounts(
                         datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
                         paymentMethodComboBox.getSelectionModel().getSelectedItem(),
-                        disputeManager.getDisputesAsObservableList())));
+                        arbitrationManager.getDisputesAsObservableList())));
 
         headLineLabel.setText(Res.get("popup.accountSigning.signAccounts.headline"));
         descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description",
