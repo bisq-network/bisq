@@ -507,9 +507,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     feeInFiatAsString = Res.get("shared.na");
                 }
 
-                double amountAsLong = (double) dataModel.getAmount().get().value;
-                double makerFeeInBtcAsLong = (double) makerFeeInBtc.value;
-                double percent = makerFeeInBtcAsLong / amountAsLong;
+                double amountAsDouble = (double) dataModel.getAmount().get().value;
+                double makerFeeInBtcAsDouble = (double) makerFeeInBtc.value;
+                double percent = makerFeeInBtcAsDouble / amountAsDouble;
 
                 tradeFeeInBsqWithFiat.set(Res.get("createOffer.tradeFee.fiatAndPercent",
                         feeInFiatAsString,
@@ -734,6 +734,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 onFocusOutVolumeTextField(true, false);
                 onFocusOutMinAmountTextField(true, false);
             });
+
+            if (marketPriceMargin.get() == null && amount.get() != null && volume.get() != null) {
+                updateMarketPriceToManual();
+            }
         }
     }
 
@@ -800,12 +804,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public void onFocusOutPriceAsPercentageTextField(boolean oldValue, boolean newValue) {
         inputIsMarketBasedPrice = !oldValue && newValue;
-        if (oldValue && !newValue)
+        if (oldValue && !newValue) {
             if (marketPriceMargin.get() == null) {
                 // field wasn't set manually
                 inputIsMarketBasedPrice = true;
             }
-        marketPriceMargin.set(BSFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
+            marketPriceMargin.set(btcFormatter.formatRoundedDoubleWithPrecision(dataModel.getMarketPriceMargin() * 100, 2));
+        }
 
         // We want to trigger a recalculation of the volume
         UserThread.execute(() -> {
@@ -847,6 +852,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     if (amountValidationResult.getValue() != null && amountValidationResult.getValue().isValid && minAmount.get() != null)
                         minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
                 }
+            }
+
+            if (marketPriceMargin.get() == null && amount.get() != null && volume.get() != null) {
+                updateMarketPriceToManual();
             }
         }
     }
@@ -1190,4 +1199,31 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return dataModel.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
     }
 
+    private void updateMarketPriceToManual() {
+        final String currencyCode = dataModel.getTradeCurrencyCode().get();
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
+            double marketPriceAsDouble = marketPrice.getPrice();
+            double amountAsDouble = ParsingUtils.parseNumberStringToDouble(amount.get());
+            double volumeAsDouble = ParsingUtils.parseNumberStringToDouble(volume.get());
+            double manualPriceAsDouble = dataModel.calculateMarketPriceManual(marketPriceAsDouble, volumeAsDouble, amountAsDouble);
+
+            final boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
+            int precision = isCryptoCurrency ?
+                    Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
+            price.set(BSFormatter.formatRoundedDoubleWithPrecision(manualPriceAsDouble, precision));
+            setPriceToModel();
+            dataModel.calculateTotalToPay();
+            updateButtonDisableState();
+            applyMakerFee();
+        } else {
+            marketPriceMargin.set("");
+            String id = "showNoPriceFeedAvailablePopup";
+            if (preferences.showAgain(id)) {
+                new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                        .dontShowAgainId(id)
+                        .show();
+            }
+        }
+    }
 }
