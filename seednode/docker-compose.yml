@@ -11,8 +11,8 @@ services:
                 SEEDNODE_URL: ${SEEDNODE_URL}
                 SEEDNODE_BRANCH: ${SEEDNODE_BRANCH}
         image: seednode
-        depends_on:
-            - btcd
+#        depends_on:
+#            - btcd
         ports:
             - 8000:8000
             - 9010:9010
@@ -32,11 +32,11 @@ services:
             - NODE_PORT=8000
             - DAO_ACTIVATED=true
             - FULL_DAO_NODE=true
-            - RPC_HOST=172.28.1.2
-            - RPC_PORT=8332
+            - RPC_HOST=btcd
+            - RPC_PORT=${RPC_PORT}
             - RPC_USER=${RPC_USER}
             - RPC_PASSWORD=${RPC_PASSWORD}
-            - RPC_BLOCKNOTIFY_HOST=172.28.1.3
+            - RPC_BLOCKNOTIFY_HOST=seednode
             - RPC_BLOCKNOTIFY_PORT=5120
         networks:
             bisq_net:
@@ -64,7 +64,7 @@ services:
         restart: unless-stopped
         command:
             -printtoconsole
-            -rpcport=8332
+            -rpcport=${RPC_PORT}
             -server=1
             -txindex=1
             -dbcache=1000
@@ -72,10 +72,10 @@ services:
             -timeout=30000
             -listen=0
             -rpcuser=${RPC_USER}
+            -rpcpassword=${RPC_PASSWORD}
             -rpcallowip=0.0.0.0/0
             -rpcbind=127.0.0.1
-            -rpcbind=172.28.1.2
-            -rpcpassword=${RPC_PASSWORD}
+            -rpcbind=btcd
             -blocknotify="bash ~/.bitcoin/blocknotify %s"
         ports:
             - 8333:8333
