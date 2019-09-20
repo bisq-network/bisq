@@ -53,9 +53,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
@@ -91,26 +91,11 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     private int blindvoteheight = daostateheight;
 
     /**
-     * Efficient way to count message occurrences.
-     */
-    private class Counter {
-        private int value = 0;
-
-        int value() {
-            return value;
-        }
-
-        void increment() {
-            value++;
-        }
-    }
-
-    /**
      * Use a counter to do statistics.
      */
-    private class MyStatistics  implements  Statistics<Counter> {
+    private class MyStatistics implements Statistics<Set<Integer>> {
 
-        private final Map<String, Counter> buckets = new HashMap<>();
+        private final Map<String, Set<Integer>> buckets = new HashMap<>();
 
         @Override
         public Statistics create() {
@@ -123,12 +108,12 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
             // For logging different data types
             String className = message.getClass().getSimpleName();
 
-            buckets.putIfAbsent(className, new Counter());
-            buckets.get(className).increment();
+            buckets.putIfAbsent(className, new HashSet<>());
+            buckets.get(className).add(message.hashCode());
         }
 
         @Override
-        public Map<String, Counter> values() {
+        public Map<String, Set<Integer>> values() {
             return buckets;
         }
 
@@ -188,8 +173,8 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         // report
         Map<String, String> report = new HashMap<>();
         // - assemble histograms
-        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((type, counter) -> report
-                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, String.valueOf(((Counter) counter).value()))));
+        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((type, set) -> report
+                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, Integer.toString(((Set) set).size()))));
 
         // - assemble diffs
         //   - transfer values
@@ -197,22 +182,26 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         bucketsPerHost.forEach((host, value) -> messagesPerHost.put(OnionParser.prettyPrint(host), value));
 
         //   - pick reference seed node and its values
-        Optional<String> referenceHost = messagesPerHost.keySet().stream().sorted().findFirst();
-        Map<String, Counter> referenceValues = messagesPerHost.get(referenceHost.get()).values();
+        String referenceHost = "overall_number_of_unique_messages";
+        Map<String, Set<Object>> referenceValues = new HashMap<>();
+        messagesPerHost.forEach((host, statistics) -> statistics.values().forEach((type, set) -> {
+            referenceValues.putIfAbsent((String) type, new HashSet<>());
+            referenceValues.get(type).addAll((Set) set);
+        }));
 
         //   - calculate diffs
         messagesPerHost.forEach(
             (host, statistics) -> {
-                statistics.values().forEach((messageType, count) -> {
+                statistics.values().forEach((messageType, set) -> {
                     try {
                         report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(((Counter) count).value() - referenceValues.get(messageType).value()));
+                                String.valueOf(((Set) set).size() - referenceValues.get(messageType).size()));
                     } catch (MalformedURLException | NullPointerException ignore) {
                         log.error("we should never have gotten here", ignore);
                     }
                 });
                 try {
-                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost.get());
+                    report.put(OnionParser.prettyPrint(host) + ".referenceHost", referenceHost);
                 } catch (MalformedURLException ignore) {
                     log.error("we should never got here");
                 }
@@ -327,7 +316,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkNotNull(connection.getPeersNodeAddressProperty(),
                 "although the property is nullable, we need it to not be null");
-        
+
         if (networkEnvelope instanceof GetDataResponse) {
 
             Statistics result = this.statistics.create();
