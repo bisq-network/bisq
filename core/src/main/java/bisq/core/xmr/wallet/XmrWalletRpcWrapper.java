@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -27,17 +28,14 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.xmr.jsonrpc.MoneroRpcConnection;
+import bisq.core.xmr.jsonrpc.MoneroSendPriority;
+import bisq.core.xmr.jsonrpc.MoneroWalletRpc;
+import bisq.core.xmr.jsonrpc.result.MoneroTransfer;
+import bisq.core.xmr.jsonrpc.result.MoneroTx;
 import bisq.core.xmr.wallet.listeners.WalletUiListener;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import lombok.extern.slf4j.Slf4j;
-import monero.rpc.MoneroRpcConnection;
-import monero.wallet.MoneroWalletRpc;
-import monero.wallet.model.MoneroSendPriority;
-import monero.wallet.model.MoneroSendRequest;
-import monero.wallet.model.MoneroTxSet;
-import monero.wallet.model.MoneroTxWallet;
 
 @Slf4j
 @Singleton
@@ -113,7 +111,7 @@ public class XmrWalletRpcWrapper {
 					}
 					if(walletRpcData.containsKey("getTxs")) {
 						time0 = System.currentTimeMillis();
-						List<MoneroTxWallet> txList = walletRpc.getTxs();
+						List<MoneroTransfer> txList = walletRpc.getTxs(null);
 						if(txList != null && !txList.isEmpty()) {
 							walletRpcData.put("getTxs", transformTxWallet(txList));
 							log.debug("listen -time: {}ms - transactions: {}", (System.currentTimeMillis() - time0), txList.size());
@@ -134,12 +132,13 @@ public class XmrWalletRpcWrapper {
 		}
     }
     
-    private List<XmrTxListItem> transformTxWallet(List<MoneroTxWallet> txList) {
-		Predicate<MoneroTxWallet> predicate = new Predicate<>() {
+    private List<XmrTxListItem> transformTxWallet(List<MoneroTransfer> txList) {
+		Predicate<MoneroTransfer> predicate = new Predicate<>() {
 
 			@Override
-			public boolean test(MoneroTxWallet t) {
-				return t.isRelayed();
+			public boolean test(MoneroTransfer t) {
+				//Check if transaction occurred less than 90 days ago
+				return (new Date().getTime() - Date.from(Instant.ofEpochSecond(t.getTimestamp())).getTime()) <= 90 * 24 * 3600 * 1000;
 			}
 		};
     	List<XmrTxListItem> list = new ArrayList<>();
@@ -162,7 +161,7 @@ public class XmrWalletRpcWrapper {
 					
 					searchParam.split(",");
 					long time0 = System.currentTimeMillis();
-					List<MoneroTxWallet> txs = walletRpc.getTxs(Arrays.asList(searchParam.split(",")));
+					List<MoneroTransfer> txs = walletRpc.getTxs(searchParam);
 					walletRpcData.put("getTxs", transformTxWallet(txs));
 					log.debug("listen -time: {}ms - searchTx: {}", (System.currentTimeMillis() - time0), txs.size());
 				}
@@ -186,35 +185,29 @@ public class XmrWalletRpcWrapper {
 				checkNotNull(walletRpc, Res.get("mainView.networkWarning.localhostLost", "Monero"));
 				listener.playAnimation();
 				long time0 = System.currentTimeMillis();
-				MoneroSendRequest request = new MoneroSendRequest(accountIndex, address, amount, priority);
-				request.setDoNotRelay(doNotRelay);
-				MoneroTxSet txSet = walletRpc.send(request);
+				Map<String, Object> destination = new HashMap<>();
+				destination.put("amount", amount);
+				destination.put("address", address);
+				List<Map<String, Object>> destinations = new ArrayList<Map<String,Object>>();
+				destinations.add(destination);
+				Map<String, Object> request = new HashMap<>();
+				request.put("destinations", destinations);
+				request.put("priority", priority.ordinal());
+				request.put("payment_id", MoneroWalletRpc.generatePaymentId());
+				request.put("get_tx_key", true);
+				request.put("get_tx_hex", false);
+				request.put("do_not_relay", true);
+				request.put("get_tx_metadata", true);
+				MoneroTx tx = walletRpc.send(request);
 				
-				if(txSet != null && txSet.getTxs() != null && !txSet.getTxs().isEmpty()) {
-					MoneroTxWallet tx = txSet.getTxs().get(0);
-					walletRpcData.put("getBalance", walletRpc.getBalance());
-					walletRpcData.put("getUnlockedBalance", walletRpc.getUnlockedBalance());
-					walletRpcData.put("getDoNotRelay", tx.getDoNotRelay());
-					walletRpcData.put("getExtra", tx.getExtra());
-					walletRpcData.put("getFee", tx.getFee());
-					walletRpcData.put("getId", tx.getId());
-					walletRpcData.put("getKey", tx.getKey());
-					walletRpcData.put("getLastRelayedTimestamp", tx.getLastRelayedTimestamp() != null ? new Date(tx.getLastRelayedTimestamp()) : null);
-					walletRpcData.put("getMixin", tx.getMixin());
-					walletRpcData.put("getNumConfirmations", tx.getNumConfirmations());
-					walletRpcData.put("getOutgoingAmount", tx.getOutgoingAmount());
-					walletRpcData.put("getOutgoingTransfer", tx.getOutgoingTransfer());
-					walletRpcData.put("getPaymentId", tx.getPaymentId());
-					walletRpcData.put("getTimestamp",  tx.getBlock().getTimestamp() != null ? new Date(tx.getBlock().getTimestamp()) : null);
-					walletRpcData.put("getSize", tx.getSize());
-					walletRpcData.put("getUnlockTime", tx.getUnlockTime());
-					walletRpcData.put("getVersion", tx.getVersion());
-					if(doNotRelay) {
-						walletRpcData.put("txToRelay", tx);
-					}
-					log.debug("MoneroTxWallet => {}", walletRpcData);
-					log.debug("createTx -time: {}ms - createTx: {}", (System.currentTimeMillis() - time0), tx.getSize());
+				walletRpcData.put("getBalance", walletRpc.getBalance());
+				walletRpcData.put("getUnlockedBalance", walletRpc.getUnlockedBalance());
+				walletRpcData.put("getFee", tx.getFee());
+				if(doNotRelay) {
+					walletRpcData.put("txToRelay", tx.getTxMetadata());
 				}
+				log.debug("MoneroTxWallet => {}", walletRpcData);
+				log.debug("createTx -time: {}ms - createTx: {}", (System.currentTimeMillis() - time0), tx.getSize());
 				listener.onUpdateBalances(walletRpcData);
 				listener.stopAnimation();
 			}
@@ -233,14 +226,13 @@ public class XmrWalletRpcWrapper {
 			public void run() {
 				checkNotNull(walletRpc, Res.get("mainView.networkWarning.localhostLost", "Monero"));
 				listener.playAnimation();
-				MoneroTxWallet txToRelay = (MoneroTxWallet) walletRpcData.get("txToRelay");
+				String txToRelay = (String) walletRpcData.get("txToRelay");
 				if(txToRelay != null) {
-					txToRelay.setDoNotRelay(false);
 					long time0 = System.currentTimeMillis();
 					String txId = walletRpc.relayTx(txToRelay);
 					walletRpcData.put("txId", txId);
-					walletRpcData.put("getMetadata", txToRelay.getMetadata());
-					log.debug("relayTx metadata: {}", txToRelay.getMetadata());
+					walletRpcData.put("getMetadata", txToRelay);
+					log.debug("relayTx metadata: {}", txToRelay);
 					log.debug("relayTx -time: {}ms - txId: {}", (System.currentTimeMillis() - time0), txId);
 				}
 				listener.stopAnimation();

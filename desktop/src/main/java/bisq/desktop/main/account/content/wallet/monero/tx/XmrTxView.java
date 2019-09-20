@@ -55,8 +55,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
-import monero.wallet.MoneroWalletRpc;
-import monero.wallet.model.MoneroTxWallet;
 
 @FxmlView
 public class XmrTxView extends ActivatableView<GridPane, Void> implements WalletUiListener {
@@ -161,8 +159,8 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
     }
 
     private void openTxInBlockExplorer(XmrTxListItem item) {
-        if (item.getTxId() != null)
-            GUIUtil.openWebPage("https://testnet.xmrchain.com/search?value=" + item.getTxId(), false);//TODO(niyid) Change from hardcoded URL
+        if (item.getId() != null)
+            GUIUtil.openWebPage("https://testnet.xmrchain.com/search?value=" + item.getId(), false);//TODO(niyid) Change from hardcoded URL
     }
     
     private void addDateColumn() {
@@ -218,7 +216,7 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    String transactionId = item.getTxId();
+                                    String transactionId = item.getId();
                                     hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
@@ -321,35 +319,6 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
                 });
         tableView.getColumns().add(column);
     }
-    
-    private void addMixinColumn() {
-        TableColumn<XmrTxListItem, XmrTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.account.wallet.tx.item.mixin"));
-
-        column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setMinWidth(60);
-        column.setCellFactory(
-                new Callback<>() {
-
-                    @Override
-                    public TableCell<XmrTxListItem, XmrTxListItem> call(TableColumn<XmrTxListItem,
-                            XmrTxListItem> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(final XmrTxListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-
-                                if (item != null && !empty && item.getMixin() != null) {
-                                    String mixin = Integer.toString(item.getMixin());
-                                    setText(mixin);
-                                } else {
-                                	setText("");
-                                }
-                            }
-                        };
-                    }
-                });
-        tableView.getColumns().add(column);
-    }
 
     private void addConfirmedColumn() {
         TableColumn<XmrTxListItem, XmrTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.account.wallet.tx.item.confirmed"));
@@ -372,8 +341,8 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
                                 if (item != null && !empty) {
                                     String confirmed = item.isConfirmed() ? Res.get("shared.yes") : Res.get("shared.no");
                                     hyperlinkWithIcon = new HyperlinkWithIcon(confirmed, MaterialDesignIcon.TICKET_CONFIRMATION);
-                                    hyperlinkWithIcon.setOnAction(e -> showTxProof(item.getTxId(), "Transaction at " + xmrFormatter.formatDateTime(item.getDate())));
-                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openTxProof", item.getTxId())));
+                                    hyperlinkWithIcon.setOnAction(e -> showTxProof(item.getId(), "Transaction at " + xmrFormatter.formatDateTime(item.getDate())));
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openTxProof", item.getId())));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);

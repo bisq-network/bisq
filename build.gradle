@@ -1,4 +1,3 @@
-
 buildscript {
     repositories {
         jcenter()
@@ -79,6 +78,10 @@ configure(subprojects) {
     repositories {
         mavenCentral()
         maven { url 'https://jitpack.io' }
+    }
+
+    dependencies {
+        testCompile "junit:junit:$junitVersion"
     }
 
     tasks.withType(JavaCompile) {

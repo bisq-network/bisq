@@ -35,6 +35,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple4;
 import bisq.core.locale.Res;
 import bisq.core.xmr.XmrFormatter;
+import bisq.core.xmr.jsonrpc.MoneroSendPriority;
 import bisq.core.xmr.wallet.XmrWalletRpcWrapper;
 import bisq.core.xmr.wallet.listeners.WalletUiListener;
 import bisq.desktop.Navigation;
@@ -60,8 +61,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import monero.wallet.model.MoneroSendPriority;
-import monero.wallet.model.MoneroTxWallet;
 
 @FxmlView
 public class XmrSendView extends ActivatableView<GridPane, Void> implements WalletUiListener {
@@ -152,7 +151,7 @@ public class XmrSendView extends ActivatableView<GridPane, Void> implements Wall
 		} else {
 			showPublishTxPopup(amountToSend, receiversAddressInputTextField.getText(), fee, size, sizeKbs, amountToSend,
 					xmrFormatter, () -> {
-						MoneroTxWallet txToRelay = (MoneroTxWallet) walletRpcData.get("txToRelay");
+						String txToRelay = (String) walletRpcData.get("txToRelay");
 						HashMap<String, Object> dataToRelay = new HashMap<>();
 						dataToRelay.put("txToRelay", txToRelay);
 						walletWrapper.relayTx(XmrSendView.this, dataToRelay);

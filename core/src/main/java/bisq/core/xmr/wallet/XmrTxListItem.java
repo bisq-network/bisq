@@ -22,11 +22,11 @@ import java.time.Instant;
 import java.util.Date;
 
 import bisq.core.locale.Res;
+import bisq.core.xmr.jsonrpc.result.MoneroTransfer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import monero.wallet.model.MoneroTxWallet;
 
 @Slf4j
 @EqualsAndHashCode
@@ -48,35 +48,19 @@ public class XmrTxListItem {
 	@Getter
 	private long confirmations = 0;
 	@Getter
-	private String key;
-	@Getter
-	private Integer mixin;
-	@Getter
 	private Long unlockTime;
 	@Getter
 	private String destinationAddress;
 
-	public XmrTxListItem(MoneroTxWallet txWallet) {
+	public XmrTxListItem(MoneroTransfer txWallet) {
 		txId = txWallet.getId();
 		paymentId = txWallet.getPaymentId();
-		Long timestamp = txWallet.getBlock().getTimestamp();
+		Long timestamp = txWallet.getTimestamp();
 		date = timestamp != null && timestamp != 0 ? Date.from(Instant.ofEpochSecond(timestamp)) : null;
-		confirmed = txWallet.isConfirmed();
-		confirmations = txWallet.getNumConfirmations();
-		key = txWallet.getKey();
-		mixin = txWallet.getMixin();
+		confirmed = txWallet.getConfirmations() >= txWallet.getSuggestedConfirmationsThreshold();
+		confirmations = txWallet.getConfirmations();
 		unlockTime = txWallet.getUnlockTime();
-		BigInteger valueSentToMe = txWallet.getIncomingAmount() != null ? txWallet.getIncomingAmount() : BigInteger.ZERO;
-		BigInteger valueSentFromMe = txWallet.getOutgoingAmount() != null ? txWallet.getOutgoingAmount() : BigInteger.ZERO;
-		if(txWallet.isOutgoing()) {
-			destinationAddress = txWallet.getOutgoingTransfer() != null && 
-					txWallet.getOutgoingTransfer().getDestinations() != null ? 
-					txWallet.getOutgoingTransfer().getDestinations().get(0).getAddress() : null;
-		} else {
-			destinationAddress = txWallet.getIncomingTransfers() != null ? 
-					txWallet.getIncomingTransfers().get(0).getAddress() : null;
-		}
-		amount = txWallet.isIncoming() ? valueSentToMe : valueSentFromMe;
-		direction = txWallet.isIncoming() ? Res.get("shared.account.wallet.tx.item.in") : Res.get("shared.account.wallet.tx.item.out");
+		amount = txWallet.getAmount();
+		direction = "in".equals(txWallet.getType()) ? Res.get("shared.account.wallet.tx.item.in") : Res.get("shared.account.wallet.tx.item.out");
 	}
 }
