@@ -25,7 +25,6 @@ configure(subprojects) {
     apply plugin: 'kotlin'
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
-	apply plugin: 'maven'
 
     sourceCompatibility = 1.10
 
@@ -159,8 +158,6 @@ configure(project(':assets')) {
         compile "com.google.guava:guava:$guavaVersion"
         compile "org.slf4j:slf4j-api:$slf4jVersion"
         compile "org.apache.commons:commons-lang3:$langVersion"
-        compile "junit:junit:$junitVersion"
-        compile "log4j:log4j:1.2.17"
     }
 }
 
@@ -178,8 +175,6 @@ configure(project(':common')) {
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-        compile "junit:junit:$junitVersion"
-        compile "log4j:log4j:1.2.17"
         compile "org.openjfx:javafx-base:11:$os"
         compile "org.openjfx:javafx-graphics:11:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
@@ -236,8 +231,6 @@ configure(project(':core')) {
     dependencies {
         compile project(':assets')
         compile project(':p2p')
-        compile "junit:junit:$junitVersion"
-        compile "log4j:log4j:1.2.17"
         compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
         compile("network.bisq.btcd-cli4j:btcd-cli4j-core:$btcdCli4jVersion") {
             exclude(module: 'slf4j-api')

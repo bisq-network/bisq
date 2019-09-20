@@ -203,6 +203,9 @@ public class XmrWalletRpcWrapper {
 				walletRpcData.put("getBalance", walletRpc.getBalance());
 				walletRpcData.put("getUnlockedBalance", walletRpc.getUnlockedBalance());
 				walletRpcData.put("getFee", tx.getFee());
+				walletRpcData.put("getAmount", tx.getAmount());
+				walletRpcData.put("getAddress", address);
+				walletRpcData.put("getSize", tx.getSize());
 				if(doNotRelay) {
 					walletRpcData.put("txToRelay", tx.getTxMetadata());
 				}

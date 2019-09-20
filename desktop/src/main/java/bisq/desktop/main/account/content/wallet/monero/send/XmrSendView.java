@@ -140,11 +140,11 @@ public class XmrSendView extends ActivatableView<GridPane, Void> implements Wall
     	log.debug("onUpdateBalances => {}", walletRpcData);
         BigInteger fee = walletRpcData.get("getFee") != null ? (BigInteger) walletRpcData.get("getFee") : BigInteger.ZERO;
         BigInteger unlockedBalance = walletRpcData.get("getUnlockedBalance") != null ? (BigInteger) walletRpcData.get("getUnlockedBalance") : BigInteger.ZERO; 
-		Integer size = walletRpcData.get("getSize") != null ? (Integer) walletRpcData.get("getSize") : 0;
+		Long size = walletRpcData.get("getSize") != null ? (Long) walletRpcData.get("getSize") : 0;
 		Double sizeKbs = size != null ? size.doubleValue() / 1024.0 : 0.0;
 		feeInputTextField.setText(xmrFormatter.formatBigInteger(fee));
-		BigInteger amountToSend = walletRpcData.get("getOutgoingAmount") != null
-				? (BigInteger) walletRpcData.get("getOutgoingAmount")
+		BigInteger amountToSend = walletRpcData.get("getAmount") != null
+				? (BigInteger) walletRpcData.get("getAmount")
 				: BigInteger.ZERO;
 		if(unlockedBalance.subtract(amountToSend).subtract(fee).compareTo(BigInteger.ZERO) < 0) {
 			handleError(new Exception("Balance too low."));
@@ -216,18 +216,12 @@ public class XmrSendView extends ActivatableView<GridPane, Void> implements Wall
 			data.put("getBalance", null);
 			data.put("getUnlockedBalance", null);
 			data.put("getFee", null);
-			data.put("getMixin", null);
-			data.put("getOutgoingAmount", null);
 			data.put("getNumConfirmations", null);
-			data.put("getDoNotRelay", null);
 			data.put("getId", null);
 			data.put("getTimestamp", null);
 			data.put("getPaymentId", null);
-			data.put("getReceivedTimestamp", null);
 			data.put("getUnlockTime", null);
-			data.put("getVersion", null);
-			data.put("getOutgoingTransfer", null);
-			data.put("getExtra", null);
+			data.put("getAmount", null);
 
 			try {
 				walletWrapper.createTx(XmrSendView.this, accountIndex, address, amount, priority != null ? priority : MoneroSendPriority.NORMAL, true, data);
@@ -252,13 +246,13 @@ public class XmrSendView extends ActivatableView<GridPane, Void> implements Wall
     }
 
     private void showPublishTxPopup(BigInteger outgoingAmount, String address, 
-    								BigInteger fee, Integer size, Double sizeKbs,
-    								BigInteger amountReceived, XmrFormatter amountFormatter,
+    								BigInteger fee, Long size, Double sizeKbs,
+    								BigInteger amountToReceive, XmrFormatter amountFormatter,
                                     ResultHandler resultHandler) {
         new Popup<>().headLine(Res.get("shared.account.wallet.send.sendFunds.headline"))
                 .confirmation(Res.get("shared.account.wallet.send.sendFunds.details",
                         xmrFormatter.formatBigInteger(outgoingAmount),
-                        address, xmrFormatter.formatBigInteger(fee),  size != 0 ? (fee.doubleValue() / size) : 0, sizeKbs, xmrFormatter.formatBigInteger(amountReceived)))
+                        address, xmrFormatter.formatBigInteger(fee),  size != null ? (new BigDecimal(fee, 12).doubleValue() / size.doubleValue()) : 0, sizeKbs, xmrFormatter.formatBigInteger(amountToReceive)))
                 .actionButtonText(Res.get("shared.yes"))
                 .onAction(() -> {
                     resultHandler.handleResult();

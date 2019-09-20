@@ -192,7 +192,12 @@ public class XmrTxView extends ActivatableView<GridPane, Void> implements Wallet
                     }
                 });
         tableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(XmrTxListItem::getDate));
+        column.setComparator(new Comparator<XmrTxListItem>() {
+			@Override
+			public int compare(XmrTxListItem o1, XmrTxListItem o2) {
+				return o2.getDate().compareTo(o1.getDate());
+			}
+		});
         column.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(column);
     }

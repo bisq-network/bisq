@@ -1,6 +1,6 @@
 package bisq.core.xmr.jsonrpc;
 
-import static org.junit.Assert.assertNotNull;
+import org.springframework.util.Assert;
 
 /**
  * Exception when interacting with a Monero wallet or daemon.
@@ -37,7 +37,7 @@ public class MoneroException extends RuntimeException {
    */
   public MoneroException(String message, Integer code) {
     super(message);
-    assertNotNull("Exeption message cannot be null", message);
+    Assert.notNull(message, "Exeption message cannot be null");
     this.code = code;
   }
 

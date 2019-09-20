@@ -16,12 +16,12 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 
 /**
  * Maintains a connection and sends requests to a Monero RPC API.
@@ -29,7 +29,7 @@ import com.google.gson.Gson;
 public class MoneroRpcConnection {
 
   // logger
-  private static final Logger LOGGER = Logger.getLogger(MoneroRpcConnection.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MoneroRpcConnection.class);
 
   // custom mapper to deserialize integers to BigIntegers
   public static ObjectMapper MAPPER;
