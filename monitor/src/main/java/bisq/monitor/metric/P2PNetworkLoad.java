@@ -42,8 +42,6 @@ import bisq.network.p2p.peers.peerexchange.PeerList;
 import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.ClockWatcher;
-import bisq.common.app.Capabilities;
-import bisq.common.app.Capability;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
@@ -202,8 +200,6 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
         super.configure(properties);
 
         history = Collections.synchronizedMap(new FixedSizeHistoryTracker<>(Integer.parseInt(configuration.getProperty(HISTORY_SIZE, "200"))));
-
-        Capabilities.app.addAll(Capability.DAO_STATE);
     }
 
     /**
