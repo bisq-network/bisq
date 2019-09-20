@@ -138,7 +138,7 @@ public class XmrWalletRpcWrapper {
 			@Override
 			public boolean test(MoneroTransfer t) {
 				//Check if transaction occurred less than 90 days ago
-				return (new Date().getTime() - Date.from(Instant.ofEpochSecond(t.getTimestamp())).getTime()) <= 90 * 24 * 3600 * 1000;
+				return (new Date().getTime() - Date.from(Instant.ofEpochSecond(t.getTimestamp())).getTime()) <= 90 * 24 * 3600 * 1000l;
 			}
 		};
     	List<XmrTxListItem> list = new ArrayList<>();

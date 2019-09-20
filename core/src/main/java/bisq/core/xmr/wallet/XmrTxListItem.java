@@ -62,5 +62,6 @@ public class XmrTxListItem {
 		unlockTime = transfer.getUnlockTime();
 		amount = transfer.getAmount();
 		direction = "in".equals(transfer.getType()) ? Res.get("shared.account.wallet.tx.item.in") : Res.get("shared.account.wallet.tx.item.out");
+		destinationAddress = transfer.getAddress();
 	}
 }

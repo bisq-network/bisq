@@ -1,7 +1,9 @@
 package bisq.core.xmr.jsonrpc;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,27 +34,24 @@ public class MoneroRpcConnectionTest {
 		
 		log.info("walletRpc.getUnlockedBalance => {}", walletRpc.getUnlockedBalance());
 		
-		Map<String, Object> destination = new HashMap<>();
-		destination.put("amount", new BigInteger("1300000000000"));
-		destination.put("address", "A19Nu2WbrA2f8aJrqJAjLh45mw7Nuft3BCnNBv2a4u3qigMR1ytdgGJLoJLzF6PkQe1Cs36CxagmoKbSTCPMgQ7eCFhFTiy");
-		List<Map<String, Object>> destinations = new ArrayList<Map<String,Object>>();
-		destinations.add(destination);
-		Map<String, Object> request = new HashMap<>();
-		request.put("destinations", destinations);
-		request.put("priority", MoneroSendPriority.NORMAL.ordinal());
-		request.put("payment_id", MoneroWalletRpc.generatePaymentId());
-		request.put("get_tx_key", true);
-		request.put("get_tx_hex", false);
-		request.put("do_not_relay", true);
-		request.put("get_tx_metadata", true);
+//		Map<String, Object> destination = new HashMap<>();
+//		destination.put("amount", new BigInteger("1300000000000"));
+//		destination.put("address", "A19Nu2WbrA2f8aJrqJAjLh45mw7Nuft3BCnNBv2a4u3qigMR1ytdgGJLoJLzF6PkQe1Cs36CxagmoKbSTCPMgQ7eCFhFTiy");
+//		List<Map<String, Object>> destinations = new ArrayList<Map<String,Object>>();
+//		destinations.add(destination);
+//		Map<String, Object> request = new HashMap<>();
+//		request.put("destinations", destinations);
+//		request.put("priority", MoneroSendPriority.NORMAL.ordinal());
+//		request.put("payment_id", MoneroWalletRpc.generatePaymentId());
+//		request.put("get_tx_key", true);
+//		request.put("get_tx_hex", false);
+//		request.put("do_not_relay", true);
+//		request.put("get_tx_metadata", true);
 
-		MoneroTx moneroTx = walletRpc.send(request);
-		log.info("walletRpc.send => {}", moneroTx);
-		
-		log.info("walletRpc.txHash => {}", walletRpc.relayTx(moneroTx.getTxMetadata()));
-		
-		List<MoneroTransfer> transfers = walletRpc.getTxs(null);
-		log.info("walletRpc.transfers => {}", transfers.size());
+//		MoneroTx moneroTx = walletRpc.send(request);
+//		log.info("walletRpc.send => {}", moneroTx);
+//		
+//		log.info("walletRpc.txHash => {}", walletRpc.relayTx(moneroTx.getTxMetadata()));
 		
 		String txId = "fb43267b69c165f8143a599b58254ed5b695dac3fa778266b78f75e2c611ed1e";
 		String message = "One of the incoming transactions";
