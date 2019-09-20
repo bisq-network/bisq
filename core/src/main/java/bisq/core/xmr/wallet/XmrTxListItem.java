@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class XmrTxListItem {
 	
 	@Getter
-	private final String txId;
+	private final String id;
 	@Getter
 	private final Date date;
 	@Getter
@@ -52,15 +52,15 @@ public class XmrTxListItem {
 	@Getter
 	private String destinationAddress;
 
-	public XmrTxListItem(MoneroTransfer txWallet) {
-		txId = txWallet.getId();
-		paymentId = txWallet.getPaymentId();
-		Long timestamp = txWallet.getTimestamp();
+	public XmrTxListItem(MoneroTransfer transfer) {
+		id = transfer.getId();
+		paymentId = transfer.getPaymentId();
+		Long timestamp = transfer.getTimestamp();
 		date = timestamp != null && timestamp != 0 ? Date.from(Instant.ofEpochSecond(timestamp)) : null;
-		confirmed = txWallet.getConfirmations() >= txWallet.getSuggestedConfirmationsThreshold();
-		confirmations = txWallet.getConfirmations();
-		unlockTime = txWallet.getUnlockTime();
-		amount = txWallet.getAmount();
-		direction = "in".equals(txWallet.getType()) ? Res.get("shared.account.wallet.tx.item.in") : Res.get("shared.account.wallet.tx.item.out");
+		confirmed = transfer.getConfirmations() >= transfer.getSuggestedConfirmationsThreshold();
+		confirmations = transfer.getConfirmations();
+		unlockTime = transfer.getUnlockTime();
+		amount = transfer.getAmount();
+		direction = "in".equals(transfer.getType()) ? Res.get("shared.account.wallet.tx.item.in") : Res.get("shared.account.wallet.tx.item.out");
 	}
 }
