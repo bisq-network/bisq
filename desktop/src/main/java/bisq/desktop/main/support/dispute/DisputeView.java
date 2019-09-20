@@ -306,6 +306,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
+            } else {
+                handleKeyPressed(event);
             }
         };
 
@@ -467,6 +469,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     .warning(Res.get("support.wrongVersion", protocolVersion))
                     .show();
         }
+    }
+
+    protected void handleKeyPressed(KeyEvent event) {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

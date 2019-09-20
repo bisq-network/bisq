@@ -40,6 +40,7 @@ import bisq.common.crypto.KeyRing;
 
 import com.google.inject.name.Named;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import javax.inject.Inject;
 
@@ -84,12 +85,9 @@ public class ArbitratorView extends DisputeAgentView {
     }
 
     @Override
-    public void initialize() {
-        super.initialize();
-        keyEventEventHandler = event -> {
-            if (Utilities.isAltOrCtrlPressed(KeyCode.S, event)) {
-                signPaymentAccountsWindow.show();
-            }
-        };
+    protected void handleKeyPressed(KeyEvent event) {
+        if (Utilities.isAltOrCtrlPressed(KeyCode.S, event)) {
+            signPaymentAccountsWindow.show();
+        }
     }
 }
