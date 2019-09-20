@@ -509,11 +509,6 @@ class OfferBookViewModel extends ActivatableViewModel {
                 PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
-    boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature(Offer offer) {
-        return user.getPaymentAccounts() != null &&
-                PaymentAccountUtil.isSellOfferAndAllTakerPaymentAccountsForOfferImmature(offer, user.getPaymentAccounts(), accountAgeWitnessService);
-    }
-
     boolean hasPaymentAccountForCurrency() {
         return (showAllTradeCurrenciesProperty.get() &&
                 user.getPaymentAccounts() != null &&
@@ -575,7 +570,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         return filterManager.requireUpdateToNewVersionForTrading();
     }
 
-    boolean isInsufficientTradeLimit(Offer offer) {
+    boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
+        return !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
+        });
+    }
+
+    boolean isMyInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
         final long myTradeLimit = accountOptional
                 .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,

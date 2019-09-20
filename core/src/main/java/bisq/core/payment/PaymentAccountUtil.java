@@ -40,24 +40,6 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PaymentAccountUtil {
 
-    public static boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature(Offer offer,
-                                                                                Collection<PaymentAccount> takerPaymentAccounts,
-                                                                                AccountAgeWitnessService accountAgeWitnessService) {
-        if (offer.isBuyOffer()) {
-            return false;
-        }
-
-        if (!OfferRestrictions.isSellOfferRisky(offer)) {
-            return false;
-        }
-
-        for (PaymentAccount takerPaymentAccount : takerPaymentAccounts) {
-            if (isMyTakerAccountForOfferMature(offer, takerPaymentAccount, accountAgeWitnessService))
-                return false;
-        }
-        return true;
-    }
-
     private static boolean isMyTakerAccountForOfferMature(Offer offer,
                                                           PaymentAccount takerPaymentAccount,
                                                           AccountAgeWitnessService accountAgeWitnessService) {

@@ -305,13 +305,9 @@ public class AccountAgeWitnessService {
     private long getTradeLimit(Coin maxTradeLimit,
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
-                               Date now,
-                               OfferPayload.Direction direction) {
+                               AccountAge accountAgeCategory) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
-
-            final long accountSignAge = getWitnessSignAge(accountAgeWitness, now);
-            AccountAge accountAgeCategory = getAccountAgeCategory(accountSignAge, direction);
 
             switch (accountAgeCategory) {
                 case TWO_MONTHS_OR_MORE:
@@ -329,9 +325,8 @@ public class AccountAgeWitnessService {
             }
 
             final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            log.debug("accountAgeCategory={}, accountSignAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
+            log.debug("accountAgeCategory={}, limit={}, factor={}, accountAgeWitnessHash={}",
                     accountAgeCategory,
-                    accountSignAge / TimeUnit.DAYS.toMillis(1) + " days",
                     Coin.valueOf(limit).toFriendlyString(),
                     factor,
                     Utilities.bytesAsHexString(accountAgeWitness.getHash()));
@@ -390,11 +385,13 @@ public class AccountAgeWitnessService {
         if (!isImmature(accountAgeWitness)) {
             return maxTradeLimit.value;
         }
+        final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
+        AccountAge accountAgeCategory = getAccountAgeCategory(accountSignAge, direction);
+
         return getTradeLimit(maxTradeLimit,
                 currencyCode,
                 accountAgeWitness,
-                new Date(),
-                direction);
+                accountAgeCategory);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -438,7 +435,8 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if the peers trade limit is not less than the trade amount
-        if (!verifyPeersTradeLimit(trade, peersWitness, peersCurrentDate, errorMessageHandler)) {
+        if (!verifyPeersTradeLimit(trade.getOffer(), trade.getTradeAmount(), peersWitness, peersCurrentDate,
+                errorMessageHandler)) {
             log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload {}", peersPaymentAccountPayload);
             return false;
         }
@@ -446,6 +444,14 @@ public class AccountAgeWitnessService {
         return verifySignature(peersPubKeyRing.getSignaturePubKey(), nonce, signature, errorMessageHandler);
     }
 
+    public boolean verifyPeersTradeAmount(Offer offer,
+                                          Coin tradeAmount,
+                                          ErrorMessageHandler errorMessageHandler) {
+        checkNotNull(offer);
+        return findWitness(offer)
+                .map(witness -> verifyPeersTradeLimit(offer, tradeAmount, witness, new Date(), errorMessageHandler))
+                .orElse(false);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope verification subroutines
@@ -491,19 +497,20 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    private boolean verifyPeersTradeLimit(Trade trade,
+    private boolean verifyPeersTradeLimit(Offer offer,
+                                          Coin tradeAmount,
                                           AccountAgeWitness peersWitness,
                                           Date peersCurrentDate,
                                           ErrorMessageHandler errorMessageHandler) {
-        Offer offer = trade.getOffer();
-        Coin tradeAmount = checkNotNull(trade.getTradeAmount());
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
         if (isImmature(peersWitness)) {
-            peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness, peersCurrentDate,
-                    offer.isMyOffer(keyRing) ? offer.getMirroredDirection() : offer.getDirection());
+            final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
+            AccountAge accountAgeCategory = getPeersAccountAgeCategory(accountSignAge, offer);
+            peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
+                    accountAgeCategory);
         }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;
