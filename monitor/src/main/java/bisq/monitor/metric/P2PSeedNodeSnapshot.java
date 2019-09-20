@@ -86,7 +86,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     Statistics statistics;
     final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
     protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
-    private int daostateheight = 550000;
+    private int daostateheight = 594000;
     private int proposalheight = daostateheight;
     private int blindvoteheight = daostateheight;
 
