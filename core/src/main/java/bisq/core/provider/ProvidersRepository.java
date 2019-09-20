@@ -44,7 +44,8 @@ public class ProvidersRepository {
             "http://xc3nh4juf2hshy7e.onion/",   // @emzy
             "http://ceaanhbvluug4we6.onion/",   // @mrosseel
             "http://44mgyoe2b6oqiytt.onion/",   // @devinbileck
-            "http://62nvujg5iou3vu3i.onion/"    // @alexej996
+            "http://62nvujg5iou3vu3i.onion/",   // @alexej996
+            "http://gztmprecgqjq64zh.onion/"    // @wiz
     );
 
     private final String providersFromProgramArgs;
