@@ -516,12 +516,6 @@ class OfferBookViewModel extends ActivatableViewModel {
                 user.hasPaymentAccountForCurrency(selectedTradeCurrency);
     }
 
-    boolean hasMakerAnyMatureAccountForBuyOffer() {
-        return direction == OfferPayload.Direction.SELL ||
-                (user.getPaymentAccounts() != null &&
-                        PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
-    }
-
     boolean canCreateOrTakeOffer() {
         return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
                 GUIUtil.isBootstrappedOrShowPopup(p2PService);
