@@ -22,15 +22,15 @@ import bisq.core.trade.SellerAsMakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
-import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.maker.MakerProcessPayDepositRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerSendPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
+import bisq.core.trade.protocol.tasks.maker.MakerSendsProvideInputsForDepositTxMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
@@ -114,7 +114,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                                        NodeAddress sender,
                                        ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), tradeMessage);
-        checkArgument(tradeMessage instanceof PayDepositRequest);
+        checkArgument(tradeMessage instanceof InputsForDepositTxRequest);
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -126,7 +126,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 });
 
         taskRunner.addTasks(
-                MakerProcessPayDepositRequest.class,
+                MakerProcessesInputsForDepositTxRequest.class,
                 ApplyFilter.class,
                 MakerVerifyTakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
@@ -135,7 +135,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 MakerCreateAndSignContract.class,
                 SellerAsMakerCreatesAndSignsDepositTx.class,
                 MakerSetupDepositTxListener.class,
-                MakerSendPublishDepositTxRequest.class
+                MakerSendsProvideInputsForDepositTxMessage.class
         );
 
         // We don't start a timeout because if we don't receive the peers DepositTxPublishedMessage we still
