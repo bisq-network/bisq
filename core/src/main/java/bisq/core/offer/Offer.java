@@ -365,6 +365,13 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return "";
     }
 
+    public boolean useReimbursementModel() {
+        if (getExtraDataMap() != null && getExtraDataMap().containsKey(OfferPayload.USE_REIMBURSEMENT_MODEL))
+            return getExtraDataMap().get(OfferPayload.USE_REIMBURSEMENT_MODEL).equals("1");
+        else
+            return false;
+    }
+
     // domain properties
     public Offer.State getState() {
         return stateProperty.get();
