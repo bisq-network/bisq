@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller_as_taker;
+package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -25,6 +25,7 @@ import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import java.util.Arrays;
 
@@ -34,9 +35,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerFinalizesDelayedPayoutTx extends TradeTask {
+public class SellerSignsDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerFinalizesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerSignsDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -45,26 +46,24 @@ public class SellerAsTakerFinalizesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction unsignedDelayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
+            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            byte[] buyerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
             byte[] sellerMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(id, sellerMultiSigPubKey);
+
             checkArgument(Arrays.equals(sellerMultiSigPubKey,
                     btcWalletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
+            byte[] buyerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
 
-            byte[] buyerSignature = processModel.getTradingPeer().getDelayedPayoutTxSignature();
-            byte[] sellerSignature = processModel.getDelayedPayoutTxSignature();
-
-            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(unsignedDelayedPayoutTx,
+            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(delayedPayoutTx,
+                    myMultiSigKeyPair,
                     buyerMultiSigPubKey,
-                    sellerMultiSigPubKey,
-                    buyerSignature,
-                    sellerSignature);
+                    sellerMultiSigPubKey);
 
-            trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
+            processModel.setDelayedPayoutTxSignature(delayedPayoutTxSignature);
 
             complete();
         } catch (Throwable t) {

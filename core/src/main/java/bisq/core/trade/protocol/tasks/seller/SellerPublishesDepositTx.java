@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller_as_taker;
+package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
@@ -31,9 +31,9 @@ import org.bitcoinj.core.Transaction;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SellerAsTakerPublishesDepositTx extends TradeTask {
+public class SellerPublishesDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerPublishesDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerPublishesDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,7 +47,7 @@ public class SellerAsTakerPublishesDepositTx extends TradeTask {
                         @Override
                         public void onSuccess(Transaction transaction) {
                             if (!completed) {
-                                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
+                                trade.setState(Trade.State.SELLER_PUBLISHED_DEPOSIT_TX);
 
                                 processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(processModel.getOffer().getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 

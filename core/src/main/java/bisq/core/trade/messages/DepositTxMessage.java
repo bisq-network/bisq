@@ -17,7 +17,7 @@
 
 package bisq.core.trade.messages;
 
-import bisq.network.p2p.MailboxMessage;
+import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -28,65 +28,63 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
-//todo maybe remove?
+// It is the last message in the take offer phase. We use MailboxMessage instead of DirectMessage to add more tolerance
+// in case of network issues and as the message does not trigger further protocol execution.
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
-    private final byte[] depositTx;
+public final class DepositTxMessage extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
+    private final byte[] depositTx;
 
-    public DepositTxPublishedMessage(String tradeId,
-                                     byte[] depositTx,
-                                     NodeAddress senderNodeAddress,
-                                     String uid) {
-        this(tradeId,
-                depositTx,
-                senderNodeAddress,
+    public DepositTxMessage(String uid,
+                            String tradeId,
+                            NodeAddress senderNodeAddress,
+                            byte[] depositTx) {
+        this(Version.getP2PMessageVersion(),
                 uid,
-                Version.getP2PMessageVersion());
+                tradeId,
+                senderNodeAddress,
+                depositTx);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DepositTxPublishedMessage(String tradeId,
-                                      byte[] depositTx,
-                                      NodeAddress senderNodeAddress,
-                                      String uid,
-                                      int messageVersion) {
+    private DepositTxMessage(int messageVersion,
+                             String uid,
+                             String tradeId,
+                             NodeAddress senderNodeAddress,
+                             byte[] depositTx) {
         super(messageVersion, tradeId, uid);
-        this.depositTx = depositTx;
         this.senderNodeAddress = senderNodeAddress;
+        this.depositTx = depositTx;
     }
-
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDepositTxPublishedMessage(protobuf.DepositTxPublishedMessage.newBuilder()
+                .setDepositTxMessage(protobuf.DepositTxMessage.newBuilder()
+                        .setUid(uid)
                         .setTradeId(tradeId)
-                        .setDepositTx(ByteString.copyFrom(depositTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                        .setDepositTx(ByteString.copyFrom(depositTx)))
                 .build();
     }
 
-    public static DepositTxPublishedMessage fromProto(protobuf.DepositTxPublishedMessage proto, int messageVersion) {
-        return new DepositTxPublishedMessage(proto.getTradeId(),
-                proto.getDepositTx().toByteArray(),
-                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+    public static DepositTxMessage fromProto(protobuf.DepositTxMessage proto, int messageVersion) {
+        return new DepositTxMessage(messageVersion,
                 proto.getUid(),
-                messageVersion);
+                proto.getTradeId(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getDepositTx().toByteArray());
     }
-
 
     @Override
     public String toString() {
-        return "DepositTxPublishedMessage{" +
-                "\n     depositTx=" + Utilities.bytesAsHexString(depositTx) +
-                ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
+        return "DepositTxMessage{" +
+                "\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     depositTx=" + Utilities.bytesAsHexString(depositTx) +
                 "\n} " + super.toString();
     }
 }

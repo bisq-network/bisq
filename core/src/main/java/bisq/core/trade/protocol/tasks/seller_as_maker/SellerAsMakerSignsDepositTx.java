@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.tasks.seller_as_maker;
 
+import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class MakerAsBuyerProcessSignDelayedPayoutTxMessage extends TradeTask {
+public class SellerAsMakerSignsDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerAsBuyerProcessSignDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMakerSignsDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -41,15 +41,15 @@ public class MakerAsBuyerProcessSignDelayedPayoutTxMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            DelayedPayoutTxSignatureRequest message = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
-            checkNotNull(message);
-            Validator.checkTradeId(processModel.getOfferId(), message);
-            byte[] delayedPayoutTxAsBytes = checkNotNull(message.getDelayedPayoutTx());
-            Transaction delayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
-            trade.applyDelayedPayoutTx(delayedPayoutTx);
 
-            // update to the latest peer address of our peer if the message is correct
-            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+            Transaction preparedDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(checkNotNull(processModel.getPreparedDepositTx()));
+            processModel.getTradeWalletService().sellerAsMakerSignsDepositTx(preparedDepositTx);
+
+            Transaction depositTx = processModel.getTradeWalletService().addTxToWallet(preparedDepositTx);
+            trade.applyDepositTx(depositTx);
+            BtcWalletService.printTx("Fully signed depositTx", depositTx);
+
+            processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 
             complete();
         } catch (Throwable t) {

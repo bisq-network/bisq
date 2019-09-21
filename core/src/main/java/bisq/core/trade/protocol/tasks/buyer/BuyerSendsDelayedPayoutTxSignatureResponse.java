@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
@@ -33,9 +33,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class MakerAsBuyerSendsDelayedPayoutTxSignatureMessage extends TradeTask {
+public class BuyerSendsDelayedPayoutTxSignatureResponse extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerAsBuyerSendsDelayedPayoutTxSignatureMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerSendsDelayedPayoutTxSignatureResponse(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

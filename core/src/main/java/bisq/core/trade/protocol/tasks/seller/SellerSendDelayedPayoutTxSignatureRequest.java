@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller_as_taker;
+package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
@@ -35,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerSendSignDelayedPayoutTxMessage extends TradeTask {
+public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerSendSignDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerSendDelayedPayoutTxSignatureRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

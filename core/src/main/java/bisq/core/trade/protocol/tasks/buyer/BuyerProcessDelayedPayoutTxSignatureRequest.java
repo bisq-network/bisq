@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.TradeTask;
+import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -26,10 +28,12 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
-public class BuyerAsMakerVerifiesDelayedPayoutTx extends TradeTask {
+public class BuyerProcessDelayedPayoutTxSignatureRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerAsMakerVerifiesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerProcessDelayedPayoutTxSignatureRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -37,14 +41,17 @@ public class BuyerAsMakerVerifiesDelayedPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
+            DelayedPayoutTxSignatureRequest message = (DelayedPayoutTxSignatureRequest) processModel.getTradeMessage();
+            checkNotNull(message);
+            Validator.checkTradeId(processModel.getOfferId(), message);
+            byte[] delayedPayoutTxAsBytes = checkNotNull(message.getDelayedPayoutTx());
+            Transaction delayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxAsBytes);
+            trade.applyDelayedPayoutTx(delayedPayoutTx);
 
-            Transaction depositTx = trade.getDepositTx();
-            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx, delayedPayoutTx)) {
-                complete();
-            } else {
-                failed("DelayedPayoutTx is not spending correctly depositTx");
-            }
+            // update to the latest peer address of our peer if the message is correct
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
+
+            complete();
         } catch (Throwable t) {
             failed(t);
         }

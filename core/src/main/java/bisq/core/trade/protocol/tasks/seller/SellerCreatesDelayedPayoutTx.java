@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller_as_taker;
+package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
@@ -34,9 +34,9 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerCreatesDelayedPayoutTx extends TradeTask {
+public class SellerCreatesDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerCreatesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public SellerCreatesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

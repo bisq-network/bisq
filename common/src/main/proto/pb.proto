@@ -38,7 +38,7 @@ message NetworkEnvelope {
 
         InputsForDepositTxRequest inputs_for_deposit_tx_request = 17;
         InputsForDepositTxResponse inputs_for_deposit_tx_response = 18;
-        DepositTxPublishedMessage deposit_tx_published_message = 19;
+        DepositTxMessage deposit_tx_message = 19;
         CounterCurrencyTransferStartedMessage counter_currency_transfer_started_message = 20;
         PayoutTxPublishedMessage payout_tx_published_message = 21;
 
@@ -266,11 +266,11 @@ message DepositTxAndDelayedPayoutTxMessage {
     bytes delayed_payout_tx = 5;
 }
 
-message DepositTxPublishedMessage {
-    string trade_id = 1;
-    bytes deposit_tx = 2;
+message DepositTxMessage {
+    string uid = 1;
+    string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    string uid = 4;
+    bytes deposit_tx = 4;
 }
 
 message CounterCurrencyTransferStartedMessage {
@@ -1248,13 +1248,13 @@ message Trade {
         MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST = 5;
         MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST = 6;
         TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST = 7;
-        TAKER_PUBLISHED_DEPOSIT_TX = 8;
-        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 9;
-        TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG = 10;
-        TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG = 11;
-        TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG = 12;
-        MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 13;
-        MAKER_SAW_DEPOSIT_TX_IN_NETWORK = 14;
+        SELLER_PUBLISHED_DEPOSIT_TX = 8;
+        SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 9;
+        SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG = 10;
+        SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG = 11;
+        SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG = 12;
+        BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 13;
+        BUYER_SAW_DEPOSIT_TX_IN_NETWORK = 14;
         DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN = 15;
         BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED = 16;
         BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG = 17;

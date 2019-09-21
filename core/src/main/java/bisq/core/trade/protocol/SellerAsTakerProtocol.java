@@ -28,23 +28,23 @@ import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerCreatesDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerVerifiesPeersAccountAge;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerFinalizesDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerProcessDelayedPayoutTxSignatureMessage;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerPublishesDepositTx;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSendSignDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessesProvideInputsForDepositTxMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
-import bisq.core.trade.protocol.tasks.taker.TakerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
@@ -84,19 +84,15 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     public void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade) {
         this.trade = trade;
 
-        if (networkEnvelope instanceof MailboxMessage) {
+        if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
             NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-            if (networkEnvelope instanceof TradeMessage) {
-                TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-                log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
-                        tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-                if (tradeMessage instanceof InputsForDepositTxResponse)
-                    handle((InputsForDepositTxResponse) tradeMessage, peerNodeAddress);
-                else if (tradeMessage instanceof CounterCurrencyTransferStartedMessage)
-                    handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
-                else
-                    log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
-            }
+            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
+            log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
+                    tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
+            if (tradeMessage instanceof CounterCurrencyTransferStartedMessage)
+                handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
+            else
+                log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
         }
     }
 
@@ -151,8 +147,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerVerifyAndSignContract.class,
                 TakerPublishFeeTx.class,
                 SellerAsTakerSignsDepositTx.class,
-                SellerAsTakerCreatesDelayedPayoutTx.class,
-                SellerAsTakerSendSignDelayedPayoutTxMessage.class
+                SellerCreatesDelayedPayoutTx.class,
+                SellerSendDelayedPayoutTxSignatureRequest.class
         );
         taskRunner.run();
     }
@@ -169,11 +165,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
-                SellerAsTakerProcessDelayedPayoutTxSignatureMessage.class,
-                SellerAsTakerSignsDelayedPayoutTx.class,
-                SellerAsTakerFinalizesDelayedPayoutTx.class,
-                SellerAsTakerPublishesDepositTx.class,
-                TakerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                SellerProcessDelayedPayoutTxSignatureResponse.class,
+                SellerSignsDelayedPayoutTx.class,
+                SellerFinalizesDelayedPayoutTx.class,
+                SellerPublishesDepositTx.class,
+                SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                 PublishTradeStatistics.class
         );
         taskRunner.run();

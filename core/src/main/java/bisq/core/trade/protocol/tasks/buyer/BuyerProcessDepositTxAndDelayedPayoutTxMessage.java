@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -34,9 +34,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsMakerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
+public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
     @SuppressWarnings({"unused"})
-    public BuyerAsMakerProcessDepositTxAndDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerProcessDepositTxAndDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -69,8 +69,8 @@ public class BuyerAsMakerProcessDepositTxAndDelayedPayoutTxMessage extends Trade
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             // If we got already the confirmation we don't want to apply an earlier state
-            if (trade.getState() != Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK)
-                trade.setState(Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+            if (trade.getState() != Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK)
+                trade.setState(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
 
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 

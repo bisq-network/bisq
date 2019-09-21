@@ -96,7 +96,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
             trade.applyDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from network", walletTx);
-            trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
+            trade.setState(Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK);
         } else {
             log.info("We got the deposit tx already set from MakerProcessDepositTxPublishedMessage.  tradeId={}, state={}", trade.getId(), trade.getState());
         }

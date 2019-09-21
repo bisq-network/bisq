@@ -15,23 +15,23 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.seller_as_taker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.util.Validator.checkTradeId;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerProcessDelayedPayoutTxSignatureMessage extends TradeTask {
+public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerProcessDelayedPayoutTxSignatureMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerVerifiesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -39,19 +39,14 @@ public class SellerAsTakerProcessDelayedPayoutTxSignatureMessage extends TradeTa
     protected void run() {
         try {
             runInterceptHook();
-            DelayedPayoutTxSignatureResponse delayedPayoutTxSignatureResponse = (DelayedPayoutTxSignatureResponse) processModel.getTradeMessage();
-            checkNotNull(delayedPayoutTxSignatureResponse);
-            checkTradeId(processModel.getOfferId(), delayedPayoutTxSignatureResponse);
 
-            byte[] delayedPayoutTxSignature = checkNotNull(delayedPayoutTxSignatureResponse.getDelayedPayoutTxSignature());
-            processModel.getTradingPeer().setDelayedPayoutTxSignature(delayedPayoutTxSignature);
-
-            // update to the latest peer address of our peer if the message is correct
-            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
-
-            // todo trade.setState
-
-            complete();
+            Transaction depositTx = checkNotNull(trade.getDepositTx());
+            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
+            if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx, delayedPayoutTx)) {
+                complete();
+            } else {
+                failed("DelayedPayoutTx is not spending correctly depositTx");
+            }
         } catch (Throwable t) {
             failed(t);
         }
