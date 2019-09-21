@@ -55,8 +55,6 @@ import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol, MakerProtocol {
     private final BuyerAsMakerTrade buyerAsMakerTrade;
@@ -121,11 +119,10 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage tradeMessage,
+    public void handleTakeOfferRequest(InputsForDepositTxRequest tradeMessage,
                                        NodeAddress peerNodeAddress,
                                        ErrorMessageHandler errorMessageHandler) {
         Validator.checkTradeId(processModel.getOfferId(), tradeMessage);
-        checkArgument(tradeMessage instanceof InputsForDepositTxRequest);
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
 
