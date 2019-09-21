@@ -21,6 +21,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
@@ -114,7 +115,7 @@ public abstract class Trade implements Tradable, Model {
         // maker perspective
         MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
         MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
-        MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
+        MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED), //todo remove
         MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST(Phase.TAKER_FEE_PUBLISHED),
 
         // taker perspective
@@ -368,9 +369,14 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     transient protected TradeProtocol tradeProtocol;
     @Nullable
-    transient private Transaction payoutTx;
-    @Nullable
     transient private Transaction depositTx;
+
+    // Added in v1.2.0
+    @Nullable
+    transient private Transaction delayedPayoutTx;
+
+    @Nullable
+    transient private Transaction payoutTx;
     @Nullable
     transient private Coin tradeAmount;
 
@@ -378,11 +384,20 @@ public abstract class Trade implements Tradable, Model {
     transient private ObjectProperty<Volume> tradeVolumeProperty;
     final transient private Set<DecryptedMessageWithPubKey> decryptedMessageWithPubKeySet = new HashSet<>();
 
-    //Added in v1.1.6
+    // Added in v1.1.6
     @Getter
     @Nullable
     private MediationResultState mediationResultState = MediationResultState.UNDEFINED_MEDIATION_RESULT;
     transient final private ObjectProperty<MediationResultState> mediationResultStateProperty = new SimpleObjectProperty<>(mediationResultState);
+
+    // Added in v1.2.0
+    @Getter
+    @Setter
+    private long lockTime;
+    @Nullable
+    @Getter
+    @Setter
+    private String delayedPayoutTxId;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -463,7 +478,8 @@ public abstract class Trade implements Tradable, Model {
                 .setTradePeriodState(Trade.TradePeriodState.toProtoMessage(tradePeriodState))
                 .addAllChatMessage(chatMessages.stream()
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()))
+                .setLockTime(lockTime);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -483,6 +499,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(mediatorPubKeyRing).ifPresent(e -> builder.setMediatorPubKeyRing(mediatorPubKeyRing.toProtoMessage()));
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
         Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
+        Optional.ofNullable(delayedPayoutTxId).ifPresent(e -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         return builder.build();
     }
 
@@ -509,6 +526,8 @@ public abstract class Trade implements Tradable, Model {
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
+        trade.setDelayedPayoutTxId(proto.getDelayedPayoutTxId());
+        trade.setLockTime(proto.getLockTime());
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
@@ -531,6 +550,7 @@ public abstract class Trade implements Tradable, Model {
                      BtcWalletService btcWalletService,
                      BsqWalletService bsqWalletService,
                      TradeWalletService tradeWalletService,
+                     DaoFacade daoFacade,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      ReferralIdService referralIdService,
@@ -550,6 +570,7 @@ public abstract class Trade implements Tradable, Model {
                 btcWalletService,
                 bsqWalletService,
                 tradeWalletService,
+                daoFacade,
                 referralIdService,
                 user,
                 filterManager,
@@ -590,10 +611,10 @@ public abstract class Trade implements Tradable, Model {
     // The deserialized tx has not actual confidence data, so we need to get the fresh one from the wallet.
     void updateDepositTxFromWallet() {
         if (getDepositTx() != null)
-            setDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
+            applyDepositTx(processModel.getTradeWalletService().getWalletTx(getDepositTx().getHash()));
     }
 
-    public void setDepositTx(Transaction tx) {
+    public void applyDepositTx(Transaction tx) {
         log.debug("setDepositTx " + tx);
         this.depositTx = tx;
         depositTxId = depositTx.getHashAsString();
@@ -606,6 +627,19 @@ public abstract class Trade implements Tradable, Model {
         if (depositTx == null)
             depositTx = depositTxId != null ? btcWalletService.getTransaction(depositTxId) : null;
         return depositTx;
+    }
+
+    public void applyDelayedPayoutTx(Transaction delayedPayoutTx) {
+        this.delayedPayoutTx = delayedPayoutTx;
+        delayedPayoutTxId = delayedPayoutTx.getHashAsString();
+        persist();
+    }
+
+    @Nullable
+    public Transaction getDelayedPayoutTx() {
+        if (delayedPayoutTx == null)
+            delayedPayoutTx = delayedPayoutTxId != null ? btcWalletService.getTransaction(delayedPayoutTxId) : null;
+        return delayedPayoutTx;
     }
 
     // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
