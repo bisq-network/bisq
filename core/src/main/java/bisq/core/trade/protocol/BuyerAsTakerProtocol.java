@@ -20,8 +20,8 @@ package bisq.core.trade.protocol;
 
 import bisq.core.trade.BuyerAsTakerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
@@ -31,12 +31,12 @@ import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStar
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
-import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
+import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerProcessesProvideInputsForDepositTxMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
@@ -91,8 +91,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
                 log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
                         tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-                if (tradeMessage instanceof PublishDepositTxRequest)
-                    handle((PublishDepositTxRequest) tradeMessage, peerNodeAddress);
+                if (tradeMessage instanceof InputsForDepositTxResponse)
+                    handle((InputsForDepositTxResponse) tradeMessage, peerNodeAddress);
                 else if (tradeMessage instanceof PayoutTxPublishedMessage) {
                     handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
                 } else
@@ -131,7 +131,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
+    private void handle(InputsForDepositTxResponse tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -142,15 +142,15 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
         taskRunner.addTasks(
-                TakerProcessPublishDepositTxRequest.class,
+                TakerProcessesProvideInputsForDepositTxMessage.class,
                 ApplyFilter.class,
                 TakerVerifyMakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 TakerPublishFeeTx.class,
-                BuyerAsTakerSignAndPublishDepositTx.class,
-                TakerSendDepositTxPublishedMessage.class,
+                BuyerAsTakerSignsDepositTx.class,
+                TakerSendsDepositTxAndDelayedPayoutTxMessage.class,
                 PublishTradeStatistics.class
         );
         taskRunner.run();
@@ -221,8 +221,8 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
-        if (tradeMessage instanceof PublishDepositTxRequest) {
-            handle((PublishDepositTxRequest) tradeMessage, sender);
+        if (tradeMessage instanceof InputsForDepositTxResponse) {
+            handle((InputsForDepositTxResponse) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
         }
