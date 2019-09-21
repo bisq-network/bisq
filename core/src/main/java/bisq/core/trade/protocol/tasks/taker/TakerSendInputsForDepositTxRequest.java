@@ -45,9 +45,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TakerSendPayDepositRequest extends TradeTask {
+public class TakerSendInputsForDepositTxRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public TakerSendPayDepositRequest(TaskRunner taskHandler, Trade trade) {
+    public TakerSendInputsForDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

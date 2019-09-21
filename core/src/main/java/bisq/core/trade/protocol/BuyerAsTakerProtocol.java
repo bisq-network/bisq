@@ -35,7 +35,7 @@ import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerProcessesProvideInputsForDepositTxMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
@@ -117,7 +117,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 TakerVerifyMakerFeePayment.class,
                 CreateTakerFeeTx.class,
                 BuyerAsTakerCreatesDepositTxInputs.class,
-                TakerSendPayDepositRequest.class
+                TakerSendInputsForDepositTxRequest.class
         );
 
         //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
