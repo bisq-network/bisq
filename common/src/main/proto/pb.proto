@@ -36,8 +36,8 @@ message NetworkEnvelope {
         CloseConnectionMessage close_connection_message = 15;
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 16;
 
-        PayDepositRequest pay_deposit_request = 17;
-        PublishDepositTxRequest publish_deposit_tx_request = 18;
+        InputsForDepositTxRequest inputs_for_deposit_tx_request = 17;
+        InputsForDepositTxResponse inputs_for_deposit_tx_response = 18;
         DepositTxPublishedMessage deposit_tx_published_message = 19;
         CounterCurrencyTransferStartedMessage counter_currency_transfer_started_message = 20;
         PayoutTxPublishedMessage payout_tx_published_message = 21;
@@ -70,6 +70,10 @@ message NetworkEnvelope {
         BundleOfEnvelopes bundle_of_envelopes = 43;
         MediatedPayoutTxSignatureMessage mediated_payout_tx_signature_message = 44;
         MediatedPayoutTxPublishedMessage mediated_payout_tx_published_message = 45;
+
+        DelayedPayoutTxSignatureRequest delayed_payout_tx_signature_request = 46;
+        DelayedPayoutTxSignatureResponse delayed_payout_tx_signature_response = 47;
+        DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
     }
 }
 
@@ -197,7 +201,7 @@ message PrefixedSealedAndSignedMessage {
 
 // trade
 
-message PayDepositRequest {
+message InputsForDepositTxRequest {
     string trade_id = 1;
     NodeAddress sender_node_address = 2;
     int64 trade_amount = 3;
@@ -223,7 +227,7 @@ message PayDepositRequest {
     int64 current_date = 23;
 }
 
-message PublishDepositTxRequest {
+message InputsForDepositTxResponse {
     string trade_id = 1;
     PaymentAccountPayload maker_payment_account_payload = 2;
     string maker_account_id = 3;
@@ -237,6 +241,29 @@ message PublishDepositTxRequest {
     string uid = 11;
     bytes account_age_witness_signature_of_prepared_deposit_tx = 12;
     int64 current_date = 13;
+    int64 lock_time = 14;
+}
+
+message DelayedPayoutTxSignatureRequest {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes delayed_payout_tx = 4;
+}
+
+message DelayedPayoutTxSignatureResponse {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes delayed_payout_tx_signature = 4;
+}
+
+message DepositTxAndDelayedPayoutTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes deposit_tx = 4;
+    bytes delayed_payout_tx = 5;
 }
 
 message DepositTxPublishedMessage {
@@ -279,8 +306,8 @@ message MediatedPayoutTxPublishedMessage {
 
 message MediatedPayoutTxSignatureMessage {
     string uid = 1;
-    bytes tx_signature = 2;
     string trade_id = 3;
+    bytes tx_signature = 2;
     NodeAddress sender_node_address = 4;
 }
 
@@ -774,6 +801,7 @@ message Contract {
     bytes maker_multi_sig_pub_key = 17;
     bytes taker_multi_sig_pub_key = 18;
     NodeAddress mediator_node_address = 19;
+    int64 lock_time = 20;
 }
 
 message RawTransactionInput {
@@ -1305,6 +1333,8 @@ message Trade {
     string counter_currency_tx_id = 28;
     repeated ChatMessage chat_message = 29;
     MediationResultState mediation_result_state = 30;
+    int64 lock_time = 31;
+    string delayed_payout_tx_id = 32;
 }
 
 message BuyerAsMakerTrade {
@@ -1344,6 +1374,7 @@ message ProcessModel {
     bytes mediated_payout_tx_signature = 18;
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
+    bytes delayed_payout_tx_signature = 21;
 }
 
 message TradingPeer {
@@ -1362,6 +1393,7 @@ message TradingPeer {
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;
     bytes mediated_payout_tx_signature = 15;
+    bytes delayed_payout_tx_signature = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1454,6 +1486,7 @@ message PreferencesPayload {
     double buyer_security_deposit_as_percent_for_crypto = 52;
     int32 block_notify_port = 53;
     int32 css_theme = 54;
+    bool use_reimbursement_model = 55;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
