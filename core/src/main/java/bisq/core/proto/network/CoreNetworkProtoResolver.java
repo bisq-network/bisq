@@ -46,12 +46,15 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.DepositTxPublishedMessage;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
@@ -89,7 +92,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CoreNetworkProtoResolver extends CoreProtoResolver implements NetworkProtoResolver {
-
     @Inject
     public CoreNetworkProtoResolver() {
     }
@@ -134,12 +136,26 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
                     return PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage(), messageVersion);
 
-                case PAY_DEPOSIT_REQUEST:
-                    return PayDepositRequest.fromProto(proto.getPayDepositRequest(), this, messageVersion);
+                // trade protocol messages
+                case INPUTS_FOR_DEPOSIT_TX_REQUEST:
+                    return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), this, messageVersion);
+
+                case INPUTS_FOR_DEPOSIT_TX_RESPONSE:
+                    return InputsForDepositTxResponse.fromProto(proto.getInputsForDepositTxResponse(), this, messageVersion);
+
+                case DELAYED_PAYOUT_TX_SIGNATURE_REQUEST:
+                    return DelayedPayoutTxSignatureRequest.fromProto(proto.getDelayedPayoutTxSignatureRequest(), messageVersion);
+
+                case DELAYED_PAYOUT_TX_SIGNATURE_RESPONSE:
+                    return DelayedPayoutTxSignatureResponse.fromProto(proto.getDelayedPayoutTxSignatureResponse(), messageVersion);
+
+                case DEPOSIT_TX_AND_DELAYED_PAYOUT_TX_MESSAGE:
+                    return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), messageVersion);
+
+                // todo remove?
                 case DEPOSIT_TX_PUBLISHED_MESSAGE:
                     return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage(), messageVersion);
-                case PUBLISH_DEPOSIT_TX_REQUEST:
-                    return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this, messageVersion);
+
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
                 case PAYOUT_TX_PUBLISHED_MESSAGE:
