@@ -22,6 +22,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -78,6 +79,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private BtcWalletService btcWalletService;
     transient private BsqWalletService bsqWalletService;
     transient private TradeWalletService tradeWalletService;
+    transient private DaoFacade daoFacade;
     transient private Offer offer;
     transient private User user;
     transient private FilterManager filterManager;
@@ -158,6 +160,11 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
+    // Added in v1.2.0
+    @Setter
+    @Nullable
+    private byte[] delayedPayoutTxSignature;
+
     public ProcessModel() {
     }
 
@@ -190,6 +197,7 @@ public class ProcessModel implements Model, PersistablePayload {
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
+        Optional.ofNullable(delayedPayoutTxSignature).ifPresent(e -> builder.setDelayedPayoutTxSignature(ByteString.copyFrom(e)));
         return builder.build();
     }
 
@@ -228,6 +236,7 @@ public class ProcessModel implements Model, PersistablePayload {
         ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
         paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
         processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
+        processModel.setDelayedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxSignature()));
         return processModel;
     }
 
@@ -243,6 +252,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          BtcWalletService walletService,
                                          BsqWalletService bsqWalletService,
                                          TradeWalletService tradeWalletService,
+                                         DaoFacade daoFacade,
                                          ReferralIdService referralIdService,
                                          User user,
                                          FilterManager filterManager,
@@ -259,6 +269,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.btcWalletService = walletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
+        this.daoFacade = daoFacade;
         this.referralIdService = referralIdService;
         this.user = user;
         this.filterManager = filterManager;
