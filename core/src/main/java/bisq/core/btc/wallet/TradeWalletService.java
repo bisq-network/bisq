@@ -384,10 +384,61 @@ public class TradeWalletService {
         return new InputsAndChangeOutput(new ArrayList<>(rawTransactionInputList), 0, null);
     }
 
+    public PreparedDepositTxAndMakerInputs sellerAsMakerCreatesDepositTx(byte[] contractHash,
+                                                                         Coin makerInputAmount,
+                                                                         Coin msOutputAmount,
+                                                                         List<RawTransactionInput> takerRawTransactionInputs,
+                                                                         long takerChangeOutputValue,
+                                                                         @Nullable String takerChangeAddressString,
+                                                                         Address makerAddress,
+                                                                         Address makerChangeAddress,
+                                                                         byte[] buyerPubKey,
+                                                                         byte[] sellerPubKey)
+            throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
+        return makerCreatesDepositTx(false,
+                false,
+                contractHash,
+                makerInputAmount,
+                msOutputAmount,
+                takerRawTransactionInputs,
+                takerChangeOutputValue,
+                takerChangeAddressString,
+                makerAddress,
+                makerChangeAddress,
+                buyerPubKey,
+                sellerPubKey);
+    }
+
+    public PreparedDepositTxAndMakerInputs buyerAsMakerCreatesAndSignsDepositTx(byte[] contractHash,
+                                                                                Coin makerInputAmount,
+                                                                                Coin msOutputAmount,
+                                                                                List<RawTransactionInput> takerRawTransactionInputs,
+                                                                                long takerChangeOutputValue,
+                                                                                @Nullable String takerChangeAddressString,
+                                                                                Address makerAddress,
+                                                                                Address makerChangeAddress,
+                                                                                byte[] buyerPubKey,
+                                                                                byte[] sellerPubKey)
+            throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
+        return makerCreatesDepositTx(true,
+                true,
+                contractHash,
+                makerInputAmount,
+                msOutputAmount,
+                takerRawTransactionInputs,
+                takerChangeOutputValue,
+                takerChangeAddressString,
+                makerAddress,
+                makerChangeAddress,
+                buyerPubKey,
+                sellerPubKey);
+    }
+
     /**
      * The maker creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
      * @param makerIsBuyer              The flag indicating if we are in the maker as buyer role or the opposite.
+     * @param doSign                    The flag indicating if the tx gets signed
      * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
      * @param makerInputAmount          The input amount of the maker.
      * @param msOutputAmount            The output amount to our MS output.
@@ -403,17 +454,18 @@ public class TradeWalletService {
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    public PreparedDepositTxAndMakerInputs makerCreatesAndSignsDepositTx(boolean makerIsBuyer,
-                                                                         byte[] contractHash,
-                                                                         Coin makerInputAmount,
-                                                                         Coin msOutputAmount,
-                                                                         List<RawTransactionInput> takerRawTransactionInputs,
-                                                                         long takerChangeOutputValue,
-                                                                         @Nullable String takerChangeAddressString,
-                                                                         Address makerAddress,
-                                                                         Address makerChangeAddress,
-                                                                         byte[] buyerPubKey,
-                                                                         byte[] sellerPubKey)
+    public PreparedDepositTxAndMakerInputs makerCreatesDepositTx(boolean makerIsBuyer,
+                                                                 boolean doSign,
+                                                                 byte[] contractHash,
+                                                                 Coin makerInputAmount,
+                                                                 Coin msOutputAmount,
+                                                                 List<RawTransactionInput> takerRawTransactionInputs,
+                                                                 long takerChangeOutputValue,
+                                                                 @Nullable String takerChangeAddressString,
+                                                                 Address makerAddress,
+                                                                 Address makerChangeAddress,
+                                                                 byte[] buyerPubKey,
+                                                                 byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         checkArgument(!takerRawTransactionInputs.isEmpty());
 
@@ -509,17 +561,18 @@ public class TradeWalletService {
             }
         }
 
-        // Sign inputs
-        int start = makerIsBuyer ? 0 : takerRawTransactionInputs.size();
-        int end = makerIsBuyer ? makerInputs.size() : preparedDepositTx.getInputs().size();
-        for (int i = start; i < end; i++) {
-            TransactionInput input = preparedDepositTx.getInput(i);
-            signInput(preparedDepositTx, input, i);
-            WalletService.checkScriptSig(preparedDepositTx, input, i);
+        if (doSign) {
+            // Sign inputs
+            int start = 0;
+            int end = makerInputs.size();
+            for (int i = start; i < end; i++) {
+                TransactionInput input = preparedDepositTx.getInput(i);
+                signInput(preparedDepositTx, input, i);
+                WalletService.checkScriptSig(preparedDepositTx, input, i);
+            }
         }
 
         WalletService.printTx("prepared depositTx", preparedDepositTx);
-
         WalletService.verifyTransaction(preparedDepositTx);
 
         return new PreparedDepositTxAndMakerInputs(makerRawTransactionInputs, preparedDepositTx.bitcoinSerialize());

@@ -42,9 +42,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
+public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsMakerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMakerCreatesUnsignedDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -89,8 +89,7 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerMultiSigAddressEntry.getPubKey()),
                     "sellerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().makerCreatesAndSignsDepositTx(
-                    false,
+            PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().sellerAsMakerCreatesDepositTx(
                     contractHash,
                     makerInputAmount,
                     msOutputAmount,

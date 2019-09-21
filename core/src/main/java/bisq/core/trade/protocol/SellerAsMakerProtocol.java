@@ -31,6 +31,7 @@ import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessDepositTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerSendsProvideInputsForDepositTxMessage;
+import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
@@ -39,7 +40,7 @@ import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransfe
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerVerifiesPeersAccountAge;
-import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
 import bisq.core.util.Validator;
 
 import bisq.network.p2p.MailboxMessage;
@@ -129,8 +130,9 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 VerifyPeersAccountAgeWitness.class,
                 SellerVerifiesPeersAccountAge.class,
                 MakerVerifyTakerFeePayment.class,
+                MakerSetsLockTime.class,
                 MakerCreateAndSignContract.class,
-                SellerAsMakerCreatesAndSignsDepositTx.class,
+                SellerAsMakerCreatesUnsignedDepositTx.class,
                 MakerSetupDepositTxListener.class,
                 MakerSendsProvideInputsForDepositTxMessage.class
         );

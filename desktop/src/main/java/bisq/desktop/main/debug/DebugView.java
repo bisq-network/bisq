@@ -45,7 +45,7 @@ import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
-import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
@@ -183,7 +183,7 @@ public class DebugView extends InitializableView<GridPane, Void> {
                         MakerVerifyTakerAccount.class,
                         MakerVerifyTakerFeePayment.class,
                         MakerCreateAndSignContract.class,
-                        SellerAsMakerCreatesAndSignsDepositTx.class,
+                        SellerAsMakerCreatesUnsignedDepositTx.class,
                         MakerSetupDepositTxListener.class,
                         MakerSendsProvideInputsForDepositTxMessage.class,
 

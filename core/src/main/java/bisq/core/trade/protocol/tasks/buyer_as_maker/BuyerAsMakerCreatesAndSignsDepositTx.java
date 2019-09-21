@@ -80,25 +80,17 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     .add(trade.getTradeAmount());
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
-
             long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-
             String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
-
-            Address makerAddress = walletService.getOrCreateAddressEntry(id,
-                    AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-
+            Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
             Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
-
             byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
+            byte[] sellerPubKey = tradingPeer.getMultiSigPubKey();
             checkArgument(Arrays.equals(buyerPubKey,
                     makerMultiSigAddressEntry.getPubKey()),
                     "buyerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            byte[] sellerPubKey = tradingPeer.getMultiSigPubKey();
-
-            PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().makerCreatesAndSignsDepositTx(
-                    true,
+            PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().buyerAsMakerCreatesAndSignsDepositTx(
                     contractHash,
                     makerInputAmount,
                     msOutputAmount,
