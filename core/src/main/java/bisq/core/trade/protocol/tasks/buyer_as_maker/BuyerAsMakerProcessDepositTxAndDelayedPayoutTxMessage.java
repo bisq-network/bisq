@@ -53,7 +53,7 @@ public class BuyerAsMakerProcessDepositTxAndDelayedPayoutTxMessage extends Trade
             Transaction depositTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTx());
             // update with full tx
             Transaction depositTxWalletTx = processModel.getTradeWalletService().addTxToWallet(depositTx);
-            trade.setDepositTx(depositTxWalletTx);
+            trade.applyDepositTx(depositTxWalletTx);
             BtcWalletService.printTx("depositTx received from peer", depositTxWalletTx);
 
             // To access tx confidence we need to add that tx into our wallet.

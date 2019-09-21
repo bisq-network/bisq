@@ -55,8 +55,11 @@ public class SellerAsTakerCreatesDelayedPayoutTx extends TradeTask {
             byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
             byte[] arbitratorPubKey = trade.getArbitratorBtcPubKey();
             long lockTime = trade.getLockTime();
-            Transaction unsignedDelayedPayoutTx = offer.useDonationAddress() ?
-                    tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx, donationAddressString, minerFee, lockTime) :
+            Transaction unsignedDelayedPayoutTx = offer.useReimbursementModel() ?
+                    tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx,
+                            donationAddressString,
+                            minerFee,
+                            lockTime) :
                     tradeWalletService.createDelayedUnsignedPayoutTxToMultisigAddress(depositTx,
                             buyerPubKey,
                             sellerPubKey,

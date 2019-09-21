@@ -21,9 +21,9 @@ import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.PayDepositRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
@@ -318,7 +318,7 @@ public abstract class TradeProtocol {
             sourceUid = ((MailboxMessage) tradeMessage).getUid();
         } else {
             // For direct msg we don't have a mandatory uid so we need to cast to get it
-            if (tradeMessage instanceof PayDepositRequest) {
+            if (tradeMessage instanceof InputsForDepositTxRequest) {
                 sourceUid = tradeMessage.getUid();
             }
         }

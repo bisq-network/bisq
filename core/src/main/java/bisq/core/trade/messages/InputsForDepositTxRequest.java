@@ -21,6 +21,7 @@ import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 
+import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
@@ -41,7 +42,7 @@ import javax.annotation.Nullable;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class PayDepositRequest extends TradeMessage {
+public final class InputsForDepositTxRequest extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
     private final long tradeAmount;
     private final long tradePrice;
@@ -68,30 +69,30 @@ public final class PayDepositRequest extends TradeMessage {
     private final byte[] accountAgeWitnessSignatureOfOfferId;
     private final long currentDate;
 
-    public PayDepositRequest(String tradeId,
-                             NodeAddress senderNodeAddress,
-                             long tradeAmount,
-                             long tradePrice,
-                             long txFee,
-                             long takerFee,
-                             boolean isCurrencyForTakerFeeBtc,
-                             List<RawTransactionInput> rawTransactionInputs,
-                             long changeOutputValue,
-                             @Nullable String changeOutputAddress,
-                             byte[] takerMultiSigPubKey,
-                             String takerPayoutAddressString,
-                             PubKeyRing takerPubKeyRing,
-                             PaymentAccountPayload takerPaymentAccountPayload,
-                             String takerAccountId,
-                             String takerFeeTxId,
-                             List<NodeAddress> acceptedArbitratorNodeAddresses,
-                             List<NodeAddress> acceptedMediatorNodeAddresses,
-                             NodeAddress arbitratorNodeAddress,
-                             NodeAddress mediatorNodeAddress,
-                             String uid,
-                             int messageVersion,
-                             @Nullable byte[] accountAgeWitnessSignatureOfOfferId,
-                             long currentDate) {
+    public InputsForDepositTxRequest(String tradeId,
+                                     NodeAddress senderNodeAddress,
+                                     long tradeAmount,
+                                     long tradePrice,
+                                     long txFee,
+                                     long takerFee,
+                                     boolean isCurrencyForTakerFeeBtc,
+                                     List<RawTransactionInput> rawTransactionInputs,
+                                     long changeOutputValue,
+                                     @Nullable String changeOutputAddress,
+                                     byte[] takerMultiSigPubKey,
+                                     String takerPayoutAddressString,
+                                     PubKeyRing takerPubKeyRing,
+                                     PaymentAccountPayload takerPaymentAccountPayload,
+                                     String takerAccountId,
+                                     String takerFeeTxId,
+                                     List<NodeAddress> acceptedArbitratorNodeAddresses,
+                                     List<NodeAddress> acceptedMediatorNodeAddresses,
+                                     NodeAddress arbitratorNodeAddress,
+                                     NodeAddress mediatorNodeAddress,
+                                     String uid,
+                                     int messageVersion,
+                                     @Nullable byte[] accountAgeWitnessSignatureOfOfferId,
+                                     long currentDate) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -123,7 +124,7 @@ public final class PayDepositRequest extends TradeMessage {
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        protobuf.PayDepositRequest.Builder builder = protobuf.PayDepositRequest.newBuilder()
+        protobuf.InputsForDepositTxRequest.Builder builder = protobuf.InputsForDepositTxRequest.newBuilder()
                 .setTradeId(tradeId)
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setTradeAmount(tradeAmount)
@@ -152,12 +153,12 @@ public final class PayDepositRequest extends TradeMessage {
         Optional.ofNullable(accountAgeWitnessSignatureOfOfferId).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
 
-        return getNetworkEnvelopeBuilder().setPayDepositRequest(builder).build();
+        return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
-    public static PayDepositRequest fromProto(protobuf.PayDepositRequest proto,
-                                              CoreProtoResolver coreProtoResolver,
-                                              int messageVersion) {
+    public static InputsForDepositTxRequest fromProto(protobuf.InputsForDepositTxRequest proto,
+                                                      CoreProtoResolver coreProtoResolver,
+                                                      int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
                 .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
                         rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
@@ -167,7 +168,7 @@ public final class PayDepositRequest extends TradeMessage {
         List<NodeAddress> acceptedMediatorNodeAddresses = proto.getAcceptedMediatorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
 
-        return new PayDepositRequest(proto.getTradeId(),
+        return new InputsForDepositTxRequest(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getTradeAmount(),
                 proto.getTradePrice(),
@@ -195,7 +196,7 @@ public final class PayDepositRequest extends TradeMessage {
 
     @Override
     public String toString() {
-        return "PayDepositRequest{" +
+        return "InputsForDepositTxRequest{" +
                 "\n     senderNodeAddress=" + senderNodeAddress +
                 ",\n     tradeAmount=" + tradeAmount +
                 ",\n     tradePrice=" + tradePrice +

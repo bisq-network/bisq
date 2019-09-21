@@ -55,7 +55,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             TradingPeer taker = processModel.getTradingPeer();
             PaymentAccountPayload makerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
             checkNotNull(makerPaymentAccountPayload, "makerPaymentAccountPayload must not be null");
-            PaymentAccountPayload takerPaymentAccountPayload = taker.getPaymentAccountPayload();
+            PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(taker.getPaymentAccountPayload());
             boolean isBuyerMakerAndSellerTaker = trade instanceof BuyerAsMakerTrade;
 
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
@@ -91,7 +91,8 @@ public class MakerCreateAndSignContract extends TradeTask {
                     takerAddressEntry.getAddressString(),
                     taker.getPayoutAddressString(),
                     makerMultiSigPubKey,
-                    taker.getMultiSigPubKey()
+                    taker.getMultiSigPubKey(),
+                    trade.getLockTime()
             );
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);

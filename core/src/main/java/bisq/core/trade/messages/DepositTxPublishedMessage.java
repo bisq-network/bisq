@@ -28,6 +28,7 @@ import com.google.protobuf.ByteString;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+//todo maybe remove?
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {

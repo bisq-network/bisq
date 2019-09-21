@@ -94,7 +94,7 @@ public class MakerSetupDepositTxListener extends TradeTask {
     private void applyConfidence(TransactionConfidence confidence) {
         if (trade.getDepositTx() == null) {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
-            trade.setDepositTx(walletTx);
+            trade.applyDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from network", walletTx);
             trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
         } else {

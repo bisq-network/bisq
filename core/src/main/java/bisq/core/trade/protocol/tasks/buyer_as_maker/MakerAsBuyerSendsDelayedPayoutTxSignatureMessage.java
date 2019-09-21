@@ -45,11 +45,10 @@ public class MakerAsBuyerSendsDelayedPayoutTxSignatureMessage extends TradeTask 
             runInterceptHook();
 
             byte[] delayedPayoutTxSignature = checkNotNull(processModel.getDelayedPayoutTxSignature());
-            DelayedPayoutTxSignatureResponse message = new DelayedPayoutTxSignatureResponse(
+            DelayedPayoutTxSignatureResponse message = new DelayedPayoutTxSignatureResponse(UUID.randomUUID().toString(),
                     processModel.getOfferId(),
-                    delayedPayoutTxSignature,
                     processModel.getMyNodeAddress(),
-                    UUID.randomUUID().toString());
+                    delayedPayoutTxSignature);
 
             // todo trade.setState
 

@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.tasks.taker;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.DepositTxPublishedMessage;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
@@ -26,14 +26,18 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
-public class TakerSendDepositTxPublishedMessage extends TradeTask {
+public class TakerSendsDepositTxAndDelayedPayoutTxMessage extends TradeTask {
     @SuppressWarnings({"unused"})
-    public TakerSendDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public TakerSendsDepositTxAndDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,11 +46,12 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getDepositTx() != null) {
-                final String id = processModel.getOfferId();
-                DepositTxPublishedMessage message = new DepositTxPublishedMessage(processModel.getOfferId(),
-                        trade.getDepositTx().bitcoinSerialize(),
+                Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
+                DepositTxAndDelayedPayoutTxMessage message = new DepositTxAndDelayedPayoutTxMessage(UUID.randomUUID().toString(),
+                        processModel.getOfferId(),
                         processModel.getMyNodeAddress(),
-                        UUID.randomUUID().toString());
+                        trade.getDepositTx().bitcoinSerialize(),
+                        delayedPayoutTx.bitcoinSerialize());
                 trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
 
                 NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
@@ -69,6 +74,7 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
                             public void onStoredInMailbox() {
                                 log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+
                                 trade.setState(Trade.State.TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }

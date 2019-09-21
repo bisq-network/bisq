@@ -54,7 +54,7 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
             Transaction txFromSerializedTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTx());
             // update with full tx
             Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(txFromSerializedTx);
-            trade.setDepositTx(walletTx);
+            trade.applyDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from peer", walletTx);
 
             // update to the latest peer address of our peer if the message is correct

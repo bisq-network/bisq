@@ -21,7 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -85,7 +85,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
             byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), offerId.getBytes(Charsets.UTF_8));
 
-            PayDepositRequest message = new PayDepositRequest(
+            InputsForDepositTxRequest message = new InputsForDepositTxRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
                     trade.getTradeAmount().value,

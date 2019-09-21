@@ -22,7 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.user.User;
@@ -43,9 +43,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class MakerProcessPayDepositRequest extends TradeTask {
+public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerProcessPayDepositRequest(TaskRunner taskHandler, Trade trade) {
+    public MakerProcessesInputsForDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -54,37 +54,37 @@ public class MakerProcessPayDepositRequest extends TradeTask {
         try {
             runInterceptHook();
             log.debug("current trade state " + trade.getState());
-            PayDepositRequest payDepositRequest = (PayDepositRequest) processModel.getTradeMessage();
-            checkNotNull(payDepositRequest);
-            checkTradeId(processModel.getOfferId(), payDepositRequest);
+            InputsForDepositTxRequest inputsForDepositTxRequest = (InputsForDepositTxRequest) processModel.getTradeMessage();
+            checkNotNull(inputsForDepositTxRequest);
+            checkTradeId(processModel.getOfferId(), inputsForDepositTxRequest);
 
             final TradingPeer tradingPeer = processModel.getTradingPeer();
-            tradingPeer.setPaymentAccountPayload(checkNotNull(payDepositRequest.getTakerPaymentAccountPayload()));
-            tradingPeer.setRawTransactionInputs(checkNotNull(payDepositRequest.getRawTransactionInputs()));
-            checkArgument(payDepositRequest.getRawTransactionInputs().size() > 0);
+            tradingPeer.setPaymentAccountPayload(checkNotNull(inputsForDepositTxRequest.getTakerPaymentAccountPayload()));
+            tradingPeer.setRawTransactionInputs(checkNotNull(inputsForDepositTxRequest.getRawTransactionInputs()));
+            checkArgument(inputsForDepositTxRequest.getRawTransactionInputs().size() > 0);
 
-            tradingPeer.setChangeOutputValue(payDepositRequest.getChangeOutputValue());
-            tradingPeer.setChangeOutputAddress(payDepositRequest.getChangeOutputAddress());
+            tradingPeer.setChangeOutputValue(inputsForDepositTxRequest.getChangeOutputValue());
+            tradingPeer.setChangeOutputAddress(inputsForDepositTxRequest.getChangeOutputAddress());
 
-            tradingPeer.setMultiSigPubKey(checkNotNull(payDepositRequest.getTakerMultiSigPubKey()));
-            tradingPeer.setPayoutAddressString(nonEmptyStringOf(payDepositRequest.getTakerPayoutAddressString()));
-            tradingPeer.setPubKeyRing(checkNotNull(payDepositRequest.getTakerPubKeyRing()));
+            tradingPeer.setMultiSigPubKey(checkNotNull(inputsForDepositTxRequest.getTakerMultiSigPubKey()));
+            tradingPeer.setPayoutAddressString(nonEmptyStringOf(inputsForDepositTxRequest.getTakerPayoutAddressString()));
+            tradingPeer.setPubKeyRing(checkNotNull(inputsForDepositTxRequest.getTakerPubKeyRing()));
 
-            tradingPeer.setAccountId(nonEmptyStringOf(payDepositRequest.getTakerAccountId()));
-            trade.setTakerFeeTxId(nonEmptyStringOf(payDepositRequest.getTakerFeeTxId()));
-            processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedArbitratorNodeAddresses()));
-            processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(payDepositRequest.getAcceptedMediatorNodeAddresses()));
-            if (payDepositRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
+            tradingPeer.setAccountId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerAccountId()));
+            trade.setTakerFeeTxId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerFeeTxId()));
+            processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(inputsForDepositTxRequest.getAcceptedArbitratorNodeAddresses()));
+            processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(inputsForDepositTxRequest.getAcceptedMediatorNodeAddresses()));
+            if (inputsForDepositTxRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNodeAddresses must not be empty");
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
-            tradingPeer.setAccountAgeWitnessSignature(payDepositRequest.getAccountAgeWitnessSignatureOfOfferId());
-            tradingPeer.setCurrentDate(payDepositRequest.getCurrentDate());
+            tradingPeer.setAccountAgeWitnessSignature(inputsForDepositTxRequest.getAccountAgeWitnessSignatureOfOfferId());
+            tradingPeer.setCurrentDate(inputsForDepositTxRequest.getCurrentDate());
 
             User user = checkNotNull(processModel.getUser(), "User must not be null");
 
-            NodeAddress arbitratorNodeAddress = checkNotNull(payDepositRequest.getArbitratorNodeAddress(),
+            NodeAddress arbitratorNodeAddress = checkNotNull(inputsForDepositTxRequest.getArbitratorNodeAddress(),
                     "payDepositRequest.getArbitratorNodeAddress() must not be null");
             trade.setArbitratorNodeAddress(arbitratorNodeAddress);
             Arbitrator arbitrator = checkNotNull(user.getAcceptedArbitratorByAddress(arbitratorNodeAddress),
@@ -94,7 +94,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
             trade.setArbitratorPubKeyRing(checkNotNull(arbitrator.getPubKeyRing(),
                     "arbitrator.getPubKeyRing() must not be null"));
 
-            NodeAddress mediatorNodeAddress = checkNotNull(payDepositRequest.getMediatorNodeAddress(),
+            NodeAddress mediatorNodeAddress = checkNotNull(inputsForDepositTxRequest.getMediatorNodeAddress(),
                     "payDepositRequest.getMediatorNodeAddress() must not be null");
             trade.setMediatorNodeAddress(mediatorNodeAddress);
             Mediator mediator = checkNotNull(user.getAcceptedMediatorByAddress(mediatorNodeAddress),
@@ -104,7 +104,7 @@ public class MakerProcessPayDepositRequest extends TradeTask {
 
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             try {
-                long takersTradePrice = payDepositRequest.getTradePrice();
+                long takersTradePrice = inputsForDepositTxRequest.getTradePrice();
                 offer.checkTradePriceTolerance(takersTradePrice);
                 trade.setTradePrice(takersTradePrice);
             } catch (TradePriceOutOfToleranceException e) {
@@ -113,14 +113,12 @@ public class MakerProcessPayDepositRequest extends TradeTask {
                 failed(e2);
             }
 
-            checkArgument(payDepositRequest.getTradeAmount() > 0);
-            trade.setTradeAmount(Coin.valueOf(payDepositRequest.getTradeAmount()));
+            checkArgument(inputsForDepositTxRequest.getTradeAmount() > 0);
+            trade.setTradeAmount(Coin.valueOf(inputsForDepositTxRequest.getTradeAmount()));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             trade.persist();
-
-            processModel.removeMailboxMessageAfterProcessing(trade);
 
             complete();
         } catch (Throwable t) {
