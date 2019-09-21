@@ -1001,7 +1001,6 @@ public class TradeWalletService {
     }
 
 
-    //todo add version for 2of2 ms
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Emergency payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1010,21 +1009,21 @@ public class TradeWalletService {
     // Emergency payout tool. Used only in cased when the payput from the arbitrator does not work because some data
     // in the trade/dispute are messed up.
     // We keep here arbitratorPayoutAmount just in case (requires cooperation from peer anyway)
-    public Transaction emergencySignAndPublishPayoutTx(String depositTxHex,
-                                                       Coin buyerPayoutAmount,
-                                                       Coin sellerPayoutAmount,
-                                                       Coin arbitratorPayoutAmount,
-                                                       Coin txFee,
-                                                       String buyerAddressString,
-                                                       String sellerAddressString,
-                                                       String arbitratorAddressString,
-                                                       @Nullable String buyerPrivateKeyAsHex,
-                                                       @Nullable String sellerPrivateKeyAsHex,
-                                                       String arbitratorPrivateKeyAsHex,
-                                                       String buyerPubKeyAsHex,
-                                                       String sellerPubKeyAsHex,
-                                                       String arbitratorPubKeyAsHex,
-                                                       TxBroadcaster.Callback callback)
+    public Transaction emergencySignAndPublishPayoutTxFrom2of3MultiSig(String depositTxHex,
+                                                                       Coin buyerPayoutAmount,
+                                                                       Coin sellerPayoutAmount,
+                                                                       Coin arbitratorPayoutAmount,
+                                                                       Coin txFee,
+                                                                       String buyerAddressString,
+                                                                       String sellerAddressString,
+                                                                       String arbitratorAddressString,
+                                                                       @Nullable String buyerPrivateKeyAsHex,
+                                                                       @Nullable String sellerPrivateKeyAsHex,
+                                                                       String arbitratorPrivateKeyAsHex,
+                                                                       String buyerPubKeyAsHex,
+                                                                       String sellerPubKeyAsHex,
+                                                                       String arbitratorPubKeyAsHex,
+                                                                       TxBroadcaster.Callback callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
         checkNotNull((buyerPrivateKeyAsHex != null || sellerPrivateKeyAsHex != null),
                 "either buyerPrivateKeyAsHex or sellerPrivateKeyAsHex must not be null");
@@ -1076,6 +1075,66 @@ public class TradeWalletService {
         TransactionSignature arbitratorTxSig = new TransactionSignature(arbitratorSignature, Transaction.SigHash.ALL, false);
         // Take care of order of signatures. See comment below at getMultiSigRedeemScript (sort order needed here: arbitrator, seller, buyer)
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(arbitratorTxSig, tradersTxSig), redeemScript);
+
+        TransactionInput input = payoutTx.getInput(0);
+        input.setScriptSig(inputScript);
+        WalletService.printTx("payoutTx", payoutTx);
+        WalletService.verifyTransaction(payoutTx);
+        WalletService.checkWalletConsistency(wallet);
+        broadcastTx(payoutTx, callback, 20);
+        return payoutTx;
+    }
+
+    //todo add window tool for usage
+    public Transaction emergencySignAndPublishPayoutTxFrom2of2MultiSig(String depositTxHex,
+                                                                       Coin buyerPayoutAmount,
+                                                                       Coin sellerPayoutAmount,
+                                                                       Coin txFee,
+                                                                       String buyerAddressString,
+                                                                       String sellerAddressString,
+                                                                       String buyerPrivateKeyAsHex,
+                                                                       String sellerPrivateKeyAsHex,
+                                                                       String buyerPubKeyAsHex,
+                                                                       String sellerPubKeyAsHex,
+                                                                       TxBroadcaster.Callback callback)
+            throws AddressFormatException, TransactionVerificationException, WalletException {
+        byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
+        byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
+
+        Script p2SHMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
+
+        Coin msOutput = buyerPayoutAmount.add(sellerPayoutAmount).add(txFee);
+        TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, null, msOutput, p2SHMultiSigOutputScript.getProgram());
+        Transaction depositTx = new Transaction(params);
+        depositTx.addOutput(p2SHMultiSigOutput);
+
+        Transaction payoutTx = new Transaction(params);
+        Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
+        payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
+
+        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
+            payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
+        }
+        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
+            payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+        }
+
+        // take care of sorting!
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
+        Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+
+        ECKey buyerPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(buyerPrivateKeyAsHex));
+        checkNotNull(buyerPrivateKey, "key must not be null");
+        ECKey.ECDSASignature buyerECDSASignature = buyerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
+
+        ECKey sellerPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(sellerPrivateKeyAsHex));
+        checkNotNull(sellerPrivateKey, "key must not be null");
+        ECKey.ECDSASignature sellerECDSASignature = sellerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
+
+        TransactionSignature buyerTxSig = new TransactionSignature(buyerECDSASignature, Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
+
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
         WalletService.printTx("payoutTx", payoutTx);
