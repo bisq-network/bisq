@@ -178,16 +178,7 @@ public class TradeWalletService {
                                              Coin txFee,
                                              String feeReceiverAddresses,
                                              boolean doBroadcast,
-                                             @Nullable TxBroadcaster.Callback callback)
-            throws InsufficientMoneyException, AddressFormatException {
-        log.debug("fundingAddress {}", fundingAddress);
-        log.debug("reservedForTradeAddress {}", reservedForTradeAddress);
-        log.debug("changeAddress {}", changeAddress);
-        log.info("reservedFundsForOffer {}", reservedFundsForOffer.toPlainString());
-        log.debug("useSavingsWallet {}", useSavingsWallet);
-        log.info("tradingFee {}", tradingFee.toPlainString());
-        log.info("txFee {}", txFee.toPlainString());
-        log.debug("feeReceiverAddresses {}", feeReceiverAddresses);
+                                             @Nullable TxBroadcaster.Callback callback) throws InsufficientMoneyException, AddressFormatException {
         Transaction tradingFeeTx = new Transaction(params);
         SendRequest sendRequest = null;
         try {
@@ -220,17 +211,18 @@ public class TradeWalletService {
             wallet.completeTx(sendRequest);
             WalletService.printTx("tradingFeeTx", tradingFeeTx);
 
-            if (doBroadcast && callback != null)
+            if (doBroadcast && callback != null) {
                 broadcastTx(tradingFeeTx, callback);
+            }
 
             return tradingFeeTx;
         } catch (Throwable t) {
-            if (wallet != null && sendRequest != null && sendRequest.coinSelector != null)
-                log.warn("Balance = {}; CoinSelector = {}",
-                        wallet.getBalance(sendRequest.coinSelector),
-                        sendRequest.coinSelector);
+            if (wallet != null && sendRequest != null && sendRequest.coinSelector != null) {
+                log.warn("Balance = {}; CoinSelector = {}", wallet.getBalance(sendRequest.coinSelector), sendRequest.coinSelector);
+            }
 
-            log.warn("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(), tradingFeeTx.getOutputs());
+            log.warn("createBtcTradingFeeTx failed: tradingFeeTx={}, txOutputs={}", tradingFeeTx.toString(),
+                    tradingFeeTx.getOutputs());
             throw t;
         }
     }
@@ -241,17 +233,8 @@ public class TradeWalletService {
                                                Address changeAddress,
                                                Coin reservedFundsForOffer,
                                                boolean useSavingsWallet,
-                                               Coin txFee) throws
-            TransactionVerificationException, WalletException,
-            InsufficientMoneyException, AddressFormatException {
-
-        log.debug("preparedBsqTx {}", preparedBsqTx);
-        log.debug("fundingAddress {}", fundingAddress);
-        log.debug("changeAddress {}", changeAddress);
-        log.debug("reservedFundsForOffer {}", reservedFundsForOffer.toPlainString());
-        log.debug("useSavingsWallet {}", useSavingsWallet);
-        log.debug("txFee {}", txFee.toPlainString());
-
+                                               Coin txFee)
+            throws TransactionVerificationException, WalletException, InsufficientMoneyException, AddressFormatException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
         // outputs [0-1] BSQ change output
@@ -306,7 +289,8 @@ public class TradeWalletService {
         // Sign all BTC inputs
         for (int i = preparedBsqTxInputsSize; i < resultTx.getInputs().size(); i++) {
             TransactionInput txIn = resultTx.getInputs().get(i);
-            checkArgument(txIn.getConnectedOutput() != null && txIn.getConnectedOutput().isMine(wallet),
+            checkArgument(txIn.getConnectedOutput() != null &&
+                            txIn.getConnectedOutput().isMine(wallet),
                     "txIn.getConnectedOutput() is not in our wallet. That must not happen.");
             WalletService.signTransactionInput(wallet, aesKey, resultTx, txIn, i);
             WalletService.checkScriptSig(resultTx, txIn, i);
@@ -321,8 +305,9 @@ public class TradeWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Trade
+    // Deposit tx
     ///////////////////////////////////////////////////////////////////////////////////////////
+
 
     // We construct the deposit transaction in the way that the buyer is always the first entry (inputs, outputs, MS keys) and then the seller.
     // In the creation of the deposit tx the taker/maker roles are the determining roles instead of buyer/seller.
@@ -341,18 +326,10 @@ public class TradeWalletService {
      * @return A data container holding the inputs, the output value and address
      * @throws TransactionVerificationException
      */
-    public InputsAndChangeOutput takerCreatesDepositsTxInputs(Transaction takeOfferFeeTx,
-                                                              Coin inputAmount,
-                                                              Coin txFee,
-                                                              Address takersAddress) throws
-            TransactionVerificationException {
-        if (log.isDebugEnabled()) {
-            log.debug("takerCreatesDepositsTxInputs called");
-            log.debug("inputAmount {}", inputAmount.toFriendlyString());
-            log.debug("txFee {}", txFee.toFriendlyString());
-            log.debug("takersAddress {}", takersAddress.toString());
-        }
-
+    public InputsAndChangeOutput takerCreatesDepositTxInputs(Transaction takeOfferFeeTx,
+                                                             Coin inputAmount,
+                                                             Coin txFee)
+            throws TransactionVerificationException {
         // We add the mining fee 2 times to the deposit tx:
         // 1. Will be spent when publishing the deposit tx (paid by buyer)
         // 2. Will be added to the MS amount, so when publishing the payout tx the fee is already there and the outputs are not changed by fee reduction
@@ -390,14 +367,13 @@ public class TradeWalletService {
 
         //WalletService.printTx("dummyTX", dummyTX);
 
-        List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream()
-                .map(e -> {
-                    checkNotNull(e.getConnectedOutput(), "e.getConnectedOutput() must not be null");
-                    checkNotNull(e.getConnectedOutput().getParentTransaction(), "e.getConnectedOutput().getParentTransaction() must not be null");
-                    checkNotNull(e.getValue(), "e.getValue() must not be null");
-                    return getRawInputFromTransactionInput(e);
-                })
-                .collect(Collectors.toList());
+        List<RawTransactionInput> rawTransactionInputList = dummyTX.getInputs().stream().map(e -> {
+            checkNotNull(e.getConnectedOutput(), "e.getConnectedOutput() must not be null");
+            checkNotNull(e.getConnectedOutput().getParentTransaction(),
+                    "e.getConnectedOutput().getParentTransaction() must not be null");
+            checkNotNull(e.getValue(), "e.getValue() must not be null");
+            return getRawInputFromTransactionInput(e);
+        }).collect(Collectors.toList());
 
 
         // TODO changeOutputValue and changeOutputAddress is not used as taker spends exact amount from fee tx.
@@ -422,7 +398,6 @@ public class TradeWalletService {
      * @param makerChangeAddress        The maker's change address.
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
-     * @param arbitratorPubKey          The public key of the arbitrator.
      * @return A data container holding the serialized transaction and the maker raw inputs
      * @throws SigningException
      * @throws TransactionVerificationException
@@ -438,22 +413,8 @@ public class TradeWalletService {
                                                                          Address makerAddress,
                                                                          Address makerChangeAddress,
                                                                          byte[] buyerPubKey,
-                                                                         byte[] sellerPubKey,
-                                                                         byte[] arbitratorPubKey)
+                                                                         byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
-        log.debug("makerCreatesAndSignsDepositTx called");
-        log.debug("makerIsBuyer {}", makerIsBuyer);
-        log.debug("makerInputAmount {}", makerInputAmount.toFriendlyString());
-        log.debug("msOutputAmount {}", msOutputAmount.toFriendlyString());
-        log.debug("takerRawInputs {}", takerRawTransactionInputs.toString());
-        log.debug("takerChangeOutputValue {}", takerChangeOutputValue);
-        log.debug("takerChangeAddressString {}", takerChangeAddressString);
-        log.debug("makerAddress {}", makerAddress);
-        log.debug("makerChangeAddress {}", makerChangeAddress);
-        log.debug("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey));
-        log.debug("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey));
-        log.debug("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey));
-
         checkArgument(!takerRawTransactionInputs.isEmpty());
 
         // First we construct a dummy TX to get the inputs and outputs we want to use for the real deposit tx.
@@ -470,8 +431,9 @@ public class TradeWalletService {
         checkArgument(dummyTx.getOutputs().size() < 3, "dummyTx.getOutputs().size() >= 3");
 
         // Only save change outputs, the dummy output is ignored (that's why we start with index 1)
-        if (dummyTx.getOutputs().size() > 1)
+        if (dummyTx.getOutputs().size() > 1) {
             makerOutput = dummyTx.getOutput(1);
+        }
 
         // Now we construct the real deposit tx
         Transaction preparedDepositTx = new Transaction(params);
@@ -505,10 +467,11 @@ public class TradeWalletService {
 
 
         // Add MultiSig output
-        Script p2SHMultiSigOutputScript = getP2SHMultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script p2SHMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
 
         // Tx fee for deposit tx will be paid by buyer.
-        TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, preparedDepositTx, msOutputAmount, p2SHMultiSigOutputScript.getProgram());
+        TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, preparedDepositTx, msOutputAmount,
+                p2SHMultiSigOutputScript.getProgram());
         preparedDepositTx.addOutput(p2SHMultiSigOutput);
 
         // We add the hash ot OP_RETURN with a 0 amount output
@@ -517,28 +480,33 @@ public class TradeWalletService {
         preparedDepositTx.addOutput(contractHashOutput);
 
         TransactionOutput takerTransactionOutput = null;
-        if (takerChangeOutputValue > 0 && takerChangeAddressString != null)
+        if (takerChangeOutputValue > 0 && takerChangeAddressString != null) {
             takerTransactionOutput = new TransactionOutput(params, preparedDepositTx, Coin.valueOf(takerChangeOutputValue),
                     Address.fromBase58(params, takerChangeAddressString));
+        }
 
         if (makerIsBuyer) {
             // Add optional buyer outputs
-            if (makerOutput != null)
+            if (makerOutput != null) {
                 preparedDepositTx.addOutput(makerOutput);
+            }
 
             // Add optional seller outputs
-            if (takerTransactionOutput != null)
+            if (takerTransactionOutput != null) {
                 preparedDepositTx.addOutput(takerTransactionOutput);
+            }
         } else {
             // taker is buyer role
 
             // Add optional seller outputs
-            if (takerTransactionOutput != null)
+            if (takerTransactionOutput != null) {
                 preparedDepositTx.addOutput(takerTransactionOutput);
+            }
 
             // Add optional buyer outputs
-            if (makerOutput != null)
+            if (makerOutput != null) {
                 preparedDepositTx.addOutput(makerOutput);
+            }
         }
 
         // Sign inputs
@@ -567,40 +535,28 @@ public class TradeWalletService {
      * @param sellerInputs              The connected outputs for all inputs of the seller.
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
-     * @param arbitratorPubKey          The public key of the arbitrator.
-     * @param callback                  Callback when transaction is broadcasted.
      * @throws SigningException
      * @throws TransactionVerificationException
      * @throws WalletException
      */
-    public Transaction takerSignsAndPublishesDepositTx(boolean takerIsSeller,
-                                                       byte[] contractHash,
-                                                       byte[] makersDepositTxSerialized,
-                                                       List<RawTransactionInput> buyerInputs,
-                                                       List<RawTransactionInput> sellerInputs,
-                                                       byte[] buyerPubKey,
-                                                       byte[] sellerPubKey,
-                                                       byte[] arbitratorPubKey,
-                                                       TxBroadcaster.Callback callback) throws SigningException, TransactionVerificationException,
-            WalletException {
+    public Transaction takerSignsDepositTx(boolean takerIsSeller,
+                                           byte[] contractHash,
+                                           byte[] makersDepositTxSerialized,
+                                           List<RawTransactionInput> buyerInputs,
+                                           List<RawTransactionInput> sellerInputs,
+                                           byte[] buyerPubKey,
+                                           byte[] sellerPubKey)
+            throws SigningException, TransactionVerificationException, WalletException {
         Transaction makersDepositTx = new Transaction(params, makersDepositTxSerialized);
-
-        log.debug("signAndPublishDepositTx called");
-        log.debug("takerIsSeller {}", takerIsSeller);
-        log.debug("makersDepositTx {}", makersDepositTx.toString());
-        log.debug("buyerConnectedOutputsForAllInputs {}", buyerInputs.toString());
-        log.debug("sellerConnectedOutputsForAllInputs {}", sellerInputs.toString());
-        log.debug("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.debug("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.debug("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
 
         checkArgument(!buyerInputs.isEmpty());
         checkArgument(!sellerInputs.isEmpty());
 
         // Check if maker's Multisig script is identical to the takers
-        Script p2SHMultiSigOutputScript = getP2SHMultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
-        if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(p2SHMultiSigOutputScript))
+        Script p2SHMultiSigOutputScript = get2of2MultiSigOutputScript(buyerPubKey, sellerPubKey);
+        if (!makersDepositTx.getOutput(0).getScriptPubKey().equals(p2SHMultiSigOutputScript)) {
             throw new TransactionVerificationException("Maker's p2SHMultiSigOutputScript does not match to takers p2SHMultiSigOutputScript");
+        }
 
         // The outpoints are not available from the serialized makersDepositTx, so we cannot use that tx directly, but we use it to construct a new
         // depositTx
@@ -610,7 +566,7 @@ public class TradeWalletService {
             // Add buyer inputs and apply signature
             // We grab the signature from the makersDepositTx and apply it to the new tx input
             for (int i = 0; i < buyerInputs.size(); i++)
-                depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(makersDepositTx, i), buyerInputs.get(i)));
+                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(makersDepositTx, i), buyerInputs.get(i)));
 
             // Add seller inputs
             for (RawTransactionInput rawTransactionInput : sellerInputs)
@@ -624,7 +580,7 @@ public class TradeWalletService {
             // Add seller inputs
             // We grab the signature from the makersDepositTx and apply it to the new tx input
             for (int i = buyerInputs.size(), k = 0; i < makersDepositTx.getInputs().size(); i++, k++)
-                depositTx.addInput(getTransactionInput(depositTx, getScriptProgram(makersDepositTx, i), sellerInputs.get(k)));
+                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(makersDepositTx, i), sellerInputs.get(k)));
         }
 
         // Check if OP_RETURN output with contract hash matches the one from the maker
@@ -633,12 +589,13 @@ public class TradeWalletService {
         log.debug("contractHashOutput {}", contractHashOutput);
         TransactionOutput makersContractHashOutput = makersDepositTx.getOutputs().get(1);
         log.debug("makersContractHashOutput {}", makersContractHashOutput);
-        if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey()))
+        if (!makersContractHashOutput.getScriptPubKey().equals(contractHashOutput.getScriptPubKey())) {
             throw new TransactionVerificationException("Maker's transaction output for the contract hash is not matching takers version.");
+        }
 
         // Add all outputs from makersDepositTx to depositTx
         makersDepositTx.getOutputs().forEach(depositTx::addOutput);
-        //WalletService.printTx("makersDepositTx", makersDepositTx);
+        WalletService.printTx("makersDepositTx", makersDepositTx);
 
         // Sign inputs
         int start = takerIsSeller ? buyerInputs.size() : 0;
@@ -654,11 +611,116 @@ public class TradeWalletService {
         WalletService.verifyTransaction(depositTx);
         WalletService.checkWalletConsistency(wallet);
 
-        broadcastTx(depositTx, callback);
-
         return depositTx;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Delayed payout tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createDelayedUnsignedPayoutTxToDonationAddress(Transaction depositTx,
+                                                                      String donationAddressString,
+                                                                      Coin minerFee,
+                                                                      long lockTime)
+            throws AddressFormatException, TransactionVerificationException {
+        TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
+        Transaction delayedPayoutTx = new Transaction(params);
+        delayedPayoutTx.addInput(p2SHMultiSigOutput);
+        applyLockTime(lockTime, delayedPayoutTx);
+        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
+        delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
+        WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
+        WalletService.verifyTransaction(delayedPayoutTx);
+        return delayedPayoutTx;
+    }
+
+    public Transaction createDelayedUnsignedPayoutTxToMultisigAddress(Transaction depositTx,
+                                                                      byte[] buyerPubKey,
+                                                                      byte[] sellerPubKey,
+                                                                      byte[] arbitratorPubKey,
+                                                                      Coin minerFee,
+                                                                      long lockTime)
+            throws TransactionVerificationException {
+        Transaction delayedPayoutTx = new Transaction(params);
+        TransactionOutput p2SHMultiSigOutput2of2 = depositTx.getOutput(0);
+        delayedPayoutTx.addInput(p2SHMultiSigOutput2of2);
+        applyLockTime(lockTime, delayedPayoutTx);
+        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
+        // Add 2of3 MultiSig output
+        Script p2SHMultiSigOutputScript = get2of3MultiSigOutputScript(buyerPubKey,
+                sellerPubKey, arbitratorPubKey);
+        TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, depositTx,
+                outputAmount, p2SHMultiSigOutputScript.getProgram());
+        delayedPayoutTx.addOutput(p2SHMultiSigOutput);
+        WalletService.printTx("Unsigned delayedPayoutTx ToMultisigAddress", delayedPayoutTx);
+        WalletService.verifyTransaction(delayedPayoutTx);
+
+        return delayedPayoutTx;
+    }
+
+    public byte[] signDelayedPayoutTx(Transaction delayedPayoutTx,
+                                      DeterministicKey myMultiSigKeyPair,
+                                      byte[] buyerPubKey,
+                                      byte[] sellerPubKey)
+            throws AddressFormatException, TransactionVerificationException {
+
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
+        Sha256Hash sigHash = delayedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
+        checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
+        if (myMultiSigKeyPair.isEncrypted()) {
+            checkNotNull(aesKey);
+        }
+
+        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        WalletService.printTx("delayedPayoutTx for sig creation", delayedPayoutTx);
+        WalletService.verifyTransaction(delayedPayoutTx);
+        return mySignature.encodeToDER();
+    }
+
+    public Transaction finalizeDelayedPayoutTx(Transaction delayedPayoutTx,
+                                               byte[] buyerPubKey,
+                                               byte[] sellerPubKey,
+                                               byte[] buyerSignature,
+                                               byte[] sellerSignature)
+            throws AddressFormatException, TransactionVerificationException, WalletException {
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
+        ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
+        ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
+        TransactionSignature buyerTxSig = new TransactionSignature(buyerECDSASignature, Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
+        TransactionInput input = delayedPayoutTx.getInput(0);
+        input.setScriptSig(inputScript);
+        WalletService.printTx("Fully signed delayedPayoutTx", delayedPayoutTx);
+        WalletService.verifyTransaction(delayedPayoutTx);
+        WalletService.checkWalletConsistency(wallet);
+        WalletService.checkScriptSig(delayedPayoutTx, input, 0);
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        input.verify(input.getConnectedOutput());
+        return delayedPayoutTx;
+    }
+
+    public boolean verifiesDepositTxAndDelayedPayoutTx(Transaction depositTx,
+                                                       Transaction delayedPayoutTx) {
+        // todo
+        if (delayedPayoutTx.getLockTime() == 0) {
+            log.error("Time lock is not set");
+            return false;
+        }
+
+        if (delayedPayoutTx.getInputs().stream().anyMatch(e -> e.getSequenceNumber() == TransactionInput.NO_SEQUENCE)) {
+            log.error("Sequence number must be smaller than 0xFFFFFFFF");
+            return false;
+        }
+
+        return true;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Standard payout tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Seller signs payout transaction, buyer has not signed yet.
@@ -671,7 +733,6 @@ public class TradeWalletService {
      * @param multiSigKeyPair           DeterministicKey for MultiSig from seller
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
-     * @param arbitratorPubKey          The public key of the arbitrator.
      * @return DER encoded canonical signature
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -683,38 +744,21 @@ public class TradeWalletService {
                                      String sellerPayoutAddressString,
                                      DeterministicKey multiSigKeyPair,
                                      byte[] buyerPubKey,
-                                     byte[] sellerPubKey,
-                                     byte[] arbitratorPubKey)
+                                     byte[] sellerPubKey)
             throws AddressFormatException, TransactionVerificationException {
-        log.trace("sellerSignsPayoutTx called");
-        log.trace("depositTx {}", depositTx.toString());
-        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
-        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
-        log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
-        log.info("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
-        log.info("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
-        Transaction preparedPayoutTx = createPayoutTx(depositTx,
-                buyerPayoutAmount,
-                sellerPayoutAmount,
-                buyerPayoutAddressString,
-                sellerPayoutAddressString);
+        Transaction preparedPayoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount,
+                buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
-        if (multiSigKeyPair.isEncrypted())
+        if (multiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
-
+        }
         ECKey.ECDSASignature buyerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
-
         WalletService.printTx("prepared payoutTx", preparedPayoutTx);
-
         WalletService.verifyTransaction(preparedPayoutTx);
-
         return buyerSignature.encodeToDER();
     }
 
@@ -731,7 +775,6 @@ public class TradeWalletService {
      * @param multiSigKeyPair           Buyer's keypair for MultiSig
      * @param buyerPubKey               The public key of the buyer.
      * @param sellerPubKey              The public key of the seller.
-     * @param arbitratorPubKey          The public key of the arbitrator.
      * @return The payout transaction
      * @throws AddressFormatException
      * @throws TransactionVerificationException
@@ -745,49 +788,27 @@ public class TradeWalletService {
                                                        String sellerPayoutAddressString,
                                                        DeterministicKey multiSigKeyPair,
                                                        byte[] buyerPubKey,
-                                                       byte[] sellerPubKey,
-                                                       byte[] arbitratorPubKey)
+                                                       byte[] sellerPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException {
-        log.trace("buyerSignsAndFinalizesPayoutTx called");
-        log.trace("depositTx {}", depositTx.toString());
-        log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
-        log.trace("buyerSignature s {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
-        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
-        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
-        log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
-
-        Transaction payoutTx = createPayoutTx(depositTx,
-                buyerPayoutAmount,
-                sellerPayoutAmount,
-                buyerPayoutAddressString,
-                sellerPayoutAddressString);
+        Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
-        if (multiSigKeyPair.isEncrypted())
+        if (multiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
-
-
+        }
         ECKey.ECDSASignature sellerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
-
         TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
                 Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(sellerSignature, Transaction.SigHash.ALL, false);
         // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (arbitrator, seller, buyer)
-        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
-
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig),
+                redeemScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
-
         WalletService.printTx("payoutTx", payoutTx);
-
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
         WalletService.checkScriptSig(payoutTx, input, 0);
@@ -798,7 +819,7 @@ public class TradeWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Mediation
+    // Mediated payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public byte[] signMediatedPayoutTx(Transaction depositTx,
@@ -808,38 +829,20 @@ public class TradeWalletService {
                                        String sellerPayoutAddressString,
                                        DeterministicKey myMultiSigKeyPair,
                                        byte[] buyerPubKey,
-                                       byte[] sellerPubKey,
-                                       byte[] arbitratorPubKey)
+                                       byte[] sellerPubKey)
             throws AddressFormatException, TransactionVerificationException {
-        log.trace("signMediatedPayoutTx called");
-        log.trace("depositTx {}", depositTx.toString());
-        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
-        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
-        log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.trace("buyerPubKey HEX=" + ECKey.fromPublicOnly(buyerPubKey).getPublicKeyAsHex());
-        log.trace("sellerPubKey HEX=" + ECKey.fromPublicOnly(sellerPubKey).getPublicKeyAsHex());
-        log.trace("arbitratorPubKey HEX=" + ECKey.fromPublicOnly(arbitratorPubKey).getPublicKeyAsHex());
-        Transaction preparedPayoutTx = createPayoutTx(depositTx,
-                buyerPayoutAmount,
-                sellerPayoutAmount,
-                buyerPayoutAddressString,
-                sellerPayoutAddressString);
+        Transaction preparedPayoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         // MS output from prev. tx is index 0
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
-        if (myMultiSigKeyPair.isEncrypted())
+        if (myMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
-
+        }
         ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
-
         WalletService.printTx("prepared mediated payoutTx for sig creation", preparedPayoutTx);
-
         WalletService.verifyTransaction(preparedPayoutTx);
-
         return mySignature.encodeToDER();
     }
 
@@ -852,47 +855,22 @@ public class TradeWalletService {
                                                 String sellerPayoutAddressString,
                                                 DeterministicKey multiSigKeyPair,
                                                 byte[] buyerPubKey,
-                                                byte[] sellerPubKey,
-                                                byte[] arbitratorPubKey)
+                                                byte[] sellerPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException {
-        log.trace("finalizeMediatedPayoutTx called");
-        log.trace("depositTx {}", depositTx.toString());
-        log.trace("buyerSignature r {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).r.toString());
-        log.trace("buyerSignature s {}", ECKey.ECDSASignature.decodeFromDER(buyerSignature).s.toString());
-        log.trace("sellerSignature r {}", ECKey.ECDSASignature.decodeFromDER(sellerSignature).r.toString());
-        log.trace("sellerSignature s {}", ECKey.ECDSASignature.decodeFromDER(sellerSignature).s.toString());
-        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerPayoutAddressString {}", buyerPayoutAddressString);
-        log.trace("sellerPayoutAddressString {}", sellerPayoutAddressString);
-        log.trace("multiSigKeyPair (not displayed for security reasons)");
-        log.trace("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.trace("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.trace("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
-
-        Transaction payoutTx = createPayoutTx(depositTx,
-                buyerPayoutAmount,
-                sellerPayoutAmount,
-                buyerPayoutAddressString,
-                sellerPayoutAddressString);
+        Transaction payoutTx = createPayoutTx(depositTx, buyerPayoutAmount, sellerPayoutAmount, buyerPayoutAddressString, sellerPayoutAddressString);
         // MS redeemScript
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         // MS output from prev. tx is index 0
         checkNotNull(multiSigKeyPair, "multiSigKeyPair must not be null");
-
         TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
                 Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(sellerSignature),
                 Transaction.SigHash.ALL, false);
-
         // Take care of order of signatures. Need to be reversed here. See comment below at getMultiSigRedeemScript (arbitrator, seller, buyer)
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
-
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
-
         WalletService.printTx("mediated payoutTx", payoutTx);
-
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
         WalletService.checkScriptSig(payoutTx, input, 0);
@@ -903,7 +881,7 @@ public class TradeWalletService {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Arbitration
+    // Arbitrated payoutTx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -933,39 +911,27 @@ public class TradeWalletService {
                                                   byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
-        log.trace("signDisputedPayoutTx called");
-        log.trace("depositTx {}", depositTx.toString());
-        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressString {}", buyerAddressString);
-        log.trace("sellerAddressString {}", sellerAddressString);
-        log.trace("arbitratorKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
-
         // Our MS is index 0
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction preparedPayoutTx = new Transaction(params);
         preparedPayoutTx.addInput(p2SHMultiSigOutput);
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
+        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
             preparedPayoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
+        }
+        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
             preparedPayoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+        }
 
         // take care of sorting!
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = preparedPayoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         checkNotNull(arbitratorKeyPair, "arbitratorKeyPair must not be null");
-        if (arbitratorKeyPair.isEncrypted())
+        if (arbitratorKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
-
+        }
         ECKey.ECDSASignature arbitratorSignature = arbitratorKeyPair.sign(sigHash, aesKey).toCanonicalised();
-
         WalletService.verifyTransaction(preparedPayoutTx);
-
-        //WalletService.printTx("preparedPayoutTx", preparedPayoutTx);
-
+        WalletService.printTx("preparedPayoutTx", preparedPayoutTx);
         return arbitratorSignature.encodeToDER();
     }
 
@@ -999,47 +965,33 @@ public class TradeWalletService {
                                                              byte[] arbitratorPubKey)
             throws AddressFormatException, TransactionVerificationException, WalletException {
         Transaction depositTx = new Transaction(params, depositTxSerialized);
-
-        log.trace("signAndFinalizeDisputedPayoutTx called");
-        log.trace("depositTx {}", depositTx);
-        log.trace("arbitratorSignature r {}", ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).r.toString());
-        log.trace("arbitratorSignature s {}", ECKey.ECDSASignature.decodeFromDER(arbitratorSignature).s.toString());
-        log.trace("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.trace("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.trace("buyerAddressString {}", buyerAddressString);
-        log.trace("sellerAddressString {}", sellerAddressString);
-        log.trace("tradersMultiSigKeyPair (not displayed for security reasons)");
-        log.info("buyerPubKey {}", ECKey.fromPublicOnly(buyerPubKey).toString());
-        log.info("sellerPubKey {}", ECKey.fromPublicOnly(sellerPubKey).toString());
-        log.info("arbitratorPubKey {}", ECKey.fromPublicOnly(arbitratorPubKey).toString());
-
-
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction payoutTx = new Transaction(params);
         payoutTx.addInput(p2SHMultiSigOutput);
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
+        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
             payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
+        }
+        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
             payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
+        }
 
         // take care of sorting!
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
         checkNotNull(tradersMultiSigKeyPair, "tradersMultiSigKeyPair must not be null");
-        if (tradersMultiSigKeyPair.isEncrypted())
+        if (tradersMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
+        }
         ECKey.ECDSASignature tradersSignature = tradersMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
-
         TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
         TransactionSignature arbitratorTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(arbitratorSignature),
                 Transaction.SigHash.ALL, false);
         // Take care of order of signatures. See comment below at getMultiSigRedeemScript (sort order needed here: arbitrator, seller, buyer)
-        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(arbitratorTxSig, tradersTxSig), redeemScript);
+        Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(arbitratorTxSig, tradersTxSig),
+                redeemScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
-
         WalletService.printTx("disputed payoutTx", payoutTx);
-
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
         WalletService.checkScriptSig(payoutTx, input, 0);
@@ -1047,6 +999,12 @@ public class TradeWalletService {
         input.verify(input.getConnectedOutput());
         return payoutTx;
     }
+
+
+    //todo add version for 2of2 ms
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Emergency payoutTx
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
 
     // Emergency payout tool. Used only in cased when the payput from the arbitrator does not work because some data
@@ -1066,32 +1024,16 @@ public class TradeWalletService {
                                                        String buyerPubKeyAsHex,
                                                        String sellerPubKeyAsHex,
                                                        String arbitratorPubKeyAsHex,
-                                                       String P2SHMultiSigOutputScript,
                                                        TxBroadcaster.Callback callback)
             throws AddressFormatException, TransactionVerificationException, WalletException {
-        log.info("signAndPublishPayoutTx called");
-        log.info("depositTxHex {}", depositTxHex);
-        log.info("buyerPayoutAmount {}", buyerPayoutAmount.toFriendlyString());
-        log.info("sellerPayoutAmount {}", sellerPayoutAmount.toFriendlyString());
-        log.info("arbitratorPayoutAmount {}", arbitratorPayoutAmount.toFriendlyString());
-        log.info("buyerAddressString {}", buyerAddressString);
-        log.info("sellerAddressString {}", sellerAddressString);
-        log.info("arbitratorAddressString {}", arbitratorAddressString);
-        log.info("buyerPrivateKeyAsHex (not displayed for security reasons)");
-        log.info("sellerPrivateKeyAsHex (not displayed for security reasons)");
-        log.info("arbitratorPrivateKeyAsHex (not displayed for security reasons)");
-        log.info("buyerPubKeyAsHex {}", buyerPubKeyAsHex);
-        log.info("sellerPubKeyAsHex {}", sellerPubKeyAsHex);
-        log.info("arbitratorPubKeyAsHex {}", arbitratorPubKeyAsHex);
-        log.info("P2SHMultiSigOutputScript {}", P2SHMultiSigOutputScript);
-
-        checkNotNull((buyerPrivateKeyAsHex != null || sellerPrivateKeyAsHex != null), "either buyerPrivateKeyAsHex or sellerPrivateKeyAsHex must not be null");
+        checkNotNull((buyerPrivateKeyAsHex != null || sellerPrivateKeyAsHex != null),
+                "either buyerPrivateKeyAsHex or sellerPrivateKeyAsHex must not be null");
 
         byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
-        final byte[] arbitratorPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(arbitratorPubKeyAsHex)).getPubKey();
+        byte[] arbitratorPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(arbitratorPubKeyAsHex)).getPubKey();
 
-        Script p2SHMultiSigOutputScript = getP2SHMultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script p2SHMultiSigOutputScript = get2of3MultiSigOutputScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
 
         Coin msOutput = buyerPayoutAmount.add(sellerPayoutAmount).add(arbitratorPayoutAmount).add(txFee);
         TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, null, msOutput, p2SHMultiSigOutputScript.getProgram());
@@ -1102,15 +1044,18 @@ public class TradeWalletService {
         Sha256Hash spendTxHash = Sha256Hash.wrap(depositTxHex);
         payoutTx.addInput(new TransactionInput(params, depositTx, p2SHMultiSigOutputScript.getProgram(), new TransactionOutPoint(params, 0, spendTxHash), msOutput));
 
-        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO))
+        if (buyerPayoutAmount.isGreaterThan(Coin.ZERO)) {
             payoutTx.addOutput(buyerPayoutAmount, Address.fromBase58(params, buyerAddressString));
-        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO))
+        }
+        if (sellerPayoutAmount.isGreaterThan(Coin.ZERO)) {
             payoutTx.addOutput(sellerPayoutAmount, Address.fromBase58(params, sellerAddressString));
-        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO))
+        }
+        if (arbitratorPayoutAmount.isGreaterThan(Coin.ZERO)) {
             payoutTx.addOutput(arbitratorPayoutAmount, Address.fromBase58(params, arbitratorAddressString));
+        }
 
         // take care of sorting!
-        Script redeemScript = getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
+        Script redeemScript = get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey);
         Sha256Hash sigHash = payoutTx.hashForSignature(0, redeemScript, Transaction.SigHash.ALL, false);
 
         ECKey.ECDSASignature tradersSignature;
@@ -1124,24 +1069,19 @@ public class TradeWalletService {
             checkNotNull(sellerPrivateKey, "sellerPrivateKey must not be null");
             tradersSignature = sellerPrivateKey.sign(sigHash, aesKey).toCanonicalised();
         }
-        final ECKey key = ECKey.fromPrivate(Utils.HEX.decode(arbitratorPrivateKeyAsHex));
+        ECKey key = ECKey.fromPrivate(Utils.HEX.decode(arbitratorPrivateKeyAsHex));
         checkNotNull(key, "key must not be null");
         ECKey.ECDSASignature arbitratorSignature = key.sign(sigHash, aesKey).toCanonicalised();
-
         TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
         TransactionSignature arbitratorTxSig = new TransactionSignature(arbitratorSignature, Transaction.SigHash.ALL, false);
         // Take care of order of signatures. See comment below at getMultiSigRedeemScript (sort order needed here: arbitrator, seller, buyer)
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(arbitratorTxSig, tradersTxSig), redeemScript);
         TransactionInput input = payoutTx.getInput(0);
         input.setScriptSig(inputScript);
-
         WalletService.printTx("payoutTx", payoutTx);
-
         WalletService.verifyTransaction(payoutTx);
         WalletService.checkWalletConsistency(wallet);
-
         broadcastTx(payoutTx, callback, 20);
-
         return payoutTx;
     }
 
@@ -1175,8 +1115,9 @@ public class TradeWalletService {
         Transaction result = new Transaction(params, transaction.bitcoinSerialize());
         result.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
 
-        if (wallet != null)
+        if (wallet != null) {
             wallet.receivePending(result, null, true);
+        }
         return result;
     }
 
@@ -1190,8 +1131,9 @@ public class TradeWalletService {
         Transaction transaction = new Transaction(params, serializedTransaction);
         transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);
 
-        if (wallet != null)
+        if (wallet != null) {
             wallet.receivePending(transaction, null, true);
+        }
         return transaction;
     }
 
@@ -1219,31 +1161,31 @@ public class TradeWalletService {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @NotNull
     private RawTransactionInput getRawInputFromTransactionInput(@NotNull TransactionInput input) {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-        checkNotNull(input.getConnectedOutput().getParentTransaction(), "input.getConnectedOutput().getParentTransaction() must not be null");
+        checkNotNull(input.getConnectedOutput().getParentTransaction(),
+                "input.getConnectedOutput().getParentTransaction() must not be null");
         checkNotNull(input.getValue(), "input.getValue() must not be null");
 
-        return new RawTransactionInput(input.getOutpoint().getIndex(), input.getConnectedOutput().getParentTransaction().bitcoinSerialize(), input.getValue().value);
+        return new RawTransactionInput(input.getOutpoint().getIndex(),
+                input.getConnectedOutput().getParentTransaction().bitcoinSerialize(),
+                input.getValue().value);
     }
 
-    private byte[] getScriptProgram(Transaction makersDepositTx, int i) throws TransactionVerificationException {
+    private byte[] getMakersScriptSigProgram(Transaction makersDepositTx, int i) throws TransactionVerificationException {
         byte[] scriptProgram = makersDepositTx.getInputs().get(i).getScriptSig().getProgram();
-        if (scriptProgram.length == 0)
+        if (scriptProgram.length == 0) {
             throw new TransactionVerificationException("Inputs from maker not signed.");
+        }
 
         return scriptProgram;
     }
 
-    @NotNull
     private TransactionInput getTransactionInput(Transaction depositTx,
                                                  byte[] scriptProgram,
                                                  RawTransactionInput rawTransactionInput) {
-        return new TransactionInput(params,
-                depositTx,
-                scriptProgram,
-                new TransactionOutPoint(params, rawTransactionInput.index, new Transaction(params, rawTransactionInput.parentTransaction)),
+        return new TransactionInput(params, depositTx, scriptProgram, new TransactionOutPoint(params,
+                rawTransactionInput.index, new Transaction(params, rawTransactionInput.parentTransaction)),
                 Coin.valueOf(rawTransactionInput.value));
     }
 
@@ -1257,7 +1199,7 @@ public class TradeWalletService {
     // Furthermore the executed list is reversed to the provided.
     // Best practice is to provide the list sorted by the least probable successful candidates first (arbitrator is first -> will be last in execution loop, so
     // avoiding unneeded expensive ECKey.verify calls)
-    private Script getMultiSigRedeemScript(byte[] buyerPubKey, byte[] sellerPubKey, byte[] arbitratorPubKey) {
+    private Script get2of3MultiSigRedeemScript(byte[] buyerPubKey, byte[] sellerPubKey, byte[] arbitratorPubKey) {
         ECKey buyerKey = ECKey.fromPublicOnly(buyerPubKey);
         ECKey sellerKey = ECKey.fromPublicOnly(sellerPubKey);
         ECKey arbitratorKey = ECKey.fromPublicOnly(arbitratorPubKey);
@@ -1266,8 +1208,20 @@ public class TradeWalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    private Script getP2SHMultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, byte[] arbitratorPubKey) {
-        return ScriptBuilder.createP2SHOutputScript(getMultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey));
+    private Script get2of2MultiSigRedeemScript(byte[] buyerPubKey, byte[] sellerPubKey) {
+        ECKey buyerKey = ECKey.fromPublicOnly(buyerPubKey);
+        ECKey sellerKey = ECKey.fromPublicOnly(sellerPubKey);
+        // Take care of sorting! Need to reverse to the order we use normally (buyer, seller)
+        List<ECKey> keys = ImmutableList.of(sellerKey, buyerKey);
+        return ScriptBuilder.createMultiSigOutputScript(2, keys);
+    }
+
+    private Script get2of3MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, byte[] arbitratorPubKey) {
+        return ScriptBuilder.createP2SHOutputScript(get2of3MultiSigRedeemScript(buyerPubKey, sellerPubKey, arbitratorPubKey));
+    }
+
+    private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey) {
+        return ScriptBuilder.createP2SHOutputScript(get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey));
     }
 
     private Transaction createPayoutTx(Transaction depositTx,
@@ -1288,9 +1242,11 @@ public class TradeWalletService {
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
         checkNotNull(wallet);
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
-        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" + input.getOutpoint().toString());
-        if (sigKey.isEncrypted())
+        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" +
+                input.getOutpoint().toString());
+        if (sigKey.isEncrypted()) {
             checkNotNull(aesKey);
+        }
         Sha256Hash hash = transaction.hashForSignature(inputIndex, scriptPubKey, Transaction.SigHash.ALL, false);
         ECKey.ECDSASignature signature = sigKey.sign(hash, aesKey);
         TransactionSignature txSig = new TransactionSignature(signature, Transaction.SigHash.ALL, false);
@@ -1327,10 +1283,18 @@ public class TradeWalletService {
             checkNotNull(wallet, "wallet must not be null");
             wallet.completeTx(sendRequest);
         } catch (Throwable t) {
-            if (sendRequest != null && sendRequest.tx != null)
-                log.warn("addAvailableInputsAndChangeOutputs: sendRequest.tx={}, sendRequest.tx.getOutputs()={}", sendRequest.tx, sendRequest.tx.getOutputs());
+            if (sendRequest != null && sendRequest.tx != null) {
+                log.warn("addAvailableInputsAndChangeOutputs: sendRequest.tx={}, sendRequest.tx.getOutputs()={}",
+                        sendRequest.tx, sendRequest.tx.getOutputs());
+            }
 
             throw new WalletException(t);
         }
+    }
+
+    private void applyLockTime(long lockTime, Transaction tx) {
+        checkArgument(!tx.getInputs().isEmpty(), "The tx must have inputs. tx={}", tx);
+        tx.getInputs().forEach(input -> input.setSequenceNumber(TransactionInput.NO_SEQUENCE - 1));
+        tx.setLockTime(lockTime);
     }
 }
