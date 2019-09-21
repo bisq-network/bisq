@@ -103,10 +103,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
-    //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee;
+            avoidStandbyMode, useCustomFee, useReimbursementModel;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
     /*referralIdInputTextField,*/
@@ -225,28 +224,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 9, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
-
-        // selectBaseCurrencyNetwork
-      /*  selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
-                Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
-
-        selectBaseCurrencyNetworkComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("settings.preferences.selectCurrencyNetwork"),
-                selectBaseCurrencyNetworkComboBox, false));
-        selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return baseCurrencyNetwork != null ?
-                        Res.get(baseCurrencyNetwork.name()) :
-                        Res.get("na");
-            }
-
-            @Override
-            public BaseCurrencyNetwork fromString(String string) {
-                return null;
-            }
-        });*/
 
         userLanguageComboBox = addComboBox(root, gridRow,
                 Res.get("shared.language"), Layout.FIRST_ROW_DISTANCE);
@@ -370,6 +349,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // AvoidStandbyModeService
         avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.avoidStandbyMode"));
+
+        useReimbursementModel = addSlideToggleButton(root, ++gridRow,
+                Res.get("setting.preferences.useReimbursementModel"));
     }
 
     private void initializeSeparator() {
@@ -829,6 +811,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
         avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
         avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
+
+        useReimbursementModel.setSelected(preferences.isUseReimbursementModel());
+        useReimbursementModel.setOnAction(e -> preferences.setUseReimbursementModel(useReimbursementModel.isSelected()));
     }
 
     private void activateDaoPreferences() {
@@ -951,6 +936,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         avoidStandbyMode.setOnAction(null);
+        useReimbursementModel.setOnAction(null);
     }
 
     private void deactivateDaoPreferences() {
