@@ -34,6 +34,8 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 
+import bisq.network.p2p.BootstrapListener;
+
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
@@ -43,7 +45,6 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
 
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
@@ -93,8 +94,7 @@ public abstract class TradeStepView extends AnchorPane {
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
     private Overlay acceptMediationResultPopup;
-
-    private Scene scene;
+    private BootstrapListener bootstrapListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -183,15 +183,20 @@ public abstract class TradeStepView extends AnchorPane {
             });
         }
 
-        disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
-            if (newValue != null)
-                updateDisputeState(newValue);
-        });
-
-        mediationResultStateSubscription = EasyBind.subscribe(trade.mediationResultStateProperty(), newValue -> {
-            if (newValue != null)
-                updateMediationResultState();
-        });
+        // We get mailbox messages processed after we have bootstrapped. This will influence the states we
+        // handle in our disputeStateSubscription and mediationResultStateSubscriptions. To avoid that we show
+        // popups from incorrect states we wait until we have bootstrapped and the mailbox messages processed.
+        if (model.p2PService.isBootstrapped()) {
+            registerSubscriptions();
+        } else {
+            bootstrapListener = new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    registerSubscriptions();
+                }
+            };
+            model.p2PService.addP2PServiceListener(bootstrapListener);
+        }
 
         tradePeriodStateSubscription = EasyBind.subscribe(trade.tradePeriodStateProperty(), newValue -> {
             if (newValue != null)
@@ -202,6 +207,22 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (infoLabel != null)
             infoLabel.setText(getInfoText());
+    }
+
+    private void registerSubscriptions() {
+        disputeStateSubscription = EasyBind.subscribe(trade.disputeStateProperty(), newValue -> {
+            if (newValue != null) {
+                updateDisputeState(newValue);
+            }
+        });
+
+        mediationResultStateSubscription = EasyBind.subscribe(trade.mediationResultStateProperty(), newValue -> {
+            if (newValue != null) {
+                updateMediationResultState();
+            }
+        });
+
+        UserThread.execute(() -> model.p2PService.removeP2PServiceListener(bootstrapListener));
     }
 
     private void openSupportTicket() {
