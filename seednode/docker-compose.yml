@@ -88,17 +88,16 @@ services:
                 ipv4_address: 172.28.1.2
 
     nginx:
-        image: nginx:latest
-        container_name: collectd_nginx
-#        context: ./docker
-        volumes:
-            - ./docker/prod/nginx.conf:/etc/nginx/nginx.conf
-            - ./cert.crt:/etc/nginx/cert.crt
-            - ./cert.key:/etc/nginx/cert.key
+        build:
+            context: .
+            dockerfile: docker/prod/Dockerfile-nginx
+        image: bisq/nginx
+        container_name: nginx
         depends_on:
             - collectd
         expose:
             - "2003"
+        command: [nginx-debug, '-g', 'daemon off;']
         networks:
             bisq_net:
                 ipv4_address: 172.28.1.5
