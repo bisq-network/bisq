@@ -1374,7 +1374,6 @@ message ProcessModel {
     bytes mediated_payout_tx_signature = 18;
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
-    bytes delayed_payout_tx_signature = 21;
 }
 
 message TradingPeer {
@@ -1393,7 +1392,6 @@ message TradingPeer {
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;
     bytes mediated_payout_tx_signature = 15;
-    bytes delayed_payout_tx_signature = 16;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

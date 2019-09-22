@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.tasks.seller;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.offer.Offer;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -35,6 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerCreatesDelayedPayoutTx extends TradeTask {
+
     @SuppressWarnings({"unused"})
     public SellerCreatesDelayedPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
@@ -50,22 +52,36 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             Coin minerFee = trade.getTxFee();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction depositTx = checkNotNull(trade.getDepositTx());
-            TradingPeer tradingPeer = processModel.getTradingPeer();
-            byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
-            byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
-            byte[] arbitratorPubKey = trade.getArbitratorBtcPubKey();
+
             long lockTime = trade.getLockTime();
-            Transaction unsignedDelayedPayoutTx = offer.useReimbursementModel() ?
-                    tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx,
-                            donationAddressString,
-                            minerFee,
-                            lockTime) :
-                    tradeWalletService.createDelayedUnsignedPayoutTxToMultisigAddress(depositTx,
-                            buyerPubKey,
-                            sellerPubKey,
-                            arbitratorPubKey,
-                            minerFee,
-                            lockTime);
+
+            //todo
+            Contract contract = checkNotNull(trade.getContract());
+            String buyerPayoutAddress = contract.getBuyerPayoutAddressString();
+            String sellerPayoutAddress = contract.getSellerPayoutAddressString();
+
+            Transaction unsignedDelayedPayoutTx;
+            if (offer.useReimbursementModel()) {
+                unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx,
+                        donationAddressString,
+                        minerFee,
+                        lockTime,
+                        buyerPayoutAddress,
+                        sellerPayoutAddress);
+            } else {
+                TradingPeer tradingPeer = processModel.getTradingPeer();
+                byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
+                byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
+                byte[] arbitratorPubKey = trade.getArbitratorBtcPubKey();
+                unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTxToMultisigAddress(depositTx,
+                        buyerPubKey,
+                        sellerPubKey,
+                        arbitratorPubKey,
+                        minerFee,
+                        lockTime,
+                        buyerPayoutAddress,
+                        sellerPayoutAddress);
+            }
 
             trade.applyDelayedPayoutTx(unsignedDelayedPayoutTx);
 

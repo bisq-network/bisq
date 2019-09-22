@@ -30,9 +30,7 @@ import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerSendsProvideInputsForDepositTxMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
-import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.tasks.seller.SellerBroadcastPayoutTx;
@@ -48,8 +46,9 @@ import bisq.core.trade.protocol.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.seller.SellerVerifiesPeersAccountAge;
 import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerFinalizesDepositTx;
 import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessDepositTxMessage;
-import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSignsDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.util.Validator;
 
 import bisq.network.p2p.MailboxMessage;
@@ -81,7 +80,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                     () -> handleTaskRunnerSuccess("MakerSetupDepositTxListener"),
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(MakerSetupDepositTxListener.class);
             taskRunner.run();
         }
     }
@@ -138,8 +136,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 MakerSetsLockTime.class,
                 MakerCreateAndSignContract.class,
                 SellerAsMakerCreatesUnsignedDepositTx.class,
-                MakerSetupDepositTxListener.class,
-                MakerSendsProvideInputsForDepositTxMessage.class
+                SellerAsMakerSendsInputsForDepositTxResponse.class
         );
 
         // We don't start a timeout because if we don't receive the peers DepositTxPublishedMessage we still
@@ -164,7 +161,7 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
 
         taskRunner.addTasks(
                 SellerAsMakerProcessDepositTxMessage.class,
-                SellerAsMakerSignsDepositTx.class,
+                SellerAsMakerFinalizesDepositTx.class,
                 SellerCreatesDelayedPayoutTx.class,
                 SellerSendDelayedPayoutTxSignatureRequest.class
         );

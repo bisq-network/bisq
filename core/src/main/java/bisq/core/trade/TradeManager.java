@@ -19,10 +19,12 @@ package bisq.core.trade;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.exceptions.AddressEntryException;
+import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
@@ -96,6 +98,8 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
@@ -570,6 +574,39 @@ public class TradeManager implements PersistedDataHost {
             addTradeToClosedTrades(trade);
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Publish delayed payout tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void publishDelayedPayoutTx(String tradeId) {
+        getTradeById(tradeId).ifPresent(trade -> {
+            Offer offer = checkNotNull(trade.getOffer());
+            if (offer.useReimbursementModel()) {
+                // We have spent the funds from the deposit tx
+                btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
+            } else {
+                // re apply multisig tx
+                //todo
+            }
+            Transaction tx = trade.getDelayedPayoutTx();
+            if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() == 0) {
+                tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
+                    @Override
+                    public void onSuccess(Transaction transaction) {
+                        log.error("onSuccess " + transaction);
+                    }
+
+                    @Override
+                    public void onFailure(TxBroadcastException exception) {
+                        log.error("onFailure " + exception);
+                    }
+                });
+            }
+        });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

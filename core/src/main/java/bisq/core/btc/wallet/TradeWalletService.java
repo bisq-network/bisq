@@ -72,46 +72,6 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// TradeService handles all relevant transactions used in the trade process
-/*
-    To maintain a consistent tx structure we use that structure:
-    Always buyers in/outputs/keys first then sellers in/outputs/keys the arbitrators outputs/keys.
-
-    Deposit tx:
-    IN[0] buyer (mandatory) e.g. 0.1 BTC
-    IN[...] optional additional buyer inputs (normally never used as we pay from trade fee tx and always have 1 output there)
-    IN[...] seller (mandatory) e.g. 1.1001 BTC
-    IN[...] optional additional seller inputs (normally never used as we pay from trade fee tx and always have 1 output there)
-    OUT[0] Multisig output (include tx fee for payout tx) e.g. 1.2001
-    OUT[1] OP_RETURN with hash of contract and 0 BTC amount
-    OUT[...] optional buyer change (normally never used as we pay from trade fee tx and always have 1 output there)
-    OUT[...] optional seller change (normally never used as we pay from trade fee tx and always have 1 output there)
-    FEE tx fee 0.0001 BTC
-
-    Payout tx:
-    IN[0] Multisig output from deposit Tx (signed by buyer and trader)
-    OUT[0] Buyer payout address
-    OUT[1] Seller payout address
-
-    We use 0 confirmation transactions to make the trade process practical from usability side.
-    There is no risk for double spends as the deposit transaction would become invalid if any preceding transaction would have been double spent.
-    If a preceding transaction in the chain will not make it into the same or earlier block as the deposit transaction the deposit transaction
-    will be invalid as well.
-    Though the deposit need 1 confirmation before the buyer starts the Fiat payment.
-
-    We have that chain of transactions:
-    1. Deposit from external wallet to our trading wallet: Tx0 (0 conf)
-    2. Create offer (or take offer) fee payment from Tx0 output: tx1 (0 conf)
-    3. Deposit tx created with inputs from tx1 of both traders: Tx2 (here we wait for 1 conf)
-
-    Fiat transaction will not start before we get at least 1 confirmation for the deposit tx, then we can proceed.
-    4. Payout tx with input from MS output and output to both traders: Tx3 (0 conf)
-    5. Withdrawal to external wallet from Tx3: Tx4 (0 conf)
-
-    After the payout transaction we also don't have issues with 0 conf or if not both tx (payout, withdrawal) make it into a block.
-    Worst case is to rebroadcast the transactions (TODO: is not implemented yet).
-
- */
 public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
 
@@ -396,7 +356,6 @@ public class TradeWalletService {
                                                                          byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         return makerCreatesDepositTx(false,
-                false,
                 contractHash,
                 makerInputAmount,
                 msOutputAmount,
@@ -421,7 +380,6 @@ public class TradeWalletService {
                                                                                 byte[] sellerPubKey)
             throws SigningException, TransactionVerificationException, WalletException, AddressFormatException {
         return makerCreatesDepositTx(true,
-                true,
                 contractHash,
                 makerInputAmount,
                 msOutputAmount,
@@ -438,7 +396,6 @@ public class TradeWalletService {
      * The maker creates the deposit transaction using the takers input(s) and optional output and signs his input(s).
      *
      * @param makerIsBuyer              The flag indicating if we are in the maker as buyer role or the opposite.
-     * @param doSign                    The flag indicating if the tx gets signed
      * @param contractHash              The hash of the contract to be added to the OP_RETURN output.
      * @param makerInputAmount          The input amount of the maker.
      * @param msOutputAmount            The output amount to our MS output.
@@ -455,7 +412,6 @@ public class TradeWalletService {
      * @throws WalletException
      */
     private PreparedDepositTxAndMakerInputs makerCreatesDepositTx(boolean makerIsBuyer,
-                                                                  boolean doSign,
                                                                   byte[] contractHash,
                                                                   Coin makerInputAmount,
                                                                   Coin msOutputAmount,
@@ -474,7 +430,7 @@ public class TradeWalletService {
         Transaction dummyTx = new Transaction(params);
         TransactionOutput dummyOutput = new TransactionOutput(params, dummyTx, makerInputAmount, new ECKey().toAddress(params));
         dummyTx.addOutput(dummyOutput);
-        addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress, Coin.ZERO);
+        addAvailableInputsAndChangeOutputs(dummyTx, makerAddress, makerChangeAddress);
         // Normally we have only 1 input but we support multiple inputs if the user has paid in with several transactions.
         List<TransactionInput> makerInputs = dummyTx.getInputs();
         TransactionOutput makerOutput = null;
@@ -561,43 +517,19 @@ public class TradeWalletService {
             }
         }
 
-        if (doSign) {
-            // Sign inputs
-            int start = 0;
-            int end = makerInputs.size();
-            for (int i = start; i < end; i++) {
-                TransactionInput input = preparedDepositTx.getInput(i);
-                signInput(preparedDepositTx, input, i);
-                WalletService.checkScriptSig(preparedDepositTx, input, i);
-            }
+        int start = makerIsBuyer ? 0 : takerRawTransactionInputs.size();
+        int end = makerIsBuyer ? makerInputs.size() : preparedDepositTx.getInputs().size();
+        for (int i = start; i < end; i++) {
+            TransactionInput input = preparedDepositTx.getInput(i);
+            signInput(preparedDepositTx, input, i);
+            WalletService.checkScriptSig(preparedDepositTx, input, i);
         }
 
-        WalletService.printTx("prepared depositTx", preparedDepositTx);
+        WalletService.printTx("makerCreatesDepositTx", preparedDepositTx);
         WalletService.verifyTransaction(preparedDepositTx);
 
         return new PreparedDepositTxAndMakerInputs(makerRawTransactionInputs, preparedDepositTx.bitcoinSerialize());
     }
-
-
-    public void sellerAsMakerSignsDepositTx(Transaction depositTx)
-            throws SigningException, TransactionVerificationException, AddressFormatException {
-        for (int i = 0; i < depositTx.getInputs().size(); i++) {
-            TransactionInput input = depositTx.getInput(i);
-            TransactionOutput connectedOutput = input.getConnectedOutput();
-            if (connectedOutput != null &&
-                    connectedOutput.isMine(wallet) &&
-                    connectedOutput.getParentTransaction() != null &&
-                    connectedOutput.getParentTransaction().getConfidence() != null &&
-                    input.getValue() != null) {
-                signInput(depositTx, input, i);
-                WalletService.checkScriptSig(depositTx, input, i);
-            }
-        }
-
-        WalletService.printTx("Fully signed depositTx", depositTx);
-        WalletService.verifyTransaction(depositTx);
-    }
-
 
     /**
      * The taker signs the deposit transaction he received from the maker and publishes it.
@@ -639,22 +571,29 @@ public class TradeWalletService {
         if (takerIsSeller) {
             // Add buyer inputs and apply signature
             // We grab the signature from the makersDepositTx and apply it to the new tx input
-            for (int i = 0; i < buyerInputs.size(); i++)
-                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(makersDepositTx, i), buyerInputs.get(i)));
+            for (int i = 0; i < buyerInputs.size(); i++) {
+                TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
+                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(transactionInput), buyerInputs.get(i)));
+            }
 
             // Add seller inputs
-            for (RawTransactionInput rawTransactionInput : sellerInputs)
+            for (RawTransactionInput rawTransactionInput : sellerInputs) {
                 depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
+            }
         } else {
             // taker is buyer
             // Add buyer inputs and apply signature
-            for (RawTransactionInput rawTransactionInput : buyerInputs)
+            for (RawTransactionInput rawTransactionInput : buyerInputs) {
                 depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, rawTransactionInput));
+            }
 
             // Add seller inputs
             // We grab the signature from the makersDepositTx and apply it to the new tx input
-            for (int i = buyerInputs.size(), k = 0; i < makersDepositTx.getInputs().size(); i++, k++)
-                depositTx.addInput(getTransactionInput(depositTx, getMakersScriptSigProgram(makersDepositTx, i), sellerInputs.get(k)));
+            for (int i = buyerInputs.size(), k = 0; i < makersDepositTx.getInputs().size(); i++, k++) {
+                TransactionInput transactionInput = makersDepositTx.getInputs().get(i);
+                // We get the deposit tx unsigned if maker is seller
+                depositTx.addInput(getTransactionInput(depositTx, new byte[]{}, sellerInputs.get(k)));
+            }
         }
 
         // Check if OP_RETURN output with contract hash matches the one from the maker
@@ -680,12 +619,27 @@ public class TradeWalletService {
             WalletService.checkScriptSig(depositTx, input, i);
         }
 
-        WalletService.printTx("depositTx", depositTx);
+        WalletService.printTx("takerSignsDepositTx", depositTx);
 
         WalletService.verifyTransaction(depositTx);
         WalletService.checkWalletConsistency(wallet);
 
         return depositTx;
+    }
+
+
+    public void sellerAsMakerFinalizesDepositTx(Transaction myDepositTx, Transaction takersDepositTx, int numTakersInputs)
+            throws TransactionVerificationException, AddressFormatException {
+
+        // We add takers signature from his inputs and add it to out tx which was already signed earlier.
+        for (int i = 0; i < numTakersInputs; i++) {
+            TransactionInput input = takersDepositTx.getInput(i);
+            Script scriptSig = input.getScriptSig();
+            myDepositTx.getInput(i).setScriptSig(scriptSig);
+        }
+
+        WalletService.printTx("sellerAsMakerFinalizesDepositTx", myDepositTx);
+        WalletService.verifyTransaction(myDepositTx);
     }
 
 
@@ -696,13 +650,21 @@ public class TradeWalletService {
     public Transaction createDelayedUnsignedPayoutTxToDonationAddress(Transaction depositTx,
                                                                       String donationAddressString,
                                                                       Coin minerFee,
-                                                                      long lockTime)
+                                                                      long lockTime,
+                                                                      String buyerAddressString,
+                                                                      String sellerAddressString)
             throws AddressFormatException, TransactionVerificationException {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction delayedPayoutTx = new Transaction(params);
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
+
+        // todo we don't get confirmation if we are not related to the tx, so we add a tiny payout
+        // we need to find a solution how to do that without that
+        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee).subtract(Coin.valueOf(2000));
+        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, buyerAddressString));
+        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, sellerAddressString));
+
         delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
@@ -714,19 +676,28 @@ public class TradeWalletService {
                                                                       byte[] sellerPubKey,
                                                                       byte[] arbitratorPubKey,
                                                                       Coin minerFee,
-                                                                      long lockTime)
+                                                                      long lockTime,
+                                                                      String buyerAddressString,
+                                                                      String sellerAddressString)
             throws TransactionVerificationException {
         Transaction delayedPayoutTx = new Transaction(params);
         TransactionOutput p2SHMultiSigOutput2of2 = depositTx.getOutput(0);
         delayedPayoutTx.addInput(p2SHMultiSigOutput2of2);
         applyLockTime(lockTime, delayedPayoutTx);
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
+
+        // todo we don't get confirmation if we are not related to the tx, so we add a tiny payout
+        // we need to find a solution how to do that without that
+        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee).subtract(Coin.valueOf(2000));
+        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, buyerAddressString));
+        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, sellerAddressString));
+
         // Add 2of3 MultiSig output
         Script p2SHMultiSigOutputScript = get2of3MultiSigOutputScript(buyerPubKey,
                 sellerPubKey, arbitratorPubKey);
         TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, depositTx,
                 outputAmount, p2SHMultiSigOutputScript.getProgram());
         delayedPayoutTx.addOutput(p2SHMultiSigOutput);
+
         WalletService.printTx("Unsigned delayedPayoutTx ToMultisigAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
 
@@ -766,7 +737,7 @@ public class TradeWalletService {
         Script inputScript = ScriptBuilder.createP2SHMultiSigInputScript(ImmutableList.of(sellerTxSig, buyerTxSig), redeemScript);
         TransactionInput input = delayedPayoutTx.getInput(0);
         input.setScriptSig(inputScript);
-        WalletService.printTx("Fully signed delayedPayoutTx", delayedPayoutTx);
+        WalletService.printTx("finalizeDelayedPayoutTx", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         WalletService.checkWalletConsistency(wallet);
         WalletService.checkScriptSig(delayedPayoutTx, input, 0);
@@ -777,14 +748,14 @@ public class TradeWalletService {
 
     public boolean verifiesDepositTxAndDelayedPayoutTx(Transaction depositTx,
                                                        Transaction delayedPayoutTx) {
-        // todo
+        // todo add more checks
         if (delayedPayoutTx.getLockTime() == 0) {
             log.error("Time lock is not set");
             return false;
         }
 
-        if (delayedPayoutTx.getInputs().stream().anyMatch(e -> e.getSequenceNumber() == TransactionInput.NO_SEQUENCE)) {
-            log.error("Sequence number must be smaller than 0xFFFFFFFF");
+        if (delayedPayoutTx.getInputs().stream().noneMatch(e -> e.getSequenceNumber() == TransactionInput.NO_SEQUENCE - 1)) {
+            log.error("Sequence number must be 0xFFFFFFFE");
             return false;
         }
 
@@ -1245,13 +1216,13 @@ public class TradeWalletService {
      */
     public Transaction addTxToWallet(Transaction transaction) throws VerificationException {
         // We need to recreate the transaction otherwise we get a null pointer...
-        Transaction result = new Transaction(params, transaction.bitcoinSerialize());
-        result.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
+        Transaction tx = new Transaction(params, transaction.bitcoinSerialize());
+        tx.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
 
         if (wallet != null) {
-            wallet.receivePending(result, null, true);
+            wallet.receivePending(tx, null, true);
         }
-        return result;
+        return tx;
     }
 
     /**
@@ -1305,8 +1276,8 @@ public class TradeWalletService {
                 input.getValue().value);
     }
 
-    private byte[] getMakersScriptSigProgram(Transaction makersDepositTx, int i) throws TransactionVerificationException {
-        byte[] scriptProgram = makersDepositTx.getInputs().get(i).getScriptSig().getProgram();
+    private byte[] getMakersScriptSigProgram(TransactionInput transactionInput) throws TransactionVerificationException {
+        byte[] scriptProgram = transactionInput.getScriptSig().getProgram();
         if (scriptProgram.length == 0) {
             throw new TransactionVerificationException("Inputs from maker not signed.");
         }
@@ -1394,8 +1365,7 @@ public class TradeWalletService {
 
     private void addAvailableInputsAndChangeOutputs(Transaction transaction,
                                                     Address address,
-                                                    Address changeAddress,
-                                                    Coin txFee) throws WalletException {
+                                                    Address changeAddress) throws WalletException {
         SendRequest sendRequest = null;
         try {
             // Lets let the framework do the work to find the right inputs
@@ -1403,7 +1373,7 @@ public class TradeWalletService {
             sendRequest.shuffleOutputs = false;
             sendRequest.aesKey = aesKey;
             // We use a fixed fee
-            sendRequest.fee = txFee;
+            sendRequest.fee = Coin.ZERO;
             sendRequest.feePerKb = Coin.ZERO;
             sendRequest.ensureMinRequiredFee = false;
             // we allow spending of unconfirmed tx (double spend risk is low and usability would suffer if we need to wait for 1 confirmation)

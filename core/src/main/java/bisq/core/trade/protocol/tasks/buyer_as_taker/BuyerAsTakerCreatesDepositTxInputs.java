@@ -47,12 +47,14 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
 
             Coin txFee = trade.getTxFee();
             Coin takerInputAmount = checkNotNull(trade.getOffer()).getBuyerSecurityDeposit()
-                    .add(txFee).add(txFee)
+                    .add(txFee)
+                    .add(txFee)
                     .subtract(bsqTakerFee);
+            Coin fee = txFee.subtract(bsqTakerFee);
             InputsAndChangeOutput result = processModel.getTradeWalletService().takerCreatesDepositTxInputs(
                     processModel.getTakeOfferFeeTx(),
                     takerInputAmount,
-                    txFee.subtract(bsqTakerFee));
+                    fee);
             processModel.setRawTransactionInputs(result.rawTransactionInputs);
             processModel.setChangeOutputValue(result.changeOutputValue);
             processModel.setChangeOutputAddress(result.changeOutputAddress);

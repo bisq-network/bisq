@@ -78,6 +78,7 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
             List<RawTransactionInput> sellerInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
+            byte[] sellerMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     false,
                     contractHash,
@@ -85,7 +86,7 @@ public class BuyerAsTakerSignsDepositTx extends TradeTask {
                     buyerInputs,
                     sellerInputs,
                     buyerMultiSigPubKey,
-                    tradingPeer.getMultiSigPubKey());
+                    sellerMultiSigPubKey);
             trade.applyDepositTx(depositTx);
 
             complete();

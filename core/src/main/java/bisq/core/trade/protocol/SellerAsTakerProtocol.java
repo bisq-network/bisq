@@ -42,7 +42,7 @@ import bisq.core.trade.protocol.tasks.seller.SellerVerifiesPeersAccountAge;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.tasks.seller_as_taker.SellerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerProcessesProvideInputsForDepositTxMessage;
+import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
@@ -138,7 +138,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
 
         taskRunner.addTasks(
-                TakerProcessesProvideInputsForDepositTxMessage.class,
+                TakerProcessesInputsForDepositTxResponse.class,
                 ApplyFilter.class,
                 TakerVerifyMakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,

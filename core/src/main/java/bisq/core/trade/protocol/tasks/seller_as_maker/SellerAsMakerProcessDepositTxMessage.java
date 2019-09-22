@@ -45,7 +45,7 @@ public class SellerAsMakerProcessDepositTxMessage extends TradeTask {
             checkNotNull(message);
             checkNotNull(message.getDepositTx());
 
-            processModel.setPreparedDepositTx(message.getDepositTx());
+            processModel.getTradingPeer().setPreparedDepositTx(message.getDepositTx());
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             complete();

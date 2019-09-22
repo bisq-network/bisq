@@ -70,6 +70,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+// Fields marked as transient are only used during protocol execution which are based on directMessages so we do not
+// persist them.
+//todo clean up older fields as well to make most transient
+
 @Getter
 @Slf4j
 public class ProcessModel implements Model, PersistablePayload {
@@ -98,20 +102,21 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     transient private DecryptedMessageWithPubKey decryptedMessageWithPubKey;
 
+    // Added in v1.2.0
+    @Setter
+    @Nullable
+    transient private byte[] delayedPayoutTxSignature;
 
-    // Persistable Immutable (only set by PB)
-    @Setter
+
+    // Persistable Immutable (private setter only used by PB method)
     private TradingPeer tradingPeer = new TradingPeer();
-    @Setter
     private String offerId;
-    @Setter
     private String accountId;
-    @Setter
     private PubKeyRing pubKeyRing;
 
     // Persistable Mutable
     @Nullable
-    @Setter
+    @Setter()
     private String takeOfferFeeTxId;
     @Nullable
     @Setter
@@ -160,10 +165,6 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
-    // Added in v1.2.0
-    @Setter
-    @Nullable
-    private byte[] delayedPayoutTxSignature;
 
     public ProcessModel() {
     }
@@ -197,7 +198,6 @@ public class ProcessModel implements Model, PersistablePayload {
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
-        Optional.ofNullable(delayedPayoutTxSignature).ifPresent(e -> builder.setDelayedPayoutTxSignature(ByteString.copyFrom(e)));
         return builder.build();
     }
 
@@ -236,7 +236,6 @@ public class ProcessModel implements Model, PersistablePayload {
         ObjectProperty<MessageState> paymentStartedMessageStateProperty = processModel.getPaymentStartedMessageStateProperty();
         paymentStartedMessageStateProperty.set(ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageState));
         processModel.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
-        processModel.setDelayedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxSignature()));
         return processModel;
     }
 
@@ -349,5 +348,21 @@ public class ProcessModel implements Model, PersistablePayload {
 
     public void setPaymentStartedMessageState(MessageState paymentStartedMessageStateProperty) {
         this.paymentStartedMessageStateProperty.set(paymentStartedMessageStateProperty);
+    }
+
+    private void setTradingPeer(TradingPeer tradingPeer) {
+        this.tradingPeer = tradingPeer;
+    }
+
+    private void setOfferId(String offerId) {
+        this.offerId = offerId;
+    }
+
+    private void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
+
+    private void setPubKeyRing(PubKeyRing pubKeyRing) {
+        this.pubKeyRing = pubKeyRing;
     }
 }

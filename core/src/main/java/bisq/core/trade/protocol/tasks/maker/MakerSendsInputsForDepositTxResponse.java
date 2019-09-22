@@ -41,11 +41,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class MakerSendsProvideInputsForDepositTxMessage extends TradeTask {
+public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerSendsProvideInputsForDepositTxMessage(TaskRunner taskHandler, Trade trade) {
+    public MakerSendsInputsForDepositTxResponse(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
+
+    protected abstract byte[] getPreparedDepositTx();
 
     @Override
     protected void run() {
@@ -62,7 +64,7 @@ public class MakerSendsProvideInputsForDepositTxMessage extends TradeTask {
                     addressEntryOptional.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            byte[] preparedDepositTx = processModel.getPreparedDepositTx();
+            byte[] preparedDepositTx = getPreparedDepositTx();
 
             // Maker has to use preparedDepositTx as nonce.
             // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.

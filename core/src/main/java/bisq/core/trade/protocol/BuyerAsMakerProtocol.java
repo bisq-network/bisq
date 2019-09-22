@@ -32,16 +32,16 @@ import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayou
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
-import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
-import bisq.core.trade.protocol.tasks.maker.MakerSendsProvideInputsForDepositTxMessage;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
-import bisq.core.trade.protocol.tasks.maker.MakerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.util.Validator;
@@ -72,10 +72,10 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
         Trade.Phase phase = trade.getState().getPhase();
         if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
-                    () -> handleTaskRunnerSuccess("MakerSetupDepositTxListener"),
+                    () -> handleTaskRunnerSuccess("BuyerSetupDepositTxListener"),
                     this::handleTaskRunnerFault);
 
-            taskRunner.addTasks(MakerSetupDepositTxListener.class);
+            taskRunner.addTasks(BuyerSetupDepositTxListener.class);
             taskRunner.run();
         } else if (trade.isFiatSent() && !trade.isPayoutPublished()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
@@ -139,8 +139,8 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                 MakerSetsLockTime.class,
                 MakerCreateAndSignContract.class,
                 BuyerAsMakerCreatesAndSignsDepositTx.class,
-                MakerSetupDepositTxListener.class,
-                MakerSendsProvideInputsForDepositTxMessage.class
+                BuyerSetupDepositTxListener.class,
+                BuyerAsMakerSendsInputsForDepositTxResponse.class
         );
         // We don't use a timeout here because if the DepositTxPublishedMessage does not arrive we
         // get the deposit tx set at MakerSetupDepositTxListener once it is seen in the bitcoin network
@@ -209,7 +209,7 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
                     ApplyFilter.class,
                     MakerVerifyTakerAccount.class,
                     MakerVerifyTakerFeePayment.class,
-                    BuyerAsMakerSignPayoutTx.class,
+                    BuyerSignPayoutTx.class,
                     BuyerSendCounterCurrencyTransferStartedMessage.class,
                     BuyerSetupPayoutTxListener.class
             );

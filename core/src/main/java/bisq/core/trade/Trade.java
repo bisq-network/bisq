@@ -526,7 +526,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setMediatorPubKeyRing(proto.hasMediatorPubKeyRing() ? PubKeyRing.fromProto(proto.getMediatorPubKeyRing()) : null);
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
-        trade.setDelayedPayoutTxId(proto.getDelayedPayoutTxId());
+        trade.setDelayedPayoutTxId(proto.getDelayedPayoutTxId().isEmpty() ? null : proto.getDelayedPayoutTxId());
         trade.setLockTime(proto.getLockTime());
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
