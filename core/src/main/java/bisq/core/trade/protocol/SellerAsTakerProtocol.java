@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol;
 
 
+import bisq.core.offer.Offer;
 import bisq.core.trade.SellerAsTakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
@@ -49,14 +50,14 @@ import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtocol, TakerProtocol {
@@ -72,7 +73,8 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
 
         this.sellerAsTakerTrade = trade;
 
-        processModel.getTradingPeer().setPubKeyRing(trade.getOffer().getPubKeyRing());
+        Offer offer = checkNotNull(trade.getOffer());
+        processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
 
@@ -81,18 +83,11 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade) {
-        this.trade = trade;
+    public void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+        super.doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
 
-        if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
-            NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-            log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
-                    tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-            if (tradeMessage instanceof CounterCurrencyTransferStartedMessage)
-                handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
-            else
-                log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
+        if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
+            handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
         }
     }
 
@@ -115,8 +110,6 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
                 TakerSendInputsForDepositTxRequest.class
         );
 
-        //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
-        // We should add an error message the peer sends us in such cases.
         startTimeout();
         taskRunner.run();
     }

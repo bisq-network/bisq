@@ -51,6 +51,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -722,7 +723,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and want to rewrite a
             // persisted offer after the user has updated to 1.1.6 so their offer will be accepted by the network.
 
-            if (!OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION)) {
+            if (originalOfferPayload.getProtocolVersion() < Version.TRADE_PROTOCOL_VERSION ||
+                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION)) {
                 // We rewrite our offer with the additional capabilities entry
 
                 Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
@@ -734,6 +736,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                 // We overwrite any entry with our current capabilities
                 updatedExtraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
+
+                // We update the trade protocol version
+                int protocolVersion = Version.TRADE_PROTOCOL_VERSION;
 
                 OfferPayload updatedPayload = new OfferPayload(originalOfferPayload.getId(),
                         originalOfferPayload.getDate(),
@@ -772,7 +777,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         originalOfferPayload.isPrivateOffer(),
                         originalOfferPayload.getHashOfChallenge(),
                         updatedExtraDataMap,
-                        originalOfferPayload.getProtocolVersion());
+                        protocolVersion);
 
                 // Save states from original data to use the for updated
                 Offer.State originalOfferState = originalOffer.getState();

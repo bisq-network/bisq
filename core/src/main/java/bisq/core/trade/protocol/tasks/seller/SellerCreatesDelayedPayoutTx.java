@@ -20,7 +20,6 @@ package bisq.core.trade.protocol.tasks.seller;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.offer.Offer;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -54,20 +53,12 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             Transaction depositTx = checkNotNull(trade.getDepositTx());
 
             long lockTime = trade.getLockTime();
-
-            //todo
-            Contract contract = checkNotNull(trade.getContract());
-            String buyerPayoutAddress = contract.getBuyerPayoutAddressString();
-            String sellerPayoutAddress = contract.getSellerPayoutAddressString();
-
             Transaction unsignedDelayedPayoutTx;
             if (offer.useReimbursementModel()) {
                 unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx,
                         donationAddressString,
                         minerFee,
-                        lockTime,
-                        buyerPayoutAddress,
-                        sellerPayoutAddress);
+                        lockTime);
             } else {
                 TradingPeer tradingPeer = processModel.getTradingPeer();
                 byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
@@ -78,9 +69,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
                         sellerPubKey,
                         arbitratorPubKey,
                         minerFee,
-                        lockTime,
-                        buyerPayoutAddress,
-                        sellerPayoutAddress);
+                        lockTime);
             }
 
             trade.applyDelayedPayoutTx(unsignedDelayedPayoutTx);

@@ -46,12 +46,10 @@ import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerAccount;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.util.Validator;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -93,21 +91,13 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade) {
-        this.trade = trade;
+    public void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+        super.doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
 
-        if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
-            MailboxMessage mailboxMessage = (MailboxMessage) networkEnvelope;
-            NodeAddress peerNodeAddress = mailboxMessage.getSenderNodeAddress();
-            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-            log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
-                    tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-            if (tradeMessage instanceof DepositTxAndDelayedPayoutTxMessage)
-                handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
-            else if (tradeMessage instanceof PayoutTxPublishedMessage)
-                handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-            else
-                log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
+        if (tradeMessage instanceof DepositTxAndDelayedPayoutTxMessage) {
+            handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         }
     }
 
@@ -249,7 +239,6 @@ public class BuyerAsMakerProtocol extends TradeProtocol implements BuyerProtocol
 
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
-
 
         if (tradeMessage instanceof DelayedPayoutTxSignatureRequest) {
             handle((DelayedPayoutTxSignatureRequest) tradeMessage, sender);

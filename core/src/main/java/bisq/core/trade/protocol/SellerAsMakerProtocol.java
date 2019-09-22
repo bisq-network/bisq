@@ -51,12 +51,10 @@ import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessDeposi
 import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.util.Validator;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,19 +88,11 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade) {
-        this.trade = trade;
+    public void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+        super.doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
 
-        if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
-            NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-            TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-            log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
-                    tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-
-            if (tradeMessage instanceof CounterCurrencyTransferStartedMessage)
-                handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
-            else
-                log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
+        if (tradeMessage instanceof CounterCurrencyTransferStartedMessage) {
+            handle((CounterCurrencyTransferStartedMessage) tradeMessage, peerNodeAddress);
         }
     }
 
@@ -139,8 +129,6 @@ public class SellerAsMakerProtocol extends TradeProtocol implements SellerProtoc
                 SellerAsMakerSendsInputsForDepositTxResponse.class
         );
 
-        // We don't start a timeout because if we don't receive the peers DepositTxPublishedMessage we still
-        // will get set the deposit tx in MakerSetupDepositTxListener once seen in the network
         taskRunner.run();
     }
 

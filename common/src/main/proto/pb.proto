@@ -74,6 +74,7 @@ message NetworkEnvelope {
         DelayedPayoutTxSignatureRequest delayed_payout_tx_signature_request = 46;
         DelayedPayoutTxSignatureResponse delayed_payout_tx_signature_response = 47;
         DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
+        PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
     }
 }
 
@@ -271,6 +272,12 @@ message DepositTxMessage {
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     bytes deposit_tx = 4;
+}
+
+message PeerPublishedDelayedPayoutTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
 }
 
 message CounterCurrencyTransferStartedMessage {

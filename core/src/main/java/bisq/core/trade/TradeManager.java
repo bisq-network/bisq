@@ -39,6 +39,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -50,6 +51,7 @@ import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
@@ -85,6 +87,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -594,15 +597,41 @@ public class TradeManager implements PersistedDataHost {
             }
             Transaction tx = trade.getDelayedPayoutTx();
             if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() == 0) {
-                tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
+                Transaction walletTx = tradeWalletService.addTxToWallet(tx);
+                tradeWalletService.broadcastTx(walletTx, new TxBroadcaster.Callback() {
                     @Override
                     public void onSuccess(Transaction transaction) {
-                        log.error("onSuccess " + transaction);
+                        log.info("publishDelayedPayoutTx onSuccess " + transaction);
+                        NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                        PeerPublishedDelayedPayoutTxMessage msg = new PeerPublishedDelayedPayoutTxMessage(UUID.randomUUID().toString(),
+                                tradeId,
+                                tradingPeerNodeAddress);
+                        p2PService.sendEncryptedMailboxMessage(
+                                tradingPeerNodeAddress,
+                                trade.getProcessModel().getTradingPeer().getPubKeyRing(),
+                                msg,
+                                new SendMailboxMessageListener() {
+                                    @Override
+                                    public void onArrived() {
+                                        log.info("SendMailboxMessageListener onArrived tradeId={}", tradeId);
+                                    }
+
+                                    @Override
+                                    public void onStoredInMailbox() {
+                                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={}", tradeId);
+                                    }
+
+                                    @Override
+                                    public void onFault(String errorMessage) {
+                                        log.error("SendMailboxMessageListener onFault tradeId={}", tradeId);
+                                    }
+                                }
+                        );
                     }
 
                     @Override
                     public void onFailure(TxBroadcastException exception) {
-                        log.error("onFailure " + exception);
+                        log.error("publishDelayedPayoutTx onFailure {}", exception);
                     }
                 });
             }

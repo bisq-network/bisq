@@ -650,21 +650,13 @@ public class TradeWalletService {
     public Transaction createDelayedUnsignedPayoutTxToDonationAddress(Transaction depositTx,
                                                                       String donationAddressString,
                                                                       Coin minerFee,
-                                                                      long lockTime,
-                                                                      String buyerAddressString,
-                                                                      String sellerAddressString)
+                                                                      long lockTime)
             throws AddressFormatException, TransactionVerificationException {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction delayedPayoutTx = new Transaction(params);
         delayedPayoutTx.addInput(p2SHMultiSigOutput);
         applyLockTime(lockTime, delayedPayoutTx);
-
-        // todo we don't get confirmation if we are not related to the tx, so we add a tiny payout
-        // we need to find a solution how to do that without that
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee).subtract(Coin.valueOf(2000));
-        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, buyerAddressString));
-        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, sellerAddressString));
-
+        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
         delayedPayoutTx.addOutput(outputAmount, Address.fromBase58(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
@@ -676,21 +668,13 @@ public class TradeWalletService {
                                                                       byte[] sellerPubKey,
                                                                       byte[] arbitratorPubKey,
                                                                       Coin minerFee,
-                                                                      long lockTime,
-                                                                      String buyerAddressString,
-                                                                      String sellerAddressString)
+                                                                      long lockTime)
             throws TransactionVerificationException {
         Transaction delayedPayoutTx = new Transaction(params);
         TransactionOutput p2SHMultiSigOutput2of2 = depositTx.getOutput(0);
         delayedPayoutTx.addInput(p2SHMultiSigOutput2of2);
         applyLockTime(lockTime, delayedPayoutTx);
-
-        // todo we don't get confirmation if we are not related to the tx, so we add a tiny payout
-        // we need to find a solution how to do that without that
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee).subtract(Coin.valueOf(2000));
-        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, buyerAddressString));
-        delayedPayoutTx.addOutput(Coin.valueOf(1000), Address.fromBase58(params, sellerAddressString));
-
+        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
         // Add 2of3 MultiSig output
         Script p2SHMultiSigOutputScript = get2of3MultiSigOutputScript(buyerPubKey,
                 sellerPubKey, arbitratorPubKey);
