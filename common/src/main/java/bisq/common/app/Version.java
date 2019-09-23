@@ -84,6 +84,7 @@ public class Version {
     // A taker will check the version of the offers to see if his version is compatible.
     // Offers created with the old version will become invalid and have to be canceled.
     // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
+    // Version 1.2.0 -> TRADE_PROTOCOL_VERSION = 2
     public static final int TRADE_PROTOCOL_VERSION = 2;
     private static int p2pMessageVersion;
 

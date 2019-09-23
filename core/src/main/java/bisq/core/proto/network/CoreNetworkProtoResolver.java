@@ -44,6 +44,7 @@ import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
+import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
@@ -247,6 +248,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return Arbitrator.fromProto(proto.getArbitrator());
                 case MEDIATOR:
                     return Mediator.fromProto(proto.getMediator());
+                case REFUND_AGENT:
+                    return RefundAgent.fromProto(proto.getRefundAgent());
                 case FILTER:
                     return Filter.fromProto(proto.getFilter());
                 case TRADE_STATISTICS:
