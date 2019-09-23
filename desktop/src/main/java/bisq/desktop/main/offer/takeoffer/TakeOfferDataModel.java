@@ -372,7 +372,7 @@ class TakeOfferDataModel extends OfferDataModel {
             feeTxSize = 380;
             txFeeFromFeeService = txFeePerByteFromFeeService.multiply(feeTxSize);
             log.info("We cannot do the fee estimation because there are no funds in the wallet.\nThis is expected " +
-                            "if the user has not funded his wallet yet.\n" +
+                            "if the user has not funded their wallet yet.\n" +
                             "In that case we use an estimated tx size of 380 bytes.\n" +
                             "txFee based on estimated size of {} bytes. feeTxSize = {} bytes. Actual tx size = {} bytes. TxFee is {} ({} sat/byte)",
                     feeTxSize, feeTxSize, txSize, txFeeFromFeeService.toFriendlyString(), feeService.getTxFeePerByte());

@@ -94,8 +94,7 @@ public class BisqInstaller {
 
     public VerifyTask verify(List<FileDescriptor> fileDescriptors) {
         VerifyTask verifyTask = new VerifyTask(fileDescriptors);
-        Thread th = new Thread(verifyTask);
-        th.start();
+        new Thread(verifyTask, "BisqInstaller VerifyTask").start();
         // TODO: check for problems when creating task
         return verifyTask;
     }
@@ -120,8 +119,7 @@ public class BisqInstaller {
         if (saveDir == null)
             saveDir = Utilities.getDownloadOfHomeDir();
         DownloadTask task = new DownloadTask(fileDescriptors, saveDir);
-        Thread th = new Thread(task);
-        th.start();
+        new Thread(task, "BisqInstaller DownloadTask").start();
         // TODO: check for problems when creating task
         return task;
     }

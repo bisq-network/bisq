@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeRestrictions;
@@ -55,6 +56,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -589,6 +591,15 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    double calculateMarketPriceManual(double marketPrice, double volumeAsDouble, double amountAsDouble) {
+        double manualPriceAsDouble = volumeAsDouble / amountAsDouble;
+        double percentage = MathUtils.roundDouble(manualPriceAsDouble / marketPrice, 4);
+        
+        setMarketPriceMargin(percentage);
+
+        return manualPriceAsDouble;
+    }
+
     void calculateVolume() {
         if (price.get() != null &&
                 amount.get() != null &&
@@ -642,7 +653,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 !price.get().isZero() &&
                 allowAmountUpdate) {
             try {
-                Coin value = btcFormatter.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()));
+                Coin value = DisplayUtils.reduceTo4Decimals(price.get().getAmountByVolume(volume.get()), btcFormatter);
                 if (isHalCashAccount())
                     value = OfferUtil.getAdjustedAmountForHalCash(value, price.get(), getMaxTradeLimit());
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))

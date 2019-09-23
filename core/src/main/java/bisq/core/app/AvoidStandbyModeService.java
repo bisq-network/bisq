@@ -70,9 +70,7 @@ public class AvoidStandbyModeService {
     private void start() {
         isStopped = false;
         log.info("AvoidStandbyModeService started");
-        Thread thread = new Thread(this::play);
-        thread.setName("AvoidStandbyModeService-thread");
-        thread.start();
+        new Thread(this::play, "AvoidStandbyModeService-thread").start();
     }
 
 

@@ -40,7 +40,6 @@ bisq.asset.coins.Donu
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.DSTRA
 bisq.asset.coins.Emercoin
-bisq.asset.coins.Ergo
 bisq.asset.coins.Ether
 bisq.asset.coins.EtherClassic
 bisq.asset.coins.FourtyTwo
@@ -73,6 +72,7 @@ bisq.asset.coins.Myce
 bisq.asset.coins.Namecoin
 bisq.asset.coins.Navcoin
 bisq.asset.coins.Noir
+bisq.asset.coins.NoteBlockchain
 bisq.asset.coins.ParsiCoin
 bisq.asset.coins.Particl
 bisq.asset.coins.PENG

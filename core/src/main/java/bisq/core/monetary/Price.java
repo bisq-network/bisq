@@ -18,7 +18,7 @@
 package bisq.core.monetary;
 
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
@@ -58,7 +58,7 @@ public class Price extends MonetaryWrapper implements Comparable<Price> {
      * @return The parsed Price.
      */
     public static Price parse(String currencyCode, String input) {
-        String cleaned = BSFormatter.convertCharsForNumber(input);
+        String cleaned = ParsingUtils.convertCharsForNumber(input);
         if (CurrencyUtil.isFiatCurrency(currencyCode))
             return new Price(Fiat.parseFiat(currencyCode, cleaned));
         else

@@ -221,9 +221,11 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     public void onConnection(Connection connection) {
         boolean seedNode = isSeedNode(connection);
         Optional<NodeAddress> addressOptional = connection.getPeersNodeAddressOptional();
-        log.debug("onConnection: peer = {}{}",
-                (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
-                seedNode ? " (SeedNode)" : "");
+        if (log.isDebugEnabled()) {
+            log.debug("onConnection: peer = {}{}",
+                    (addressOptional.isPresent() ? addressOptional.get().getFullAddress() : "not known yet (connection id=" + connection.getUid() + ")"),
+                    seedNode ? " (SeedNode)" : "");
+        }
 
         if (seedNode)
             connection.setPeerType(Connection.PeerType.SEED_NODE);

@@ -27,6 +27,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.CssTheme;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -514,7 +515,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setGraphic(new AutoTooltipLabel(formatter.formatDateTime(item.getTrade().getDate())));
+                                    setGraphic(new AutoTooltipLabel(DisplayUtils.formatDateTime(item.getTrade().getDate())));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -557,7 +558,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(formatter.formatPrice(item.getPrice())));
+                                    setGraphic(new AutoTooltipLabel(BSFormatter.formatPrice(item.getPrice())));
                                 else
                                     setGraphic(null);
                             }
@@ -578,7 +579,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(formatter.formatVolumeWithCode(item.getTrade().getTradeVolume())));
+                                    setGraphic(new AutoTooltipLabel(DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume())));
                                 else
                                     setGraphic(null);
                             }

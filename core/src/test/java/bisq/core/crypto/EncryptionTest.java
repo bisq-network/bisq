@@ -22,11 +22,8 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
 import bisq.common.storage.FileUtil;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Security;
 import java.security.cert.CertificateException;
 
 import java.io.File;
@@ -62,5 +59,3 @@ public class EncryptionTest {
 
 
 }
-
-

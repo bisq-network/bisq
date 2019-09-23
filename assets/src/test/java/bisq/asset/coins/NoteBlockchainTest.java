@@ -21,28 +21,23 @@ import bisq.asset.AbstractAssetTest;
 
 import org.junit.Test;
 
-public class ErgoTest extends AbstractAssetTest {
+public class NoteBlockchainTest extends AbstractAssetTest {
 
-    public ErgoTest() {
-        super(new Ergo());
+    public NoteBlockchainTest() {
+        super(new NoteBlockchain());
     }
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("9fRAWhdxEsTcdb8PhGNrZfwqa65zfkuYHAMmkQLcic1gdLSV5vA");
-        assertValidAddress("25qGdVWg2yyYho8uC1pLtc7KxFn4nEEAwD");
-        assertValidAddress("23NL9a8ngN28ovtLiKLgHexcdTKBbUMLhH");
-        assertValidAddress("7bwdkU5V8");
-        assertValidAddress("BxKBaHkvrTvLZrDcZjcsxsF7aSsrN73ijeFZXtbj4CXZHHcvBtqSxQ");
+        assertValidAddress("NaeSp6oTDFiGBZejFyYJvuCaSqWMnMM44E");
+        assertValidAddress("NPCz6bsSnksLUGbp11hbHFWqFuVweEgMWM");
+        assertValidAddress("NMNA6oMBExWhYoVEcD2BbcL6qmQ6rs7GN2");
     }
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("9fRAWhdxEsTcdb8PhGNrZfwqa65zfkuYHAMmkQLcic1gdLSV5vAaa");
-        assertInvalidAddress("afRAWhdxEsTcdb8PhGNrZfwqa65zfkuYHAMmkQLcic1gdLSV5vA");
-        assertInvalidAddress("25qGdVWg2yyYho8uC1pLtc7KxFn4nEEAwDaa");
-        assertInvalidAddress("23NL9a8ngN28ovtLiKLgHexcdTKBbUMLhHaa");
-        assertInvalidAddress("7bwdkU5V8aa");
-        assertInvalidAddress("BxKBaHkvrTvLZrDcZjcsxsF7aSsrN73ijeFZXtbj4CXZHHcvBtqSxQ#");
+        assertInvalidAddress("1NMNA6oMBExWhYoVEcD2BbcL6qmQ6rs7GN2");
+        assertInvalidAddress("NMNA6oMBExyWhYoVEcD2BbcL6qmQ6rs7GN2");
+        assertInvalidAddress("NMNA6oMBExWhYoVEcD2BbcL6qmQ6rs7GN2#");
     }
 }

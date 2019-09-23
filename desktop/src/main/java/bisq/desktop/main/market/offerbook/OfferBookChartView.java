@@ -223,15 +223,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                                final String withCryptoPrecision = formatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                final String withCryptoPrecision = BSFormatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 if (withCryptoPrecision.equals("0.000")) {
                                     cryptoPrecision = 8;
-                                    return formatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                    return BSFormatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 } else {
                                     return withCryptoPrecision;
                                 }
                             } else {
-                                return formatter.formatRoundedDoubleWithPrecision(doubleValue, 2);
+                                return BSFormatter.formatRoundedDoubleWithPrecision(doubleValue, 2);
                             }
                         }
 
@@ -268,7 +268,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
                         priceColumnLabel.set(Res.get("shared.priceWithCur", code));
                     }
-                    xAxis.setLabel(formatter.getPriceWithCurrencyCode(code));
+                    xAxis.setLabel(BSFormatter.getPriceWithCurrencyCode(code));
 
                     seriesBuy.setName(leftHeaderLabel.getText() + "   ");
                     seriesSell.setName(rightHeaderLabel.getText());

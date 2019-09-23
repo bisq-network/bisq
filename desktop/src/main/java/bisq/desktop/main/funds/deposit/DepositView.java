@@ -36,6 +36,7 @@ import bisq.core.locale.Res;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.ParsingUtils;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -232,7 +233,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         walletService.addBalanceListener(balanceListener);
         amountTextFieldSubscription = EasyBind.subscribe(amountTextField.textProperty(), t -> {
-            addressTextField.setAmountAsCoin(formatter.parseToCoin(t));
+            addressTextField.setAmountAsCoin(ParsingUtils.parseToCoin(t, formatter));
             updateQRCode();
         });
 
@@ -301,7 +302,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     }
 
     private Coin getAmountAsCoin() {
-        return formatter.parseToCoin(amountTextField.getText());
+        return ParsingUtils.parseToCoin(amountTextField.getText(), formatter);
     }
 
     @NotNull

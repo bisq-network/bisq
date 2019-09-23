@@ -561,13 +561,12 @@ public class WalletConfig extends AbstractIdleService {
 
     private void installShutdownHook() {
         if (autoStop) Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("ShutdownHook");
             try {
                 WalletConfig.this.stopAsync();
                 WalletConfig.this.awaitTerminated();
             } catch (Throwable ignore) {
             }
-        }));
+        }, "WalletConfig ShutdownHook"));
     }
 
     @Override

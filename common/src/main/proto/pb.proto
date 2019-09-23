@@ -431,7 +431,7 @@ message Peer {
 message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
-    string pgp_pub_key_as_pem = 3;
+    reserved 3;  // WAS: string pgp_pub_key_as_pem = 3;
 }
 
 message SealedAndSigned {

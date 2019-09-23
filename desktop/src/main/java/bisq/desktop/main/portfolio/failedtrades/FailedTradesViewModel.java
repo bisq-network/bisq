@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.failedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
+import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
@@ -54,29 +55,29 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     }
 
     String getPrice(FailedTradesListItem item) {
-        return (item != null) ? formatter.formatPrice(item.getTrade().getTradePrice()) : "";
+        return (item != null) ? BSFormatter.formatPrice(item.getTrade().getTradePrice()) : "";
     }
 
     String getVolume(FailedTradesListItem item) {
         if (item != null && item.getTrade() != null)
-            return formatter.formatVolumeWithCode(item.getTrade().getTradeVolume());
+            return DisplayUtils.formatVolumeWithCode(item.getTrade().getTradeVolume());
         else
             return "";
     }
 
     String getDirectionLabel(FailedTradesListItem item) {
-        return (item != null) ? formatter.getDirectionWithCode(dataModel.getDirection(item.getTrade().getOffer()), item.getTrade().getOffer().getCurrencyCode()) : "";
+        return (item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTrade().getOffer()), item.getTrade().getOffer().getCurrencyCode()) : "";
     }
 
     String getMarketLabel(FailedTradesListItem item) {
         if ((item == null))
             return "";
 
-        return formatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     String getDate(FailedTradesListItem item) {
-        return formatter.formatDateTime(item.getTrade().getDate());
+        return DisplayUtils.formatDateTime(item.getTrade().getDate());
     }
 
     String getState(FailedTradesListItem item) {

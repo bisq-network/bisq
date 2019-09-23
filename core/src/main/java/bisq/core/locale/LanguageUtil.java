@@ -34,6 +34,7 @@ public class LanguageUtil {
             "el", // Greek
             "es", // Spanish
             "pt", // Portuguese
+            "pt_BR", // Brazilian Portuguese
             "zh", // Chinese
             "ru", // Russian
             "fr", // French
@@ -84,6 +85,12 @@ public class LanguageUtil {
             */
     );
 
+    private static final List<String> rtlLanguagesCodes = Arrays.asList(
+            "fa", // Persian
+            "ar", // Arabic
+            "iw" // Hebrew
+    );
+
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
@@ -118,9 +125,15 @@ public class LanguageUtil {
             // Serbia
             // shows it in russian by default
             return "Srpski";
+        } else if (locale.getLanguage().equals("pt_br")) {
+            return "português (Brasil)";
         } else {
             return locale.getDisplayName(locale);
         }
+    }
+
+    public static boolean isDefaultLanguageRTL() {
+        return rtlLanguagesCodes.contains(LanguageUtil.getDefaultLanguageLocaleAsCode());
     }
 
     public static List<String> getUserLanguageCodes() {

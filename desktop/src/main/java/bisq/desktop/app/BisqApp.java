@@ -20,7 +20,6 @@ package bisq.desktop.app;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
-import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.debug.DebugView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -29,13 +28,14 @@ import bisq.desktop.main.overlays.windows.FilterWindow;
 import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
-import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.CssTheme;
+import bisq.desktop.util.ImageUtil;
 
 import bisq.core.alert.AlertManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqEnvironment;
+import bisq.core.app.OSXStandbyModeDisabler;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.governance.voteresult.MissingDataRequestService;
@@ -57,8 +57,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
-import org.reactfx.EventStreams;
-
 import javafx.application.Application;
 
 import javafx.stage.Modality;
@@ -67,11 +65,9 @@ import javafx.stage.StageStyle;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 import java.awt.GraphicsEnvironment;
@@ -139,6 +135,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             scene = createAndConfigScene(mainView, injector);
             setupStage(scene);
 
+            injector.getInstance(OSXStandbyModeDisabler.class).doIt();
             injector.getInstance(AvoidStandbyModeService.class).init();
 
             UserThread.runPeriodically(() -> Profiler.printSystemLoad(log), LOG_MEMORY_PERIOD_MIN, TimeUnit.MINUTES);
@@ -318,12 +315,8 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     else
                         new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
-                    // dev ode only
-                    if (Utilities.isAltOrCtrlPressed(KeyCode.P, keyEvent)) {
-                        showFPSWindow(scene);
-                    } else if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent)) {
+                    if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent))
                         showDebugWindow(scene, injector);
-                    }
                 }
             }
         });
@@ -399,32 +392,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.initOwner(scene.getWindow());
         stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
         stage.setY(this.stage.getY());
-        stage.show();
-    }
-
-    private void showFPSWindow(Scene scene) {
-        Label label = new AutoTooltipLabel();
-        EventStreams.animationTicks()
-                .latestN(100)
-                .map(ticks -> {
-                    int n = ticks.size() - 1;
-                    return n * 1_000_000_000.0 / (ticks.get(n) - ticks.get(0));
-                })
-                .map(d -> String.format("FPS: %.3f", d)) // Don't translate, just for dev
-                .feedTo(label.textProperty());
-
-        Pane root = new StackPane();
-        root.getChildren().add(label);
-        Stage stage = new Stage();
-        stage.setScene(new Scene(root));
-        stage.setTitle("FPS"); // Don't translate, just for dev
-        stage.initModality(Modality.NONE);
-        stage.initStyle(StageStyle.UTILITY);
-        stage.initOwner(scene.getWindow());
-        stage.setX(this.stage.getX() + this.stage.getWidth() + 10);
-        stage.setY(this.stage.getY());
-        stage.setWidth(200);
-        stage.setHeight(100);
         stage.show();
     }
 }

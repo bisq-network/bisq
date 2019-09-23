@@ -92,12 +92,12 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
 
     public void onInvalidateMarketPriceMargin() {
         marketPriceMargin.set("0.00%");
-        marketPriceMargin.set(btcFormatter.formatToPercent(dataModel.getMarketPriceMargin()));
+        marketPriceMargin.set(BSFormatter.formatToPercent(dataModel.getMarketPriceMargin()));
     }
 
     public void onInvalidatePrice() {
-        price.set(btcFormatter.formatPrice(null));
-        price.set(btcFormatter.formatPrice(dataModel.getPrice().get()));
+        price.set(BSFormatter.formatPrice(null));
+        price.set(BSFormatter.formatPrice(dataModel.getPrice().get()));
     }
 
     public boolean isSecurityDepositValid() {
