@@ -313,6 +313,7 @@ public class SignedWitnessService {
 
     private void publishSignedWitness(SignedWitness signedWitness) {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
+            log.info("broadcast signed witness {}", signedWitness.toString());
             p2PService.addPersistableNetworkPayload(signedWitness, false);
         }
     }

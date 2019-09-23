@@ -355,6 +355,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public boolean peerNeedsSigning() {
+        // TODO: check for signing requirement type
         return !accountAgeWitnessService.peerHasSignedWitness(trade);
     }
 
