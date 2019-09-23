@@ -15,14 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.network.p2p;
+package bisq.core.support.dispute.refund;
 
-public enum AckMessageSourceType {
-    UNDEFINED,
-    OFFER_MESSAGE,
-    TRADE_MESSAGE,
-    ARBITRATION_MESSAGE,
-    MEDIATION_MESSAGE,
-    TRADE_CHAT_MESSAGE,
-    REFUND_MESSAGE
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeSession;
+
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
+
+@Slf4j
+public class RefundSession extends DisputeSession {
+
+    public RefundSession(@Nullable Dispute dispute, boolean isTrader) {
+        super(dispute, isTrader);
+    }
 }

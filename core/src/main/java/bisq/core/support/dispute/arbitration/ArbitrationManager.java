@@ -24,6 +24,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportType;
@@ -138,6 +139,13 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Override
     public void cleanupDisputes() {
         disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED));
+    }
+
+    @Override
+    protected String getDisputeInfo(Dispute dispute) {
+        String role = Res.get("shared.arbitrator2").toLowerCase();
+        String link = "https://bisq.network/docs/exchange/arbitration-system";
+        return Res.get("support.initialInfo", role, role, link);
     }
 
 

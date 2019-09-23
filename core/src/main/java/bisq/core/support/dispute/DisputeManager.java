@@ -163,6 +163,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     public abstract void cleanupDisputes();
 
+    protected abstract String getDisputeInfo(Dispute dispute);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates for disputeListService
@@ -236,7 +238,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // arbitrator receives that from trader who opens dispute
+    // dispute agent receives that from trader who opens dispute
     protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -278,7 +280,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // not dispute requester receives that from arbitrator
+    // not dispute requester receives that from dispute agent
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -345,7 +347,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent() || reOpen) {
-            String disputeInfo = getDisputeInfo(dispute.isMediationDispute());
+            String disputeInfo = getDisputeInfo(dispute);
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
@@ -432,7 +434,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // arbitrator sends that to trading peer when he received openDispute request
+    // dispute agent sends that to trading peer when he received openDispute request
     private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
                                                 PubKeyRing pubKeyRing) {
@@ -459,10 +461,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.getMakerContractSignature(),
                 disputeFromOpener.getTakerContractSignature(),
                 disputeFromOpener.getAgentPubKeyRing(),
-                disputeFromOpener.isSupportTicket());
+                disputeFromOpener.isSupportTicket(),
+                disputeFromOpener.getSupportType());
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
-            String disputeInfo = getDisputeInfo(dispute.isMediationDispute());
+            String disputeInfo = getDisputeInfo(dispute);
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
@@ -546,7 +549,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // arbitrator send result to trader
+    // dispute agent send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -689,13 +692,5 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream()
                 .filter(e -> e.getTradeId().equals(tradeId))
                 .findAny();
-    }
-
-    private String getDisputeInfo(boolean isMediationDispute) {
-        String role = isMediationDispute ? Res.get("shared.mediator").toLowerCase() :
-                Res.get("shared.arbitrator2").toLowerCase();
-        String link = isMediationDispute ? "https://docs.bisq.network/trading-rules.html#mediation" :
-                "https://bisq.network/docs/exchange/arbitration-system";
-        return Res.get("support.initialInfo", role, role, link);
     }
 }

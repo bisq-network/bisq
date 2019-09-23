@@ -324,6 +324,7 @@ enum SupportType {
     ARBITRATION = 0;
     MEDIATION = 1;
     TRADE = 2;
+    REFUND = 3;
 }
 
 message OpenNewDisputeMessage {
@@ -756,6 +757,7 @@ message Dispute {
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
+    SupportType support_type = 24;
 }
 
 message Attachment {
@@ -823,6 +825,7 @@ message Contract {
     bytes taker_multi_sig_pub_key = 18;
     NodeAddress mediator_node_address = 19;
     int64 lock_time = 20;
+    NodeAddress refund_agent_node_address = 21;
 }
 
 message RawTransactionInput {

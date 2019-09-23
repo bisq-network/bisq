@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.support.dispute.mediation;
+package bisq.core.support.dispute.refund;
 
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -35,8 +35,6 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.TradeProtocol;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -45,34 +43,19 @@ import bisq.network.p2p.P2PService;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
-
-import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public final class MediationManager extends DisputeManager<MediationDisputeList> {
-
-    // The date when mediation is activated
-    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 26);
-
-    public static boolean isMediationActivated() {
-        return new Date().after(MEDIATION_ACTIVATED_DATE);
-    }
+public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,17 +63,17 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MediationManager(P2PService p2PService,
-                            TradeWalletService tradeWalletService,
-                            BtcWalletService walletService,
-                            WalletsSetup walletsSetup,
-                            TradeManager tradeManager,
-                            ClosedTradableManager closedTradableManager,
-                            OpenOfferManager openOfferManager,
-                            PubKeyRing pubKeyRing,
-                            MediationDisputeListService mediationDisputeListService) {
+    public RefundManager(P2PService p2PService,
+                         TradeWalletService tradeWalletService,
+                         BtcWalletService walletService,
+                         WalletsSetup walletsSetup,
+                         TradeManager tradeManager,
+                         ClosedTradableManager closedTradableManager,
+                         OpenOfferManager openOfferManager,
+                         PubKeyRing pubKeyRing,
+                         RefundDisputeListService refundDisputeListService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
-                openOfferManager, pubKeyRing, mediationDisputeListService);
+                openOfferManager, pubKeyRing, refundDisputeListService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -99,7 +82,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     public SupportType getSupportType() {
-        return SupportType.MEDIATION;
+        return SupportType.REFUND;
     }
 
     @Override
@@ -124,12 +107,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     protected Trade.DisputeState getDisputeState_StartedByPeer() {
-        return Trade.DisputeState.MEDIATION_STARTED_BY_PEER;
+        return Trade.DisputeState.REFUND_STARTED_BY_PEER;
     }
 
     @Override
     protected AckMessageSourceType getAckMessageSourceType() {
-        return AckMessageSourceType.MEDIATION_MESSAGE;
+        return AckMessageSourceType.REFUND_MESSAGE;
     }
 
     @Override
@@ -137,15 +120,15 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         disputeListService.cleanupDisputes(tradeId -> {
             tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
                     .ifPresent(trade -> {
-                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.REFUND_CLOSED);
                     });
         });
     }
 
     @Override
     protected String getDisputeInfo(Dispute dispute) {
-        String role = Res.get("shared.mediator").toLowerCase();
-        String link = "https://docs.bisq.network/trading-rules.html#mediation";
+        String role = Res.get("shared.refundAgent").toLowerCase();
+        String link = "https://bisq.network/docs/exchange/refundAgent"; //todo create link
         return Res.get("support.initialInfo", role, role, link);
     }
 
@@ -197,9 +180,9 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         Optional<Trade> tradeOptional = tradeManager.getTradeById(tradeId);
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
-            if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_REQUESTED ||
-                    trade.getDisputeState() == Trade.DisputeState.MEDIATION_STARTED_BY_PEER) {
-                trade.setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
+            if (trade.getDisputeState() == Trade.DisputeState.REFUND_REQUESTED ||
+                    trade.getDisputeState() == Trade.DisputeState.REFUND_STARTED_BY_PEER) {
+                trade.setDisputeState(Trade.DisputeState.REFUND_CLOSED);
             }
         } else {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
@@ -215,45 +198,45 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
-        return dispute.getContract().getMediatorNodeAddress();
+        return dispute.getContract().getRefundAgentNodeAddress();
     }
 
-    public void acceptMediationResult(Trade trade,
-                                      ResultHandler resultHandler,
-                                      ErrorMessageHandler errorMessageHandler) {
-        String tradeId = trade.getId();
-        Optional<Dispute> optionalDispute = findDispute(tradeId);
-        checkArgument(optionalDispute.isPresent(), "dispute must be present");
-        DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
-        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
-        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
-        ProcessModel processModel = trade.getProcessModel();
-        processModel.setBuyerPayoutAmountFromMediation(buyerPayoutAmount.value);
-        processModel.setSellerPayoutAmountFromMediation(sellerPayoutAmount.value);
-        TradeProtocol tradeProtocol = trade.getTradeProtocol();
-
-        trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
-
-        // If we have not got yet the peers signature we sign and send to the peer our signature.
-        // Otherwise we sign and complete with the peers signature the payout tx.
-        if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
-            tradeProtocol.onAcceptMediationResult(() -> {
-                if (trade.getPayoutTx() != null) {
-                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
-                }
-                resultHandler.handleResult();
-            }, errorMessageHandler);
-        } else {
-            tradeProtocol.onFinalizeMediationResultPayout(() -> {
-                if (trade.getPayoutTx() != null) {
-                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
-                }
-                resultHandler.handleResult();
-            }, errorMessageHandler);
-        }
-    }
-
-    public void rejectMediationResult(Trade trade) {
-        trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
-    }
+//    public void acceptRefundResult(Trade trade,
+//                                   ResultHandler resultHandler,
+//                                   ErrorMessageHandler errorMessageHandler) {
+//        String tradeId = trade.getId();
+//        Optional<Dispute> optionalDispute = findDispute(tradeId);
+//        checkArgument(optionalDispute.isPresent(), "dispute must be present");
+//        DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
+//        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
+//        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
+//        ProcessModel processModel = trade.getProcessModel();
+//        processModel.setBuyerPayoutAmountFromRefund(buyerPayoutAmount.value);
+//        processModel.setSellerPayoutAmountFromRefund(sellerPayoutAmount.value);
+//        TradeProtocol tradeProtocol = trade.getTradeProtocol();
+//
+//        trade.setRefundResultState(RefundResultState.MEDIATION_RESULT_ACCEPTED);
+//
+//        // If we have not got yet the peers signature we sign and send to the peer our signature.
+//        // Otherwise we sign and complete with the peers signature the payout tx.
+//        if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
+//            tradeProtocol.onAcceptRefundResult(() -> {
+//                if (trade.getPayoutTx() != null) {
+//                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+//                }
+//                resultHandler.handleResult();
+//            }, errorMessageHandler);
+//        } else {
+//            tradeProtocol.onFinalizeRefundResultPayout(() -> {
+//                if (trade.getPayoutTx() != null) {
+//                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+//                }
+//                resultHandler.handleResult();
+//            }, errorMessageHandler);
+//        }
+//    }
+//
+//    public void rejectRefundResult(Trade trade) {
+//        trade.setRefundResultState(RefundResultState.MEDIATION_RESULT_REJECTED);
+//    }
 }

@@ -32,12 +32,14 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.ParsingUtils;
@@ -89,6 +91,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final BSFormatter formatter;
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private Dispute dispute;
@@ -121,12 +124,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     public DisputeSummaryWindow(BSFormatter formatter,
                                 ArbitrationManager arbitrationManager,
                                 MediationManager mediationManager,
+                                RefundManager refundManager,
                                 BtcWalletService walletService,
                                 TradeWalletService tradeWalletService) {
 
         this.formatter = formatter;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
 
@@ -526,7 +531,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 return;
             }
 
-            if (!dispute.isMediationDispute()) {
+            if (dispute.getSupportType() != SupportType.MEDIATION) {
                 try {
                     AddressEntry arbitratorAddressEntry = walletService.getArbitratorAddressEntry();
                     disputeResult.setArbitratorPubKey(arbitratorAddressEntry.getPubKey());
@@ -558,7 +563,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
                     disputeResult.summaryNotesProperty().get());
 
-            if (dispute.isMediationDispute()) {
+            if (dispute.getSupportType() == SupportType.MEDIATION) {
                 text += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
             }
 
@@ -585,7 +590,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
-        return dispute.isMediationDispute() ? mediationManager : arbitrationManager;
+        if (dispute.getSupportType() != null) {
+            switch (dispute.getSupportType()) {
+                case ARBITRATION:
+                    return arbitrationManager;
+                case MEDIATION:
+                    return mediationManager;
+                case TRADE:
+                    break;
+                case REFUND:
+                    return refundManager;
+            }
+        }
+        return null;
     }
 
 
