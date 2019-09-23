@@ -81,7 +81,7 @@ public class SignedWitnessServiceTest {
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
         ArbitrationManager arbitrationManager = mock(ArbitrationManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
-        signedWitnessService = new SignedWitnessService(null, null, arbitratorManager, null, appendOnlyDataStoreService, arbitrationManager, null);
+        signedWitnessService = new SignedWitnessService(null, null, arbitratorManager, null, appendOnlyDataStoreService);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
         account2DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{2});
         account3DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{3});
