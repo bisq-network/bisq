@@ -59,6 +59,7 @@ import lombok.Getter;
 import javax.annotation.Nullable;
 
 import static bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel.SellerState.UNDEFINED;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTradesDataModel> implements ViewModel {
 
@@ -347,20 +348,19 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-    public boolean iAmSigner(boolean asSeller) {
-        AccountAgeWitness witness = accountAgeWitnessService.getMyWitness(asSeller ?
+    public boolean isSignWitnessTrade(boolean asSeller) {
+        checkNotNull(trade, "trade must not be null");
+        checkNotNull(trade.getOffer(), "offer must not be null");
+        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(asSeller ?
                 dataModel.getSellersPaymentAccountPayload() :
                 dataModel.getBuyersPaymentAccountPayload());
-        return accountAgeWitnessService.accountIsSigner(witness);
-    }
 
-    public boolean peerNeedsSigning() {
-        // TODO: check for signing requirement type
-        return !accountAgeWitnessService.peerHasSignedWitness(trade);
+        return accountAgeWitnessService.accountIsSigner(myWitness) &&
+                !accountAgeWitnessService.peerHasSignedWitness(trade);
     }
 
     public void maybeSignWitness(boolean asSeller) {
-        if (iAmSigner(asSeller) && peerNeedsSigning()) {
+        if (isSignWitnessTrade(asSeller)) {
             accountAgeWitnessService.traderSignPeersAccountAgeWitness(trade);
         }
     }

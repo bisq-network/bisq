@@ -120,7 +120,7 @@ public class BuyerStep4View extends TradeStepView {
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);
 
-        if (model.peerNeedsSigning()) {
+        if (model.isSignWitnessTrade(false)) {
             Label signLabel = new Label(Res.get("portfolio.pending.step5_buyer.signer"));
             GridPane.setRowIndex(signLabel, ++gridRow);
             gridPane.getChildren().add(signLabel);

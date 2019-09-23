@@ -565,7 +565,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
-        return !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
         });
     }
 

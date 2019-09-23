@@ -54,10 +54,19 @@ public class PaymentAccountUtil {
         ObservableList<PaymentAccount> result = FXCollections.observableArrayList();
         result.addAll(paymentAccounts.stream()
                 .filter(paymentAccount -> isTakerPaymentAccountValidForOffer(offer, paymentAccount))
-                .filter(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
-                        offer.getCurrencyCode(), offer.getMirroredDirection()) > offer.getAmount().value)
+                .filter(paymentAccount -> isAmountValidForOffer(offer, paymentAccount, accountAgeWitnessService))
                 .collect(Collectors.toList()));
         return result;
+    }
+
+    // Return true if paymentAccount can take this offer
+    public static boolean isAmountValidForOffer(Offer offer,
+                                                PaymentAccount paymentAccount,
+                                                AccountAgeWitnessService accountAgeWitnessService) {
+        boolean hasChargebackRisk = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
+        boolean hasValidAccountAgeWitness = accountAgeWitnessService.getMyTradeLimit(paymentAccount,
+                offer.getCurrencyCode(), offer.getMirroredDirection()) > offer.getAmount().value;
+        return !hasChargebackRisk || hasValidAccountAgeWitness;
     }
 
     // TODO might be used to show more details if we get payment methods updates with diff. limits
