@@ -46,6 +46,7 @@ public abstract class SellerTrade extends Trade {
                 NodeAddress tradingPeerNodeAddress,
                 @Nullable NodeAddress arbitratorNodeAddress,
                 @Nullable NodeAddress mediatorNodeAddress,
+                @Nullable NodeAddress refundAgentNodeAddress,
                 Storage<? extends TradableList> storage,
                 BtcWalletService btcWalletService) {
         super(offer,
@@ -57,6 +58,7 @@ public abstract class SellerTrade extends Trade {
                 tradingPeerNodeAddress,
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
+                refundAgentNodeAddress,
                 storage,
                 btcWalletService);
     }
@@ -67,6 +69,7 @@ public abstract class SellerTrade extends Trade {
                 boolean isCurrencyForTakerFeeBtc,
                 @Nullable NodeAddress arbitratorNodeAddress,
                 @Nullable NodeAddress mediatorNodeAddress,
+                @Nullable NodeAddress refundAgentNodeAddress,
                 Storage<? extends TradableList> storage,
                 BtcWalletService btcWalletService) {
         super(offer,
@@ -75,6 +78,7 @@ public abstract class SellerTrade extends Trade {
                 isCurrencyForTakerFeeBtc,
                 arbitratorNodeAddress,
                 mediatorNodeAddress,
+                refundAgentNodeAddress,
                 storage,
                 btcWalletService);
     }

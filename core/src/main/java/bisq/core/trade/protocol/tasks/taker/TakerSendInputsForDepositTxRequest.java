@@ -61,8 +61,10 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             checkNotNull(user, "User must not be null");
             final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
             final List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
-            checkNotNull(acceptedArbitratorAddresses, "acceptedArbitratorAddresses must not be null");
+            final List<NodeAddress> acceptedRefundAgentAddresses = user.getAcceptedRefundAgentAddresses();
+            // We don't check for arbitrators as they should vanish soon
             checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
+            // We also don't check for refund agents yet as we don't want to restict us too much. They are not mandatory.
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
@@ -102,10 +104,12 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     paymentAccountPayload,
                     processModel.getAccountId(),
                     trade.getTakerFeeTxId(),
-                    new ArrayList<>(acceptedArbitratorAddresses),
+                    acceptedArbitratorAddresses == null ? new ArrayList<>() : new ArrayList<>(acceptedArbitratorAddresses),
                     new ArrayList<>(acceptedMediatorAddresses),
+                    acceptedRefundAgentAddresses == null ? new ArrayList<>() : new ArrayList<>(acceptedRefundAgentAddresses),
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
+                    trade.getRefundAgentNodeAddress(),
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
                     sig,

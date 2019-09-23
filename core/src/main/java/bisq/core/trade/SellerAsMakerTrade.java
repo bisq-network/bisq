@@ -48,9 +48,18 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                               boolean isCurrencyForTakerFeeBtc,
                               @Nullable NodeAddress arbitratorNodeAddress,
                               @Nullable NodeAddress mediatorNodeAddress,
+                              @Nullable NodeAddress refundAgentNodeAddress,
                               Storage<? extends TradableList> storage,
                               BtcWalletService btcWalletService) {
-        super(offer, txFee, takerFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, mediatorNodeAddress, storage, btcWalletService);
+        super(offer,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                storage,
+                btcWalletService);
     }
 
 
@@ -78,6 +87,7 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 proto.getIsCurrencyForTakerFeeBtc(),
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
                 proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
+                proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                 storage,
                 btcWalletService);
 

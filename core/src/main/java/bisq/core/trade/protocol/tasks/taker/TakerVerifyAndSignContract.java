@@ -98,7 +98,8 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     takerPayoutAddressString,
                     maker.getMultiSigPubKey(),
                     takerMultiSigPubKey,
-                    trade.getLockTime()
+                    trade.getLockTime(),
+                    trade.getRefundAgentNodeAddress()
             );
             String contractAsJson = Utilities.objectToJson(contract);
             log.trace("Contract as json:{}", contractAsJson);

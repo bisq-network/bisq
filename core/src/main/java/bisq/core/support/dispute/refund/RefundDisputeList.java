@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ToString
 /*
- * Holds a List of arbitration dispute objects.
+ * Holds a List of refund dispute objects.
  *
  * Calls to the List are delegated because this class intercepts the add/remove calls so changes
  * can be saved to disc.
@@ -67,11 +67,11 @@ public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
 
     @Override
     public Message toProtoMessage() {
-        return protobuf.PersistableEnvelope.newBuilder().setArbitrationDisputeList(protobuf.ArbitrationDisputeList.newBuilder()
+        return protobuf.PersistableEnvelope.newBuilder().setRefundDisputeList(protobuf.RefundDisputeList.newBuilder()
                 .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list)))).build();
     }
 
-    public static RefundDisputeList fromProto(protobuf.ArbitrationDisputeList proto,
+    public static RefundDisputeList fromProto(protobuf.RefundDisputeList proto,
                                               CoreProtoResolver coreProtoResolver,
                                               Storage<RefundDisputeList> storage) {
         List<Dispute> list = proto.getDisputeList().stream()

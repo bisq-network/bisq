@@ -29,6 +29,7 @@ import bisq.core.offer.placeoffer.PlaceOfferProtocol;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradableList;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -105,6 +106,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final TradeStatisticsManager tradeStatisticsManager;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
+    private final RefundAgentManager refundAgentManager;
     private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private boolean stopped;
@@ -130,6 +132,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             TradeStatisticsManager tradeStatisticsManager,
                             ArbitratorManager arbitratorManager,
                             MediatorManager mediatorManager,
+                            RefundAgentManager refundAgentManager,
                             Storage<TradableList<OpenOffer>> storage) {
         this.keyRing = keyRing;
         this.user = user;
@@ -144,6 +147,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
+        this.refundAgentManager = refundAgentManager;
 
         openOfferTradableListStorage = storage;
 
@@ -578,6 +582,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             AvailabilityResult availabilityResult;
             NodeAddress arbitratorNodeAddress = null;
             NodeAddress mediatorNodeAddress = null;
+            NodeAddress refundAgentNodeAddress = null;
             if (openOfferOptional.isPresent()) {
                 OpenOffer openOffer = openOfferOptional.get();
                 if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
@@ -586,12 +591,17 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
                         List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
+                        // todo missing check for NO_MEDIATORS and NO_REFUND_AGENTS
                         if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
                             arbitratorNodeAddress = DisputeAgentSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
                             openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
                             mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
                             openOffer.setMediatorNodeAddress(mediatorNodeAddress);
+
+                            refundAgentNodeAddress = DisputeAgentSelection.getLeastUsedRefundAgent(tradeStatisticsManager, refundAgentManager).getNodeAddress();
+                            openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
+
                             Capabilities supportedCapabilities = request.getSupportedCapabilities();
                             if (!OfferRestrictions.requiresUpdate() ||
                                     (supportedCapabilities != null &&
@@ -635,7 +645,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
                     availabilityResult,
                     arbitratorNodeAddress,
-                    mediatorNodeAddress);
+                    mediatorNodeAddress,
+                    refundAgentNodeAddress);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     offerAvailabilityResponse.getClass().getSimpleName(), offerAvailabilityResponse.getOfferId(),
                     offerAvailabilityResponse.getUid(), peer);

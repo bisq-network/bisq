@@ -92,7 +92,8 @@ public class MakerCreateAndSignContract extends TradeTask {
                     taker.getPayoutAddressString(),
                     makerMultiSigPubKey,
                     taker.getMultiSigPubKey(),
-                    trade.getLockTime()
+                    trade.getLockTime(),
+                    trade.getRefundAgentNodeAddress()
             );
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);

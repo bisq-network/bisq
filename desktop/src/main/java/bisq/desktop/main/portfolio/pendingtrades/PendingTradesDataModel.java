@@ -33,6 +33,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
@@ -513,6 +514,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             useMediation = false;
             useArbitration = true;
         }
+
+        //todo
         if (useMediation) {
             // If no dispute state set we start with mediation
             disputeManager = mediationManager;
@@ -537,7 +540,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
                     mediatorPubKeyRing,
-                    isSupportTicket);
+                    isSupportTicket,
+                    SupportType.MEDIATION);
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false, disputeManager);
@@ -565,7 +569,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
                     arbitratorPubKeyRing,
-                    isSupportTicket);
+                    isSupportTicket,
+                    SupportType.ARBITRATION);
 
             trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false, disputeManager);

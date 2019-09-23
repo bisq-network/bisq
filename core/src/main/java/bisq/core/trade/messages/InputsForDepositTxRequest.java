@@ -30,7 +30,6 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,8 +60,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final String takerFeeTxId;
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
+    private final List<NodeAddress> acceptedRefundAgentNodeAddresses;
     private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
+    private final NodeAddress refundAgentNodeAddress;
 
     // added in v 0.6. can be null if we trade with an older peer
     @Nullable
@@ -87,8 +88,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      String takerFeeTxId,
                                      List<NodeAddress> acceptedArbitratorNodeAddresses,
                                      List<NodeAddress> acceptedMediatorNodeAddresses,
+                                     List<NodeAddress> acceptedRefundAgentNodeAddresses,
                                      NodeAddress arbitratorNodeAddress,
                                      NodeAddress mediatorNodeAddress,
+                                     NodeAddress refundAgentNodeAddress,
                                      String uid,
                                      int messageVersion,
                                      @Nullable byte[] accountAgeWitnessSignatureOfOfferId,
@@ -111,8 +114,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.takerFeeTxId = takerFeeTxId;
         this.acceptedArbitratorNodeAddresses = acceptedArbitratorNodeAddresses;
         this.acceptedMediatorNodeAddresses = acceptedMediatorNodeAddresses;
+        this.acceptedRefundAgentNodeAddresses = acceptedRefundAgentNodeAddresses;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
+        this.refundAgentNodeAddress = refundAgentNodeAddress;
         this.accountAgeWitnessSignatureOfOfferId = accountAgeWitnessSignatureOfOfferId;
         this.currentDate = currentDate;
     }
@@ -145,8 +150,11 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .addAllAcceptedMediatorNodeAddresses(acceptedMediatorNodeAddresses.stream()
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
+                .addAllAcceptedRefundAgentNodeAddresses(acceptedRefundAgentNodeAddresses.stream()
+                        .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
+                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .setUid(uid);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
@@ -167,6 +175,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
         List<NodeAddress> acceptedMediatorNodeAddresses = proto.getAcceptedMediatorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());
+        List<NodeAddress> acceptedRefundAgentNodeAddresses = proto.getAcceptedRefundAgentNodeAddressesList().stream()
+                .map(NodeAddress::fromProto).collect(Collectors.toList());
 
         return new InputsForDepositTxRequest(proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
@@ -186,8 +196,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 proto.getTakerFeeTxId(),
                 acceptedArbitratorNodeAddresses,
                 acceptedMediatorNodeAddresses,
+                acceptedRefundAgentNodeAddresses,
                 NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
+                NodeAddress.fromProto(proto.getRefundAgentNodeAddress()),
                 proto.getUid(),
                 messageVersion,
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
@@ -214,11 +226,12 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
                 ",\n     acceptedArbitratorNodeAddresses=" + acceptedArbitratorNodeAddresses +
                 ",\n     acceptedMediatorNodeAddresses=" + acceptedMediatorNodeAddresses +
+                ",\n     acceptedRefundAgentNodeAddresses=" + acceptedRefundAgentNodeAddresses +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
-                ",\n     uid='" + uid + '\'' +
+                ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     accountAgeWitnessSignatureOfOfferId=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfOfferId) +
-                ",\n     currentDate=" + new Date(currentDate) +
+                ",\n     currentDate=" + currentDate +
                 "\n} " + super.toString();
     }
 }

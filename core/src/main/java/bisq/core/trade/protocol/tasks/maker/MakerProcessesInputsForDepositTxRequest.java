@@ -72,8 +72,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setAccountId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerAccountId()));
             trade.setTakerFeeTxId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerFeeTxId()));
-            processModel.setTakerAcceptedArbitratorNodeAddresses(checkNotNull(inputsForDepositTxRequest.getAcceptedArbitratorNodeAddresses()));
-            processModel.setTakerAcceptedMediatorNodeAddresses(checkNotNull(inputsForDepositTxRequest.getAcceptedMediatorNodeAddresses()));
             if (inputsForDepositTxRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
                 failed("acceptedArbitratorNodeAddresses must not be empty");
 

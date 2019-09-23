@@ -49,6 +49,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
@@ -131,6 +132,7 @@ public class BisqSetup {
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
+    private final RefundAgentManager refundAgentManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
@@ -213,6 +215,7 @@ public class BisqSetup {
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
                      MediatorManager mediatorManager,
+                     RefundAgentManager refundAgentManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
@@ -257,6 +260,7 @@ public class BisqSetup {
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
+        this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -631,6 +635,7 @@ public class BisqSetup {
 
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
+        refundAgentManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));

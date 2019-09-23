@@ -15,17 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
+package bisq.core.support.dispute.refund;
 
-public enum AvailabilityResult {
-    UNKNOWN_FAILURE,
-    AVAILABLE,
-    OFFER_TAKEN,
-    PRICE_OUT_OF_TOLERANCE,
-    MARKET_PRICE_NOT_AVAILABLE,
-    NO_ARBITRATORS,
-    NO_MEDIATORS,
-    USER_IGNORED,
-    MISSING_MANDATORY_CAPABILITY,
-    NO_REFUND_AGENTS
+import bisq.common.proto.ProtoUtil;
+
+// todo
+public enum RefundResultState {
+    UNDEFINED_REFUND_RESULT;
+
+    public static RefundResultState fromProto(protobuf.RefundResultState refundResultState) {
+        return ProtoUtil.enumFromProto(RefundResultState.class, refundResultState.name());
+    }
+
+    public static protobuf.RefundResultState toProtoMessage(RefundResultState refundResultState) {
+        return protobuf.RefundResultState.valueOf(refundResultState.name());
+    }
 }

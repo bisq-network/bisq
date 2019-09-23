@@ -32,6 +32,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
@@ -91,6 +92,7 @@ public class ProcessModel implements Model, PersistablePayload {
     transient private TradeStatisticsManager tradeStatisticsManager;
     transient private ArbitratorManager arbitratorManager;
     transient private MediatorManager mediatorManager;
+    transient private RefundAgentManager refundAgentManager;
     transient private KeyRing keyRing;
     transient private P2PService p2PService;
     transient private ReferralIdService referralIdService;
@@ -121,12 +123,6 @@ public class ProcessModel implements Model, PersistablePayload {
     @Nullable
     @Setter
     private byte[] payoutTxSignature;
-    @Nullable
-    @Setter
-    private List<NodeAddress> takerAcceptedArbitratorNodeAddresses;
-    @Nullable
-    @Setter
-    private List<NodeAddress> takerAcceptedMediatorNodeAddresses;
     @Nullable
     @Setter
     private byte[] preparedDepositTx;
@@ -165,7 +161,6 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
-
     public ProcessModel() {
     }
 
@@ -190,14 +185,13 @@ public class ProcessModel implements Model, PersistablePayload {
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
-        Optional.ofNullable(takerAcceptedArbitratorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedArbitratorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedArbitratorNodeAddresses)));
-        Optional.ofNullable(takerAcceptedMediatorNodeAddresses).ifPresent(e -> builder.addAllTakerAcceptedMediatorNodeAddresses(ProtoUtil.collectionToProto(takerAcceptedMediatorNodeAddresses)));
         Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(ProtoUtil.collectionToProto(rawTransactionInputs)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
+
         return builder.build();
     }
 
@@ -216,14 +210,6 @@ public class ProcessModel implements Model, PersistablePayload {
         // nullable
         processModel.setTakeOfferFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakeOfferFeeTxId()));
         processModel.setPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSignature()));
-        List<NodeAddress> takerAcceptedArbitratorNodeAddresses = proto.getTakerAcceptedArbitratorNodeAddressesList().isEmpty() ?
-                null : proto.getTakerAcceptedArbitratorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-        List<NodeAddress> takerAcceptedMediatorNodeAddresses = proto.getTakerAcceptedMediatorNodeAddressesList().isEmpty() ?
-                null : proto.getTakerAcceptedMediatorNodeAddressesList().stream()
-                .map(NodeAddress::fromProto).collect(Collectors.toList());
-        processModel.setTakerAcceptedArbitratorNodeAddresses(takerAcceptedArbitratorNodeAddresses);
-        processModel.setTakerAcceptedMediatorNodeAddresses(takerAcceptedMediatorNodeAddresses);
         processModel.setPreparedDepositTx(ProtoUtil.byteArrayOrNullFromProto(proto.getPreparedDepositTx()));
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
                 null : proto.getRawTransactionInputsList().stream()
@@ -259,6 +245,7 @@ public class ProcessModel implements Model, PersistablePayload {
                                          TradeStatisticsManager tradeStatisticsManager,
                                          ArbitratorManager arbitratorManager,
                                          MediatorManager mediatorManager,
+                                         RefundAgentManager refundAgentManager,
                                          KeyRing keyRing,
                                          boolean useSavingsWallet,
                                          Coin fundsNeededForTrade) {
@@ -276,6 +263,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
+        this.refundAgentManager = refundAgentManager;
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.useSavingsWallet = useSavingsWallet;
