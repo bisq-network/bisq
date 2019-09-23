@@ -75,6 +75,7 @@ public final class Contract implements NetworkPayload {
 
     // Added in v1.2.0
     private long lockTime;
+    private final NodeAddress refundAgentNodeAddress;
 
     public Contract(OfferPayload offerPayload,
                     long tradeAmount,
@@ -95,7 +96,8 @@ public final class Contract implements NetworkPayload {
                     String takerPayoutAddressString,
                     byte[] makerMultiSigPubKey,
                     byte[] takerMultiSigPubKey,
-                    long lockTime) {
+                    long lockTime,
+                    NodeAddress refundAgentNodeAddress) {
         this.offerPayload = offerPayload;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
@@ -116,6 +118,7 @@ public final class Contract implements NetworkPayload {
         this.makerMultiSigPubKey = makerMultiSigPubKey;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
         this.lockTime = lockTime;
+        this.refundAgentNodeAddress = refundAgentNodeAddress;
 
         String makerPaymentMethodId = makerPaymentAccountPayload.getPaymentMethodId();
         String takerPaymentMethodId = takerPaymentAccountPayload.getPaymentMethodId();
@@ -153,7 +156,8 @@ public final class Contract implements NetworkPayload {
                 proto.getTakerPayoutAddressString(),
                 proto.getMakerMultiSigPubKey().toByteArray(),
                 proto.getTakerMultiSigPubKey().toByteArray(),
-                proto.getLockTime());
+                proto.getLockTime(),
+                NodeAddress.fromProto(proto.getRefundAgentNodeAddress()));
     }
 
     @Override
@@ -179,6 +183,7 @@ public final class Contract implements NetworkPayload {
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
                 .setLockTime(lockTime)
+                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .build();
     }
 
@@ -297,6 +302,7 @@ public final class Contract implements NetworkPayload {
                 ",\n     sellerNodeAddress=" + sellerNodeAddress +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     isBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
                 ",\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     takerAccountId='" + takerAccountId + '\'' +
