@@ -44,7 +44,7 @@ import javax.inject.Inject;
 public class RefundAgentView extends DisputeAgentView {
 
     @Inject
-    public RefundAgentView(RefundManager arbitrationManager,
+    public RefundAgentView(RefundManager refundManager,
                            KeyRing keyRing,
                            TradeManager tradeManager,
                            BSFormatter formatter,
@@ -54,7 +54,7 @@ public class RefundAgentView extends DisputeAgentView {
                            TradeDetailsWindow tradeDetailsWindow,
                            AccountAgeWitnessService accountAgeWitnessService,
                            @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(arbitrationManager,
+        super(refundManager,
                 keyRing,
                 tradeManager,
                 formatter,
@@ -68,7 +68,7 @@ public class RefundAgentView extends DisputeAgentView {
 
     @Override
     protected SupportType getType() {
-        return SupportType.ARBITRATION;
+        return SupportType.REFUND;
     }
 
     @Override

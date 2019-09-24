@@ -590,46 +590,29 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
-                        List<NodeAddress> acceptedArbitrators = user.getAcceptedArbitratorAddresses();
-                        // todo missing check for NO_MEDIATORS and NO_REFUND_AGENTS
-                        if (acceptedArbitrators != null && !acceptedArbitrators.isEmpty()) {
-                            arbitratorNodeAddress = DisputeAgentSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
-                            openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
+                        arbitratorNodeAddress = DisputeAgentSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
+                        openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
 
-                            mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
-                            openOffer.setMediatorNodeAddress(mediatorNodeAddress);
+                        mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
+                        openOffer.setMediatorNodeAddress(mediatorNodeAddress);
 
-                            refundAgentNodeAddress = DisputeAgentSelection.getLeastUsedRefundAgent(tradeStatisticsManager, refundAgentManager).getNodeAddress();
-                            openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
+                        refundAgentNodeAddress = DisputeAgentSelection.getLeastUsedRefundAgent(tradeStatisticsManager, refundAgentManager).getNodeAddress();
+                        openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
 
-                            Capabilities supportedCapabilities = request.getSupportedCapabilities();
-                            if (!OfferRestrictions.requiresUpdate() ||
-                                    (supportedCapabilities != null &&
-                                            Capabilities.hasMandatoryCapability(supportedCapabilities, Capability.MEDIATION))) {
-                                try {
-                                    // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
-                                    // in trade price between the peers. Also here poor connectivity might cause market price API connection
-                                    // losses and therefore an outdated market price.
-                                    offer.checkTradePriceTolerance(request.getTakersTradePrice());
-                                } catch (TradePriceOutOfToleranceException e) {
-                                    log.warn("Trade price check failed because takers price is outside out tolerance.");
-                                    availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
-                                } catch (MarketPriceNotAvailableException e) {
-                                    log.warn(e.getMessage());
-                                    availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
-                                } catch (Throwable e) {
-                                    log.warn("Trade price check failed. " + e.getMessage());
-                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
-                                }
-                            } else {
-                                log.warn("Taker has not mandatory capability MEDIATION");
-                                // Because an old peer has not AvailabilityResult.MISSING_MANDATORY_CAPABILITY and we
-                                // have not set the UNDEFINED fallback in AvailabilityResult the user will get a null value.
-                                availabilityResult = AvailabilityResult.MISSING_MANDATORY_CAPABILITY;
-                            }
-                        } else {
-                            log.warn("acceptedArbitrators is null or empty: acceptedArbitrators=" + acceptedArbitrators);
-                            availabilityResult = AvailabilityResult.NO_ARBITRATORS;
+                        try {
+                            // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
+                            // in trade price between the peers. Also here poor connectivity might cause market price API connection
+                            // losses and therefore an outdated market price.
+                            offer.checkTradePriceTolerance(request.getTakersTradePrice());
+                        } catch (TradePriceOutOfToleranceException e) {
+                            log.warn("Trade price check failed because takers price is outside out tolerance.");
+                            availabilityResult = AvailabilityResult.PRICE_OUT_OF_TOLERANCE;
+                        } catch (MarketPriceNotAvailableException e) {
+                            log.warn(e.getMessage());
+                            availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
+                        } catch (Throwable e) {
+                            log.warn("Trade price check failed. " + e.getMessage());
+                            availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
                         }
                     } else {
                         availabilityResult = AvailabilityResult.USER_IGNORED;

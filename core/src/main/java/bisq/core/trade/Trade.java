@@ -228,8 +228,8 @@ public abstract class Trade implements Tradable, Model {
 
         // refund
         REFUND_REQUESTED,
-        REFUND_STARTED_BY_PEER,
-        REFUND_CLOSED;
+        REFUND_REQUEST_STARTED_BY_PEER,
+        REFUND_REQUEST_CLOSED;
 
         public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());

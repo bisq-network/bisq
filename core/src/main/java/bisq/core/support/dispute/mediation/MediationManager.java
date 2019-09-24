@@ -47,15 +47,12 @@ import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;

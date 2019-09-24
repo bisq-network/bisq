@@ -1325,8 +1325,8 @@ message Trade {
         MEDIATION_STARTED_BY_PEER = 6;
         MEDIATION_CLOSED = 7;
         REFUND_REQUESTED = 8;
-        REFUND_STARTED_BY_PEER = 9;
-        REFUND_CLOSED = 10;
+        REFUND_REQUEST_STARTED_BY_PEER = 9;
+        REFUND_REQUEST_CLOSED = 10;
     }
 
     enum TradePeriodState {

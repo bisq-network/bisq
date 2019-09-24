@@ -43,7 +43,7 @@ import javax.inject.Inject;
 @FxmlView
 public class RefundClientView extends DisputeClientView {
     @Inject
-    public RefundClientView(RefundManager arbitrationManager,
+    public RefundClientView(RefundManager refundManager,
                             KeyRing keyRing,
                             TradeManager tradeManager,
                             BSFormatter formatter,
@@ -53,14 +53,14 @@ public class RefundClientView extends DisputeClientView {
                             TradeDetailsWindow tradeDetailsWindow,
                             AccountAgeWitnessService accountAgeWitnessService,
                             @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(arbitrationManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
+        super(refundManager, keyRing, tradeManager, formatter, disputeSummaryWindow,
                 privateNotificationManager, contractWindow, tradeDetailsWindow, accountAgeWitnessService,
                 useDevPrivilegeKeys);
     }
 
     @Override
     protected SupportType getType() {
-        return SupportType.ARBITRATION;
+        return SupportType.REFUND;
     }
 
     @Override

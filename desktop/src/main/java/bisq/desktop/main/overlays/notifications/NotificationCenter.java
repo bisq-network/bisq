@@ -27,8 +27,8 @@ import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientVie
 import bisq.desktop.main.support.dispute.client.mediation.MediationClientView;
 
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.SellerTrade;
@@ -38,7 +38,6 @@ import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 
 import com.google.inject.Inject;
 
@@ -82,8 +81,8 @@ public class NotificationCenter {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private final TradeManager tradeManager;
-    private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final Navigation navigation;
 
     private final Map<String, Subscription> disputeStateSubscriptionsMap = new HashMap<>();
@@ -97,13 +96,13 @@ public class NotificationCenter {
 
     @Inject
     public NotificationCenter(TradeManager tradeManager,
-                              ArbitrationManager arbitrationManager,
                               MediationManager mediationManager,
+                              RefundManager refundManager,
                               Preferences preferences,
                               Navigation navigation) {
         this.tradeManager = tradeManager;
-        this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.navigation = navigation;
 
         EasyBind.subscribe(preferences.getUseAnimationsProperty(), useAnimations -> NotificationCenter.useAnimations = useAnimations);
@@ -230,26 +229,26 @@ public class NotificationCenter {
 
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
         String message = null;
-        if (arbitrationManager.findOwnDispute(trade.getId()).isPresent()) {
-            String disputeOrTicket = arbitrationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
+        if (refundManager.findOwnDispute(trade.getId()).isPresent()) {
+            String disputeOrTicket = refundManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
                     Res.get("shared.dispute");
             switch (disputeState) {
                 case NO_DISPUTE:
                     break;
-                case DISPUTE_REQUESTED:
+                case REFUND_REQUESTED:
                     break;
-                case DISPUTE_STARTED_BY_PEER:
+                case REFUND_REQUEST_STARTED_BY_PEER:
                     message = Res.get("notification.trade.peerOpenedDispute", disputeOrTicket);
                     break;
-                case DISPUTE_CLOSED:
+                case REFUND_REQUEST_CLOSED:
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
                 default:
-                    if (DevEnv.isDevMode()) {
-                        log.error("arbitrationDisputeManager must not contain mediation disputes");
-                        throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
-                    }
+//                    if (DevEnv.isDevMode()) {
+//                        log.error("refundManager must not contain mediation or arbitration disputes. disputeState={}", disputeState);
+//                        throw new RuntimeException("arbitrationDisputeManager must not contain mediation disputes");
+//                    }
                     break;
             }
             if (message != null) {
@@ -271,10 +270,10 @@ public class NotificationCenter {
                     message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
                     break;
                 default:
-                    if (DevEnv.isDevMode()) {
-                        log.error("mediationDisputeManager must not contain arbitration disputes");
-                        throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
-                    }
+//                    if (DevEnv.isDevMode()) {
+//                        log.error("mediationDisputeManager must not contain arbitration or refund disputes. disputeState={}", disputeState);
+//                        throw new RuntimeException("mediationDisputeManager must not contain arbitration disputes");
+//                    }
                     break;
             }
             if (message != null) {

@@ -72,10 +72,10 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
     private final Navigation navigation;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
-    private final RefundManager refundManager;
+    private final RefundAgentManager refundAgentManager;
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
-    private final RefundAgentManager refundAgentManager;
+    private final RefundManager refundManager;
     private final KeyRing keyRing;
 
     private Navigation.Listener navigationListener;
@@ -91,19 +91,19 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
                        Navigation navigation,
                        ArbitratorManager arbitratorManager,
                        MediatorManager mediatorManager,
-                       RefundManager refundManager,
+                       RefundAgentManager refundAgentManager,
                        ArbitrationManager arbitrationManager,
                        MediationManager mediationManager,
-                       RefundAgentManager refundAgentManager,
+                       RefundManager refundManager,
                        KeyRing keyRing) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
-        this.refundManager = refundManager;
+        this.refundAgentManager = refundAgentManager;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
-        this.refundAgentManager = refundAgentManager;
+        this.refundManager = refundManager;
         this.keyRing = keyRing;
     }
 
@@ -113,8 +113,8 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         updateAgentTabs();
 
         tradersMediationDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
-        tradersRefundDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
-        tradersArbitrationDisputesTab.setText(Res.get("support.tab.refund.support").toUpperCase());
+        tradersRefundDisputesTab.setText(Res.get("support.tab.refund.support").toUpperCase());
+        tradersArbitrationDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SupportView.class) == 1)
                 loadView(viewPath.tip());
@@ -125,6 +125,8 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
                 navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class);
             else if (newValue == tradersMediationDisputesTab)
                 navigation.navigateTo(MainView.class, SupportView.class, MediationClientView.class);
+            else if (newValue == tradersRefundDisputesTab)
+                navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
             else if (newValue == arbitratorTab)
                 navigation.navigateTo(MainView.class, SupportView.class, ArbitratorView.class);
             else if (newValue == mediatorTab)
@@ -212,6 +214,8 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
             navigation.navigateTo(MainView.class, SupportView.class, MediationClientView.class);
         } else if (root.getSelectionModel().getSelectedItem() == tradersArbitrationDisputesTab) {
             navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class);
+        } else if (root.getSelectionModel().getSelectedItem() == tradersRefundDisputesTab) {
+            navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
         } else if (arbitratorTab != null) {
             navigation.navigateTo(MainView.class, SupportView.class, ArbitratorView.class);
         } else if (mediatorTab != null) {

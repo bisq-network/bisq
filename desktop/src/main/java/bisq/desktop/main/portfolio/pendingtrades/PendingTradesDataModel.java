@@ -38,8 +38,8 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
@@ -85,8 +85,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PendingTradesDataModel extends ActivatableDataModel {
     public final TradeManager tradeManager;
     public final BtcWalletService btcWalletService;
-    public final ArbitrationManager arbitrationManager;
     public final MediationManager mediationManager;
+    public final RefundManager refundManager;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     @Getter
@@ -101,6 +101,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     final ObjectProperty<PendingTradesListItem> selectedItemProperty = new SimpleObjectProperty<>();
     public final StringProperty txId = new SimpleStringProperty();
+
     @Getter
     private final TraderChatManager traderChatManager;
     public final Preferences preferences;
@@ -118,8 +119,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public PendingTradesDataModel(TradeManager tradeManager,
                                   BtcWalletService btcWalletService,
                                   PubKeyRing pubKeyRing,
-                                  ArbitrationManager arbitrationManager,
                                   MediationManager mediationManager,
+                                  RefundManager refundManager,
                                   TraderChatManager traderChatManager,
                                   Preferences preferences,
                                   P2PService p2PService,
@@ -131,8 +132,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.pubKeyRing = pubKeyRing;
-        this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.p2PService = p2PService;
@@ -503,19 +504,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
         boolean useMediation;
-        boolean useArbitration;
-        // If mediation is not activated we use arbitration
-        if (MediationManager.isMediationActivated()) {
-            // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED or
-            useMediation = disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED;
-            // in case of arbitration disputeState == Trade.DisputeState.ARBITRATION_REQUESTED
-            useArbitration = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.DISPUTE_REQUESTED;
-        } else {
-            useMediation = false;
-            useArbitration = true;
-        }
+        boolean useRefundAgent;
+        // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED
+        useMediation = disputeState == Trade.DisputeState.NO_DISPUTE || disputeState == Trade.DisputeState.MEDIATION_REQUESTED;
+        // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
+        useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.REFUND_REQUESTED;
 
-        //todo
         if (useMediation) {
             // If no dispute state set we start with mediation
             disputeManager = mediationManager;
@@ -545,11 +539,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false, disputeManager);
-        } else if (useArbitration) {
-            // Only if we have completed mediation we allow arbitration
-            disputeManager = arbitrationManager;
-            PubKeyRing arbitratorPubKeyRing = trade.getArbitratorPubKeyRing();
-            checkNotNull(arbitratorPubKeyRing, "arbitratorPubKeyRing must not be null");
+        } else if (useRefundAgent) {
+            // Only if we have completed mediation we allow refund agent
+            disputeManager = refundManager;
+            PubKeyRing refundAgentPubKeyRing = trade.getRefundAgentPubKeyRing();
+            checkNotNull(refundAgentPubKeyRing, "refundAgentPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
             String depositTxHashAsString = depositTx.getHashAsString();
             Dispute dispute = new Dispute(disputeManager.getStorage(),
@@ -568,11 +562,11 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getContractAsJson(),
                     trade.getMakerContractSignature(),
                     trade.getTakerContractSignature(),
-                    arbitratorPubKeyRing,
+                    refundAgentPubKeyRing,
                     isSupportTicket,
-                    SupportType.ARBITRATION);
+                    SupportType.REFUND);
 
-            trade.setDisputeState(Trade.DisputeState.DISPUTE_REQUESTED);
+            trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
             sendOpenNewDisputeMessage(dispute, false, disputeManager);
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());

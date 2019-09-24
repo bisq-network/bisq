@@ -49,6 +49,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
@@ -138,6 +139,7 @@ public class BisqSetup {
     private final OpenOfferManager openOfferManager;
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final TraderChatManager traderChatManager;
     private final Preferences preferences;
     private final User user;
@@ -221,6 +223,7 @@ public class BisqSetup {
                      OpenOfferManager openOfferManager,
                      ArbitrationManager arbitrationManager,
                      MediationManager mediationManager,
+                     RefundManager refundManager,
                      TraderChatManager traderChatManager,
                      Preferences preferences,
                      User user,
@@ -266,6 +269,7 @@ public class BisqSetup {
         this.openOfferManager = openOfferManager;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.user = user;
@@ -622,6 +626,7 @@ public class BisqSetup {
 
         arbitrationManager.onAllServicesInitialized();
         mediationManager.onAllServicesInitialized();
+        refundManager.onAllServicesInitialized();
         traderChatManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();

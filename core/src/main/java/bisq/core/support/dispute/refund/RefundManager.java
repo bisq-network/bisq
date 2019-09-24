@@ -107,7 +107,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
     @Override
     protected Trade.DisputeState getDisputeState_StartedByPeer() {
-        return Trade.DisputeState.REFUND_STARTED_BY_PEER;
+        return Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER;
     }
 
     @Override
@@ -120,7 +120,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         disputeListService.cleanupDisputes(tradeId -> {
             tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
                     .ifPresent(trade -> {
-                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.REFUND_CLOSED);
+                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.REFUND_REQUEST_CLOSED);
                     });
         });
     }
@@ -181,8 +181,8 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         if (tradeOptional.isPresent()) {
             Trade trade = tradeOptional.get();
             if (trade.getDisputeState() == Trade.DisputeState.REFUND_REQUESTED ||
-                    trade.getDisputeState() == Trade.DisputeState.REFUND_STARTED_BY_PEER) {
-                trade.setDisputeState(Trade.DisputeState.REFUND_CLOSED);
+                    trade.getDisputeState() == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
+                trade.setDisputeState(Trade.DisputeState.REFUND_REQUEST_CLOSED);
             }
         } else {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
