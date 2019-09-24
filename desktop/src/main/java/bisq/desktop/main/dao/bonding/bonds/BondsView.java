@@ -185,9 +185,9 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 };
             }
         });
+        tableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BondListItem::getAmount));
         column.setSortType(TableColumn.SortType.ASCENDING);
-        tableView.getColumns().add(column);
         tableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockTime"));
