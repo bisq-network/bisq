@@ -26,7 +26,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Address;
@@ -47,8 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class BsqFormatter extends BSFormatter {
-    @SuppressWarnings("PointlessBooleanExpression")
-    private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
+    private static final boolean useBsqAddressFormat = true;// || !DevEnv.isDevMode();
     private final String prefix = "B";
     private DecimalFormat amountFormat;
     private DecimalFormat marketCapFormat;
@@ -100,7 +98,7 @@ public class BsqFormatter extends BSFormatter {
 
     public Address getAddressFromBsqAddress(String encoded) {
         if (useBsqAddressFormat)
-            encoded = encoded.substring(prefix.length(), encoded.length());
+            encoded = encoded.substring(prefix.length());
 
         try {
             return Address.fromBase58(BisqEnvironment.getParameters(), encoded);
