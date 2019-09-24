@@ -72,6 +72,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 
+import java.util.Comparator;
+
 @Slf4j
 public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> {
 
@@ -249,6 +251,9 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                         };
                     }
                 });
+        column.setComparator(Comparator.comparing(VoteListItem::getBlindVoteDate));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+        votesTableView.getSortOrder().add(column);
         votesTableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("shared.blindVoteTxId"));

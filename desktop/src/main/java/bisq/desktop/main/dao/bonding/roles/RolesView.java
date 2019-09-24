@@ -157,6 +157,9 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                         };
                     }
                 });
+        column.setComparator(Comparator.comparing(RolesListItem::getLockupDate).reversed());
+        column.setSortType(TableColumn.SortType.ASCENDING);
+        tableView.getSortOrder().add(column);
         tableView.getColumns().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.link"));

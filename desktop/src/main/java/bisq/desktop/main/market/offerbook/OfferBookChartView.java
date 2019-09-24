@@ -609,6 +609,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 });
 
         tableView.getColumns().add(volumeColumn);
+        volumeColumn.setComparator(Comparator.comparing(item -> item.offer.getPrice()));
+        volumeColumn.setSortType(TableColumn.SortType.ASCENDING);
+        tableView.getColumns().add(volumeColumn);
+
         tableView.getColumns().add(amountColumn);
         tableView.getColumns().add(priceColumn);
         tableView.getColumns().add(avatarColumn);
