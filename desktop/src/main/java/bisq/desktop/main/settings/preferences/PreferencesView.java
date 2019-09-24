@@ -53,6 +53,7 @@ import bisq.core.util.validation.IntegerValidator;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -97,14 +98,22 @@ import static com.google.common.base.Preconditions.checkArgument;
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
 
+    private final Preferences preferences;
+    private final FeeService feeService;
+    //private final ReferralIdService referralIdService;
+    private final AssetService assetService;
+    private final FilterManager filterManager;
+    //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
+    private final DaoFacade daoFacade;
+    private final BSFormatter formatter;
+    private final boolean daoOptionsSet;
+    private final boolean displayStandbyModeFeature;
     // not supported yet
     //private ComboBox<String> btcDenominationComboBox;
     private ComboBox<BlockChainExplorer> blockChainExplorerComboBox;
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
-    //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
-
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee;
     private int gridRow = 0;
@@ -114,16 +123,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ToggleButton isDaoFullNodeToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
-
     private ChangeListener<Boolean> transactionFeeFocusedListener;
-    private final Preferences preferences;
-    private final FeeService feeService;
-    //private final ReferralIdService referralIdService;
-    private final AssetService assetService;
-    private final FilterManager filterManager;
-    private final DaoFacade daoFacade;
-    private final BSFormatter formatter;
-
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
@@ -144,7 +144,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Boolean> deviationFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
-    private final boolean daoOptionsSet;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -170,10 +169,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
         this.formatter = formatter;
-        daoOptionsSet = fullDaoNode != null && !fullDaoNode.isEmpty() &&
+        this.daoOptionsSet = fullDaoNode != null && !fullDaoNode.isEmpty() &&
                 rpcUser != null && !rpcUser.isEmpty() &&
                 rpcPassword != null && !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != null && !rpcBlockNotificationPort.isEmpty();
+        this.displayStandbyModeFeature = Utilities.isOSX() || Utilities.isWindows();
     }
 
     @Override
@@ -225,7 +225,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 8 : 7;
+        TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
         // selectBaseCurrencyNetwork
@@ -367,9 +368,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         };
 
-        // AvoidStandbyModeService
-        avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
-                Res.get("setting.preferences.avoidStandbyMode"));
+        if (displayStandbyModeFeature) {
+            // AvoidStandbyModeService feature works only on OSX & Windows
+            avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
+                    Res.get("setting.preferences.avoidStandbyMode"));
+        }
     }
 
     private void initializeSeparator() {
@@ -827,8 +830,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         // We use opposite property (useStandbyMode) in preferences to have the default value (false) set as we want it,
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
-        avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
-        avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
+        if (displayStandbyModeFeature) {
+            avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
+            avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
+        }
     }
 
     private void activateDaoPreferences() {
@@ -950,7 +955,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         sortMarketCurrenciesNumerically.setOnAction(null);
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
-        avoidStandbyMode.setOnAction(null);
+        if (displayStandbyModeFeature) {
+            avoidStandbyMode.setOnAction(null);
+        }
     }
 
     private void deactivateDaoPreferences() {
