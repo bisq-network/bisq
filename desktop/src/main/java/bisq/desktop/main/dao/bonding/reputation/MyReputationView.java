@@ -311,9 +311,9 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                 };
             }
         });
+        tableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(MyReputationListItem::getAmount));
         column.setSortType(TableColumn.SortType.ASCENDING);
-        tableView.getColumns().add(column);
         tableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.bond.table.column.lockTime"));
