@@ -27,6 +27,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.bond.Bond;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.state.model.governance.BondedRoleType;
@@ -122,6 +123,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
 
     private void updateList() {
         observableList.setAll(daoFacade.getBondedRoles().stream()
+                .filter(Bond::isActive)
                 .map(bond -> new RolesListItem(bond, daoFacade))
                 .sorted(Comparator.comparing(RolesListItem::getLockupDate).reversed())
                 .collect(Collectors.toList()));
