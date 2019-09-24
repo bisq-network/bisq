@@ -19,9 +19,7 @@ package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
-import bisq.core.offer.Offer;
 import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
@@ -46,31 +44,16 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
             String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
             Coin minerFee = trade.getTxFee();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction depositTx = checkNotNull(trade.getDepositTx());
 
             long lockTime = trade.getLockTime();
-            Transaction unsignedDelayedPayoutTx;
-            if (offer.useReimbursementModel()) {
-                unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx,
-                        donationAddressString,
-                        minerFee,
-                        lockTime);
-            } else {
-                TradingPeer tradingPeer = processModel.getTradingPeer();
-                byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
-                byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
-                byte[] arbitratorPubKey = trade.getArbitratorBtcPubKey();
-                unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTxToMultisigAddress(depositTx,
-                        buyerPubKey,
-                        sellerPubKey,
-                        arbitratorPubKey,
-                        minerFee,
-                        lockTime);
-            }
+            Transaction unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTxToDonationAddress(depositTx,
+                    donationAddressString,
+                    minerFee,
+                    lockTime);
 
             trade.applyDelayedPayoutTx(unsignedDelayedPayoutTx);
 

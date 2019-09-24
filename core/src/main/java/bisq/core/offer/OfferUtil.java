@@ -344,8 +344,6 @@ public class OfferUtil {
 
         extraDataMap.put(OfferPayload.CAPABILITIES, Capabilities.app.toStringList());
 
-        extraDataMap.put(OfferPayload.USE_REIMBURSEMENT_MODEL, preferences.isUseReimbursementModel() ? "1" : "0");
-
         return extraDataMap.isEmpty() ? null : extraDataMap;
     }
 

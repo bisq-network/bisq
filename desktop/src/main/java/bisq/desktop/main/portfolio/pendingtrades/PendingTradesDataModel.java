@@ -567,7 +567,16 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     SupportType.REFUND);
 
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
-            sendOpenNewDisputeMessage(dispute, false, disputeManager);
+
+            tradeManager.publishDelayedPayoutTx(dispute.getTradeId(),
+                    () -> {
+                        log.info("DelayedPayoutTx published and message sent to peer");
+                        sendOpenNewDisputeMessage(dispute, false, disputeManager);
+                    },
+                    errorMessage -> {
+                        log.error(errorMessage);
+                    });
+
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }

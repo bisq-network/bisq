@@ -663,31 +663,6 @@ public class TradeWalletService {
         return delayedPayoutTx;
     }
 
-    public Transaction createDelayedUnsignedPayoutTxToMultisigAddress(Transaction depositTx,
-                                                                      byte[] buyerPubKey,
-                                                                      byte[] sellerPubKey,
-                                                                      byte[] arbitratorPubKey,
-                                                                      Coin minerFee,
-                                                                      long lockTime)
-            throws TransactionVerificationException {
-        Transaction delayedPayoutTx = new Transaction(params);
-        TransactionOutput p2SHMultiSigOutput2of2 = depositTx.getOutput(0);
-        delayedPayoutTx.addInput(p2SHMultiSigOutput2of2);
-        applyLockTime(lockTime, delayedPayoutTx);
-        Coin outputAmount = depositTx.getOutputSum().subtract(minerFee);
-        // Add 2of3 MultiSig output
-        Script p2SHMultiSigOutputScript = get2of3MultiSigOutputScript(buyerPubKey,
-                sellerPubKey, arbitratorPubKey);
-        TransactionOutput p2SHMultiSigOutput = new TransactionOutput(params, depositTx,
-                outputAmount, p2SHMultiSigOutputScript.getProgram());
-        delayedPayoutTx.addOutput(p2SHMultiSigOutput);
-
-        WalletService.printTx("Unsigned delayedPayoutTx ToMultisigAddress", delayedPayoutTx);
-        WalletService.verifyTransaction(delayedPayoutTx);
-
-        return delayedPayoutTx;
-    }
-
     public byte[] signDelayedPayoutTx(Transaction delayedPayoutTx,
                                       DeterministicKey myMultiSigKeyPair,
                                       byte[] buyerPubKey,

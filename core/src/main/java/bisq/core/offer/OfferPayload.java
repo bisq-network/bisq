@@ -84,9 +84,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // of the offer supports both capabilities we add "11, 12" to capabilities.
     public static final String CAPABILITIES = "capabilities";
 
-    //todo if hard fork use field instead
-    public static final String USE_REIMBURSEMENT_MODEL = "useReimbursementModel"; // Values: "0" or "1"
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Instance fields

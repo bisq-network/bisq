@@ -666,11 +666,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
-    public void setUseReimbursementModel(boolean value) {
-        prefPayload.setUseReimbursementModel(value);
-        persist();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -956,7 +951,5 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         String getRpcPw();
 
         int getBlockNotifyPort();
-
-        void setUseReimbursementModel(boolean value);
     }
 }

@@ -105,7 +105,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
-            avoidStandbyMode, useCustomFee, useReimbursementModel;
+            avoidStandbyMode, useCustomFee;
     private int gridRow = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
     /*referralIdInputTextField,*/
@@ -349,9 +349,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // AvoidStandbyModeService
         avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.avoidStandbyMode"));
-
-        useReimbursementModel = addSlideToggleButton(root, ++gridRow,
-                Res.get("setting.preferences.useReimbursementModel"));
     }
 
     private void initializeSeparator() {
@@ -811,9 +808,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         // so users who update gets set avoidStandbyMode=true (useStandbyMode=false)
         avoidStandbyMode.setSelected(!preferences.isUseStandbyMode());
         avoidStandbyMode.setOnAction(e -> preferences.setUseStandbyMode(!avoidStandbyMode.isSelected()));
-
-        useReimbursementModel.setSelected(preferences.isUseReimbursementModel());
-        useReimbursementModel.setOnAction(e -> preferences.setUseReimbursementModel(useReimbursementModel.isSelected()));
     }
 
     private void activateDaoPreferences() {
@@ -936,7 +930,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         showOwnOffersInOfferBook.setOnAction(null);
         resetDontShowAgainButton.setOnAction(null);
         avoidStandbyMode.setOnAction(null);
-        useReimbursementModel.setOnAction(null);
     }
 
     private void deactivateDaoPreferences() {

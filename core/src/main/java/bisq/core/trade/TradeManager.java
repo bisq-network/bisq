@@ -103,8 +103,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class TradeManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(TradeManager.class);
 
@@ -593,17 +591,13 @@ public class TradeManager implements PersistedDataHost {
     // Publish delayed payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void publishDelayedPayoutTx(String tradeId) {
+    public void publishDelayedPayoutTx(String tradeId,
+                                       ResultHandler resultHandler,
+                                       ErrorMessageHandler errorMessageHandler) {
         getTradeById(tradeId).ifPresent(trade -> {
-            Offer offer = checkNotNull(trade.getOffer());
-            if (offer.useReimbursementModel()) {
-                // We have spent the funds from the deposit tx
-                btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-                btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
-            } else {
-                // re apply multisig tx
-                //todo
-            }
+            // We have spent the funds from the deposit tx
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
             Transaction tx = trade.getDelayedPayoutTx();
             if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() == 0) {
                 Transaction walletTx = tradeWalletService.addTxToWallet(tx);
@@ -622,17 +616,20 @@ public class TradeManager implements PersistedDataHost {
                                 new SendMailboxMessageListener() {
                                     @Override
                                     public void onArrived() {
+                                        resultHandler.handleResult();
                                         log.info("SendMailboxMessageListener onArrived tradeId={}", tradeId);
                                     }
 
                                     @Override
                                     public void onStoredInMailbox() {
+                                        resultHandler.handleResult();
                                         log.info("SendMailboxMessageListener onStoredInMailbox tradeId={}", tradeId);
                                     }
 
                                     @Override
                                     public void onFault(String errorMessage) {
                                         log.error("SendMailboxMessageListener onFault tradeId={}", tradeId);
+                                        errorMessageHandler.handleErrorMessage(errorMessage);
                                     }
                                 }
                         );
@@ -640,7 +637,8 @@ public class TradeManager implements PersistedDataHost {
 
                     @Override
                     public void onFailure(TxBroadcastException exception) {
-                        log.error("publishDelayedPayoutTx onFailure {}", exception);
+                        log.error("publishDelayedPayoutTx onFailure", exception);
+                        errorMessageHandler.handleErrorMessage(exception.toString());
                     }
                 });
             }
