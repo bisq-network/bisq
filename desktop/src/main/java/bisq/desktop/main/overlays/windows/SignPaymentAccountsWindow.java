@@ -181,7 +181,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 3);
         selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
         selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(
-                accountAgeWitnessService.getBuyerPaymentAccounts(
+                accountAgeWitnessService.getTraderPaymentAccounts(
                         datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
                         paymentMethodComboBox.getSelectionModel().getSelectedItem(),
                         arbitrationManager.getDisputesAsObservableList())));

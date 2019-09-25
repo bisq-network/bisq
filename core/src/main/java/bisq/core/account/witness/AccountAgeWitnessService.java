@@ -67,6 +67,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -567,14 +568,13 @@ public class AccountAgeWitnessService {
     }
 
     // Arbitrator signing
-    public List<TraderDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
-                                                        List<Dispute> disputes) {
+    public List<TraderDataItem> getTraderPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
+                                                         List<Dispute> disputes) {
         return disputes.stream()
                 .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)
-                .map(this::getBuyerData)
-                .filter(Objects::nonNull)
+                .flatMap(this::getTraderData)
                 .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
                 .distinct()
                 .collect(Collectors.toList());
@@ -591,17 +591,30 @@ public class AccountAgeWitnessService {
         return dispute.getDisputeResultProperty().get().getWinner() == DisputeResult.Winner.BUYER;
     }
 
-    @Nullable
-    private TraderDataItem getBuyerData(Dispute dispute) {
+    private Stream<TraderDataItem> getTraderData(Dispute dispute) {
+        Coin tradeAmount = dispute.getContract().getTradeAmount();
+
         PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
+        PubKeyRing sellerPubKeyRing = dispute.getContract().getSellerPubKeyRing();
+
         PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
-        return findWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
+        PaymentAccountPayload sellerPaymentAccountPaload = dispute.getContract().getSellerPaymentAccountPayload();
+
+        TraderDataItem buyerData = findWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
                 .map(witness -> new TraderDataItem(
                         buyerPaymentAccountPaload,
                         witness,
-                        dispute.getContract().getTradeAmount(),
-                        dispute.getContract().getSellerPubKeyRing().getSignaturePubKey()))
+                        tradeAmount,
+                        sellerPubKeyRing.getSignaturePubKey()))
                 .orElse(null);
+        TraderDataItem sellerData = findWitness(sellerPaymentAccountPaload, sellerPubKeyRing)
+                .map(witness -> new TraderDataItem(
+                        sellerPaymentAccountPaload,
+                        witness,
+                        tradeAmount,
+                        buyerPubKeyRing.getSignaturePubKey()))
+                .orElse(null);
+        return Stream.of(buyerData, sellerData);
     }
 
     // Check if my account has a signed witness
