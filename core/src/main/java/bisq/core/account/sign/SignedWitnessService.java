@@ -135,6 +135,11 @@ public class SignedWitnessService {
                                                AccountAgeWitness accountAgeWitness,
                                                ECKey key,
                                                PublicKey peersPubKey) {
+        if (isValidAccountAgeWitness(accountAgeWitness)) {
+            log.warn("Arbitrator trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
+            return null;
+        }
+
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
         String signatureBase64 = key.signMessage(accountAgeWitnessHashAsHex);
         SignedWitness signedWitness = new SignedWitness(true,
@@ -145,6 +150,7 @@ public class SignedWitnessService {
                 new Date().getTime(),
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
+        log.info("Arbitrator signed witness {}", signedWitness.toString());
         return signedWitness;
     }
 
@@ -152,6 +158,11 @@ public class SignedWitnessService {
     public SignedWitness signAccountAgeWitness(Coin tradeAmount,
                                                AccountAgeWitness accountAgeWitness,
                                                PublicKey peersPubKey) throws CryptoException {
+        if (isValidAccountAgeWitness(accountAgeWitness)) {
+            log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
+            return null;
+        }
+
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
         SignedWitness signedWitness = new SignedWitness(false,
                 accountAgeWitness.getHash(),
@@ -161,6 +172,7 @@ public class SignedWitnessService {
                 new Date().getTime(),
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
+        log.info("Trader signed witness {}", signedWitness.toString());
         return signedWitness;
     }
 
@@ -308,6 +320,7 @@ public class SignedWitnessService {
 
     @VisibleForTesting
     void addToMap(SignedWitness signedWitness) {
+        // TODO: Perhaps filter out all but one signedwitness per accountagewitness
         signedWitnessMap.putIfAbsent(signedWitness.getHashAsByteArray(), signedWitness);
     }
 

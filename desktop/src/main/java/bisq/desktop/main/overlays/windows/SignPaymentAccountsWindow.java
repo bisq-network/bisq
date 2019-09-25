@@ -206,12 +206,11 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                     if (isKeyValid) {
                         selectedPaymentAccountsList.getItems().forEach(item -> {
                             // Sign accounts
-                            SignedWitness signedWitness = accountAgeWitnessService.arbitratorSignAccountAgeWitness(
+                            accountAgeWitnessService.arbitratorSignAccountAgeWitness(
                                     item.getTradeAmount(),
                                     item.getAccountAgeWitness(),
                                     arbitratorKey,
                                     item.getPeersPubKey());
-                            log.info("Signed witness {}", signedWitness.toString());
                         });
                         hide();
                     }
