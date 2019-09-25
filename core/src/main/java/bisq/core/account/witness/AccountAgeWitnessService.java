@@ -29,7 +29,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.support.dispute.arbitration.BuyerDataItem;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
@@ -567,15 +567,15 @@ public class AccountAgeWitnessService {
     }
 
     // Arbitrator signing
-    public List<BuyerDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
-                                                       List<Dispute> disputes) {
+    public List<TraderDataItem> getBuyerPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
+                                                        List<Dispute> disputes) {
         return disputes.stream()
                 .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)
                 .map(this::getBuyerData)
                 .filter(Objects::nonNull)
-                .filter(buyerDataItem -> buyerDataItem.getAccountAgeWitness().getDate() < safeDate)
+                .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
                 .distinct()
                 .collect(Collectors.toList());
     }
@@ -592,11 +592,11 @@ public class AccountAgeWitnessService {
     }
 
     @Nullable
-    private BuyerDataItem getBuyerData(Dispute dispute) {
+    private TraderDataItem getBuyerData(Dispute dispute) {
         PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
         PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
         return findWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
-                .map(witness -> new BuyerDataItem(
+                .map(witness -> new TraderDataItem(
                         buyerPaymentAccountPaload,
                         witness,
                         dispute.getContract().getTradeAmount(),

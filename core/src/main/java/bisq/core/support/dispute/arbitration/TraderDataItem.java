@@ -30,20 +30,20 @@ import lombok.Getter;
 // TODO consider to move to signed witness domain
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class BuyerDataItem {
+public class TraderDataItem {
     private final PaymentAccountPayload paymentAccountPayload;
     @EqualsAndHashCode.Include
     private final AccountAgeWitness accountAgeWitness;
     private final Coin tradeAmount;
-    private final PublicKey sellerPubKey;
+    private final PublicKey peersPubKey;
 
-    public BuyerDataItem(PaymentAccountPayload paymentAccountPayload,
-                         AccountAgeWitness accountAgeWitness,
-                         Coin tradeAmount,
-                         PublicKey sellerPubKey) {
+    public TraderDataItem(PaymentAccountPayload paymentAccountPayload,
+                          AccountAgeWitness accountAgeWitness,
+                          Coin tradeAmount,
+                          PublicKey peersPubKey) {
         this.paymentAccountPayload = paymentAccountPayload;
         this.accountAgeWitness = accountAgeWitness;
         this.tradeAmount = tradeAmount;
-        this.sellerPubKey = sellerPubKey;
+        this.peersPubKey = peersPubKey;
     }
 }

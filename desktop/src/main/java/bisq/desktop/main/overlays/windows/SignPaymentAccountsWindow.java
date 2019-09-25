@@ -18,7 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.support.dispute.arbitration.BuyerDataItem;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
@@ -72,7 +72,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     private ComboBox<FiatCurrency> currencyComboBox;
     private DatePicker datePicker;
     private InputTextField privateKey;
-    private ListView<BuyerDataItem> selectedPaymentAccountsList = new ListView<>();
+    private ListView<TraderDataItem> selectedPaymentAccountsList = new ListView<>();
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final ArbitrationManager arbitrationManager;
@@ -174,7 +174,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         removeContent();
 
         // Add payment accounts to sign
-        Tuple3<Label, ListView<BuyerDataItem>, VBox> selectedPaymentAccountsTuple =
+        Tuple3<Label, ListView<TraderDataItem>, VBox> selectedPaymentAccountsTuple =
                 addTopLabelListView(gridPane,
                         ++rowIndex,
                         Res.get("popup.accountSigning.selectAccounts.headline"));
@@ -210,7 +210,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                                     item.getTradeAmount(),
                                     item.getAccountAgeWitness(),
                                     arbitratorKey,
-                                    item.getSellerPubKey());
+                                    item.getPeersPubKey());
                             log.info("Signed witness {}", signedWitness.toString());
                         });
                         hide();
@@ -224,11 +224,11 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
         selectedPaymentAccountsList.setCellFactory(new Callback<>() {
             @Override
-            public ListCell<BuyerDataItem> call(
-                    ListView<BuyerDataItem> param) {
+            public ListCell<TraderDataItem> call(
+                    ListView<TraderDataItem> param) {
                 return new ListCell<>() {
                     @Override
-                    protected void updateItem(BuyerDataItem item, boolean empty) {
+                    protected void updateItem(TraderDataItem item, boolean empty) {
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
