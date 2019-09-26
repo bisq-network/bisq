@@ -17,20 +17,17 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.support.dispute.arbitration.TraderDataItem;
-import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
-import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -49,6 +46,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.VPos;
 
 import javafx.collections.FXCollections;
 
@@ -69,7 +68,6 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
     private Label descriptionLabel;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
-    private ComboBox<FiatCurrency> currencyComboBox;
     private DatePicker datePicker;
     private InputTextField privateKey;
     private ListView<TraderDataItem> selectedPaymentAccountsList = new ListView<>();
@@ -131,23 +129,6 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
         paymentMethodComboBox.setOnAction(e -> updateAccountSelectionState());
 
-        currencyComboBox = addComboBox(gridPane, ++rowIndex, Res.get("list.currency.select"));
-        currencyComboBox.setVisibleRowCount(11);
-        currencyComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(FiatCurrency currency) {
-                return currency != null ? currency.getNameAndCode() : "";
-            }
-
-            @Override
-            public FiatCurrency fromString(String string) {
-                return null;
-            }
-        });
-
-        currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
-        currencyComboBox.setOnAction(e -> updateAccountSelectionState());
-
         datePicker = addTopLabelDatePicker(gridPane, ++rowIndex,
                 Res.get("popup.accountSigning.selectAccounts.datePicker"),
                 0).second;
@@ -156,29 +137,27 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
     private void addECKeyField() {
         privateKey = addInputTextField(gridPane, ++rowIndex, Res.get("popup.accountSigning.signAccounts.ECKey"));
+        GridPane.setVgrow(privateKey, Priority.ALWAYS);
+        GridPane.setValignment(privateKey, VPos.TOP);
     }
 
     private void updateAccountSelectionState() {
         actionButton.setDisable(paymentMethodComboBox.getSelectionModel().isEmpty() ||
-                currencyComboBox.getSelectionModel().isEmpty() ||
                 datePicker.getValue() == null
         );
     }
 
     private void removeContent() {
-        removeRowsFromGridPane(gridPane, 2, 4);
+        removeRowsFromGridPane(gridPane, 2, 3);
         rowIndex = 1;
     }
 
-    private void addAccountsToSignContent() {
+    private void addSelectedAccountsContent() {
         removeContent();
-
-        // Add payment accounts to sign
         Tuple3<Label, ListView<TraderDataItem>, VBox> selectedPaymentAccountsTuple =
                 addTopLabelListView(gridPane,
-                        ++rowIndex,
-                        Res.get("popup.accountSigning.selectAccounts.headline"));
-        GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 3);
+                        ++rowIndex, Res.get("popup.accountSigning.confirmSelectedAccounts.headline"));
+        GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 2);
         selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
         selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(
                 accountAgeWitnessService.getTraderPaymentAccounts(
@@ -186,40 +165,12 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                         paymentMethodComboBox.getSelectionModel().getSelectedItem(),
                         arbitrationManager.getDisputesAsObservableList())));
 
-        headLineLabel.setText(Res.get("popup.accountSigning.signAccounts.headline"));
-        descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description",
+        headLineLabel.setText(Res.get("popup.accountSigning.confirmSelectedAccounts.headline"));
+        descriptionLabel.setText(Res.get("popup.accountSigning.confirmSelectedAccounts.description",
                 selectedPaymentAccountsList.getItems().size()));
-        ((AutoTooltipButton) actionButton).updateText(Res.get("popup.accountSigning.signAccounts.button"));
+        ((AutoTooltipButton) actionButton).updateText(Res.get("popup.accountSigning.confirmSelectedAccounts.button"));
 
-        actionButton.setOnAction(e -> {
-            removeContent();
-            addECKeyField();
-            headLineLabel.setText(Res.get("popup.accountSigning.success.headline"));
-            descriptionLabel.setText(Res.get("popup.accountSigning.success.description",
-                    selectedPaymentAccountsList.getItems().size()));
-            ((AutoTooltipButton) actionButton).updateText(Res.get("shared.ok"));
-            actionButton.setOnAction(a -> {
-                ECKey arbitratorKey = arbitratorManager.getRegistrationKey(privateKey.getText());
-                if (arbitratorKey != null) {
-                    String arbitratorPubKeyAsHex = Utils.HEX.encode(arbitratorKey.getPubKey());
-                    boolean isKeyValid = arbitratorManager.isPublicKeyInList(arbitratorPubKeyAsHex);
-                    if (isKeyValid) {
-                        selectedPaymentAccountsList.getItems().forEach(item -> {
-                            // Sign accounts
-                            accountAgeWitnessService.arbitratorSignAccountAgeWitness(
-                                    item.getTradeAmount(),
-                                    item.getAccountAgeWitness(),
-                                    arbitratorKey,
-                                    item.getPeersPubKey());
-                        });
-                        hide();
-                    }
-                } else {
-                    new Popup<>().error("Bad arbitrator ECKey").show();
-                }
-
-            });
-        });
+        actionButton.setOnAction(e -> addAccountsToSignContent());
 
         selectedPaymentAccountsList.setCellFactory(new Callback<>() {
             @Override
@@ -241,6 +192,46 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         });
     }
 
+    private void addAccountsToSignContent() {
+        removeContent();
+        addECKeyField();
+
+        headLineLabel.setText(Res.get("popup.accountSigning.signAccounts.headline"));
+        descriptionLabel.setText(Res.get("popup.accountSigning.signAccounts.description", selectedPaymentAccountsList.getItems().size()));
+        ((AutoTooltipButton) actionButton).updateText(Res.get("popup.accountSigning.signAccounts.button"));
+        actionButton.setOnAction(a -> {
+            ECKey arbitratorKey = arbitratorManager.getRegistrationKey(privateKey.getText());
+            if (arbitratorKey != null) {
+                String arbitratorPubKeyAsHex = Utils.HEX.encode(arbitratorKey.getPubKey());
+                boolean isKeyValid = arbitratorManager.isPublicKeyInList(arbitratorPubKeyAsHex);
+                if (isKeyValid) {
+                    selectedPaymentAccountsList.getItems().forEach(item -> {
+                        accountAgeWitnessService.arbitratorSignAccountAgeWitness(item.getTradeAmount(), item.getAccountAgeWitness(), arbitratorKey, item.getPeersPubKey());
+                    });
+                    addSuccessContent();
+                }
+            } else {
+                new Popup<>().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(() -> hide()).show();
+            }
+
+        });
+    }
+
+    private void addSuccessContent() {
+        removeContent();
+        GridPane.setVgrow(descriptionLabel, Priority.ALWAYS);
+        GridPane.setValignment(descriptionLabel, VPos.TOP);
+
+        closeButton.setVisible(false);
+        closeButton.setManaged(false);
+        headLineLabel.setText(Res.get("popup.accountSigning.success.headline"));
+        descriptionLabel.setText(Res.get("popup.accountSigning.success.description", selectedPaymentAccountsList.getItems().size()));
+        ((AutoTooltipButton) actionButton).updateText(Res.get("shared.ok"));
+        actionButton.setOnAction(a -> {
+            hide();
+        });
+    }
+
     @Override
     protected void addButtons() {
 
@@ -249,13 +240,10 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
         actionButton = buttonTuple.first;
         actionButton.setDisable(true);
-        actionButton.setOnAction(e -> {
-            //TODO: select accounts to sign
-            addAccountsToSignContent();
-        });
+        actionButton.setOnAction(e -> addSelectedAccountsContent());
 
-        Button cancelButton = buttonTuple.second;
-        cancelButton.setOnAction(e -> hide());
+        closeButton = (AutoTooltipButton) buttonTuple.second;
+        closeButton.setOnAction(e -> hide());
 
     }
 }
