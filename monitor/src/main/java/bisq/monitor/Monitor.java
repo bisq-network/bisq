@@ -29,6 +29,9 @@ import bisq.monitor.metric.TorStartupTime;
 import bisq.monitor.reporter.ConsoleReporter;
 import bisq.monitor.reporter.GraphiteReporter;
 
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
+
 import org.berndpruenster.netlayer.tor.NativeTor;
 import org.berndpruenster.netlayer.tor.Tor;
 
@@ -77,6 +80,16 @@ public class Monitor {
 
         // start Tor
         Tor.setDefault(new NativeTor(TOR_WORKING_DIR, null, null, false));
+
+        Capabilities.app.addAll(Capability.TRADE_STATISTICS,
+                Capability.TRADE_STATISTICS_2,
+                Capability.ACCOUNT_AGE_WITNESS,
+                Capability.ACK_MSG,
+                Capability.PROPOSAL,
+                Capability.BLIND_VOTE,
+                Capability.DAO_STATE,
+                Capability.BUNDLE_OF_ENVELOPES,
+                Capability.MEDIATION);
 
         // assemble Metrics
         // - create reporters
