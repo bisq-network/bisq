@@ -36,25 +36,41 @@ import static bisq.desktop.util.FormBuilder.getIcon;
 
 public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
+    public static final int DEFAULT_WIDTH = 300;
     private Node textIcon;
     private Boolean hidePopover;
     private PopOver infoPopover;
+    private ContentDisplay contentDisplay;
 
     public InfoAutoTooltipLabel(String text, GlyphIcons icon, ContentDisplay contentDisplay, String info) {
         super(text);
+        this.contentDisplay = contentDisplay;
 
-        textIcon = getIcon(icon);
-        addIcon(contentDisplay, info, 300);
+        setIcon(icon);
+        positionAndActivateIcon(contentDisplay, info, DEFAULT_WIDTH);
     }
 
     public InfoAutoTooltipLabel(String text, AwesomeIcon icon, ContentDisplay contentDisplay, String info, double width) {
         super(text);
 
-        textIcon = getIcon(icon);
-        addIcon(contentDisplay, info, width);
+        setIcon(icon);
+        positionAndActivateIcon(contentDisplay, info, width);
     }
 
-    private void addIcon(ContentDisplay contentDisplay, String info, double width) {
+    public void setIcon(GlyphIcons icon) {
+        textIcon = getIcon(icon);
+    }
+
+    public void setIcon(GlyphIcons icon, String info) {
+        setIcon(icon);
+        positionAndActivateIcon(contentDisplay, info, DEFAULT_WIDTH);
+    }
+
+    public void setIcon(AwesomeIcon icon) {
+        textIcon = getIcon(icon);
+    }
+
+    private void positionAndActivateIcon(ContentDisplay contentDisplay, String info, double width) {
         textIcon.setOpacity(0.4);
 
         textIcon.setOnMouseEntered(e -> {

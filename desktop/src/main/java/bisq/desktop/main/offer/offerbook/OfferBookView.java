@@ -1081,8 +1081,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 //TODO sqrrm: add time since signing
                                 timeSinceSigning = "3 days";
                             } else {
+
+                                //TODO sqrrm: Here we need two states:
+                                // - not signing necessary for this payment account
+                                // - signing required and not signed
                                 icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
-                                info = Res.get("offerbook.timeSinceSigning.notSigned.info");
+                                info = Res.get("shared.notSigned");
                                 timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
                             }
 
