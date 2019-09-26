@@ -647,10 +647,10 @@ public class TradeWalletService {
     // Delayed payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction createDelayedUnsignedPayoutTxToDonationAddress(Transaction depositTx,
-                                                                      String donationAddressString,
-                                                                      Coin minerFee,
-                                                                      long lockTime)
+    public Transaction createDelayedUnsignedPayoutTx(Transaction depositTx,
+                                                     String donationAddressString,
+                                                     Coin minerFee,
+                                                     long lockTime)
             throws AddressFormatException, TransactionVerificationException {
         TransactionOutput p2SHMultiSigOutput = depositTx.getOutput(0);
         Transaction delayedPayoutTx = new Transaction(params);

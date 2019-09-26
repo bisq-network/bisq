@@ -595,13 +595,13 @@ public class TradeManager implements PersistedDataHost {
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         getTradeById(tradeId).ifPresent(trade -> {
-            // We have spent the funds from the deposit tx
-            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
-            btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
             Transaction tx = trade.getDelayedPayoutTx();
-            if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() == 0) {
-                Transaction walletTx = tradeWalletService.addTxToWallet(tx);
-                tradeWalletService.broadcastTx(walletTx, new TxBroadcaster.Callback() {
+            if (tx != null) {
+                // We have spent the funds from the deposit tx
+                btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
+                // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
+
+                tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
                     @Override
                     public void onSuccess(Transaction transaction) {
                         log.info("publishDelayedPayoutTx onSuccess " + transaction);

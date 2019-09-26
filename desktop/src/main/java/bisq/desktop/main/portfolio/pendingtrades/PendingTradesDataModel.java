@@ -38,14 +38,17 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -510,6 +513,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
         useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.REFUND_REQUESTED;
 
+        ResultHandler resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class);
         if (useMediation) {
             // If no dispute state set we start with mediation
             disputeManager = mediationManager;
@@ -538,9 +542,42 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     SupportType.MEDIATION);
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
-            sendOpenNewDisputeMessage(dispute, false, disputeManager);
+            disputeManager.sendOpenNewDisputeMessage(dispute,
+                    false,
+                    resultHandler,
+                    (errorMessage, throwable) -> {
+                        if ((throwable instanceof DisputeAlreadyOpenException)) {
+                            errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
+                            new Popup<>().warning(errorMessage)
+                                    .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
+                                    .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
+                                            true,
+                                            resultHandler,
+                                            (e, t) -> {
+                                                log.error(e);
+                                            }))
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .show();
+                        } else {
+                            new Popup<>().warning(errorMessage).show();
+                        }
+                    });
         } else if (useRefundAgent) {
-            // Only if we have completed mediation we allow refund agent
+            if (trade.getDelayedPayoutTx() == null) {
+                return;
+            }
+
+            long lockTime = trade.getDelayedPayoutTx().getLockTime();
+            int bestChainHeight = btcWalletService.getBestChainHeight();
+            long remaining = lockTime - bestChainHeight;
+            if (remaining > 0) {
+                new Popup<>()
+                        .instruction(Res.get("portfolio.pending.timeLockNotOver",
+                                BSFormatter.getDateFromBlockHeight(remaining), remaining))
+                        .show();
+                return;
+            }
+
             disputeManager = refundManager;
             PubKeyRing refundAgentPubKeyRing = trade.getRefundAgentPubKeyRing();
             checkNotNull(refundAgentPubKeyRing, "refundAgentPubKeyRing must not be null");
@@ -566,40 +603,53 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     isSupportTicket,
                     SupportType.REFUND);
 
+            String tradeId = dispute.getTradeId();
+            mediationManager.findDispute(tradeId)
+                    .ifPresent(mediatorsDispute -> {
+                        DisputeResult mediatorsDisputeResult = mediatorsDispute.getDisputeResultProperty().get();
+                        ChatMessage mediatorsResultMessage = mediatorsDisputeResult.getChatMessage();
+                        if (mediatorsResultMessage != null) {
+                            String mediatorAddress = Res.get("support.mediatorsAddress",
+                                    mediatorsDispute.getContract().getRefundAgentNodeAddress().getFullAddress());
+                            String message = mediatorAddress + "\n\n" + mediatorsResultMessage.getMessage();
+                            dispute.setMediatorsDisputeResult(message);
+                        }
+                    });
+
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
-            tradeManager.publishDelayedPayoutTx(dispute.getTradeId(),
+            //todo add UI spinner as it can take a bit if peer is offline
+            tradeManager.publishDelayedPayoutTx(tradeId,
                     () -> {
                         log.info("DelayedPayoutTx published and message sent to peer");
-                        sendOpenNewDisputeMessage(dispute, false, disputeManager);
+                        disputeManager.sendOpenNewDisputeMessage(dispute,
+                                false,
+                                resultHandler,
+                                (errorMessage, throwable) -> {
+                                    if ((throwable instanceof DisputeAlreadyOpenException)) {
+                                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
+                                        new Popup<>().warning(errorMessage)
+                                                .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
+                                                .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
+                                                        true,
+                                                        resultHandler,
+                                                        (e, t) -> {
+                                                            log.error(e);
+                                                        }))
+                                                .closeButtonText(Res.get("shared.cancel"))
+                                                .show();
+                                    } else {
+                                        new Popup<>().warning(errorMessage).show();
+                                    }
+                                });
                     },
                     errorMessage -> {
-                        log.error(errorMessage);
+                        new Popup<>().error(errorMessage).show();
                     });
 
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
-    }
-
-    private void sendOpenNewDisputeMessage(Dispute dispute,
-                                           boolean reOpen,
-                                           DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager) {
-        disputeManager.sendOpenNewDisputeMessage(dispute,
-                reOpen,
-                () -> navigation.navigateTo(MainView.class, SupportView.class),
-                (errorMessage, throwable) -> {
-                    if ((throwable instanceof DisputeAlreadyOpenException)) {
-                        errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
-                        new Popup<>().warning(errorMessage)
-                                .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
-                                .onAction(() -> sendOpenNewDisputeMessage(dispute, true, disputeManager))
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .show();
-                    } else {
-                        new Popup<>().warning(errorMessage).show();
-                    }
-                });
     }
 
     public boolean isReadyForTxBroadcast() {

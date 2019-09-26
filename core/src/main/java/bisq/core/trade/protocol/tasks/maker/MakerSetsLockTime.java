@@ -44,7 +44,7 @@ public class MakerSetsLockTime extends TradeTask {
             log.info("lockTime={}, delay={}", lockTime, delay);
             trade.setLockTime(lockTime);
             //todo for dev testing
-            trade.setLockTime(processModel.getBtcWalletService().getBestChainHeight() + 1);
+            trade.setLockTime(processModel.getBtcWalletService().getBestChainHeight() + 5);
 
             complete();
         } catch (Throwable t) {

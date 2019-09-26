@@ -117,12 +117,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
     @Override
     public void cleanupDisputes() {
-        disputeListService.cleanupDisputes(tradeId -> {
-            tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
-                    .ifPresent(trade -> {
-                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.REFUND_REQUEST_CLOSED);
-                    });
-        });
+        disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.REFUND_REQUEST_CLOSED));
     }
 
     @Override
@@ -189,6 +184,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
         sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
+
+        // set state after payout as we call swapTradeEntryToAvailableEntry
+        if (tradeManager.getTradeById(tradeId).isPresent()) {
+            tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.REFUND_REQUEST_CLOSED);
+        } else {
+            Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
+            openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
+        }
     }
 
 
@@ -200,43 +203,4 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getRefundAgentNodeAddress();
     }
-
-//    public void acceptRefundResult(Trade trade,
-//                                   ResultHandler resultHandler,
-//                                   ErrorMessageHandler errorMessageHandler) {
-//        String tradeId = trade.getId();
-//        Optional<Dispute> optionalDispute = findDispute(tradeId);
-//        checkArgument(optionalDispute.isPresent(), "dispute must be present");
-//        DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
-//        Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
-//        Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
-//        ProcessModel processModel = trade.getProcessModel();
-//        processModel.setBuyerPayoutAmountFromRefund(buyerPayoutAmount.value);
-//        processModel.setSellerPayoutAmountFromRefund(sellerPayoutAmount.value);
-//        TradeProtocol tradeProtocol = trade.getTradeProtocol();
-//
-//        trade.setRefundResultState(RefundResultState.MEDIATION_RESULT_ACCEPTED);
-//
-//        // If we have not got yet the peers signature we sign and send to the peer our signature.
-//        // Otherwise we sign and complete with the peers signature the payout tx.
-//        if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
-//            tradeProtocol.onAcceptRefundResult(() -> {
-//                if (trade.getPayoutTx() != null) {
-//                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
-//                }
-//                resultHandler.handleResult();
-//            }, errorMessageHandler);
-//        } else {
-//            tradeProtocol.onFinalizeRefundResultPayout(() -> {
-//                if (trade.getPayoutTx() != null) {
-//                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
-//                }
-//                resultHandler.handleResult();
-//            }, errorMessageHandler);
-//        }
-//    }
-//
-//    public void rejectRefundResult(Trade trade) {
-//        trade.setRefundResultState(RefundResultState.MEDIATION_RESULT_REJECTED);
-//    }
 }

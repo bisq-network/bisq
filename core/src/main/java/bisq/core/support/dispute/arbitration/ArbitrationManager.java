@@ -160,7 +160,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         ChatMessage chatMessage = disputeResult.getChatMessage();
         checkNotNull(chatMessage, "chatMessage must not be null");
         if (Arrays.equals(disputeResult.getArbitratorPubKey(),
-                walletService.getArbitratorAddressEntry().getPubKey())) {
+                btcWalletService.getArbitratorAddressEntry().getPubKey())) {
             log.error("Arbitrator received disputeResultMessage. That must never happen.");
             return;
         }
@@ -238,7 +238,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 if (payoutTx == null) {
                     if (dispute.getDepositTxSerialized() != null) {
                         byte[] multiSigPubKey = isBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
-                        DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
+                        DeterministicKey multiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
                         Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
                                 dispute.getDepositTxSerialized(),
                                 disputeResult.getArbitratorSignature(),

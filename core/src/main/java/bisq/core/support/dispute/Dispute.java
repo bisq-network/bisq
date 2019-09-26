@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -94,6 +95,10 @@ public final class Dispute implements NetworkPayload {
 
     // Added v1.2.0
     private SupportType supportType;
+    // Only used at refundAgent so that he knows how the mediator resolved the case
+    @Setter
+    @Nullable
+    private String mediatorsDisputeResult;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +223,7 @@ public final class Dispute implements NetworkPayload {
         Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
         Optional.ofNullable(disputeResultProperty.get()).ifPresent(result -> builder.setDisputeResult(disputeResultProperty.get().toProtoMessage()));
         Optional.ofNullable(supportType).ifPresent(result -> builder.setSupportType(SupportType.toProtoMessage(supportType)));
+        Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         return builder.build();
     }
 
@@ -250,6 +256,7 @@ public final class Dispute implements NetworkPayload {
         if (proto.hasDisputeResult())
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
         dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
+        dispute.setMediatorsDisputeResult(proto.getMediatorsDisputeResult());
         return dispute;
     }
 

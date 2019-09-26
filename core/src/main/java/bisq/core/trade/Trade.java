@@ -555,7 +555,8 @@ public abstract class Trade implements Tradable, Model {
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
         trade.setRefundResultState(RefundResultState.fromProto(proto.getRefundResultState()));
-        trade.setDelayedPayoutTxId(proto.getDelayedPayoutTxId().isEmpty() ? null : proto.getDelayedPayoutTxId());
+        String delayedPayoutTxId = proto.getDelayedPayoutTxId();
+        trade.setDelayedPayoutTxId(delayedPayoutTxId.isEmpty() ? null : delayedPayoutTxId);
         trade.setLockTime(proto.getLockTime());
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
@@ -899,6 +900,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isFundsLockedIn() {
+        //todo hanlde REFUND_REQUEST_CLOSED
         return isDepositPublished() && !isPayoutPublished() && disputeState != DisputeState.DISPUTE_CLOSED;
     }
 
@@ -910,7 +912,6 @@ public abstract class Trade implements Tradable, Model {
         return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isFiatReceived() {
         return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }

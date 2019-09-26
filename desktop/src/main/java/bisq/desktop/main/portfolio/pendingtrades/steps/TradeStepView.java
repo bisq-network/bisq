@@ -32,6 +32,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
+import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.BootstrapListener;
 
@@ -528,10 +529,18 @@ public abstract class TradeStepView extends AnchorPane {
         String myPayoutAmount = isMyRoleBuyer ? buyerPayoutAmount : sellerPayoutAmount;
         String peersPayoutAmount = isMyRoleBuyer ? sellerPayoutAmount : buyerPayoutAmount;
 
+        checkNotNull(trade.getDelayedPayoutTx(),
+                "trade.getDelayedPayoutTx() must not be null at openMediationResultPopup");
+        long lockTime = trade.getDelayedPayoutTx().getLockTime();
+        int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
+        long remaining = lockTime - bestChainHeight;
         acceptMediationResultPopup = new Popup<>().width(900)
                 .headLine(headLine)
                 .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
-                        myPayoutAmount, peersPayoutAmount))
+                        myPayoutAmount,
+                        peersPayoutAmount,
+                        BSFormatter.getDateFromBlockHeight(remaining),
+                        lockTime))
                 .actionButtonText(Res.get("shared.accept"))
                 .onAction(() -> {
                     model.dataModel.mediationManager.acceptMediationResult(trade,
