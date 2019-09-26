@@ -93,6 +93,10 @@ public class Capabilities {
         return containsAll(capabilities.capabilities);
     }
 
+    public boolean containsAll(Capability... capabilities) {
+        return this.capabilities.containsAll(Arrays.asList(capabilities));
+    }
+
     public boolean isEmpty() {
         return capabilities.isEmpty();
     }
