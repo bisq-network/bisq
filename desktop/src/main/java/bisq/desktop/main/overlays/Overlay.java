@@ -31,6 +31,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.locale.LanguageUtil;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -68,6 +69,7 @@ import javafx.scene.transform.Rotate;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.NodeOrientation;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -191,6 +193,9 @@ public abstract class Overlay<T extends Overlay> {
     public void show(boolean showAgainChecked) {
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
+            if (LanguageUtil.isDefaultLanguageRTL())
+                getRootContainer().setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+
             addHeadLine();
 
             if (showBusyAnimation)

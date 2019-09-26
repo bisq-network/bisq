@@ -33,7 +33,6 @@ configure(subprojects) {
         bitcoinjVersion = 'a88d36d'
         btcdCli4jVersion = '975ff5d4'
         codecVersion = '1.9'
-        controlsfxVersion = '8.0.6_20'
         easybindVersion = '1.0.3'
         easyVersion = '4.0.1'
         findbugsVersion = '3.0.2'
@@ -275,7 +274,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.1.6-SNAPSHOT'
+    version = '1.1.7-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
@@ -288,7 +287,6 @@ configure(project(':desktop')) {
 
     dependencies {
         compile project(':core')
-        compile "org.controlsfx:controlsfx:$controlsfxVersion"
         compile "net.glxn:qrgen:$qrgenVersion"
         compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
         compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
