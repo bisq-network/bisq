@@ -22,6 +22,7 @@ import bisq.common.crypto.CryptoUtils;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
+import bisq.core.locale.Res;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -31,8 +32,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,6 +72,11 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     @JsonExclude
     @Nullable
     protected final Map<String, String> excludeFromJsonDataMap;
+
+    @JsonExclude
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)    
+	protected String paymentDetails;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +125,10 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+    
+    public void setPaymentDetails(String paymentDetails) {
+    	this.paymentDetails = paymentDetails;
+    }
 
     public abstract String getPaymentDetails();
 

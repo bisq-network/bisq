@@ -136,13 +136,17 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (showAcceptedBanks)
             rows++;
 
+        String currencyCode = offer.getCurrencyCode();
         PaymentAccountPayload sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
+        PaymentAccountPayload buyerPaymentAccountPayload = contract.getBuyerPaymentAccountPayload();
+        buyerPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.receiver.address", currencyCode));
+        sellerPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", currencyCode));
+
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE).second.setMouseTransparent(false);
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("contractWindow.dates"),
                 DisplayUtils.formatDateTime(offer.getDate()) + " / " + DisplayUtils.formatDateTime(dispute.getTradeDate()));
-        String currencyCode = offer.getCurrencyCode();
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.offerType"),
                 DisplayUtils.getDirectionBothSides(offer.getDirection(), currencyCode));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
@@ -175,7 +179,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 nrOfDisputesAsBuyer + " / " + nrOfDisputesAsSeller);
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-                contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
+        		buyerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 

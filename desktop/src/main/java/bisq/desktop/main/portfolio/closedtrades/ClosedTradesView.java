@@ -331,8 +331,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 boolean matchesTradeDate = DisplayUtils.formatDate(trade.getTakeOfferDate()).contains(filterString);
                 Contract contract = trade.getContract();
                 if (contract != null) {
+                	String currencyCode = contract.getTradePrice().getCurrencyCode();
                     isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
                     isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
+                    contract.getBuyerPaymentAccountPayload().setPaymentDetails(Res.getWithCol("payment.altcoin.receiver.address", currencyCode));
+                    contract.getSellerPaymentAccountPayload().setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", currencyCode));
                     matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
                     matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
                 }
