@@ -35,6 +35,8 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 
@@ -60,6 +62,12 @@ class RequestDataHandler implements MessageListener {
     private static final long TIMEOUT = 90;
     private NodeAddress peersNodeAddress;
 
+    /**
+     * when we are run as a seed node, we spawn a RequestDataHandler every hour. However, we do not want to receive
+     * {@link PersistableNetworkPayload}s (for now, as there are hardly any cases where such data goes out of sync). This
+     * flag indicates whether we already received our first set of {@link PersistableNetworkPayload}s.
+     */
+    private static boolean firstRequest = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -194,49 +202,10 @@ class RequestDataHandler implements MessageListener {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-                    Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    dataSet.forEach(e -> {
-                        final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-                        if (protectedStoragePayload == null) {
-                            log.warn("StoragePayload was null: {}", networkEnvelope.toString());
-                            return;
-                        }
-
-                        // For logging different data types
-                        String className = protectedStoragePayload.getClass().getSimpleName();
-                        if (!payloadByClassName.containsKey(className))
-                            payloadByClassName.put(className, new HashSet<>());
-
-                        payloadByClassName.get(className).add(protectedStoragePayload);
-                    });
-
-
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-                    if (persistableNetworkPayloadSet != null) {
-                        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
-                            // For logging different data types
-                            String className = persistableNetworkPayload.getClass().getSimpleName();
-                            if (!payloadByClassName.containsKey(className))
-                                payloadByClassName.put(className, new HashSet<>());
 
-                            payloadByClassName.get(className).add(persistableNetworkPayload);
-                        });
-                    }
-
-                    // Log different data types
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("\n#################################################################\n");
-                    sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
-                    final int items = dataSet.size() +
-                            (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
-                    sb.append("Received ").append(items).append(" instances\n");
-                    payloadByClassName.forEach((key, value) -> sb.append(key)
-                            .append(": ")
-                            .append(value.size())
-                            .append("\n"));
-                    sb.append("#################################################################");
-                    log.info(sb.toString());
+                    if (log.isDebugEnabled()) logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
@@ -258,7 +227,11 @@ class RequestDataHandler implements MessageListener {
                         });
                         log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts);
 
-                        if (persistableNetworkPayloadSet != null) {
+                        // engage the firstRequest logic only if we are a seed node. Normal clients get here twice at most.
+                        if (!Capabilities.app.containsAll(Capability.SEED_NODE))
+                            firstRequest = true;
+
+                        if (persistableNetworkPayloadSet != null && firstRequest) {
                             ts = System.currentTimeMillis();
                             persistableNetworkPayloadSet.forEach(e -> {
                                 if (e instanceof LazyProcessedPayload) {
@@ -280,6 +253,7 @@ class RequestDataHandler implements MessageListener {
 
                         cleanup();
                         listener.onComplete();
+                        firstRequest = false;
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
@@ -304,6 +278,51 @@ class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void logContents(NetworkEnvelope networkEnvelope,
+                             Set<ProtectedStorageEntry> dataSet,
+                             Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
+        Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
+        dataSet.stream().forEach(e -> {
+            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload == null) {
+                log.warn("StoragePayload was null: {}", networkEnvelope.toString());
+                return;
+            }
+
+            // For logging different data types
+            String className = protectedStoragePayload.getClass().getSimpleName();
+            if (!payloadByClassName.containsKey(className))
+                payloadByClassName.put(className, new HashSet<>());
+
+            payloadByClassName.get(className).add(protectedStoragePayload);
+        });
+
+
+        if (persistableNetworkPayloadSet != null) {
+            persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+                // For logging different data types
+                String className = persistableNetworkPayload.getClass().getSimpleName();
+                if (!payloadByClassName.containsKey(className))
+                    payloadByClassName.put(className, new HashSet<>());
+
+                payloadByClassName.get(className).add(persistableNetworkPayload);
+            });
+        }
+
+        // Log different data types
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n#################################################################\n");
+        sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
+        final int items = dataSet.size() +
+                (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
+        sb.append("Received ").append(items).append(" instances\n");
+        payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
+                .append(": ")
+                .append(e.getValue().size())
+                .append("\n"));
+        sb.append("#################################################################");
+        log.info(sb.toString());
+    }
 
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage,

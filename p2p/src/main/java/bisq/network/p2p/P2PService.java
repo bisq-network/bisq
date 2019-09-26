@@ -47,6 +47,8 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
@@ -311,6 +313,8 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                 "seedNodeOfPreliminaryDataRequest must be present");
 
         requestDataManager.requestUpdateData();
+        if (Capabilities.app.containsAll(Capability.SEED_NODE))
+            UserThread.runPeriodically(() -> requestDataManager.requestUpdateData(), 1, TimeUnit.HOURS);
 
         // If we start up first time we don't have any peers so we need to request from seed node.
         // As well it can be that the persisted peer list is outdated with dead peers.
