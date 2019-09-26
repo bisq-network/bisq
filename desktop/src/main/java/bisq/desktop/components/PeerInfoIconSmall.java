@@ -38,8 +38,7 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
                                     Offer offer, Preferences preferences,
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
-                                    boolean isFiatCurrency,
-                                    long makersAccountAge) {
+                                    boolean isFiatCurrency, long makersAccountAge, String accountSigningState) {
     }
 
     @Override

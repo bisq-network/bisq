@@ -243,7 +243,18 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
+        //TODO sqrrm: We need these states in here:
+        //  - signed by arbitrator
+        //  - signed by peer
+        //  - signed by peer and limit lifted
+        //  - signed by peer and able to sign
+        // - not signing necessary for this payment account
+        // - signing required and not signed
+        //  Additionally we need to have some enum or so how the account signing took place.
+        //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+        String accountSigningState = Res.get("shared.notSigned");
+
+        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge, accountSigningState);
     }
 
     private long getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
@@ -268,17 +279,17 @@ public class PeerInfoIcon extends Group {
                                     Preferences preferences,
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
-                                    boolean isFiatCurrency,
-                                    long makersAccountAge) {
+                                    boolean isFiatCurrency, long makersAccountAge, String accountSigningState) {
         final String accountAgeTagEditor = isFiatCurrency ?
                 makersAccountAge > -1 ?
                         DisplayUtils.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
+
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
-                .accountAge(accountAgeTagEditor)
+                .accountAge(accountAgeTagEditor).accountSigningState(accountSigningState)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
                     preferences.setTagForPeer(fullAddress, newTag);

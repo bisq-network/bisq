@@ -211,7 +211,7 @@ public abstract class PaymentMethodForm {
                 accountSigningStateText = Res.get("shared.notSigned");
             }
 
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountSigningState"), accountSigningStateText);
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"), accountSigningStateText);
         }
         else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
