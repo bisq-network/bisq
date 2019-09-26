@@ -32,6 +32,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
+import bisq.core.trade.Trade.TradePeriodState;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.BootstrapListener;
@@ -174,8 +175,11 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (!isMediationClosedState()) {
             tradeStepInfo.setOnAction(e -> {
+            	String supportPopupInfo = TradePeriodState.TRADE_PERIOD_OVER.equals(trade.getTradePeriodState()) ? 
+            		Res.get("portfolio.pending.support.popup.info", "") :
+            		Res.get("portfolio.pending.support.popup.info", "portfolio.pending.support.popup.info.inprogress");
                 new Popup<>().attention(MediationManager.isMediationActivated() ?
-                        Res.get("portfolio.pending.support.popup.info") : Res.get("portfolio.pending.support.popup.info.arbitrator"))
+                        supportPopupInfo : Res.get("portfolio.pending.support.popup.info.arbitrator"))
                         .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
                         .onAction(this::openSupportTicket)
                         .closeButtonText(Res.get("shared.cancel"))

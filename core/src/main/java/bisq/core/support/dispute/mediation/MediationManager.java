@@ -227,7 +227,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_ACCEPTED);
 
         // If we have not got yet the peers signature we sign and send to the peer our signature.
-        // Otherwise we sign and complete with the peers signature the payout tx.
+        // Otherwise we sign and complete the payout tx with the peers signature.
         if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
             tradeProtocol.onAcceptMediationResult(() -> {
                 if (trade.getPayoutTx() != null) {
