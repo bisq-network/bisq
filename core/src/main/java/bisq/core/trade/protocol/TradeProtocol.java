@@ -83,7 +83,6 @@ public abstract class TradeProtocol {
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-                log.trace("handleNewMessage: message = {} from {}", networkEnvelope.getClass().getSimpleName(), peersNodeAddress);
                 if (networkEnvelope instanceof TradeMessage) {
                     TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
                     nonEmptyStringOf(tradeMessage.getTradeId());

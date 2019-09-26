@@ -63,8 +63,8 @@ public final class PeerPublishedDelayedPayoutTxMessage extends TradeMessage impl
 
     public static PeerPublishedDelayedPayoutTxMessage fromProto(protobuf.PeerPublishedDelayedPayoutTxMessage proto, int messageVersion) {
         return new PeerPublishedDelayedPayoutTxMessage(messageVersion,
-                proto.getTradeId(),
                 proto.getUid(),
+                proto.getTradeId(),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()));
     }
 

@@ -31,6 +31,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.locale.Res;
@@ -370,7 +371,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
-        return (totalAmount.compareTo(available) == 0);
+        if (getDisputeManager(dispute) instanceof RefundManager) {
+            // We allow to spend less in case of RefundAgent
+            return totalAmount.compareTo(available) <= 0;
+        } else {
+            return totalAmount.compareTo(available) == 0;
+        }
     }
 
     private void applyCustomAmounts(InputTextField inputTextField) {
@@ -380,10 +386,17 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 .add(offer.getBuyerSecurityDeposit())
                 .add(offer.getSellerSecurityDeposit());
         Coin enteredAmount = ParsingUtils.parseToCoin(inputTextField.getText(), formatter);
+        if (enteredAmount.isNegative()) {
+            enteredAmount = Coin.ZERO;
+            inputTextField.setText(formatter.formatCoin(enteredAmount));
+        }
+        if (enteredAmount.isPositive() && !Restrictions.isAboveDust(enteredAmount)) {
+            enteredAmount = Restrictions.getMinNonDustOutput();
+            inputTextField.setText(formatter.formatCoin(enteredAmount));
+        }
         if (enteredAmount.compareTo(available) > 0) {
             enteredAmount = available;
-            Coin finalEnteredAmount = enteredAmount;
-            inputTextField.setText(formatter.formatCoin(finalEnteredAmount));
+            inputTextField.setText(formatter.formatCoin(enteredAmount));
         }
         Coin counterPartAsCoin = available.subtract(enteredAmount);
         String formattedCounterPartAmount = formatter.formatCoin(counterPartAsCoin);
@@ -392,11 +405,27 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (inputTextField == buyerPayoutAmountInputTextField) {
             buyerAmount = enteredAmount;
             sellerAmount = counterPartAsCoin;
-            sellerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+            Coin sellerAmountFromField = ParsingUtils.parseToCoin(sellerPayoutAmountInputTextField.getText(), formatter);
+            Coin totalAmountFromFields = enteredAmount.add(sellerAmountFromField);
+            // RefundAgent can enter less then available
+            if (getDisputeManager(dispute) instanceof MediationManager ||
+                    totalAmountFromFields.compareTo(available) > 0) {
+                sellerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+            } else {
+                sellerAmount = sellerAmountFromField;
+            }
         } else {
             sellerAmount = enteredAmount;
             buyerAmount = counterPartAsCoin;
-            buyerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+            Coin buyerAmountFromField = ParsingUtils.parseToCoin(buyerPayoutAmountInputTextField.getText(), formatter);
+            Coin totalAmountFromFields = enteredAmount.add(buyerAmountFromField);
+            // RefundAgent can enter less then available
+            if (getDisputeManager(dispute) instanceof MediationManager ||
+                    totalAmountFromFields.compareTo(available) > 0) {
+                buyerPayoutAmountInputTextField.setText(formattedCounterPartAmount);
+            } else {
+                buyerAmount = buyerAmountFromField;
+            }
         }
 
         disputeResult.setBuyerPayoutAmount(buyerAmount);
@@ -634,7 +663,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
             log.error("Exception at doPayout", e);
             new Popup<>().error(e.toString()).show();
-            ;
         }
     }
 

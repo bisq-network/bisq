@@ -900,8 +900,12 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isFundsLockedIn() {
-        //todo hanlde REFUND_REQUEST_CLOSED
-        return isDepositPublished() && !isPayoutPublished() && disputeState != DisputeState.DISPUTE_CLOSED;
+        return isDepositPublished() &&
+                !isPayoutPublished() &&
+                disputeState != DisputeState.DISPUTE_CLOSED &&
+                disputeState != DisputeState.REFUND_REQUESTED &&
+                disputeState != DisputeState.REFUND_REQUEST_STARTED_BY_PEER &&
+                disputeState != DisputeState.REFUND_REQUEST_CLOSED;
     }
 
     public boolean isDepositConfirmed() {

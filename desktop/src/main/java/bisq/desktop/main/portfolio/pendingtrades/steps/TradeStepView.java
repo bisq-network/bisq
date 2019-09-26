@@ -429,6 +429,7 @@ public abstract class TradeStepView extends AnchorPane {
                 updateMediationResultState();
                 break;
             case REFUND_REQUESTED:
+                deactivatePaymentButtons(true);
                 if (tradeStepInfo != null) {
                     tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
@@ -442,6 +443,7 @@ public abstract class TradeStepView extends AnchorPane {
 
                 break;
             case REFUND_REQUEST_STARTED_BY_PEER:
+                deactivatePaymentButtons(true);
                 if (tradeStepInfo != null) {
                     tradeStepInfo.setFirstHalfOverWarnTextSupplier(this::getFirstHalfOverWarnText);
                 }
@@ -454,6 +456,7 @@ public abstract class TradeStepView extends AnchorPane {
                 });
                 break;
             case REFUND_REQUEST_CLOSED:
+                deactivatePaymentButtons(true);
                 break;
         }
     }

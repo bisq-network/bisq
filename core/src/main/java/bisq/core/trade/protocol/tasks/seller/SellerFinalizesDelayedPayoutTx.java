@@ -65,7 +65,6 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
                     sellerSignature);
 
             trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
-            processModel.getTradeWalletService().addTxToWallet(signedDelayedPayoutTx);
 
             complete();
         } catch (Throwable t) {

@@ -595,13 +595,14 @@ public class TradeManager implements PersistedDataHost {
                                        ResultHandler resultHandler,
                                        ErrorMessageHandler errorMessageHandler) {
         getTradeById(tradeId).ifPresent(trade -> {
-            Transaction tx = trade.getDelayedPayoutTx();
-            if (tx != null) {
-                // We have spent the funds from the deposit tx
+            Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+            if (delayedPayoutTx != null) {
+                // We have spent the funds from the deposit tx with the delayedPayoutTx
                 btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
                 // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
 
-                tradeWalletService.broadcastTx(tx, new TxBroadcaster.Callback() {
+                tradeWalletService.addTxToWallet(delayedPayoutTx);
+                tradeWalletService.broadcastTx(delayedPayoutTx, new TxBroadcaster.Callback() {
                     @Override
                     public void onSuccess(Transaction transaction) {
                         log.info("publishDelayedPayoutTx onSuccess " + transaction);
@@ -617,18 +618,21 @@ public class TradeManager implements PersistedDataHost {
                                     @Override
                                     public void onArrived() {
                                         resultHandler.handleResult();
-                                        log.info("SendMailboxMessageListener onArrived tradeId={}", tradeId);
+                                        log.info("SendMailboxMessageListener onArrived tradeId={} at peer {}",
+                                                tradeId, tradingPeerNodeAddress);
                                     }
 
                                     @Override
                                     public void onStoredInMailbox() {
                                         resultHandler.handleResult();
-                                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={}", tradeId);
+                                        log.info("SendMailboxMessageListener onStoredInMailbox tradeId={} at peer {}",
+                                                tradeId, tradingPeerNodeAddress);
                                     }
 
                                     @Override
                                     public void onFault(String errorMessage) {
-                                        log.error("SendMailboxMessageListener onFault tradeId={}", tradeId);
+                                        log.error("SendMailboxMessageListener onFault tradeId={} at peer {}",
+                                                tradeId, tradingPeerNodeAddress);
                                         errorMessageHandler.handleErrorMessage(errorMessage);
                                     }
                                 }
