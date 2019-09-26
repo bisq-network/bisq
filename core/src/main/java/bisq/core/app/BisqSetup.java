@@ -436,10 +436,10 @@ public class BisqSetup {
     }
 
     private void maybeShowTac() {
-        if (!preferences.isTacAccepted() && !DevEnv.isDevMode()) {
+        if (!preferences.isTacAcceptedV120() && !DevEnv.isDevMode()) {
             if (displayTacHandler != null)
                 displayTacHandler.accept(() -> {
-                    preferences.setTacAccepted(true);
+                    preferences.setTacAcceptedV120(true);
                     step2();
                 });
         } else {
