@@ -40,7 +40,6 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -69,6 +68,7 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
+import de.jensd.fx.glyphs.GlyphIcons;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Scene;
@@ -126,8 +126,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
-    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
-            priceColumn, avatarColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, signingStateColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -221,6 +220,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(volumeColumn);
         TableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
+        signingStateColumn = getSigningStateColumn();
+        tableView.getColumns().add(signingStateColumn);
         avatarColumn = getAvatarColumn();
         tableView.getColumns().add(getActionColumn());
         tableView.getColumns().add(avatarColumn);
@@ -883,19 +884,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    GridPane pane = new GridPane();
                                     field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                     field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
                                     field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
 
-                                    // Check witness status
-                                    ImageView signed = accountAgeWitnessService.hasSignedWitness(item.getOffer()) ?
-                                            ImageUtil.getImageViewById("image-tick") :
-                                            ImageUtil.getImageViewById("rejected");
-
-                                    pane.add(field, 0, 0);
-                                    pane.add(signed, 1, 0);
-                                    setGraphic(pane);
+                                    setGraphic(field);
                                 } else {
                                     setGraphic(null);
                                     if (field != null)
@@ -1046,6 +1039,66 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         };
                     }
                 });
+        return column;
+    }
+
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getSigningStateColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("offerbook.timeSinceSigning"), Res.get("offerbook.timeSinceSigning.help")) {
+            {
+                setMinWidth(60);
+                setSortable(true);
+            }
+        };
+
+        column.getStyleClass().add("number-column");
+        column.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
+        column.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
+                return new TableCell<>() {
+                    private HyperlinkWithIcon field;
+
+                    @Override
+                    public void updateItem(final OfferBookListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+
+                        if (item != null && !empty) {
+
+                            GlyphIcons icon;
+                            String info;
+                            String timeSinceSigning;
+
+                            if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
+                                //TODO sqrrm: We need four states in here:
+                                //  - signed by arbitrator
+                                //  - signed by peer
+                                //  - signed by peer and limit lifted
+                                //  - signed by peer and able to sign
+                                //  Additionally we need to have some enum or so how the account signing took place.
+                                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+                                icon = MaterialDesignIcon.APPROVAL;
+                                info = "This account was verified and signed by an arbitrator or peer.";
+                                //TODO sqrrm: add time since signing
+                                timeSinceSigning = "3 days";
+                            } else {
+
+                                //TODO sqrrm: Here we need two states:
+                                // - not signing necessary for this payment account
+                                // - signing required and not signed
+                                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                                info = Res.get("shared.notSigned");
+                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
+                            }
+
+                            InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(timeSinceSigning, icon, ContentDisplay.RIGHT, info);
+                            setGraphic(label);
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
         return column;
     }
 

@@ -4,6 +4,7 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.ImageUtil;
 
@@ -14,8 +15,11 @@ import bisq.core.payment.PaymentAccount;
 
 import bisq.common.UserThread;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -93,17 +97,15 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
                 return new ListCell<>() {
-                    final Label label = new AutoTooltipLabel();
+                    final InfoAutoTooltipLabel label = new InfoAutoTooltipLabel("", MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, ContentDisplay.RIGHT, "");
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
-                    final ImageView signed = ImageUtil.getImageViewById("image-update-failed");
-                    final AnchorPane pane = new AnchorPane(label, signed, removeButton);
+                    final AnchorPane pane = new AnchorPane(label, removeButton);
 
                     {
                         label.setLayoutY(5);
                         removeButton.setId("icon-button");
                         AnchorPane.setRightAnchor(removeButton, 0d);
-                        AnchorPane.setRightAnchor(signed, removeButton.getWidth());
                     }
 
                     @Override
@@ -111,10 +113,23 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             label.setText(item.getAccountName());
+
+                            if (accountAgeWitnessService.myHasSignedWitness(item.paymentAccountPayload)) {
+                                //TODO sqrrm: We need four states in here:
+                                //  - signed by arbitrator
+                                //  - signed by peer
+                                //  - signed by peer and limit lifted
+                                //  - signed by peer and able to sign
+                                //  Additionally we need to have some enum or so how the account signing took place.
+                                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+                                label.setIcon(MaterialDesignIcon.APPROVAL, "This account was verified and signed by an arbitrator or peer.");
+                            } else {
+                                //TODO sqrrm: Here we need two states:
+                                // - not signing necessary for this payment account
+                                // - signing required and not signed
+                                label.setIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, Res.get("shared.notSigned"));
+                            }
                             removeButton.setOnAction(e -> onDeleteAccount(item));
-                            String signedWitnessId = accountAgeWitnessService.myHasSignedWitness(
-                                    item.paymentAccountPayload) ? "image-tick" : "rejected";
-                            signed.setId(signedWitnessId);
                             setGraphic(pane);
                         } else {
                             setGraphic(null);

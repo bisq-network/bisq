@@ -190,8 +190,29 @@ public abstract class PaymentMethodForm {
                                 paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.SELL))),
                         DisplayUtils.formatAccountAge(accountAge));
 
-        if (isDisplayForm)
+        if (isDisplayForm) {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
+
+            String accountSigningStateText;
+
+            if (accountAgeWitnessService.myHasSignedWitness(paymentAccount.getPaymentAccountPayload())) {
+                //TODO sqrrm: We need four states in here:
+                //  - signed by arbitrator
+                //  - signed by peer
+                //  - signed by peer and limit lifted
+                //  - signed by peer and able to sign
+                //  Additionally we need to have some enum or so how the account signing took place.
+                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+                accountSigningStateText = "This account was verified and signed by an arbitrator or peer / Time since signing: 3 days";
+            } else {
+                //TODO sqrrm: Here we need two states:
+                // - not signing necessary for this payment account
+                // - signing required and not signed
+                accountSigningStateText = Res.get("shared.notSigned");
+            }
+
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"), accountSigningStateText);
+        }
         else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
