@@ -60,7 +60,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public abstract class DisputeManager<T extends DisputeList<? extends DisputeList>> extends SupportManager {
     protected final TradeWalletService tradeWalletService;
-    protected final BtcWalletService walletService;
+    protected final BtcWalletService btcWalletService;
     protected final TradeManager tradeManager;
     protected final ClosedTradableManager closedTradableManager;
     protected final OpenOfferManager openOfferManager;
@@ -74,7 +74,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     public DisputeManager(P2PService p2PService,
                           TradeWalletService tradeWalletService,
-                          BtcWalletService walletService,
+                          BtcWalletService btcWalletService,
                           WalletsSetup walletsSetup,
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
@@ -84,7 +84,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         super(p2PService, walletsSetup);
 
         this.tradeWalletService = tradeWalletService;
-        this.walletService = walletService;
+        this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.openOfferManager = openOfferManager;
@@ -163,6 +163,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     public abstract void cleanupDisputes();
 
+    protected abstract String getDisputeInfo(Dispute dispute);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates for disputeListService
@@ -236,7 +238,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // arbitrator receives that from trader who opens dispute
+    // dispute agent receives that from trader who opens dispute
     protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -270,15 +272,29 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
 
         // We use the ChatMessage not the openNewDisputeMessage for the ACK
-        ObservableList<ChatMessage> messages = openNewDisputeMessage.getDispute().getChatMessages();
+        ObservableList<ChatMessage> messages = dispute.getChatMessages();
         if (!messages.isEmpty()) {
-            ChatMessage msg = messages.get(0);
+            ChatMessage chatMessage = messages.get(0);
             PubKeyRing sendersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getBuyerPubKeyRing() : contractFromOpener.getSellerPubKeyRing();
-            sendAckMessage(msg, sendersPubKeyRing, errorMessage == null, errorMessage);
+            sendAckMessage(chatMessage, sendersPubKeyRing, errorMessage == null, errorMessage);
+        }
+
+        // In case of refundAgent we add a message with the mediatorsDisputeSummary. Only visible for refundAgent.
+        if (dispute.getMediatorsDisputeResult() != null) {
+            String mediatorsDisputeResult = Res.get("support.mediatorsDisputeSummary", dispute.getMediatorsDisputeResult());
+            ChatMessage mediatorsDisputeResultMessage = new ChatMessage(
+                    getSupportType(),
+                    dispute.getTradeId(),
+                    pubKeyRing.hashCode(),
+                    false,
+                    mediatorsDisputeResult,
+                    p2PService.getAddress());
+            mediatorsDisputeResultMessage.setSystemMessage(true);
+            dispute.addAndPersistChatMessage(mediatorsDisputeResultMessage);
         }
     }
 
-    // not dispute requester receives that from arbitrator
+    // not dispute requester receives that from dispute agent
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -345,17 +361,18 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent() || reOpen) {
-            String disputeInfo = getDisputeInfo(dispute.isMediationDispute());
+            String disputeInfo = getDisputeInfo(dispute);
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
                     : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
 
+            String message = Res.get("support.systemMsg", sysMsg);
             ChatMessage chatMessage = new ChatMessage(
                     getSupportType(),
                     dispute.getTradeId(),
                     pubKeyRing.hashCode(),
                     false,
-                    Res.get("support.systemMsg", sysMsg),
+                    message,
                     p2PService.getAddress());
             chatMessage.setSystemMessage(true);
             dispute.addAndPersistChatMessage(chatMessage);
@@ -368,11 +385,14 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     p2PService.getAddress(),
                     UUID.randomUUID().toString(),
                     getSupportType());
-            log.info("Send {} to peer {}. tradeId={}, openNewDisputeMessage.uid={}, " +
-                            "chatMessage.uid={}",
-                    openNewDisputeMessage.getClass().getSimpleName(), agentNodeAddress,
-                    openNewDisputeMessage.getTradeId(), openNewDisputeMessage.getUid(),
+
+            log.info("Send {} to peer {}. tradeId={}, openNewDisputeMessage.uid={}, chatMessage.uid={}",
+                    openNewDisputeMessage.getClass().getSimpleName(),
+                    agentNodeAddress,
+                    openNewDisputeMessage.getTradeId(),
+                    openNewDisputeMessage.getUid(),
                     chatMessage.getUid());
+
             p2PService.sendEncryptedMailboxMessage(agentNodeAddress,
                     dispute.getAgentPubKeyRing(),
                     openNewDisputeMessage,
@@ -432,7 +452,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // arbitrator sends that to trading peer when he received openDispute request
+    // dispute agent sends that to trading peer when he received openDispute request
     private String sendPeerOpenedDisputeMessage(Dispute disputeFromOpener,
                                                 Contract contractFromOpener,
                                                 PubKeyRing pubKeyRing) {
@@ -459,10 +479,11 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.getMakerContractSignature(),
                 disputeFromOpener.getTakerContractSignature(),
                 disputeFromOpener.getAgentPubKeyRing(),
-                disputeFromOpener.isSupportTicket());
+                disputeFromOpener.isSupportTicket(),
+                disputeFromOpener.getSupportType());
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
-            String disputeInfo = getDisputeInfo(dispute.isMediationDispute());
+            String disputeInfo = getDisputeInfo(dispute);
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.peerOpenedTicket", disputeInfo)
                     : Res.get("support.peerOpenedDispute", disputeInfo);
@@ -485,11 +506,12 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                     p2PService.getAddress(),
                     UUID.randomUUID().toString(),
                     getSupportType());
-            log.info("Send {} to peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, " +
-                            "chatMessage.uid={}",
+
+            log.info("Send {} to peer {}. tradeId={}, peerOpenedDisputeMessage.uid={}, chatMessage.uid={}",
                     peerOpenedDisputeMessage.getClass().getSimpleName(), peersNodeAddress,
                     peerOpenedDisputeMessage.getTradeId(), peerOpenedDisputeMessage.getUid(),
                     chatMessage.getUid());
+
             p2PService.sendEncryptedMailboxMessage(peersNodeAddress,
                     peersPubKeyRing,
                     peerOpenedDisputeMessage,
@@ -546,7 +568,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         }
     }
 
-    // arbitrator send result to trader
+    // dispute agent send result to trader
     public void sendDisputeResultMessage(DisputeResult disputeResult, Dispute dispute, String text) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
@@ -689,13 +711,5 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         return disputeList.stream()
                 .filter(e -> e.getTradeId().equals(tradeId))
                 .findAny();
-    }
-
-    private String getDisputeInfo(boolean isMediationDispute) {
-        String role = isMediationDispute ? Res.get("shared.mediator").toLowerCase() :
-                Res.get("shared.arbitrator2").toLowerCase();
-        String link = isMediationDispute ? "https://docs.bisq.network/trading-rules.html#mediation" :
-                "https://bisq.network/docs/exchange/arbitration-system";
-        return Res.get("support.initialInfo", role, role, link);
     }
 }

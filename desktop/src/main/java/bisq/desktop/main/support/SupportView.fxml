@@ -26,6 +26,7 @@
             xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="tradersMediationDisputesTab" closable="false"/>
+    <Tab fx:id="tradersRefundDisputesTab" closable="false"/>
     <Tab fx:id="tradersArbitrationDisputesTab" closable="false"/>
 
 </JFXTabPane>

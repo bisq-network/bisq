@@ -24,6 +24,8 @@ import bisq.core.trade.Tradable;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
+import bisq.common.crypto.PubKeyRing;
+
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -33,20 +35,27 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+
 @Singleton
 public class TransactionListItemFactory {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final DaoFacade daoFacade;
+    private final PubKeyRing pubKeyRing;
     private final BSFormatter formatter;
     private final Preferences preferences;
 
     @Inject
-    TransactionListItemFactory(BtcWalletService btcWalletService, BsqWalletService bsqWalletService,
-                               DaoFacade daoFacade, BSFormatter formatter, Preferences preferences) {
+    TransactionListItemFactory(BtcWalletService btcWalletService,
+                               BsqWalletService bsqWalletService,
+                               DaoFacade daoFacade,
+                               PubKeyRing pubKeyRing,
+                               BSFormatter formatter,
+                               Preferences preferences) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.daoFacade = daoFacade;
+        this.pubKeyRing = pubKeyRing;
         this.formatter = formatter;
         this.preferences = preferences;
     }
@@ -55,7 +64,13 @@ public class TransactionListItemFactory {
         Optional<Tradable> maybeTradable = Optional.ofNullable(tradable)
                 .map(TransactionAwareTradable::asTradable);
 
-        return new TransactionsListItem(transaction, btcWalletService, bsqWalletService, maybeTradable,
-                daoFacade, formatter, preferences.getIgnoreDustThreshold());
+        return new TransactionsListItem(transaction,
+                btcWalletService,
+                bsqWalletService,
+                maybeTradable,
+                daoFacade,
+                pubKeyRing,
+                formatter,
+                preferences.getIgnoreDustThreshold());
     }
 }

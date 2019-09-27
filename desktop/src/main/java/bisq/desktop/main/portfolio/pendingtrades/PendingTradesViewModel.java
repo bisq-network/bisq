@@ -378,20 +378,20 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
 
             // #################### Phase DEPOSIT_PAID
-            case TAKER_PUBLISHED_DEPOSIT_TX:
+            case SELLER_PUBLISHED_DEPOSIT_TX:
 
                 // DEPOSIT_TX_PUBLISHED_MSG
-                // taker perspective
-            case TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
-            case TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG:
-            case TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG:
-            case TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG:
+                // seller perspective
+            case SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
+            case SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG:
+            case SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG:
+            case SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG:
 
-                // maker perspective
-            case MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
+                // buyer perspective
+            case BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
 
                 // Alternatively the maker could have seen the deposit tx earlier before he received the DEPOSIT_TX_PUBLISHED_MSG
-            case MAKER_SAW_DEPOSIT_TX_IN_NETWORK:
+            case BUYER_SAW_DEPOSIT_TX_IN_NETWORK:
                 buyerState.set(BuyerState.STEP1);
                 sellerState.set(SellerState.STEP1);
                 break;

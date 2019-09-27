@@ -17,63 +17,89 @@
 
 package bisq.desktop.main.funds.transactions;
 
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.offer.Offer;
+import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 
+import bisq.common.crypto.PubKeyRing;
+
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
 
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+
+@Slf4j
 class TransactionAwareTrade implements TransactionAwareTradable {
-    private final Trade delegate;
+    private final Trade trade;
     private final ArbitrationManager arbitrationManager;
+    private final RefundManager refundManager;
+    private final BtcWalletService btcWalletService;
+    private final PubKeyRing pubKeyRing;
 
-    TransactionAwareTrade(Trade delegate, ArbitrationManager arbitrationManager) {
-        this.delegate = delegate;
+    TransactionAwareTrade(Trade trade,
+                          ArbitrationManager arbitrationManager,
+                          RefundManager refundManager,
+                          BtcWalletService btcWalletService,
+                          PubKeyRing pubKeyRing) {
+        this.trade = trade;
         this.arbitrationManager = arbitrationManager;
+        this.refundManager = refundManager;
+        this.btcWalletService = btcWalletService;
+        this.pubKeyRing = pubKeyRing;
     }
 
     @Override
     public boolean isRelatedToTransaction(Transaction transaction) {
         String txId = transaction.getHashAsString();
 
-        boolean isTakerOfferFeeTx = txId.equals(delegate.getTakerFeeTxId());
+        boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
         boolean isOfferFeeTx = isOfferFeeTx(txId);
         boolean isDepositTx = isDepositTx(txId);
         boolean isPayoutTx = isPayoutTx(txId);
         boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
+        boolean isDelayedPayoutTx = isDelayedPayoutTx(txId);
+        boolean isRefundPayoutTx = isRefundPayoutTx(txId);
 
-        return isTakerOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx || isDisputedPayoutTx;
+        return isTakerOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx ||
+                isDisputedPayoutTx || isDelayedPayoutTx || isRefundPayoutTx;
     }
 
     private boolean isPayoutTx(String txId) {
-        return Optional.ofNullable(delegate.getPayoutTx())
+        return Optional.ofNullable(trade.getPayoutTx())
                 .map(Transaction::getHashAsString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
 
     private boolean isDepositTx(String txId) {
-        return Optional.ofNullable(delegate.getDepositTx())
+        return Optional.ofNullable(trade.getDepositTx())
                 .map(Transaction::getHashAsString)
                 .map(hash -> hash.equals(txId))
                 .orElse(false);
     }
 
     private boolean isOfferFeeTx(String txId) {
-        return Optional.ofNullable(delegate.getOffer())
+        return Optional.ofNullable(trade.getOffer())
                 .map(Offer::getOfferFeePaymentTxId)
                 .map(paymentTxId -> paymentTxId.equals(txId))
                 .orElse(false);
     }
 
     private boolean isDisputedPayoutTx(String txId) {
-        String delegateId = delegate.getId();
+        String delegateId = trade.getId();
 
         ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
         return disputes.stream()
@@ -88,8 +114,60 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                 });
     }
 
+    private boolean isDelayedPayoutTx(String txId) {
+        String delegateId = trade.getId();
+
+        ObservableList<Dispute> disputes = refundManager.getDisputesAsObservableList();
+        return disputes.stream()
+                .anyMatch(dispute -> {
+                    Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+                    if (delayedPayoutTx != null) {
+                        boolean isDelayedPayoutTx = txId.equals(delayedPayoutTx.getHashAsString());
+                        String disputeTradeId = dispute.getTradeId();
+                        boolean isDisputeRelatedToThis = delegateId.equals(disputeTradeId);
+                        return isDelayedPayoutTx && isDisputeRelatedToThis;
+                    } else {
+                        return false;
+                    }
+                });
+    }
+
+    private boolean isRefundPayoutTx(String txId) {
+        String tradeId = trade.getId();
+        ObservableList<Dispute> disputes = refundManager.getDisputesAsObservableList();
+        AtomicBoolean isRefundTx = new AtomicBoolean(false);
+        AtomicBoolean isDisputeRelatedToThis = new AtomicBoolean(false);
+        disputes.forEach(dispute -> {
+            String disputeTradeId = dispute.getTradeId();
+            isDisputeRelatedToThis.set(tradeId.equals(disputeTradeId));
+            if (isDisputeRelatedToThis.get()) {
+                Transaction tx = btcWalletService.getTransaction(txId);
+                if (tx != null) {
+                    tx.getOutputs().forEach(txo -> {
+                        if (btcWalletService.isTransactionOutputMine(txo)) {
+                            try {
+                                Address receiverAddress = txo.getAddressFromP2PKHScript(btcWalletService.getParams());
+                                Contract contract = checkNotNull(trade.getContract());
+                                String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
+                                        contract.getBuyerPayoutAddressString() :
+                                        contract.getSellerPayoutAddressString();
+                                if (receiverAddress != null && myPayoutAddressString.equals(receiverAddress.toString())) {
+                                    isRefundTx.set(true);
+                                }
+                            } catch (Throwable ignore) {
+                            }
+
+                        }
+                    });
+                }
+            }
+        });
+
+        return isRefundTx.get() && isDisputeRelatedToThis.get();
+    }
+
     @Override
     public Tradable asTradable() {
-        return delegate;
+        return trade;
     }
 }

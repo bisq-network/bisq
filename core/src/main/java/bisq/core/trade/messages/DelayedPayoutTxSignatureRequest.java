@@ -17,7 +17,7 @@
 
 package bisq.core.trade.messages;
 
-import bisq.network.p2p.MailboxMessage;
+import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.app.Version;
@@ -30,62 +30,60 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class DepositTxPublishedMessage extends TradeMessage implements MailboxMessage {
-    private final byte[] depositTx;
+public final class DelayedPayoutTxSignatureRequest extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
+    private final byte[] delayedPayoutTx;
 
-    public DepositTxPublishedMessage(String tradeId,
-                                     byte[] depositTx,
-                                     NodeAddress senderNodeAddress,
-                                     String uid) {
-        this(tradeId,
-                depositTx,
-                senderNodeAddress,
+    public DelayedPayoutTxSignatureRequest(String uid,
+                                           String tradeId,
+                                           NodeAddress senderNodeAddress,
+                                           byte[] delayedPayoutTx) {
+        this(Version.getP2PMessageVersion(),
                 uid,
-                Version.getP2PMessageVersion());
+                tradeId,
+                senderNodeAddress,
+                delayedPayoutTx);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private DepositTxPublishedMessage(String tradeId,
-                                      byte[] depositTx,
-                                      NodeAddress senderNodeAddress,
-                                      String uid,
-                                      int messageVersion) {
+    private DelayedPayoutTxSignatureRequest(int messageVersion,
+                                            String uid,
+                                            String tradeId,
+                                            NodeAddress senderNodeAddress,
+                                            byte[] delayedPayoutTx) {
         super(messageVersion, tradeId, uid);
-        this.depositTx = depositTx;
         this.senderNodeAddress = senderNodeAddress;
+        this.delayedPayoutTx = delayedPayoutTx;
     }
 
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         return getNetworkEnvelopeBuilder()
-                .setDepositTxPublishedMessage(protobuf.DepositTxPublishedMessage.newBuilder()
+                .setDelayedPayoutTxSignatureRequest(protobuf.DelayedPayoutTxSignatureRequest.newBuilder()
+                        .setUid(uid)
                         .setTradeId(tradeId)
-                        .setDepositTx(ByteString.copyFrom(depositTx))
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setUid(uid))
+                        .setDelayedPayoutTx(ByteString.copyFrom(delayedPayoutTx)))
                 .build();
     }
 
-    public static DepositTxPublishedMessage fromProto(protobuf.DepositTxPublishedMessage proto, int messageVersion) {
-        return new DepositTxPublishedMessage(proto.getTradeId(),
-                proto.getDepositTx().toByteArray(),
-                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+    public static DelayedPayoutTxSignatureRequest fromProto(protobuf.DelayedPayoutTxSignatureRequest proto, int messageVersion) {
+        return new DelayedPayoutTxSignatureRequest(messageVersion,
                 proto.getUid(),
-                messageVersion);
+                proto.getTradeId(),
+                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+                proto.getDelayedPayoutTx().toByteArray());
     }
-
 
     @Override
     public String toString() {
-        return "DepositTxPublishedMessage{" +
-                "\n     depositTx=" + Utilities.bytesAsHexString(depositTx) +
-                ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
+        return "DelayedPayoutTxSignatureRequest{" +
+                "\n     senderNodeAddress=" + senderNodeAddress +
+                ",\n     delayedPayoutTx=" + Utilities.bytesAsHexString(delayedPayoutTx) +
                 "\n} " + super.toString();
     }
 }

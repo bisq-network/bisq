@@ -63,6 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
     public static final String ARBITRATOR_ADDRESS = "arbAddr";
     public static final String MEDIATOR_ADDRESS = "medAddr";
+    public static final String REFUND_AGENT_ADDRESS = "refAddr";
 
     private final OfferPayload.Direction direction;
     private final String baseCurrency;

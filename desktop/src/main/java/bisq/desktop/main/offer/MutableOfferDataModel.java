@@ -358,7 +358,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService,
                 referralIdService,
                 paymentAccount,
-                currencyCode);
+                currencyCode,
+                preferences);
 
         OfferUtil.validateOfferData(filterManager,
                 p2PService,
@@ -594,7 +595,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     double calculateMarketPriceManual(double marketPrice, double volumeAsDouble, double amountAsDouble) {
         double manualPriceAsDouble = volumeAsDouble / amountAsDouble;
         double percentage = MathUtils.roundDouble(manualPriceAsDouble / marketPrice, 4);
-        
+
         setMarketPriceMargin(percentage);
 
         return manualPriceAsDouble;

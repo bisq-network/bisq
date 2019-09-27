@@ -49,6 +49,8 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
@@ -131,11 +133,13 @@ public class BisqSetup {
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
+    private final RefundAgentManager refundAgentManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final TraderChatManager traderChatManager;
     private final Preferences preferences;
     private final User user;
@@ -213,11 +217,13 @@ public class BisqSetup {
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
                      MediatorManager mediatorManager,
+                     RefundAgentManager refundAgentManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      ArbitrationManager arbitrationManager,
                      MediationManager mediationManager,
+                     RefundManager refundManager,
                      TraderChatManager traderChatManager,
                      Preferences preferences,
                      User user,
@@ -257,11 +263,13 @@ public class BisqSetup {
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
+        this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.user = user;
@@ -428,10 +436,10 @@ public class BisqSetup {
     }
 
     private void maybeShowTac() {
-        if (!preferences.isTacAccepted() && !DevEnv.isDevMode()) {
+        if (!preferences.isTacAcceptedV120() && !DevEnv.isDevMode()) {
             if (displayTacHandler != null)
                 displayTacHandler.accept(() -> {
-                    preferences.setTacAccepted(true);
+                    preferences.setTacAcceptedV120(true);
                     step2();
                 });
         } else {
@@ -618,6 +626,7 @@ public class BisqSetup {
 
         arbitrationManager.onAllServicesInitialized();
         mediationManager.onAllServicesInitialized();
+        refundManager.onAllServicesInitialized();
         traderChatManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
@@ -631,6 +640,7 @@ public class BisqSetup {
 
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
+        refundAgentManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));

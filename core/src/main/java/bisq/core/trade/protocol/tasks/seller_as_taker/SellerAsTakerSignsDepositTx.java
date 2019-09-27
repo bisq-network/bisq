@@ -17,11 +17,9 @@
 
 package bisq.core.trade.protocol.tasks.seller_as_taker;
 
-import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
@@ -43,9 +41,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
+public class SellerAsTakerSignsDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsTakerSignAndPublishDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsTakerSignsDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -58,7 +56,7 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");
 
-            byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
             trade.setContractHash(contractHash);
 
             List<RawTransactionInput> sellerInputs = checkNotNull(processModel.getRawTransactionInputs(), "sellerInputs must not be null");
@@ -80,51 +78,20 @@ public class SellerAsTakerSignAndPublishDepositTx extends TradeTask {
 
             TradingPeer tradingPeer = processModel.getTradingPeer();
 
-            Transaction depositTx = processModel.getTradeWalletService().takerSignsAndPublishesDepositTx(
+            Transaction depositTx = processModel.getTradeWalletService().takerSignsDepositTx(
                     true,
                     contractHash,
                     processModel.getPreparedDepositTx(),
-                    tradingPeer.getRawTransactionInputs(),
+                    checkNotNull(tradingPeer.getRawTransactionInputs()),
                     sellerInputs,
                     tradingPeer.getMultiSigPubKey(),
-                    sellerMultiSigPubKey,
-                    trade.getArbitratorBtcPubKey(),
-                    new TxBroadcaster.Callback() {
-                        @Override
-                        public void onSuccess(Transaction transaction) {
-                            if (!completed) {
-                                // We set the depositTx before we change the state as the state change triggers code
-                                // which expected the tx to be available. That case will usually never happen as the
-                                // callback is called after the method call has returned but in some test scenarios
-                                // with regtest we run into such issues, thus fixing it to make it more stict seems
-                                // reasonable.
-                                trade.setDepositTx(transaction);
-                                log.trace("takerSignsAndPublishesDepositTx succeeded " + transaction);
-                                trade.setState(Trade.State.TAKER_PUBLISHED_DEPOSIT_TX);
-                                walletService.swapTradeEntryToAvailableEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE);
+                    sellerMultiSigPubKey);
 
-                                complete();
-                            } else {
-                                log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
-                            }
-                        }
+            trade.applyDepositTx(depositTx);
 
-                        @Override
-                        public void onFailure(TxBroadcastException exception) {
-                            if (!completed) {
-                                failed(exception);
-                            } else {
-                                log.warn("We got the onFailure callback called after the timeout has been triggered a complete().");
-                            }
-                        }
-                    });
-            if (trade.getDepositTx() == null) {
-                // We set the deposit tx in case we get the onFailure called. We cannot set it in the onFailure
-                // callback as the tx is returned by the method call where the callback is  used as an argument.
-                trade.setDepositTx(depositTx);
-            }
+            complete();
         } catch (Throwable t) {
-            final Contract contract = trade.getContract();
+            Contract contract = trade.getContract();
             if (contract != null)
                 contract.printDiff(processModel.getTradingPeer().getContractAsJson());
             failed(t);

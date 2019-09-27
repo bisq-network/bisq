@@ -73,6 +73,10 @@ public final class Contract implements NetworkPayload {
     @JsonExclude
     private final byte[] takerMultiSigPubKey;
 
+    // Added in v1.2.0
+    private long lockTime;
+    private final NodeAddress refundAgentNodeAddress;
+
     public Contract(OfferPayload offerPayload,
                     long tradeAmount,
                     long tradePrice,
@@ -91,7 +95,9 @@ public final class Contract implements NetworkPayload {
                     String makerPayoutAddressString,
                     String takerPayoutAddressString,
                     byte[] makerMultiSigPubKey,
-                    byte[] takerMultiSigPubKey) {
+                    byte[] takerMultiSigPubKey,
+                    long lockTime,
+                    NodeAddress refundAgentNodeAddress) {
         this.offerPayload = offerPayload;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
@@ -111,6 +117,8 @@ public final class Contract implements NetworkPayload {
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.makerMultiSigPubKey = makerMultiSigPubKey;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
+        this.lockTime = lockTime;
+        this.refundAgentNodeAddress = refundAgentNodeAddress;
 
         String makerPaymentMethodId = makerPaymentAccountPayload.getPaymentMethodId();
         String takerPaymentMethodId = takerPaymentAccountPayload.getPaymentMethodId();
@@ -128,7 +136,6 @@ public final class Contract implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
     public static Contract fromProto(protobuf.Contract proto, CoreProtoResolver coreProtoResolver) {
         return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
                 proto.getTradeAmount(),
@@ -148,7 +155,9 @@ public final class Contract implements NetworkPayload {
                 proto.getMakerPayoutAddressString(),
                 proto.getTakerPayoutAddressString(),
                 proto.getMakerMultiSigPubKey().toByteArray(),
-                proto.getTakerMultiSigPubKey().toByteArray());
+                proto.getTakerMultiSigPubKey().toByteArray(),
+                proto.getLockTime(),
+                NodeAddress.fromProto(proto.getRefundAgentNodeAddress()));
     }
 
     @Override
@@ -173,6 +182,8 @@ public final class Contract implements NetworkPayload {
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
+                .setLockTime(lockTime)
+                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .build();
     }
 
@@ -291,6 +302,7 @@ public final class Contract implements NetworkPayload {
                 ",\n     sellerNodeAddress=" + sellerNodeAddress +
                 ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     isBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
                 ",\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     takerAccountId='" + takerAccountId + '\'' +
@@ -304,6 +316,7 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
                 ",\n     buyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
                 ",\n     sellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
+                ",\n     lockTime=" + lockTime +
                 "\n}";
     }
 }

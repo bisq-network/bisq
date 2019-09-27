@@ -21,11 +21,11 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.PublishDepositTxRequest;
+import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendMailboxMessageListener;
+import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
@@ -41,11 +41,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class MakerSendPublishDepositTxRequest extends TradeTask {
+public abstract class MakerSendsInputsForDepositTxResponse extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerSendPublishDepositTxRequest(TaskRunner taskHandler, Trade trade) {
+    public MakerSendsInputsForDepositTxResponse(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
+
+    protected abstract byte[] getPreparedDepositTx();
 
     @Override
     protected void run() {
@@ -62,15 +64,16 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     addressEntryOptional.get().getPubKey()),
                     "makerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            final byte[] preparedDepositTx = processModel.getPreparedDepositTx();
+            byte[] preparedDepositTx = getPreparedDepositTx();
 
             // Maker has to use preparedDepositTx as nonce.
             // He cannot manipulate the preparedDepositTx - so we avoid to have a challenge protocol for passing the nonce we want to get signed.
-            final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
+            PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade),
+                    "processModel.getPaymentAccountPayload(trade) must not be null");
 
             byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), preparedDepositTx);
 
-            PublishDepositTxRequest message = new PublishDepositTxRequest(
+            InputsForDepositTxResponse message = new InputsForDepositTxResponse(
                     processModel.getOfferId(),
                     paymentAccountPayload,
                     processModel.getAccountId(),
@@ -83,31 +86,24 @@ public class MakerSendPublishDepositTxRequest extends TradeTask {
                     processModel.getMyNodeAddress(),
                     UUID.randomUUID().toString(),
                     sig,
-                    new Date().getTime());
+                    new Date().getTime(),
+                    trade.getLockTime());
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
 
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            processModel.getP2PService().sendEncryptedMailboxMessage(
+            processModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
                     processModel.getTradingPeer().getPubKeyRing(),
                     message,
-                    new SendMailboxMessageListener() {
+                    new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
                             trade.setState(Trade.State.MAKER_SAW_ARRIVED_PUBLISH_DEPOSIT_TX_REQUEST);
-                            complete();
-                        }
-
-                        @Override
-                        public void onStoredInMailbox() {
-                            log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                            trade.setState(Trade.State.MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST);
                             complete();
                         }
 

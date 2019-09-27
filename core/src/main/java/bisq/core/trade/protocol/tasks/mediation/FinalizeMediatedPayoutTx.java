@@ -104,8 +104,7 @@ public class FinalizeMediatedPayoutTx extends TradeTask {
                     sellerPayoutAddressString,
                     multiSigKeyPair,
                     buyerMultiSigPubKey,
-                    sellerMultiSigPubKey,
-                    trade.getArbitratorBtcPubKey()
+                    sellerMultiSigPubKey
             );
 
             trade.setPayoutTx(transaction);

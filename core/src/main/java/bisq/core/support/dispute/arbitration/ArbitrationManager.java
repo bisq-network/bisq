@@ -24,6 +24,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportType;
@@ -140,6 +141,13 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         disputeListService.cleanupDisputes(tradeId -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.DISPUTE_CLOSED));
     }
 
+    @Override
+    protected String getDisputeInfo(Dispute dispute) {
+        String role = Res.get("shared.arbitrator2").toLowerCase();
+        String link = "https://bisq.network/docs/exchange/arbitration-system";
+        return Res.get("support.initialInfo", role, role, link);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
@@ -152,7 +160,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         ChatMessage chatMessage = disputeResult.getChatMessage();
         checkNotNull(chatMessage, "chatMessage must not be null");
         if (Arrays.equals(disputeResult.getArbitratorPubKey(),
-                walletService.getArbitratorAddressEntry().getPubKey())) {
+                btcWalletService.getArbitratorAddressEntry().getPubKey())) {
             log.error("Arbitrator received disputeResultMessage. That must never happen.");
             return;
         }
@@ -230,7 +238,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                 if (payoutTx == null) {
                     if (dispute.getDepositTxSerialized() != null) {
                         byte[] multiSigPubKey = isBuyer ? contract.getBuyerMultiSigPubKey() : contract.getSellerMultiSigPubKey();
-                        DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
+                        DeterministicKey multiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, multiSigPubKey);
                         Transaction signedDisputedPayoutTx = tradeWalletService.traderSignAndFinalizeDisputedPayoutTx(
                                 dispute.getDepositTxSerialized(),
                                 disputeResult.getArbitratorSignature(),

@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.maker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.DepositTxPublishedMessage;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 
@@ -34,9 +34,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class MakerProcessDepositTxPublishedMessage extends TradeTask {
+public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
     @SuppressWarnings({"unused"})
-    public MakerProcessDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public BuyerProcessDepositTxAndDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -44,18 +44,22 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getState());
-            DepositTxPublishedMessage message = (DepositTxPublishedMessage) processModel.getTradeMessage();
-            Validator.checkTradeId(processModel.getOfferId(), message);
+            DepositTxAndDelayedPayoutTxMessage message = (DepositTxAndDelayedPayoutTxMessage) processModel.getTradeMessage();
             checkNotNull(message);
+            Validator.checkTradeId(processModel.getOfferId(), message);
             checkArgument(message.getDepositTx() != null);
 
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction txFromSerializedTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTx());
+            Transaction depositTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTx());
             // update with full tx
-            Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(txFromSerializedTx);
-            trade.setDepositTx(walletTx);
-            BtcWalletService.printTx("depositTx received from peer", walletTx);
+            Transaction depositTxWalletTx = processModel.getTradeWalletService().addTxToWallet(depositTx);
+            trade.applyDepositTx(depositTxWalletTx);
+            BtcWalletService.printTx("depositTx received from peer", depositTxWalletTx);
+
+            // To access tx confidence we need to add that tx into our wallet.
+            Transaction delayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDelayedPayoutTx());
+            trade.applyDelayedPayoutTx(delayedPayoutTx);
+            BtcWalletService.printTx("delayedPayoutTx received from peer", delayedPayoutTx);
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
@@ -63,8 +67,8 @@ public class MakerProcessDepositTxPublishedMessage extends TradeTask {
             processModel.removeMailboxMessageAfterProcessing(trade);
 
             // If we got already the confirmation we don't want to apply an earlier state
-            if (trade.getState() != Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK)
-                trade.setState(Trade.State.MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+            if (trade.getState() != Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK)
+                trade.setState(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
 
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.RESERVED_FOR_TRADE);
 
