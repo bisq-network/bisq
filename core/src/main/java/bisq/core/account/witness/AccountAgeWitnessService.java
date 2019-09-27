@@ -367,8 +367,7 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isImmature(AccountAgeWitness accountAgeWitness) {
-        return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE &&
-                getWitnessSignAge(accountAgeWitness, new Date()) < 0;
+        return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE;
     }
 
     public boolean isMyAccountAgeImmature(PaymentAccount myPaymentAccount) {
