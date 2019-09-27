@@ -205,7 +205,7 @@ class RequestDataHandler implements MessageListener {
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
 
-                    if (log.isDebugEnabled()) logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
+                    logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
