@@ -107,7 +107,9 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -1069,17 +1071,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             String timeSinceSigning;
 
                             if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
-                                //TODO sqrrm: We need four states in here:
-                                //  - signed by arbitrator
-                                //  - signed by peer
-                                //  - signed by peer and limit lifted
-                                //  - signed by peer and able to sign
-                                //  Additionally we need to have some enum or so how the account signing took place.
-                                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
                                 icon = MaterialDesignIcon.APPROVAL;
-                                info = "This account was verified and signed by an arbitrator or peer.";
-                                //TODO sqrrm: add time since signing
-                                timeSinceSigning = "3 days";
+                                info = Res.get("offerbook.timeSinceSigning.info",
+                                        accountAgeWitnessService.getSignState(item.getOffer()).getPresentation());
+                                long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
+                                        accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
+                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
+                                        daysSinceSigning);
                             } else {
 
                                 //TODO sqrrm: Here we need two states:

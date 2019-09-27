@@ -20,6 +20,7 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
@@ -85,6 +86,25 @@ public class AccountAgeWitnessService {
         ONE_TO_TWO_MONTHS,
         TWO_MONTHS_OR_MORE
     }
+
+    public enum SignState {
+        UNSIGNED("Not signed"),
+        ARBITRATOR(Res.get("offerbook.timeSinceSigning.info.arbitrator")),
+        PEER_INITIAL(Res.get("offerbook.timeSinceSigning.info.peer")),
+        PEER_LIMIT_LIFTED(Res.get("offerbook.timeSinceSigning.info.peerLimitLifted")),
+        PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer"));
+
+        private String presentation;
+
+        SignState(String presentation) {
+            this.presentation = presentation;
+        }
+
+        public String getPresentation() {
+            return presentation;
+        }
+
+        }
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -650,5 +670,30 @@ public class AccountAgeWitnessService {
             return true;
         }
         return getWitnessSignAge(accountAgeWitness, new Date()) > SignedWitnessService.SIGNER_AGE;
+    }
+
+    public SignState getSignState(Offer offer) {
+        return findWitness(offer)
+                .map(this::getSignState)
+                .orElse(SignState.UNSIGNED);
+    }
+
+    public SignState getSignState(AccountAgeWitness accountAgeWitness) {
+        if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
+            return SignState.ARBITRATOR;
+        } else {
+            final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
+            switch (getAccountAgeCategory(accountSignAge)) {
+                case TWO_MONTHS_OR_MORE:
+                    return SignState.PEER_SIGNER;
+                case ONE_TO_TWO_MONTHS:
+                    return SignState.PEER_LIMIT_LIFTED;
+                case LESS_ONE_MONTH:
+                    return SignState.PEER_INITIAL;
+                case UNVERIFIED:
+                default:
+                    return SignState.UNSIGNED;
+            }
+        }
     }
 }
