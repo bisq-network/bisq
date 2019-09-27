@@ -45,6 +45,8 @@ import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -194,6 +196,7 @@ public abstract class PaymentMethodForm {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
             String accountSigningStateText;
+            MaterialDesignIcon icon;
 
             if (accountAgeWitnessService.myHasSignedWitness(paymentAccount.getPaymentAccountPayload())) {
                 //TODO sqrrm: We need four states in here:
@@ -204,14 +207,19 @@ public abstract class PaymentMethodForm {
                 //  Additionally we need to have some enum or so how the account signing took place.
                 //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
                 accountSigningStateText = "This account was verified and signed by an arbitrator or peer / Time since signing: 3 days";
+                icon = MaterialDesignIcon.APPROVAL;
             } else {
                 //TODO sqrrm: Here we need two states:
                 // - not signing necessary for this payment account
                 // - signing required and not signed
                 accountSigningStateText = Res.get("shared.notSigned");
+                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
             }
 
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"), accountSigningStateText);
+            InfoTextField accountSigningField = addCompactTopLabelInfoTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"),
+                    accountSigningStateText).second;
+            //TODO: add additional information regarding account signing
+            accountSigningField.setContent(icon, accountSigningStateText, "", 0.4);
         }
         else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
