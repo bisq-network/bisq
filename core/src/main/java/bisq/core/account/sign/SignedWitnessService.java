@@ -130,6 +130,13 @@ public class SignedWitnessService {
                 .collect(Collectors.toList());
     }
 
+    public boolean isSignedByArbitrator(AccountAgeWitness accountAgeWitness) {
+        return getSignedWitnessSet(accountAgeWitness).stream()
+                .map(SignedWitness::isSignedByArbitrator)
+                .findAny()
+                .orElse(false);
+    }
+
     // Arbitrators sign with EC key
     public SignedWitness signAccountAgeWitness(Coin tradeAmount,
                                                AccountAgeWitness accountAgeWitness,

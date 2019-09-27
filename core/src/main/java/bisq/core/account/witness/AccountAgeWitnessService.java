@@ -646,6 +646,9 @@ public class AccountAgeWitnessService {
     }
 
     public boolean accountIsSigner(AccountAgeWitness accountAgeWitness) {
+        if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
+            return true;
+        }
         return getWitnessSignAge(accountAgeWitness, new Date()) > SignedWitnessService.SIGNER_AGE;
     }
 }
