@@ -161,7 +161,7 @@ class RequestDataHandler implements MessageListener {
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             //noinspection UnstableApiUsage
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+            Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
@@ -205,7 +205,7 @@ class RequestDataHandler implements MessageListener {
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
 
-                    if (log.isDebugEnabled()) logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
+                    logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
@@ -282,8 +282,8 @@ class RequestDataHandler implements MessageListener {
                              Set<ProtectedStorageEntry> dataSet,
                              Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
         Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
-        dataSet.stream().forEach(e -> {
-            final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+        dataSet.forEach(e -> {
+            ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
             if (protectedStoragePayload == null) {
                 log.warn("StoragePayload was null: {}", networkEnvelope.toString());
                 return;
@@ -299,7 +299,7 @@ class RequestDataHandler implements MessageListener {
 
 
         if (persistableNetworkPayloadSet != null) {
-            persistableNetworkPayloadSet.stream().forEach(persistableNetworkPayload -> {
+            persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
                 // For logging different data types
                 String className = persistableNetworkPayload.getClass().getSimpleName();
                 if (!payloadByClassName.containsKey(className))
@@ -316,9 +316,9 @@ class RequestDataHandler implements MessageListener {
         final int items = dataSet.size() +
                 (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
         sb.append("Received ").append(items).append(" instances\n");
-        payloadByClassName.entrySet().stream().forEach(e -> sb.append(e.getKey())
+        payloadByClassName.forEach((key, value) -> sb.append(key)
                 .append(": ")
-                .append(e.getValue().size())
+                .append(value.size())
                 .append("\n"));
         sb.append("#################################################################");
         log.info(sb.toString());
