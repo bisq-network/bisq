@@ -25,6 +25,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
@@ -32,6 +33,8 @@ import bisq.core.util.BSFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import com.google.common.base.Charsets;
+
+import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -152,6 +155,7 @@ public class PeerInfoIcon extends Group {
         // outer circle
         Color ringColor;
         if (isFiatCurrency) {
+
             switch (accountAgeWitnessService.getPeersAccountAgeCategory(peersAccountAge)) {
                 case TWO_MONTHS_OR_MORE:
                     ringColor = Color.rgb(0, 225, 0); // > 2 months green
@@ -243,16 +247,11 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        //TODO sqrrm: We need these states in here:
-        //  - signed by arbitrator
-        //  - signed by peer
-        //  - signed by peer and limit lifted
-        //  - signed by peer and able to sign
-        // - not signing necessary for this payment account
-        // - signing required and not signed
-        //  Additionally we need to have some enum or so how the account signing took place.
-        //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
-        String accountSigningState = Res.get("shared.notSigned");
+        boolean needsSigning = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
+        String accountSigningState = Res.get("shared.notSigned.noNeed");
+        if (needsSigning) {
+            accountSigningState = StringUtils.capitalize(accountAgeWitnessService.getSignState(offer).getPresentation());
+        }
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge, accountSigningState);
     }
@@ -264,13 +263,12 @@ public class PeerInfoIcon extends Group {
                 // unexpected
                 return -1;
             }
-
-            return accountAgeWitnessService.getWitnessSignAge(trade, new Date());
-        } else {
-            checkNotNull(offer, "Offer must not be null if trade is null.");
-
+        }
+        checkNotNull(offer, "Offer must not be null if trade is null.");
+        if (PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
             return accountAgeWitnessService.getWitnessSignAge(offer, new Date());
         }
+        return accountAgeWitnessService.getAccountAge(offer);
     }
 
     protected void addMouseListener(int numTrades,
@@ -279,7 +277,9 @@ public class PeerInfoIcon extends Group {
                                     Preferences preferences,
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
-                                    boolean isFiatCurrency, long makersAccountAge, String accountSigningState) {
+                                    boolean isFiatCurrency,
+                                    long makersAccountAge,
+                                    String accountSigningState) {
         final String accountAgeTagEditor = isFiatCurrency ?
                 makersAccountAge > -1 ?
                         DisplayUtils.formatAccountAge(makersAccountAge) :
@@ -289,7 +289,8 @@ public class PeerInfoIcon extends Group {
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
-                .accountAge(accountAgeTagEditor).accountSigningState(accountSigningState)
+                .accountAge(accountAgeTagEditor)
+                .accountSigningState(accountSigningState)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
                     preferences.setTagForPeer(fullAddress, newTag);

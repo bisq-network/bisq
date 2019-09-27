@@ -89,7 +89,7 @@ public class AccountAgeWitnessService {
     }
 
     public enum SignState {
-        UNSIGNED("Not signed"),
+        UNSIGNED(Res.get("offerbook.timeSinceSigning.notSigned")),
         ARBITRATOR(Res.get("offerbook.timeSinceSigning.info.arbitrator")),
         PEER_INITIAL(Res.get("offerbook.timeSinceSigning.info.peer")),
         PEER_LIMIT_LIFTED(Res.get("offerbook.timeSinceSigning.info.peerLimitLifted")),
@@ -255,6 +255,12 @@ public class AccountAgeWitnessService {
     // Return -1 if no witness found
     public long getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         return findWitness(paymentAccountPayload, pubKeyRing)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
+    }
+
+    public long getAccountAge(Offer offer) {
+        return findWitness(offer)
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
                 .orElse(-1L);
     }
