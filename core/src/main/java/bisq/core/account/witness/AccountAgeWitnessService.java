@@ -78,6 +78,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
+    // TODO: Change to March, 1, 2019 before release
     private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1).getTime();
 
     public enum AccountAge {
@@ -313,12 +314,18 @@ public class AccountAgeWitnessService {
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
                                AccountAge accountAgeCategory,
-                               OfferPayload.Direction direction) {
+                               OfferPayload.Direction direction,
+                               PaymentMethod paymentMethod) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
-
+            boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
+            if (!isRisky) {
+                // Get age of witness rather than time since signing for non risky payment methods
+                accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
+            }
             long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-            if (direction == OfferPayload.Direction.BUY) {
+            if (direction == OfferPayload.Direction.BUY && isRisky) {
+                // Used only for bying of BTC with risky payment methods
                 switch (accountAgeCategory) {
                     case TWO_MONTHS_OR_MORE:
                         factor = 1;
@@ -332,6 +339,7 @@ public class AccountAgeWitnessService {
                         factor = 0;
                 }
             } else {
+                // Used by non risky payment methods and for selling BTC with risky methods
                 switch (accountAgeCategory) {
                     case TWO_MONTHS_OR_MORE:
                         factor = 1;
@@ -412,7 +420,8 @@ public class AccountAgeWitnessService {
                 currencyCode,
                 accountAgeWitness,
                 accountAgeCategory,
-                direction);
+                direction,
+                paymentAccount.getPaymentMethod());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -533,7 +542,7 @@ public class AccountAgeWitnessService {
             OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
                     offer.getMirroredDirection() : offer.getDirection();
             peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
-                    accountAgeCategory, direction);
+                    accountAgeCategory, direction, offer.getPaymentMethod());
         }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;
