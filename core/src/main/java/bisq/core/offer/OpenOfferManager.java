@@ -595,9 +595,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
                         availabilityResult = AvailabilityResult.AVAILABLE;
 
-                        arbitratorNodeAddress = DisputeAgentSelection.getLeastUsedArbitrator(tradeStatisticsManager, arbitratorManager).getNodeAddress();
-                        openOffer.setArbitratorNodeAddress(arbitratorNodeAddress);
-
                         mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
                         openOffer.setMediatorNodeAddress(mediatorNodeAddress);
 

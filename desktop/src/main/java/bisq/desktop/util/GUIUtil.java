@@ -786,7 +786,7 @@ public class GUIUtil {
     }
 
     public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
-        if (!user.hasAcceptedArbitrators()) {
+        if (!user.hasAcceptedRefundAgents()) {
             new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             return false;
         }
