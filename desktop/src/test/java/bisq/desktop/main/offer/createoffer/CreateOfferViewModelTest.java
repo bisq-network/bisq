@@ -99,7 +99,7 @@ public class CreateOfferViewModelTest {
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
-        when(accountAgeWitnessService.getMyTradeLimit(any(), any())).thenReturn(100000000L);
+        when(accountAgeWitnessService.getMyTradeLimit(any(), any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);

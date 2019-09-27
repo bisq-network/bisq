@@ -141,7 +141,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final F2FValidator f2FValidator;
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
@@ -173,7 +172,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             AdvancedCashValidator advancedCashValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             BSFormatter formatter) {
-        super(model);
+        super(model, accountAgeWitnessService);
 
         this.ibanValidator = ibanValidator;
         this.bicValidator = bicValidator;
@@ -195,7 +194,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.f2FValidator = f2FValidator;
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
     }
 
@@ -343,8 +341,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.paymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        paymentMethodComboBox.setPromptText(Res.get("shared.selectPaymentMethod"));
+        paymentMethodComboBox = FormBuilder.addComboBox(root, gridRow, Res.get("shared.selectPaymentMethod"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()

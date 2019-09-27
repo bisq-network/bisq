@@ -4,16 +4,22 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.ImageUtil;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 
 import bisq.common.UserThread;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -31,11 +37,14 @@ import java.util.concurrent.TimeUnit;
 public abstract class PaymentAccountsView<R extends Node, M extends ActivatableWithDataModel> extends ActivatableViewAndModel<R, M> {
 
     protected ListView<PaymentAccount> paymentAccountsListView;
-    protected ChangeListener<PaymentAccount> paymentAccountChangeListener;
+    private ChangeListener<PaymentAccount> paymentAccountChangeListener;
     protected Button addAccountButton, exportButton, importButton;
+    SignedWitnessService signedWitnessService;
+    protected AccountAgeWitnessService accountAgeWitnessService;
 
-    public PaymentAccountsView(M model) {
+    public PaymentAccountsView(M model, AccountAgeWitnessService accountAgeWitnessService) {
         super(model);
+        this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
     @Override
@@ -84,11 +93,11 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
     }
 
     protected void setPaymentAccountsCellFactory() {
-        paymentAccountsListView.setCellFactory(new Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>>() {
+        paymentAccountsListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
-                return new ListCell<PaymentAccount>() {
-                    final Label label = new AutoTooltipLabel();
+                return new ListCell<>() {
+                    final InfoAutoTooltipLabel label = new InfoAutoTooltipLabel("", MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, ContentDisplay.RIGHT, "");
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
@@ -104,6 +113,22 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
                             label.setText(item.getAccountName());
+
+                            if (accountAgeWitnessService.myHasSignedWitness(item.paymentAccountPayload)) {
+                                //TODO sqrrm: We need four states in here:
+                                //  - signed by arbitrator
+                                //  - signed by peer
+                                //  - signed by peer and limit lifted
+                                //  - signed by peer and able to sign
+                                //  Additionally we need to have some enum or so how the account signing took place.
+                                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+                                label.setIcon(MaterialDesignIcon.APPROVAL, "This account was verified and signed by an arbitrator or peer.");
+                            } else {
+                                //TODO sqrrm: Here we need two states:
+                                // - not signing necessary for this payment account
+                                // - signing required and not signed
+                                label.setIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, Res.get("shared.notSigned"));
+                            }
                             removeButton.setOnAction(e -> onDeleteAccount(item));
                             setGraphic(pane);
                         } else {

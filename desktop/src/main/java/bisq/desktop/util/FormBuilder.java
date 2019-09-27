@@ -2018,7 +2018,7 @@ public class FormBuilder {
     public static void removeRowsFromGridPane(GridPane gridPane, int fromGridRow, int toGridRow) {
         Set<Node> nodes = new CopyOnWriteArraySet<>(gridPane.getChildren());
         nodes.stream()
-                .filter(e -> GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
+                .filter(e -> GridPane.getRowIndex(e) != null && GridPane.getRowIndex(e) >= fromGridRow && GridPane.getRowIndex(e) <= toGridRow)
                 .forEach(e -> gridPane.getChildren().remove(e));
     }
 

@@ -1,7 +1,7 @@
 package bisq.core.arbitration;
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.support.dispute.arbitration.BuyerDataItem;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.payment.payload.PaymentAccountPayload;
 
 import org.bitcoinj.core.Coin;
@@ -31,10 +31,10 @@ import static org.mockito.Mockito.mock;
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-public class BuyerDataItemTest {
-    private BuyerDataItem buyerDataItem1;
-    private BuyerDataItem buyerDataItem2;
-    private BuyerDataItem buyerDataItem3;
+public class TraderDataItemTest {
+    private TraderDataItem traderDataItem1;
+    private TraderDataItem traderDataItem2;
+    private TraderDataItem traderDataItem3;
     private AccountAgeWitness accountAgeWitness1;
     private AccountAgeWitness accountAgeWitness2;
     private byte[] hash1 = "1".getBytes();
@@ -44,24 +44,24 @@ public class BuyerDataItemTest {
     public void setup() {
         accountAgeWitness1 = new AccountAgeWitness(hash1, 123);
         accountAgeWitness2 = new AccountAgeWitness(hash2, 124);
-        buyerDataItem1 = new BuyerDataItem(mock(PaymentAccountPayload.class), accountAgeWitness1, Coin.valueOf(546),
+        traderDataItem1 = new TraderDataItem(mock(PaymentAccountPayload.class), accountAgeWitness1, Coin.valueOf(546),
                 mock(PublicKey.class));
-        buyerDataItem2 = new BuyerDataItem(mock(PaymentAccountPayload.class), accountAgeWitness1, Coin.valueOf(547),
+        traderDataItem2 = new TraderDataItem(mock(PaymentAccountPayload.class), accountAgeWitness1, Coin.valueOf(547),
                 mock(PublicKey.class));
-        buyerDataItem3 = new BuyerDataItem(mock(PaymentAccountPayload.class), accountAgeWitness2, Coin.valueOf(548),
+        traderDataItem3 = new TraderDataItem(mock(PaymentAccountPayload.class), accountAgeWitness2, Coin.valueOf(548),
                 mock(PublicKey.class));
     }
 
     @Test
     public void testEquals() {
-        assertEquals(buyerDataItem1, buyerDataItem2);
-        assertNotEquals(buyerDataItem1, buyerDataItem3);
-        assertNotEquals(buyerDataItem2, buyerDataItem3);
+        assertEquals(traderDataItem1, traderDataItem2);
+        assertNotEquals(traderDataItem1, traderDataItem3);
+        assertNotEquals(traderDataItem2, traderDataItem3);
     }
 
     @Test
     public void testHashCode() {
-        assertEquals(buyerDataItem1.hashCode(), buyerDataItem2.hashCode());
-        assertNotEquals(buyerDataItem1.hashCode(), buyerDataItem3.hashCode());
+        assertEquals(traderDataItem1.hashCode(), traderDataItem2.hashCode());
+        assertNotEquals(traderDataItem1.hashCode(), traderDataItem3.hashCode());
     }
 }

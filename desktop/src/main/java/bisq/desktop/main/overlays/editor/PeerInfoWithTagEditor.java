@@ -90,6 +90,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private EventHandler<KeyEvent> keyEventEventHandler;
     @Nullable
     private String accountAge;
+    @Nullable
+    private String accountSigningState;
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
                                  Offer offer,
@@ -123,6 +125,11 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     public PeerInfoWithTagEditor accountAge(@Nullable String accountAge) {
         this.accountAge = accountAge;
+        return this;
+    }
+
+    public PeerInfoWithTagEditor accountSigningState(@Nullable String accountSigningState) {
+        this.accountSigningState = accountSigningState;
         return this;
     }
 
@@ -193,6 +200,10 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet")).third, 2);
         if (accountAge != null)
             GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("peerInfo.age"), accountAge).third, 2);
+
+        if (accountSigningState != null) {
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.accountSigningState"), accountSigningState).third, 2);
+        }
 
         inputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag"));
         GridPane.setColumnSpan(inputTextField, 2);

@@ -387,6 +387,12 @@ public class User implements PersistedDataHost {
         return paymentAccountsAsObservable;
     }
 
+
+    /**
+     * If this user is an arbitrator it returns the registered arbitrator.
+     *
+     * @return The arbitrator registered for this user
+     */
     @Nullable
     public Arbitrator getRegisteredArbitrator() {
         return userPayload.getRegisteredArbitrator();

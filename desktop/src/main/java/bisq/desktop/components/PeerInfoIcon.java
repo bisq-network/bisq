@@ -152,7 +152,7 @@ public class PeerInfoIcon extends Group {
         // outer circle
         Color ringColor;
         if (isFiatCurrency) {
-            switch (accountAgeWitnessService.getAccountAgeCategory(peersAccountAge)) {
+            switch (accountAgeWitnessService.getPeersAccountAgeCategory(peersAccountAge)) {
                 case TWO_MONTHS_OR_MORE:
                     ringColor = Color.rgb(0, 225, 0); // > 2 months green
                     break;
@@ -160,8 +160,11 @@ public class PeerInfoIcon extends Group {
                     ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
                     break;
                 case LESS_ONE_MONTH:
-                default:
                     ringColor = Color.rgb(255, 140, 0); //< 1 month orange
+                    break;
+                case UNVERIFIED:
+                default:
+                    ringColor = Color.rgb(255, 0, 0); // not signed, red
                     break;
             }
 
@@ -240,7 +243,18 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
+        //TODO sqrrm: We need these states in here:
+        //  - signed by arbitrator
+        //  - signed by peer
+        //  - signed by peer and limit lifted
+        //  - signed by peer and able to sign
+        // - not signing necessary for this payment account
+        // - signing required and not signed
+        //  Additionally we need to have some enum or so how the account signing took place.
+        //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+        String accountSigningState = Res.get("shared.notSigned");
+
+        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge, accountSigningState);
     }
 
     private long getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
@@ -251,11 +265,11 @@ public class PeerInfoIcon extends Group {
                 return -1;
             }
 
-            return accountAgeWitnessService.getTradingPeersAccountAge(trade);
+            return accountAgeWitnessService.getWitnessSignAge(trade, new Date());
         } else {
             checkNotNull(offer, "Offer must not be null if trade is null.");
 
-            return accountAgeWitnessService.getMakersAccountAge(offer, new Date());
+            return accountAgeWitnessService.getWitnessSignAge(offer, new Date());
         }
     }
 
@@ -265,17 +279,17 @@ public class PeerInfoIcon extends Group {
                                     Preferences preferences,
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
-                                    boolean isFiatCurrency,
-                                    long makersAccountAge) {
+                                    boolean isFiatCurrency, long makersAccountAge, String accountSigningState) {
         final String accountAgeTagEditor = isFiatCurrency ?
                 makersAccountAge > -1 ?
                         DisplayUtils.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
+
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
-                .accountAge(accountAgeTagEditor)
+                .accountAge(accountAgeTagEditor).accountSigningState(accountSigningState)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
                     preferences.setTagForPeer(fullAddress, newTag);
