@@ -43,6 +43,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 
 import java.math.BigDecimal;
 
@@ -354,6 +355,13 @@ public class BSFormatter {
         } else {
             return "";
         }
+    }
+
+    public static String getDateFromBlockHeight(long blockHeight) {
+        long now = new Date().getTime();
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
+        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        return BSFormatter.formatDateTime(new Date(now + blockHeight * 10 * 60 * 1000L), dateFormatter, timeFormatter);
     }
 
     public static String formatToPercentWithSymbol(double value) {

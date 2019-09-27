@@ -368,7 +368,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         trade.stateProperty().addListener(tradeStateListener);
 
         disputeStateListener = (observable, oldValue, newValue) -> {
-            if (newValue == Trade.DisputeState.DISPUTE_CLOSED) {
+            if (newValue == Trade.DisputeState.DISPUTE_CLOSED || newValue == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
                 chatPopupStage.hide();
             }
         };

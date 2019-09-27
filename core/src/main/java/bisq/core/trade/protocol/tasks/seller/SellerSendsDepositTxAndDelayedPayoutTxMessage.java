@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.taker;
+package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.DepositTxPublishedMessage;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
@@ -26,14 +26,18 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Transaction;
+
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 @Slf4j
-public class TakerSendDepositTxPublishedMessage extends TradeTask {
+public class SellerSendsDepositTxAndDelayedPayoutTxMessage extends TradeTask {
     @SuppressWarnings({"unused"})
-    public TakerSendDepositTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
+    public SellerSendsDepositTxAndDelayedPayoutTxMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,12 +46,14 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
         try {
             runInterceptHook();
             if (trade.getDepositTx() != null) {
-                final String id = processModel.getOfferId();
-                DepositTxPublishedMessage message = new DepositTxPublishedMessage(processModel.getOfferId(),
-                        trade.getDepositTx().bitcoinSerialize(),
+                Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
+                Transaction depositTx = checkNotNull(trade.getDepositTx());
+                DepositTxAndDelayedPayoutTxMessage message = new DepositTxAndDelayedPayoutTxMessage(UUID.randomUUID().toString(),
+                        processModel.getOfferId(),
                         processModel.getMyNodeAddress(),
-                        UUID.randomUUID().toString());
-                trade.setState(Trade.State.TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
+                        depositTx.bitcoinSerialize(),
+                        delayedPayoutTx.bitcoinSerialize());
+                trade.setState(Trade.State.SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG);
 
                 NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
                 log.info("Send {} to peer {}. tradeId={}, uid={}",
@@ -61,7 +67,7 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
                             public void onArrived() {
                                 log.info("{} arrived at peer {}. tradeId={}, uid={}",
                                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                trade.setState(Trade.State.TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
+                                trade.setState(Trade.State.SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
@@ -69,7 +75,8 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
                             public void onStoredInMailbox() {
                                 log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
                                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-                                trade.setState(Trade.State.TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
+
+                                trade.setState(Trade.State.SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG);
                                 complete();
                             }
 
@@ -77,7 +84,7 @@ public class TakerSendDepositTxPublishedMessage extends TradeTask {
                             public void onFault(String errorMessage) {
                                 log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
                                         message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
-                                trade.setState(Trade.State.TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG);
+                                trade.setState(Trade.State.SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG);
                                 appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" + errorMessage);
                                 failed();
                             }

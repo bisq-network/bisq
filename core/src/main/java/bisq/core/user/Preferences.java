@@ -394,6 +394,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         persist();
     }
 
+    public void setTacAcceptedV120(boolean tacAccepted) {
+        prefPayload.setTacAcceptedV120(tacAccepted);
+        persist();
+    }
+
     private void persist() {
         if (initialReadDone)
             storage.queueUpForSave(prefPayload);
@@ -951,5 +956,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         String getRpcPw();
 
         int getBlockNotifyPort();
+
+        void setTacAcceptedV120(boolean tacAccepted);
     }
 }

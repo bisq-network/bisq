@@ -57,6 +57,13 @@ public class DisputeAgentSelection {
                 TradeStatistics2.MEDIATOR_ADDRESS);
     }
 
+    public static <T extends DisputeAgent> T getLeastUsedRefundAgent(TradeStatisticsManager tradeStatisticsManager,
+                                                                     DisputeAgentManager<T> disputeAgentManager) {
+        return getLeastUsedDisputeAgent(tradeStatisticsManager,
+                disputeAgentManager,
+                TradeStatistics2.REFUND_AGENT_ADDRESS);
+    }
+
     private static <T extends DisputeAgent> T getLeastUsedDisputeAgent(TradeStatisticsManager tradeStatisticsManager,
                                                                        DisputeAgentManager<T> disputeAgentManager,
                                                                        String extraMapKey) {

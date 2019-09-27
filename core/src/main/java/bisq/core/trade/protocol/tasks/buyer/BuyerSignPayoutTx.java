@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -38,10 +38,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsMakerSignPayoutTx extends TradeTask {
+public class BuyerSignPayoutTx extends TradeTask {
 
     @SuppressWarnings({"unused"})
-    public BuyerAsMakerSignPayoutTx(TaskRunner taskHandler, Trade trade) {
+    public BuyerSignPayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -69,7 +69,7 @@ public class BuyerAsMakerSignPayoutTx extends TradeTask {
             checkArgument(Arrays.equals(buyerMultiSigPubKey,
                     walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG).getPubKey()),
                     "buyerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
-            final byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
+            byte[] sellerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
 
             byte[] payoutTxSignature = processModel.getTradeWalletService().buyerSignsPayoutTx(
                     trade.getDepositTx(),
@@ -79,8 +79,7 @@ public class BuyerAsMakerSignPayoutTx extends TradeTask {
                     sellerPayoutAddressString,
                     buyerMultiSigKeyPair,
                     buyerMultiSigPubKey,
-                    sellerMultiSigPubKey,
-                    trade.getArbitratorBtcPubKey());
+                    sellerMultiSigPubKey);
             processModel.setPayoutTxSignature(payoutTxSignature);
 
             complete();

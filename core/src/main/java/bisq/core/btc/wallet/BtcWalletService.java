@@ -1114,4 +1114,55 @@ public class BtcWalletService extends WalletService {
     protected boolean isDustAttackUtxo(TransactionOutput output) {
         return output.getValue().value < preferences.getIgnoreDustThreshold();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Refund payoutTx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createRefundPayoutTx(Coin buyerAmount,
+                                            Coin sellerAmount,
+                                            Coin fee,
+                                            String buyerAddressString,
+                                            String sellerAddressString)
+            throws AddressFormatException, InsufficientMoneyException, WalletException, TransactionVerificationException {
+        Transaction tx = new Transaction(params);
+        Preconditions.checkArgument(buyerAmount.add(sellerAmount).isPositive(),
+                "The sellerAmount + buyerAmount must be positive.");
+        // buyerAmount can be 0
+        if (buyerAmount.isPositive()) {
+            Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
+                    "The buyerAmount is too low (dust limit).");
+
+            tx.addOutput(buyerAmount, Address.fromBase58(params, buyerAddressString));
+        }
+        // sellerAmount can be 0
+        if (sellerAmount.isPositive()) {
+            Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
+                    "The sellerAmount is too low (dust limit).");
+
+            tx.addOutput(sellerAmount, Address.fromBase58(params, sellerAddressString));
+        }
+
+        SendRequest sendRequest = SendRequest.forTx(tx);
+        sendRequest.fee = fee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+        sendRequest.aesKey = aesKey;
+        sendRequest.shuffleOutputs = false;
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        sendRequest.changeAddress = getFreshAddressEntry().getAddress();
+
+        checkNotNull(wallet);
+        wallet.completeTx(sendRequest);
+
+        Transaction resultTx = sendRequest.tx;
+        checkWalletConsistency(wallet);
+        verifyTransaction(resultTx);
+
+        WalletService.printTx("createRefundPayoutTx", resultTx);
+
+        return resultTx;
+    }
 }

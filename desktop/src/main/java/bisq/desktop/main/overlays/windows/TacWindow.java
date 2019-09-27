@@ -52,13 +52,12 @@ public class TacWindow extends Overlay<TacWindow> {
             this.width = primaryScreenBoundsWidth * 0.8;
             log.warn("Very small screen: primaryScreenBounds=" + primaryScreenBounds.toString());
         } else {
-            width = 968;
+            width = 1100;
         }
     }
 
     @Override
     public void show() {
-        //noinspection ConstantConditions
         headLine(Res.get("tacWindow.headline"));
 
         // We do not translate the tacs because of the legal nature. We would need translations checked by lawyers
@@ -88,15 +87,20 @@ public class TacWindow extends Overlay<TacWindow> {
                 "    - You must complete trades within the maximum duration specified for each payment method.\n" +
                 "    - You must enter the trade ID in the \"reason for payment\" text field when doing the fiat payment transfer.\n" +
                 "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
-                "    - You must cooperate with the arbitrator during the arbitration process.\n" +
-                "    - You must reply within 48 hours to each arbitrator inquiry.\n" +
+                "    - You must cooperate with the mediator during the mediation process.\n" +
+                "    - You must reply within 48 hours to each mediator inquiry.\n" +
+                "    - If mediation does not lead to a payout by consensus of both traders the traders can open arbitration after 2 weeks.\n" +
+                "    - Opening a refund request from arbitrators will trigger publishing the delayed payout transaction where the funds from the deposit transaction are sent to the Bisq DAO receiver address as collateral. The arbitrator will refund the traders according to his judgement.\n" +
+                "    - Opening a refund request from arbitrators should be used only if the trade peer is not reacting or the trader considers the mediators suggested payout as unfair. " +
+                "If the arbitrator comes to the same conclusion as the mediator he will take a part of the payout from the trader who opened the dispute for covering his efforts.\n" +
+                "    - The arbitrator will make a reimbursement request to the Bisq DAO to get refunded for the funds he paid out to traders in refund requests.\n" +
                 "    - Failure to follow the above requirements may result in loss of your security deposit.\n\n" +
                 "For more details and a general overview please read the full documentation about the " +
                 "arbitration system and the dispute process.";
         message(text);
         actionButtonText(Res.get("tacWindow.agree"));
         closeButtonText(Res.get("tacWindow.disagree"));
-        onClose(BisqApp.getShutDownHandler()::run);
+        onClose(BisqApp.getShutDownHandler());
 
         super.show();
     }

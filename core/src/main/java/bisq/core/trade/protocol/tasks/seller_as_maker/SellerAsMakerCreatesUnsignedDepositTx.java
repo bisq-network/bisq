@@ -42,9 +42,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
+public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
     @SuppressWarnings({"unused"})
-    public SellerAsMakerCreatesAndSignsDepositTx(TaskRunner taskHandler, Trade trade) {
+    public SellerAsMakerCreatesUnsignedDepositTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -57,44 +57,39 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
             TradingPeer tradingPeer = processModel.getTradingPeer();
-            final Offer offer = trade.getOffer();
+            Offer offer = checkNotNull(trade.getOffer());
 
             // params
-            final boolean makerIsBuyer = false;
-
-            final byte[] contractHash = Hash.getSha256Hash(trade.getContractAsJson());
+            byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
             trade.setContractHash(contractHash);
             log.debug("\n\n------------------------------------------------------------\n"
                     + "Contract as json\n"
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");
 
-            final Coin makerInputAmount = offer.getSellerSecurityDeposit().add(trade.getTradeAmount());
+            Coin makerInputAmount = offer.getSellerSecurityDeposit().add(trade.getTradeAmount());
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry makerMultiSigAddressEntry = addressEntryOptional.get();
             makerMultiSigAddressEntry.setCoinLockedInMultiSig(makerInputAmount);
             walletService.saveAddressEntryList();
 
-            final Coin msOutputAmount = makerInputAmount
+            Coin msOutputAmount = makerInputAmount
                     .add(trade.getTxFee())
                     .add(offer.getBuyerSecurityDeposit());
 
-            final List<RawTransactionInput> takerRawTransactionInputs = tradingPeer.getRawTransactionInputs();
-            final long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
-            final String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
-            final Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
-            final Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
-            final byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
-            final byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
+            List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());
+            long takerChangeOutputValue = tradingPeer.getChangeOutputValue();
+            String takerChangeAddressString = tradingPeer.getChangeOutputAddress();
+            Address makerAddress = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.RESERVED_FOR_TRADE).getAddress();
+            Address makerChangeAddress = walletService.getFreshAddressEntry().getAddress();
+            byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();
+            byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
             checkArgument(Arrays.equals(sellerPubKey,
                     makerMultiSigAddressEntry.getPubKey()),
                     "sellerPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
 
-            final byte[] arbitratorBtcPubKey = trade.getArbitratorBtcPubKey();
-
-            PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().makerCreatesAndSignsDepositTx(
-                    makerIsBuyer,
+            PreparedDepositTxAndMakerInputs result = processModel.getTradeWalletService().sellerAsMakerCreatesDepositTx(
                     contractHash,
                     makerInputAmount,
                     msOutputAmount,
@@ -104,8 +99,7 @@ public class SellerAsMakerCreatesAndSignsDepositTx extends TradeTask {
                     makerAddress,
                     makerChangeAddress,
                     buyerPubKey,
-                    sellerPubKey,
-                    arbitratorBtcPubKey);
+                    sellerPubKey);
 
             processModel.setPreparedDepositTx(result.depositTransaction);
             processModel.setRawTransactionInputs(result.rawMakerInputs);

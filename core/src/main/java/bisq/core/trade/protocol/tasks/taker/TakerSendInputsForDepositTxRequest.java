@@ -21,7 +21,7 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.Trade;
-import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.user.User;
 
@@ -45,9 +45,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class TakerSendPayDepositRequest extends TradeTask {
+public class TakerSendInputsForDepositTxRequest extends TradeTask {
     @SuppressWarnings({"unused"})
-    public TakerSendPayDepositRequest(TaskRunner taskHandler, Trade trade) {
+    public TakerSendInputsForDepositTxRequest(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -61,8 +61,10 @@ public class TakerSendPayDepositRequest extends TradeTask {
             checkNotNull(user, "User must not be null");
             final List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
             final List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
-            checkNotNull(acceptedArbitratorAddresses, "acceptedArbitratorAddresses must not be null");
+            final List<NodeAddress> acceptedRefundAgentAddresses = user.getAcceptedRefundAgentAddresses();
+            // We don't check for arbitrators as they should vanish soon
             checkNotNull(acceptedMediatorAddresses, "acceptedMediatorAddresses must not be null");
+            // We also don't check for refund agents yet as we don't want to restict us too much. They are not mandatory.
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
@@ -85,7 +87,7 @@ public class TakerSendPayDepositRequest extends TradeTask {
             final PaymentAccountPayload paymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade), "processModel.getPaymentAccountPayload(trade) must not be null");
             byte[] sig = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), offerId.getBytes(Charsets.UTF_8));
 
-            PayDepositRequest message = new PayDepositRequest(
+            InputsForDepositTxRequest message = new InputsForDepositTxRequest(
                     offerId,
                     processModel.getMyNodeAddress(),
                     trade.getTradeAmount().value,
@@ -102,10 +104,12 @@ public class TakerSendPayDepositRequest extends TradeTask {
                     paymentAccountPayload,
                     processModel.getAccountId(),
                     trade.getTakerFeeTxId(),
-                    new ArrayList<>(acceptedArbitratorAddresses),
+                    acceptedArbitratorAddresses == null ? new ArrayList<>() : new ArrayList<>(acceptedArbitratorAddresses),
                     new ArrayList<>(acceptedMediatorAddresses),
+                    acceptedRefundAgentAddresses == null ? new ArrayList<>() : new ArrayList<>(acceptedRefundAgentAddresses),
                     trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
+                    trade.getRefundAgentNodeAddress(),
                     UUID.randomUUID().toString(),
                     Version.getP2PMessageVersion(),
                     sig,

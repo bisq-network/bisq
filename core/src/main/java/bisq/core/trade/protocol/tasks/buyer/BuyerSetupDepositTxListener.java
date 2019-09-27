@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.tasks.maker;
+package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -39,13 +39,13 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class MakerSetupDepositTxListener extends TradeTask {
+public class BuyerSetupDepositTxListener extends TradeTask {
     // Use instance fields to not get eaten up by the GC
     private Subscription tradeStateSubscription;
     private AddressConfidenceListener confidenceListener;
 
     @SuppressWarnings({"unused"})
-    public MakerSetupDepositTxListener(TaskRunner taskHandler, Trade trade) {
+    public BuyerSetupDepositTxListener(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -94,9 +94,9 @@ public class MakerSetupDepositTxListener extends TradeTask {
     private void applyConfidence(TransactionConfidence confidence) {
         if (trade.getDepositTx() == null) {
             Transaction walletTx = processModel.getTradeWalletService().getWalletTx(confidence.getTransactionHash());
-            trade.setDepositTx(walletTx);
+            trade.applyDepositTx(walletTx);
             BtcWalletService.printTx("depositTx received from network", walletTx);
-            trade.setState(Trade.State.MAKER_SAW_DEPOSIT_TX_IN_NETWORK);
+            trade.setState(Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK);
         } else {
             log.info("We got the deposit tx already set from MakerProcessDepositTxPublishedMessage.  tradeId={}, state={}", trade.getId(), trade.getState());
         }

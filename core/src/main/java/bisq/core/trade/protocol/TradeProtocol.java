@@ -21,11 +21,13 @@ import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
+import bisq.core.trade.protocol.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.mediation.BroadcastMediatedPayoutTx;
 import bisq.core.trade.protocol.tasks.mediation.FinalizeMediatedPayoutTx;
 import bisq.core.trade.protocol.tasks.mediation.ProcessMediatedPayoutSignatureMessage;
@@ -59,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.core.util.Validator.nonEmptyStringOf;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class TradeProtocol {
@@ -80,13 +83,13 @@ public abstract class TradeProtocol {
             PublicKey signaturePubKey = decryptedMessageWithPubKey.getSignaturePubKey();
             if (tradingPeerPubKeyRing != null && signaturePubKey.equals(tradingPeerPubKeyRing.getSignaturePubKey())) {
                 NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-                log.trace("handleNewMessage: message = {} from {}", networkEnvelope.getClass().getSimpleName(), peersNodeAddress);
                 if (networkEnvelope instanceof TradeMessage) {
                     TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
                     nonEmptyStringOf(tradeMessage.getTradeId());
 
-                    if (tradeMessage.getTradeId().equals(processModel.getOfferId()))
+                    if (tradeMessage.getTradeId().equals(processModel.getOfferId())) {
                         doHandleDecryptedMessage(tradeMessage, peersNodeAddress);
+                    }
                 } else if (networkEnvelope instanceof AckMessage) {
                     AckMessage ackMessage = (AckMessage) networkEnvelope;
                     if (ackMessage.getSourceType() == AckMessageSourceType.TRADE_MESSAGE &&
@@ -110,7 +113,7 @@ public abstract class TradeProtocol {
 
         stateChangeListener = (observable, oldValue, newValue) -> {
             if (newValue.getPhase() == Trade.Phase.TAKER_FEE_PUBLISHED && trade instanceof MakerTrade)
-                processModel.getOpenOfferManager().closeOpenOffer(trade.getOffer());
+                processModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
         };
         trade.stateProperty().addListener(stateChangeListener);
     }
@@ -207,6 +210,26 @@ public abstract class TradeProtocol {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Peer has published the delayed payout tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void handle(PeerPublishedDelayedPayoutTxMessage tradeMessage, NodeAddress sender) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(sender);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                () -> handleTaskRunnerSuccess(tradeMessage, "PeerPublishedDelayedPayoutTxMessage"),
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+
+        taskRunner.addTasks(
+                //todo
+                ProcessPeerPublishedDelayedPayoutTxMessage.class
+        );
+        taskRunner.run();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -215,6 +238,8 @@ public abstract class TradeProtocol {
             handle((MediatedPayoutTxSignatureMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
             handle((MediatedPayoutTxPublishedMessage) tradeMessage, sender);
+        } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
+            handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, sender);
         }
     }
 
@@ -225,10 +250,6 @@ public abstract class TradeProtocol {
 
     public void completed() {
         cleanup();
-
-        // We only removed earlier the listener here, but then we migth have dangling trades after faults...
-        // so lets remove it at cleanup
-        //processModel.getP2PService().removeDecryptedDirectMessageListener(decryptedDirectMessageListener);
     }
 
     private void cleanup() {
@@ -241,28 +262,33 @@ public abstract class TradeProtocol {
 
     public void applyMailboxMessage(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         NetworkEnvelope networkEnvelope = decryptedMessageWithPubKey.getNetworkEnvelope();
-        log.debug("applyMailboxMessage {}", networkEnvelope);
         if (processModel.getTradingPeer().getPubKeyRing() != null &&
                 decryptedMessageWithPubKey.getSignaturePubKey().equals(processModel.getTradingPeer().getPubKeyRing().getSignaturePubKey())) {
             processModel.setDecryptedMessageWithPubKey(decryptedMessageWithPubKey);
-            doApplyMailboxMessage(networkEnvelope, trade);
 
-            // This is just a quick fix for the missing handling of the mediation MailboxMessages.
-            // With the new trade protocol that will be refactored further with using doApplyMailboxMessage...
             if (networkEnvelope instanceof MailboxMessage && networkEnvelope instanceof TradeMessage) {
-                NodeAddress sender = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-                if (networkEnvelope instanceof MediatedPayoutTxSignatureMessage) {
-                    handle((MediatedPayoutTxSignatureMessage) networkEnvelope, sender);
-                } else if (networkEnvelope instanceof MediatedPayoutTxPublishedMessage) {
-                    handle((MediatedPayoutTxPublishedMessage) networkEnvelope, sender);
-                }
+                this.trade = trade;
+                TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
+                NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
+                doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
             }
         } else {
             log.error("SignaturePubKey in message does not match the SignaturePubKey we have stored to that trading peer.");
         }
     }
 
-    protected abstract void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade);
+    protected void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+        log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
+                tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
+
+        if (tradeMessage instanceof MediatedPayoutTxSignatureMessage) {
+            handle((MediatedPayoutTxSignatureMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof MediatedPayoutTxPublishedMessage) {
+            handle((MediatedPayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PeerPublishedDelayedPayoutTxMessage) {
+            handle((PeerPublishedDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
+        }
+    }
 
     protected void startTimeout() {
         stopTimeout();
@@ -318,7 +344,7 @@ public abstract class TradeProtocol {
             sourceUid = ((MailboxMessage) tradeMessage).getUid();
         } else {
             // For direct msg we don't have a mandatory uid so we need to cast to get it
-            if (tradeMessage instanceof PayDepositRequest) {
+            if (tradeMessage instanceof InputsForDepositTxRequest) {
                 sourceUid = tradeMessage.getUid();
             }
         }
