@@ -759,7 +759,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     boolean exceeds;
                     if (networkEnvelope instanceof ExtendedDataSizePermission) {
                         exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
-                        log.warn("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
                     } else {
                         exceeds = size > PERMITTED_MESSAGE_SIZE;
                     }
