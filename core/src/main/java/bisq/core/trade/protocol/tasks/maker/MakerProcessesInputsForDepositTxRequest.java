@@ -72,8 +72,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             tradingPeer.setAccountId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerAccountId()));
             trade.setTakerFeeTxId(nonEmptyStringOf(inputsForDepositTxRequest.getTakerFeeTxId()));
-            if (inputsForDepositTxRequest.getAcceptedArbitratorNodeAddresses().isEmpty())
-                failed("acceptedArbitratorNodeAddresses must not be empty");
 
             // Taker has to sign offerId (he cannot manipulate that - so we avoid to have a challenge protocol for passing the nonce we want to get signed)
             tradingPeer.setAccountAgeWitnessNonce(trade.getId().getBytes(Charsets.UTF_8));
@@ -82,15 +80,17 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             User user = checkNotNull(processModel.getUser(), "User must not be null");
 
-            NodeAddress arbitratorNodeAddress = checkNotNull(inputsForDepositTxRequest.getArbitratorNodeAddress(),
-                    "payDepositRequest.getArbitratorNodeAddress() must not be null");
-            trade.setArbitratorNodeAddress(arbitratorNodeAddress);
-            Arbitrator arbitrator = checkNotNull(user.getAcceptedArbitratorByAddress(arbitratorNodeAddress),
-                    "user.getAcceptedArbitratorByAddress(arbitratorNodeAddress) must not be null");
-            trade.setArbitratorBtcPubKey(checkNotNull(arbitrator.getBtcPubKey(),
-                    "arbitrator.getBtcPubKey() must not be null"));
-            trade.setArbitratorPubKeyRing(checkNotNull(arbitrator.getPubKeyRing(),
-                    "arbitrator.getPubKeyRing() must not be null"));
+            NodeAddress arbitratorNodeAddress = inputsForDepositTxRequest.getArbitratorNodeAddress();
+            if (arbitratorNodeAddress != null) {
+                trade.setArbitratorNodeAddress(arbitratorNodeAddress);
+                Arbitrator arbitrator = user.getAcceptedArbitratorByAddress(arbitratorNodeAddress);
+                if (arbitrator != null) {
+                    trade.setArbitratorBtcPubKey(checkNotNull(arbitrator.getBtcPubKey(),
+                            "arbitrator.getBtcPubKey() must not be null"));
+                    trade.setArbitratorPubKeyRing(checkNotNull(arbitrator.getPubKeyRing(),
+                            "arbitrator.getPubKeyRing() must not be null"));
+                }
+            }
 
             NodeAddress mediatorNodeAddress = checkNotNull(inputsForDepositTxRequest.getMediatorNodeAddress(),
                     "payDepositRequest.getMediatorNodeAddress() must not be null");

@@ -79,7 +79,6 @@ public class MakerCreateAndSignContract extends TradeTask {
                     trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,
-                    trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     processModel.getAccountId(),

@@ -66,6 +66,8 @@ import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -122,9 +124,10 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         }
     }
 
+    @Nullable
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
-        return dispute.getContract().getArbitratorNodeAddress();
+        return null;
     }
 
     @Override

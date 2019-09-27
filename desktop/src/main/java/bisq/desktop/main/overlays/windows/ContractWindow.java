@@ -39,6 +39,8 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 
@@ -204,8 +206,12 @@ public class ContractWindow extends Overlay<ContractWindow> {
             }
         }
 
-        String agentNodeAddress = disputeManager != null ? disputeManager.getAgentNodeAddress(dispute).getFullAddress() : "";
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress);
+        if (disputeManager != null) {
+            NodeAddress agentNodeAddress = disputeManager.getAgentNodeAddress(dispute);
+            if (agentNodeAddress != null) {
+                addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress.getFullAddress());
+            }
+        }
 
         if (showAcceptedCountryCodes) {
             String countries;
