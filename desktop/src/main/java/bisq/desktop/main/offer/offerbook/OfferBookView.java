@@ -1079,13 +1079,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                         daysSinceSigning);
                             } else {
-
-                                //TODO sqrrm: Here we need two states:
-                                // - not signing necessary for this payment account
-                                // - signing required and not signed
-                                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
-                                info = Res.get("shared.notSigned");
-                                timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
+                                boolean needsSigning = PaymentMethod.hasChargebackRisk(
+                                        item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
+                                if (needsSigning) {
+                                    icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                                    info = Res.get("shared.notSigned");
+                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
+                                } else {
+                                    icon = MaterialDesignIcon.INFORMATION_OUTLINE;
+                                    info = Res.get("shared.notSigned.noNeed");
+                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned.noNeed");
+                                }
                             }
 
                             InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(timeSinceSigning, icon, ContentDisplay.RIGHT, info);
