@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
@@ -601,8 +602,9 @@ public class TradeManager implements PersistedDataHost {
                 btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
                 // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
 
-                tradeWalletService.addTxToWallet(delayedPayoutTx);
-                tradeWalletService.broadcastTx(delayedPayoutTx, new TxBroadcaster.Callback() {
+                Transaction committedDelayedPayoutTx = WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, btcWalletService.getWallet());
+
+                tradeWalletService.broadcastTx(committedDelayedPayoutTx, new TxBroadcaster.Callback() {
                     @Override
                     public void onSuccess(Transaction transaction) {
                         log.info("publishDelayedPayoutTx onSuccess " + transaction);

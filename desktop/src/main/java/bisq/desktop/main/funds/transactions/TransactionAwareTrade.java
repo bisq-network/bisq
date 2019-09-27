@@ -30,6 +30,7 @@ import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import javafx.collections.ObservableList;
 
@@ -114,21 +115,28 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                 });
     }
 
-    private boolean isDelayedPayoutTx(String txId) {
-        String delegateId = trade.getId();
+    boolean isDelayedPayoutTx(String txId) {
+        Transaction transaction = btcWalletService.getTransaction(txId);
+        if (transaction == null)
+            return false;
 
-        ObservableList<Dispute> disputes = refundManager.getDisputesAsObservableList();
-        return disputes.stream()
-                .anyMatch(dispute -> {
-                    Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
-                    if (delayedPayoutTx != null) {
-                        boolean isDelayedPayoutTx = txId.equals(delayedPayoutTx.getHashAsString());
-                        String disputeTradeId = dispute.getTradeId();
-                        boolean isDisputeRelatedToThis = delegateId.equals(disputeTradeId);
-                        return isDelayedPayoutTx && isDisputeRelatedToThis;
-                    } else {
+        if (transaction.getLockTime() == 0)
+            return false;
+
+        if (transaction.getInputs() == null)
+            return false;
+
+        return transaction.getInputs().stream()
+                .anyMatch(input -> {
+                    TransactionOutput connectedOutput = input.getConnectedOutput();
+                    if (connectedOutput == null) {
                         return false;
                     }
+                    Transaction parentTransaction = connectedOutput.getParentTransaction();
+                    if (parentTransaction == null) {
+                        return false;
+                    }
+                    return isDepositTx(parentTransaction.getHashAsString());
                 });
     }
 

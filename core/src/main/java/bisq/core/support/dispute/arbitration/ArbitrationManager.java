@@ -24,6 +24,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -251,7 +252,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
                                 contract.getSellerMultiSigPubKey(),
                                 disputeResult.getArbitratorPubKey()
                         );
-                        Transaction committedDisputedPayoutTx = tradeWalletService.addTxToWallet(signedDisputedPayoutTx);
+                        Transaction committedDisputedPayoutTx = WalletService.maybeAddSelfTxToWallet(signedDisputedPayoutTx, btcWalletService.getWallet());
                         tradeWalletService.broadcastTx(committedDisputedPayoutTx, new TxBroadcaster.Callback() {
                             @Override
                             public void onSuccess(Transaction transaction) {
@@ -336,9 +337,11 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         PubKeyRing peersPubKeyRing = isBuyer ? contract.getSellerPubKeyRing() : contract.getBuyerPubKeyRing();
 
         cleanupRetryMap(uid);
-        Transaction walletTx = tradeWalletService.addTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction());
-        dispute.setDisputePayoutTxId(walletTx.getHashAsString());
-        BtcWalletService.printTx("Disputed payoutTx received from peer", walletTx);
+
+        Transaction committedDisputePayoutTx = WalletService.maybeAddNetworkTxToWallet(peerPublishedDisputePayoutTxMessage.getTransaction(), btcWalletService.getWallet());
+
+        dispute.setDisputePayoutTxId(committedDisputePayoutTx.getHashAsString());
+        BtcWalletService.printTx("Disputed payoutTx received from peer", committedDisputePayoutTx);
 
         // We can only send the ack msg if we have the peersPubKeyRing which requires the dispute
         sendAckMessage(peerPublishedDisputePayoutTxMessage, peersPubKeyRing, true, null);

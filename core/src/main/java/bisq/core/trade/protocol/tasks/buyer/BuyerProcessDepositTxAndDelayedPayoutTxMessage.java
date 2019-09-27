@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -52,14 +53,16 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             // To access tx confidence we need to add that tx into our wallet.
             Transaction depositTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTx());
             // update with full tx
-            Transaction depositTxWalletTx = processModel.getTradeWalletService().addTxToWallet(depositTx);
-            trade.applyDepositTx(depositTxWalletTx);
-            BtcWalletService.printTx("depositTx received from peer", depositTxWalletTx);
+            Transaction committedDepositTx = WalletService.maybeAddSelfTxToWallet(depositTx, processModel.getBtcWalletService().getWallet());
+            trade.applyDepositTx(committedDepositTx);
+            BtcWalletService.printTx("depositTx received from peer", committedDepositTx);
 
             // To access tx confidence we need to add that tx into our wallet.
             Transaction delayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDelayedPayoutTx());
             trade.applyDelayedPayoutTx(delayedPayoutTx);
             BtcWalletService.printTx("delayedPayoutTx received from peer", delayedPayoutTx);
+
+            WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, processModel.getBtcWalletService().getWallet());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

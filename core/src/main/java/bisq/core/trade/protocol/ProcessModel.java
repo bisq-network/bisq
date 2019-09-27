@@ -108,7 +108,9 @@ public class ProcessModel implements Model, PersistablePayload {
     @Setter
     @Nullable
     transient private byte[] delayedPayoutTxSignature;
-
+    @Setter
+    @Nullable
+    transient private Transaction preparedDelayedPayoutTx;
 
     // Persistable Immutable (private setter only used by PB method)
     private TradingPeer tradingPeer = new TradingPeer();

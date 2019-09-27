@@ -46,11 +46,12 @@ public class SellerSendDelayedPayoutTxSignatureRequest extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
+            Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx(),
+                    "processModel.getPreparedDelayedPayoutTx() must not be null");
             DelayedPayoutTxSignatureRequest message = new DelayedPayoutTxSignatureRequest(UUID.randomUUID().toString(),
                     processModel.getOfferId(),
                     processModel.getMyNodeAddress(),
-                    delayedPayoutTx.bitcoinSerialize());
+                    preparedDelayedPayoutTx.bitcoinSerialize());
 
             // todo trade.setState
 
