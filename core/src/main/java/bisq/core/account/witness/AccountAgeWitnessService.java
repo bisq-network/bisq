@@ -584,6 +584,8 @@ public class AccountAgeWitnessService {
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)
                 .flatMap(this::getTraderData)
+                .filter(traderDataItem ->
+                        !signedWitnessService.isValidAccountAgeWitness(traderDataItem.getAccountAgeWitness()))
                 .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
                 .distinct()
                 .collect(Collectors.toList());
