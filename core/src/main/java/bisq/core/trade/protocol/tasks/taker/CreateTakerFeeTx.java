@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.trade.Trade;
@@ -68,6 +69,7 @@ public class CreateTakerFeeTx extends TradeTask {
             Address changeAddress = changeAddressEntry.getAddress();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction transaction;
+            String feeReceiver = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
             if (trade.isCurrencyForTakerFeeBtc()) {
                 transaction = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
@@ -77,7 +79,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
                         trade.getTxFee(),
-                        arbitrator.getBtcAddress(),
+                        feeReceiver,
                         false,
                         null);
             } else {

@@ -20,6 +20,7 @@ package bisq.core.offer;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
@@ -107,6 +108,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
+    private final DaoFacade daoFacade;
     private final Storage<TradableList<OpenOffer>> openOfferTradableListStorage;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private boolean stopped;
@@ -133,6 +135,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             ArbitratorManager arbitratorManager,
                             MediatorManager mediatorManager,
                             RefundAgentManager refundAgentManager,
+                            DaoFacade daoFacade,
                             Storage<TradableList<OpenOffer>> storage) {
         this.keyRing = keyRing;
         this.user = user;
@@ -148,6 +151,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
+        this.daoFacade = daoFacade;
 
         openOfferTradableListStorage = storage;
 
@@ -344,6 +348,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 offerBookService,
                 arbitratorManager,
                 tradeStatisticsManager,
+                daoFacade,
                 user);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
                 model,
