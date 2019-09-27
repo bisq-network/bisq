@@ -135,6 +135,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
             rows++;
+        if (dispute.getDelayedPayoutTxId() != null)
+            rows++;
         if (showAcceptedCountryCodes)
             rows++;
         if (showAcceptedBanks)
@@ -232,8 +234,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.getTakerFeeTxID());
+
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), dispute.getDepositTxId());
+
+        if (dispute.getDelayedPayoutTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
+
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
 

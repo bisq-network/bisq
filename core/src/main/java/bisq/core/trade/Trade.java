@@ -652,7 +652,6 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public void applyDepositTx(Transaction tx) {
-        log.debug("setDepositTx " + tx);
         this.depositTx = tx;
         depositTxId = depositTx.getHashAsString();
         setupConfidenceListener();

@@ -414,8 +414,6 @@ public abstract class TradeStepView extends AnchorPane {
                 });
                 break;
             case MEDIATION_CLOSED:
-                deactivatePaymentButtons(true);
-
                 if (tradeStepInfo != null) {
                     tradeStepInfo.setOnAction(e -> {
                         updateMediationResultState();

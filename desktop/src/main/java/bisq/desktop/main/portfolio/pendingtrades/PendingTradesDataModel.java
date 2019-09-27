@@ -616,6 +616,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         }
                     });
 
+            dispute.setDelayedPayoutTxId(trade.getDelayedPayoutTx().getHashAsString());
+
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
 
             //todo add UI spinner as it can take a bit if peer is offline

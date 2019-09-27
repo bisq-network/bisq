@@ -481,6 +481,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.getAgentPubKeyRing(),
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.getSupportType());
+        dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
+
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
             String disputeInfo = getDisputeInfo(dispute);
