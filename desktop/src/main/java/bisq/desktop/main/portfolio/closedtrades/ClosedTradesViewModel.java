@@ -20,10 +20,12 @@ package bisq.desktop.main.portfolio.closedtrades;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
-
+import bisq.common.crypto.KeyRing;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.BSFormatter;
@@ -37,13 +39,16 @@ import java.util.stream.Collectors;
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     private final BSFormatter formatter;
     final AccountAgeWitnessService accountAgeWitnessService;
+	final private KeyRing keyRing;
 
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
-                                 AccountAgeWitnessService accountAgeWitnessService,
+                                 AccountAgeWitnessService accountAgeWitnessService, 
+                                 KeyRing keyRing,
                                  BSFormatter formatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.keyRing = keyRing;
         this.formatter = formatter;
     }
 
@@ -83,24 +88,36 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
     }
 
-    String getTxFee(ClosedTradableListItem item) {
+    String getMakerMiningFee(ClosedTradableListItem item) {
         if (item == null)
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatCoin(((Trade) tradable).getTxFee());
+            return formatter.formatCoin(((Trade) tradable).getOffer().getTxFee());
         else
             return formatter.formatCoin(tradable.getOffer().getTxFee());
     }
 
-    String getMakerFee(ClosedTradableListItem item) {
+    String getTakerMiningFee(ClosedTradableListItem item) {
         if (item == null)
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatCoin(((Trade) tradable).getTakerFee());
+            return formatter.formatCoin(((Trade) tradable).getOffer().getTxFee().multiply(3L));
         else
-            return formatter.formatCoin(tradable.getOffer().getMakerFee());
+            return formatter.formatCoin(tradable.getOffer().getTxFee().multiply(3L));
+    }
+
+    String getMakerTradingFee(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        return formatter.formatCoin(FeeService.getMakerFeePerBtc(true));
+    }
+
+    String getTakerTradingFee(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        return formatter.formatCoin(FeeService.getTakerFeePerBtc(true));
     }
 
     String getBuyerSecurityDeposit(ClosedTradableListItem item) {
@@ -122,9 +139,28 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         else
             return "";
     }
+    
+    String isBuyerMakerAndSellerTaker(ClosedTradableListItem item) {
+        if (item == null)
+            return "";
+        Tradable tradable = item.getTradable();
+        boolean flag = false;
+        String result = "";
+        if (tradable.getOffer() != null) {
+            flag = tradable.getOffer().isMyOffer(keyRing);
+            return flag ? Res.get("shared.maker", tradable.getOffer().getCurrencyCode()) : Res.get("shared.taker", tradable.getOffer().getCurrencyCode());
+        }
+        else {
+            return "";
+        }
+    }
 
     String getDirectionLabel(ClosedTradableListItem item) {
-        return (item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
+    	if (item == null) {
+    		return "";
+    	} else {
+            return isBuyerMakerAndSellerTaker(item) + " " + ((item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "");
+    	}
     }
 
     String getDate(ClosedTradableListItem item) {
