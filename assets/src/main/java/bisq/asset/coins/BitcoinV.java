@@ -23,17 +23,9 @@ import bisq.asset.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.params.MainNetParams;
 
-public abstract class BitcoinV extends Coin {
+public class BitcoinV extends Coin {
 
     public BitcoinV(Network network, NetworkParameters networkParameters) {
-        super("BitcoinV", "BTCV", new Base58BitcoinAddressValidator(networkParameters), network);
+        super("BitcoinV", "BTCV", new Base58BitcoinAddressValidator(MainNetParams.get()), Network.MAINNET);
     }
-
-    public static class Mainnet extends BitcoinV {
-
-        public Mainnet() {
-            super(Network.MAINNET, MainNetParams.get());
-        }
-    }
-
 }
