@@ -25,7 +25,7 @@ import org.bitcoinj.params.MainNetParams;
 
 public class BitcoinV extends Coin {
 
-    public BitcoinV(Network network, NetworkParameters networkParameters) {
+    public BitcoinV() {
         super("BitcoinV", "BTCV", new Base58BitcoinAddressValidator(MainNetParams.get()), Network.MAINNET);
     }
 }
