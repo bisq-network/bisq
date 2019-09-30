@@ -20,6 +20,7 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferRestrictions;
@@ -77,6 +78,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
+    // TODO: Change to March, 1, 2019 before release
     private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 1).getTime();
 
     public enum AccountAge {
@@ -85,6 +87,25 @@ public class AccountAgeWitnessService {
         ONE_TO_TWO_MONTHS,
         TWO_MONTHS_OR_MORE
     }
+
+    public enum SignState {
+        UNSIGNED(Res.get("offerbook.timeSinceSigning.notSigned")),
+        ARBITRATOR(Res.get("offerbook.timeSinceSigning.info.arbitrator")),
+        PEER_INITIAL(Res.get("offerbook.timeSinceSigning.info.peer")),
+        PEER_LIMIT_LIFTED(Res.get("offerbook.timeSinceSigning.info.peerLimitLifted")),
+        PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer"));
+
+        private String presentation;
+
+        SignState(String presentation) {
+            this.presentation = presentation;
+        }
+
+        public String getPresentation() {
+            return presentation;
+        }
+
+        }
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
@@ -238,6 +259,12 @@ public class AccountAgeWitnessService {
                 .orElse(-1L);
     }
 
+    public long getAccountAge(Offer offer) {
+        return findWitness(offer)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Signed age
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -293,12 +320,18 @@ public class AccountAgeWitnessService {
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
                                AccountAge accountAgeCategory,
-                               OfferPayload.Direction direction) {
+                               OfferPayload.Direction direction,
+                               PaymentMethod paymentMethod) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
-
+            boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
+            if (!isRisky) {
+                // Get age of witness rather than time since signing for non risky payment methods
+                accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
+            }
             long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
-            if (direction == OfferPayload.Direction.BUY) {
+            if (direction == OfferPayload.Direction.BUY && isRisky) {
+                // Used only for bying of BTC with risky payment methods
                 switch (accountAgeCategory) {
                     case TWO_MONTHS_OR_MORE:
                         factor = 1;
@@ -312,6 +345,7 @@ public class AccountAgeWitnessService {
                         factor = 0;
                 }
             } else {
+                // Used by non risky payment methods and for selling BTC with risky methods
                 switch (accountAgeCategory) {
                     case TWO_MONTHS_OR_MORE:
                         factor = 1;
@@ -347,8 +381,7 @@ public class AccountAgeWitnessService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isImmature(AccountAgeWitness accountAgeWitness) {
-        return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE &&
-                getWitnessSignAge(accountAgeWitness, new Date()) < 0;
+        return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE;
     }
 
     public boolean isMyAccountAgeImmature(PaymentAccount myPaymentAccount) {
@@ -393,7 +426,8 @@ public class AccountAgeWitnessService {
                 currencyCode,
                 accountAgeWitness,
                 accountAgeCategory,
-                direction);
+                direction,
+                paymentAccount.getPaymentMethod());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -514,7 +548,7 @@ public class AccountAgeWitnessService {
             OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
                     offer.getMirroredDirection() : offer.getDirection();
             peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
-                    accountAgeCategory, direction);
+                    accountAgeCategory, direction, offer.getPaymentMethod());
         }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;
@@ -650,5 +684,30 @@ public class AccountAgeWitnessService {
             return true;
         }
         return getWitnessSignAge(accountAgeWitness, new Date()) > SignedWitnessService.SIGNER_AGE;
+    }
+
+    public SignState getSignState(Offer offer) {
+        return findWitness(offer)
+                .map(this::getSignState)
+                .orElse(SignState.UNSIGNED);
+    }
+
+    public SignState getSignState(AccountAgeWitness accountAgeWitness) {
+        if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
+            return SignState.ARBITRATOR;
+        } else {
+            final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
+            switch (getAccountAgeCategory(accountSignAge)) {
+                case TWO_MONTHS_OR_MORE:
+                    return SignState.PEER_SIGNER;
+                case ONE_TO_TWO_MONTHS:
+                    return SignState.PEER_LIMIT_LIFTED;
+                case LESS_ONE_MONTH:
+                    return SignState.PEER_INITIAL;
+                case UNVERIFIED:
+                default:
+                    return SignState.UNSIGNED;
+            }
+        }
     }
 }
