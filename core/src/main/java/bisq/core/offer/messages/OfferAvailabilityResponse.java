@@ -93,13 +93,13 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         final protobuf.OfferAvailabilityResponse.Builder builder = protobuf.OfferAvailabilityResponse.newBuilder()
                 .setOfferId(offerId)
-                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()))
-                .setArbitrator(arbitrator.toProtoMessage());
+                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()));
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
         Optional.ofNullable(mediator).ifPresent(e -> builder.setMediator(mediator.toProtoMessage()));
         Optional.ofNullable(refundAgent).ifPresent(e -> builder.setRefundAgent(refundAgent.toProtoMessage()));
+        Optional.ofNullable(arbitrator).ifPresent(e -> builder.setArbitrator(arbitrator.toProtoMessage()));
 
         return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityResponse(builder)
@@ -112,7 +112,7 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid(),
-                NodeAddress.fromProto(proto.getArbitrator()),
+                proto.hasArbitrator() ? NodeAddress.fromProto(proto.getArbitrator()) : null,
                 proto.hasMediator() ? NodeAddress.fromProto(proto.getMediator()) : null,
                 proto.hasRefundAgent() ? NodeAddress.fromProto(proto.getRefundAgent()) : null);
     }

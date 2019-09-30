@@ -113,8 +113,8 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
         updateAgentTabs();
 
         tradersMediationDisputesTab.setText(Res.get("support.tab.mediation.support").toUpperCase());
-        tradersRefundDisputesTab.setText(Res.get("support.tab.refund.support").toUpperCase());
-        tradersArbitrationDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
+        tradersRefundDisputesTab.setText(Res.get("support.tab.arbitration.support").toUpperCase());
+        tradersArbitrationDisputesTab.setText(Res.get("support.tab.legacyArbitration.support").toUpperCase());
         navigationListener = viewPath -> {
             if (viewPath.size() == 3 && viewPath.indexOf(SupportView.class) == 1)
                 loadView(viewPath.tip());

@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -45,7 +46,7 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction unsignedDelayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
+            Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
@@ -58,13 +59,14 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
             byte[] buyerSignature = processModel.getTradingPeer().getDelayedPayoutTxSignature();
             byte[] sellerSignature = processModel.getDelayedPayoutTxSignature();
 
-            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(unsignedDelayedPayoutTx,
+            Transaction signedDelayedPayoutTx = processModel.getTradeWalletService().finalizeDelayedPayoutTx(preparedDelayedPayoutTx,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey,
                     buyerSignature,
                     sellerSignature);
 
             trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
+            WalletService.maybeAddSelfTxToWallet(signedDelayedPayoutTx, processModel.getBtcWalletService().getWallet());
 
             complete();
         } catch (Throwable t) {

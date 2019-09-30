@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.tasks;
 
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.util.Validator;
@@ -51,7 +52,7 @@ public class ProcessPeerPublishedDelayedPayoutTxMessage extends TradeTask {
 
             // We add the tx to our wallet.
             Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
-            processModel.getTradeWalletService().addTxToWallet(delayedPayoutTx);
+            WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, processModel.getBtcWalletService().getWallet());
 
             // todo trade.setState
 

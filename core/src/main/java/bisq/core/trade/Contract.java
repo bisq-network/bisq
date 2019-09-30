@@ -55,7 +55,6 @@ public final class Contract implements NetworkPayload {
     private final String takerFeeTxID;
     private final NodeAddress buyerNodeAddress;
     private final NodeAddress sellerNodeAddress;
-    private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final boolean isBuyerMakerAndSellerTaker;
     private final String makerAccountId;
@@ -83,7 +82,6 @@ public final class Contract implements NetworkPayload {
                     String takerFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
-                    NodeAddress arbitratorNodeAddress,
                     NodeAddress mediatorNodeAddress,
                     boolean isBuyerMakerAndSellerTaker,
                     String makerAccountId,
@@ -104,7 +102,6 @@ public final class Contract implements NetworkPayload {
         this.takerFeeTxID = takerFeeTxID;
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
-        this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.isBuyerMakerAndSellerTaker = isBuyerMakerAndSellerTaker;
         this.makerAccountId = makerAccountId;
@@ -143,7 +140,6 @@ public final class Contract implements NetworkPayload {
                 proto.getTakerFeeTxId(),
                 NodeAddress.fromProto(proto.getBuyerNodeAddress()),
                 NodeAddress.fromProto(proto.getSellerNodeAddress()),
-                NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 proto.getIsBuyerMakerAndSellerTaker(),
                 proto.getMakerAccountId(),
@@ -169,7 +165,6 @@ public final class Contract implements NetworkPayload {
                 .setTakerFeeTxId(takerFeeTxID)
                 .setBuyerNodeAddress(buyerNodeAddress.toProtoMessage())
                 .setSellerNodeAddress(sellerNodeAddress.toProtoMessage())
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
                 .setMakerAccountId(makerAccountId)
@@ -300,7 +295,6 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerFeeTxID='" + takerFeeTxID + '\'' +
                 ",\n     buyerNodeAddress=" + buyerNodeAddress +
                 ",\n     sellerNodeAddress=" + sellerNodeAddress +
-                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     isBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +

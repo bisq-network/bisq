@@ -88,7 +88,7 @@ class TransactionsListItem {
     TransactionsListItem(Transaction transaction,
                          BtcWalletService btcWalletService,
                          BsqWalletService bsqWalletService,
-                         Optional<Tradable> tradableOptional,
+                         TransactionAwareTradable transactionAwareTradable,
                          DaoFacade daoFacade,
                          PubKeyRing pubKeyRing,
                          BSFormatter formatter,
@@ -97,6 +97,9 @@ class TransactionsListItem {
         this.formatter = formatter;
 
         txId = transaction.getHashAsString();
+
+        Optional<Tradable> optionalTradable = Optional.ofNullable(transactionAwareTradable)
+                .map(TransactionAwareTradable::asTradable);
 
         Coin valueSentToMe = btcWalletService.getValueSentToMeForTransaction(transaction);
         Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
@@ -199,41 +202,42 @@ class TransactionsListItem {
         confirmations = confidence.getDepthInBlocks();
 
 
-        if (tradableOptional.isPresent()) {
-            tradable = tradableOptional.get();
+        if (optionalTradable.isPresent()) {
+            tradable = optionalTradable.get();
             detailsAvailable = true;
-            String id = tradable.getShortId();
+            String tradeId = tradable.getShortId();
             if (tradable instanceof OpenOffer) {
-                details = Res.get("funds.tx.createOfferFee", id);
+                details = Res.get("funds.tx.createOfferFee", tradeId);
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
+                TransactionAwareTrade transactionAwareTrade = (TransactionAwareTrade) transactionAwareTradable;
                 if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().equals(txId)) {
-                    details = Res.get("funds.tx.takeOfferFee", id);
+                    details = Res.get("funds.tx.takeOfferFee", tradeId);
                 } else {
                     Offer offer = trade.getOffer();
                     String offerFeePaymentTxID = offer.getOfferFeePaymentTxId();
                     if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
-                        details = Res.get("funds.tx.createOfferFee", id);
+                        details = Res.get("funds.tx.createOfferFee", tradeId);
                     } else if (trade.getDepositTx() != null &&
                             trade.getDepositTx().getHashAsString().equals(txId)) {
-                        details = Res.get("funds.tx.multiSigDeposit", id);
+                        details = Res.get("funds.tx.multiSigDeposit", tradeId);
                     } else if (trade.getPayoutTx() != null &&
                             trade.getPayoutTx().getHashAsString().equals(txId)) {
-                        details = Res.get("funds.tx.multiSigPayout", id);
+                        details = Res.get("funds.tx.multiSigPayout", tradeId);
                     } else {
                         Trade.DisputeState disputeState = trade.getDisputeState();
                         if (disputeState == Trade.DisputeState.DISPUTE_CLOSED) {
                             if (valueSentToMe.isPositive()) {
-                                details = Res.get("funds.tx.disputePayout", id);
+                                details = Res.get("funds.tx.disputePayout", tradeId);
                             } else {
-                                details = Res.get("funds.tx.disputeLost", id);
+                                details = Res.get("funds.tx.disputeLost", tradeId);
                                 txConfidenceIndicator.setVisible(false);
                             }
                         } else if (disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUESTED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
                             if (valueSentToMe.isPositive()) {
-                                details = Res.get("funds.tx.refund", id);
+                                details = Res.get("funds.tx.refund", tradeId);
                             } else {
                                 Contract contract = trade.getContract();
                                 Coin tradeAmount = trade.getTradeAmount();
@@ -241,12 +245,17 @@ class TransactionsListItem {
                                     boolean isBuyer = contract.isMyRoleBuyer(pubKeyRing);
                                     amountAsCoin = isBuyer ? trade.getOffer().getBuyerSecurityDeposit().multiply(-1) :
                                             (trade.getOffer().getSellerSecurityDeposit().add(tradeAmount)).multiply(-1);
-                                    details = Res.get("funds.tx.collateralForRefund", id);
+                                    details = Res.get("funds.tx.collateralForRefund", tradeId);
                                     txConfidenceIndicator.setVisible(false);
                                 }
                             }
                         } else {
-                            details = Res.get("funds.tx.unknown", id);
+                            if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
+                                details = Res.get("funds.tx.timeLockedPayoutTx", tradeId);
+                                txConfidenceIndicator.setVisible(false);
+                            } else {
+                                details = Res.get("funds.tx.unknown", tradeId);
+                            }
                         }
                     }
                 }

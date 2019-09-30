@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -157,6 +159,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
     // We get that message at both peers. The dispute object is in context of the trader
     public abstract void onDisputeResultMessage(DisputeResultMessage disputeResultMessage);
 
+    @Nullable
     public abstract NodeAddress getAgentNodeAddress(Dispute dispute);
 
     protected abstract Trade.DisputeState getDisputeState_StartedByPeer();
@@ -248,13 +251,13 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
+        dispute.setStorage(disputeListService.getStorage());
         Contract contractFromOpener = dispute.getContract();
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
         if (isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
                 if (!storedDisputeOptional.isPresent()) {
-                    dispute.setStorage(disputeListService.getStorage());
                     disputeList.add(dispute);
                     errorMessage = sendPeerOpenedDisputeMessage(dispute, contractFromOpener, peersPubKeyRing);
                 } else {
@@ -381,6 +384,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             }
 
             NodeAddress agentNodeAddress = getAgentNodeAddress(dispute);
+            if (agentNodeAddress == null) {
+                return;
+            }
+
             OpenNewDisputeMessage openNewDisputeMessage = new OpenNewDisputeMessage(dispute,
                     p2PService.getAddress(),
                     UUID.randomUUID().toString(),
@@ -481,6 +488,8 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
                 disputeFromOpener.getAgentPubKeyRing(),
                 disputeFromOpener.isSupportTicket(),
                 disputeFromOpener.getSupportType());
+        dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
+
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
             String disputeInfo = getDisputeInfo(dispute);

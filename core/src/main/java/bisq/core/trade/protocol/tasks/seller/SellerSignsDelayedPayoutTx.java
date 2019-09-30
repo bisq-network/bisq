@@ -46,7 +46,7 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction delayedPayoutTx = checkNotNull(trade.getDelayedPayoutTx());
+            Transaction preparedDelayedPayoutTx = checkNotNull(processModel.getPreparedDelayedPayoutTx());
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
@@ -58,7 +58,7 @@ public class SellerSignsDelayedPayoutTx extends TradeTask {
                     "sellerMultiSigPubKey from AddressEntry must match the one from the trade data. trade id =" + id);
             byte[] buyerMultiSigPubKey = processModel.getTradingPeer().getMultiSigPubKey();
 
-            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(delayedPayoutTx,
+            byte[] delayedPayoutTxSignature = processModel.getTradeWalletService().signDelayedPayoutTx(preparedDelayedPayoutTx,
                     myMultiSigKeyPair,
                     buyerMultiSigPubKey,
                     sellerMultiSigPubKey);

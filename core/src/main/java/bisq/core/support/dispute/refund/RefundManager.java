@@ -51,6 +51,8 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -199,6 +201,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getRefundAgentNodeAddress();

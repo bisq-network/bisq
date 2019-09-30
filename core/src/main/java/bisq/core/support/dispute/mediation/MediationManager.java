@@ -57,6 +57,8 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -202,6 +204,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getMediatorNodeAddress();

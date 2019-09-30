@@ -762,6 +762,7 @@ message Dispute {
     string dispute_payout_tx_id = 23;
     SupportType support_type = 24;
     string mediators_dispute_result = 25;
+    string delayed_payout_tx_id = 26;
 }
 
 message Attachment {
@@ -813,7 +814,7 @@ message Contract {
     int64 trade_amount = 2;
     int64 trade_price = 3;
     string taker_fee_tx_id = 4;
-    NodeAddress arbitrator_node_address = 5;
+    reserved 5; // WAS: arbitrator_node_address
     bool is_buyer_maker_and_seller_taker = 6;
     string maker_account_id = 7;
     string taker_account_id = 8;

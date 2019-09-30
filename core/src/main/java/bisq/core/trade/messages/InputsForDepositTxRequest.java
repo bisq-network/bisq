@@ -61,6 +61,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final List<NodeAddress> acceptedArbitratorNodeAddresses;
     private final List<NodeAddress> acceptedMediatorNodeAddresses;
     private final List<NodeAddress> acceptedRefundAgentNodeAddresses;
+    @Nullable
     private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final NodeAddress refundAgentNodeAddress;
@@ -152,13 +153,13 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
                 .addAllAcceptedRefundAgentNodeAddresses(acceptedRefundAgentNodeAddresses.stream()
                         .map(NodeAddress::toProtoMessage).collect(Collectors.toList()))
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .setUid(uid);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(accountAgeWitnessSignatureOfOfferId).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(e)));
+        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
         builder.setCurrentDate(currentDate);
 
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();

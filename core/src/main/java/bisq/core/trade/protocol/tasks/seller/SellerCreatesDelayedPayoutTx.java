@@ -50,12 +50,12 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             Transaction depositTx = checkNotNull(trade.getDepositTx());
 
             long lockTime = trade.getLockTime();
-            Transaction unsignedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
+            Transaction preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
                     donationAddressString,
                     minerFee,
                     lockTime);
 
-            trade.applyDelayedPayoutTx(unsignedDelayedPayoutTx);
+            processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
 
             complete();
         } catch (Throwable t) {

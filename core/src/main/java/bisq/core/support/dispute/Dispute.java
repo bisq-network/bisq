@@ -99,6 +99,9 @@ public final class Dispute implements NetworkPayload {
     @Setter
     @Nullable
     private String mediatorsDisputeResult;
+    @Setter
+    @Nullable
+    private String delayedPayoutTxId;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -224,11 +227,12 @@ public final class Dispute implements NetworkPayload {
         Optional.ofNullable(disputeResultProperty.get()).ifPresent(result -> builder.setDisputeResult(disputeResultProperty.get().toProtoMessage()));
         Optional.ofNullable(supportType).ifPresent(result -> builder.setSupportType(SupportType.toProtoMessage(supportType)));
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
+        Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         return builder.build();
     }
 
     public static Dispute fromProto(protobuf.Dispute proto, CoreProtoResolver coreProtoResolver) {
-        final Dispute dispute = new Dispute(proto.getTradeId(),
+        Dispute dispute = new Dispute(proto.getTradeId(),
                 proto.getTraderId(),
                 proto.getDisputeOpenerIsBuyer(),
                 proto.getDisputeOpenerIsMaker(),
@@ -256,7 +260,17 @@ public final class Dispute implements NetworkPayload {
         if (proto.hasDisputeResult())
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
         dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
-        dispute.setMediatorsDisputeResult(proto.getMediatorsDisputeResult());
+
+        String mediatorsDisputeResult = proto.getMediatorsDisputeResult();
+        if (!mediatorsDisputeResult.isEmpty()) {
+            dispute.setMediatorsDisputeResult(mediatorsDisputeResult);
+        }
+
+        String delayedPayoutTxId = proto.getDelayedPayoutTxId();
+        if (!delayedPayoutTxId.isEmpty()) {
+            dispute.setDelayedPayoutTxId(delayedPayoutTxId);
+        }
+
         return dispute;
     }
 
@@ -334,34 +348,37 @@ public final class Dispute implements NetworkPayload {
         return isClosedProperty.get();
     }
 
+
     @Override
     public String toString() {
         return "Dispute{" +
-                "tradeId='" + tradeId + '\'' +
-                ", id='" + id + '\'' +
-                ", traderId=" + traderId +
-                ", disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
-                ", disputeOpenerIsMaker=" + disputeOpenerIsMaker +
-                ", openingDate=" + openingDate +
-                ", traderPubKeyRing=" + traderPubKeyRing +
-                ", tradeDate=" + tradeDate +
-                ", contract=" + contract +
-                ", contractHash=" + Utilities.bytesAsHexString(contractHash) +
-                ", depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +
-                ", payoutTxSerialized not displayed for privacy reasons..." +
-                ", depositTxId='" + depositTxId + '\'' +
-                ", payoutTxId='" + payoutTxId + '\'' +
-                ", contractAsJson='" + contractAsJson + '\'' +
-                ", makerContractSignature='" + makerContractSignature + '\'' +
-                ", takerContractSignature='" + takerContractSignature + '\'' +
-                ", agentPubKeyRing=" + agentPubKeyRing +
-                ", isSupportTicket=" + isSupportTicket +
-                ", chatMessages=" + chatMessages +
-                ", isClosed=" + isClosedProperty.get() +
-                ", disputeResult=" + disputeResultProperty.get() +
-                ", disputePayoutTxId='" + disputePayoutTxId + '\'' +
-                ", isClosedProperty=" + isClosedProperty +
-                ", disputeResultProperty=" + disputeResultProperty +
-                '}';
+                "\n     tradeId='" + tradeId + '\'' +
+                ",\n     id='" + id + '\'' +
+                ",\n     traderId=" + traderId +
+                ",\n     disputeOpenerIsBuyer=" + disputeOpenerIsBuyer +
+                ",\n     disputeOpenerIsMaker=" + disputeOpenerIsMaker +
+                ",\n     traderPubKeyRing=" + traderPubKeyRing +
+                ",\n     tradeDate=" + tradeDate +
+                ",\n     contract=" + contract +
+                ",\n     contractHash=" + Utilities.bytesAsHexString(contractHash) +
+                ",\n     depositTxSerialized=" + Utilities.bytesAsHexString(depositTxSerialized) +
+                ",\n     payoutTxSerialized=" + Utilities.bytesAsHexString(payoutTxSerialized) +
+                ",\n     depositTxId='" + depositTxId + '\'' +
+                ",\n     payoutTxId='" + payoutTxId + '\'' +
+                ",\n     contractAsJson='" + contractAsJson + '\'' +
+                ",\n     makerContractSignature='" + makerContractSignature + '\'' +
+                ",\n     takerContractSignature='" + takerContractSignature + '\'' +
+                ",\n     agentPubKeyRing=" + agentPubKeyRing +
+                ",\n     isSupportTicket=" + isSupportTicket +
+                ",\n     chatMessages=" + chatMessages +
+                ",\n     isClosedProperty=" + isClosedProperty +
+                ",\n     disputeResultProperty=" + disputeResultProperty +
+                ",\n     disputePayoutTxId='" + disputePayoutTxId + '\'' +
+                ",\n     openingDate=" + openingDate +
+                ",\n     storage=" + storage +
+                ",\n     supportType=" + supportType +
+                ",\n     mediatorsDisputeResult='" + mediatorsDisputeResult + '\'' +
+                ",\n     delayedPayoutTxId='" + delayedPayoutTxId + '\'' +
+                "\n}";
     }
 }

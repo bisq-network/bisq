@@ -309,11 +309,8 @@ public class BisqSetup {
     }
 
     public void start() {
-        if (log.isDebugEnabled()) {
-            UserThread.runPeriodically(() -> {
-                log.debug("1 second heartbeat");
-            }, 1);
-        }
+        UserThread.runPeriodically(() -> {
+        }, 1);
         maybeReSyncSPVChain();
         maybeShowTac();
     }

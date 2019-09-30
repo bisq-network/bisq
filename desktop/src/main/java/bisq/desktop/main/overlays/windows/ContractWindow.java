@@ -39,6 +39,8 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
 
@@ -135,6 +137,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
             rows++;
+        if (dispute.getDelayedPayoutTxId() != null)
+            rows++;
         if (showAcceptedCountryCodes)
             rows++;
         if (showAcceptedBanks)
@@ -202,8 +206,12 @@ public class ContractWindow extends Overlay<ContractWindow> {
             }
         }
 
-        String agentNodeAddress = disputeManager != null ? disputeManager.getAgentNodeAddress(dispute).getFullAddress() : "";
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress);
+        if (disputeManager != null) {
+            NodeAddress agentNodeAddress = disputeManager.getAgentNodeAddress(dispute);
+            if (agentNodeAddress != null) {
+                addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress.getFullAddress());
+            }
+        }
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -232,8 +240,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.getTakerFeeTxID());
+
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), dispute.getDepositTxId());
+
+        if (dispute.getDelayedPayoutTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
+
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
 

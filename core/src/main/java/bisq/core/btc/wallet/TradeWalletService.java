@@ -33,13 +33,11 @@ import bisq.core.user.Preferences;
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Context;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
@@ -1167,38 +1165,6 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Misc
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * @param transaction The transaction to be added to the wallet
-     * @return The transaction we added to the wallet, which is different as the one we passed as argument!
-     * @throws VerificationException
-     */
-    public Transaction addTxToWallet(Transaction transaction) throws VerificationException {
-        // We need to recreate the transaction otherwise we get a null pointer...
-        Transaction tx = new Transaction(params, transaction.bitcoinSerialize());
-        tx.getConfidence(Context.get()).setSource(TransactionConfidence.Source.SELF);
-
-        if (wallet != null) {
-            wallet.receivePending(tx, null, true);
-        }
-        return tx;
-    }
-
-    /**
-     * @param serializedTransaction The serialized transaction to be added to the wallet
-     * @return The transaction we added to the wallet, which is different as the one we passed as argument!
-     * @throws VerificationException
-     */
-    public Transaction addTxToWallet(byte[] serializedTransaction) throws VerificationException {
-        // We need to recreate the tx otherwise we get a null pointer...
-        Transaction transaction = new Transaction(params, serializedTransaction);
-        transaction.getConfidence(Context.get()).setSource(TransactionConfidence.Source.NETWORK);
-
-        if (wallet != null) {
-            wallet.receivePending(transaction, null, true);
-        }
-        return transaction;
-    }
 
     /**
      * @param txId The transaction ID of the transaction we want to lookup

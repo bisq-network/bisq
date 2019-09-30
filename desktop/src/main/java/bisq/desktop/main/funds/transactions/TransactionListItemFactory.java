@@ -20,7 +20,6 @@ package bisq.desktop.main.funds.transactions;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.trade.Tradable;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
@@ -30,8 +29,6 @@ import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -61,13 +58,10 @@ public class TransactionListItemFactory {
     }
 
     TransactionsListItem create(Transaction transaction, @Nullable TransactionAwareTradable tradable) {
-        Optional<Tradable> maybeTradable = Optional.ofNullable(tradable)
-                .map(TransactionAwareTradable::asTradable);
-
         return new TransactionsListItem(transaction,
                 btcWalletService,
                 bsqWalletService,
-                maybeTradable,
+                tradable,
                 daoFacade,
                 pubKeyRing,
                 formatter,

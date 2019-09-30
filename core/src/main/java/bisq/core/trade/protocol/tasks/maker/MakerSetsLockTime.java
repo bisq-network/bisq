@@ -20,9 +20,8 @@ package bisq.core.trade.protocol.tasks.maker;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
+import bisq.common.app.DevEnv;
 import bisq.common.taskrunner.TaskRunner;
-
-import java.util.Random;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,13 +37,15 @@ public class MakerSetsLockTime extends TradeTask {
         try {
             runInterceptHook();
 
-            // 20-30 days
-            int delay = 144 * 20 + new Random().nextInt(144 * 10);
+            // 10 days for altcoins, 20 days for other payment methods
+            int delay = processModel.getOffer().getPaymentMethod().isAsset() ? 144 * 10 : 144 * 20;
+            if (DevEnv.isDevMode()) {
+                delay = 1;
+            }
+
             long lockTime = processModel.getBtcWalletService().getBestChainHeight() + delay;
             log.info("lockTime={}, delay={}", lockTime, delay);
             trade.setLockTime(lockTime);
-            //todo for dev testing
-            trade.setLockTime(processModel.getBtcWalletService().getBestChainHeight() + 5);
 
             complete();
         } catch (Throwable t) {
