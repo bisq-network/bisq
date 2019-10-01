@@ -28,7 +28,6 @@ public class BsqWalletServiceTest {
         WalletsSetup walletsSetup = mock(WalletsSetup.class);
         UnitTestParams params = new UnitTestParams();
         Wallet bsqWallet = new Wallet(params);
-
         when(walletsSetup.getBsqWallet()).thenReturn(bsqWallet);
         when(walletsSetup.getParams()).thenReturn(params);
         FeeService feeService = mock(FeeService.class);
@@ -37,6 +36,8 @@ public class BsqWalletServiceTest {
         BsqWalletService bsqWalletService = new BsqWalletService(walletsSetup, bsqSelector, mock(NonBsqCoinSelector.class), daoStateService, mock(UnconfirmedBsqChangeOutputListService.class), mock(Preferences.class), feeService, mock(DaoKillSwitch.class));
         bsqWalletService.setupComplete();
         Coin receiverAmount = ParsingUtils.parseToCoin("10", MonetaryFormat.BTC);
+
+
         bsqWalletService.getPreparedSendBsqTx(bsqWallet.freshReceiveAddress().toString(), receiverAmount);
     }
 
