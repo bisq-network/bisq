@@ -896,7 +896,7 @@ public class BtcWalletService extends WalletService {
                 SendRequest sendRequest = getSendRequest(fromAddress, toAddress, amount, fee, aesKey, context);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
-                txSize = tx.bitcoinSerialize().length;
+                txSize = tx.bitcoinSerialize().length + 1; // add extra byte to prevent rounding down causing invalid TX
                 printTx("FeeEstimationTransaction", tx);
             }
             while (feeEstimationNotSatisfied(counter, tx));
@@ -945,7 +945,7 @@ public class BtcWalletService extends WalletService {
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
-                txSize = tx.bitcoinSerialize().length;
+                txSize = tx.bitcoinSerialize().length + 1; // add extra byte to prevent rounding down causing invalid TX
                 printTx("FeeEstimationTransactionForMultipleAddresses", tx);
             }
             while (feeEstimationNotSatisfied(counter, tx));
@@ -983,7 +983,7 @@ public class BtcWalletService extends WalletService {
         sendRequest.ensureMinRequiredFee = false;
         sendRequest.changeAddress = dummyAddress;
         wallet.completeTx(sendRequest);
-        return transaction.bitcoinSerialize().length;
+        return transaction.bitcoinSerialize().length + 1; // add extra byte to prevent rounding down causing invalid TX
     }
 
 
