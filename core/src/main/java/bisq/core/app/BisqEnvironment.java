@@ -271,14 +271,9 @@ public class BisqEnvironment extends StandardEnvironment {
         try {
             propertySources.addLast(getAppDirProperties());
 
-            final String bannedPriceRelayNodesAsString = getProperty(FilterManager.BANNED_PRICE_RELAY_NODES, "");
-            bannedPriceRelayNodes = !bannedPriceRelayNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedPriceRelayNodesAsString).split(",")) : null;
-
-            final String bannedSeedNodesAsString = getProperty(FilterManager.BANNED_SEED_NODES, "");
-            bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : new ArrayList<>();
-
-            final String bannedBtcNodesAsString = getProperty(FilterManager.BANNED_BTC_NODES, "");
-            bannedBtcNodes = !bannedBtcNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedBtcNodesAsString).split(",")) : null;
+            bannedPriceRelayNodes = getListProperty(FilterManager.BANNED_PRICE_RELAY_NODES, null);
+            bannedSeedNodes = getListProperty(FilterManager.BANNED_SEED_NODES, new ArrayList<>());
+            bannedBtcNodes = getListProperty(FilterManager.BANNED_BTC_NODES, null);
 
             baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
                     getDefaultBaseCurrencyNetwork().name()).toUpperCase());
@@ -372,6 +367,11 @@ public class BisqEnvironment extends StandardEnvironment {
 
     private String getProperty (PropertySource properties, String propertyKey, String defaultValue) {
         return properties.containsProperty(propertyKey) ? (String) properties.getProperty(propertyKey) : defaultValue;
+    }
+
+    private List<String> getListProperty (String key, List defaultValue) {
+        final String value = getProperty(key, "");
+        return value.isEmpty() ? defaultValue : Arrays.asList(StringUtils.deleteWhitespace(value).split(","));
     }
 
     private PropertySource<?> defaultProperties() {
