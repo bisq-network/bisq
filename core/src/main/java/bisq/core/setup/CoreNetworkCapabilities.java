@@ -49,8 +49,7 @@ public class CoreNetworkCapabilities {
         // If we set dao full mode at the preferences view we add the capability there. We read the preferences a
         // bit later than we call that method so we have to add DAO_FULL_NODE Capability at preferences as well to
         // be sure it is set in both cases.
-        String isFullDaoNode = bisqEnvironment.getProperty(DaoOptionKeys.FULL_DAO_NODE, String.class, "false");
-        if (isFullDaoNode != null && !isFullDaoNode.isEmpty() && isFullDaoNode.toLowerCase().equals("true")) {
+        if (bisqEnvironment.getProperty(DaoOptionKeys.FULL_DAO_NODE, Boolean.class, Boolean.FALSE)) {
             log.info("Set Capability.DAO_FULL_NODE");
             Capabilities.app.addAll(Capability.DAO_FULL_NODE);
         } else {
