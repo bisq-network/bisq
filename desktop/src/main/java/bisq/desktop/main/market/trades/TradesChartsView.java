@@ -51,6 +51,7 @@ import com.jfoenix.controls.JFXTabPane;
 
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SingleSelectionModel;
@@ -108,6 +109,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private NumberAxis priceAxisX, priceAxisY, volumeAxisY, volumeAxisX;
     private XYChart.Series<Number, Number> priceSeries;
     private XYChart.Series<Number, Number> volumeSeries;
+    private XYChart.Series<Number, Number> bisqBurnSeries;
     private ChangeListener<Number> priceAxisYWidthListener;
     private ChangeListener<Number> volumeAxisYWidthListener;
     private double priceAxisYWidth;
@@ -327,7 +329,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     // Chart
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void createCharts() {
+    @SuppressWarnings("unchecked")
+	private void createCharts() {
         priceSeries = new XYChart.Series<>();
 
         priceAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
@@ -394,6 +397,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChartPane.getChildren().add(priceChart);
 
         volumeSeries = new XYChart.Series<>();
+        volumeSeries.setName(Res.get("shared.volumeWithCur", model.getCurrencyCode()));
+
+        bisqBurnSeries = new XYChart.Series<>();
+        bisqBurnSeries.setName(Res.get("dao.proofOfBurn.volumeRatio", model.getCurrencyCode()));
 
         volumeAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
         volumeAxisX.setTickUnit(1);
@@ -430,11 +437,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         });
         //noinspection unchecked
         volumeChart.setId("volume-chart");
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        //TODO bisqBurnSeries should only be added when model.getCurrencyCode() == "BSQ" ???
+        volumeChart.setData(FXCollections.observableArrayList(volumeSeries, bisqBurnSeries));
         volumeChart.setMinHeight(128);
         volumeChart.setPrefHeight(128);
         volumeChart.setMaxHeight(200);
-        volumeChart.setLegendVisible(false);
+        volumeChart.setLegendVisible(true);
         volumeChart.setPadding(new Insets(0));
 
         volumeChartPane = new AnchorPane();
@@ -450,6 +458,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void updateChartData() {
         volumeSeries.getData().setAll(model.volumeItems);
+        bisqBurnSeries.getData().setAll(model.burntBsqRatioItems);
 
         // At price chart we need to set the priceSeries new otherwise the lines are not rendered correctly
         // TODO should be fixed in candle chart

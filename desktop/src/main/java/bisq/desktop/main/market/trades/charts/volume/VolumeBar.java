@@ -61,7 +61,7 @@ public class VolumeBar extends Group {
     public void update(double height, double candleWidth, CandleData candleData) {
         bar.resizeRelocate(-candleWidth / 2, 0, candleWidth, height);
         String vol = volumeStringConverter.toString(candleData.accumulatedAmount);
-        tooltip.setText(Res.get("market.trades.tooltip.volumeBar", vol, candleData.numTrades, candleData.date));
+        tooltip.setText(Res.get("market.trades.tooltip.volumeBar", vol, candleData.numTrades, candleData.bisqBurnVolumeRatio, candleData.date));
     }
 
     private void updateStyleClasses() {

@@ -219,7 +219,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private List<Tx> getAllProofOfBurnTxs() {
+    public List<Tx> getAllProofOfBurnTxs() {
         return daoStateService.getProofOfBurnOpReturnTxOutputs().stream()
                 .map(txOutput -> daoStateService.getTx(txOutput.getTxId()).orElse(null))
                 .filter(Objects::nonNull)

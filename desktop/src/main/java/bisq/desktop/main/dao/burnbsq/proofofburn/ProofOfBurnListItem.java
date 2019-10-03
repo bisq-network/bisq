@@ -32,7 +32,7 @@ import java.util.Date;
 import lombok.Value;
 
 @Value
-class ProofOfBurnListItem {
+public class ProofOfBurnListItem {
     private final long amount;
     private final String amountAsString;
     private final String txId;
@@ -41,7 +41,7 @@ class ProofOfBurnListItem {
     private final Date date;
     private final String dateAsString;
 
-    ProofOfBurnListItem(Tx tx, ProofOfBurnService proofOfBurnService, BsqFormatter bsqFormatter) {
+    public ProofOfBurnListItem(Tx tx, ProofOfBurnService proofOfBurnService, BsqFormatter bsqFormatter) {
         amount = proofOfBurnService.getAmount(tx);
         amountAsString = bsqFormatter.formatCoinWithCode(Coin.valueOf(amount));
         txId = tx.getId();

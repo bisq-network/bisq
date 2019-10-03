@@ -20,6 +20,9 @@ package bisq.desktop.main.market.trades;
 import bisq.desktop.Navigation;
 import bisq.desktop.main.market.trades.charts.CandleData;
 
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Tx;
+
 import bisq.core.locale.FiatCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.OfferPayload;
@@ -28,6 +31,7 @@ import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;
@@ -111,7 +115,7 @@ public class TradesChartsViewModelTest {
     public void setup() throws IOException {
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
         model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
-                mock(Navigation.class), mock(BSFormatter.class));
+                mock(Navigation.class), mock(BSFormatter.class), mock(DaoStateService.class), mock(BsqFormatter.class));
         dir = File.createTempFile("temp_tests1", "");
         //noinspection ResultOfMethodCallIgnored
         dir.delete();
@@ -143,7 +147,9 @@ public class TradesChartsViewModelTest {
         set.add(new TradeStatistics2(offer, Price.parse("EUR", "600"), Coin.parseCoin("1"), new Date(now.getTime() + 200), null, null));
         set.add(new TradeStatistics2(offer, Price.parse("EUR", "580"), Coin.parseCoin("1"), new Date(now.getTime() + 300), null, null));
 
-        CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set);
+        Set<Tx> set2 = new HashSet<>();
+
+        CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set, set2);
         assertEquals(open, candleData.open);
         assertEquals(close, candleData.close);
         assertEquals(high, candleData.high);

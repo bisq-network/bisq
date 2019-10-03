@@ -27,7 +27,8 @@ import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
-
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
@@ -38,7 +39,7 @@ import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
-
+import bisq.core.util.BsqFormatter;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
@@ -60,6 +61,7 @@ import javafx.collections.SetChangeListener;
 
 import javafx.util.Pair;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -67,14 +69,19 @@ import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
@@ -98,6 +105,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final TradeStatisticsManager tradeStatisticsManager;
     final Preferences preferences;
     private PriceFeedService priceFeedService;
+    private final DaoStateService daoStateService;
+    private final BsqFormatter bsqFormatter;
     private Navigation navigation;
     private BSFormatter formatter;
 
@@ -107,9 +116,12 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""), -1);
     final ObservableList<TradeStatistics2> tradeStatisticsByCurrency = FXCollections.observableArrayList();
+    private final ObservableList<Tx> burntBsqStatistics = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
+    final ObservableList<XYChart.Data<Number, Number>> burntBsqRatioItems = FXCollections.observableArrayList();
     private Map<Long, Pair<Date, Set<TradeStatistics2>>> itemsPerInterval;
+    private Map<Long, Pair<Date, Set<Tx>>> burntBsqPerInterval;
 
     TickUnit tickUnit = TickUnit.DAY;
     final int maxTicks = 90;
@@ -121,12 +133,16 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, PriceFeedService priceFeedService, Navigation navigation, BSFormatter formatter) {
+    public TradesChartsViewModel(TradeStatisticsManager tradeStatisticsManager, Preferences preferences, 
+    		PriceFeedService priceFeedService, Navigation navigation, BSFormatter formatter, 
+    		DaoStateService daoStateService, BsqFormatter bsqFormatter) {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.formatter = formatter;
+        this.daoStateService = daoStateService;
+        this.bsqFormatter = bsqFormatter;
 
         setChangeListener = change -> {
             updateChartData();
@@ -256,6 +272,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrencyCode().equals(getCurrencyCode()))
                 .collect(Collectors.toList()));
+        
+        burntBsqStatistics.setAll(daoStateService.getBurntFeeTxs());
 
         // Generate date range and create sets for all ticks
         itemsPerInterval = new HashMap<>();
@@ -279,10 +297,31 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
         });
 
+        burntBsqPerInterval = new HashMap<>();
+        time = new Date();
+        for (long i = maxTicks + 1; i >= 0; --i) {
+            Set<Tx> set = new HashSet<>();
+            Pair<Date, Set<Tx>> pair = new Pair<>((Date) time.clone(), set);
+            burntBsqPerInterval.put(i, pair);
+            time.setTime(time.getTime() - 1);
+            time = roundToTick(time, tickUnit);
+        }
+
+        // Get all entries for the defined time interval
+        burntBsqStatistics.stream().forEach(e -> {
+            for (long i = maxTicks; i > 0; --i) {
+                Pair<Date, Set<Tx>> p = burntBsqPerInterval.get(i);
+                if (Date.from(Instant.ofEpochMilli(e.getTime())).after(p.getKey())) {
+                    p.getValue().add(e);
+                    break;
+                }
+            }
+        });
+
         // create CandleData for defined time interval
         List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
                 .filter(entry -> entry.getKey() >= 0 && !entry.getValue().getValue().isEmpty())
-                .map(entry -> getCandleData(entry.getKey(), entry.getValue().getValue()))
+                .map(entry -> getCandleData(entry.getKey(), entry.getValue().getValue(), burntBsqPerInterval.get(entry.getKey()).getValue()))
                 .collect(Collectors.toList());
         candleDataList.sort((o1, o2) -> (o1.tick < o2.tick ? -1 : (o1.tick == o2.tick ? 0 : 1)));
 
@@ -295,16 +334,24 @@ class TradesChartsViewModel extends ActivatableViewModel {
         volumeItems.setAll(candleDataList.stream()
                 .map(e -> new XYChart.Data<Number, Number>(e.tick, e.accumulatedAmount, e))
                 .collect(Collectors.toList()));
+
+        //noinspection Convert2Diamond
+        burntBsqRatioItems.setAll(candleDataList.stream()
+                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.bisqBurnVolumeRatio, e))
+                .collect(Collectors.toList()));
+
     }
 
     @VisibleForTesting
-    CandleData getCandleData(long tick, Set<TradeStatistics2> set) {
+    CandleData getCandleData(long tick, Set<TradeStatistics2> set, Set<Tx> burntBsqSet) {
         long open = 0;
         long close = 0;
         long high = 0;
         long low = 0;
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
+        long accumulatedBisqBurn = 0;
+        double bisqBurnVolumeRatio = 0;
         long numTrades = set.size();
         List<Long> tradePrices = new ArrayList<>(set.size());
 
@@ -333,13 +380,16 @@ class TradesChartsViewModel extends ActivatableViewModel {
         tradePrices.toArray(prices);
         long medianPrice = MathUtils.getMedian(prices);
         boolean isBullish;
+        double accumulatedMetricAsDouble;
         if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
             isBullish = close < open;
             double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
+            accumulatedMetricAsDouble = accumulatedAmount;
             averagePrice = MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume);
         } else {
             isBullish = close > open;
             double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
+            accumulatedMetricAsDouble = accumulatedVolume;
             averagePrice = MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
         }
 
@@ -348,8 +398,17 @@ class TradesChartsViewModel extends ActivatableViewModel {
         String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
                 DisplayUtils.formatDateTimeSpan(dateFrom, dateTo) :
                 DisplayUtils.formatDate(dateFrom) + " - " + DisplayUtils.formatDate(dateTo);
+        
+		for (Tx item : burntBsqSet) {
+			accumulatedBisqBurn += item.getBurntBsq();
+		}
+                
+        //TODO compute bisqBurnVolumeRatio
+		double accumulatedBisqBurnAsDouble = (double) accumulatedBisqBurn;
+		bisqBurnVolumeRatio = accumulatedMetricAsDouble != 0 ? accumulatedBisqBurnAsDouble * 100.0 / accumulatedMetricAsDouble : 0l;//Percentage calculation
+				
         return new CandleData(tick, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
-                numTrades, isBullish, dateString);
+                numTrades, bisqBurnVolumeRatio, isBullish, dateString);
     }
 
     Date roundToTick(Date time, TickUnit tickUnit) {
