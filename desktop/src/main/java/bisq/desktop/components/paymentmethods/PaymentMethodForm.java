@@ -35,6 +35,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -198,28 +199,34 @@ public abstract class PaymentMethodForm {
             String accountSigningStateText;
             MaterialDesignIcon icon;
 
-            if (accountAgeWitnessService.myHasSignedWitness(paymentAccount.getPaymentAccountPayload())) {
-                //TODO sqrrm: We need four states in here:
-                //  - signed by arbitrator
-                //  - signed by peer
-                //  - signed by peer and limit lifted
-                //  - signed by peer and able to sign
-                //  Additionally we need to have some enum or so how the account signing took place.
-                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
-                accountSigningStateText = "This account was verified and signed by an arbitrator or peer / Time since signing: 3 days";
-                icon = MaterialDesignIcon.APPROVAL;
-            } else {
-                //TODO sqrrm: Here we need two states:
-                // - not signing necessary for this payment account
-                // - signing required and not signed
-                accountSigningStateText = Res.get("shared.notSigned");
-                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+            boolean needsSigning = PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(),
+                    paymentAccount.getTradeCurrencies());
+
+            if (needsSigning) {
+                if (accountAgeWitnessService.myHasSignedWitness(paymentAccount.getPaymentAccountPayload())) {
+                    //TODO sqrrm: We need four states in here:
+                    //  - signed by arbitrator
+                    //  - signed by peer
+                    //  - signed by peer and limit lifted
+                    //  - signed by peer and able to sign
+                    //  Additionally we need to have some enum or so how the account signing took place.
+                    //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
+                    accountSigningStateText = "This account was verified and signed by an arbitrator or peer / Time since signing: 3 days";
+                    icon = MaterialDesignIcon.APPROVAL;
+                } else {
+                    //TODO sqrrm: Here we need two states:
+                    // - not signing necessary for this payment account
+                    // - signing required and not signed
+                    accountSigningStateText = Res.get("shared.notSigned");
+                    icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                }
+
+                InfoTextField accountSigningField = addCompactTopLabelInfoTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"),
+                        accountSigningStateText).second;
+                //TODO: add additional information regarding account signing
+                accountSigningField.setContent(icon, accountSigningStateText, "", 0.4);
             }
 
-            InfoTextField accountSigningField = addCompactTopLabelInfoTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"),
-                    accountSigningStateText).second;
-            //TODO: add additional information regarding account signing
-            accountSigningField.setContent(icon, accountSigningStateText, "", 0.4);
         }
         else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);

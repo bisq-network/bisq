@@ -17,8 +17,9 @@
 
 package bisq.desktop.components;
 
-import bisq.common.UserThread;
 import bisq.desktop.components.controlsfx.control.PopOver;
+
+import bisq.common.UserThread;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
@@ -42,8 +43,7 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
     private ContentDisplay contentDisplay;
 
     public InfoAutoTooltipLabel(String text, GlyphIcons icon, ContentDisplay contentDisplay, String info) {
-        super(text);
-        this.contentDisplay = contentDisplay;
+        this(text, contentDisplay);
 
         setIcon(icon);
         positionAndActivateIcon(contentDisplay, info, DEFAULT_WIDTH);
@@ -54,6 +54,11 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
         setIcon(icon);
         positionAndActivateIcon(contentDisplay, info, width);
+    }
+
+    public InfoAutoTooltipLabel(String text, ContentDisplay contentDisplay) {
+        super(text);
+        this.contentDisplay = contentDisplay;
     }
 
     public void setIcon(GlyphIcons icon) {
@@ -67,6 +72,11 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
     public void setIcon(AwesomeIcon icon) {
         textIcon = getIcon(icon);
+    }
+
+    public void hideIcon() {
+        textIcon = null;
+        setGraphic(textIcon);
     }
 
     private void positionAndActivateIcon(ContentDisplay contentDisplay, String info, double width) {
