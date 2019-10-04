@@ -88,7 +88,8 @@ public class RevolutForm extends PaymentMethodForm {
 
     private void addCurrenciesGrid(boolean isEditable) {
         FlowPane flowPane = addTopLabelFlowPane(gridPane, ++gridRow,
-                Res.get("payment.supportedCurrencies"), 0).second;
+                Res.get("payment.supportedCurrencies"), Layout.FLOATING_LABEL_DISTANCE,
+                Layout.FLOATING_LABEL_DISTANCE).second;
 
         if (isEditable)
             flowPane.setId("flow-pane-checkboxes-bg");
