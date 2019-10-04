@@ -25,6 +25,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
@@ -64,7 +65,9 @@ import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
 
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -203,22 +206,31 @@ public abstract class PaymentMethodForm {
                     paymentAccount.getTradeCurrencies());
 
             if (needsSigning) {
-                if (accountAgeWitnessService.myHasSignedWitness(paymentAccount.getPaymentAccountPayload())) {
-                    //TODO sqrrm: We need four states in here:
-                    //  - signed by arbitrator
-                    //  - signed by peer
-                    //  - signed by peer and limit lifted
-                    //  - signed by peer and able to sign
-                    //  Additionally we need to have some enum or so how the account signing took place.
-                    //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
-                    accountSigningStateText = "This account was verified and signed by an arbitrator or peer / Time since signing: 3 days";
-                    icon = MaterialDesignIcon.APPROVAL;
-                } else {
-                    //TODO sqrrm: Here we need two states:
-                    // - not signing necessary for this payment account
-                    // - signing required and not signed
-                    accountSigningStateText = Res.get("shared.notSigned");
-                    icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+
+                AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
+                        paymentAccount.paymentAccountPayload);
+                AccountAgeWitnessService.SignState signState =
+                        accountAgeWitnessService.getSignState(myWitness);
+
+                accountSigningStateText = StringUtils.capitalize(signState.getPresentation());
+
+                long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
+                        accountAgeWitnessService.getWitnessSignAge(myWitness, new Date()));
+                String timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning.long",
+                        Res.get("offerbook.timeSinceSigning.daysSinceSigning",
+                                daysSinceSigning));
+
+                switch (signState) {
+                    case PEER_SIGNER:
+                    case ARBITRATOR:
+                        icon = MaterialDesignIcon.APPROVAL;
+                        accountSigningStateText += " / " + timeSinceSigning;
+                        break;
+                    case PEER_INITIAL:
+                    case PEER_LIMIT_LIFTED:
+                        accountSigningStateText += " / " + timeSinceSigning;
+                    default:
+                        icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
                 }
 
                 InfoTextField accountSigningField = addCompactTopLabelInfoTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"),
@@ -227,8 +239,7 @@ public abstract class PaymentMethodForm {
                 accountSigningField.setContent(icon, accountSigningStateText, "", 0.4);
             }
 
-        }
-        else
+        } else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (!(paymentAccount instanceof AssetAccount)) {
