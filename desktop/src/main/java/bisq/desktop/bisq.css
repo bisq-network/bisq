@@ -723,7 +723,7 @@ tree-table-view:focused {
  * Icons                                                                       *
  *                                                                             *
  ******************************************************************************/
-.icon, icon:hover {
+.icon, .icon:hover {
     -fx-cursor: hand;
 }
 

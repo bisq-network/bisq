@@ -12,8 +12,11 @@ import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.common.UserThread;
+
+import org.apache.commons.lang3.StringUtils;
 
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -97,7 +100,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
             @Override
             public ListCell<PaymentAccount> call(ListView<PaymentAccount> list) {
                 return new ListCell<>() {
-                    final InfoAutoTooltipLabel label = new InfoAutoTooltipLabel("", MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, ContentDisplay.RIGHT, "");
+                    final InfoAutoTooltipLabel label = new InfoAutoTooltipLabel("", ContentDisplay.RIGHT);
                     final ImageView icon = ImageUtil.getImageViewById(ImageUtil.REMOVE_ICON);
                     final Button removeButton = new AutoTooltipButton("", icon);
                     final AnchorPane pane = new AnchorPane(label, removeButton);
@@ -114,21 +117,28 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                         if (item != null && !empty) {
                             label.setText(item.getAccountName());
 
-                            if (accountAgeWitnessService.myHasSignedWitness(item.paymentAccountPayload)) {
-                                //TODO sqrrm: We need four states in here:
-                                //  - signed by arbitrator
-                                //  - signed by peer
-                                //  - signed by peer and limit lifted
-                                //  - signed by peer and able to sign
-                                //  Additionally we need to have some enum or so how the account signing took place.
-                                //  e.g. if in the future we'll also offer the "pay with two different accounts"-signing
-                                label.setIcon(MaterialDesignIcon.APPROVAL, "This account was verified and signed by an arbitrator or peer.");
+                            boolean needsSigning = PaymentMethod.hasChargebackRisk(item.getPaymentMethod(),
+                                    item.getTradeCurrencies());
+
+                            if (needsSigning) {
+                                AccountAgeWitnessService.SignState signState =
+                                        accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
+                                                item.paymentAccountPayload));
+
+                                String info = StringUtils.capitalize(signState.getPresentation());
+
+                                switch (signState) {
+                                    case PEER_SIGNER:
+                                    case ARBITRATOR:
+                                        label.setIcon(MaterialDesignIcon.APPROVAL, info);
+                                        break;
+                                    default:
+                                        label.setIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, info);
+                                }
                             } else {
-                                //TODO sqrrm: Here we need two states:
-                                // - not signing necessary for this payment account
-                                // - signing required and not signed
-                                label.setIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, Res.get("shared.notSigned"));
+                                label.hideIcon();
                             }
+
                             removeButton.setOnAction(e -> onDeleteAccount(item));
                             setGraphic(pane);
                         } else {

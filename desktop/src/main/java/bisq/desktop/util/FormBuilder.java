@@ -1563,6 +1563,14 @@ public class FormBuilder {
     // Label  + InfoTextField
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static Tuple3<Label, InfoTextField, VBox> addCompactTopLabelInfoTextField(GridPane gridPane,
+                                                                                     int rowIndex,
+                                                                                     String labelText,
+                                                                                     String fieldText) {
+        return addTopLabelInfoTextField(gridPane, rowIndex, labelText, fieldText,
+                -Layout.FLOATING_LABEL_DISTANCE);
+    }
+
     public static Tuple3<Label, InfoTextField, VBox> addTopLabelInfoTextField(GridPane gridPane,
                                                                               int rowIndex,
                                                                               String labelText,
@@ -1998,11 +2006,22 @@ public class FormBuilder {
                                                               int rowIndex,
                                                               String title,
                                                               double top) {
+        return addTopLabelFlowPane(gridPane, rowIndex, title, top, 0);
+    }
+
+    public static Tuple2<Label, FlowPane> addTopLabelFlowPane(GridPane gridPane,
+                                                              int rowIndex,
+                                                              String title,
+                                                              double top,
+                                                              double bottom) {
         FlowPane flowPane = new FlowPane();
         flowPane.setPadding(new Insets(10, 10, 10, 10));
         flowPane.setVgap(10);
         flowPane.setHgap(10);
         final Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, flowPane, top);
+
+        GridPane.setMargin(topLabelWithVBox.second, new Insets(top + Layout.FLOATING_LABEL_DISTANCE,
+                0, bottom, 0));
 
         return new Tuple2<>(topLabelWithVBox.first, flowPane);
     }
@@ -2040,6 +2059,10 @@ public class FormBuilder {
 
     public static Text getSmallIconForLabel(GlyphIcons icon, Label label) {
         return getIconForLabel(icon, "0.769em", label);
+    }
+
+    public static Text getRegularIconForLabel(GlyphIcons icon, Label label) {
+        return getIconForLabel(icon, "1.231em", label);
     }
 
     public static Text getIcon(GlyphIcons icon) {

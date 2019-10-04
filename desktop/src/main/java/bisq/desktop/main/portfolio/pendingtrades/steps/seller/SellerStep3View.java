@@ -350,6 +350,10 @@ public class SellerStep3View extends TradeStepView {
             if (optionalHolderName.isPresent()) {
                 message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
             }
+
+            if (model.isSignWitnessTrade(true)) {
+                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
+            }
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
