@@ -152,10 +152,6 @@ public class BuyerStep4View extends TradeStepView {
 
         String key = "tradeCompleted" + trade.getId();
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
-            if (model.isSignWitnessTrade(false)) {
-
-            }
-
             DontShowAgainLookup.dontShowAgain(key, true);
             new Notification().headLine(Res.get("notification.tradeCompleted.headline"))
                     .notification(Res.get("notification.tradeCompleted.msg"))
