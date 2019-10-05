@@ -19,7 +19,6 @@ package bisq.core.account.sign;
 
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
@@ -79,7 +78,6 @@ public class SignedWitnessServiceTest {
     public void setup() throws Exception {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);
-        ArbitrationManager arbitrationManager = mock(ArbitrationManager.class);
         when(arbitratorManager.isPublicKeyInList(any())).thenReturn(true);
         signedWitnessService = new SignedWitnessService(null, null, arbitratorManager, null, appendOnlyDataStoreService);
         account1DataHash = org.bitcoinj.core.Utils.sha256hash160(new byte[]{1});
@@ -162,6 +160,52 @@ public class SignedWitnessServiceTest {
     }
 
     @Test
+    public void testIsValidSelfSignatureOk() throws Exception {
+        KeyPair peer1KeyPair = Sig.generateKeyPair();
+        signer2PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
+
+        signature2 = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account2DataHash).getBytes(Charsets.UTF_8));
+        signature3 = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, signer2PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, signer2PubKey, signer2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, signer2PubKey, signer2PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
+    public void testIsValidSimpleLoopSignatureProblem() throws Exception {
+        // A reasonable case where user1 is signed by user2 and later switches account and the new
+        // account gets signed by user2. This is not allowed.
+        KeyPair peer1KeyPair = Sig.generateKeyPair();
+        KeyPair peer2KeyPair = Sig.generateKeyPair();
+        byte[] user1PubKey = Sig.getPublicKeyBytes(peer1KeyPair.getPublic());
+        byte[] user2PubKey = Sig.getPublicKeyBytes(peer2KeyPair.getPublic());
+
+        signature2 = Sig.sign(peer1KeyPair.getPrivate(), Utilities.encodeToHex(account2DataHash).getBytes(Charsets.UTF_8));
+        signature3 = Sig.sign(peer2KeyPair.getPrivate(), Utilities.encodeToHex(account3DataHash).getBytes(Charsets.UTF_8));
+
+        SignedWitness sw1 = new SignedWitness(true, account1DataHash, signature1, signer1PubKey, user1PubKey, date1, tradeAmount1);
+        SignedWitness sw2 = new SignedWitness(false, account2DataHash, signature2, user1PubKey, user2PubKey, date2, tradeAmount2);
+        SignedWitness sw3 = new SignedWitness(false, account3DataHash, signature3, user2PubKey, user1PubKey, date3, tradeAmount3);
+
+        signedWitnessService.addToMap(sw1);
+        signedWitnessService.addToMap(sw2);
+        signedWitnessService.addToMap(sw3);
+
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+    }
+
+    @Test
     public void testIsValidAccountAgeWitnessDateTooSoonProblem() {
         date3 = getTodayMinusNDays(SIGN_AGE_2 - 1);
 
@@ -211,7 +255,6 @@ public class SignedWitnessServiceTest {
         KeyPair peer1KeyPair = Sig.generateKeyPair();
         KeyPair peer2KeyPair = Sig.generateKeyPair();
         KeyPair peer3KeyPair = Sig.generateKeyPair();
-
 
         String account1DataHashAsHexString = Utilities.encodeToHex(account1DataHash);
         String account2DataHashAsHexString = Utilities.encodeToHex(account2DataHash);
