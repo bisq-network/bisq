@@ -337,7 +337,7 @@ public class AccountAgeWitnessService {
                         factor = 1;
                         break;
                     case ONE_TO_TWO_MONTHS:
-                        factor = 0.25;
+                        factor = 0.5;
                         break;
                     case LESS_ONE_MONTH:
                     case UNVERIFIED:
