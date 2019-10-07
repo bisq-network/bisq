@@ -128,7 +128,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
-    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn, priceColumn, signingStateColumn, avatarColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
+            priceColumn, paymentMethodColumn, signingStateColumn, avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
     private OfferView.OfferActionHandler offerActionHandler;
@@ -220,7 +221,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(amountColumn);
         volumeColumn = getVolumeColumn();
         tableView.getColumns().add(volumeColumn);
-        TableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
+        paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
         signingStateColumn = getSigningStateColumn();
         tableView.getColumns().add(signingStateColumn);
@@ -310,6 +311,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (paymentMethodComboBox.getEditor().getText().isEmpty())
                 paymentMethodComboBox.getSelectionModel().select(SHOW_ALL);
             model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
+            updateSigningStateColumn();
         });
 
         if (model.showAllPaymentMethods)
@@ -339,6 +341,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         tableView.getColumns().remove(marketColumn);
                     }
 
+                    updateSigningStateColumn();
+
                     return null;
                 });
 
@@ -351,6 +355,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         nrOfOffersLabel.setText(Res.get("offerbook.nrOffers", model.getOfferList().size()));
 
         model.priceFeedService.updateCounterProperty().addListener(priceFeedUpdateCounterListener);
+    }
+
+    private void updateSigningStateColumn() {
+        if (model.hasSelectionAccountSigning()) {
+            if (!tableView.getColumns().contains(signingStateColumn)) {
+                tableView.getColumns().add(tableView.getColumns().indexOf(paymentMethodColumn) + 1, signingStateColumn);
+            }
+        } else {
+            tableView.getColumns().remove(signingStateColumn);
+        }
     }
 
     @Override
@@ -865,8 +879,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         return column;
     }
 
-    private TableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
-        TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod")) {
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> getPaymentMethodColumn() {
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.paymentMethod")) {
             {
                 setMinWidth(80);
             }
