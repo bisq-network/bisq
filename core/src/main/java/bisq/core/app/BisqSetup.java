@@ -17,7 +17,9 @@
 
 package bisq.core.app;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
@@ -43,6 +45,7 @@ import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
@@ -63,6 +66,7 @@ import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.ClockWatcher;
 import bisq.common.Timer;
@@ -175,7 +179,8 @@ public class BisqSetup {
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
-            wrongOSArchitectureHandler;
+            wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
+            displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -339,6 +344,7 @@ public class BisqSetup {
         // in MainViewModel
         maybeShowSecurityRecommendation();
         maybeShowLocalhostRunningInfo();
+        maybeShowAccountSigningStateInfo();
     }
 
 
@@ -579,9 +585,7 @@ public class BisqSetup {
                     if (allBasicServicesInitialized)
                         checkForLockedUpFunds();
                 },
-                () -> {
-                    walletInitialized.set(true);
-                });
+                () -> walletInitialized.set(true));
     }
 
 
@@ -703,9 +707,7 @@ public class BisqSetup {
         voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
             c.next();
             if (c.wasAdded() && voteResultExceptionHandler != null) {
-                c.getAddedSubList().forEach(e -> {
-                    voteResultExceptionHandler.accept(e);
-                });
+                c.getAddedSubList().forEach(e -> voteResultExceptionHandler.accept(e));
             }
         });
 
@@ -729,9 +731,65 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        String key = "bitcoinLocalhostNode";
-        if (bisqEnvironment.isBitcoinLocalhostNodeRunning() && preferences.showAgain(key) &&
-                displayLocalhostHandler != null)
-            displayLocalhostHandler.accept(key);
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, bisqEnvironment.isBitcoinLocalhostNodeRunning());
+    }
+
+    private void maybeShowAccountSigningStateInfo() {
+        String keySignedByArbitrator = "accountSignedByArbitrator";
+        String keySignedByPeer = "accountSignedByPeer";
+        String keyPeerLimitedLifted = "accountLimitLifted";
+        String keyPeerSigner = "accountPeerSigner";
+
+        // check signed witness on startup
+        checkSigningState(AccountAgeWitnessService.SignState.ARBITRATOR, keySignedByArbitrator, displaySignedByArbitratorHandler);
+        checkSigningState(AccountAgeWitnessService.SignState.PEER_INITIAL, keySignedByPeer, displaySignedByPeerHandler);
+        checkSigningState(AccountAgeWitnessService.SignState.PEER_LIMIT_LIFTED, keyPeerLimitedLifted, displayPeerLimitLiftedHandler);
+        checkSigningState(AccountAgeWitnessService.SignState.PEER_SIGNER, keyPeerSigner, displayPeerSignerHandler);
+
+        // check signed witness during runtime
+        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(
+                payload -> {
+                    maybeTriggerDisplayHandler(keySignedByArbitrator, displaySignedByArbitratorHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.ARBITRATOR));
+                    maybeTriggerDisplayHandler(keySignedByPeer, displaySignedByPeerHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.PEER_INITIAL));
+                    maybeTriggerDisplayHandler(keyPeerLimitedLifted, displayPeerLimitLiftedHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.PEER_LIMIT_LIFTED));
+                    maybeTriggerDisplayHandler(keyPeerSigner, displayPeerSignerHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.PEER_SIGNER));
+                });
+    }
+
+    private void checkSigningState(AccountAgeWitnessService.SignState state,
+                                   String key, Consumer<String> displayHandler) {
+        boolean signingStateFound = p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
+                .anyMatch(payload -> isSignedWitnessOfMineWithState(payload, state));
+
+        maybeTriggerDisplayHandler(key, displayHandler, signingStateFound);
+    }
+
+    private boolean isSignedWitnessOfMineWithState(PersistableNetworkPayload payload,
+                                                   AccountAgeWitnessService.SignState state) {
+        if (payload instanceof SignedWitness && user.getPaymentAccounts() != null) {
+            // We know at this point that it is already added to the signed witness list
+            // Check if new signed witness is for one of my own accounts
+
+            return user.getPaymentAccounts().stream()
+                    .filter(a -> PaymentMethod.hasChargebackRisk(a.getPaymentMethod(), a.getTradeCurrencies()))
+                    .anyMatch(a -> {
+                        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload());
+                        AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(myWitness);
+
+                        return (signState.equals(state));
+                    });
+        }
+        return false;
+    }
+
+    private void maybeTriggerDisplayHandler(String key, Consumer<String> displayHandler, boolean signingStateFound) {
+        if (signingStateFound && preferences.showAgain(key) &&
+                displayHandler != null) {
+            displayHandler.accept(key);
+        }
     }
 }
