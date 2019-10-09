@@ -306,13 +306,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 showNextStepAfterAmountIsSet();
         }
 
-        if (CurrencyUtil.isFiatCurrency(model.getOffer().getCurrencyCode()) && !DevEnv.isDevMode()) {
-            new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
-                    .information(Res.get("popup.roundedFiatValues.msg", model.getOffer().getCurrencyCode()))
-                    .dontShowAgainId("FiatValuesRoundedWarning")
-                    .show();
-        }
-
         boolean currencyForMakerFeeBtc = model.dataModel.isCurrencyForTakerFeeBtc();
         tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
         tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);

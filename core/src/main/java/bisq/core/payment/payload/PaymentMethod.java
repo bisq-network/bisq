@@ -328,6 +328,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable {
                 .anyMatch(tradeCurrency -> hasChargebackRisk(paymentMethod, tradeCurrency.getCode()));
     }
 
+    public static boolean hasChargebackRisk(PaymentMethod paymentMethod) {
+        return hasChargebackRisk(paymentMethod, CurrencyUtil.getMatureMarketCurrencies());
+    }
+
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, String currencyCode) {
         if (paymentMethod == null)
             return false;

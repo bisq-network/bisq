@@ -286,6 +286,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
+        else
+            this.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
 
         applyFilterPredicate();
     }
@@ -567,7 +569,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
         return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
                 !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
-        });
+                });
     }
 
     boolean isMyInsufficientTradeLimit(Offer offer) {
@@ -607,5 +609,20 @@ class OfferBookViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    public boolean hasSelectionAccountSigning() {
+        if (showAllTradeCurrenciesProperty.get()) {
+            if (!selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG)) {
+                return PaymentMethod.hasChargebackRisk(selectedPaymentMethod);
+            }
+        } else {
+            if (selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG))
+                return CurrencyUtil.getMatureMarketCurrencies().stream()
+                        .anyMatch(c -> c.getCode().equals(selectedTradeCurrency.getCode()));
+            else
+                return PaymentMethod.hasChargebackRisk(selectedPaymentMethod, tradeCurrencyCode.get());
+        }
+        return true;
     }
 }
