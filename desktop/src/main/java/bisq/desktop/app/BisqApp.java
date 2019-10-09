@@ -218,10 +218,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         }
         Scene scene = new Scene(mainView.getRoot(),
                 maxWindowBounds.width < INITIAL_WINDOW_WIDTH ?
-                        (maxWindowBounds.width < MIN_WINDOW_WIDTH ? MIN_WINDOW_WIDTH : maxWindowBounds.width) :
+                        Math.max(maxWindowBounds.width, MIN_WINDOW_WIDTH) :
                         INITIAL_WINDOW_WIDTH,
                 maxWindowBounds.height < INITIAL_WINDOW_HEIGHT ?
-                        (maxWindowBounds.height < MIN_WINDOW_HEIGHT ? MIN_WINDOW_HEIGHT : maxWindowBounds.height) :
+                        Math.max(maxWindowBounds.height, MIN_WINDOW_HEIGHT) :
                         INITIAL_WINDOW_HEIGHT);
 
         addSceneKeyEventHandler(scene, injector);
