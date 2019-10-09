@@ -73,6 +73,7 @@ import javafx.scene.layout.StackPane;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -180,12 +181,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             try {
                 try {
                     if (!popupOpened) {
-                        String message = throwable.getMessage();
                         popupOpened = true;
-                        if (message != null)
-                            new Popup<>().error(message).onClose(() -> popupOpened = false).show();
-                        else
-                            new Popup<>().error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                        new Popup<>().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
+                                .onClose(() -> popupOpened = false)
+                                .show();
                     }
                 } catch (Throwable throwable3) {
                     log.error("Error at displaying Throwable.");
