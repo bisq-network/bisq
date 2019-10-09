@@ -68,8 +68,8 @@ public class BtcNodes {
                         new BtcNode("btc1.sqrrm.net", "3r44ddzjitznyahw.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
                         new BtcNode("btc2.sqrrm.net", "i3a5xtzfm4xwtybd.onion", "81.171.22.143", BtcNode.DEFAULT_PORT, "@sqrrm"),
 
-                        // KanoczTomas
-                        new BtcNode("btc.ispol.sk", null, "193.58.196.212", BtcNode.DEFAULT_PORT, "@KanoczTomas"),
+                        // KanoczTomas - temp disabled until he returns
+                        // new BtcNode("btc.ispol.sk", "mbm6ffx6j5ygi2ck.onion", "193.58.196.212", BtcNode.DEFAULT_PORT, "@KanoczTomas"),
 
                         // Devin Bileck
                         new BtcNode("btc1.dnsalias.net", "lva54pnbq2nsmjyr.onion", "165.227.34.198", BtcNode.DEFAULT_PORT, "@devinbileck"),
