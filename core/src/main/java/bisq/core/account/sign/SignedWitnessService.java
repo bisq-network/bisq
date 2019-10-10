@@ -149,7 +149,7 @@ public class SignedWitnessService {
 
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
         String signatureBase64 = key.signMessage(accountAgeWitnessHashAsHex);
-        SignedWitness signedWitness = new SignedWitness(true,
+        SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.ARBITRATOR,
                 accountAgeWitness.getHash(),
                 signatureBase64.getBytes(Charsets.UTF_8),
                 key.getPubKey(),
@@ -171,7 +171,7 @@ public class SignedWitnessService {
         }
 
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
-        SignedWitness signedWitness = new SignedWitness(false,
+        SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.TRADE,
                 accountAgeWitness.getHash(),
                 signature,
                 keyRing.getSignatureKeyPair().getPublic().getEncoded(),

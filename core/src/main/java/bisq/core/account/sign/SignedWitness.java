@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
@@ -46,9 +47,23 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
         DateTolerantPayload, CapabilityRequiringPayload {
+
+    public enum VerificationMethod {
+        ARBITRATOR,
+        TRADE;
+
+        public static SignedWitness.VerificationMethod fromProto(protobuf.SignedWitness.VerificationMethod method) {
+            return ProtoUtil.enumFromProto(SignedWitness.VerificationMethod.class, method.name());
+        }
+
+        public static protobuf.SignedWitness.VerificationMethod toProtoMessage(SignedWitness.VerificationMethod method) {
+            return protobuf.SignedWitness.VerificationMethod.valueOf(method.name());
+        }
+    }
+
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
-    private final boolean signedByArbitrator;
+    private final VerificationMethod verificationMethod;
     private final byte[] accountAgeWitnessHash;
     private final byte[] signature;
     private final byte[] signerPubKey;
@@ -58,14 +73,14 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
 
     transient private final byte[] hash;
 
-    public SignedWitness(boolean signedByArbitrator,
+    public SignedWitness(VerificationMethod verificationMethod,
                          byte[] accountAgeWitnessHash,
                          byte[] signature,
                          byte[] signerPubKey,
                          byte[] witnessOwnerPubKey,
                          long date,
                          long tradeAmount) {
-        this.signedByArbitrator = signedByArbitrator;
+        this.verificationMethod = verificationMethod;
         this.accountAgeWitnessHash = accountAgeWitnessHash.clone();
         this.signature = signature.clone();
         this.signerPubKey = signerPubKey.clone();
@@ -93,7 +108,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     @Override
     public protobuf.PersistableNetworkPayload toProtoMessage() {
         final protobuf.SignedWitness.Builder builder = protobuf.SignedWitness.newBuilder()
-                .setSignedByArbitrator(signedByArbitrator)
+                .setVerificationMethod(VerificationMethod.toProtoMessage(verificationMethod))
                 .setAccountAgeWitnessHash(ByteString.copyFrom(accountAgeWitnessHash))
                 .setSignature(ByteString.copyFrom(signature))
                 .setSignerPubKey(ByteString.copyFrom(signerPubKey))
@@ -108,7 +123,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     }
 
     public static SignedWitness fromProto(protobuf.SignedWitness proto) {
-        return new SignedWitness(proto.getSignedByArbitrator(),
+        return new SignedWitness(
+                SignedWitness.VerificationMethod.fromProto(proto.getVerificationMethod()),
                 proto.getAccountAgeWitnessHash().toByteArray(),
                 proto.getSignature().toByteArray(),
                 proto.getSignerPubKey().toByteArray(),
@@ -145,6 +161,9 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         return hash;
     }
 
+    public boolean isSignedByArbitrator() {
+        return verificationMethod == VerificationMethod.ARBITRATOR;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -157,7 +176,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     @Override
     public String toString() {
         return "SignedWitness{" +
-                ",\n     signedByArbitrator=" + signedByArbitrator +
+                ",\n     verificationMethod=" + verificationMethod +
                 ",\n     witnessHash=" + Utilities.bytesAsHexString(accountAgeWitnessHash) +
                 ",\n     signature=" + Utilities.bytesAsHexString(signature) +
                 ",\n     signerPubKey=" + Utilities.bytesAsHexString(signerPubKey) +
