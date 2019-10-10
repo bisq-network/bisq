@@ -34,8 +34,10 @@ import bisq.desktop.main.account.register.arbitrator.ArbitratorRegistrationView;
 import bisq.desktop.main.account.register.mediator.MediatorRegistrationView;
 import bisq.desktop.main.account.register.refundagent.RefundAgentRegistrationView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.presentation.AccountPresentation;
 
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 
 import bisq.common.app.DevEnv;
 import bisq.common.util.Utilities;
@@ -206,6 +208,9 @@ public class AccountView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
+        // Hide account new badge if user saw this section
+        DontShowAgainLookup.dontShowAgain(AccountPresentation.ACCOUNT_NEWS, true);
+
         navigation.addListener(navigationListener);
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
