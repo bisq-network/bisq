@@ -30,6 +30,7 @@ import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
+import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
@@ -105,6 +106,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
     private final SupportTicketsPresentation supportTicketsPresentation;
     private final MarketPricePresentation marketPricePresentation;
     private final DaoPresentation daoPresentation;
+    private final AccountPresentation accountPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     @Getter
@@ -146,7 +148,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                          SupportTicketsPresentation supportTicketsPresentation,
                          MarketPricePresentation marketPricePresentation,
                          DaoPresentation daoPresentation,
-                         P2PService p2PService,
+                         AccountPresentation accountPresentation, P2PService p2PService,
                          TradeManager tradeManager,
                          Preferences preferences,
                          PrivateNotificationManager privateNotificationManager,
@@ -167,6 +169,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         this.supportTicketsPresentation = supportTicketsPresentation;
         this.marketPricePresentation = marketPricePresentation;
         this.daoPresentation = daoPresentation;
+        this.accountPresentation = accountPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.preferences = preferences;
@@ -241,6 +244,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
         marketPricePresentation.setup();
         daoPresentation.setup();
+        accountPresentation.setup();
 
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
@@ -350,38 +354,14 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
                 popupQueue.add(popup);
             }
         });
-        bisqSetup.setDisplaySignedByArbitratorHandler(key -> {
-            if (!DevEnv.isDevMode()) {
-                preferences.dontShowAgain(key, true);
-                new Popup<>().information(Res.get("popup.accountSigning.signedByArbitrator",
-                        Res.get("popup.accountSigning.generalInformation")))
-                        .show();
-            }
-        });
-        bisqSetup.setDisplaySignedByPeerHandler(key -> {
-            if (!DevEnv.isDevMode()) {
-                preferences.dontShowAgain(key, true);
-                new Popup<>().information(Res.get("popup.accountSigning.signedByPeer",
-                        Res.get("popup.accountSigning.generalInformation")))
-                        .show();
-            }
-        });
-        bisqSetup.setDisplayPeerLimitLiftedHandler(key -> {
-            if (!DevEnv.isDevMode()) {
-                preferences.dontShowAgain(key, true);
-                new Popup<>().information(Res.get("popup.accountSigning.peerLimitLifted",
-                        Res.get("popup.accountSigning.generalInformation")))
-                        .show();
-            }
-        });
-        bisqSetup.setDisplayPeerSignerHandler(key -> {
-            if (!DevEnv.isDevMode()) {
-                preferences.dontShowAgain(key, true);
-                new Popup<>().information(Res.get("popup.accountSigning.peerSigner",
-                        Res.get("popup.accountSigning.generalInformation")))
-                        .show();
-            }
-        });
+        bisqSetup.setDisplaySignedByArbitratorHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.signedByArbitrator"));
+        bisqSetup.setDisplaySignedByPeerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.signedByPeer"));
+        bisqSetup.setDisplayPeerLimitLiftedHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.peerLimitLifted"));
+        bisqSetup.setDisplayPeerSignerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.peerSigner"));
 
         bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
 
@@ -634,6 +614,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
 
     public BooleanProperty getShowDaoUpdatesNotification() {
         return daoPresentation.getShowDaoUpdatesNotification();
+    }
+
+    public BooleanProperty getShowAccountUpdatesNotification() {
+        return accountPresentation.getShowAccountUpdatesNotification();
     }
 
     private void maybeAddDaoLaunchWindowToQueue() {
