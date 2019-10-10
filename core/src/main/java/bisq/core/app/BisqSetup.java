@@ -19,7 +19,6 @@ package bisq.core.app;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
-import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
@@ -106,6 +105,7 @@ import java.net.Socket;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -773,15 +773,12 @@ public class BisqSetup {
         if (payload instanceof SignedWitness && user.getPaymentAccounts() != null) {
             // We know at this point that it is already added to the signed witness list
             // Check if new signed witness is for one of my own accounts
-
             return user.getPaymentAccounts().stream()
                     .filter(a -> PaymentMethod.hasChargebackRisk(a.getPaymentMethod(), a.getTradeCurrencies()))
-                    .anyMatch(a -> {
-                        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload());
-                        AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(myWitness);
-
-                        return (signState.equals(state));
-                    });
+                    .filter(a -> Arrays.equals(((SignedWitness) payload).getWitnessHash(),
+                            accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload()).getHash()))
+                    .anyMatch(a -> accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
+                            a.getPaymentAccountPayload())).equals(state));
         }
         return false;
     }
