@@ -193,7 +193,7 @@ public class SignedWitnessService {
 
     private boolean verifySignatureWithECKey(SignedWitness signedWitness) {
         try {
-            String message = Utilities.encodeToHex(signedWitness.getWitnessHash());
+            String message = Utilities.encodeToHex(signedWitness.getAccountAgeWitnessHash());
             String signatureBase64 = new String(signedWitness.getSignature(), Charsets.UTF_8);
             ECKey key = ECKey.fromPublicOnly(signedWitness.getSignerPubKey());
             if (arbitratorManager.isPublicKeyInList(Utilities.encodeToHex(key.getPubKey()))) {
@@ -213,7 +213,7 @@ public class SignedWitnessService {
     private boolean verifySignatureWithDSAKey(SignedWitness signedWitness) {
         try {
             PublicKey signaturePubKey = Sig.getPublicKeyFromBytes(signedWitness.getSignerPubKey());
-            Sig.verify(signaturePubKey, signedWitness.getWitnessHash(), signedWitness.getSignature());
+            Sig.verify(signaturePubKey, signedWitness.getAccountAgeWitnessHash(), signedWitness.getSignature());
             return true;
         } catch (CryptoException e) {
             log.warn("verifySignature signedWitness failed. signedWitness={}", signedWitness);
@@ -224,7 +224,7 @@ public class SignedWitnessService {
 
     private Set<SignedWitness> getSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
-                .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
+                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 
@@ -232,7 +232,7 @@ public class SignedWitnessService {
     public Set<SignedWitness> getArbitratorsSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
                 .filter(SignedWitness::isSignedByArbitrator)
-                .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
+                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 
@@ -240,7 +240,7 @@ public class SignedWitnessService {
     public Set<SignedWitness> getTrustedPeerSignedWitnessSet(AccountAgeWitness accountAgeWitness) {
         return signedWitnessMap.values().stream()
                 .filter(e -> !e.isSignedByArbitrator())
-                .filter(e -> Arrays.equals(e.getWitnessHash(), accountAgeWitness.getHash()))
+                .filter(e -> Arrays.equals(e.getAccountAgeWitnessHash(), accountAgeWitness.getHash()))
                 .collect(Collectors.toSet());
     }
 

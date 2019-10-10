@@ -723,7 +723,7 @@ message AccountAgeWitness {
 
 message SignedWitness {
     bool signed_by_arbitrator = 1;
-    bytes witness_hash = 2;
+    bytes account_age_witness_hash = 2;
     bytes signature = 3;
     bytes signer_pub_key = 4;
     bytes witness_owner_pub_key = 5;

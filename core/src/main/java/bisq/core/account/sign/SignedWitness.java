@@ -49,7 +49,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
     private final boolean signedByArbitrator;
-    private final byte[] witnessHash;
+    private final byte[] accountAgeWitnessHash;
     private final byte[] signature;
     private final byte[] signerPubKey;
     private final byte[] witnessOwnerPubKey;
@@ -59,14 +59,14 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     transient private final byte[] hash;
 
     public SignedWitness(boolean signedByArbitrator,
-                         byte[] witnessHash,
+                         byte[] accountAgeWitnessHash,
                          byte[] signature,
                          byte[] signerPubKey,
                          byte[] witnessOwnerPubKey,
                          long date,
                          long tradeAmount) {
         this.signedByArbitrator = signedByArbitrator;
-        this.witnessHash = witnessHash.clone();
+        this.accountAgeWitnessHash = accountAgeWitnessHash.clone();
         this.signature = signature.clone();
         this.signerPubKey = signerPubKey.clone();
         this.witnessOwnerPubKey = witnessOwnerPubKey.clone();
@@ -80,7 +80,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         // same peer to add more security as if that one would be colluding it would be not detected anyway. The total
         // number of signed trades with different peers is still available and can be considered more valuable data for
         // security.
-        byte[] data = Utilities.concatenateByteArrays(witnessHash, signature);
+        byte[] data = Utilities.concatenateByteArrays(accountAgeWitnessHash, signature);
         data = Utilities.concatenateByteArrays(data, signerPubKey);
         hash = Hash.getSha256Ripemd160hash(data);
     }
@@ -94,7 +94,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     public protobuf.PersistableNetworkPayload toProtoMessage() {
         final protobuf.SignedWitness.Builder builder = protobuf.SignedWitness.newBuilder()
                 .setSignedByArbitrator(signedByArbitrator)
-                .setWitnessHash(ByteString.copyFrom(witnessHash))
+                .setAccountAgeWitnessHash(ByteString.copyFrom(accountAgeWitnessHash))
                 .setSignature(ByteString.copyFrom(signature))
                 .setSignerPubKey(ByteString.copyFrom(signerPubKey))
                 .setWitnessOwnerPubKey(ByteString.copyFrom(witnessOwnerPubKey))
@@ -109,7 +109,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
 
     public static SignedWitness fromProto(protobuf.SignedWitness proto) {
         return new SignedWitness(proto.getSignedByArbitrator(),
-                proto.getWitnessHash().toByteArray(),
+                proto.getAccountAgeWitnessHash().toByteArray(),
                 proto.getSignature().toByteArray(),
                 proto.getSignerPubKey().toByteArray(),
                 proto.getWitnessOwnerPubKey().toByteArray(),
@@ -158,7 +158,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     public String toString() {
         return "SignedWitness{" +
                 ",\n     signedByArbitrator=" + signedByArbitrator +
-                ",\n     witnessHash=" + Utilities.bytesAsHexString(witnessHash) +
+                ",\n     witnessHash=" + Utilities.bytesAsHexString(accountAgeWitnessHash) +
                 ",\n     signature=" + Utilities.bytesAsHexString(signature) +
                 ",\n     signerPubKey=" + Utilities.bytesAsHexString(signerPubKey) +
                 ",\n     witnessOwnerPubKey=" + Utilities.bytesAsHexString(witnessOwnerPubKey) +

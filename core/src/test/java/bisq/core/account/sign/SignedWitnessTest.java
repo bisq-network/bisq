@@ -41,9 +41,9 @@ public class SignedWitnessTest {
     public void isImmutable() {
         byte[] signerPubkey = arbitrator1Key.getPubKey();
         SignedWitness signedWitness = new SignedWitness(true, witnessHash, witnessHashSignature, signerPubkey, witnessOwner1PubKey, Instant.now().getEpochSecond(), 100);
-        byte[] originalWitnessHash = signedWitness.getWitnessHash().clone();
+        byte[] originalWitnessHash = signedWitness.getAccountAgeWitnessHash().clone();
         witnessHash[0] += 1;
-        assertArrayEquals(originalWitnessHash, signedWitness.getWitnessHash());
+        assertArrayEquals(originalWitnessHash, signedWitness.getAccountAgeWitnessHash());
 
         byte[] originalWitnessHashSignature = signedWitness.getSignature().clone();
         witnessHashSignature[0] += 1;
