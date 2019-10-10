@@ -1097,8 +1097,19 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
                                 if (needsSigning) {
                                     icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
-                                    info = Res.get("shared.notSigned");
-                                    timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
+
+                                    AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
+
+                                    if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+                                        info = Res.get("offerbook.timeSinceSigning.info", signState.getPresentation());
+                                        long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
+                                                accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
+                                        timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
+                                                daysSinceSigning);
+                                    } else {
+                                        info = Res.get("shared.notSigned");
+                                        timeSinceSigning = Res.get("offerbook.timeSinceSigning.notSigned");
+                                    }
                                 } else {
                                     icon = MaterialDesignIcon.INFORMATION_OUTLINE;
                                     info = Res.get("shared.notSigned.noNeed");
