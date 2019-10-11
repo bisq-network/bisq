@@ -142,7 +142,7 @@ public class SignedWitnessService {
                                                AccountAgeWitness accountAgeWitness,
                                                ECKey key,
                                                PublicKey peersPubKey) {
-        if (isValidAccountAgeWitness(accountAgeWitness)) {
+        if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Arbitrator trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
             return null;
         }
@@ -165,7 +165,7 @@ public class SignedWitnessService {
     public SignedWitness signAccountAgeWitness(Coin tradeAmount,
                                                AccountAgeWitness accountAgeWitness,
                                                PublicKey peersPubKey) throws CryptoException {
-        if (isValidAccountAgeWitness(accountAgeWitness)) {
+        if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
             return null;
         }
@@ -254,18 +254,27 @@ public class SignedWitnessService {
                 .collect(Collectors.toSet());
     }
 
+    public boolean isSignedAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
+        return isSignerAccountAgeWitness(accountAgeWitness, new Date().getTime() + SIGNER_AGE);
+    }
+
+    public boolean isSignerAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
+        return isSignerAccountAgeWitness(accountAgeWitness, new Date().getTime());
+    }
+
     /**
-     * Checks whether the accountAgeWitness has a valid signature from a peer/arbitrator.
+     * Checks whether the accountAgeWitness has a valid signature from a peer/arbitrator and is allowed to sign
+     * other accounts.
      *
      * @param accountAgeWitness accountAgeWitness
-     * @return true if accountAgeWitness is valid, false otherwise.
+     * @param time              time of signing
+     * @return true if accountAgeWitness is allowed to sign at time, false otherwise.
      */
-    public boolean isValidAccountAgeWitness(AccountAgeWitness accountAgeWitness) {
+    private boolean isSignerAccountAgeWitness(AccountAgeWitness accountAgeWitness, long time) {
         Stack<P2PDataStorage.ByteArray> excludedPubKeys = new Stack<>();
-        long now = new Date().getTime();
         Set<SignedWitness> signedWitnessSet = getSignedWitnessSet(accountAgeWitness);
         for (SignedWitness signedWitness : signedWitnessSet) {
-            if (isValidSignedWitnessInternal(signedWitness, now, excludedPubKeys)) {
+            if (isValidSignerWitnessInternal(signedWitness, time, excludedPubKeys)) {
                 return true;
             }
         }
@@ -281,7 +290,7 @@ public class SignedWitnessService {
      * @param excludedPubKeys              stack to prevent recursive loops
      * @return true if signedWitness is valid, false otherwise.
      */
-    private boolean isValidSignedWitnessInternal(SignedWitness signedWitness,
+    private boolean isValidSignerWitnessInternal(SignedWitness signedWitness,
                                                  long childSignedWitnessDateMillis,
                                                  Stack<P2PDataStorage.ByteArray> excludedPubKeys) {
         if (!verifySignature(signedWitness)) {
@@ -303,7 +312,7 @@ public class SignedWitnessService {
             // Iterate over signedWitness signers
             Set<SignedWitness> signerSignedWitnessSet = getSignedWitnessSetByOwnerPubKey(signedWitness.getSignerPubKey(), excludedPubKeys);
             for (SignedWitness signerSignedWitness : signerSignedWitnessSet) {
-                if (isValidSignedWitnessInternal(signerSignedWitness, signedWitness.getDate(), excludedPubKeys)) {
+                if (isValidSignerWitnessInternal(signerSignedWitness, signedWitness.getDate(), excludedPubKeys)) {
                     return true;
                 }
             }

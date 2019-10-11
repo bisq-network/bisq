@@ -122,9 +122,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
     @Test
@@ -139,9 +139,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
     @Test
@@ -156,9 +156,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
     @Test
@@ -177,9 +177,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
     @Test
@@ -202,9 +202,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
     @Test
@@ -219,9 +219,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
     @Test
@@ -236,9 +236,9 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew1));
-        assertTrue(signedWitnessService.isValidAccountAgeWitness(aew2));
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew1));
+        assertTrue(signedWitnessService.isSignerAccountAgeWitness(aew2));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
 
@@ -288,7 +288,7 @@ public class SignedWitnessServiceTest {
         signedWitnessService.addToMap(sw2);
         signedWitnessService.addToMap(sw3);
 
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew3));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew3));
     }
 
 
@@ -323,7 +323,7 @@ public class SignedWitnessServiceTest {
             SignedWitness sw = new SignedWitness(i == 0 ? ARBITRATOR : TRADE, accountDataHash, signature, signerPubKey, witnessOwnerPubKey, date, tradeAmount1);
             signedWitnessService.addToMap(sw);
         }
-        assertFalse(signedWitnessService.isValidAccountAgeWitness(aew));
+        assertFalse(signedWitnessService.isSignerAccountAgeWitness(aew));
     }
 
 

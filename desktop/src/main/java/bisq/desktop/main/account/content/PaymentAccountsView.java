@@ -130,6 +130,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                                 switch (signState) {
                                     case PEER_SIGNER:
                                     case ARBITRATOR:
+                                    case PEER_LIMIT_LIFTED:
+                                    case PEER_INITIAL:
                                         label.setIcon(MaterialDesignIcon.APPROVAL, info);
                                         break;
                                     default:

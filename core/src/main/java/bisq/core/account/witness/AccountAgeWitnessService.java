@@ -619,7 +619,7 @@ public class AccountAgeWitnessService {
                 .filter(this::isBuyerWinner)
                 .flatMap(this::getTraderData)
                 .filter(traderDataItem ->
-                        !signedWitnessService.isValidAccountAgeWitness(traderDataItem.getAccountAgeWitness()))
+                        !signedWitnessService.isSignedAccountAgeWitness(traderDataItem.getAccountAgeWitness()))
                 .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
                 .distinct()
                 .collect(Collectors.toList());
@@ -662,28 +662,20 @@ public class AccountAgeWitnessService {
         return Stream.of(buyerData, sellerData);
     }
 
-    // Check if my account has a signed witness
-    public boolean myHasSignedWitness(PaymentAccountPayload paymentAccountPayload) {
-        return signedWitnessService.isValidAccountAgeWitness(getMyWitness(paymentAccountPayload));
-    }
-
     public boolean hasSignedWitness(Offer offer) {
         return findWitness(offer)
-                .map(signedWitnessService::isValidAccountAgeWitness)
+                .map(signedWitnessService::isSignedAccountAgeWitness)
                 .orElse(false);
     }
 
     public boolean peerHasSignedWitness(Trade trade) {
         return findTradePeerWitness(trade)
-                .map(signedWitnessService::isValidAccountAgeWitness)
+                .map(signedWitnessService::isSignedAccountAgeWitness)
                 .orElse(false);
     }
 
     public boolean accountIsSigner(AccountAgeWitness accountAgeWitness) {
-        if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
-            return true;
-        }
-        return getWitnessSignAge(accountAgeWitness, new Date()) > SignedWitnessService.SIGNER_AGE;
+        return signedWitnessService.isSignerAccountAgeWitness(accountAgeWitness);
     }
 
     public SignState getSignState(Offer offer) {
