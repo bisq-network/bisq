@@ -722,8 +722,14 @@ message AccountAgeWitness {
 }
 
 message SignedWitness {
-    bool signed_by_arbitrator = 1;
-    bytes witness_hash = 2;
+    enum VerificationMethod {
+        PB_ERROR = 0;
+        ARBITRATOR = 1;
+        TRADE = 2;
+    }
+
+    VerificationMethod verification_method = 1;
+    bytes account_age_witness_hash = 2;
     bytes signature = 3;
     bytes signer_pub_key = 4;
     bytes witness_owner_pub_key = 5;

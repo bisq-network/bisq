@@ -775,7 +775,7 @@ public class BisqSetup {
             // Check if new signed witness is for one of my own accounts
             return user.getPaymentAccounts().stream()
                     .filter(a -> PaymentMethod.hasChargebackRisk(a.getPaymentMethod(), a.getTradeCurrencies()))
-                    .filter(a -> Arrays.equals(((SignedWitness) payload).getWitnessHash(),
+                    .filter(a -> Arrays.equals(((SignedWitness) payload).getAccountAgeWitnessHash(),
                             accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload()).getHash()))
                     .anyMatch(a -> accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
                             a.getPaymentAccountPayload())).equals(state));
