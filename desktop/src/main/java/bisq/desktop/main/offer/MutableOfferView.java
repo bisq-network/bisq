@@ -213,6 +213,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
         paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.selectTradingAccount"),
                 paymentAccountsComboBox, false));
+        paymentAccountsComboBox.setCellFactory(model.getPaymentAccountListCellFactory(paymentAccountsComboBox));
 
         doSetFocus();
     }

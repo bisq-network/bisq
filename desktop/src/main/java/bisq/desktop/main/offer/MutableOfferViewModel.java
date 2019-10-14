@@ -35,6 +35,7 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -66,6 +67,10 @@ import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -75,6 +80,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+
+import javafx.util.Callback;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +93,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private final BsqValidator bsqValidator;
     protected final SecurityDepositValidator securityDepositValidator;
     private final PriceFeedService priceFeedService;
+    private AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final Preferences preferences;
     protected final BSFormatter btcFormatter;
@@ -185,6 +193,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                  BsqValidator bsqValidator,
                                  SecurityDepositValidator securityDepositValidator,
                                  PriceFeedService priceFeedService,
+                                 AccountAgeWitnessService accountAgeWitnessService,
                                  Navigation navigation,
                                  Preferences preferences,
                                  BSFormatter btcFormatter,
@@ -198,6 +207,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
         this.priceFeedService = priceFeedService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.preferences = preferences;
         this.btcFormatter = btcFormatter;
@@ -1040,6 +1050,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public Offer createAndGetOffer() {
         offer = dataModel.createAndGetOffer();
         return offer;
+    }
+
+    public Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>> getPaymentAccountListCellFactory(
+            ComboBox<PaymentAccount> paymentAccountsComboBox) {
+        return GUIUtil.getPaymentAccountListCellFactory(paymentAccountsComboBox, accountAgeWitnessService);
     }
 
     public M getDataModel() {

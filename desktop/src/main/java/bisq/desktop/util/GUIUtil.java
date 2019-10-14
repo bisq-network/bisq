@@ -21,12 +21,15 @@ import bisq.desktop.Navigation;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BisqTextArea;
+import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
@@ -83,6 +86,8 @@ import com.google.gson.JsonElement;
 import com.google.common.base.Charsets;
 
 import org.apache.commons.lang3.StringUtils;
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -814,6 +819,50 @@ public class GUIUtil {
             @Override
             public PaymentAccount fromString(String s) {
                 return null;
+            }
+        };
+    }
+
+    public static Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>> getPaymentAccountListCellFactory(
+            ComboBox<PaymentAccount> paymentAccountsComboBox,
+            AccountAgeWitnessService accountAgeWitnessService) {
+        return p -> new ListCell<>() {
+            @Override
+            protected void updateItem(PaymentAccount item, boolean empty) {
+                super.updateItem(item, empty);
+
+                if (item != null && !empty) {
+
+                    boolean needsSigning = PaymentMethod.hasChargebackRisk(item.getPaymentMethod(),
+                            item.getTradeCurrencies());
+
+                    InfoAutoTooltipLabel label = new InfoAutoTooltipLabel(
+                            paymentAccountsComboBox.getConverter().toString(item),
+                            ContentDisplay.RIGHT);
+
+                    if (needsSigning) {
+                        AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
+                                item.paymentAccountPayload);
+                        AccountAgeWitnessService.SignState signState =
+                                accountAgeWitnessService.getSignState(myWitness);
+                        String info = StringUtils.capitalize(signState.getPresentation());
+
+                        MaterialDesignIcon icon;
+
+                        switch (signState) {
+                            case PEER_SIGNER:
+                            case ARBITRATOR:
+                                icon = MaterialDesignIcon.APPROVAL;
+                                break;
+                            default:
+                                icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                        }
+                        label.setIcon(icon, info);
+                    }
+                    setGraphic(label);
+                } else {
+                    setGraphic(null);
+                }
             }
         };
     }
