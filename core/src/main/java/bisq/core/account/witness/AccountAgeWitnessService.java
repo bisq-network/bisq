@@ -363,15 +363,22 @@ public class AccountAgeWitnessService {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Mature witness checks
+    // Trade limit exceptions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isImmature(AccountAgeWitness accountAgeWitness) {
         return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE;
     }
 
-    public boolean isMyAccountAgeImmature(PaymentAccount myPaymentAccount) {
-        return isImmature(getMyWitness(myPaymentAccount.getPaymentAccountPayload()));
+    public boolean myHasTradeLimitException(PaymentAccount myPaymentAccount) {
+        return hasTradeLimitException(getMyWitness(myPaymentAccount.getPaymentAccountPayload()));
+    }
+
+    // There are no trade limits on accounts that
+    // - are mature
+    // - were signed by an arbitrator
+    private boolean hasTradeLimitException(AccountAgeWitness accountAgeWitness) {
+        return !isImmature(accountAgeWitness) || signedWitnessService.isSignedByArbitrator(accountAgeWitness);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -402,7 +409,7 @@ public class AccountAgeWitnessService {
 
         AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccount.getPaymentAccountPayload());
         Coin maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
-        if (!isImmature(accountAgeWitness)) {
+        if (hasTradeLimitException(accountAgeWitness)) {
             return maxTradeLimit.value;
         }
         final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
@@ -528,7 +535,7 @@ public class AccountAgeWitnessService {
         final String currencyCode = offer.getCurrencyCode();
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
-        if (isImmature(peersWitness)) {
+        if (!hasTradeLimitException(peersWitness)) {
             final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
             AccountAge accountAgeCategory = getPeersAccountAgeCategory(accountSignAge);
             OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
