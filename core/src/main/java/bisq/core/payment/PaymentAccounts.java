@@ -61,7 +61,7 @@ class PaymentAccounts {
     }
 
     private List<PaymentAccount> sortValidAccounts(Offer offer) {
-        Comparator<PaymentAccount> comparator = this::compareBySignAgeOrMatureAccount;
+        Comparator<PaymentAccount> comparator = this::compareByTradeLimit;
         return accounts.stream()
                 .filter(account -> validator.apply(offer, account))
                 .sorted(comparator.reversed())
@@ -91,13 +91,13 @@ class PaymentAccounts {
         }
     }
 
-    // Accounts created before
-    private int compareBySignAgeOrMatureAccount(PaymentAccount left, PaymentAccount right) {
+    // Accounts ranked by trade limit
+    private int compareByTradeLimit(PaymentAccount left, PaymentAccount right) {
         // Mature accounts count as infinite sign age
-        if (!accountAgeWitnessService.isMyAccountAgeImmature(left)) {
-            return accountAgeWitnessService.isMyAccountAgeImmature(right) ? 1 : 0;
+        if (accountAgeWitnessService.myHasTradeLimitException(left)) {
+            return !accountAgeWitnessService.myHasTradeLimitException(right) ? 1 : 0;
         }
-        if (!accountAgeWitnessService.isMyAccountAgeImmature(right)) {
+        if (accountAgeWitnessService.myHasTradeLimitException(right)) {
             return -1;
         }
 
