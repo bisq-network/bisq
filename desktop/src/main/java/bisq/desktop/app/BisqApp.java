@@ -253,18 +253,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.setScene(scene);
         stage.setMinWidth(MIN_WINDOW_WIDTH);
         stage.setMinHeight(MIN_WINDOW_HEIGHT);
-
-        // on Windows the title icon is also used as task bar icon in a larger size
-        // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
-        String iconPath;
-        if (Utilities.isOSX())
-            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
-        else if (Utilities.isWindows())
-            iconPath = "/images/task_bar_icon_windows.png";
-        else
-            iconPath = "/images/task_bar_icon_linux.png";
-
-        stage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+        stage.getIcons().add(ImageUtil.getApplicationIconImage());
 
         // make the UI visible
         stage.show();
