@@ -170,6 +170,8 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                 selectedPaymentAccountsList.getItems().size()));
         ((AutoTooltipButton) actionButton).updateText(Res.get("popup.accountSigning.confirmSelectedAccounts.button"));
 
+        actionButton.setDisable(selectedPaymentAccountsList.getItems().size() == 0);
+
         actionButton.setOnAction(e -> addAccountsToSignContent());
 
         selectedPaymentAccountsList.setCellFactory(new Callback<>() {
