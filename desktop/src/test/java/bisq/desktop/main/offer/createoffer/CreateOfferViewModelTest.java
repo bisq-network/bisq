@@ -112,7 +112,7 @@ public class CreateOfferViewModelTest {
         dataModel.activate();
 
         model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator,
-                btcValidator, null, securityDepositValidator, priceFeedService, null,
+                btcValidator, null, securityDepositValidator, priceFeedService, null, null,
                 preferences, bsFormatter, bsqFormatter);
         model.activate();
     }

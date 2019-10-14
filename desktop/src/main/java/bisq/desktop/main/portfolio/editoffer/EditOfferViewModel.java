@@ -26,6 +26,7 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
@@ -48,6 +49,7 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
                               BsqValidator bsqValidator,
                               SecurityDepositValidator securityDepositValidator,
                               PriceFeedService priceFeedService,
+                              AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               Preferences preferences,
                               BSFormatter btcFormatter,
@@ -60,10 +62,10 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
                 bsqValidator,
                 securityDepositValidator,
                 priceFeedService,
+                accountAgeWitnessService,
                 navigation,
                 preferences,
-                btcFormatter,
-                bsqFormatter);
+                btcFormatter, bsqFormatter);
         syncMinAmountWithAmount = false;
     }
 
