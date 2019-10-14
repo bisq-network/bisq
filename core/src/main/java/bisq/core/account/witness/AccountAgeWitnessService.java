@@ -285,19 +285,6 @@ public class AccountAgeWitnessService {
                 .orElse(-1L);
     }
 
-    // Return -1 if not signed
-    public long getWitnessSignAge(Trade trade, Date now) {
-        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
-        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
-            // unexpected
-            return -1;
-        }
-
-        return findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing())
-                .map(witness -> getWitnessSignAge(witness, now))
-                .orElse(-1L);
-    }
-
     public AccountAge getPeersAccountAgeCategory(long peersAccountAge) {
         return getAccountAgeCategory(peersAccountAge);
     }
