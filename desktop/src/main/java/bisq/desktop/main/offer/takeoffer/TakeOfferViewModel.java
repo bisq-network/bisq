@@ -698,7 +698,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
     }
 
     public String getSecurityDepositWithCode() {
@@ -710,7 +710,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         final String takerFee = getFormatterForTakerFee().formatCoinWithCode(takerFeeAsCoin);
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get());
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
     }
@@ -718,7 +718,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTakerFeePercentage() {
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFeeAsCoin != null ? GUIUtil.getPercentage(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter) : Res.get("shared.na");
+            return takerFeeAsCoin != null ? GUIUtil.getPercentage(takerFeeAsCoin, dataModel.getAmount().get()) : Res.get("shared.na");
         else
             return Res.get("dao.paidWithBsq");
     }
@@ -734,13 +734,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
 
     }
 
     public String getTxFeePercentage() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
-        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get());
     }
 
     public PaymentMethod getPaymentMethod() {

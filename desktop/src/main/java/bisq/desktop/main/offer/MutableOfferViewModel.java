@@ -956,7 +956,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
     }
 
     public String getSecurityDepositWithCode() {
@@ -968,7 +968,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
         if (dataModel.isCurrencyForMakerFeeBtc())
-            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get());
         else
             return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
     }
@@ -976,7 +976,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public String getMakerFeePercentage() {
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         if (dataModel.isCurrencyForMakerFeeBtc())
-            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get());
         else
             return Res.get("dao.paidWithBsq");
     }
@@ -1004,13 +1004,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
 
     }
 
     public String getTxFeePercentage() {
         Coin txFeeAsCoin = dataModel.getTxFee();
-        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get());
     }
 
     public PaymentAccount getPaymentAccount() {
@@ -1045,7 +1045,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public M getDataModel() {
         return dataModel;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

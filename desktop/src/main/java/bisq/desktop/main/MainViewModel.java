@@ -303,7 +303,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         });
         bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup<>().warning(msg)
                 .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
-                .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
+                .onAction(() -> GUIUtil.reSyncSPVChain(preferences))
                 .show());
         bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn(voteResultException.toString()));
 

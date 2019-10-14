@@ -93,6 +93,7 @@ import javafx.stage.StageStyle;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -103,12 +104,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Region;
 
 import javafx.geometry.Orientation;
-
-import javafx.beans.property.DoubleProperty;
 
 import javafx.collections.FXCollections;
 
@@ -117,7 +114,6 @@ import javafx.util.StringConverter;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 import java.nio.file.Paths;
 
@@ -209,7 +205,7 @@ public class GUIUtil {
                                       CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         if (!accounts.isEmpty()) {
             String directory = getDirectoryFromChooser(preferences, stage);
-            if (directory != null && !directory.isEmpty()) {
+            if (!directory.isEmpty()) {
                 Storage<PersistableList<PaymentAccount>> paymentAccountsStorage = new Storage<>(new File(directory), persistenceProtoResolver, corruptedDatabaseFilesHandler);
                 paymentAccountsStorage.initAndGetPersisted(new PaymentAccountList(accounts), fileName, 100);
                 paymentAccountsStorage.queueUpForSave();
@@ -309,7 +305,7 @@ public class GUIUtil {
         }
     }
 
-    public static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
+    private static String getDirectoryFromChooser(Preferences preferences, Stage stage) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File initDir = new File(preferences.getDirectoryChooserPath());
         if (initDir.isDirectory()) {
@@ -324,51 +320,6 @@ public class GUIUtil {
         } else {
             return "";
         }
-    }
-
-    public static ListCell<CurrencyListItem> getCurrencyListItemButtonCell(String postFixSingle, String postFixMulti,
-                                                                           Preferences preferences) {
-        return new ListCell<>() {
-
-            @Override
-            protected void updateItem(CurrencyListItem item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (item != null && !empty) {
-                    String code = item.tradeCurrency.getCode();
-
-                    AnchorPane pane = new AnchorPane();
-                    Label currency = new AutoTooltipLabel(code + " - " + item.tradeCurrency.getName());
-                    currency.getStyleClass().add("currency-label-selected");
-                    AnchorPane.setLeftAnchor(currency, 0.0);
-                    pane.getChildren().add(currency);
-
-                    switch (code) {
-                        case GUIUtil.SHOW_ALL_FLAG:
-                            currency.setText(Res.get("list.currency.showAll"));
-                            break;
-                        case GUIUtil.EDIT_FLAG:
-                            currency.setText(Res.get("list.currency.editList"));
-                            break;
-                        default:
-                            if (preferences.isSortMarketCurrenciesNumerically()) {
-                                Label numberOfOffers = new AutoTooltipLabel(item.numTrades + " " +
-                                        (item.numTrades == 1 ? postFixSingle : postFixMulti));
-                                numberOfOffers.getStyleClass().add("offer-label-small");
-                                AnchorPane.setRightAnchor(numberOfOffers, 0.0);
-                                AnchorPane.setBottomAnchor(numberOfOffers, 2.0);
-                                pane.getChildren().add(numberOfOffers);
-                            }
-                    }
-
-                    setGraphic(pane);
-                    setText("");
-                } else {
-                    setGraphic(null);
-                    setText("");
-                }
-            }
-        };
     }
 
     public static Callback<ListView<CurrencyListItem>, ListCell<CurrencyListItem>> getCurrencyListItemCellFactory(String postFixSingle,
@@ -692,23 +643,12 @@ public class GUIUtil {
         }
     }
 
-    public static void openMail(String to, String subject, String body) {
-        try {
-            subject = URLEncoder.encode(subject, "UTF-8").replace("+", "%20");
-            body = URLEncoder.encode(body, "UTF-8").replace("+", "%20");
-            Utilities.openURI(new URI("mailto:" + to + "?subject=" + subject + "&body=" + body));
-        } catch (IOException | URISyntaxException e) {
-            log.error("openMail failed " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount, BSFormatter formatter) {
-        return " (" + getPercentage(fee, tradeAmount, formatter) +
+    public static String getPercentageOfTradeAmount(Coin fee, Coin tradeAmount) {
+        return " (" + getPercentage(fee, tradeAmount) +
                 " " + Res.get("guiUtil.ofTradeAmount") + ")";
     }
 
-    public static String getPercentage(Coin part, Coin total, BSFormatter formatter) {
+    public static String getPercentage(Coin part, Coin total) {
         return BSFormatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
@@ -733,22 +673,6 @@ public class GUIUtil {
                 .closeButtonText(Res.get("shared.iConfirm"))
                 .dontShowAgainId(key)
                 .show();
-    }
-
-    public static void fillAvailableHeight(Pane container, Region component, DoubleProperty initialOccupiedHeight) {
-        UserThread.runAfter(() -> {
-
-            double available;
-            if (container.getParent() instanceof Pane)
-                available = ((Pane) container.getParent()).getHeight();
-            else
-                available = container.getHeight();
-
-            if (initialOccupiedHeight.get() == -1 && component.getHeight() > 0) {
-                initialOccupiedHeight.set(available - component.getHeight());
-            }
-            component.setPrefHeight(available - initialOccupiedHeight.get());
-        }, 100, TimeUnit.MILLISECONDS);
     }
 
     public static String getBitcoinURI(String address, Coin amount, String label) {
@@ -819,7 +743,7 @@ public class GUIUtil {
         UserThread.execute(node::requestFocus);
     }
 
-    public static void reSyncSPVChain(WalletsSetup walletsSetup, Preferences preferences) {
+    public static void reSyncSPVChain(Preferences preferences) {
         try {
             new Popup<>().feedback(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()
@@ -874,7 +798,7 @@ public class GUIUtil {
     }
 
     public static StringConverter<PaymentAccount> getPaymentAccountsComboBoxStringConverter() {
-        return new StringConverter<PaymentAccount>() {
+        return new StringConverter<>() {
             @Override
             public String toString(PaymentAccount paymentAccount) {
                 if (paymentAccount.hasMultipleCurrencies()) {
