@@ -206,155 +206,67 @@ public class BisqEnvironment extends StandardEnvironment {
     @SuppressWarnings("ConstantConditions")
     public BisqEnvironment(PropertySource commandLineProperties) {
         //CommonOptionKeys
-        logLevel = commandLineProperties.containsProperty(CommonOptionKeys.LOG_LEVEL_KEY) ?
-                (String) commandLineProperties.getProperty(CommonOptionKeys.LOG_LEVEL_KEY) :
-                LOG_LEVEL_DEFAULT;
+        logLevel = getProperty(commandLineProperties, CommonOptionKeys.LOG_LEVEL_KEY, LOG_LEVEL_DEFAULT);
+        useDevMode = getProperty(commandLineProperties, CommonOptionKeys.USE_DEV_MODE, "");
 
         //AppOptionKeys
-        userDataDir = commandLineProperties.containsProperty(AppOptionKeys.USER_DATA_DIR_KEY) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.USER_DATA_DIR_KEY) :
-                DEFAULT_USER_DATA_DIR;
-
-        appName = commandLineProperties.containsProperty(AppOptionKeys.APP_NAME_KEY) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.APP_NAME_KEY) :
-                DEFAULT_APP_NAME;
-
-        appDataDir = commandLineProperties.containsProperty(AppOptionKeys.APP_DATA_DIR_KEY) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.APP_DATA_DIR_KEY) :
-                appDataDir(userDataDir, appName);
+        userDataDir = getProperty(commandLineProperties, AppOptionKeys.USER_DATA_DIR_KEY, DEFAULT_USER_DATA_DIR);
+        appName = getProperty(commandLineProperties, AppOptionKeys.APP_NAME_KEY, DEFAULT_APP_NAME);
+        appDataDir = getProperty(commandLineProperties, AppOptionKeys.APP_DATA_DIR_KEY, appDataDir(userDataDir, appName));
         staticAppDataDir = appDataDir;
 
-        desktopWithHttpApi = commandLineProperties.containsProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.DESKTOP_WITH_HTTP_API) :
-                "false";
-        desktopWithGrpcApi = commandLineProperties.containsProperty(AppOptionKeys.DESKTOP_WITH_GRPC_API) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.DESKTOP_WITH_GRPC_API) :
-                "false";
-        ignoreDevMsg = commandLineProperties.containsProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.IGNORE_DEV_MSG_KEY) :
-                "";
-        useDevPrivilegeKeys = commandLineProperties.containsProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) :
-                "";
-        referralId = commandLineProperties.containsProperty(AppOptionKeys.REFERRAL_ID) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.REFERRAL_ID) :
-                "";
-        useDevMode = commandLineProperties.containsProperty(CommonOptionKeys.USE_DEV_MODE) ?
-                (String) commandLineProperties.getProperty(CommonOptionKeys.USE_DEV_MODE) :
-                "";
-        dumpStatistics = commandLineProperties.containsProperty(AppOptionKeys.DUMP_STATISTICS) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.DUMP_STATISTICS) :
-                "";
-        maxMemory = commandLineProperties.containsProperty(AppOptionKeys.MAX_MEMORY) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.MAX_MEMORY) :
-                "";
-        providers = commandLineProperties.containsProperty(AppOptionKeys.PROVIDERS) ?
-                (String) commandLineProperties.getProperty(AppOptionKeys.PROVIDERS) :
-                "";
+        desktopWithHttpApi = getProperty(commandLineProperties, AppOptionKeys.DESKTOP_WITH_HTTP_API, "false");
+        desktopWithGrpcApi = getProperty(commandLineProperties, AppOptionKeys.DESKTOP_WITH_GRPC_API, "false");
+        ignoreDevMsg = getProperty(commandLineProperties, AppOptionKeys.IGNORE_DEV_MSG_KEY, "");
+        useDevPrivilegeKeys = getProperty(commandLineProperties, AppOptionKeys.USE_DEV_PRIVILEGE_KEYS, "");
+        referralId = getProperty(commandLineProperties, AppOptionKeys.REFERRAL_ID, "");
+        dumpStatistics = getProperty(commandLineProperties, AppOptionKeys.DUMP_STATISTICS, "");
+        maxMemory = getProperty(commandLineProperties, AppOptionKeys.MAX_MEMORY, "");
+        providers = getProperty(commandLineProperties, AppOptionKeys.PROVIDERS, "");
 
         //NetworkOptionKeys
-        seedNodes = commandLineProperties.containsProperty(NetworkOptionKeys.SEED_NODES_KEY) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEED_NODES_KEY) :
-                "";
-
-        banList = commandLineProperties.containsProperty(NetworkOptionKeys.BAN_LIST) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.BAN_LIST) :
-                "";
-        socks5ProxyBtcAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS) :
-                "";
-        socks5ProxyHttpAddress = commandLineProperties.containsProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS) :
-                "";
-        torRcFile = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_FILE) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_FILE) :
-                "";
-        torRcOptions = commandLineProperties.containsProperty(NetworkOptionKeys.TORRC_OPTIONS) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.TORRC_OPTIONS) :
-                "";
-        externalTorControlPort = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT) :
-                "";
-        externalTorPassword = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_PASSWORD) :
-                "";
-        externalTorCookieFile = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE) :
-                "";
+        seedNodes = getProperty(commandLineProperties, NetworkOptionKeys.SEED_NODES_KEY, "");
+        banList = getProperty(commandLineProperties, NetworkOptionKeys.BAN_LIST, "");
+        socks5ProxyBtcAddress = getProperty(commandLineProperties, NetworkOptionKeys.SOCKS_5_PROXY_BTC_ADDRESS, "");
+        socks5ProxyHttpAddress = getProperty(commandLineProperties, NetworkOptionKeys.SOCKS_5_PROXY_HTTP_ADDRESS, "");
+        torRcFile = getProperty(commandLineProperties, NetworkOptionKeys.TORRC_FILE, "");
+        torRcOptions = getProperty(commandLineProperties, NetworkOptionKeys.TORRC_OPTIONS, "");
+        externalTorControlPort = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_CONTROL_PORT, "");
+        externalTorPassword = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_PASSWORD, "");
+        externalTorCookieFile = getProperty(commandLineProperties, NetworkOptionKeys.EXTERNAL_TOR_COOKIE_FILE, "");
         externalTorUseSafeCookieAuthentication = commandLineProperties.containsProperty(NetworkOptionKeys.EXTERNAL_TOR_USE_SAFECOOKIE);
         torStreamIsolation = commandLineProperties.containsProperty(NetworkOptionKeys.TOR_STREAM_ISOLATION);
-        msgThrottlePerSec = commandLineProperties.containsProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.MSG_THROTTLE_PER_SEC) :
-                String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC);
-        msgThrottlePer10Sec = commandLineProperties.containsProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC) :
-                String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_10_SEC);
-        sendMsgThrottleTrigger = commandLineProperties.containsProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER) :
-                String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER);
-        sendMsgThrottleSleep = commandLineProperties.containsProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP) ?
-                (String) commandLineProperties.getProperty(NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP) :
-                String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_SLEEP);
 
-        //RpcOptionKeys
-        rpcUser = commandLineProperties.containsProperty(DaoOptionKeys.RPC_USER) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_USER) :
-                "";
-        rpcPassword = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PASSWORD) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PASSWORD) :
-                "";
-        rpcHost = commandLineProperties.containsProperty(DaoOptionKeys.RPC_HOST) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_HOST) :
-                "";
-        rpcPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_PORT) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_PORT) :
-                "";
-        rpcBlockNotificationPort = commandLineProperties.containsProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT) :
-                "";
-        rpcBlockNotificationHost = commandLineProperties.containsProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST) :
-                "";
-        dumpBlockchainData = commandLineProperties.containsProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.DUMP_BLOCKCHAIN_DATA) :
-                "";
-        fullDaoNode = commandLineProperties.containsProperty(DaoOptionKeys.FULL_DAO_NODE) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.FULL_DAO_NODE) :
-                "";
-        genesisTxId = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_TX_ID) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_TX_ID) :
-                "";
-        genesisBlockHeight = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_BLOCK_HEIGHT) :
-                "-1";
-        genesisTotalSupply = commandLineProperties.containsProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.GENESIS_TOTAL_SUPPLY) :
-                "-1";
-        daoActivated = commandLineProperties.containsProperty(DaoOptionKeys.DAO_ACTIVATED) ?
-                (String) commandLineProperties.getProperty(DaoOptionKeys.DAO_ACTIVATED) :
-                "true";
+        msgThrottlePerSec = getProperty(commandLineProperties, NetworkOptionKeys.MSG_THROTTLE_PER_SEC, String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_SEC));
+        msgThrottlePer10Sec = getProperty(commandLineProperties, NetworkOptionKeys.MSG_THROTTLE_PER_10_SEC, String.valueOf(ConnectionConfig.MSG_THROTTLE_PER_10_SEC));
+        sendMsgThrottleTrigger = getProperty(commandLineProperties, NetworkOptionKeys.SEND_MSG_THROTTLE_TRIGGER, String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_TRIGGER));
+        sendMsgThrottleSleep = getProperty(commandLineProperties, NetworkOptionKeys.SEND_MSG_THROTTLE_SLEEP, String.valueOf(ConnectionConfig.SEND_MSG_THROTTLE_SLEEP));
 
-        btcNodes = commandLineProperties.containsProperty(BtcOptionKeys.BTC_NODES) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.BTC_NODES) :
-                "";
 
-        useTorForBtc = commandLineProperties.containsProperty(BtcOptionKeys.USE_TOR_FOR_BTC) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_TOR_FOR_BTC) :
-                "";
-        userAgent = commandLineProperties.containsProperty(BtcOptionKeys.USER_AGENT) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.USER_AGENT) :
-                "Bisq";
-        useAllProvidedNodes = commandLineProperties.containsProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES) :
-                "false";
-        numConnectionForBtc = commandLineProperties.containsProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC) :
-                "9";
-        ignoreLocalBtcNode = commandLineProperties.containsProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE) ?
-                (String) commandLineProperties.getProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE) :
-                "false";
+        //DaoOptionKeys
+        rpcUser = getProperty(commandLineProperties, DaoOptionKeys.RPC_USER, "");
+        rpcPassword = getProperty(commandLineProperties, DaoOptionKeys.RPC_PASSWORD, "");
+        rpcHost = getProperty(commandLineProperties, DaoOptionKeys.RPC_HOST, "");
+        rpcPort = getProperty(commandLineProperties, DaoOptionKeys.RPC_PORT, "");
+        rpcBlockNotificationPort = getProperty(commandLineProperties, DaoOptionKeys.RPC_BLOCK_NOTIFICATION_PORT, "");
+        rpcBlockNotificationHost = getProperty(commandLineProperties, DaoOptionKeys.RPC_BLOCK_NOTIFICATION_HOST, "");
+        dumpBlockchainData = getProperty(commandLineProperties, DaoOptionKeys.DUMP_BLOCKCHAIN_DATA, "");
+        fullDaoNode = getProperty(commandLineProperties, DaoOptionKeys.FULL_DAO_NODE, "");
+        genesisTxId = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TX_ID, "");
+        genesisBlockHeight = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_BLOCK_HEIGHT, "-1");
+        genesisTotalSupply = getProperty(commandLineProperties, DaoOptionKeys.GENESIS_TOTAL_SUPPLY, "-1");
+        daoActivated = getProperty(commandLineProperties, DaoOptionKeys.DAO_ACTIVATED, "true");
 
-        MutablePropertySources propertySources = this.getPropertySources();
+        //BtcOptionKeys
+        btcNodes = getProperty(commandLineProperties, BtcOptionKeys.BTC_NODES, "");
+        useTorForBtc = getProperty(commandLineProperties, BtcOptionKeys.USE_TOR_FOR_BTC, "");
+        userAgent = getProperty(commandLineProperties, BtcOptionKeys.USER_AGENT, "Bisq");
+        useAllProvidedNodes = getProperty(commandLineProperties, BtcOptionKeys.USE_ALL_PROVIDED_NODES, "false");
+        numConnectionForBtc = getProperty(commandLineProperties, BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, "9");
+        ignoreLocalBtcNode = getProperty(commandLineProperties, BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, "false");
+
+
+        MutablePropertySources propertySources = getPropertySources();
         propertySources.addFirst(commandLineProperties);
         try {
             propertySources.addLast(getAppDirProperties());
@@ -456,6 +368,10 @@ public class BisqEnvironment extends StandardEnvironment {
             return new PropertySource.StubPropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME);
 
         return new ResourcePropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME, resource);
+    }
+
+    private String getProperty (PropertySource properties, String propertyKey, String defaultValue) {
+        return properties.containsProperty(propertyKey) ? (String) properties.getProperty(propertyKey) : defaultValue;
     }
 
     private PropertySource<?> defaultProperties() {
