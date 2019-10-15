@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.parser;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.OpReturnType;
@@ -41,8 +42,46 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public class TxOutputParser {
-    private final DaoStateService daoStateService;
+    // With block 602500 (about 2 weeks after v1.2.0 release) we enforce a new rule which represents a
+    // hard fork. Not updated nodes would see an out of sync dao state hash if a relevant transaction would
+    // happen again.
+    // Further (highly unlikely) consequences could be:
+    // If the BSQ output would be sent to a BSQ address the old client would accept that even it is
+    // invalid according to the new rules. But sending such a output would require a manually crafted tx
+    // (not possible in the UI). Worst case a not updated user would buy invalid BSQ but that is not possible as we
+    // enforce update to 1.2.0 for trading a few days after release as that release introduced the new trade protocol
+    // and protection tool. Only of both both traders would have deactivated filter messages they could trade.
 
+    // Problem description:
+    // We did not apply the check to not allow BSQ outputs after we had detected a BTC output.
+    // The supported BSQ transactions did not support such cases anyway but we missed an edge case:
+    // A trade fee tx in case when the BTC input matches exactly the BTC output
+    // (or BTC change was <= the miner fee) and the BSQ fee was > the miner fee. Then we
+    // create a change output after the BTC output (using an address from the BTC wallet) and as
+    // available BSQ was >= as spent BSQ it was considered a valid BSQ output.
+    // There have been observed 5 such transactions where 4 got spent later to a BTC address and by that burned
+    // the pending BSQ (spending amount was higher than sending amount). One was still unspent.
+    // The BSQ was sitting in the BTC wallet so not even visible as BSQ to the user.
+    // If the user would have crafted a custom BSQ tx he could have avoided that the full trade fee was burned.
+
+    // Not an universal rule:
+    // We cannot enforce the rule that no BSQ output is permitted to all possible transactions because there can be cases
+    // where we need to permit this case.
+    // For instance in case we confiscate a lockupTx we have usually 2 BSQ outputs: The first one is the bond which
+    // should be confiscated and the second one is the BSQ change output.
+    // At confiscating we set the first to TxOutputType.BTC_OUTPUT but we do not want to confiscate
+    // the second BSQ change output as well. So we do not apply the rule that no BSQ is allowed once a BTC output is
+    // found. Theoretically other transactions could be confiscated as well and all BSQ tx which allow > 1 BSQ outputs
+    // would have the same issue as well if the first output gets confiscated.
+    // We also don't enforce the rule for irregular or invalid txs which are usually set and detected at the end of
+    // the tx parsing which is done in the TxParser. Blind vote and LockupTx with invalid OpReturn would be such cases
+    // where we don't want to invalidate the change output (See comments in TxParser).
+
+    private static int ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET = 602500;
+    private static int ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET = 1583054;
+    private static int ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST = 1;
+
+    private final DaoStateService daoStateService;
     // Setters
     @Getter
     @Setter
@@ -70,6 +109,7 @@ public class TxOutputParser {
     // Private
     private int lockTime;
     private final List<TempTxOutput> utxoCandidates = new ArrayList<>();
+    private boolean prohibitMoreBsqOutputs = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +159,11 @@ public class TxOutputParser {
                 // In case we have the opReturn for a burn fee tx all outputs after 1st output are considered BTC
                 handleBtcOutput(tempTxOutput, index);
             } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
-                handleBsqOutput(tempTxOutput, index, txOutputValue);
+                if (tempTxOutput.getBlockHeight() >= getActivateHardFork1Height() && prohibitMoreBsqOutputs) {
+                    handleBtcOutput(tempTxOutput, index);
+                } else {
+                    handleBsqOutput(tempTxOutput, index, txOutputValue);
+                }
             } else {
                 handleBtcOutput(tempTxOutput, index);
             }
@@ -127,6 +171,9 @@ public class TxOutputParser {
             log.warn("TxOutput {} is confiscated ", tempTxOutput.getKey());
             // We only burn that output
             availableInputValue -= tempTxOutput.getValue();
+
+            // We must not set prohibitMoreBsqOutputs at confiscation transactions as optional
+            // BSQ change output (output 2)  must not be confiscated.
             tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
         }
     }
@@ -139,6 +186,7 @@ public class TxOutputParser {
      * This sets all outputs to BTC_OUTPUT and doesn't add any txOutputs to the unspentTxOutput map in daoStateService
      */
     void invalidateUTXOCandidates() {
+        // We do not need to apply prohibitMoreBsqOutputs as all spendable outputs are set to BTC_OUTPUT anyway.
         utxoCandidates.forEach(output -> output.setTxOutputType(TxOutputType.BTC_OUTPUT));
     }
 
@@ -171,6 +219,9 @@ public class TxOutputParser {
         utxoCandidates.add(txOutput);
 
         bsqOutputFound = true;
+
+        // We do not permit more BSQ outputs after the unlock txo as we don't expect additional BSQ outputs.
+        prohibitMoreBsqOutputs = true;
     }
 
     private boolean isBtcOutputOfBurnFeeTx(TempTxOutput tempTxOutput) {
@@ -228,9 +279,21 @@ public class TxOutputParser {
                 (optionalOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST ||
                         optionalOpReturnType.get() == OpReturnType.REIMBURSEMENT_REQUEST)) {
             optionalIssuanceCandidate = Optional.of(txOutput);
+
+            // We do not permit more BSQ outputs after the issuance candidate.
+            prohibitMoreBsqOutputs = true;
         } else {
             txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+
+            // For regular transactions we don't permit BSQ outputs after a BTC output was detected.
+            prohibitMoreBsqOutputs = true;
         }
+    }
+
+    private int getActivateHardFork1Height() {
+        return BisqEnvironment.getBaseCurrencyNetwork().isMainnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET :
+                BisqEnvironment.getBaseCurrencyNetwork().isTestnet() ? ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET :
+                        ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST;
     }
 
 
