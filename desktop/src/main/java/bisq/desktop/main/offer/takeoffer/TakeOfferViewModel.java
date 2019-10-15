@@ -386,6 +386,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
                     new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
+                            bsqFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();

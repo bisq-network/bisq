@@ -37,6 +37,7 @@ import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
@@ -357,7 +358,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         bisqSetup.setDisplaySignedByArbitratorHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
                 key, "popup.accountSigning.signedByArbitrator"));
         bisqSetup.setDisplaySignedByPeerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
-                key, "popup.accountSigning.signedByPeer"));
+                key, "popup.accountSigning.signedByPeer", String.valueOf(SignedWitnessService.SIGNER_AGE_DAYS)));
         bisqSetup.setDisplayPeerLimitLiftedHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
                 key, "popup.accountSigning.peerLimitLifted"));
         bisqSetup.setDisplayPeerSignerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(

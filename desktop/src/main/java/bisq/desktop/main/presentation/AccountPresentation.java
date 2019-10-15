@@ -68,14 +68,21 @@ public class AccountPresentation {
     }
 
     public void showOneTimeAccountSigningPopup(String key, String s) {
+        showOneTimeAccountSigningPopup(key, s, null);
+    }
+
+    public void showOneTimeAccountSigningPopup(String key, String s, String optionalParam) {
         if (!DevEnv.isDevMode()) {
 
             DontShowAgainLookup.dontShowAgain(ACCOUNT_NEWS, false);
             showNotification.set(true);
 
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup<>().information(Res.get(s,
-                    Res.get("popup.accountSigning.generalInformation")))
+            String message = optionalParam != null ?
+                    Res.get(s, optionalParam, Res.get("popup.accountSigning.generalInformation")) :
+                    Res.get(s, Res.get("popup.accountSigning.generalInformation"));
+
+            new Popup<>().information(message)
                     .show();
         }
     }
