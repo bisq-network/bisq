@@ -40,6 +40,6 @@ public class RefundAgentRegistrationView extends AgentRegistrationView<RefundAge
 
     @Override
     protected String getRole() {
-        return Res.get("shared.refundAgent");
+        return Res.get("shared.refundAgentForSupportStaff");
     }
 }

@@ -125,7 +125,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     @Override
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.refundAgent").toLowerCase();
-        String link = "https://bisq.network/docs/exchange/refundAgent"; //todo create link
+        String link = "https://docs.bisq.network/trading-rules.html#arbitration";
         return Res.get("support.initialInfo", role, role, link);
     }
 

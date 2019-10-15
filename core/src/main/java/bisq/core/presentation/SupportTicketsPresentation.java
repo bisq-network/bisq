@@ -19,6 +19,7 @@ package bisq.core.presentation;
 
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 
 import javax.inject.Inject;
 
@@ -43,6 +44,11 @@ public class SupportTicketsPresentation {
     private final BooleanProperty showOpenMediationTicketsNotification = new SimpleBooleanProperty();
 
     @Getter
+    private final StringProperty numOpenRefundTickets = new SimpleStringProperty();
+    @Getter
+    private final BooleanProperty showOpenRefundTicketsNotification = new SimpleBooleanProperty();
+
+    @Getter
     private final StringProperty numOpenSupportTickets = new SimpleStringProperty();
     @Getter
     private final BooleanProperty showOpenSupportTicketsNotification = new SimpleBooleanProperty();
@@ -50,14 +56,19 @@ public class SupportTicketsPresentation {
     private final ArbitrationManager arbitrationManager;
     @org.jetbrains.annotations.NotNull
     private final MediationManager mediationManager;
+    private RefundManager refundManager;
 
     @Inject
-    public SupportTicketsPresentation(ArbitrationManager arbitrationManager, MediationManager mediationManager) {
+    public SupportTicketsPresentation(ArbitrationManager arbitrationManager,
+                                      MediationManager mediationManager,
+                                      RefundManager refundManager) {
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
 
         arbitrationManager.getNumOpenDisputes().addListener((observable, oldValue, newValue) -> onChange());
         mediationManager.getNumOpenDisputes().addListener((observable, oldValue, newValue) -> onChange());
+        refundManager.getNumOpenDisputes().addListener((observable, oldValue, newValue) -> onChange());
     }
 
     private void onChange() {
@@ -71,7 +82,12 @@ public class SupportTicketsPresentation {
         numOpenMediationTickets.set(String.valueOf(mediationTickets));
         showOpenMediationTicketsNotification.set(mediationTickets > 0);
 
-        int supportTickets = arbitrationTickets + mediationTickets;
+        AtomicInteger openRefundDisputes = new AtomicInteger(refundManager.getNumOpenDisputes().get());
+        int refundTickets = openRefundDisputes.get();
+        numOpenRefundTickets.set(String.valueOf(refundTickets));
+        showOpenRefundTicketsNotification.set(refundTickets > 0);
+
+        int supportTickets = arbitrationTickets + mediationTickets + refundTickets;
         numOpenSupportTickets.set(String.valueOf(supportTickets));
         showOpenSupportTicketsNotification.set(supportTickets > 0);
     }
