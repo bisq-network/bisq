@@ -184,7 +184,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
 
         // We might get that method called before we have the map is filled in the arbitratorManager
         if (arbitratorTab != null) {
-            arbitratorTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.arbitrator2")).toUpperCase());
+            arbitratorTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.arbitrator")).toUpperCase());
         }
         if (mediatorTab != null) {
             mediatorTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.mediator")).toUpperCase());

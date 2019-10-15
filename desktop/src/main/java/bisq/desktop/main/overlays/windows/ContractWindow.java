@@ -192,8 +192,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:
-                    // TODO update in next release to shared.selectedArbitrator and delete shared.arbitrator entry
-                    title = Res.get("shared.arbitrator");
+                    title = Res.get("shared.selectedArbitrator");
                     break;
                 case MEDIATION:
                     title = Res.get("shared.selectedMediator");
