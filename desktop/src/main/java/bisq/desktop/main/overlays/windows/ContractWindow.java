@@ -200,7 +200,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 case TRADE:
                     break;
                 case REFUND:
-                    title = Res.get("shared.refundAgent");
+                    title = Res.get("shared.selectedRefundAgent");
                     break;
             }
         }

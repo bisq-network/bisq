@@ -190,7 +190,7 @@ public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
             mediatorTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.mediator")).toUpperCase());
         }
         if (refundAgentTab != null) {
-            refundAgentTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.refundAgent")).toUpperCase());
+            refundAgentTab.setText(Res.get("support.tab.ArbitratorsSupportTickets", Res.get("shared.refundAgentForSupportStaff")).toUpperCase());
         }
     }
 

@@ -148,7 +148,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
     @Override
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.arbitrator").toLowerCase();
-        String link = "https://bisq.network/docs/exchange/arbitration-system";
+        String link = "https://docs.bisq.network/trading-rules.html#legacy-arbitration"; //TODO needs to be created
         return Res.get("support.initialInfo", role, role, link);
     }
 
