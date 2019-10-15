@@ -56,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SignedWitnessService {
-    public static final long SIGNER_AGE_DAYS = 60;
+    public static final long SIGNER_AGE_DAYS = 30;
     public static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
 
     private final KeyRing keyRing;
