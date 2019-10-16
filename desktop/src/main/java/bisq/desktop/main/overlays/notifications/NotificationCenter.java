@@ -23,8 +23,8 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 import bisq.desktop.main.support.SupportView;
 import bisq.desktop.main.support.dispute.client.DisputeClientView;
-import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientView;
 import bisq.desktop.main.support.dispute.client.mediation.MediationClientView;
+import bisq.desktop.main.support.dispute.client.refund.RefundClientView;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.MediationManager;
@@ -254,8 +254,7 @@ public class NotificationCenter {
             if (message != null) {
                 goToSupport(trade, message, false);
             }
-        }
-        if (mediationManager.findOwnDispute(trade.getId()).isPresent()) {
+        } else if (mediationManager.findOwnDispute(trade.getId()).isPresent()) {
             String disputeOrTicket = mediationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
                     Res.get("shared.mediationCase");
@@ -286,7 +285,7 @@ public class NotificationCenter {
         Notification notification = new Notification().disputeHeadLine(trade.getShortId()).message(message);
         Class<? extends DisputeClientView> viewClass = isMediation ?
                 MediationClientView.class :
-                ArbitrationClientView.class;
+                RefundClientView.class;
         if (navigation.getCurrentPath() != null && !navigation.getCurrentPath().contains(viewClass)) {
             notification.actionButtonTextWithGoTo("navigation.support")
                     .onAction(() -> navigation.navigateTo(MainView.class, SupportView.class, viewClass))
