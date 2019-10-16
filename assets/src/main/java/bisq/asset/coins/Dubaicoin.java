@@ -20,9 +20,9 @@ package bisq.asset.coins;
 import bisq.asset.Coin;
 import bisq.asset.RegexAddressValidator;
 
-public class DBIX extends Coin {
+public class Dubaicoin extends Coin {
 
-    public DBIX() {
+    public Dubaicoin() {
         super("Dubaicoin", "DBIX", new RegexAddressValidator("^0x[0-9a-fA-F]{40}$"));
     }
 }
