@@ -32,7 +32,6 @@ bisq.asset.coins.CRowdCLassic
 bisq.asset.coins.CTSCoin
 bisq.asset.coins.DarkPay
 bisq.asset.coins.Dash
-bisq.asset.coins.DBIX
 bisq.asset.coins.Decred
 bisq.asset.coins.DeepOnion
 bisq.asset.coins.Dextro
@@ -41,6 +40,7 @@ bisq.asset.coins.Doichain
 bisq.asset.coins.Donu
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.DSTRA
+bisq.asset.coins.Dubaicoin
 bisq.asset.coins.Emercoin
 bisq.asset.coins.Ergo
 bisq.asset.coins.Ether
