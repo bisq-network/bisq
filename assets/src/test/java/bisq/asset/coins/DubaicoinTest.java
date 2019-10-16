@@ -19,10 +19,10 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
-public class DBIXTest extends AbstractAssetTest {
+public class DubaicoinTest extends AbstractAssetTest {
 
-    public DBIXTest() {
-        super(new DBIX());
+    public DubaicoinTest() {
+        super(new Dubaicoin());
     }
 
 	@Test
