@@ -23,7 +23,7 @@ import bisq.asset.I18n;
 
 public class Dubaicoin extends Coin {
 
-    public EtherClassic() {
+    public Dubaicoin() {
         super("Dubaicoin", "DBIX", new EtherAddressValidator(I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.DBIX")));
     }
 }
