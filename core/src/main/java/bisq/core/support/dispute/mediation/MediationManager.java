@@ -44,6 +44,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -140,6 +141,15 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         return Res.get("support.initialInfo", role, role, link);
     }
 
+    @Override
+    protected String getDisputeIntroForPeer(String disputeInfo) {
+        return Res.get("support.peerOpenedDisputeForMediation", disputeInfo, Version.VERSION);
+    }
+
+    @Override
+    protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
+        return Res.get("support.youOpenedDisputeForMediation", disputeInfo, Version.VERSION);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler

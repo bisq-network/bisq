@@ -42,6 +42,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 
 import com.google.inject.Inject;
@@ -129,6 +130,15 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return Res.get("support.initialInfo", role, role, link);
     }
 
+    @Override
+    protected String getDisputeIntroForPeer(String disputeInfo) {
+        return Res.get("support.peerOpenedDispute", disputeInfo, Version.VERSION);
+    }
+
+    @Override
+    protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
+        return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler

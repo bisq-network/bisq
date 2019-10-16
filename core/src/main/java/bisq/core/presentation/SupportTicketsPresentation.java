@@ -28,35 +28,20 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import lombok.Getter;
 
 public class SupportTicketsPresentation {
     @Getter
-    private final StringProperty numOpenArbitrationTickets = new SimpleStringProperty();
-    @Getter
-    private final BooleanProperty showOpenArbitrationTicketsNotification = new SimpleBooleanProperty();
-
-    @Getter
-    private final StringProperty numOpenMediationTickets = new SimpleStringProperty();
-    @Getter
-    private final BooleanProperty showOpenMediationTicketsNotification = new SimpleBooleanProperty();
-
-    @Getter
-    private final StringProperty numOpenRefundTickets = new SimpleStringProperty();
-    @Getter
-    private final BooleanProperty showOpenRefundTicketsNotification = new SimpleBooleanProperty();
-
-    @Getter
     private final StringProperty numOpenSupportTickets = new SimpleStringProperty();
     @Getter
     private final BooleanProperty showOpenSupportTicketsNotification = new SimpleBooleanProperty();
+
     @org.jetbrains.annotations.NotNull
     private final ArbitrationManager arbitrationManager;
     @org.jetbrains.annotations.NotNull
     private final MediationManager mediationManager;
-    private RefundManager refundManager;
+    @org.jetbrains.annotations.NotNull
+    private final RefundManager refundManager;
 
     @Inject
     public SupportTicketsPresentation(ArbitrationManager arbitrationManager,
@@ -72,22 +57,10 @@ public class SupportTicketsPresentation {
     }
 
     private void onChange() {
-        AtomicInteger openArbitrationDisputes = new AtomicInteger(arbitrationManager.getNumOpenDisputes().get());
-        int arbitrationTickets = openArbitrationDisputes.get();
-        numOpenArbitrationTickets.set(String.valueOf(arbitrationTickets));
-        showOpenArbitrationTicketsNotification.set(arbitrationTickets > 0);
+        int supportTickets = arbitrationManager.getNumOpenDisputes().get() +
+                mediationManager.getNumOpenDisputes().get() +
+                refundManager.getNumOpenDisputes().get();
 
-        AtomicInteger openMediationDisputes = new AtomicInteger(mediationManager.getNumOpenDisputes().get());
-        int mediationTickets = openMediationDisputes.get();
-        numOpenMediationTickets.set(String.valueOf(mediationTickets));
-        showOpenMediationTicketsNotification.set(mediationTickets > 0);
-
-        AtomicInteger openRefundDisputes = new AtomicInteger(refundManager.getNumOpenDisputes().get());
-        int refundTickets = openRefundDisputes.get();
-        numOpenRefundTickets.set(String.valueOf(refundTickets));
-        showOpenRefundTicketsNotification.set(refundTickets > 0);
-
-        int supportTickets = arbitrationTickets + mediationTickets + refundTickets;
         numOpenSupportTickets.set(String.valueOf(supportTickets));
         showOpenSupportTicketsNotification.set(supportTickets > 0);
     }
