@@ -168,6 +168,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
     protected abstract String getDisputeInfo(Dispute dispute);
 
+    protected abstract String getDisputeIntroForPeer(String disputeInfo);
+
+    protected abstract String getDisputeIntroForDisputeCreator(String disputeInfo);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates for disputeListService
@@ -365,9 +369,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent() || reOpen) {
             String disputeInfo = getDisputeInfo(dispute);
+            String disputeMessage = getDisputeIntroForDisputeCreator(disputeInfo);
             String sysMsg = dispute.isSupportTicket() ?
                     Res.get("support.youOpenedTicket", disputeInfo, Version.VERSION)
-                    : Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
+                    : disputeMessage;
 
             String message = Res.get("support.systemMsg", sysMsg);
             ChatMessage chatMessage = new ChatMessage(
@@ -493,9 +498,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
         if (!storedDisputeOptional.isPresent()) {
             String disputeInfo = getDisputeInfo(dispute);
+            String disputeMessage = getDisputeIntroForPeer(disputeInfo);
             String sysMsg = dispute.isSupportTicket() ?
-                    Res.get("support.peerOpenedTicket", disputeInfo)
-                    : Res.get("support.peerOpenedDispute", disputeInfo);
+                    Res.get("support.peerOpenedTicket", disputeInfo, Version.VERSION)
+                    : disputeMessage;
             ChatMessage chatMessage = new ChatMessage(
                     getSupportType(),
                     dispute.getTradeId(),

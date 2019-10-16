@@ -258,7 +258,7 @@ public class NotificationCenter {
         if (mediationManager.findOwnDispute(trade.getId()).isPresent()) {
             String disputeOrTicket = mediationManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :
-                    Res.get("shared.dispute");
+                    Res.get("shared.mediationCase");
             switch (disputeState) {
                 // TODO
                 case MEDIATION_REQUESTED:

@@ -51,6 +51,7 @@ import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.AddressFormatException;
@@ -152,6 +153,15 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
         return Res.get("support.initialInfo", role, role, link);
     }
 
+    @Override
+    protected String getDisputeIntroForPeer(String disputeInfo) {
+        return Res.get("support.peerOpenedDispute", disputeInfo, Version.VERSION);
+    }
+
+    @Override
+    protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
+        return Res.get("support.youOpenedDispute", disputeInfo, Version.VERSION);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
