@@ -19,6 +19,8 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
+import org.junit.Test;
+
 public class DubaicoinTest extends AbstractAssetTest {
 
     public DubaicoinTest() {
