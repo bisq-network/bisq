@@ -39,45 +39,53 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Checks if an output is a BSQ output and apply state change.
+ *
+ * With block 602500 (about 4 weeks after v1.2.0 release) we enforce a new rule which represents a
+ * hard fork. Not updated nodes would see an out of sync dao state hash if a relevant transaction would
+ * happen again.
+ * Further (highly unlikely) consequences could be:
+ * If the BSQ output would be sent to a BSQ address the old client would accept that even it is
+ * invalid according to the new rules. But sending such a output would require a manually crafted tx
+ * (not possible in the UI). Worst case a not updated user would buy invalid BSQ but that is not possible as we
+ * enforce update to 1.2.0 for trading a few days after release as that release introduced the new trade protocol
+ * and protection tool. Only of both both traders would have deactivated filter messages they could trade.
+ *
+ * Problem description:
+ * We did not apply the check to not allow BSQ outputs after we had detected a BTC output.
+ * The supported BSQ transactions did not support such cases anyway but we missed an edge case:
+ * A trade fee tx in case when the BTC input matches exactly the BTC output
+ * (or BTC change was <= the miner fee) and the BSQ fee was > the miner fee. Then we
+ * create a change output after the BTC output (using an address from the BTC wallet) and as
+ * available BSQ was >= as spent BSQ it was considered a valid BSQ output.
+ * There have been observed 5 such transactions where 4 got spent later to a BTC address and by that burned
+ * the pending BSQ (spending amount was higher than sending amount). One was still unspent.
+ * The BSQ was sitting in the BTC wallet so not even visible as BSQ to the user.
+ * If the user would have crafted a custom BSQ tx he could have avoided that the full trade fee was burned.
+ *
+ * Not an universal rule:
+ * We cannot enforce the rule that no BSQ output is permitted to all possible transactions because there can be cases
+ * where we need to permit this case.
+ * For instance in case we confiscate a lockupTx we have usually 2 BSQ outputs: The first one is the bond which
+ * should be confiscated and the second one is the BSQ change output.
+ * At confiscating we set the first to TxOutputType.BTC_OUTPUT but we do not want to confiscate
+ * the second BSQ change output as well. So we do not apply the rule that no BSQ is allowed once a BTC output is
+ * found. Theoretically other transactions could be confiscated as well and all BSQ tx which allow > 1 BSQ outputs
+ * would have the same issue as well if the first output gets confiscated.
+ * We also don't enforce the rule for irregular or invalid txs which are usually set and detected at the end of
+ * the tx parsing which is done in the TxParser. Blind vote and LockupTx with invalid OpReturn would be such cases
+ * where we don't want to invalidate the change output (See comments in TxParser).
+ *
+ * Most transactions created in Bisq (Proposal, blind vote and lockup,...) have only 1 or 2 BSQ
+ * outputs but we do not enforce a limit of max. 2 transactions in the parser.
+ * We leave for now that flexibility but it should not be considered as a rule. We might strengthen
+ * it any time if we find a reason for that (e.g. attack risk) and add checks that no more
+ * BSQ outputs are permitted for those txs.
+ * Some transactions like issuance, vote reveal and unlock have exactly 1 BSQ output and that rule
+ * is enforced.
  */
 @Slf4j
-public class TxOutputParser {
-    // With block 602500 (about 2 weeks after v1.2.0 release) we enforce a new rule which represents a
-    // hard fork. Not updated nodes would see an out of sync dao state hash if a relevant transaction would
-    // happen again.
-    // Further (highly unlikely) consequences could be:
-    // If the BSQ output would be sent to a BSQ address the old client would accept that even it is
-    // invalid according to the new rules. But sending such a output would require a manually crafted tx
-    // (not possible in the UI). Worst case a not updated user would buy invalid BSQ but that is not possible as we
-    // enforce update to 1.2.0 for trading a few days after release as that release introduced the new trade protocol
-    // and protection tool. Only of both both traders would have deactivated filter messages they could trade.
-
-    // Problem description:
-    // We did not apply the check to not allow BSQ outputs after we had detected a BTC output.
-    // The supported BSQ transactions did not support such cases anyway but we missed an edge case:
-    // A trade fee tx in case when the BTC input matches exactly the BTC output
-    // (or BTC change was <= the miner fee) and the BSQ fee was > the miner fee. Then we
-    // create a change output after the BTC output (using an address from the BTC wallet) and as
-    // available BSQ was >= as spent BSQ it was considered a valid BSQ output.
-    // There have been observed 5 such transactions where 4 got spent later to a BTC address and by that burned
-    // the pending BSQ (spending amount was higher than sending amount). One was still unspent.
-    // The BSQ was sitting in the BTC wallet so not even visible as BSQ to the user.
-    // If the user would have crafted a custom BSQ tx he could have avoided that the full trade fee was burned.
-
-    // Not an universal rule:
-    // We cannot enforce the rule that no BSQ output is permitted to all possible transactions because there can be cases
-    // where we need to permit this case.
-    // For instance in case we confiscate a lockupTx we have usually 2 BSQ outputs: The first one is the bond which
-    // should be confiscated and the second one is the BSQ change output.
-    // At confiscating we set the first to TxOutputType.BTC_OUTPUT but we do not want to confiscate
-    // the second BSQ change output as well. So we do not apply the rule that no BSQ is allowed once a BTC output is
-    // found. Theoretically other transactions could be confiscated as well and all BSQ tx which allow > 1 BSQ outputs
-    // would have the same issue as well if the first output gets confiscated.
-    // We also don't enforce the rule for irregular or invalid txs which are usually set and detected at the end of
-    // the tx parsing which is done in the TxParser. Blind vote and LockupTx with invalid OpReturn would be such cases
-    // where we don't want to invalidate the change output (See comments in TxParser).
-
-    private static int ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET = 602500;
+class TxOutputParser {
+    private static int ACTIVATE_HARD_FORK_1_HEIGHT_MAINNET = 605000;
     private static int ACTIVATE_HARD_FORK_1_HEIGHT_TESTNET = 1583054;
     private static int ACTIVATE_HARD_FORK_1_HEIGHT_REGTEST = 1;
 
@@ -252,6 +260,9 @@ public class TxOutputParser {
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.VOTE_REVEAL) {
             txOutputType = TxOutputType.VOTE_REVEAL_UNLOCK_STAKE_OUTPUT;
             optionalVoteRevealUnlockStakeOutput = Optional.of(txOutput);
+
+            // We do not permit more BSQ outputs after the VOTE_REVEAL_UNLOCK_STAKE_OUTPUT.
+            prohibitMoreBsqOutputs = true;
         } else if (isFirstOutput && opReturnTypeCandidate == OpReturnType.LOCKUP) {
             txOutputType = TxOutputType.LOCKUP_OUTPUT;
 
