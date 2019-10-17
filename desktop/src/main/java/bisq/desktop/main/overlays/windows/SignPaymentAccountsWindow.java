@@ -128,6 +128,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.isAsset())
+                .filter(PaymentMethod::hasChargebackRisk)
                 .collect(Collectors.toList());
 
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
