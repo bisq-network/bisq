@@ -54,8 +54,12 @@ import javafx.collections.FXCollections;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,6 +128,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
                 .filter(paymentMethod -> !paymentMethod.isAsset())
+                .filter(PaymentMethod::hasChargebackRisk)
                 .collect(Collectors.toList());
 
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
@@ -133,6 +138,8 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                 Res.get("popup.accountSigning.selectAccounts.datePicker"),
                 0).second;
         datePicker.setOnAction(e -> updateAccountSelectionState());
+        datePicker.setValue(Instant.ofEpochMilli(new Date().getTime()).minus(60, ChronoUnit.DAYS)
+                .atZone(ZoneId.systemDefault()).toLocalDate());
     }
 
     private void addECKeyField() {
@@ -207,13 +214,15 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                 String arbitratorPubKeyAsHex = Utils.HEX.encode(arbitratorKey.getPubKey());
                 boolean isKeyValid = arbitratorManager.isPublicKeyInList(arbitratorPubKeyAsHex);
                 if (isKeyValid) {
-                    selectedPaymentAccountsList.getItems().forEach(item -> {
-                        accountAgeWitnessService.arbitratorSignAccountAgeWitness(item.getTradeAmount(), item.getAccountAgeWitness(), arbitratorKey, item.getPeersPubKey());
-                    });
+                    selectedPaymentAccountsList.getItems().forEach(item ->
+                            accountAgeWitnessService.arbitratorSignAccountAgeWitness(item.getTradeAmount(),
+                                    item.getAccountAgeWitness(),
+                                    arbitratorKey,
+                                    item.getPeersPubKey()));
                     addSuccessContent();
                 }
             } else {
-                new Popup<>().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(() -> hide()).show();
+                new Popup<>().error(Res.get("popup.accountSigning.signAccounts.ECKey.error")).onClose(this::hide).show();
             }
 
         });
@@ -229,9 +238,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         headLineLabel.setText(Res.get("popup.accountSigning.success.headline"));
         descriptionLabel.setText(Res.get("popup.accountSigning.success.description", selectedPaymentAccountsList.getItems().size()));
         ((AutoTooltipButton) actionButton).updateText(Res.get("shared.ok"));
-        actionButton.setOnAction(a -> {
-            hide();
-        });
+        actionButton.setOnAction(a -> hide());
     }
 
     @Override
