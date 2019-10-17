@@ -233,14 +233,49 @@ class TxOutputParser {
     }
 
     private boolean isBtcOutputOfBurnFeeTx(TempTxOutput tempTxOutput) {
-        // If we get a asset listing or proof of burn tx we have only 1 BSQ output and if the
-        // burned amount is larger than the miner fee we might have a BTC output for receiving the burned funds.
-        // If the burned funds are less than the miner fee a BTC input is used for miner fee and a BTC change output for
-        // the remaining funds. In any case only the first output is BSQ all the others are BTC.
-        return optionalOpReturnType.isPresent() &&
-                (optionalOpReturnType.get() == OpReturnType.ASSET_LISTING_FEE ||
-                        optionalOpReturnType.get() == OpReturnType.PROOF_OF_BURN) &&
-                tempTxOutput.getIndex() >= 1;
+        if (optionalOpReturnType.isPresent()) {
+            switch (optionalOpReturnType.get()) {
+                case UNDEFINED:
+                    break;
+                case PROPOSAL:
+                    // TODO
+                    break;
+                case COMPENSATION_REQUEST:
+                    break;
+                case REIMBURSEMENT_REQUEST:
+                    break;
+                case BLIND_VOTE:
+                    // TODO
+                    break;
+                case VOTE_REVEAL:
+                    break;
+                case LOCKUP:
+                    break;
+                case ASSET_LISTING_FEE:
+                    // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
+                    // structurally same transactions where only the BSQ fee is different and the asset listing fee is
+                    // a user input when creating the asset listing, so it is not know to the parser.
+                    // Instead we derive the asset listing fee from the parser.
+
+                    // Case 1: 10 BSQ asset listing fee
+                    // In: 15 BSQ
+                    // Out: BSQ change 5 BSQ -> valid BSQ
+                    // Out: OpReturn
+                    // Miner fee: 1000 sat  (10 BSQ burned)
+
+
+                    // Case 2: 15 BSQ asset listing fee
+                    // In: 15 BSQ
+                    // Out: burned BSQ change 5 BSQ -> BTC (5 BSQ burned)
+                    // Out: OpReturn
+                    // Miner fee: 1000 sat  (10 BSQ burned)
+                    return tempTxOutput.getIndex() >= 1;
+                case PROOF_OF_BURN:
+                    // TODO
+                    return tempTxOutput.getIndex() >= 1;
+            }
+        }
+        return false;
     }
 
     private void handleBsqOutput(TempTxOutput txOutput, int index, long txOutputValue) {
