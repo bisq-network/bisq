@@ -586,6 +586,68 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return getPreparedBurnFeeTx(fee, false);
     }
 
+    public Transaction getPreparedBurnFeeTxForAssetListing(Coin fee) throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+
+        // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
+        // structurally same transactions where only the BSQ fee is different and the asset listing fee is
+        // a user input when creating the asset listing, so it is not know to the parser.
+        // Instead we derive the asset listing fee from the parser.
+
+        // Case 1: 10 BSQ asset listing fee
+        // In: 15 BSQ
+        // Out: BSQ change 5 BSQ -> valid BSQ
+        // Out: OpReturn
+        // Miner fee: 1000 sat  (10 BSQ burned)
+
+
+        // Case 2: 15 BSQ asset listing fee
+        // In: 15 BSQ
+        // Out: burned BSQ change 5 BSQ -> BTC (5 BSQ burned)
+        // Out: OpReturn
+        // Miner fee: 1000 sat  (10 BSQ burned)
+
+        Transaction tx = new Transaction(params);
+        // We look for inputs covering out BSQ fee we want to pay.
+        CoinSelection coinSelection = bsqCoinSelector.select(fee, wallet.calculateAllSpendCandidates());
+        try {
+            Coin change = bsqCoinSelector.getChange(fee, coinSelection);
+            if (change.isZero() || Restrictions.isDust(change)) {
+                // If change is zero or below dust we increase required input amount to enforce a BSQ change output.
+                // All outputs after that are considered BTC and therefore would be burned BSQ if BSQ is left from what
+                // we use for miner fee.
+
+                Coin minDustThreshold = Coin.valueOf(preferences.getIgnoreDustThreshold());
+                Coin increasedRequiredInput = fee.add(minDustThreshold);
+                coinSelection = bsqCoinSelector.select(increasedRequiredInput, wallet.calculateAllSpendCandidates());
+                change = bsqCoinSelector.getChange(fee, coinSelection);
+
+                log.warn("We increased required input as change output was zero or dust: New change value={}", change);
+                checkArgument(coinSelection.valueGathered.compareTo(fee) > 0,
+                        "This transaction require a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
+                                "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
+                                "Intended asset listing fee=" + fee.value / 100 + " BSQ. " +
+                                "Please reduce the asset listing fee to " + (coinSelection.valueGathered.value - minDustThreshold.value) / 100 + " BSQ.");
+
+                checkArgument(!Restrictions.isDust(change),
+                        "This transaction would create a dust output of " + change.value / 100 + " BSQ. " +
+                                "It requires a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
+                                "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
+                                "Intended asset listing fee=" + fee.value / 100 + " BSQ. " +
+                                "Please reduce the asset listing fee to " + (coinSelection.valueGathered.value - minDustThreshold.value) / 100 + " BSQ.");
+            }
+
+            coinSelection.gathered.forEach(tx::addInput);
+            tx.addOutput(change, getChangeAddress());
+
+            return tx;
+
+        } catch (InsufficientMoneyException e) {
+            log.error("coinSelection.gathered={}", coinSelection.gathered);
+            throw new InsufficientBsqException(e.missing);
+        }
+    }
+
     private Transaction getPreparedBurnFeeTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
         daoKillSwitch.assertDaoIsNotDisabled();
         final Transaction tx = new Transaction(params);
