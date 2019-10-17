@@ -24,6 +24,8 @@ import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.support.SupportView;
+import bisq.desktop.main.support.dispute.client.mediation.MediationClientView;
+import bisq.desktop.main.support.dispute.client.refund.RefundClientView;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -513,9 +515,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         // In case we re-open a dispute we allow Trade.DisputeState.REFUND_REQUESTED
         useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED || disputeState == Trade.DisputeState.REFUND_REQUESTED;
 
-        ResultHandler resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class);
+        ResultHandler resultHandler;
         if (useMediation) {
             // If no dispute state set we start with mediation
+            resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, MediationClientView.class);
             disputeManager = mediationManager;
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
@@ -563,6 +566,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         }
                     });
         } else if (useRefundAgent) {
+            resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
+
             if (trade.getDelayedPayoutTx() == null) {
                 return;
             }
