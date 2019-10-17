@@ -258,15 +258,15 @@ class TxOutputParser {
                     // Instead we derive the asset listing fee from the parser.
 
                     // Case 1: 10 BSQ asset listing fee
-                    // In: 15 BSQ
-                    // Out: BSQ change 5 BSQ -> valid BSQ
+                    // In: 17 BSQ
+                    // Out: BSQ change 7 BSQ -> valid BSQ
                     // Out: OpReturn
                     // Miner fee: 1000 sat  (10 BSQ burned)
 
 
-                    // Case 2: 15 BSQ asset listing fee
-                    // In: 15 BSQ
-                    // Out: burned BSQ change 5 BSQ -> BTC (5 BSQ burned)
+                    // Case 2: 17 BSQ asset listing fee
+                    // In: 17 BSQ
+                    // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
                     // Out: OpReturn
                     // Miner fee: 1000 sat  (10 BSQ burned)
                     return tempTxOutput.getIndex() >= 1;
