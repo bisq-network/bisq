@@ -586,22 +586,30 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return getPreparedBurnFeeTx(fee, false);
     }
 
+    public Transaction getPreparedProofOfBurnTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedBurnBsqFeeTx(fee);
+    }
+
     public Transaction getPreparedBurnFeeTxForAssetListing(Coin fee) throws InsufficientBsqException {
+        return getPreparedBurnBsqFeeTx(fee);
+    }
+
+    private Transaction getPreparedBurnBsqFeeTx(Coin fee) throws InsufficientBsqException {
         daoKillSwitch.assertDaoIsNotDisabled();
 
         // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
-        // structurally same transactions where only the BSQ fee is different and the asset listing fee is
-        // a user input when creating the asset listing, so it is not know to the parser.
-        // Instead we derive the asset listing fee from the parser.
+        // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
+        // burn it  is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
+        // In case of proposal fee  we could derive it from the params.
 
-        // Case 1: 10 BSQ asset listing fee
+        // Case 1: 10 BSQ fee to burn
         // In: 17 BSQ
         // Out: BSQ change 7 BSQ -> valid BSQ
         // Out: OpReturn
         // Miner fee: 1000 sat  (10 BSQ burned)
 
 
-        // Case 2: 17 BSQ asset listing fee
+        // Case 2: 17 BSQ fee to burn
         // In: 17 BSQ
         // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
         // Out: OpReturn
@@ -623,18 +631,17 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 change = bsqCoinSelector.getChange(fee, coinSelection);
 
                 log.warn("We increased required input as change output was zero or dust: New change value={}", change);
+                String info = "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
+                        "Intended fee to burn=" + fee.value / 100 + " BSQ. " +
+                        "Please reduce the fee to burn to " + (coinSelection.valueGathered.value - minDustThreshold.value) / 100 + " BSQ.";
                 checkArgument(coinSelection.valueGathered.compareTo(fee) > 0,
                         "This transaction require a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
-                                "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
-                                "Intended asset listing fee=" + fee.value / 100 + " BSQ. " +
-                                "Please reduce the asset listing fee to " + (coinSelection.valueGathered.value - minDustThreshold.value) / 100 + " BSQ.");
+                                info);
 
                 checkArgument(!Restrictions.isDust(change),
                         "This transaction would create a dust output of " + change.value / 100 + " BSQ. " +
                                 "It requires a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
-                                "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
-                                "Intended asset listing fee=" + fee.value / 100 + " BSQ. " +
-                                "Please reduce the asset listing fee to " + (coinSelection.valueGathered.value - minDustThreshold.value) / 100 + " BSQ.");
+                                info);
             }
 
             coinSelection.gathered.forEach(tx::addInput);
@@ -688,7 +695,10 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                                 "BSQ is needed for this transaction");
                 tx.addOutput(change, getChangeAddress());
             }
+
+            log.error(tx.toString());
         } catch (InsufficientMoneyException e) {
+            log.error(tx.toString());
             throw new InsufficientBsqException(e.missing);
         }
     }
