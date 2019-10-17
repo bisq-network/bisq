@@ -29,6 +29,7 @@ bisq.asset.coins.Counterparty
 bisq.asset.coins.Credits
 bisq.asset.coins.Croat
 bisq.asset.coins.CRowdCLassic
+bisq.asset.coins.CTSCoin
 bisq.asset.coins.DarkPay
 bisq.asset.coins.Dash
 bisq.asset.coins.Decred
@@ -40,8 +41,10 @@ bisq.asset.coins.Donu
 bisq.asset.coins.Dragonglass
 bisq.asset.coins.DSTRA
 bisq.asset.coins.Emercoin
+bisq.asset.coins.Ergo
 bisq.asset.coins.Ether
 bisq.asset.coins.EtherClassic
+bisq.asset.coins.Faircoin
 bisq.asset.coins.FourtyTwo
 bisq.asset.coins.Fujicoin
 bisq.asset.coins.Galilel
@@ -99,6 +102,7 @@ bisq.asset.coins.TEO
 bisq.asset.coins.TurtleCoin
 bisq.asset.coins.UnitedCommunityCoin
 bisq.asset.coins.Unobtanium
+bisq.asset.coins.uPlexa
 bisq.asset.coins.VARIUS
 bisq.asset.coins.Veil
 bisq.asset.coins.Vertcoin

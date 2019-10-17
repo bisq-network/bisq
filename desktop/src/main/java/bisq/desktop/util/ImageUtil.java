@@ -19,6 +19,8 @@ package bisq.desktop.util;
 
 import bisq.core.locale.Country;
 
+import bisq.common.util.Utilities;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
@@ -38,6 +40,18 @@ public class ImageUtil {
         ImageView imageView = new ImageView();
         imageView.setId(id);
         return imageView;
+    }
+
+    public static Image getApplicationIconImage () {
+        String iconPath;
+        if (Utilities.isOSX())
+            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
+        else if (Utilities.isWindows())
+            iconPath = "/images/task_bar_icon_windows.png";
+        else
+            iconPath = "/images/task_bar_icon_linux.png";
+
+        return getImageByUrl(iconPath);
     }
 
     private static Image getImageByUrl(String url) {

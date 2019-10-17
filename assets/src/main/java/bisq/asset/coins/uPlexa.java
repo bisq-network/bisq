@@ -15,17 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.app;
+package bisq.asset.coins;
 
-import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.setup.UncaughtExceptionHandler;
+import bisq.asset.AltCoinAccountDisclaimer;
+import bisq.asset.Coin;
+import bisq.asset.RegexAddressValidator;
 
-import com.google.inject.Injector;
+@AltCoinAccountDisclaimer("account.altcoin.popup.upx.msg")
+public class uPlexa extends Coin {
 
-public interface HeadlessApp extends UncaughtExceptionHandler, BisqSetup.BisqSetupListener {
-    void setGracefulShutDownHandler(GracefulShutDownHandler gracefulShutDownHandler);
-
-    void setInjector(Injector injector);
-
-    void startApplication();
+    public uPlexa() {
+        super("uPlexa", "UPX", new RegexAddressValidator("^((UPX)[1-9A-Za-z^OIl]{95}|(UPi)[1-9A-Za-z^OIl]{106}|(UmV|UmW)[1-9A-Za-z^OIl]{94})$"));
+    }
 }
