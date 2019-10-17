@@ -15,17 +15,22 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.app;
+package bisq.asset.coins;
 
-import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.setup.UncaughtExceptionHandler;
+import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Coin;
+import bisq.asset.NetworkParametersAdapter;
 
-import com.google.inject.Injector;
+public class CTSCoin extends Coin {
+    public CTSCoin() {
+        super("CTSCoin", "CTSC", new Base58BitcoinAddressValidator(new CtscMainNetParams()));
+    }
 
-public interface HeadlessApp extends UncaughtExceptionHandler, BisqSetup.BisqSetupListener {
-    void setGracefulShutDownHandler(GracefulShutDownHandler gracefulShutDownHandler);
-
-    void setInjector(Injector injector);
-
-    void startApplication();
+    public static class CtscMainNetParams extends NetworkParametersAdapter {
+        public CtscMainNetParams() {
+            this.addressHeader = 66;
+            this.p2shHeader = 16;
+            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
+        }
+    }
 }

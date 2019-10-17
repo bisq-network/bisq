@@ -73,6 +73,7 @@ import javafx.scene.layout.StackPane;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -180,12 +181,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             try {
                 try {
                     if (!popupOpened) {
-                        String message = throwable.getMessage();
                         popupOpened = true;
-                        if (message != null)
-                            new Popup<>().error(message).onClose(() -> popupOpened = false).show();
-                        else
-                            new Popup<>().error(throwable.toString()).onClose(() -> popupOpened = false).show();
+                        new Popup<>().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
+                                .onClose(() -> popupOpened = false)
+                                .show();
                     }
                 } catch (Throwable throwable3) {
                     log.error("Error at displaying Throwable.");
@@ -218,10 +217,10 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         }
         Scene scene = new Scene(mainView.getRoot(),
                 maxWindowBounds.width < INITIAL_WINDOW_WIDTH ?
-                        (maxWindowBounds.width < MIN_WINDOW_WIDTH ? MIN_WINDOW_WIDTH : maxWindowBounds.width) :
+                        Math.max(maxWindowBounds.width, MIN_WINDOW_WIDTH) :
                         INITIAL_WINDOW_WIDTH,
                 maxWindowBounds.height < INITIAL_WINDOW_HEIGHT ?
-                        (maxWindowBounds.height < MIN_WINDOW_HEIGHT ? MIN_WINDOW_HEIGHT : maxWindowBounds.height) :
+                        Math.max(maxWindowBounds.height, MIN_WINDOW_HEIGHT) :
                         INITIAL_WINDOW_HEIGHT);
 
         addSceneKeyEventHandler(scene, injector);
@@ -253,18 +252,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         stage.setScene(scene);
         stage.setMinWidth(MIN_WINDOW_WIDTH);
         stage.setMinHeight(MIN_WINDOW_HEIGHT);
-
-        // on Windows the title icon is also used as task bar icon in a larger size
-        // on Linux no title icon is supported but also a large task bar icon is derived from that title icon
-        String iconPath;
-        if (Utilities.isOSX())
-            iconPath = ImageUtil.isRetina() ? "/images/window_icon@2x.png" : "/images/window_icon.png";
-        else if (Utilities.isWindows())
-            iconPath = "/images/task_bar_icon_windows.png";
-        else
-            iconPath = "/images/task_bar_icon_linux.png";
-
-        stage.getIcons().add(new Image(getClass().getResourceAsStream(iconPath)));
+        stage.getIcons().add(ImageUtil.getApplicationIconImage());
 
         // make the UI visible
         stage.show();

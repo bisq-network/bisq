@@ -73,6 +73,6 @@ public enum BaseCurrencyNetwork {
     }
 
     public long getDefaultMinFeePerByte() {
-        return 1;
+        return 2;
     }
 }

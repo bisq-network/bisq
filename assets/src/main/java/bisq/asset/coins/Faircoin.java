@@ -15,17 +15,25 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.app;
+package bisq.asset.coins;
 
-import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.setup.UncaughtExceptionHandler;
+import bisq.asset.Base58BitcoinAddressValidator;
+import bisq.asset.Coin;
+import bisq.asset.NetworkParametersAdapter;
 
-import com.google.inject.Injector;
+public class Faircoin extends Coin {
 
-public interface HeadlessApp extends UncaughtExceptionHandler, BisqSetup.BisqSetupListener {
-    void setGracefulShutDownHandler(GracefulShutDownHandler gracefulShutDownHandler);
+    public Faircoin() {
+        super("Faircoin", "FAIR", new Base58BitcoinAddressValidator(new Faircoin.FaircoinParams()));
+    }
 
-    void setInjector(Injector injector);
+    public static class FaircoinParams extends NetworkParametersAdapter {
 
-    void startApplication();
+        public FaircoinParams() {
+            addressHeader = 95;
+            p2shHeader = 36;
+            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+        }
+    }
+
 }
