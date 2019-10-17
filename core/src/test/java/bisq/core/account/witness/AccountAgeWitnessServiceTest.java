@@ -55,7 +55,7 @@ public class AccountAgeWitnessServiceTest {
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
         SignedWitnessService signedWitnessService = mock(SignedWitnessService.class);
         ChargeBackRisk chargeBackRisk = mock(ChargeBackRisk.class);
-        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, null);
+        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, null, null);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }

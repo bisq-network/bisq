@@ -19,6 +19,8 @@ package bisq.core.account.witness;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.filter.FilterManager;
+import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -104,13 +106,14 @@ public class AccountAgeWitnessService {
             return presentation;
         }
 
-        }
+    }
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final User user;
     private final SignedWitnessService signedWitnessService;
     private final ChargeBackRisk chargeBackRisk;
+    private final FilterManager filterManager;
 
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
@@ -127,12 +130,14 @@ public class AccountAgeWitnessService {
                                     SignedWitnessService signedWitnessService,
                                     ChargeBackRisk chargeBackRisk,
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
-                                    AppendOnlyDataStoreService appendOnlyDataStoreService) {
+                                    AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                    FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.user = user;
         this.signedWitnessService = signedWitnessService;
         this.chargeBackRisk = chargeBackRisk;
+        this.filterManager = filterManager;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(accountAgeWitnessStorageService);
@@ -608,6 +613,7 @@ public class AccountAgeWitnessService {
                                                          List<Dispute> disputes) {
         return disputes.stream()
                 .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
+                .filter(this::isNotFiltered)
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)
                 .flatMap(this::getTraderData)
@@ -616,6 +622,19 @@ public class AccountAgeWitnessService {
                 .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    private boolean isNotFiltered(Dispute dispute) {
+        boolean isFiltered = filterManager.isNodeAddressBanned(dispute.getContract().getBuyerNodeAddress()) ||
+                filterManager.isNodeAddressBanned(dispute.getContract().getSellerNodeAddress()) ||
+                filterManager.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
+                filterManager.isPaymentMethodBanned(
+                        PaymentMethod.getPaymentMethodById(dispute.getContract().getPaymentMethodId())) ||
+                filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getBuyerPaymentAccountPayload(),
+                        new PaymentAccountFilter[1]) ||
+                filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getSellerPaymentAccountPayload(),
+                        new PaymentAccountFilter[1]);
+        return !isFiltered;
     }
 
     private boolean hasChargebackRisk(Dispute dispute) {
