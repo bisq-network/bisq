@@ -882,10 +882,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getPaymentMethod(item));
-                                    field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
-                                    field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
-                                    setGraphic(field);
+
+                                    if (model.isOfferBanned(item.getOffer())) {
+                                        setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
+                                    } else {
+                                        field = new HyperlinkWithIcon(model.getPaymentMethod(item));
+                                        field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
+                                        field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
+                                        setGraphic(field);
+                                    }
                                 } else {
                                     setGraphic(null);
                                     if (field != null)
