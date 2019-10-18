@@ -167,7 +167,7 @@ class TxOutputParser {
                 // In case we have the opReturn for a burn fee tx all outputs after 1st output are considered BTC
                 handleBtcOutput(tempTxOutput, index);
             } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
-                if (tempTxOutput.getBlockHeight() >= getActivateHardFork1Height() && prohibitMoreBsqOutputs) {
+                if (isHardForkActivated(tempTxOutput) && prohibitMoreBsqOutputs) {
                     handleBtcOutput(tempTxOutput, index);
                 } else {
                     handleBsqOutput(tempTxOutput, index, txOutputValue);
@@ -238,7 +238,13 @@ class TxOutputParser {
                 case UNDEFINED:
                     break;
                 case PROPOSAL:
-                    // TODO
+                    if (isHardForkActivated(tempTxOutput)) {
+                        // We enforce a mandatory BSQ change output.
+                        // We need that as similar to ASSET_LISTING_FEE and PROOF_OF_BURN
+                        // we could not distinguish between 2 structurally same transactions otherwise (only way here
+                        // would be to check the proposal fee as that is known from the params).
+                        return tempTxOutput.getIndex() >= 1;
+                    }
                     break;
                 case COMPENSATION_REQUEST:
                     break;
@@ -252,26 +258,26 @@ class TxOutputParser {
                 case LOCKUP:
                     break;
                 case ASSET_LISTING_FEE:
-                    // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
-                    // structurally same transactions where only the BSQ fee is different and the asset listing fee is
-                    // a user input when creating the asset listing, so it is not know to the parser.
-                    // Instead we derive the asset listing fee from the parser.
+                case PROOF_OF_BURN:
+                    // Asset listing fee and proof of burn tx are structurally the same.
 
-                    // Case 1: 10 BSQ asset listing fee
+                    // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
+                    // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
+                    // burn it  is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
+                    // In case of proposal fee  we could derive it from the params.
+
+                    // Case 1: 10 BSQ fee to burn
                     // In: 17 BSQ
                     // Out: BSQ change 7 BSQ -> valid BSQ
                     // Out: OpReturn
                     // Miner fee: 1000 sat  (10 BSQ burned)
 
 
-                    // Case 2: 17 BSQ asset listing fee
+                    // Case 2: 17 BSQ fee to burn
                     // In: 17 BSQ
                     // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
                     // Out: OpReturn
                     // Miner fee: 1000 sat  (10 BSQ burned)
-                    return tempTxOutput.getIndex() >= 1;
-                case PROOF_OF_BURN:
-                    // TODO
                     return tempTxOutput.getIndex() >= 1;
             }
         }
@@ -334,6 +340,10 @@ class TxOutputParser {
             // For regular transactions we don't permit BSQ outputs after a BTC output was detected.
             prohibitMoreBsqOutputs = true;
         }
+    }
+
+    private boolean isHardForkActivated(TempTxOutput tempTxOutput) {
+        return tempTxOutput.getBlockHeight() >= getActivateHardFork1Height();
     }
 
     private int getActivateHardFork1Height() {

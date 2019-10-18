@@ -573,16 +573,21 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Burn fee tx
+    // Burn fee txs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We create a tx with Bsq inputs for the fee and optional BSQ change output.
     // As the fee amount will be missing in the output those BSQ fees are burned.
-    public Transaction getPreparedProposalTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
-        return getPreparedBurnFeeTx(fee, requireChangeOutput);
+    public Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedBurnBsqFeeTx(fee);
     }
 
-    public Transaction getPreparedBurnFeeTx(Coin fee) throws InsufficientBsqException {
+    //todo
+    public Transaction getPreparedIssuanceTx(Coin fee) throws InsufficientBsqException {
+        return getPreparedBurnBsqFeeTx(fee);
+    }
+
+    public Transaction getPreparedTradeFeeTx(Coin fee) throws InsufficientBsqException {
         return getPreparedBurnFeeTx(fee, false);
     }
 
@@ -633,7 +638,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 log.warn("We increased required input as change output was zero or dust: New change value={}", change);
                 String info = "Available BSQ balance=" + coinSelection.valueGathered.value / 100 + " BSQ. " +
                         "Intended fee to burn=" + fee.value / 100 + " BSQ. " +
-                        "Please reduce the fee to burn to " + (coinSelection.valueGathered.value - minDustThreshold.value) / 100 + " BSQ.";
+                        "Please increase your balance to at least " + (coinSelection.valueGathered.value + minDustThreshold.value) / 100 + " BSQ.";
                 checkArgument(coinSelection.valueGathered.compareTo(fee) > 0,
                         "This transaction require a change output of at least " + minDustThreshold.value / 100 + " BSQ (dust limit). " +
                                 info);
@@ -655,6 +660,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         }
     }
 
+    //todo
     private Transaction getPreparedBurnFeeTx(Coin fee, boolean requireChangeOutput) throws InsufficientBsqException {
         daoKillSwitch.assertDaoIsNotDisabled();
         final Transaction tx = new Transaction(params);

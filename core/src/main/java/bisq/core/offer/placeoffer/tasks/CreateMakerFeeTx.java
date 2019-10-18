@@ -109,7 +109,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         });
             } else {
                 final BsqWalletService bsqWalletService = model.getBsqWalletService();
-                Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedBurnFeeTx(offer.getMakerFee());
+                Transaction preparedBurnFeeTx = model.getBsqWalletService().getPreparedTradeFeeTx(offer.getMakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,
