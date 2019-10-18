@@ -20,7 +20,10 @@ package bisq.core.support.dispute.refund.refundagent;
 import bisq.core.support.dispute.agent.DisputeAgent;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 
@@ -42,7 +45,7 @@ import javax.annotation.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
-public final class RefundAgent extends DisputeAgent {
+public final class RefundAgent extends DisputeAgent implements CapabilityRequiringPayload {
 
     public RefundAgent(NodeAddress nodeAddress,
                        PubKeyRing pubKeyRing,
@@ -105,5 +108,10 @@ public final class RefundAgent extends DisputeAgent {
     @Override
     public String toString() {
         return "RefundAgent{} " + super.toString();
+    }
+
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.REFUND_AGENT);
     }
 }
