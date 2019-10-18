@@ -166,6 +166,12 @@ class TxOutputParser {
             } else if (isBtcOutputOfBurnFeeTx(tempTxOutput)) {
                 // In case we have the opReturn for a burn fee tx all outputs after 1st output are considered BTC
                 handleBtcOutput(tempTxOutput, index);
+            } else if (isHardForkActivated(tempTxOutput) && isIssuanceCandidateTxOutput(tempTxOutput)) {
+                // After the hard fork activation we fix a bug with a transaction which would have interpreted the
+                // issuance output as BSQ if the availableInputValue was >= issuance amount.
+                // Such a tx was never created but as we don't know if it will happen before activation date we cannot
+                // enforce the bugfix which represents a rule change before the activation date.
+                handleIssuanceCandidateOutput(tempTxOutput);
             } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
                 if (isHardForkActivated(tempTxOutput) && prohibitMoreBsqOutputs) {
                     handleBtcOutput(tempTxOutput, index);
@@ -284,6 +290,24 @@ class TxOutputParser {
         return false;
     }
 
+    private boolean isIssuanceCandidateTxOutput(TempTxOutput tempTxOutput) {
+        // If we have BSQ left as fee and we are at the second output we interpret it as a compensation request output.
+        return availableInputValue > 0 &&
+                tempTxOutput.getIndex() == 1 &&
+                optionalOpReturnType.isPresent() &&
+                (optionalOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST ||
+                        optionalOpReturnType.get() == OpReturnType.REIMBURSEMENT_REQUEST);
+    }
+
+    private void handleIssuanceCandidateOutput(TempTxOutput tempTxOutput) {
+        // We do not permit more BSQ outputs after the issuance candidate.
+        prohibitMoreBsqOutputs = true;
+
+        // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee  after all
+        // outputs are parsed and check the phase. The TxParser will do that....
+        optionalIssuanceCandidate = Optional.of(tempTxOutput);
+    }
+
     private void handleBsqOutput(TempTxOutput txOutput, int index, long txOutputValue) {
         // Update the input balance.
         availableInputValue -= txOutputValue;
@@ -322,23 +346,30 @@ class TxOutputParser {
     }
 
     private void handleBtcOutput(TempTxOutput txOutput, int index) {
-        // If we have BSQ left as fee and we are at the second output it might be a compensation request output.
-        // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee  after all
-        // outputs are parsed and check the phase. The TxParser will do that....
-        if (availableInputValue > 0 &&
-                index == 1 &&
-                optionalOpReturnType.isPresent() &&
-                (optionalOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST ||
-                        optionalOpReturnType.get() == OpReturnType.REIMBURSEMENT_REQUEST)) {
-            optionalIssuanceCandidate = Optional.of(txOutput);
-
-            // We do not permit more BSQ outputs after the issuance candidate.
-            prohibitMoreBsqOutputs = true;
-        } else {
+        if (isHardForkActivated(txOutput)) {
             txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
 
             // For regular transactions we don't permit BSQ outputs after a BTC output was detected.
             prohibitMoreBsqOutputs = true;
+        } else {
+            // If we have BSQ left as fee and we are at the second output it might be a compensation request output.
+            // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee  after all
+            // outputs are parsed and check the phase. The TxParser will do that....
+            if (availableInputValue > 0 &&
+                    index == 1 &&
+                    optionalOpReturnType.isPresent() &&
+                    (optionalOpReturnType.get() == OpReturnType.COMPENSATION_REQUEST ||
+                            optionalOpReturnType.get() == OpReturnType.REIMBURSEMENT_REQUEST)) {
+                optionalIssuanceCandidate = Optional.of(txOutput);
+
+                // We do not permit more BSQ outputs after the issuance candidate.
+                prohibitMoreBsqOutputs = true;
+            } else {
+                txOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
+
+                // For regular transactions we don't permit BSQ outputs after a BTC output was detected.
+                prohibitMoreBsqOutputs = true;
+            }
         }
     }
 
