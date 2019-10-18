@@ -579,12 +579,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // We create a tx with Bsq inputs for the fee and optional BSQ change output.
     // As the fee amount will be missing in the output those BSQ fees are burned.
     public Transaction getPreparedProposalTx(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnBsqFeeTx(fee);
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
     }
 
-    //todo
     public Transaction getPreparedIssuanceTx(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnBsqFeeTx(fee);
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
     }
 
     public Transaction getPreparedTradeFeeTx(Coin fee) throws InsufficientBsqException {
@@ -592,33 +591,39 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     }
 
     public Transaction getPreparedProofOfBurnTx(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnBsqFeeTx(fee);
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
     }
 
     public Transaction getPreparedBurnFeeTxForAssetListing(Coin fee) throws InsufficientBsqException {
-        return getPreparedBurnBsqFeeTx(fee);
+        return getPreparedTxWithMandatoryBsqChangeOutput(fee);
     }
 
-    private Transaction getPreparedBurnBsqFeeTx(Coin fee) throws InsufficientBsqException {
+    // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
+    // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
+    // burn it  is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
+
+    // In case of proposal fee we could derive it from the params.
+
+    // For issuance txs we also require a BSQ change output before the issuance output gets added. There was a
+    // minor bug with the old version that multiple inputs would have caused an exception in case there was no
+    // change output (e.g. inputs of 21 and 6 BSQ for BSQ fee of 21 BSQ would have caused that only 1 input was used
+    // and then caused an error as we enforced a change output. This new version handles such cases correctly.
+
+    // Examples for the structurally indistinguishable transactions:
+    // Case 1: 10 BSQ fee to burn
+    // In: 17 BSQ
+    // Out: BSQ change 7 BSQ -> valid BSQ
+    // Out: OpReturn
+    // Miner fee: 1000 sat  (10 BSQ burned)
+
+    // Case 2: 17 BSQ fee to burn
+    // In: 17 BSQ
+    // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
+    // Out: OpReturn
+    // Miner fee: 1000 sat  (10 BSQ burned)
+
+    private Transaction getPreparedTxWithMandatoryBsqChangeOutput(Coin fee) throws InsufficientBsqException {
         daoKillSwitch.assertDaoIsNotDisabled();
-
-        // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
-        // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
-        // burn it  is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
-        // In case of proposal fee  we could derive it from the params.
-
-        // Case 1: 10 BSQ fee to burn
-        // In: 17 BSQ
-        // Out: BSQ change 7 BSQ -> valid BSQ
-        // Out: OpReturn
-        // Miner fee: 1000 sat  (10 BSQ burned)
-
-
-        // Case 2: 17 BSQ fee to burn
-        // In: 17 BSQ
-        // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
-        // Out: OpReturn
-        // Miner fee: 1000 sat  (10 BSQ burned)
 
         Transaction tx = new Transaction(params);
         // We look for inputs covering out BSQ fee we want to pay.
