@@ -79,6 +79,12 @@ public class DaoView extends ActivatableViewAndModel<TabPane, Activatable> {
                     .feedback(Res.get("dao.voteReveal.txPublished", txId))
                     .show();
         });
+
+        voteRevealService.addVoteRevealTxFailedListener((exception) -> {
+            new Popup<>().headLine(Res.get("dao.voteReveal.txFailed.headLine"))
+                    .error(Res.get("dao.voteReveal.txFailed", exception.getBlindVoteTxId(), exception.getLocalizedMessage()))
+                    .show();
+        });
     }
 
     @Override

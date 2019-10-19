@@ -75,6 +75,10 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         void onVoteRevealTxPublished(String txId);
     }
 
+    public interface VoteRevealTxFailedListener {
+        void onVoteRevealTxFailed(VoteRevealException exception);
+    }
+
     private final DaoStateService daoStateService;
     private final BlindVoteListService blindVoteListService;
     private final PeriodService periodService;
@@ -87,6 +91,7 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
     @Getter
     private final ObservableList<VoteRevealException> voteRevealExceptions = FXCollections.observableArrayList();
     private final List<VoteRevealTxPublishedListener> voteRevealTxPublishedListeners = new ArrayList<>();
+    private final List<VoteRevealTxFailedListener> voteRevealTxFailedListeners = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -145,6 +150,10 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
 
     public void addVoteRevealTxPublishedListener(VoteRevealTxPublishedListener voteRevealTxPublishedListener) {
         voteRevealTxPublishedListeners.add(voteRevealTxPublishedListener);
+    }
+
+    public void addVoteRevealTxFailedListener(VoteRevealTxFailedListener voteRevealTxFailedListener) {
+        voteRevealTxFailedListeners.add(voteRevealTxFailedListener);
     }
 
 
@@ -252,6 +261,9 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
         } catch (VoteRevealException e) {
             voteRevealExceptions.add(e);
         }
+        
+        //Display vote reveal exceptions
+        voteRevealExceptions.forEach(e -> voteRevealTxFailedListeners.forEach(l -> l.onVoteRevealTxFailed(e)));
     }
 
     private void publishTx(Transaction voteRevealTx) {
