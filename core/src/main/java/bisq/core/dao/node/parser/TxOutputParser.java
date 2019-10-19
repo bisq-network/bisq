@@ -152,14 +152,14 @@ class TxOutputParser {
     }
 
     void processTxOutput(TempTxOutput tempTxOutput) {
-        if (!daoStateService.isConfiscatedOutput(tempTxOutput.getKey())) {
-            // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
-            // another output index is invalid.
-            if (tempTxOutput.isOpReturnOutput()) {
-                tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
-                return;
-            }
+        // We don not expect here an opReturn output as we do not get called on the last output. Any opReturn at
+        // another output index is invalid.
+        if (tempTxOutput.isOpReturnOutput()) {
+            tempTxOutput.setTxOutputType(TxOutputType.INVALID_OUTPUT);
+            return;
+        }
 
+        if (!daoStateService.isConfiscatedOutput(tempTxOutput.getKey())) {
             long txOutputValue = tempTxOutput.getValue();
             int index = tempTxOutput.getIndex();
             if (isUnlockBondTx(tempTxOutput.getValue(), index)) {
