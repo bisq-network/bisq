@@ -172,16 +172,17 @@ class TxOutputParser {
                 handleBtcOutput(tempTxOutput, index);
             } else if (isHardForkActivated(tempTxOutput) && isIssuanceCandidateTxOutput(tempTxOutput)) {
                 // After the hard fork activation we fix a bug with a transaction which would have interpreted the
-                // vote fee output as BSQ if the vote fee was >= miner fee.
-                // Such a tx was never created but as we don't know if it will happen before activation date we cannot
-                // enforce the bug fix which represents a rule change before the activation date.
-                handleIssuanceCandidateOutput(tempTxOutput);
-            } else if (isHardForkActivated(tempTxOutput) && isBlindVoteFeeOutput(tempTxOutput)) {
-                // After the hard fork activation we fix a bug with a transaction which would have interpreted the
                 // issuance output as BSQ if the availableInputValue was >= issuance amount.
                 // Such a tx was never created but as we don't know if it will happen before activation date we cannot
                 // enforce the bug fix which represents a rule change before the activation date.
-                handleBlindVoteFeeOutput(tempTxOutput);
+                handleIssuanceCandidateOutput(tempTxOutput);
+            } else if (isHardForkActivated(tempTxOutput) && isBlindVoteBurnedFeeOutput(tempTxOutput)) {
+                // After the hard fork activation we fix a bug with a transaction which would have interpreted the
+                // vote fee output as BSQ if the vote fee was >= miner fee.
+                // Such a tx was never created but as we don't know if it will happen before activation date we cannot
+                // enforce the bug fix which represents a rule change before the activation date.
+
+                handleBlindVoteBurnedFeeOutput(tempTxOutput);
             } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
                 if (isHardForkActivated(tempTxOutput) && prohibitMoreBsqOutputs) {
                     handleBtcOutput(tempTxOutput, index);
@@ -319,12 +320,12 @@ class TxOutputParser {
         optionalIssuanceCandidate = Optional.of(tempTxOutput);
     }
 
-    private void handleBlindVoteFeeOutput(TempTxOutput tempTxOutput) {
+    private void handleBlindVoteBurnedFeeOutput(TempTxOutput tempTxOutput) {
         tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
         prohibitMoreBsqOutputs = true;
     }
 
-    private boolean isBlindVoteFeeOutput(TempTxOutput tempTxOutput) {
+    private boolean isBlindVoteBurnedFeeOutput(TempTxOutput tempTxOutput) {
         if (!optionalOpReturnType.isPresent()) {
             return false;
         }

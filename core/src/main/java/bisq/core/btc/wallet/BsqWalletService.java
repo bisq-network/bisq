@@ -613,7 +613,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
     // We need to require one BSQ change output as we could otherwise not be able to distinguish between 2
     // structurally same transactions where only the BSQ fee is different. In case of asset listing fee and proof of
-    // burn it  is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
+    // burn it is a user input, so it is not know to the parser, instead we derive the burned fee from the parser.
 
     // In case of proposal fee we could derive it from the params.
 
