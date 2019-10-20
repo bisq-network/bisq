@@ -493,6 +493,15 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             }
         }
 
+        for (TransactionOutput txo : tx.getOutputs()) {
+            Coin value = txo.getValue();
+            // OpReturn outputs have value 0
+            if (value.isPositive()) {
+                checkArgument(Restrictions.isAboveDust(txo.getValue()),
+                        "An output value is below dust limit. Transaction=" + tx);
+            }
+        }
+
         checkWalletConsistency(wallet);
         verifyTransaction(tx);
         printTx("BSQ wallet: Signed Tx", tx);
@@ -556,11 +565,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             // Tx has as first output BSQ and an optional second BSQ change output.
             // At that stage we do not have added the BTC inputs so there is no BTC change output here.
             if (tx.getOutputs().size() == 2) {
-                TransactionOutput bsqChangeOutput = tx.getOutputs().get(1);
-                if (!Restrictions.isAboveDust(bsqChangeOutput.getValue())) {
-                    String msg = "BSQ change output is below dust limit. outputValue=" + bsqChangeOutput.getValue().toFriendlyString();
+                Coin bsqChangeOutputValue = tx.getOutputs().get(1).getValue();
+                if (!Restrictions.isAboveDust(bsqChangeOutputValue)) {
+                    String msg = "BSQ change output is below dust limit. outputValue=" + bsqChangeOutputValue.value / 100 + " BSQ";
                     log.warn(msg);
-                    throw new BsqChangeBelowDustException(msg, bsqChangeOutput.getValue());
+                    throw new BsqChangeBelowDustException(msg, bsqChangeOutputValue);
                 }
             }
 
