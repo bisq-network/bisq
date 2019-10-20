@@ -176,13 +176,6 @@ class TxOutputParser {
                 // Such a tx was never created but as we don't know if it will happen before activation date we cannot
                 // enforce the bug fix which represents a rule change before the activation date.
                 handleIssuanceCandidateOutput(tempTxOutput);
-            } else if (isHardForkActivated(tempTxOutput) && isBlindVoteBurnedFeeOutput(tempTxOutput)) {
-                // After the hard fork activation we fix a bug with a transaction which would have interpreted the
-                // vote fee output as BSQ if the vote fee was >= miner fee.
-                // Such a tx was never created but as we don't know if it will happen before activation date we cannot
-                // enforce the bug fix which represents a rule change before the activation date.
-
-                handleBlindVoteBurnedFeeOutput(tempTxOutput);
             } else if (availableInputValue > 0 && availableInputValue >= txOutputValue) {
                 if (isHardForkActivated(tempTxOutput) && prohibitMoreBsqOutputs) {
                     handleBtcOutput(tempTxOutput, index);
@@ -202,7 +195,6 @@ class TxOutputParser {
             tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
         }
     }
-
 
     void commitUTXOCandidates() {
         utxoCandidates.forEach(output -> daoStateService.addUnspentTxOutput(TxOutput.fromTempOutput(output)));
@@ -252,6 +244,7 @@ class TxOutputParser {
 
     private boolean isBtcOutputOfBurnFeeTx(TempTxOutput tempTxOutput) {
         if (optionalOpReturnType.isPresent()) {
+            int index = tempTxOutput.getIndex();
             switch (optionalOpReturnType.get()) {
                 case UNDEFINED:
                     break;
@@ -261,7 +254,7 @@ class TxOutputParser {
                         // We need that as similar to ASSET_LISTING_FEE and PROOF_OF_BURN
                         // we could not distinguish between 2 structurally same transactions otherwise (only way here
                         // would be to check the proposal fee as that is known from the params).
-                        return tempTxOutput.getIndex() >= 1;
+                        return index >= 1;
                     }
                     break;
                 case COMPENSATION_REQUEST:
@@ -269,8 +262,36 @@ class TxOutputParser {
                 case REIMBURSEMENT_REQUEST:
                     break;
                 case BLIND_VOTE:
-                    // TODO
-                    break;
+                    if (isHardForkActivated(tempTxOutput)) {
+                        // After the hard fork activation we fix a bug with a transaction which would have interpreted the
+                        // burned vote fee output as BSQ if the vote fee was >= miner fee.
+                        // Such a tx was never created but as we don't know if it will happen before activation date we cannot
+                        // enforce the bug fix which represents a rule change before the activation date.
+
+                        // If it is the vote stake output we return false.
+                        if (index == 0) {
+                            return false;
+                        }
+
+                        // There must be a vote fee left
+                        if (availableInputValue <= 0) {
+                            return false;
+                        }
+
+                        // Burned BSQ output is last output before opReturn.
+                        // We could have also a BSQ change output as last output before opReturn but that will
+                        // be detected at blindVoteFee check.
+                        // We always have the BSQ change before the burned BSQ output if both are present.
+                        checkArgument(optionalOpReturnIndex.isPresent());
+                        if (index != optionalOpReturnIndex.get() - 1) {
+                            return false;
+                        }
+
+                        // Without checking the fee we would not be able to distinguish between 2 structurally same transactions, one
+                        // where the output is burned BSQ and one where it is a BSQ change output.
+                        long blindVoteFee = daoStateService.getParamValueAsCoin(Param.BLIND_VOTE_FEE, tempTxOutput.getBlockHeight()).value;
+                        return availableInputValue == blindVoteFee;
+                    }
                 case VOTE_REVEAL:
                     break;
                 case LOCKUP:
@@ -296,7 +317,7 @@ class TxOutputParser {
                     // Out: burned BSQ change 7 BSQ -> BTC (7 BSQ burned)
                     // Out: OpReturn
                     // Miner fee: 1000 sat  (10 BSQ burned)
-                    return tempTxOutput.getIndex() >= 1;
+                    return index >= 1;
             }
         }
         return false;
@@ -318,45 +339,6 @@ class TxOutputParser {
         // We store the candidate but we don't apply the TxOutputType yet as we need to verify the fee  after all
         // outputs are parsed and check the phase. The TxParser will do that....
         optionalIssuanceCandidate = Optional.of(tempTxOutput);
-    }
-
-    private void handleBlindVoteBurnedFeeOutput(TempTxOutput tempTxOutput) {
-        tempTxOutput.setTxOutputType(TxOutputType.BTC_OUTPUT);
-        prohibitMoreBsqOutputs = true;
-    }
-
-    private boolean isBlindVoteBurnedFeeOutput(TempTxOutput tempTxOutput) {
-        if (!optionalOpReturnType.isPresent()) {
-            return false;
-        }
-
-        if (optionalOpReturnType.get() != OpReturnType.BLIND_VOTE) {
-            return false;
-        }
-
-        // If it is the vote stake output we return false.
-        if (tempTxOutput.getIndex() == 0) {
-            return false;
-        }
-
-        // There must be a vote fee left
-        if (availableInputValue <= 0) {
-            return false;
-        }
-
-        // Burned BSQ output is last output before opReturn.
-        // We could have also a BSQ change output as last output before opReturn but that will
-        // be detected at blindVoteFee check.
-        // We always have the BSQ change before the burned BSQ output if both are present.
-        checkArgument(optionalOpReturnIndex.isPresent());
-        if (tempTxOutput.getIndex() != optionalOpReturnIndex.get() - 1) {
-            return false;
-        }
-
-        // Without checking the fee we would not be able to distinguish between 2 structurally same transactions, one
-        // where the output is burned BSQ and one where it is a BSQ change output.
-        long blindVoteFee = daoStateService.getParamValueAsCoin(Param.BLIND_VOTE_FEE, tempTxOutput.getBlockHeight()).value;
-        return availableInputValue == blindVoteFee;
     }
 
     private void handleBsqOutput(TempTxOutput txOutput, int index, long txOutputValue) {
