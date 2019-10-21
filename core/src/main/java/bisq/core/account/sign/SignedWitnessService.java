@@ -144,6 +144,7 @@ public class SignedWitnessService {
                                       PublicKey peersPubKey) {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Arbitrator trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
+            return;
         }
 
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
@@ -160,12 +161,12 @@ public class SignedWitnessService {
     }
 
     // Any peer can sign with DSA key
-    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
-                                               AccountAgeWitness accountAgeWitness,
-                                               PublicKey peersPubKey) throws CryptoException {
+    public void signAccountAgeWitness(Coin tradeAmount,
+                                      AccountAgeWitness accountAgeWitness,
+                                      PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return null;
+            return;
         }
 
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
@@ -178,7 +179,6 @@ public class SignedWitnessService {
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Trader signed witness {}", signedWitness.toString());
-        return signedWitness;
     }
 
     public boolean verifySignature(SignedWitness signedWitness) {
