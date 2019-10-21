@@ -149,6 +149,8 @@ public class GUIUtil {
     public final static String SHOW_ALL_FLAG = "list.currency.showAll"; // Used for accessing the i18n resource
     public final static String EDIT_FLAG = "list.currency.editList"; // Used for accessing the i18n resource
 
+    public final static String OPEN_WEB_PAGE_KEY = "warnOpenURLWhenTorEnabled";
+
     public final static int FIAT_DECIMALS_WITH_ZEROS = 0;
     public final static int FIAT_PRICE_DECIMALS_WITH_ZEROS = 3;
     public final static int ALTCOINS_DECIMALS_WITH_ZEROS = 7;
@@ -587,30 +589,44 @@ public class GUIUtil {
         }
     }
 
+
     public static void openWebPage(String target) {
-        openWebPage(target, true);
+        openWebPage(target, true, null);
     }
 
     public static void openWebPage(String target, boolean useReferrer) {
+        openWebPage(target, useReferrer, null);
+    }
+
+    public static void openWebPage(String target, boolean useReferrer, Runnable closeHandler) {
+
         if (useReferrer && target.contains("bisq.network")) {
             // add utm parameters
             target = appendURI(target, "utm_source=desktop-client&utm_medium=in-app-link&utm_campaign=language_" +
                     preferences.getUserLanguage());
         }
 
-        String key = "warnOpenURLWhenTorEnabled";
-        if (DontShowAgainLookup.showAgain(key)) {
+        if (DontShowAgainLookup.showAgain(OPEN_WEB_PAGE_KEY)) {
             final String finalTarget = target;
             new Popup<>().information(Res.get("guiUtil.openWebBrowser.warning", target))
                     .actionButtonText(Res.get("guiUtil.openWebBrowser.doOpen"))
                     .onAction(() -> {
-                        DontShowAgainLookup.dontShowAgain(key, true);
+                        DontShowAgainLookup.dontShowAgain(OPEN_WEB_PAGE_KEY, true);
                         doOpenWebPage(finalTarget);
                     })
                     .closeButtonText(Res.get("guiUtil.openWebBrowser.copyUrl"))
-                    .onClose(() -> Utilities.copyToClipboard(finalTarget))
+                    .onClose(() -> {
+                        Utilities.copyToClipboard(finalTarget);
+                        if (closeHandler != null) {
+                            closeHandler.run();
+                        }
+                    })
                     .show();
         } else {
+            if (closeHandler != null) {
+                closeHandler.run();
+            }
+
             doOpenWebPage(target);
         }
     }

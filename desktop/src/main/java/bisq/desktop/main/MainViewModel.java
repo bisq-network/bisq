@@ -24,8 +24,8 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.DaoLaunchWindow;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
+import bisq.desktop.main.overlays.windows.NewTradeProtocolLaunchWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
@@ -69,8 +69,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
-
-import javafx.geometry.HPos;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -268,7 +266,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
 
-        maybeAddDaoLaunchWindowToQueue();
+        maybeAddNewTradeProtocolLaunchWindowToQueue();
         maybeShowPopupsFromQueue();
     }
 
@@ -621,21 +619,15 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return accountPresentation.getShowAccountUpdatesNotification();
     }
 
-    private void maybeAddDaoLaunchWindowToQueue() {
-        if (DevEnv.isDaoActivated()) {
-            String daoLaunchPopupKey = "daoLaunchPopup";
-            if (DontShowAgainLookup.showAgain(daoLaunchPopupKey)) {
-                DaoLaunchWindow daoLaunchWindow = new DaoLaunchWindow()
-                        .headLine(Res.get("popup.dao.launch.headline"))
-                        .closeButtonText(Res.get("shared.dismiss"))
-                        .actionButtonText(Res.get("shared.learnMore"))
-                        .onAction(() -> GUIUtil.openWebPage("https://docs.bisq.network/dao.html"))
-                        .buttonAlignment(HPos.CENTER);
-                daoLaunchWindow.setDisplayOrderPriority(1);
-                popupQueue.add(daoLaunchWindow);
+    private void maybeAddNewTradeProtocolLaunchWindowToQueue() {
+        String newTradeProtocolWithAccountSigningLaunchPopupKey = "newTradeProtocolWithAccountSigningLaunchPopup";
+        if (DontShowAgainLookup.showAgain(newTradeProtocolWithAccountSigningLaunchPopupKey)) {
+            NewTradeProtocolLaunchWindow newTradeProtocolLaunchWindow = new NewTradeProtocolLaunchWindow()
+                    .headLine(Res.get("popup.news.launch.headline"));
+            newTradeProtocolLaunchWindow.setDisplayOrderPriority(1);
+            popupQueue.add(newTradeProtocolLaunchWindow);
 
-                DontShowAgainLookup.dontShowAgain(daoLaunchPopupKey, true);
-            }
+            DontShowAgainLookup.dontShowAgain(newTradeProtocolWithAccountSigningLaunchPopupKey, true);
         }
     }
 
