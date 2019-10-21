@@ -408,13 +408,13 @@ public class BtcWalletService extends WalletService {
             TransactionVerificationException, WalletException, InsufficientMoneyException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [1] BSQ receivers output
         // outputs [0-1] BSQ change output
 
         // We add BTC mining fee. Result tx looks like:
         // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [1] BSQ receivers output
         // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
@@ -426,7 +426,7 @@ public class BtcWalletService extends WalletService {
 
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [1] BSQ receivers output
         // outputs [0-1] BSQ change output
         // mining fee: optional burned BSQ fee (only if opReturnData != null)
 

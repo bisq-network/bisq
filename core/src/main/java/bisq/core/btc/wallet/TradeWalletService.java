@@ -220,6 +220,10 @@ public class TradeWalletService {
         // wait for 1 confirmation)
         // In case of double spend we will detect later in the trade process and use a ban score to penalize bad behaviour (not impl. yet)
 
+        // If BSQ trade fee > reservedFundsForOffer we would create a BSQ output instead of a BTC output.
+        // As the min. reservedFundsForOffer is 0.001 BTC which is 1000 BSQ this is an unrealistic scenario and not
+        // handled atm (if BTC price is 1M USD and BSQ price is 0.1 USD, then fee would be 10% which still is unrealistic).
+
         // WalletService.printTx("preparedBsqTx", preparedBsqTx);
         SendRequest sendRequest = SendRequest.forTx(preparedBsqTx);
         sendRequest.shuffleOutputs = false;
