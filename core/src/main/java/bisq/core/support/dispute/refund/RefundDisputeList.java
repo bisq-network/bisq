@@ -84,9 +84,10 @@ public final class RefundDisputeList extends DisputeList<RefundDisputeList> {
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
                 .collect(Collectors.toList());
 
-        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.REFUND), "Support type has to be REFUND"));
-
-        list.forEach(e -> e.setStorage(storage));
+        list.forEach(e -> {
+            checkArgument(e.getSupportType().equals(SupportType.REFUND), "Support type has to be REFUND");
+            e.setStorage(storage);
+        });
         return new RefundDisputeList(storage, list);
     }
 }

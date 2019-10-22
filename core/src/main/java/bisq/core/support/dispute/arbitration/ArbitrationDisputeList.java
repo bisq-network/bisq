@@ -84,9 +84,10 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
                 .collect(Collectors.toList());
 
-        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
-
-        list.forEach(e -> e.setStorage(storage));
+        list.forEach(e -> {
+            checkArgument(e.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION");
+            e.setStorage(storage);
+        });
         return new ArbitrationDisputeList(storage, list);
     }
 }

@@ -83,9 +83,10 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
                 .collect(Collectors.toList());
 
-        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.MEDIATION), "Support type has to be MEDIATION"));
-
-        list.forEach(e -> e.setStorage(storage));
+        list.forEach(e -> {
+            checkArgument(e.getSupportType().equals(SupportType.MEDIATION), "Support type has to be MEDIATION");
+            e.setStorage(storage);
+        });
         return new MediationDisputeList(storage, list);
     }
 }
