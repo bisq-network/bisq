@@ -138,13 +138,13 @@ public class SignedWitnessService {
     }
 
     // Arbitrators sign with EC key
-    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
-                                               AccountAgeWitness accountAgeWitness,
-                                               ECKey key,
-                                               PublicKey peersPubKey) {
+    public void signAccountAgeWitness(Coin tradeAmount,
+                                      AccountAgeWitness accountAgeWitness,
+                                      ECKey key,
+                                      PublicKey peersPubKey) {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Arbitrator trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return null;
+            return;
         }
 
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
@@ -158,16 +158,15 @@ public class SignedWitnessService {
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Arbitrator signed witness {}", signedWitness.toString());
-        return signedWitness;
     }
 
     // Any peer can sign with DSA key
-    public SignedWitness signAccountAgeWitness(Coin tradeAmount,
-                                               AccountAgeWitness accountAgeWitness,
-                                               PublicKey peersPubKey) throws CryptoException {
+    public void signAccountAgeWitness(Coin tradeAmount,
+                                      AccountAgeWitness accountAgeWitness,
+                                      PublicKey peersPubKey) throws CryptoException {
         if (isSignedAccountAgeWitness(accountAgeWitness)) {
             log.warn("Trader trying to sign already signed accountagewitness {}", accountAgeWitness.toString());
-            return null;
+            return;
         }
 
         byte[] signature = Sig.sign(keyRing.getSignatureKeyPair().getPrivate(), accountAgeWitness.getHash());
@@ -180,7 +179,6 @@ public class SignedWitnessService {
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
         log.info("Trader signed witness {}", signedWitness.toString());
-        return signedWitness;
     }
 
     public boolean verifySignature(SignedWitness signedWitness) {

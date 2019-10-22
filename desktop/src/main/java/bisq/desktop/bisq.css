@@ -1967,56 +1967,6 @@ textfield */
     -fx-font-size: 0.923em;
 }
 
-.dao-launch-version {
-    -fx-font-size: 1.077em;
-}
-
-.dao-launch-headline {
-    -fx-font-size: 2.154em;
-    -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.dao-launch-description {
-    -fx-font-size: 1.538em;
-    -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.dao-launch-paging-button {
-    -fx-text-fill: -bs-rd-font-light;
-    -fx-fill: -bs-rd-font-light;
-}
-
-.dao-launch-tab-box {
-    -fx-border-style: solid;
-    -fx-border-width: 1 0 0 0;
-    -fx-border-color: -bs-rd-tab-border;
-}
-
-.slider-section-button {
-    -fx-cursor: hand;
-    -fx-background-color: transparent;
-    -fx-translate-y: -1;
-    -fx-padding: 11;
-}
-
-.slider-section-button .text {
-    -fx-font-size: 0.923em;
-    -fx-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.slider-section-button:selected {
-    -fx-border-style: solid;
-    -fx-border-width: 1 0 0 0;
-    -fx-border-color: -bs-rd-green;
-}
-
-.slider-section-button:selected .text {
-    -fx-fill: -bs-rd-green;
-}
-
 .price-trend-up {
     -fx-text-fill: -bs-color-primary;
     -fx-padding: 2 0 0 0;
@@ -2027,6 +1977,34 @@ textfield */
     -fx-padding: 2 0 0 0;
 }
 
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * News                                                                                                             *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.news-version {
+    -fx-alignment: center;
+    -fx-font-size: 1.077em;
+}
+
+.news-headline {
+    -fx-font-size: 2.154em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.news-feature-headline {
+    -fx-font-size: 1.462em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-family: "IBM Plex Sans Light";
+}
+
+.news-feature-description {
+    -fx-font-size: 1.231em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-family: "IBM Plex Sans Light";
+}
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                    *

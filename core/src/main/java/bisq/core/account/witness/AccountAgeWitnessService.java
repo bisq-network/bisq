@@ -17,7 +17,6 @@
 
 package bisq.core.account.witness;
 
-import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
@@ -585,11 +584,11 @@ public class AccountAgeWitnessService {
     // Witness signing
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SignedWitness arbitratorSignAccountAgeWitness(Coin tradeAmount,
-                                                         AccountAgeWitness accountAgeWitness,
-                                                         ECKey key,
-                                                         PublicKey peersPubKey) {
-        return signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
+    public void arbitratorSignAccountAgeWitness(Coin tradeAmount,
+                                                AccountAgeWitness accountAgeWitness,
+                                                ECKey key,
+                                                PublicKey peersPubKey) {
+        signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
     }
 
     public void traderSignPeersAccountAgeWitness(Trade trade) {
