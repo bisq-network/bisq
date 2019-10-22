@@ -18,6 +18,7 @@
 package bisq.core.support.dispute.mediation;
 
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @ToString
@@ -66,6 +69,9 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
 
     @Override
     public Message toProtoMessage() {
+
+        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.MEDIATION), "Support type has to be MEDIATION"));
+
         return protobuf.PersistableEnvelope.newBuilder().setMediationDisputeList(protobuf.MediationDisputeList.newBuilder()
                 .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list)))).build();
     }
@@ -76,6 +82,9 @@ public final class MediationDisputeList extends DisputeList<MediationDisputeList
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
                 .collect(Collectors.toList());
+
+        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.MEDIATION), "Support type has to be MEDIATION"));
+
         list.forEach(e -> e.setStorage(storage));
         return new MediationDisputeList(storage, list);
     }
