@@ -255,6 +255,10 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
 
         String errorMessage = null;
         Dispute dispute = openNewDisputeMessage.getDispute();
+
+        // Disputes from clients < 1.2.0 always have support type ARBITRATION in dispute as the field didn't exist before
+        dispute.setSupportType(openNewDisputeMessage.getSupportType());
+
         dispute.setStorage(disputeListService.getStorage());
         Contract contractFromOpener = dispute.getContract();
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contractFromOpener.getSellerPubKeyRing() : contractFromOpener.getBuyerPubKeyRing();
