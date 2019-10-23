@@ -23,20 +23,24 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -84,15 +88,18 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final ArbitrationManager arbitrationManager;
+    private final String appName;
 
 
     @Inject
     public SignPaymentAccountsWindow(AccountAgeWitnessService accountAgeWitnessService,
                                      ArbitratorManager arbitratorManager,
-                                     ArbitrationManager arbitrationManager) {
+                                     ArbitrationManager arbitrationManager,
+                                     @Named(AppOptionKeys.APP_NAME_KEY) String appName) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.arbitrationManager = arbitrationManager;
+        this.appName = appName;
     }
 
     @Override
@@ -189,6 +196,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
         ObservableList<Dispute> disputesAsObservableList = arbitrationManager.getDisputesAsObservableList();
         long safeDate = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
         List<TraderDataItem> traderDataItemList;
+        StringBuilder sb = new StringBuilder("Summary for ").append(appName).append("\n");
         if (signAllCheckbox.isSelected()) {
             traderDataItemList = new ArrayList<>();
             getPaymentMethods().forEach(paymentMethod -> {
@@ -197,14 +205,34 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                         paymentMethod,
                         disputesAsObservableList);
                 traderDataItemList.addAll(list);
+
+                sb.append("\nPayment method: ").append(Res.get(paymentMethod.getId()))
+                        .append(" (No. of signed accounts: ").append(list.size()).append(")\n");
+                list.forEach(traderDataItem -> {
+                    sb.append("Account created: ")
+                            .append(BSFormatter.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
+                            .append(" Account: ")
+                            .append(traderDataItem.getPaymentAccountPayload().getPaymentDetails()).append("\n");
+                });
             });
+            sb.append("\nTotal accounts signed: ").append(traderDataItemList.size());
         } else {
-            PaymentMethod selectedPaymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
+            PaymentMethod paymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
             traderDataItemList = accountAgeWitnessService.getTraderPaymentAccounts(
                     safeDate,
-                    selectedPaymentMethod,
+                    paymentMethod,
                     disputesAsObservableList);
+            sb.append("\nPayment method: ").append(Res.get(paymentMethod.getId()))
+                    .append(" (No. of signed accounts: ").append(traderDataItemList.size()).append(")\n");
+            traderDataItemList.forEach(traderDataItem -> {
+                sb.append("Account created: ")
+                        .append(BSFormatter.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
+                        .append(" Account: ")
+                        .append(traderDataItem.getPaymentAccountPayload().getPaymentDetails()).append("\n");
+            });
         }
+        log.info(sb.toString());
+        Utilities.copyToClipboard(sb.toString());
 
         selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(traderDataItemList));
 
