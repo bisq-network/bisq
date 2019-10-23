@@ -19,6 +19,7 @@ package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
@@ -54,7 +55,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -65,10 +65,9 @@ public class SignedWitnessService {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
+    private final User user;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
-    @Setter
-    private boolean republishOnStartup = false;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -79,11 +78,12 @@ public class SignedWitnessService {
                                 P2PService p2PService,
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
-                                AppendOnlyDataStoreService appendOnlyDataStoreService) {
+                                AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                User user) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
-
+        this.user = user;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -119,7 +119,7 @@ public class SignedWitnessService {
     }
 
     private void onBootstrapComplete() {
-        if (republishOnStartup) {
+        if (user.getRegisteredArbitrator() != null) {
             UserThread.runAfter(this::doRepublishAllSignedWitnesses, 60);
         }
     }

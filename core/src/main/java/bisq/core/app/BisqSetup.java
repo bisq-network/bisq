@@ -692,9 +692,6 @@ public class BisqSetup {
 
         accountAgeWitnessService.onAllServicesInitialized();
         signedWitnessService.onAllServicesInitialized();
-        if (user.getRegisteredArbitrator() != null) {
-            signedWitnessService.setRepublishOnStartup(true);
-        }
 
         priceFeedService.setCurrencyCodeOnInit();
 
