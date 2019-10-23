@@ -20,10 +20,12 @@ package bisq.core.account.sign;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
+import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.UserThread;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
@@ -52,6 +54,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -64,7 +67,8 @@ public class SignedWitnessService {
     private final ArbitratorManager arbitratorManager;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
-
+    @Setter
+    private boolean republishOnStartup = false;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -79,6 +83,7 @@ public class SignedWitnessService {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
+
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -100,8 +105,24 @@ public class SignedWitnessService {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);
         });
+
+        if (p2PService.isBootstrapped()) {
+            onBootstrapComplete();
+        } else {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    onBootstrapComplete();
+                }
+            });
+        }
     }
 
+    private void onBootstrapComplete() {
+        if (republishOnStartup) {
+            UserThread.runAfter(this::doRepublishAllSignedWitnesses, 60);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -343,5 +364,9 @@ public class SignedWitnessService {
             log.info("broadcast signed witness {}", signedWitness.toString());
             p2PService.addPersistableNetworkPayload(signedWitness, false);
         }
+    }
+
+    private void doRepublishAllSignedWitnesses() {
+        signedWitnessMap.forEach((e, signedWitness) -> p2PService.addPersistableNetworkPayload(signedWitness, true));
     }
 }
