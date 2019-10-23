@@ -23,21 +23,27 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.util.BSFormatter;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -47,9 +53,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import javafx.geometry.HPos;
 import javafx.geometry.VPos;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -59,6 +67,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,29 +81,38 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
 
     private Label descriptionLabel;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
+    private CheckBox signAllCheckbox;
     private DatePicker datePicker;
     private InputTextField privateKey;
     private ListView<TraderDataItem> selectedPaymentAccountsList = new ListView<>();
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final ArbitratorManager arbitratorManager;
     private final ArbitrationManager arbitrationManager;
+    private final String appName;
 
 
     @Inject
     public SignPaymentAccountsWindow(AccountAgeWitnessService accountAgeWitnessService,
                                      ArbitratorManager arbitratorManager,
-                                     ArbitrationManager arbitrationManager) {
+                                     ArbitrationManager arbitrationManager,
+                                     @Named(AppOptionKeys.APP_NAME_KEY) String appName) {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.arbitratorManager = arbitratorManager;
         this.arbitrationManager = arbitrationManager;
+        this.appName = appName;
     }
 
     @Override
     public void show() {
+        width = 1000;
         rowIndex = -1;
         createGridPane();
-        gridPane.getColumnConstraints().get(1).setHgrow(Priority.NEVER);
 
+        // We want to have more space to read list entries... initial screen does not look so nice now, but
+        // dynamically updating height of window is a bit tricky.... @christoph feel free to improve if you like...
+        gridPane.setPrefHeight(600);
+
+        gridPane.getColumnConstraints().get(1).setHgrow(Priority.NEVER);
 
         headLine(Res.get("popup.accountSigning.selectAccounts.headline"));
         type = Type.Attention;
@@ -108,7 +126,6 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     }
 
     private void addSelectAccountsContent() {
-
         descriptionLabel = addMultilineLabel(gridPane, ++rowIndex,
                 Res.get("popup.accountSigning.selectAccounts.description"));
 
@@ -126,13 +143,16 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
             }
         });
 
-        List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
-                .filter(paymentMethod -> !paymentMethod.isAsset())
-                .filter(PaymentMethod::hasChargebackRisk)
-                .collect(Collectors.toList());
 
-        paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));
+        paymentMethodComboBox.setItems(FXCollections.observableArrayList(getPaymentMethods()));
         paymentMethodComboBox.setOnAction(e -> updateAccountSelectionState());
+
+        signAllCheckbox = addLabelCheckBox(gridPane, ++rowIndex, Res.get("popup.accountSigning.selectAccounts.signAll"));
+        GridPane.setHalignment(signAllCheckbox, HPos.LEFT);
+        signAllCheckbox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            paymentMethodComboBox.setDisable(newValue);
+            updateAccountSelectionState();
+        });
 
         datePicker = addTopLabelDatePicker(gridPane, ++rowIndex,
                 Res.get("popup.accountSigning.selectAccounts.datePicker"),
@@ -142,6 +162,13 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                 .atZone(ZoneId.systemDefault()).toLocalDate());
     }
 
+    private List<PaymentMethod> getPaymentMethods() {
+        return PaymentMethod.getPaymentMethods().stream()
+                .filter(paymentMethod -> !paymentMethod.isAsset())
+                .filter(PaymentMethod::hasChargebackRisk)
+                .collect(Collectors.toList());
+    }
+
     private void addECKeyField() {
         privateKey = addInputTextField(gridPane, ++rowIndex, Res.get("popup.accountSigning.signAccounts.ECKey"));
         GridPane.setVgrow(privateKey, Priority.ALWAYS);
@@ -149,7 +176,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
     }
 
     private void updateAccountSelectionState() {
-        actionButton.setDisable(paymentMethodComboBox.getSelectionModel().isEmpty() ||
+        actionButton.setDisable((!signAllCheckbox.isSelected() && paymentMethodComboBox.getSelectionModel().isEmpty()) ||
                 datePicker.getValue() == null
         );
     }
@@ -166,18 +193,55 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                         ++rowIndex, Res.get("popup.accountSigning.confirmSelectedAccounts.headline"));
         GridPane.setRowSpan(selectedPaymentAccountsTuple.third, 2);
         selectedPaymentAccountsList = selectedPaymentAccountsTuple.second;
-        selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(
-                accountAgeWitnessService.getTraderPaymentAccounts(
-                        datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000,
-                        paymentMethodComboBox.getSelectionModel().getSelectedItem(),
-                        arbitrationManager.getDisputesAsObservableList())));
+        ObservableList<Dispute> disputesAsObservableList = arbitrationManager.getDisputesAsObservableList();
+        long safeDate = datePicker.getValue().atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000;
+        List<TraderDataItem> traderDataItemList;
+        StringBuilder sb = new StringBuilder("Summary for ").append(appName).append("\n");
+        if (signAllCheckbox.isSelected()) {
+            traderDataItemList = new ArrayList<>();
+            getPaymentMethods().forEach(paymentMethod -> {
+                List<TraderDataItem> list = accountAgeWitnessService.getTraderPaymentAccounts(
+                        safeDate,
+                        paymentMethod,
+                        disputesAsObservableList);
+                traderDataItemList.addAll(list);
+
+                sb.append("\nPayment method: ").append(Res.get(paymentMethod.getId()))
+                        .append(" (No. of signed accounts: ").append(list.size()).append(")\n");
+                list.forEach(traderDataItem -> {
+                    sb.append("Account created: ")
+                            .append(BSFormatter.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
+                            .append(" Account: ")
+                            .append(traderDataItem.getPaymentAccountPayload().getPaymentDetails()).append("\n");
+                });
+            });
+            sb.append("\nTotal accounts signed: ").append(traderDataItemList.size());
+        } else {
+            PaymentMethod paymentMethod = paymentMethodComboBox.getSelectionModel().getSelectedItem();
+            traderDataItemList = accountAgeWitnessService.getTraderPaymentAccounts(
+                    safeDate,
+                    paymentMethod,
+                    disputesAsObservableList);
+            sb.append("\nPayment method: ").append(Res.get(paymentMethod.getId()))
+                    .append(" (No. of signed accounts: ").append(traderDataItemList.size()).append(")\n");
+            traderDataItemList.forEach(traderDataItem -> {
+                sb.append("Account created: ")
+                        .append(BSFormatter.formatDateTime(new Date(traderDataItem.getAccountAgeWitness().getDate()), true))
+                        .append(" Account: ")
+                        .append(traderDataItem.getPaymentAccountPayload().getPaymentDetails()).append("\n");
+            });
+        }
+        log.info(sb.toString());
+        Utilities.copyToClipboard(sb.toString());
+
+        selectedPaymentAccountsList.setItems(FXCollections.observableArrayList(traderDataItemList));
 
         headLineLabel.setText(Res.get("popup.accountSigning.confirmSelectedAccounts.headline"));
         descriptionLabel.setText(Res.get("popup.accountSigning.confirmSelectedAccounts.description",
                 selectedPaymentAccountsList.getItems().size()));
         ((AutoTooltipButton) actionButton).updateText(Res.get("popup.accountSigning.confirmSelectedAccounts.button"));
 
-        actionButton.setDisable(selectedPaymentAccountsList.getItems().size() == 0);
+        updateAccountSelectionState();
 
         actionButton.setOnAction(e -> addAccountsToSignContent());
 
@@ -191,7 +255,7 @@ public class SignPaymentAccountsWindow extends Overlay<SignPaymentAccountsWindow
                         super.updateItem(item, empty);
 
                         if (item != null && !empty) {
-                            setText(item.getPaymentAccountPayload().toString());
+                            setText(item.getPaymentAccountPayload().getPaymentDetails());
                         } else {
                             setText(null);
                         }
