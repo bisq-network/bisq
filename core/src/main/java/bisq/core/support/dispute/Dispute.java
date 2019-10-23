@@ -319,6 +319,9 @@ public final class Dispute implements NetworkPayload {
             storage.queueUpForSave();
     }
 
+    public void setSupportType(SupportType supportType) {
+        this.supportType = supportType;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters

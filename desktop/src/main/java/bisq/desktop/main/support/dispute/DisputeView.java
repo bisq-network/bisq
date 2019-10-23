@@ -106,7 +106,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final BSFormatter formatter;
-    private final DisputeSummaryWindow disputeSummaryWindow;
+    protected final DisputeSummaryWindow disputeSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;

@@ -18,6 +18,7 @@
 package bisq.core.support.dispute.arbitration;
 
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @ToString
@@ -67,6 +70,9 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
 
     @Override
     public Message toProtoMessage() {
+
+        list.forEach(dispute -> checkArgument(dispute.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION"));
+
         return protobuf.PersistableEnvelope.newBuilder().setArbitrationDisputeList(protobuf.ArbitrationDisputeList.newBuilder()
                 .addAllDispute(ProtoUtil.collectionToProto(new ArrayList<>(list)))).build();
     }
@@ -77,7 +83,11 @@ public final class ArbitrationDisputeList extends DisputeList<ArbitrationDispute
         List<Dispute> list = proto.getDisputeList().stream()
                 .map(disputeProto -> Dispute.fromProto(disputeProto, coreProtoResolver))
                 .collect(Collectors.toList());
-        list.forEach(e -> e.setStorage(storage));
+
+        list.forEach(e -> {
+            checkArgument(e.getSupportType().equals(SupportType.ARBITRATION), "Support type has to be ARBITRATION");
+            e.setStorage(storage);
+        });
         return new ArbitrationDisputeList(storage, list);
     }
 }

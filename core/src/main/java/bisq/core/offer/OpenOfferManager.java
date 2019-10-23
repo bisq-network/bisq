@@ -712,15 +712,17 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private void maybeUpdatePersistedOffers() {
         // We need to clone to avoid ConcurrentModificationException
         ArrayList<OpenOffer> openOffersClone = new ArrayList<>(openOffers.getList());
-        openOffersClone.forEach(openOffer -> {
-            Offer originalOffer = openOffer.getOffer();
+        openOffersClone.forEach(originalOpenOffer -> {
+            Offer originalOffer = originalOpenOffer.getOffer();
 
             OfferPayload originalOfferPayload = originalOffer.getOfferPayload();
-            // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and want to rewrite a
-            // persisted offer after the user has updated to 1.1.6 so their offer will be accepted by the network.
+            // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and
+            // Capability.REFUND_AGENT in v1.2.0 and want to rewrite a
+            // persisted offer after the user has updated to 1.2.0 so their offer will be accepted by the network.
 
             if (originalOfferPayload.getProtocolVersion() < Version.TRADE_PROTOCOL_VERSION ||
-                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION)) {
+                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
+                    !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT)) {
                 // We rewrite our offer with the additional capabilities entry
 
                 Map<String, String> originalExtraDataMap = originalOfferPayload.getExtraDataMap();
@@ -775,15 +777,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         updatedExtraDataMap,
                         protocolVersion);
 
-                // Save states from original data to use the for updated
+                // Save states from original data to use for the updated
                 Offer.State originalOfferState = originalOffer.getState();
-                OpenOffer.State originalOpenOfferState = openOffer.getState();
+                OpenOffer.State originalOpenOfferState = originalOpenOffer.getState();
 
                 // remove old offer
                 originalOffer.setState(Offer.State.REMOVED);
-                openOffer.setState(OpenOffer.State.CANCELED);
-                openOffer.setStorage(openOfferTradableListStorage);
-                openOffers.remove(openOffer);
+                originalOpenOffer.setState(OpenOffer.State.CANCELED);
+                originalOpenOffer.setStorage(openOfferTradableListStorage);
+                openOffers.remove(originalOpenOffer);
 
                 // Create new Offer
                 Offer updatedOffer = new Offer(updatedPayload);
@@ -795,7 +797,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 updatedOpenOffer.setStorage(openOfferTradableListStorage);
                 openOffers.add(updatedOpenOffer);
 
-                log.info("Converted offer to support new Capability.MEDIATION capability. id={}", originalOffer.getId());
+                log.info("Converted offer to support new Capability.MEDIATION and Capability.REFUND_AGENT capability. id={}", originalOffer.getId());
             }
         });
     }
