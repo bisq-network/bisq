@@ -4,7 +4,7 @@
 
 #### Version
 
-<!-- commid id or version number -->
+<!-- commit id or version number -->
 
 ### Steps to reproduce
 
