@@ -782,6 +782,14 @@ tree-table-view:focused {
     -fx-padding: 27 2 0 2;
 }
 
+.close-icon {
+    -fx-text-fill: -bs-text-color;
+}
+
+.close-icon:hover {
+    -fx-text-fill: -fx-accent;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *
@@ -836,6 +844,12 @@ textfield */
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-underline: false;
+}
+
+.hyperlink.highlight,
+.hyperlink.highlight .text.hyperlink.no-underline {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
 }
 
 /*******************************************************************************
@@ -1984,26 +1998,19 @@ textfield */
  ********************************************************************************************************************/
 
 .news-version {
-    -fx-alignment: center;
-    -fx-font-size: 1.077em;
-}
-
-.news-headline {
-    -fx-font-size: 2.154em;
-    -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-alignment: center-left;
+    -fx-font-size: 1em;
 }
 
 .news-feature-headline {
-    -fx-font-size: 1.462em;
+    -fx-font-size: 1.077em;
     -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
+    -fx-font-family: "IBM Plex Sans Medium";
 }
 
 .news-feature-description {
-    -fx-font-size: 1.231em;
+    -fx-font-size: 1em;
     -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
 }
 /********************************************************************************************************************
  *                                                                                                                  *
