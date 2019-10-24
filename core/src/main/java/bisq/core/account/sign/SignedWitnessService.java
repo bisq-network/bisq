@@ -19,11 +19,14 @@ package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.user.User;
 
+import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
+import bisq.common.UserThread;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.Sig;
@@ -62,9 +65,9 @@ public class SignedWitnessService {
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final ArbitratorManager arbitratorManager;
+    private final User user;
 
     private final Map<P2PDataStorage.ByteArray, SignedWitness> signedWitnessMap = new HashMap<>();
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -75,10 +78,12 @@ public class SignedWitnessService {
                                 P2PService p2PService,
                                 ArbitratorManager arbitratorManager,
                                 SignedWitnessStorageService signedWitnessStorageService,
-                                AppendOnlyDataStoreService appendOnlyDataStoreService) {
+                                AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                User user) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.arbitratorManager = arbitratorManager;
+        this.user = user;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(signedWitnessStorageService);
@@ -100,8 +105,24 @@ public class SignedWitnessService {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);
         });
+
+        if (p2PService.isBootstrapped()) {
+            onBootstrapComplete();
+        } else {
+            p2PService.addP2PServiceListener(new BootstrapListener() {
+                @Override
+                public void onUpdatedDataReceived() {
+                    onBootstrapComplete();
+                }
+            });
+        }
     }
 
+    private void onBootstrapComplete() {
+        if (user.getRegisteredArbitrator() != null) {
+            UserThread.runAfter(this::doRepublishAllSignedWitnesses, 60);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -343,5 +364,9 @@ public class SignedWitnessService {
             log.info("broadcast signed witness {}", signedWitness.toString());
             p2PService.addPersistableNetworkPayload(signedWitness, false);
         }
+    }
+
+    private void doRepublishAllSignedWitnesses() {
+        signedWitnessMap.forEach((e, signedWitness) -> p2PService.addPersistableNetworkPayload(signedWitness, true));
     }
 }
