@@ -17,8 +17,8 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -27,10 +27,12 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
+import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -40,6 +42,7 @@ import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +61,7 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
 
     @Override
     public void show() {
-        width = 700;
+        width = 680;
         hideCloseButton();
         super.show();
     }
@@ -71,9 +74,9 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
     @Override
     protected void createGridPane() {
         super.createGridPane();
-        gridPane.setVgap(20);
+        gridPane.setVgap(10);
         gridPane.getColumnConstraints().get(0).setHalignment(HPos.CENTER);
-        gridPane.setPadding(new Insets(74, 64, 74, 64));
+        gridPane.setPadding(new Insets(84));
     }
 
     @Override
@@ -84,7 +87,8 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
         HBox.setHgrow(versionNumber, Priority.ALWAYS);
         versionNumber.setMaxWidth(Double.MAX_VALUE);
 
-        Button closeButton = FormBuilder.getIconButton(MaterialDesignIcon.CLOSE);
+        Button closeButton = FormBuilder.getIconButton(MaterialDesignIcon.CLOSE,
+                "close-icon", "1.231em");
         closeButton.setOnAction(event -> hide());
         HBox.setHgrow(closeButton, Priority.NEVER);
 
@@ -94,10 +98,17 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
         GridPane.setColumnSpan(header, 2);
         gridPane.getChildren().add(header);
 
-        Label headlineLabel = addLabel(gridPane, ++rowIndex, headLine);
-        headlineLabel.getStyleClass().add("news-headline");
-        GridPane.setMargin(headlineLabel, new Insets(10, 0, 0, 0));
-        GridPane.setColumnSpan(headlineLabel, 2);
+        headLineLabel = addLabel(gridPane, ++rowIndex, headLine);
+        headLineLabel.getStyleClass().add("popup-headline-information");
+        headlineIcon = new Label();
+        headlineIcon.getStyleClass().add("popup-icon-information");
+        headlineIcon.setManaged(true);
+        headlineIcon.setVisible(true);
+        FormBuilder.getIconForLabel(AwesomeIcon.INFO_SIGN, headlineIcon, "1em");
+
+        headLineLabel.setGraphic(headlineIcon);
+        GridPane.setHalignment(headLineLabel, HPos.LEFT);
+        GridPane.setColumnSpan(headLineLabel, 2);
     }
 
     @Override
@@ -116,9 +127,9 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
 
     private void createContent() {
         HBox content = new HBox();
-        content.setMinWidth(700);
-        content.setAlignment(Pos.CENTER);
-        content.setSpacing(20);
+        content.setMinWidth(680);
+        content.setAlignment(Pos.CENTER_LEFT);
+        content.setSpacing(40);
 
         VBox accountSigning = getFeatureBox(Res.get("popup.news.launch.accountSigning.headline"),
                 Res.get("popup.news.launch.accountSigning.description"),
@@ -130,8 +141,9 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
                 "image-new-trade-protocol-screenshot",
                 "https://docs.bisq.network/trading-rules");
 
-        content.getChildren().addAll(accountSigning, newTradeProtocol);
+        content.getChildren().addAll(accountSigning, new Separator(Orientation.VERTICAL), newTradeProtocol);
 
+        GridPane.setMargin(content, new Insets(40, 0, 0, 0));
         GridPane.setRowIndex(content, ++rowIndex);
         GridPane.setColumnSpan(content, 2);
         GridPane.setHgrow(content, Priority.ALWAYS);
@@ -141,20 +153,19 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
     @NotNull
     private VBox getFeatureBox(String title, String description, String imageId, String url) {
         Label featureTitle = new Label(title);
-        featureTitle.setTextAlignment(TextAlignment.CENTER);
+        featureTitle.setTextAlignment(TextAlignment.LEFT);
         featureTitle.getStyleClass().add("news-feature-headline");
 
         ImageView sectionScreenshot = new ImageView();
         sectionScreenshot.setId(imageId);
 
         Label featureDescription = new Label(description);
-        featureDescription.setTextAlignment(TextAlignment.CENTER);
+        featureDescription.setTextAlignment(TextAlignment.LEFT);
         featureDescription.getStyleClass().add("news-feature-description");
         featureDescription.setWrapText(true);
 
-        AutoTooltipButton learnMoreButton = new AutoTooltipButton(Res.get("shared.learnMore"));
-        learnMoreButton.getStyleClass().add("action-button");
-        learnMoreButton.setOnAction(event -> {
+        HyperlinkWithIcon learnMore = new HyperlinkWithIcon(Res.get("shared.learnMore"), MaterialDesignIcon.LINK, "highlight");
+        learnMore.setOnAction(event -> {
 
             if (DontShowAgainLookup.showAgain(GUIUtil.OPEN_WEB_PAGE_KEY)) {
                 hide();
@@ -167,8 +178,8 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
             }
         });
 
-        VBox vBox = new VBox(featureTitle, sectionScreenshot, featureDescription, learnMoreButton);
-        vBox.setAlignment(Pos.CENTER);
+        VBox vBox = new VBox(featureTitle, sectionScreenshot, featureDescription, learnMore);
+        vBox.setAlignment(Pos.CENTER_LEFT);
         vBox.setSpacing(20);
         vBox.setMaxWidth(300);
         return vBox;

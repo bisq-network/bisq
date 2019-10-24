@@ -2102,8 +2102,13 @@ public class FormBuilder {
     }
 
     public static Button getIconButton(GlyphIcons icon, String styleClass) {
+        return getIconButton(icon, styleClass, "2em");
+    }
+
+    public static Button getIconButton(GlyphIcons icon, String styleClass, String iconSize) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
-            Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon, "", "2em", null, ContentDisplay.CENTER);
+            Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon,
+                    "", iconSize, null, ContentDisplay.CENTER);
             textIcon.setId("icon-button");
             textIcon.getGraphic().getStyleClass().add(styleClass);
             textIcon.setPrefWidth(20);
