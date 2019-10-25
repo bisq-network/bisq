@@ -239,7 +239,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         } else {
             new Popup<>().information(Res.get("payment.limits.info",
                     formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
-                    formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
                     formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
                     .width(700)
