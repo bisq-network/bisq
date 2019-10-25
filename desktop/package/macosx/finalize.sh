@@ -13,7 +13,7 @@ vmPath=$BISQ_VM_PATH
 linux64=$vmPath/vm_shared_ubuntu/desktop/package/linux
 win64=$vmPath/vm_shared_windows/desktop/package/windows
 
-macOS=deploy
+deployDir=deploy
 
 rm -r $target_dir
 
@@ -31,7 +31,7 @@ cp "$target_dir/../../package/signingkey.asc" "$target_dir/"
 cp "deploy/Bisq-$version.jar.txt" "$target_dir/"
 
 dmg="Bisq-$version.dmg"
-cp "$macOS/$dmg" "$target_dir/"
+cp "$deployDir/$dmg" "$target_dir/"
 
 deb="Bisq-$version.deb"
 deb64="Bisq-64bit-$version.deb"
@@ -46,7 +46,7 @@ exe64="Bisq-64bit-$version.exe"
 cp "$win64/$exe" "$target_dir/$exe64"
 
 rpi="jar-lib-for-raspberry-pi-$version.zip"
-cp "$macOS/$rpi" "$target_dir/"
+cp "$deployDir/$rpi" "$target_dir/"
 
 cd "$target_dir"
 
