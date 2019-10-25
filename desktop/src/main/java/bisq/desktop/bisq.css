@@ -2012,6 +2012,12 @@ textfield */
     -fx-font-size: 1em;
     -fx-text-fill: -bs-rd-font-dark-gray;
 }
+
+.news-feature-image {
+    -fx-border-style: solid;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-rd-separator-dark;
+}
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                    *
