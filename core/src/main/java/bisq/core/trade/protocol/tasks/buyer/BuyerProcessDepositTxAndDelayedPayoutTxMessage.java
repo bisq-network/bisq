@@ -58,11 +58,9 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             BtcWalletService.printTx("depositTx received from peer", committedDepositTx);
 
             // To access tx confidence we need to add that tx into our wallet.
-            Transaction delayedPayoutTx = processModel.getBtcWalletService().getTxFromSerializedTx(message.getDelayedPayoutTx());
-            trade.applyDelayedPayoutTx(delayedPayoutTx);
-            BtcWalletService.printTx("delayedPayoutTx received from peer", delayedPayoutTx);
-
-            WalletService.maybeAddSelfTxToWallet(delayedPayoutTx, processModel.getBtcWalletService().getWallet());
+            byte[] delayedPayoutTxBytes = message.getDelayedPayoutTx();
+            trade.applyDelayedPayoutTxBytes(delayedPayoutTxBytes);
+            BtcWalletService.printTx("delayedPayoutTx received from peer", trade.getDelayedPayoutTx());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -66,7 +65,6 @@ public class SellerFinalizesDelayedPayoutTx extends TradeTask {
                     sellerSignature);
 
             trade.applyDelayedPayoutTx(signedDelayedPayoutTx);
-            WalletService.maybeAddSelfTxToWallet(signedDelayedPayoutTx, processModel.getBtcWalletService().getWallet());
 
             complete();
         } catch (Throwable t) {
