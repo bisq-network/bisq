@@ -74,11 +74,11 @@ import bisq.desktop.util.validation.WeChatPayValidator;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.HalCashAccount;
-import bisq.core.payment.JapanBankAccount;
 import bisq.core.payment.MoneyGramAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountFactory;
@@ -238,7 +238,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .show();
         } else {
             new Popup<>().information(Res.get("payment.limits.info",
-                    formatter.formatCoinWithCode(maxTradeLimitFirstMonth),
+                    formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
                     formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
                     .width(700)
