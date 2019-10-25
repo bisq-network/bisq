@@ -1375,7 +1375,7 @@ message Trade {
     repeated ChatMessage chat_message = 29;
     MediationResultState mediation_result_state = 30;
     int64 lock_time = 31;
-    string delayed_payout_tx_id = 32;
+    bytes delayed_payout_tx_bytes = 32;
     NodeAddress refund_agent_node_address = 33;
     PubKeyRing refund_agent_pub_key_ring = 34;
     RefundResultState refund_result_state = 35;

@@ -404,7 +404,7 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     @Getter
     @Setter
-    private String delayedPayoutTxId;
+    private byte[] delayedPayoutTxBytes;
     @Nullable
     @Getter
     @Setter
@@ -525,7 +525,7 @@ public abstract class Trade implements Tradable, Model {
         Optional.ofNullable(counterCurrencyTxId).ifPresent(e -> builder.setCounterCurrencyTxId(counterCurrencyTxId));
         Optional.ofNullable(mediationResultState).ifPresent(e -> builder.setMediationResultState(MediationResultState.toProtoMessage(mediationResultState)));
         Optional.ofNullable(refundResultState).ifPresent(e -> builder.setRefundResultState(RefundResultState.toProtoMessage(refundResultState)));
-        Optional.ofNullable(delayedPayoutTxId).ifPresent(e -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
+        Optional.ofNullable(delayedPayoutTxBytes).ifPresent(e -> builder.setDelayedPayoutTxBytes(ByteString.copyFrom(delayedPayoutTxBytes)));
         return builder.build();
     }
 
@@ -555,8 +555,7 @@ public abstract class Trade implements Tradable, Model {
         trade.setCounterCurrencyTxId(proto.getCounterCurrencyTxId().isEmpty() ? null : proto.getCounterCurrencyTxId());
         trade.setMediationResultState(MediationResultState.fromProto(proto.getMediationResultState()));
         trade.setRefundResultState(RefundResultState.fromProto(proto.getRefundResultState()));
-        String delayedPayoutTxId = proto.getDelayedPayoutTxId();
-        trade.setDelayedPayoutTxId(delayedPayoutTxId.isEmpty() ? null : delayedPayoutTxId);
+        trade.setDelayedPayoutTxBytes(ProtoUtil.byteArrayOrNullFromProto(proto.getDelayedPayoutTxBytes()));
         trade.setLockTime(proto.getLockTime());
 
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
@@ -667,14 +666,19 @@ public abstract class Trade implements Tradable, Model {
 
     public void applyDelayedPayoutTx(Transaction delayedPayoutTx) {
         this.delayedPayoutTx = delayedPayoutTx;
-        delayedPayoutTxId = delayedPayoutTx.getHashAsString();
+        persist();
+    }
+
+    public void applyDelayedPayoutTxBytes(byte[] delayedPayoutTxBytes) {
+        this.delayedPayoutTxBytes = delayedPayoutTxBytes;
         persist();
     }
 
     @Nullable
     public Transaction getDelayedPayoutTx() {
-        if (delayedPayoutTx == null)
-            delayedPayoutTx = delayedPayoutTxId != null ? btcWalletService.getTransaction(delayedPayoutTxId) : null;
+        if (delayedPayoutTx == null) {
+            delayedPayoutTx = delayedPayoutTxBytes != null ? processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxBytes) : null;
+        }
         return delayedPayoutTx;
     }
 
@@ -1118,7 +1122,7 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     mediationResultState=" + mediationResultState +
                 ",\n     mediationResultStateProperty=" + mediationResultStateProperty +
                 ",\n     lockTime=" + lockTime +
-                ",\n     delayedPayoutTxId='" + delayedPayoutTxId + '\'' +
+                ",\n     delayedPayoutTxBytes=" + Utilities.bytesAsHexString(delayedPayoutTxBytes) +
                 ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 ",\n     refundResultState=" + refundResultState +
