@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressWithIconAndDirection;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
 import bisq.desktop.util.DisplayUtils;
@@ -51,7 +52,6 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import com.jfoenix.controls.JFXProgressBar;
 
@@ -403,7 +403,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -473,7 +473,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             // Received
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
-                                                    MaterialDesignIcon.LINK, item.isReceived());
+                                                    item.isReceived());
                                             field.setOnAction(event -> openAddressInBlockExplorer(item));
                                             field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                             setGraphic(field);

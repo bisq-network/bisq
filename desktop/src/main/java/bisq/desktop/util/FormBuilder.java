@@ -29,6 +29,7 @@ import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BisqTextField;
 import bisq.desktop.components.BsqAddressTextField;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoInputTextField;
@@ -49,7 +50,6 @@ import bisq.common.util.Tuple4;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.utils.MaterialDesignIconFactory;
 
 import com.jfoenix.controls.JFXComboBox;
@@ -425,7 +425,7 @@ public class FormBuilder {
                                                          String title,
                                                          String url,
                                                          double top) {
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, MaterialDesignIcon.LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new ExternalHyperlink(title);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setColumnIndex(hyperlinkWithIcon, 0);
@@ -455,7 +455,7 @@ public class FormBuilder {
                                                                              double top) {
         Label label = addLabel(gridPane, rowIndex, labelTitle, top);
 
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(title, MaterialDesignIcon.LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new ExternalHyperlink(title);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);
         GridPane.setMargin(hyperlinkWithIcon, new Insets(top, 0, 0, -4));
@@ -486,7 +486,7 @@ public class FormBuilder {
                                                                                       String value,
                                                                                       String url,
                                                                                       double top) {
-        HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(value, MaterialDesignIcon.LINK);
+        HyperlinkWithIcon hyperlinkWithIcon = new ExternalHyperlink(value);
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(url));
         hyperlinkWithIcon.getStyleClass().add("hyperlink-with-icon");
         GridPane.setRowIndex(hyperlinkWithIcon, rowIndex);

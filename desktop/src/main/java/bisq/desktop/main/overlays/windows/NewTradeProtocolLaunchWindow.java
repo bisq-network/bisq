@@ -18,6 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
@@ -128,7 +129,7 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
     private void createContent() {
         HBox content = new HBox();
         content.setMinWidth(680);
-        content.setAlignment(Pos.CENTER_LEFT);
+        content.setAlignment(Pos.TOP_LEFT);
         content.setSpacing(40);
 
         VBox accountSigning = getFeatureBox(Res.get("popup.news.launch.accountSigning.headline"),
@@ -143,7 +144,7 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
 
         content.getChildren().addAll(accountSigning, new Separator(Orientation.VERTICAL), newTradeProtocol);
 
-        GridPane.setMargin(content, new Insets(40, 0, 0, 0));
+        GridPane.setMargin(content, new Insets(10, 0, 0, 0));
         GridPane.setRowIndex(content, ++rowIndex);
         GridPane.setColumnSpan(content, 2);
         GridPane.setHgrow(content, Priority.ALWAYS);
@@ -159,12 +160,15 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
         ImageView sectionScreenshot = new ImageView();
         sectionScreenshot.setId(imageId);
 
+        HBox imageContainer = new HBox(sectionScreenshot);
+        imageContainer.getStyleClass().add("news-feature-image");
+
         Label featureDescription = new Label(description);
         featureDescription.setTextAlignment(TextAlignment.LEFT);
         featureDescription.getStyleClass().add("news-feature-description");
         featureDescription.setWrapText(true);
 
-        HyperlinkWithIcon learnMore = new HyperlinkWithIcon(Res.get("shared.learnMore"), MaterialDesignIcon.LINK, "highlight");
+        HyperlinkWithIcon learnMore = new ExternalHyperlink(Res.get("shared.learnMore"), "highlight");
         learnMore.setOnAction(event -> {
 
             if (DontShowAgainLookup.showAgain(GUIUtil.OPEN_WEB_PAGE_KEY)) {
@@ -178,7 +182,7 @@ public class NewTradeProtocolLaunchWindow extends Overlay<NewTradeProtocolLaunch
             }
         });
 
-        VBox vBox = new VBox(featureTitle, sectionScreenshot, featureDescription, learnMore);
+        VBox vBox = new VBox(featureTitle, imageContainer, featureDescription, learnMore);
         vBox.setAlignment(Pos.CENTER_LEFT);
         vBox.setSpacing(20);
         vBox.setMaxWidth(300);

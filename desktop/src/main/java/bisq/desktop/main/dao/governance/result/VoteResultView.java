@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
@@ -73,7 +74,6 @@ import com.google.gson.JsonObject;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.stage.Stage;
 
@@ -716,7 +716,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
-                                    field = new HyperlinkWithIcon(proposal.getLink(), MaterialDesignIcon.LINK);
+                                    field = new ExternalHyperlink(proposal.getLink());
                                     field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);
