@@ -162,8 +162,6 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
             this.hash = Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
         else
             this.hash = hash;
-
-        log.error(this.toString());
     }
 
     @Override
