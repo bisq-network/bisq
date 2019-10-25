@@ -30,7 +30,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.BSFormatter;
@@ -239,15 +238,14 @@ class TransactionsListItem {
                             if (valueSentToMe.isPositive()) {
                                 details = Res.get("funds.tx.refund", tradeId);
                             } else {
-                                Contract contract = trade.getContract();
-                                Coin tradeAmount = trade.getTradeAmount();
-                                if (contract != null && tradeAmount != null) {
-                                    boolean isBuyer = contract.isMyRoleBuyer(pubKeyRing);
-                                    amountAsCoin = isBuyer ? trade.getOffer().getBuyerSecurityDeposit().multiply(-1) :
-                                            (trade.getOffer().getSellerSecurityDeposit().add(tradeAmount)).multiply(-1);
-                                    details = Res.get("funds.tx.collateralForRefund", tradeId);
-                                    txConfidenceIndicator.setVisible(false);
-                                }
+                                // We have spent the deposit tx outputs to the Bisq donation address to enable
+                                // the refund process (refund agent -> reimbursement). As the funds have left our wallet
+                                // already when funding the deposit tx we show 0 BTC as amount.
+                                // Confirmation is not known from the BitcoinJ side (not 100% clear why) as no funds
+                                // left our wallet nor we received funds. So we set indicator invisible.
+                                amountAsCoin = Coin.ZERO;
+                                details = Res.get("funds.tx.collateralForRefund", tradeId);
+                                txConfidenceIndicator.setVisible(false);
                             }
                         } else {
                             if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
