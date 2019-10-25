@@ -621,14 +621,14 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     private void maybeAddNewTradeProtocolLaunchWindowToQueue() {
         String newTradeProtocolWithAccountSigningLaunchPopupKey = "newTradeProtocolWithAccountSigningLaunchPopup";
-        if (DontShowAgainLookup.showAgain(newTradeProtocolWithAccountSigningLaunchPopupKey)) {
+//        if (DontShowAgainLookup.showAgain(newTradeProtocolWithAccountSigningLaunchPopupKey)) {
             NewTradeProtocolLaunchWindow newTradeProtocolLaunchWindow = new NewTradeProtocolLaunchWindow()
                     .headLine(Res.get("popup.news.launch.headline"));
             newTradeProtocolLaunchWindow.setDisplayOrderPriority(1);
             popupQueue.add(newTradeProtocolLaunchWindow);
 
             DontShowAgainLookup.dontShowAgain(newTradeProtocolWithAccountSigningLaunchPopupKey, true);
-        }
+//        }
     }
 
     private void maybeShowPopupsFromQueue() {
