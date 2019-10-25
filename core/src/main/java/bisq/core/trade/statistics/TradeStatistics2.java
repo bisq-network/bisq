@@ -162,6 +162,8 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
             this.hash = Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
         else
             this.hash = hash;
+
+        log.error(this.toString());
     }
 
     @Override
@@ -265,6 +267,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
         return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade;
     }
+
 
     @Override
     public String toString() {
