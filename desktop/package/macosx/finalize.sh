@@ -6,14 +6,14 @@ version="1.2.0"
 
 target_dir="releases/$version"
 
-vmPath=/Users/christoph/Documents/Workspaces/Java
-#vmPath=/Volumes
+# Set BISQ_GPG_USER as environment var to the email address used for gpg signing. e.g. BISQ_GPG_USER=manfred@bitsquare.io
+# Set BISQ_VM_PATH as environment var to the directory where your shared folders for virtual box are residing
+
+vmPath=$BISQ_VM_PATH
 linux64=$vmPath/vm_shared_ubuntu/desktop/package/linux
 win64=$vmPath/vm_shared_windows/desktop/package/windows
 
 macOS=deploy
-
-# Set BISQ_GPG_USER as environment var to the email address used for gpg signing. e.g. BISQ_GPG_USER=manfred@bitsquare.io
 
 rm -r $target_dir
 
@@ -45,6 +45,9 @@ exe="Bisq-$version.exe"
 exe64="Bisq-64bit-$version.exe"
 cp "$win64/$exe" "$target_dir/$exe64"
 
+rpi="jar-lib-for-raspberry-pi-$version.zip"
+cp "$macOS/$rpi" "$target_dir/"
+
 cd "$target_dir"
 
 echo Create signatures
@@ -52,12 +55,14 @@ gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $dmg.asc --detach-
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb64.asc --detach-sig --armor $deb64
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $rpm64.asc --detach-sig --armor $rpm64
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe64.asc --detach-sig --armor $exe64
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $rpi.asc --detach-sig --armor $rpi
 
 echo Verify signatures
 gpg --digest-algo SHA256 --verify $dmg{.asc*,}
 gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpm64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
+gpg --digest-algo SHA256 --verify $rpi{.asc*,}
 
 mkdir $win64/$version
 cp -r . $win64/$version
