@@ -56,7 +56,6 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 
 import bisq.common.ClockWatcher;
-import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
@@ -90,7 +89,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -287,11 +285,6 @@ public class TradeManager implements PersistedDataHost {
         removePreparedTradeList.forEach(this::removePreparedTrade);
 
         cleanUpAddressEntries();
-
-        // TODO remove once we support Taker side publishing at take offer process
-        // We start later to have better connectivity to the network
-        UserThread.runAfter(() -> tradeStatisticsManager.publishTradeStatistics(tradesForStatistics),
-                30, TimeUnit.SECONDS);
 
         pendingTradesInitialized.set(true);
     }
