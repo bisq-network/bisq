@@ -38,6 +38,7 @@ import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.main.support.SupportView;
+import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Transitions;
 
@@ -402,6 +403,14 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         // Delay a bit to give time for rendering the splash screen
         UserThread.execute(() -> onUiReadyHandler.run());
+
+        //Create modal pop-up with single button taking user to Support screen if there are active support tickets
+        if(model.getNumOpenSupportTickets() != null && Integer.parseInt(model.getNumOpenSupportTickets().get()) > 0) {
+            new Popup<>().attention(Res.get("portfolio.pending.support.popup.attention"))
+            .closeButtonTextWithGoTo("navigation.support")
+            .onClose(() -> navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class))
+            .show();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
