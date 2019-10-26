@@ -316,33 +316,41 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                 boolean reBroadcast,
                                                 boolean checkDate) {
         log.trace("addPersistableNetworkPayload payload={}", payload);
-        byte[] hash = payload.getHash();
-        if (payload.verifyHashSize()) {
-            ByteArray hashAsByteArray = new ByteArray(hash);
-            boolean containsKey = getAppendOnlyDataStoreMap().containsKey(hashAsByteArray);
-            if (!containsKey || reBroadcast) {
-                if (!(payload instanceof DateTolerantPayload) || !checkDate || ((DateTolerantPayload) payload).isDateInTolerance(clock)) {
-                    if (!containsKey) {
-                        appendOnlyDataStoreService.put(hashAsByteArray, payload);
-                        appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
-                    }
-                    if (allowBroadcast)
-                        broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
 
-                    return true;
-                } else {
-                    log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
-                            "Payload={}; now={}", payload.toString(), new Date());
-                    return false;
-                }
-            } else {
-                log.trace("We have that payload already in our map.");
-                return false;
-            }
-        } else {
+        // Payload hash size does not match expectation for that type of message.
+        if (!payload.verifyHashSize()) {
             log.warn("We got a hash exceeding our permitted size");
             return false;
         }
+
+        ByteArray hashAsByteArray = new ByteArray(payload.getHash());
+        boolean payloadHashAlreadyInStore = getAppendOnlyDataStoreMap().containsKey(hashAsByteArray);
+
+        // Store already knows about this payload. Ignore it unless the caller specifically requests a republish.
+        if (payloadHashAlreadyInStore && !reBroadcast) {
+            log.trace("We have that payload already in our map.");
+            return false;
+        }
+
+        // DateTolerantPayloads are only checked for tolerance from the onMessage handler (checkDate == true). If not in
+        // tolerance, ignore it.
+        if (checkDate && payload instanceof DateTolerantPayload && !((DateTolerantPayload) payload).isDateInTolerance((clock))) {
+            log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
+                    "Payload={}; now={}", payload.toString(), new Date());
+            return false;
+        }
+
+        // Add the payload and publish the state update to the appendOnlyDataStoreListeners
+        if (!payloadHashAlreadyInStore) {
+            appendOnlyDataStoreService.put(hashAsByteArray, payload);
+            appendOnlyDataStoreListeners.forEach(e -> e.onAdded(payload));
+        }
+
+        // Broadcast the payload if requested by caller
+        if (allowBroadcast)
+            broadcaster.broadcast(new AddPersistableNetworkPayloadMessage(payload), sender, null, isDataOwner);
+
+        return true;
     }
 
     // When we receive initial data we skip several checks to improve performance. We requested only missing entries so we
