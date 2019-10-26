@@ -58,6 +58,8 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 class RequestDataHandler implements MessageListener {
     private static final long TIMEOUT = 90;
+    private static boolean initialRequestApplied = false;
+
     private NodeAddress peersNodeAddress;
     /*
      */
@@ -240,7 +242,12 @@ class RequestDataHandler implements MessageListener {
                                     // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
                                     // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
                                     // trade stats stats and all account age witness data.
-                                    dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
+
+                                    // We only apply it once from first response
+                                    if (!initialRequestApplied) {
+                                        dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
+                                        initialRequestApplied = true;
+                                    }
                                 } else {
                                     // We don't broadcast here as we are only connected to the seed node and would be pointless
                                     dataStorage.addPersistableNetworkPayload(e, sender, false,
