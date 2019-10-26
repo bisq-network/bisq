@@ -102,7 +102,7 @@ public class TradeStatisticsManager {
 
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof TradeStatistics2)
-                addToMap((TradeStatistics2) payload, true);
+                addToSet((TradeStatistics2) payload);
         });
 
         Map<String, TradeStatistics2> map = new HashMap<>();
@@ -111,9 +111,12 @@ public class TradeStatisticsManager {
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
                 .filter(TradeStatistics2::isValid)
-                .forEach(e -> {
+                .forEach(tradeStatistics -> {
                     origSize.getAndIncrement();
-                    addToMap(e, map);
+                    TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
+                    if (prevValue != null) {
+                        duplicates++;
+                    }
                 });
 
         Collection<TradeStatistics2> items = map.values();
@@ -153,7 +156,7 @@ public class TradeStatisticsManager {
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
                     extraDataMap);
-            addToMap(tradeStatistics, true);
+            addToSet(tradeStatistics);
 
             // We only republish trades from last 10 days
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
@@ -171,28 +174,19 @@ public class TradeStatisticsManager {
         return observableTradeStatisticsSet;
     }
 
-    private void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
+    private void addToSet(TradeStatistics2 tradeStatistics) {
         if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-
-            if (observableTradeStatisticsSet.stream()
-                    .anyMatch(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))))
+            if (observableTradeStatisticsSet.stream().anyMatch(e -> e.getOfferId().equals(tradeStatistics.getOfferId()))) {
                 return;
+            }
 
-            if (!tradeStatistics.isValid())
+            if (!tradeStatistics.isValid()) {
                 return;
+            }
 
             observableTradeStatisticsSet.add(tradeStatistics);
-            if (storeLocally) {
-                priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-                dump();
-            }
-        }
-    }
-
-    private void addToMap(TradeStatistics2 tradeStatistics, Map<String, TradeStatistics2> map) {
-        TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
-        if (prevValue != null) {
-            duplicates++;
+            priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+            dump();
         }
     }
 
