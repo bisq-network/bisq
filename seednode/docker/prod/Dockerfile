@@ -8,7 +8,7 @@ WORKDIR /home/gradle/bisq/seednode
 # git sometimes complains about this, can be bogus because we're not going to commit things
 RUN git config --global user.email "you@example.com"
 RUN git config --global user.name "Your Name"
-RUN git pull origin $SEEDNODE_BRANCH && git checkout $SEEDNODE_BRANCH
+RUN git fetch origin $SEEDNODE_BRANCH && git checkout $SEEDNODE_BRANCH
 RUN gradle build
 RUN chmod +x ./build/app/bin/bisq-seednode
 
