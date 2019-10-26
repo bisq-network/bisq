@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @ToString
 @Slf4j
-public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
+public class Alert implements ProtectedStoragePayload, ExpirablePayload {
     private final String message;
     private final boolean isUpdateInfo;
     private final String version;
