@@ -95,7 +95,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteListener {
+public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final BisqSetup bisqSetup;
     private final WalletsSetup walletsSetup;
     private final User user;
@@ -191,12 +191,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupCompleteList
         GUIUtil.setPreferences(preferences);
 
         setupHandlers();
-        bisqSetup.addBisqSetupCompleteListener(this);
+        bisqSetup.addBisqSetupListener(this);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // BisqSetupCompleteListener
+    // BisqSetupListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override

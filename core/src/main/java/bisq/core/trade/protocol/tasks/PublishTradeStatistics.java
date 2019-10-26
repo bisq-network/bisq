@@ -64,6 +64,18 @@ public class PublishTradeStatistics extends TradeTask {
                     extraDataMap.put(TradeStatistics2.ARBITRATOR_ADDRESS, address);
                 }
 
+                NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
+                if (mediatorNodeAddress != null) {
+                    // The first 4 chars are sufficient to identify an arbitrator.
+                    // For testing with regtest/localhost we use the full address as its localhost and would result in
+                    // same values for multiple arbitrators.
+                    NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
+                    String address = networkNode instanceof TorNetworkNode ?
+                            mediatorNodeAddress.getFullAddress().substring(0, 4) :
+                            mediatorNodeAddress.getFullAddress();
+                    extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
+                }
+
                 Offer offer = trade.getOffer();
                 checkNotNull(offer, "offer must not ne null");
                 checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");

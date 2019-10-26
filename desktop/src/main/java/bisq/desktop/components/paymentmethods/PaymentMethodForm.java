@@ -190,27 +190,29 @@ public abstract class PaymentMethodForm {
         else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
-        if (isAddAccountScreen) {
-            InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
-            inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
-            inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-                if (!newValue.isEmpty()) {
-                    try {
-                        // test if input is hex
-                        Utilities.decodeFromHex(newValue);
+        if (!(paymentAccount instanceof AssetAccount)) {
+            if (isAddAccountScreen) {
+                InputTextField inputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.salt"), 0);
+                inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+                inputTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+                    if (!newValue.isEmpty()) {
+                        try {
+                            // test if input is hex
+                            Utilities.decodeFromHex(newValue);
 
-                        paymentAccount.setSaltAsHex(newValue);
-                    } catch (Throwable t) {
-                        new Popup().warning(Res.get("payment.error.noHexSalt")).show();
-                        inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
-                        log.warn(t.toString());
+                            paymentAccount.setSaltAsHex(newValue);
+                        } catch (Throwable t) {
+                            new Popup().warning(Res.get("payment.error.noHexSalt")).show();
+                            inputTextField.setText(Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+                            log.warn(t.toString());
+                        }
                     }
-                }
-            });
-        } else {
-            addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
-                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
-                    Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+                });
+            } else {
+                addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.salt",
+                        Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt())),
+                        Utilities.bytesAsHexString(paymentAccount.getPaymentAccountPayload().getSalt()));
+            }
         }
     }
 
