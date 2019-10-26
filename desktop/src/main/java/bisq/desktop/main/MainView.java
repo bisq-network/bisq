@@ -403,14 +403,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         // Delay a bit to give time for rendering the splash screen
         UserThread.execute(() -> onUiReadyHandler.run());
-
-        //Create modal pop-up with single button taking user to Support screen if there are active support tickets
-        if(model.getNumOpenSupportTickets() != null && Integer.parseInt(model.getNumOpenSupportTickets().get()) > 0) {
-            new Popup<>().attention(Res.get("portfolio.pending.support.popup.attention"))
-            .closeButtonTextWithGoTo("navigation.support")
-            .onClose(() -> navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class))
-            .show();
-        }
+        UserThread.execute(() -> checkOpenSupportTickets());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -426,6 +419,18 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         new Popup<>().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
                 .useShutDownButton()
                 .show();
+    }
+    
+    private void checkOpenSupportTickets() {
+		// Create modal pop-up with single button taking user to Support screen if there
+		// are active support tickets
+		if (model.getNumOpenSupportTickets() != null && Integer.parseInt(model.getNumOpenSupportTickets().get()) > 0) {
+			new Popup<>().attention(Res.get("portfolio.pending.support.popup.attention"))
+					.closeButtonTextWithGoTo("navigation.support")
+					.onClose(
+							() -> navigation.navigateTo(MainView.class, SupportView.class, ArbitrationClientView.class))
+					.show();
+		}
     }
 
 
