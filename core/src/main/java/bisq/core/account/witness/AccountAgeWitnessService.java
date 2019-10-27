@@ -65,6 +65,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -616,6 +617,7 @@ public class AccountAgeWitnessService {
                 .filter(this::hasChargebackRisk)
                 .filter(this::isBuyerWinner)
                 .flatMap(this::getTraderData)
+                .filter(Objects::nonNull)
                 .filter(traderDataItem ->
                         !signedWitnessService.isSignedAccountAgeWitness(traderDataItem.getAccountAgeWitness()))
                 .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
