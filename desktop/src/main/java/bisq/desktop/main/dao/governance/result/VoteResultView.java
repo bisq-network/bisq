@@ -202,6 +202,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         cyclesTableView.getSelectionModel().selectedItemProperty().addListener(selectedVoteResultListItemListener);
 
         if (daoStateService.isParseBlockChainComplete()) {
+            checkForResultPhase(daoStateService.getChainHeight());
             fillCycleList();
         }
 
@@ -238,7 +239,11 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        int chainHeight = daoStateService.getChainHeight();
+        checkForResultPhase(daoStateService.getChainHeight());
+        fillCycleList();
+    }
+
+    private void checkForResultPhase(int chainHeight) {
         if (periodService.getFirstBlockOfPhase(chainHeight, DaoPhase.Phase.RESULT) == chainHeight) {
             // We had set the cycle initially but at the vote result we want to update it with the actual result.
             // We remove the empty cycle to make space for the one with the result.
@@ -251,8 +256,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                     .findAny();
             optionalCurrentCycleListItem.ifPresent(cycleListItemList::remove);
         }
-
-        fillCycleList();
     }
 
 
