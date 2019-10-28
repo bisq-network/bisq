@@ -619,7 +619,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(offer.getMakerFee())))
+                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
