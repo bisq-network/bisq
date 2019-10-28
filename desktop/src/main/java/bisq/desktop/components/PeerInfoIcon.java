@@ -250,13 +250,19 @@ public class PeerInfoIcon extends Group {
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
         boolean needsSigning = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
-        String accountSigningState = Res.get("shared.notSigned.noNeed");
+        String accountSigningState = null;
+        String accountAgeInfo = peersAccount.second;
+
         if (needsSigning) {
-            accountSigningState = StringUtils.capitalize(accountAgeWitnessService.getSignState(offer).getPresentation());
+            AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(offer);
+            accountSigningState = StringUtils.capitalize(signState.getPresentation());
+
+            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
+                accountAgeInfo = null;
         }
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys,
-                isFiatCurrency, peersAccount.first, peersAccount.second, accountSigningState);
+                isFiatCurrency, peersAccount.first, accountAgeInfo, accountSigningState);
     }
 
     private Tuple2<Long, String> getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
@@ -285,7 +291,8 @@ public class PeerInfoIcon extends Group {
                                     long makersAccountAge,
                                     String makersAccountAgeInfo,
                                     String accountSigningState) {
-        final String accountAgeTagEditor = isFiatCurrency ?
+
+        final String accountAgeTagEditor = isFiatCurrency && makersAccountAgeInfo != null ?
                 makersAccountAge > -1 ?
                         DisplayUtils.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
