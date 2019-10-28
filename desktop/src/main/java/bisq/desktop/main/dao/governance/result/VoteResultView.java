@@ -147,6 +147,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ProposalListItem selectedProposalListItem;
     private boolean isVoteIncludedInResult;
     private final Set<Cycle> cyclesAdded = new HashSet<>();
+    private boolean hasCalculatedResult = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -202,6 +203,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         cyclesTableView.getSelectionModel().selectedItemProperty().addListener(selectedVoteResultListItemListener);
 
         if (daoStateService.isParseBlockChainComplete()) {
+            checkForResultPhase(daoStateService.getChainHeight());
             fillCycleList();
         }
 
@@ -238,21 +240,29 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        int chainHeight = daoStateService.getChainHeight();
-        if (periodService.getFirstBlockOfPhase(chainHeight, DaoPhase.Phase.RESULT) == chainHeight) {
-            // We had set the cycle initially but at the vote result we want to update it with the actual result.
-            // We remove the empty cycle to make space for the one with the result.
-            Optional<Cycle> optionalCurrentCycle = cyclesAdded.stream()
-                    .filter(cycle -> cycle.isInCycle(chainHeight))
-                    .findAny();
-            optionalCurrentCycle.ifPresent(cyclesAdded::remove);
-            Optional<CycleListItem> optionalCurrentCycleListItem = cycleListItemList.stream()
-                    .filter(cycleListItem -> cycleListItem.getResultsOfCycle().getCycle().isInCycle(chainHeight))
-                    .findAny();
-            optionalCurrentCycleListItem.ifPresent(cycleListItemList::remove);
-        }
-
+        checkForResultPhase(daoStateService.getChainHeight());
         fillCycleList();
+    }
+
+    private void checkForResultPhase(int chainHeight) {
+        if (periodService.isInPhase(chainHeight, DaoPhase.Phase.RESULT)) {
+            if (!hasCalculatedResult) {
+                hasCalculatedResult = true;
+                // We had set the cycle initially but at the vote result we want to update it with the actual result.
+                // We remove the empty cycle to make space for the one with the result.
+                Optional<Cycle> optionalCurrentCycle = cyclesAdded.stream()
+                        .filter(cycle -> cycle.isInCycle(chainHeight))
+                        .findAny();
+                optionalCurrentCycle.ifPresent(cyclesAdded::remove);
+                Optional<CycleListItem> optionalCurrentCycleListItem = cycleListItemList.stream()
+                        .filter(cycleListItem -> cycleListItem.getResultsOfCycle().getCycle().isInCycle(chainHeight))
+                        .findAny();
+                optionalCurrentCycleListItem.ifPresent(cycleListItemList::remove);
+            }
+        } else {
+            // Reset to be ready to calculate result for next RESULT phase
+            hasCalculatedResult = false;
+        }
     }
 
 
