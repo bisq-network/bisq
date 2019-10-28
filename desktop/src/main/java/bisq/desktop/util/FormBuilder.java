@@ -2107,14 +2107,14 @@ public class FormBuilder {
 
     public static Button getIconButton(GlyphIcons icon, String styleClass, String iconSize) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
-            Button textIcon = MaterialDesignIconFactory.get().createIconButton(icon,
+            Button iconButton = MaterialDesignIconFactory.get().createIconButton(icon,
                     "", iconSize, null, ContentDisplay.CENTER);
-            textIcon.setId("icon-button");
-            textIcon.getGraphic().getStyleClass().add(styleClass);
-            textIcon.setPrefWidth(20);
-            textIcon.setPrefHeight(20);
-            textIcon.setPadding(new Insets(0));
-            return textIcon;
+            iconButton.setId("icon-button");
+            iconButton.getGraphic().getStyleClass().add(styleClass);
+            iconButton.setPrefWidth(20);
+            iconButton.setPrefHeight(20);
+            iconButton.setPadding(new Insets(0));
+            return iconButton;
         } else {
             throw new IllegalArgumentException("Not supported icon type");
         }

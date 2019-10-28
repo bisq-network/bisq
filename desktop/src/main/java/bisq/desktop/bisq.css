@@ -783,11 +783,15 @@ tree-table-view:focused {
 }
 
 .close-icon {
-    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
 }
 
 .close-icon:hover {
-    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
+}
+
+.tooltip-icon {
+    -fx-fill: -bs-text-color;
 }
 
 /*******************************************************************************
@@ -2040,3 +2044,9 @@ textfield */
 .popover > .content {
     -fx-padding: 10;
 }
+
+.popover > .content .default-text {
+    -fx-text-fill: -bs-text-color;
+}
+
+
