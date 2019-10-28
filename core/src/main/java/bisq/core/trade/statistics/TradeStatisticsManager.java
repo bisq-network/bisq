@@ -43,11 +43,13 @@ import javafx.collections.ObservableSet;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -60,9 +62,11 @@ public class TradeStatisticsManager {
     private final JsonFileManager jsonFileManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
+    private final TradeStatistics2StorageService tradeStatistics2StorageService;
     private final ReferralIdService referralIdService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics2> observableTradeStatisticsSet = FXCollections.observableSet();
+    private int duplicates = 0;
 
     @Inject
     public TradeStatisticsManager(P2PService p2PService,
@@ -74,6 +78,7 @@ public class TradeStatisticsManager {
                                   @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.tradeStatistics2StorageService = tradeStatistics2StorageService;
         this.referralIdService = referralIdService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
@@ -97,16 +102,36 @@ public class TradeStatisticsManager {
 
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof TradeStatistics2)
-                addToMap((TradeStatistics2) payload, true);
+                addToSet((TradeStatistics2) payload);
         });
 
         Map<String, TradeStatistics2> map = new HashMap<>();
+        AtomicInteger origSize = new AtomicInteger();
         p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
                 .filter(TradeStatistics2::isValid)
-                .forEach(e -> addToMap(e, map));
-        observableTradeStatisticsSet.addAll(map.values());
+                .forEach(tradeStatistics -> {
+                    origSize.getAndIncrement();
+                    TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
+                    if (prevValue != null) {
+                        duplicates++;
+                    }
+                });
+
+        Collection<TradeStatistics2> items = map.values();
+        // At startup we check if we have duplicate entries. This might be the case from software updates when we
+        // introduced new entries to the extraMap. As that map is for flexibility in updates we keep it excluded from
+        // json so that it will not cause duplicates anymore. Until all users have updated we keep the cleanup code.
+        // Should not be needed later anymore, but will also not hurt if no duplicates exist.
+        if (duplicates > 0) {
+            long ts = System.currentTimeMillis();
+            items = tradeStatistics2StorageService.cleanupMap(items);
+            log.info("We found {} duplicate entries. Size of map entries before and after cleanup: {} / {}. Cleanup took {} ms.",
+                    duplicates, origSize, items.size(), System.currentTimeMillis() - ts);
+        }
+
+        observableTradeStatisticsSet.addAll(items);
 
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
 
@@ -131,7 +156,7 @@ public class TradeStatisticsManager {
                     trade.getDate(),
                     (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
                     extraDataMap);
-            addToMap(tradeStatistics, true);
+            addToSet(tradeStatistics);
 
             // We only republish trades from last 10 days
             if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
@@ -149,28 +174,20 @@ public class TradeStatisticsManager {
         return observableTradeStatisticsSet;
     }
 
-    private void addToMap(TradeStatistics2 tradeStatistics, boolean storeLocally) {
+    private void addToSet(TradeStatistics2 tradeStatistics) {
         if (!observableTradeStatisticsSet.contains(tradeStatistics)) {
-
-            if (observableTradeStatisticsSet.stream()
-                    .anyMatch(e -> (e.getOfferId().equals(tradeStatistics.getOfferId()))))
+            if (observableTradeStatisticsSet.stream().anyMatch(e -> e.getOfferId().equals(tradeStatistics.getOfferId()))) {
                 return;
+            }
 
-            if (!tradeStatistics.isValid())
+            if (!tradeStatistics.isValid()) {
                 return;
+            }
 
             observableTradeStatisticsSet.add(tradeStatistics);
-            if (storeLocally) {
-                priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
-                dump();
-            }
+            priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+            dump();
         }
-    }
-
-    private void addToMap(TradeStatistics2 tradeStatistics, Map<String, TradeStatistics2> map) {
-        TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
-        if (prevValue != null)
-            log.trace("We have already an item with the same offer ID. That might happen if both the maker and the taker published the tradeStatistics");
     }
 
     private void dump() {

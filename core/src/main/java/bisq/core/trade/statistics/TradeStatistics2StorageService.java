@@ -29,11 +29,11 @@ import javax.inject.Inject;
 
 import java.io.File;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
@@ -70,6 +70,19 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
         return payload instanceof TradeStatistics2;
     }
 
+    Collection<TradeStatistics2> cleanupMap(Collection<TradeStatistics2> collection) {
+        Map<P2PDataStorage.ByteArray, TradeStatistics2> tempMap = new HashMap<>();
+        // We recreate the hash as there have been duplicates from diff. extraMap entries introduced at software updates
+        collection.forEach(item -> tempMap.putIfAbsent(new P2PDataStorage.ByteArray(item.createHash()), item));
+
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = getMap();
+        map.clear();
+        map.putAll(tempMap);
+        persist();
+
+        return tempMap.values();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -83,8 +96,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected void readStore() {
         super.readStore();
-        checkArgument(store instanceof TradeStatistics2Store,
-                "Store is not instance of TradeStatistics2Store. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
     }
 }
