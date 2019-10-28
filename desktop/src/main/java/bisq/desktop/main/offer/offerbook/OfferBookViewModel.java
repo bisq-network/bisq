@@ -48,6 +48,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -101,7 +102,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    final BSFormatter formatter;
+    private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
 
 
@@ -143,7 +145,8 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              BSFormatter formatter) {
+                              BSFormatter btcFormatter,
+                              BsqFormatter bsqFormatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -156,7 +159,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
-        this.formatter = formatter;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
@@ -343,7 +347,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private String formatAmount(Offer offer, boolean decimalAligned) {
-        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), formatter);
+        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), btcFormatter);
     }
 
 
@@ -624,5 +628,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 return PaymentMethod.hasChargebackRisk(selectedPaymentMethod, tradeCurrencyCode.get());
         }
         return true;
+    }
+
+    public String getMakerFeeAsString(Offer offer) {
+        return offer.isCurrencyForMakerFeeBtc() ?
+                btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
+                bsqFormatter.formatCoinWithCode(offer.getMakerFee());
     }
 }
