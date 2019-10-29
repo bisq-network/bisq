@@ -246,7 +246,7 @@ class RequestDataHandler implements MessageListener {
                                     // We only apply it once from first response
                                     if (!initialRequestApplied) {
                                         dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
-                                        initialRequestApplied = true;
+
                                     }
                                 } else {
                                     // We don't broadcast here as we are only connected to the seed node and would be pointless
@@ -254,6 +254,10 @@ class RequestDataHandler implements MessageListener {
                                             false, false, false);
                                 }
                             });
+
+                            // We set initialRequestApplied to true after the loop, otherwise we would only process 1 entry
+                            initialRequestApplied = true;
+
                             log.info("Processing {} persistableNetworkPayloads took {} ms.",
                                     persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts);
                         }
