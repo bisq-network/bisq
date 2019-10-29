@@ -679,6 +679,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         if (dispute.getSupportType() == SupportType.MEDIATION) {
             text += Res.get("disputeSummaryWindow.close.nextStepsForMediation");
+        } else if (dispute.getSupportType() == SupportType.REFUND) {
+            text += Res.get("disputeSummaryWindow.close.nextStepsForRefundAgentArbitration");
         }
 
         checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
