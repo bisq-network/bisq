@@ -152,6 +152,7 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showBusyAnimation;
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
+    protected boolean disableActionButton;
 
     @Getter
     protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
@@ -491,6 +492,12 @@ public abstract class Overlay<T extends Overlay> {
 
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
+        //noinspection unchecked
+        return (T) this;
+    }
+
+    public T disableActionButton() {
+        this.disableActionButton = true;
         //noinspection unchecked
         return (T) this;
     }
@@ -925,16 +932,24 @@ public abstract class Overlay<T extends Overlay> {
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
-            actionButton.setDefaultButton(true);
+
+            if (!disableActionButton)
+                actionButton.setDefaultButton(true);
+            else
+                actionButton.setDisable(true);
+
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
 
             actionButton.getStyleClass().add("action-button");
             //TODO app wide focus
             //actionButton.requestFocus();
-            actionButton.setOnAction(event -> {
-                hide();
-                actionHandlerOptional.ifPresent(Runnable::run);
-            });
+
+            if (!disableActionButton) {
+                actionButton.setOnAction(event -> {
+                    hide();
+                    actionHandlerOptional.ifPresent(Runnable::run);
+                });
+            }
 
             buttonBox.setSpacing(10);
 

@@ -217,7 +217,7 @@ public abstract class TradeStepView extends AnchorPane {
 
         mediationResultStateSubscription = EasyBind.subscribe(trade.mediationResultStateProperty(), newValue -> {
             if (newValue != null) {
-                updateMediationResultState();
+                updateMediationResultState(true);
             }
         });
 
@@ -416,7 +416,7 @@ public abstract class TradeStepView extends AnchorPane {
             case MEDIATION_CLOSED:
                 if (tradeStepInfo != null) {
                     tradeStepInfo.setOnAction(e -> {
-                        updateMediationResultState();
+                        updateMediationResultState(false);
                     });
                 }
 
@@ -424,7 +424,7 @@ public abstract class TradeStepView extends AnchorPane {
                     tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT);
                 }
 
-                updateMediationResultState();
+                updateMediationResultState(true);
                 break;
             case REFUND_REQUESTED:
                 deactivatePaymentButtons(true);
@@ -459,7 +459,7 @@ public abstract class TradeStepView extends AnchorPane {
         }
     }
 
-    private void updateMediationResultState() {
+    private void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
         if (isInArbitration()) {
             if (isRefundRequestStartedByPeer()) {
                 tradeStepInfo.setState(TradeStepInfo.State.IN_REFUND_REQUEST_PEER_REQUESTED);
@@ -471,7 +471,8 @@ public abstract class TradeStepView extends AnchorPane {
             // (e.g. we might receive a RECEIVED_SIG_MSG but then later a SIG_MSG_IN_MAILBOX).
             if (hasSelfAccepted()) {
                 tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_SELF_ACCEPTED);
-                openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
+                if (!blockOpeningOfResultAcceptedPopup)
+                    openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
             } else if (peerAccepted()) {
                 tradeStepInfo.setState(TradeStepInfo.State.MEDIATION_RESULT_PEER_ACCEPTED);
                 if (acceptMediationResultPopup == null) {
@@ -535,6 +536,10 @@ public abstract class TradeStepView extends AnchorPane {
         long lockTime = trade.getDelayedPayoutTx().getLockTime();
         int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
         long remaining = lockTime - bestChainHeight;
+
+        String actionButtonText = hasSelfAccepted() ?
+                Res.get("portfolio.pending.mediationResult.popup.alreadyAccepted") : Res.get("shared.accept");
+
         acceptMediationResultPopup = new Popup<>().width(900)
                 .headLine(headLine)
                 .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
@@ -542,7 +547,7 @@ public abstract class TradeStepView extends AnchorPane {
                         peersPayoutAmount,
                         BSFormatter.getDateFromBlockHeight(remaining),
                         lockTime))
-                .actionButtonText(Res.get("shared.accept"))
+                .actionButtonText(actionButtonText)
                 .onAction(() -> {
                     model.dataModel.mediationManager.acceptMediationResult(trade,
                             () -> {
@@ -568,6 +573,10 @@ public abstract class TradeStepView extends AnchorPane {
                 .onClose(() -> {
                     acceptMediationResultPopup = null;
                 });
+
+        if (hasSelfAccepted()) {
+            acceptMediationResultPopup.disableActionButton();
+        }
 
         acceptMediationResultPopup.show();
     }
