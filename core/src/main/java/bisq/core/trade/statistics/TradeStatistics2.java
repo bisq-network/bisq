@@ -86,7 +86,8 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     private final long tradeDate;
     private final String depositTxId;
 
-    // hash get set in constructor from json of all the other data fields (with hash = null).
+    // Hash get set in constructor from json of all the other data fields (with hash = null).
+    @JsonExclude
     private final byte[] hash;
     // PB field signature_pub_key_bytes not used anymore from v0.6 on
 
@@ -94,6 +95,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
+    @JsonExclude
     private Map<String, String> extraDataMap;
 
     public TradeStatistics2(OfferPayload offerPayload,
@@ -156,12 +158,14 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         this.depositTxId = depositTxId;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
-        if (hash == null)
-            // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
-            // tradeDate is different for both peers so we ignore it for hash.
-            this.hash = Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
-        else
-            this.hash = hash;
+        this.hash = hash == null ? createHash() : hash;
+    }
+
+    public byte[] createHash() {
+        // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
+        // TradeDate is different for both peers so we ignore it for hash. ExtraDataMap is ignored as well as at
+        // software updates we might have different entries which would cause a different hash.
+        return Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
     }
 
     @Override

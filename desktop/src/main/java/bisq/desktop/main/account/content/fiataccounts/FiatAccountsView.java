@@ -237,8 +237,17 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .onAction(() -> doSaveNewAccount(paymentAccount))
                     .show();
         } else {
-            new Popup<>().information(Res.get("payment.limits.info",
-                    formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+
+            String limitsInfoKey = "payment.limits.info";
+            String initialLimit = formatter.formatCoinWithCode(maxTradeLimitFirstMonth);
+
+            if (PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(), paymentAccount.getTradeCurrencies())) {
+                limitsInfoKey = "payment.limits.info.withSigning";
+                initialLimit = formatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT);
+            }
+
+            new Popup<>().information(Res.get(limitsInfoKey,
+                    initialLimit,
                     formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
                     formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
                     .width(700)

@@ -81,6 +81,7 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
     private void positionAndActivateIcon(ContentDisplay contentDisplay, String info, double width) {
         textIcon.setOpacity(0.4);
+        textIcon.getStyleClass().add("tooltip-icon");
 
         textIcon.setOnMouseEntered(e -> {
             hidePopover = false;

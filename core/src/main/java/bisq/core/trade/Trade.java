@@ -666,6 +666,7 @@ public abstract class Trade implements Tradable, Model {
 
     public void applyDelayedPayoutTx(Transaction delayedPayoutTx) {
         this.delayedPayoutTx = delayedPayoutTx;
+        this.delayedPayoutTxBytes = delayedPayoutTx.bitcoinSerialize();
         persist();
     }
 
