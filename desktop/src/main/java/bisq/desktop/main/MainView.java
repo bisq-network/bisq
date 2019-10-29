@@ -31,6 +31,7 @@ import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
+import bisq.desktop.main.market.trades.TradesChartsView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -375,12 +376,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             View view = viewLoader.load(viewClass);
             contentContainer.getChildren().setAll(view.getRoot());
 
+            try {
             navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof NavButton)
                     .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
                     .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
                     .setSelected(true);
+            } catch (BisqException e) {
+            	navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
+			}
         });
 
         VBox splashScreen = createSplashScreen();
