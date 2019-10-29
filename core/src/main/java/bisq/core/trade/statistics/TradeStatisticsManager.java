@@ -21,15 +21,11 @@ import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
-import bisq.common.UserThread;
 import bisq.common.storage.JsonFileManager;
 import bisq.common.storage.Storage;
 import bisq.common.util.Utilities;
@@ -44,17 +40,13 @@ import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TradeStatisticsManager {
@@ -63,7 +55,6 @@ public class TradeStatisticsManager {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final TradeStatistics2StorageService tradeStatistics2StorageService;
-    private final ReferralIdService referralIdService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics2> observableTradeStatisticsSet = FXCollections.observableSet();
     private int duplicates = 0;
@@ -73,13 +64,11 @@ public class TradeStatisticsManager {
                                   PriceFeedService priceFeedService,
                                   TradeStatistics2StorageService tradeStatistics2StorageService,
                                   AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                  ReferralIdService referralIdService,
                                   @Named(Storage.STORAGE_DIR) File storageDir,
                                   @Named(AppOptionKeys.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.tradeStatistics2StorageService = tradeStatistics2StorageService;
-        this.referralIdService = referralIdService;
         this.dumpStatistics = dumpStatistics;
         jsonFileManager = new JsonFileManager(storageDir);
 
@@ -136,38 +125,6 @@ public class TradeStatisticsManager {
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
 
         dump();
-    }
-
-    public void publishTradeStatistics(List<Trade> trades) {
-        for (int i = 0; i < trades.size(); i++) {
-            Trade trade = trades.get(i);
-
-            Map<String, String> extraDataMap = null;
-            if (referralIdService.getOptionalReferralId().isPresent()) {
-                extraDataMap = new HashMap<>();
-                extraDataMap.put(OfferPayload.REFERRAL_ID, referralIdService.getOptionalReferralId().get());
-            }
-            Offer offer = trade.getOffer();
-            checkNotNull(offer, "offer must not ne null");
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-            TradeStatistics2 tradeStatistics = new TradeStatistics2(offer.getOfferPayload(),
-                    trade.getTradePrice(),
-                    trade.getTradeAmount(),
-                    trade.getDate(),
-                    (trade.getDepositTx() != null ? trade.getDepositTx().getHashAsString() : ""),
-                    extraDataMap);
-            addToSet(tradeStatistics);
-
-            // We only republish trades from last 10 days
-            if ((new Date().getTime() - trade.getDate().getTime()) < TimeUnit.DAYS.toMillis(10)) {
-                long delay = 5000;
-                long minDelay = (i + 1) * delay;
-                long maxDelay = (i + 2) * delay;
-                UserThread.runAfterRandomDelay(() -> {
-                    p2PService.addPersistableNetworkPayload(tradeStatistics, true);
-                }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
-            }
-        }
     }
 
     public ObservableSet<TradeStatistics2> getObservableTradeStatisticsSet() {

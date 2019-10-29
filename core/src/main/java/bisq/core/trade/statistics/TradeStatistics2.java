@@ -61,7 +61,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Value
 public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
+
+    //We don't support arbitrators anymore so this entry will be only for pre v1.2. trades
+    @Deprecated
     public static final String ARBITRATOR_ADDRESS = "arbAddr";
+
     public static final String MEDIATOR_ADDRESS = "medAddr";
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
 
@@ -265,6 +269,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
         return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade;
     }
+
 
     @Override
     public String toString() {

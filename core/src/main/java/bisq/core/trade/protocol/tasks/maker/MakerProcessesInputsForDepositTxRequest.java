@@ -19,7 +19,6 @@ package bisq.core.trade.protocol.tasks.maker;
 
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
-import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
@@ -79,18 +78,6 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setCurrentDate(inputsForDepositTxRequest.getCurrentDate());
 
             User user = checkNotNull(processModel.getUser(), "User must not be null");
-
-            NodeAddress arbitratorNodeAddress = inputsForDepositTxRequest.getArbitratorNodeAddress();
-            if (arbitratorNodeAddress != null) {
-                trade.setArbitratorNodeAddress(arbitratorNodeAddress);
-                Arbitrator arbitrator = user.getAcceptedArbitratorByAddress(arbitratorNodeAddress);
-                if (arbitrator != null) {
-                    trade.setArbitratorBtcPubKey(checkNotNull(arbitrator.getBtcPubKey(),
-                            "arbitrator.getBtcPubKey() must not be null"));
-                    trade.setArbitratorPubKeyRing(checkNotNull(arbitrator.getPubKeyRing(),
-                            "arbitrator.getPubKeyRing() must not be null"));
-                }
-            }
 
             NodeAddress mediatorNodeAddress = checkNotNull(inputsForDepositTxRequest.getMediatorNodeAddress(),
                     "payDepositRequest.getMediatorNodeAddress() must not be null");
