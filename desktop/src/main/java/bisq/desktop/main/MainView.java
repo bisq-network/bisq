@@ -377,7 +377,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             contentContainer.getChildren().setAll(view.getRoot());
 
             try {
-            navButtons.getToggles().stream()
+            	navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof NavButton)
                     .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
