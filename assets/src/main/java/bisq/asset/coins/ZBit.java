@@ -25,14 +25,7 @@ import bisq.asset.RegexAddressValidator;
 @AltCoinAccountDisclaimer("account.altcoin.popup.ZBT.msg")
 public class ZBit extends Coin {
 
-	public ZBit() {
-		super("ZBit", "ZBT", new ZbtAddressValidator());
-    }
-    
-    public static class ZbtAddressValidator extends RegexAddressValidator {
-
-        public ZbtAddressValidator() {
-            super("^a?[a-zA-Z0-9]{33}", I18n.DISPLAY_STRINGS.getString("account.altcoin.popup.validation.ZBT"));
-        }
+    public ZBit() {
+        super("ZBit", "ZBT", new RegexAddressValidator("^8[a-zA-Z0-9]{33}"));
     }
 }

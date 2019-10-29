@@ -19,23 +19,31 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
+import org.junit.Test;
+
 public class ZBitTest extends AbstractAssetTest {
 
     public ZBitTest() {
         super(new ZBit());
     }
 
-	@Override
-	public void testValidAddresses() {
-		assertValidAddress("8Hu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
-		assertValidAddress("81HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
-		assertValidAddress("8Hu897ivzmeFuLNB6956X6gyGeVNHUBRgD");		
-	}
+  @Test
+  public void testValidAddresses() {
+    assertValidAddress("8Hu897ivzmeFuLNB6956X6gyGeVNHUBRgD");
+    assertValidAddress("81HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3");
+    assertValidAddress("8Hu897ivzmeFuLNB6956X6gyGfhj676784");
+  }
 
-	@Override
-	public void testInvalidAddresses() {
-		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");
-		assertInvalidAddress("N22FRU9f3fx7Hty641D5cg95kRK6S3sbf3");
-		assertInvalidAddress("MxmFPEPzF19JFPU3VPrRXvUbPjMQXnQerY");		
-	}
+  @Test
+  public void testInvalidAddresses() {
+    assertInvalidAddress("");
+    assertInvalidAddress("8");
+    assertInvalidAddress("822FRU9f3fx7Hty641D5cg95kRK6sH0rT");
+    assertInvalidAddress("822FRU9f3fx7Hty641D5cg95kRK6S3sbfISTOOLONG");
+    
+    assertInvalidAddress("MHu897ivzmeFuLNB6956X6gyGfhj676784");
+    assertInvalidAddress("M");
+    assertInvalidAddress("M22FRU9f3fx7Hty641D5cg95kRK6sH0rT");
+    assertInvalidAddress("M22FRU9f3fx7Hty641D5cg95kRK6S3sbfISTOOLONG");
+  }
 }
