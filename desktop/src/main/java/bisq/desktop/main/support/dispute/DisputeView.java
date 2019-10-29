@@ -332,6 +332,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
         if (selectedItem != null)
             tableView.getSelectionModel().select(selectedItem);
+        else if (sortedList.size() > 0)
+            tableView.getSelectionModel().select(0);
 
         if (chatView != null) {
             chatView.activate();
