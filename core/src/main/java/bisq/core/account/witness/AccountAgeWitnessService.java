@@ -316,8 +316,8 @@ public class AccountAgeWitnessService {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
             boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
-            if (!isRisky) {
-                // Get age of witness rather than time since signing for non risky payment methods
+            if (!isRisky || direction == OfferPayload.Direction.SELL) {
+                // Get age of witness rather than time since signing for non risky payment methods and for selling
                 accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
             }
             long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
