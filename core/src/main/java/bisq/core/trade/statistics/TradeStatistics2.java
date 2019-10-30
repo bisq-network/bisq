@@ -24,9 +24,12 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.ExtraDataMapValidator;
@@ -60,7 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Value
-public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
+public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
 
     //We don't support arbitrators anymore so this entry will be only for pre v1.2. trades
     @Deprecated
@@ -229,6 +232,15 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     public boolean verifyHashSize() {
         checkNotNull(hash, "hash must not be null");
         return hash.length == 20;
+    }
+
+    // With v1.2.0 we changed the way how the hash is created. To not create too heavy load for seed nodes from
+    // requests from old nodes we use the SIGNED_ACCOUNT_AGE_WITNESS capability to send trade statistics only to new
+    // nodes. As trade statistics are only used for informational purpose it will not have any critical issue for the
+    // old nodes beside that they don't see the latest trades.
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.SIGNED_ACCOUNT_AGE_WITNESS);
     }
 
 
