@@ -131,7 +131,7 @@ public class MobileModel {
         iPad Pro 12.9 Inch 2. Generation
         iPad Pro 10.5 Inch
         */
-        // iPhone 6 does not support isContentAvailable, iPhone 7 does.
+        // iPhone 6 does not support isContentAvailable, iPhone 6s and 7 does.
         // We don't know for other versions, but lets assume all above iPhone 6 are ok.
         if (descriptor != null) {
             String[] descriptorTokens = descriptor.split(" ");
@@ -143,14 +143,17 @@ public class MobileModel {
                     if (Arrays.asList(validVersions).contains(versionString)) {
                         return true;
                     }
+                    String versionSuffix = "";
                     if (versionString.matches("\\d[^\\d]")) {
+                        versionSuffix = versionString.substring(1);
                         versionString = versionString.substring(0, 1);
                     } else if (versionString.matches("\\d{2}[^\\d]")) {
+                        versionSuffix = versionString.substring(2);
                         versionString = versionString.substring(0, 2);
                     }
                     try {
                         int version = Integer.parseInt(versionString);
-                        return version > 5;
+                        return version > 6 || (version == 6 && versionSuffix.equalsIgnoreCase("s"));
                     } catch (Throwable ignore) {
                     }
                 } else {

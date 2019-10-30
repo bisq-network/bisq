@@ -43,8 +43,8 @@ public class MobileModelTest {
                 new Tuple2<>("iPhone 5c", false),
                 new Tuple2<>("iPhone 5s", false),
 
-                new Tuple2<>("iPhone 6", true),
-                new Tuple2<>("iPhone 6 Plus", true),
+                new Tuple2<>("iPhone 6", false),
+                new Tuple2<>("iPhone 6 Plus", false),
                 new Tuple2<>("iPhone 6s", true),
                 new Tuple2<>("iPhone 6s Plus", true),
 
