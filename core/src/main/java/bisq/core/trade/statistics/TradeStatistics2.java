@@ -214,7 +214,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
                 proto.getDepositTxId(),
-                proto.getHash().toByteArray(),
+                null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
