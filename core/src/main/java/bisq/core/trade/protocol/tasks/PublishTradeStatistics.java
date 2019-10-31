@@ -22,10 +22,6 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.trade.Trade;
 import bisq.core.trade.statistics.TradeStatistics2;
 
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.network.NetworkNode;
-import bisq.network.p2p.network.TorNetworkNode;
-
 import bisq.common.taskrunner.TaskRunner;
 
 import java.util.HashMap;
@@ -49,18 +45,6 @@ public class PublishTradeStatistics extends TradeTask {
                 Map<String, String> extraDataMap = new HashMap<>();
                 if (processModel.getReferralIdService().getOptionalReferralId().isPresent()) {
                     extraDataMap.put(OfferPayload.REFERRAL_ID, processModel.getReferralIdService().getOptionalReferralId().get());
-                }
-
-                NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
-                if (mediatorNodeAddress != null) {
-                    // The first 4 chars are sufficient to identify an arbitrator.
-                    // For testing with regtest/localhost we use the full address as its localhost and would result in
-                    // same values for multiple arbitrators.
-                    NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
-                    String address = networkNode instanceof TorNetworkNode ?
-                            mediatorNodeAddress.getFullAddress().substring(0, 4) :
-                            mediatorNodeAddress.getFullAddress();
-                    extraDataMap.put(TradeStatistics2.MEDIATOR_ADDRESS, address);
                 }
 
                 Offer offer = trade.getOffer();
