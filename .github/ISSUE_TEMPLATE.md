@@ -1,3 +1,9 @@
+<!--
+   SUPPORT REQUESTS: This is for reporting bugs in the Bisq app.
+   If you have a support request, please join #support on Bisq's
+   Keybase team at https://keybase.io/team/Bisq
+-->
+
 ### Description
 
 <!-- brief description of the bug -->
