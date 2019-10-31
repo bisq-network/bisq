@@ -28,6 +28,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.validation.BtcValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -57,6 +58,10 @@ import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -66,6 +71,8 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ObservableList;
+
+import javafx.util.Callback;
 
 import java.util.Optional;
 
@@ -81,6 +88,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final WalletsSetup walletsSetup;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
+    private AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final BSFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -141,6 +149,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               WalletsSetup walletsSetup,
                               Preferences preferences,
                               PriceFeedService priceFeedService,
+                              AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               BSFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
@@ -152,6 +161,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.walletsSetup = walletsSetup;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
@@ -376,11 +386,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
                     new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 } else {
                     new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                             Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
@@ -698,7 +710,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
     }
 
     public String getSecurityDepositWithCode() {
@@ -710,7 +722,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         final String takerFee = getFormatterForTakerFee().formatCoinWithCode(takerFeeAsCoin);
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return takerFee + GUIUtil.getPercentageOfTradeAmount(takerFeeAsCoin, dataModel.getAmount().get());
         else
             return takerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(takerFeeAsCoin)) + ")";
     }
@@ -718,7 +730,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTakerFeePercentage() {
         final Coin takerFeeAsCoin = dataModel.getTakerFee();
         if (dataModel.isCurrencyForTakerFeeBtc())
-            return takerFeeAsCoin != null ? GUIUtil.getPercentage(takerFeeAsCoin, dataModel.getAmount().get(), btcFormatter) : Res.get("shared.na");
+            return takerFeeAsCoin != null ? GUIUtil.getPercentage(takerFeeAsCoin, dataModel.getAmount().get()) : Res.get("shared.na");
         else
             return Res.get("dao.paidWithBsq");
     }
@@ -734,13 +746,13 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
 
     }
 
     public String getTxFeePercentage() {
         Coin txFeeAsCoin = dataModel.getTotalTxFee();
-        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get());
     }
 
     public PaymentMethod getPaymentMethod() {
@@ -777,5 +789,10 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     private BSFormatter getFormatterForTakerFee() {
         return dataModel.isCurrencyForTakerFeeBtc() ? btcFormatter : bsqFormatter;
+    }
+
+    public Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>> getPaymentAccountListCellFactory(
+            ComboBox<PaymentAccount> paymentAccountsComboBox) {
+        return GUIUtil.getPaymentAccountListCellFactory(paymentAccountsComboBox, accountAgeWitnessService);
     }
 }

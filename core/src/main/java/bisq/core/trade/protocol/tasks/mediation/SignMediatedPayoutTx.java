@@ -97,8 +97,7 @@ public class SignMediatedPayoutTx extends TradeTask {
                     sellerPayoutAddressString,
                     myMultiSigKeyPair,
                     buyerMultiSigPubKey,
-                    sellerMultiSigPubKey,
-                    trade.getArbitratorBtcPubKey());
+                    sellerMultiSigPubKey);
             processModel.setMediatedPayoutTxSignature(mediatedPayoutTxSignature);
 
             complete();

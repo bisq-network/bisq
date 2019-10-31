@@ -57,12 +57,16 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             offer.setState(Offer.State.AVAILABLE);
 
             model.setSelectedArbitrator(offerAvailabilityResponse.getArbitrator());
+
             NodeAddress mediator = offerAvailabilityResponse.getMediator();
             if (mediator == null) {
                 // We do not get a mediator from old clients so we need to handle the null case.
                 mediator = DisputeAgentSelection.getLeastUsedMediator(model.getTradeStatisticsManager(), model.getMediatorManager()).getNodeAddress();
             }
             model.setSelectedMediator(mediator);
+
+            model.setSelectedRefundAgent(offerAvailabilityResponse.getRefundAgent());
+
             complete();
         } catch (Throwable t) {
             offer.setErrorMessage("An error occurred.\n" +

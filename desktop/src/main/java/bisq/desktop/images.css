@@ -279,31 +279,10 @@
     -fx-image: url("../../images/avatars/avatar_15.png");
 }
 
-#poloniex {
-    -fx-image: url("../../images/poloniex.png");
+#image-account-signing-screenshot {
+    -fx-image: url("../../images/account_signing_screenshot.png");
 }
 
-#btcaverage {
-    -fx-image: url("../../images/btcaverage.png");
+#image-new-trade-protocol-screenshot {
+    -fx-image: url("../../images/new_trade_protocol_screenshot.png");
 }
-
-#accepted {
-    -fx-image: url("../../images/accepted.png");
-}
-
-#rejected {
-    -fx-image: url("../../images/rejected.png");
-}
-
-#dao-screenshot-governance {
-    -fx-image: url("../../images/dao-screenshot-governance.png");
-}
-
-#dao-screenshot-trading {
-    -fx-image: url("../../images/dao-screenshot-trading.png");
-}
-
-#dao-screenshot-cheaper-fees {
-    -fx-image: url("../../images/dao-screenshot-cheaper-fees.png");
-}
-

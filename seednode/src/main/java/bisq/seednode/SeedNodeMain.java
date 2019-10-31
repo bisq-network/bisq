@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.1.7";
+    private static final String VERSION = "1.2.1";
     private SeedNode seedNode;
 
     public SeedNodeMain() {
@@ -53,6 +53,8 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void doExecute(OptionSet options) {
         super.doExecute(options);
 
+        checkMemory(bisqEnvironment, this);
+        startShutDownInterval(this);
         CommonSetup.setup(this);
 
         keepRunning();

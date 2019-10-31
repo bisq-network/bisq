@@ -32,7 +32,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
 
@@ -326,7 +325,8 @@ public class OfferUtil {
     public static Map<String, String> getExtraDataMap(AccountAgeWitnessService accountAgeWitnessService,
                                                       ReferralIdService referralIdService,
                                                       PaymentAccount paymentAccount,
-                                                      String currencyCode) {
+                                                      String currencyCode,
+                                                      Preferences preferences) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService.getMyWitnessHashAsHex(paymentAccount.getPaymentAccountPayload());

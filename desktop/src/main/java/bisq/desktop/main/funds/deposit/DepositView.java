@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AddressTextField;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -48,8 +49,6 @@ import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
 import javax.inject.Inject;
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -360,7 +359,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    field = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
+                                    field = new ExternalHyperlink(address);
                                     field.setOnAction(event -> {
                                         openBlockExplorer(item);
                                         tableView.getSelectionModel().select(item);

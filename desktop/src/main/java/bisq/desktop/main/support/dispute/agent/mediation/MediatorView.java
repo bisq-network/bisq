@@ -75,4 +75,10 @@ public class MediatorView extends DisputeAgentView {
     protected DisputeSession getConcreteDisputeChatSession(Dispute dispute) {
         return new MediationSession(dispute, disputeManager.isTrader(dispute));
     }
+
+    @Override
+    protected void onCloseDispute(Dispute dispute) {
+        disputeSummaryWindow.onFinalizeDispute(() -> chatView.removeInputBox())
+                .show(dispute);
+    }
 }

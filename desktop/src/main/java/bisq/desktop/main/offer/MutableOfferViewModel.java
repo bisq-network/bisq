@@ -35,6 +35,7 @@ import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -66,6 +67,10 @@ import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
 
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -75,6 +80,8 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+
+import javafx.util.Callback;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +93,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private final BsqValidator bsqValidator;
     protected final SecurityDepositValidator securityDepositValidator;
     private final PriceFeedService priceFeedService;
+    private AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final Preferences preferences;
     protected final BSFormatter btcFormatter;
@@ -185,6 +193,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                  BsqValidator bsqValidator,
                                  SecurityDepositValidator securityDepositValidator,
                                  PriceFeedService priceFeedService,
+                                 AccountAgeWitnessService accountAgeWitnessService,
                                  Navigation navigation,
                                  Preferences preferences,
                                  BSFormatter btcFormatter,
@@ -198,6 +207,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         this.bsqValidator = bsqValidator;
         this.securityDepositValidator = securityDepositValidator;
         this.priceFeedService = priceFeedService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.preferences = preferences;
         this.btcFormatter = btcFormatter;
@@ -725,6 +735,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 amount.set(btcFormatter.formatCoin(btcValidator.getMaxTradeLimit()));
                 new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                        btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                         Res.get("offerbook.warning.newVersionAnnouncement")))
                         .width(900)
                         .show();
@@ -956,7 +967,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public String getSecurityDepositInfo() {
         return btcFormatter.formatCoinWithCode(dataModel.getSecurityDeposit()) +
-                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(dataModel.getSecurityDeposit(), dataModel.getAmount().get());
     }
 
     public String getSecurityDepositWithCode() {
@@ -968,7 +979,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         final String makerFee = getFormatterForMakerFee().formatCoinWithCode(makerFeeAsCoin);
         if (dataModel.isCurrencyForMakerFeeBtc())
-            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return makerFee + GUIUtil.getPercentageOfTradeAmount(makerFeeAsCoin, dataModel.getAmount().get());
         else
             return makerFee + " (" + Res.get("shared.tradingFeeInBsqInfo", btcFormatter.formatCoinWithCode(makerFeeAsCoin)) + ")";
     }
@@ -976,7 +987,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public String getMakerFeePercentage() {
         final Coin makerFeeAsCoin = dataModel.getMakerFee();
         if (dataModel.isCurrencyForMakerFeeBtc())
-            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+            return GUIUtil.getPercentage(makerFeeAsCoin, dataModel.getAmount().get());
         else
             return Res.get("dao.paidWithBsq");
     }
@@ -1004,13 +1015,13 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     public String getTxFee() {
         Coin txFeeAsCoin = dataModel.getTxFee();
         return btcFormatter.formatCoinWithCode(txFeeAsCoin) +
-                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+                GUIUtil.getPercentageOfTradeAmount(txFeeAsCoin, dataModel.getAmount().get());
 
     }
 
     public String getTxFeePercentage() {
         Coin txFeeAsCoin = dataModel.getTxFee();
-        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get(), btcFormatter);
+        return GUIUtil.getPercentage(txFeeAsCoin, dataModel.getAmount().get());
     }
 
     public PaymentAccount getPaymentAccount() {
@@ -1042,10 +1053,14 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return offer;
     }
 
+    public Callback<ListView<PaymentAccount>, ListCell<PaymentAccount>> getPaymentAccountListCellFactory(
+            ComboBox<PaymentAccount> paymentAccountsComboBox) {
+        return GUIUtil.getPaymentAccountListCellFactory(paymentAccountsComboBox, accountAgeWitnessService);
+    }
+
     public M getDataModel() {
         return dataModel;
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils

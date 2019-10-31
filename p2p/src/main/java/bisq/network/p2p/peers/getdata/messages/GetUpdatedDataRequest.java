@@ -30,9 +30,15 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
+
+import protobuf.NetworkEnvelope;
+
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class GetUpdatedDataRequest extends GetDataRequest implements SendersNodeAddressMessage {
@@ -72,12 +78,15 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
                         .map(ByteString::copyFrom)
                         .collect(Collectors.toList()));
 
-        return getNetworkEnvelopeBuilder()
+        NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
                 .build();
+        log.info("Sending a GetUpdatedDataRequest with size = {} bytes", proto.toByteArray().length);
+        return proto;
     }
 
     public static GetUpdatedDataRequest fromProto(protobuf.GetUpdatedDataRequest proto, int messageVersion) {
+        log.info("Received a GetUpdatedDataRequest with size = {} bytes", proto.toByteArray().length);
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),

@@ -25,13 +25,18 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.util.Tuple2;
+
 import com.google.common.base.Charsets;
+
+import org.apache.commons.lang3.StringUtils;
 
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
@@ -131,7 +136,7 @@ public class PeerInfoIcon extends Group {
         peerTagMap = preferences.getPeerTagMap();
 
         boolean hasTraded = numTrades > 0;
-        long peersAccountAge = getPeersAccountAge(trade, offer);
+        Tuple2<Long, String> peersAccount = getPeersAccountAge(trade, offer);
         if (offer == null) {
             checkNotNull(trade, "Trade must not be null if offer is null.");
             offer = trade.getOffer();
@@ -142,7 +147,7 @@ public class PeerInfoIcon extends Group {
         boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
 
         String accountAge = isFiatCurrency ?
-                peersAccountAge > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(peersAccountAge)) :
+                peersAccount.first  > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(peersAccount.first)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
         tooltipText = hasTraded ?
@@ -152,7 +157,8 @@ public class PeerInfoIcon extends Group {
         // outer circle
         Color ringColor;
         if (isFiatCurrency) {
-            switch (accountAgeWitnessService.getAccountAgeCategory(peersAccountAge)) {
+
+            switch (accountAgeWitnessService.getPeersAccountAgeCategory(peersAccount.first)) {
                 case TWO_MONTHS_OR_MORE:
                     ringColor = Color.rgb(0, 225, 0); // > 2 months green
                     break;
@@ -160,8 +166,11 @@ public class PeerInfoIcon extends Group {
                     ringColor = Color.rgb(0, 139, 205); // 1-2 months blue
                     break;
                 case LESS_ONE_MONTH:
-                default:
                     ringColor = Color.rgb(255, 140, 0); //< 1 month orange
+                    break;
+                case UNVERIFIED:
+                default:
+                    ringColor = Color.rgb(255, 0, 0); // not signed, red
                     break;
             }
 
@@ -240,23 +249,36 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys, isFiatCurrency, peersAccountAge);
+        boolean needsSigning = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
+        String accountSigningState = null;
+        String accountAgeInfo = peersAccount.second;
+
+        if (needsSigning) {
+            AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(offer);
+            accountSigningState = StringUtils.capitalize(signState.getPresentation());
+
+            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
+                accountAgeInfo = null;
+        }
+
+        addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys,
+                isFiatCurrency, peersAccount.first, accountAgeInfo, accountSigningState);
     }
 
-    private long getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
+    private Tuple2<Long, String> getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
         if (trade != null) {
             offer = trade.getOffer();
             if (offer == null) {
                 // unexpected
-                return -1;
+                return new Tuple2<>(-1L, Res.get("peerInfo.age.noRisk"));
             }
-
-            return accountAgeWitnessService.getTradingPeersAccountAge(trade);
-        } else {
-            checkNotNull(offer, "Offer must not be null if trade is null.");
-
-            return accountAgeWitnessService.getMakersAccountAge(offer, new Date());
         }
+        checkNotNull(offer, "Offer must not be null if trade is null.");
+        if (PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
+            return new Tuple2<>(accountAgeWitnessService.getWitnessSignAge(offer, new Date()),
+                    Res.get("peerInfo.age.chargeBackRisk"));
+        }
+        return new Tuple2<>(accountAgeWitnessService.getAccountAge(offer), Res.get("peerInfo.age.noRisk"));
     }
 
     protected void addMouseListener(int numTrades,
@@ -266,16 +288,22 @@ public class PeerInfoIcon extends Group {
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
-                                    long makersAccountAge) {
-        final String accountAgeTagEditor = isFiatCurrency ?
+                                    long makersAccountAge,
+                                    String makersAccountAgeInfo,
+                                    String accountSigningState) {
+
+        final String accountAgeTagEditor = isFiatCurrency && makersAccountAgeInfo != null ?
                 makersAccountAge > -1 ?
                         DisplayUtils.formatAccountAge(makersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
+
         setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, offer, preferences, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
+                .accountAgeInfo(makersAccountAgeInfo)
+                .accountSigningState(accountSigningState)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
                     preferences.setTagForPeer(fullAddress, newTag);

@@ -408,13 +408,13 @@ public class BtcWalletService extends WalletService {
             TransactionVerificationException, WalletException, InsufficientMoneyException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [1] BSQ receivers output
         // outputs [0-1] BSQ change output
 
         // We add BTC mining fee. Result tx looks like:
         // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [1] BSQ receivers output
         // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
@@ -426,7 +426,7 @@ public class BtcWalletService extends WalletService {
 
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [1] BSQ receivers output
         // outputs [0-1] BSQ change output
         // mining fee: optional burned BSQ fee (only if opReturnData != null)
 
@@ -1113,5 +1113,56 @@ public class BtcWalletService extends WalletService {
     @Override
     protected boolean isDustAttackUtxo(TransactionOutput output) {
         return output.getValue().value < preferences.getIgnoreDustThreshold();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Refund payoutTx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createRefundPayoutTx(Coin buyerAmount,
+                                            Coin sellerAmount,
+                                            Coin fee,
+                                            String buyerAddressString,
+                                            String sellerAddressString)
+            throws AddressFormatException, InsufficientMoneyException, WalletException, TransactionVerificationException {
+        Transaction tx = new Transaction(params);
+        Preconditions.checkArgument(buyerAmount.add(sellerAmount).isPositive(),
+                "The sellerAmount + buyerAmount must be positive.");
+        // buyerAmount can be 0
+        if (buyerAmount.isPositive()) {
+            Preconditions.checkArgument(Restrictions.isAboveDust(buyerAmount),
+                    "The buyerAmount is too low (dust limit).");
+
+            tx.addOutput(buyerAmount, Address.fromBase58(params, buyerAddressString));
+        }
+        // sellerAmount can be 0
+        if (sellerAmount.isPositive()) {
+            Preconditions.checkArgument(Restrictions.isAboveDust(sellerAmount),
+                    "The sellerAmount is too low (dust limit).");
+
+            tx.addOutput(sellerAmount, Address.fromBase58(params, sellerAddressString));
+        }
+
+        SendRequest sendRequest = SendRequest.forTx(tx);
+        sendRequest.fee = fee;
+        sendRequest.feePerKb = Coin.ZERO;
+        sendRequest.ensureMinRequiredFee = false;
+        sendRequest.aesKey = aesKey;
+        sendRequest.shuffleOutputs = false;
+        sendRequest.coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        sendRequest.changeAddress = getFreshAddressEntry().getAddress();
+
+        checkNotNull(wallet);
+        wallet.completeTx(sendRequest);
+
+        Transaction resultTx = sendRequest.tx;
+        checkWalletConsistency(wallet);
+        verifyTransaction(resultTx);
+
+        WalletService.printTx("createRefundPayoutTx", resultTx);
+
+        return resultTx;
     }
 }

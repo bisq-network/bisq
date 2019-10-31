@@ -106,7 +106,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
     protected final BSFormatter formatter;
-    private final DisputeSummaryWindow disputeSummaryWindow;
+    protected final DisputeSummaryWindow disputeSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
@@ -124,7 +124,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
 
     private ChangeListener<Boolean> selectedDisputeClosedPropertyListener;
     private Subscription selectedDisputeSubscription;
-    private EventHandler<KeyEvent> keyEventEventHandler;
+    protected EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
     protected FilteredList<Dispute> filteredList;
     private InputTextField filterTextField;
@@ -306,6 +306,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                             .onAddAlertMessage(privateNotificationManager::sendPrivateNotificationMessageIfKeyIsValid)
                             .show();
                 }
+            } else {
+                handleKeyPressed(event);
             }
         };
 
@@ -330,6 +332,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
         Dispute selectedItem = tableView.getSelectionModel().getSelectedItem();
         if (selectedItem != null)
             tableView.getSelectionModel().select(selectedItem);
+        else if (sortedList.size() > 0)
+            tableView.getSelectionModel().select(0);
 
         if (chatView != null) {
             chatView.activate();
@@ -467,6 +471,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
                     .warning(Res.get("support.wrongVersion", protocolVersion))
                     .show();
         }
+    }
+
+    protected void handleKeyPressed(KeyEvent event) {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

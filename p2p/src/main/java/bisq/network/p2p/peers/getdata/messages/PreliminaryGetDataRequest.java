@@ -36,6 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+
+
+import protobuf.NetworkEnvelope;
+
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
 @Value
@@ -72,12 +76,15 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
 
-        return getNetworkEnvelopeBuilder()
+        NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
                 .build();
+        log.info("Sending a PreliminaryGetDataRequest with size = {} bytes", proto.toByteArray().length);
+        return proto;
     }
 
     public static PreliminaryGetDataRequest fromProto(protobuf.PreliminaryGetDataRequest proto, int messageVersion) {
+        log.info("Received a PreliminaryGetDataRequest with size = {} bytes", proto.toByteArray().length);
         Capabilities supportedCapabilities = proto.getSupportedCapabilitiesList().isEmpty() ?
                 null :
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList());

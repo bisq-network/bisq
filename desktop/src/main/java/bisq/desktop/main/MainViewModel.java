@@ -24,18 +24,20 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
-import bisq.desktop.main.overlays.windows.DaoLaunchWindow;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
+import bisq.desktop.main.overlays.windows.NewTradeProtocolLaunchWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
+import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
@@ -43,6 +45,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.app.BisqSetup;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.AliPayAccount;
@@ -56,7 +59,6 @@ import bisq.core.trade.TradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
@@ -67,8 +69,6 @@ import bisq.common.app.DevEnv;
 import bisq.common.storage.CorruptedDatabaseFilesHandler;
 
 import com.google.inject.Inject;
-
-import javafx.geometry.HPos;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -87,6 +87,7 @@ import javafx.collections.ObservableList;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Random;
@@ -104,6 +105,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final SupportTicketsPresentation supportTicketsPresentation;
     private final MarketPricePresentation marketPricePresentation;
     private final DaoPresentation daoPresentation;
+    private final AccountPresentation accountPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     @Getter
@@ -119,7 +121,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @Getter
     private final TorNetworkSettingsWindow torNetworkSettingsWindow;
     private final CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
-    private final BSFormatter formatter;
 
     @Getter
     private BooleanProperty showAppScreen = new SimpleBooleanProperty();
@@ -146,7 +147,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          SupportTicketsPresentation supportTicketsPresentation,
                          MarketPricePresentation marketPricePresentation,
                          DaoPresentation daoPresentation,
-                         P2PService p2PService,
+                         AccountPresentation accountPresentation, P2PService p2PService,
                          TradeManager tradeManager,
                          Preferences preferences,
                          PrivateNotificationManager privateNotificationManager,
@@ -158,8 +159,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          BisqEnvironment bisqEnvironment,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler,
-                         BSFormatter formatter) {
+                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -168,6 +168,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.supportTicketsPresentation = supportTicketsPresentation;
         this.marketPricePresentation = marketPricePresentation;
         this.daoPresentation = daoPresentation;
+        this.accountPresentation = accountPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.preferences = preferences;
@@ -180,7 +181,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
-        this.formatter = formatter;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -243,6 +243,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         marketPricePresentation.setup();
         daoPresentation.setup();
+        accountPresentation.setup();
 
         if (DevEnv.isDevMode()) {
             preferences.setShowOwnOffersInOfferBook(true);
@@ -265,7 +266,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         // in MainView showAppScreen handler
         notificationCenter.onAllServicesAndViewsInitialized();
 
-        maybeAddDaoLaunchWindowToQueue();
+        maybeAddNewTradeProtocolLaunchWindowToQueue();
         maybeShowPopupsFromQueue();
     }
 
@@ -288,33 +289,26 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             tacWindow.onAction(acceptedHandler::run).show();
         }, 1));
 
-        bisqSetup.setCryptoSetupFailedHandler(msg -> {
-            UserThread.execute(() -> new Popup<>().warning(msg)
-                    .useShutDownButton()
-                    .useReportBugButton()
-                    .show());
-        });
+        bisqSetup.setCryptoSetupFailedHandler(msg -> UserThread.execute(() ->
+                new Popup<>().warning(msg)
+                        .useShutDownButton()
+                        .useReportBugButton()
+                        .show()));
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> {
             if (show)
                 torNetworkSettingsWindow.show();
             else
                 torNetworkSettingsWindow.hide();
         });
-        bisqSetup.setSpvFileCorruptedHandler(msg -> {
-            new Popup<>().warning(msg)
-                    .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
-                    .onAction(() -> GUIUtil.reSyncSPVChain(walletsSetup, preferences))
-                    .show();
-        });
-        bisqSetup.setVoteResultExceptionHandler(voteResultException -> {
-            log.warn(voteResultException.toString());
-        });
+        bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup<>().warning(msg)
+                .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
+                .onAction(() -> GUIUtil.reSyncSPVChain(preferences))
+                .show());
+        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn(voteResultException.toString()));
 
-        bisqSetup.setChainFileLockedExceptionHandler(msg -> {
-            new Popup<>().warning(msg)
-                    .useShutDownButton()
-                    .show();
-        });
+        bisqSetup.setChainFileLockedExceptionHandler(msg -> new Popup<>().warning(msg)
+                .useShutDownButton()
+                .show());
         bisqSetup.setLockedUpFundsHandler(msg -> new Popup<>().warning(msg).show());
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
@@ -335,9 +329,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setDisplayAlertHandler(alert -> new DisplayAlertMessageWindow()
                 .alertMessage(alert)
                 .closeButtonText(Res.get("shared.close"))
-                .onClose(() -> {
-                    user.setDisplayedAlert(alert);
-                })
+                .onClose(() -> user.setDisplayedAlert(alert))
                 .show());
         bisqSetup.setDisplayPrivateNotificationHandler(privateNotification ->
                 new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
@@ -361,16 +353,22 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 popupQueue.add(popup);
             }
         });
+        bisqSetup.setDisplaySignedByArbitratorHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.signedByArbitrator"));
+        bisqSetup.setDisplaySignedByPeerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.signedByPeer", String.valueOf(SignedWitnessService.SIGNER_AGE_DAYS)));
+        bisqSetup.setDisplayPeerLimitLiftedHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.peerLimitLifted"));
+        bisqSetup.setDisplayPeerSignerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
+                key, "popup.accountSigning.peerSigner"));
 
         bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
 
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> {
-            new Popup<>()
-                    .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
-                            bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
-                    .useShutDownButton()
-                    .show();
-        });
+        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup<>()
+                .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
+                        bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
+                .useShutDownButton()
+                .show());
 
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
@@ -379,9 +377,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
         daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
 
-        bisqSetup.setFilterWarningHandler(warning -> {
-            new Popup<>().warning(warning).show();
-        });
+        bisqSetup.setFilterWarningHandler(warning -> new Popup<>().warning(warning).show());
     }
 
     private void setupP2PNumPeersWatcher() {
@@ -483,7 +479,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             cryptoCurrencyAccount.init();
             cryptoCurrencyAccount.setAccountName("ETH dummy");// Don't translate only for dev
             cryptoCurrencyAccount.setAddress("0x" + new Random().nextInt(1000000));
-            cryptoCurrencyAccount.setSingleTradeCurrency(CurrencyUtil.getCryptoCurrency("ETH").get());
+            Optional<CryptoCurrency> eth = CurrencyUtil.getCryptoCurrency("ETH");
+            eth.ifPresent(cryptoCurrencyAccount::setSingleTradeCurrency);
+
             user.addPaymentAccount(cryptoCurrencyAccount);
         }
     }
@@ -593,10 +591,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return marketPricePresentation.getIsFiatCurrencyPriceFeedSelected();
     }
 
-    BooleanProperty getIsCryptoCurrencyPriceFeedSelected() {
-        return marketPricePresentation.getIsCryptoCurrencyPriceFeedSelected();
-    }
-
     BooleanProperty getIsExternallyProvidedPrice() {
         return marketPricePresentation.getIsExternallyProvidedPrice();
     }
@@ -621,21 +615,19 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return daoPresentation.getShowDaoUpdatesNotification();
     }
 
-    private void maybeAddDaoLaunchWindowToQueue() {
-        if (DevEnv.isDaoActivated()) {
-            String daoLaunchPopupKey = "daoLaunchPopup";
-            if (DontShowAgainLookup.showAgain(daoLaunchPopupKey)) {
-                DaoLaunchWindow daoLaunchWindow = new DaoLaunchWindow()
-                        .headLine(Res.get("popup.dao.launch.headline"))
-                        .closeButtonText(Res.get("shared.dismiss"))
-                        .actionButtonText(Res.get("shared.learnMore"))
-                        .onAction(() -> GUIUtil.openWebPage("https://docs.bisq.network/dao.html"))
-                        .buttonAlignment(HPos.CENTER);
-                daoLaunchWindow.setDisplayOrderPriority(1);
-                popupQueue.add(daoLaunchWindow);
+    public BooleanProperty getShowAccountUpdatesNotification() {
+        return accountPresentation.getShowAccountUpdatesNotification();
+    }
 
-                DontShowAgainLookup.dontShowAgain(daoLaunchPopupKey, true);
-            }
+    private void maybeAddNewTradeProtocolLaunchWindowToQueue() {
+        String newTradeProtocolWithAccountSigningLaunchPopupKey = "newTradeProtocolWithAccountSigningLaunchPopup";
+        if (DontShowAgainLookup.showAgain(newTradeProtocolWithAccountSigningLaunchPopupKey)) {
+            NewTradeProtocolLaunchWindow newTradeProtocolLaunchWindow = new NewTradeProtocolLaunchWindow()
+                    .headLine(Res.get("popup.news.launch.headline"));
+            newTradeProtocolLaunchWindow.setDisplayOrderPriority(1);
+            popupQueue.add(newTradeProtocolLaunchWindow);
+
+            DontShowAgainLookup.dontShowAgain(newTradeProtocolWithAccountSigningLaunchPopupKey, true);
         }
     }
 

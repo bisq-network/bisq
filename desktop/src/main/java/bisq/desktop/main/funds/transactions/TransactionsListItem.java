@@ -34,6 +34,8 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.BSFormatter;
 
+import bisq.common.crypto.PubKeyRing;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
@@ -85,14 +87,18 @@ class TransactionsListItem {
     TransactionsListItem(Transaction transaction,
                          BtcWalletService btcWalletService,
                          BsqWalletService bsqWalletService,
-                         Optional<Tradable> tradableOptional,
+                         TransactionAwareTradable transactionAwareTradable,
                          DaoFacade daoFacade,
+                         PubKeyRing pubKeyRing,
                          BSFormatter formatter,
                          long ignoreDustThreshold) {
         this.btcWalletService = btcWalletService;
         this.formatter = formatter;
 
         txId = transaction.getHashAsString();
+
+        Optional<Tradable> optionalTradable = Optional.ofNullable(transactionAwareTradable)
+                .map(TransactionAwareTradable::asTradable);
 
         Coin valueSentToMe = btcWalletService.getValueSentToMeForTransaction(transaction);
         Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
@@ -195,48 +201,74 @@ class TransactionsListItem {
         confirmations = confidence.getDepthInBlocks();
 
 
-        if (tradableOptional.isPresent()) {
-            tradable = tradableOptional.get();
+        if (optionalTradable.isPresent()) {
+            tradable = optionalTradable.get();
             detailsAvailable = true;
-            String id = tradable.getShortId();
+            String tradeId = tradable.getShortId();
             if (tradable instanceof OpenOffer) {
-                details = Res.get("funds.tx.createOfferFee", id);
+                details = Res.get("funds.tx.createOfferFee", tradeId);
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
+                TransactionAwareTrade transactionAwareTrade = (TransactionAwareTrade) transactionAwareTradable;
                 if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().equals(txId)) {
-                    details = Res.get("funds.tx.takeOfferFee", id);
+                    details = Res.get("funds.tx.takeOfferFee", tradeId);
                 } else {
                     Offer offer = trade.getOffer();
                     String offerFeePaymentTxID = offer.getOfferFeePaymentTxId();
                     if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
-                        details = Res.get("funds.tx.createOfferFee", id);
+                        details = Res.get("funds.tx.createOfferFee", tradeId);
                     } else if (trade.getDepositTx() != null &&
                             trade.getDepositTx().getHashAsString().equals(txId)) {
-                        details = Res.get("funds.tx.multiSigDeposit", id);
+                        details = Res.get("funds.tx.multiSigDeposit", tradeId);
                     } else if (trade.getPayoutTx() != null &&
                             trade.getPayoutTx().getHashAsString().equals(txId)) {
-                        details = Res.get("funds.tx.multiSigPayout", id);
-                    } else if (trade.getDisputeState() == Trade.DisputeState.DISPUTE_CLOSED) {
-                        if (valueSentToMe.isPositive()) {
-                            details = Res.get("funds.tx.disputePayout", id);
-                        } else {
-                            details = Res.get("funds.tx.disputeLost", id);
-                            txConfidenceIndicator.setVisible(false);
-                        }
+                        details = Res.get("funds.tx.multiSigPayout", tradeId);
                     } else {
-                        details = Res.get("funds.tx.unknown", id);
+                        Trade.DisputeState disputeState = trade.getDisputeState();
+                        if (disputeState == Trade.DisputeState.DISPUTE_CLOSED) {
+                            if (valueSentToMe.isPositive()) {
+                                details = Res.get("funds.tx.disputePayout", tradeId);
+                            } else {
+                                details = Res.get("funds.tx.disputeLost", tradeId);
+                                txConfidenceIndicator.setVisible(false);
+                            }
+                        } else if (disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
+                                disputeState == Trade.DisputeState.REFUND_REQUESTED ||
+                                disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
+                            if (valueSentToMe.isPositive()) {
+                                details = Res.get("funds.tx.refund", tradeId);
+                            } else {
+                                // We have spent the deposit tx outputs to the Bisq donation address to enable
+                                // the refund process (refund agent -> reimbursement). As the funds have left our wallet
+                                // already when funding the deposit tx we show 0 BTC as amount.
+                                // Confirmation is not known from the BitcoinJ side (not 100% clear why) as no funds
+                                // left our wallet nor we received funds. So we set indicator invisible.
+                                amountAsCoin = Coin.ZERO;
+                                details = Res.get("funds.tx.collateralForRefund", tradeId);
+                                txConfidenceIndicator.setVisible(false);
+                            }
+                        } else {
+                            if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
+                                details = Res.get("funds.tx.timeLockedPayoutTx", tradeId);
+                                txConfidenceIndicator.setVisible(false);
+                            } else {
+                                details = Res.get("funds.tx.unknown", tradeId);
+                            }
+                        }
                     }
                 }
             }
         } else {
-            if (amountAsCoin.isZero())
+            if (amountAsCoin.isZero()) {
                 details = Res.get("funds.tx.noFundsFromDispute");
-            else if (withdrawalFromBSQWallet)
+                txConfidenceIndicator.setVisible(false);
+            } else if (withdrawalFromBSQWallet) {
                 details = Res.get("funds.tx.withdrawnFromBSQWallet");
-            else if (!txFeeForBsqPayment)
+            } else if (!txFeeForBsqPayment) {
                 details = received ? Res.get("funds.tx.receivedFunds") : Res.get("funds.tx.withdrawnFromWallet");
-            else if (details.isEmpty())
+            } else if (details.isEmpty()) {
                 details = Res.get("funds.tx.txFeePaymentForBsqTx");
+            }
         }
         // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
         date = transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime();

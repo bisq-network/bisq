@@ -27,6 +27,7 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
@@ -45,6 +46,7 @@ class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> i
                                 BsqValidator bsqValidator,
                                 SecurityDepositValidator securityDepositValidator,
                                 PriceFeedService priceFeedService,
+                                AccountAgeWitnessService accountAgeWitnessService,
                                 Navigation navigation,
                                 Preferences preferences,
                                 BSFormatter btcFormatter,
@@ -57,9 +59,9 @@ class CreateOfferViewModel extends MutableOfferViewModel<CreateOfferDataModel> i
                 bsqValidator,
                 securityDepositValidator,
                 priceFeedService,
+                accountAgeWitnessService,
                 navigation,
                 preferences,
-                btcFormatter,
-                bsqFormatter);
+                btcFormatter, bsqFormatter);
     }
 }

@@ -6,13 +6,14 @@ mkdir -p deploy
 
 set -e
 
-version="1.1.7-SNAPSHOT"
+version="1.2.1-SNAPSHOT"
 
 cd ..
 ./gradlew :desktop:build -x test shadowJar
 cd desktop
 
 EXE_JAR=build/libs/desktop-$version-all.jar
+JAR_LIB=build/app/lib
 
 # we need to strip out Java 9 module configuration used in the fontawesomefx library as it causes the javapackager to stop,
 # because of this existing module information, although it is not used as a module.
@@ -38,8 +39,13 @@ java -jar ./package/tools-1.0.jar $EXE_JAR
 echo SHA 256 after stripping jar file to get a deterministic jar:
 shasum -a256 $EXE_JAR | awk '{print $1}' | tee deploy/Bisq-$version.jar.txt
 
-vmPath=/Users/christoph/Documents/Workspaces/Java
-#vmPath=/Volumes
+# zip jar lib for Raspberry Pi
+echo "Zipping jar lib for raspberry pi"
+zip -r -X -q "deploy/jar-lib-for-raspberry-pi-$version.zip" $JAR_LIB
+
+# Set BISQ_VM_PATH as environment var to the directory where your shared folders for virtual box are residing
+
+vmPath=$BISQ_VM_PATH
 linux64=$vmPath/vm_shared_ubuntu/desktop
 linux64Package=$linux64/package/linux
 win64=$vmPath/vm_shared_windows/desktop

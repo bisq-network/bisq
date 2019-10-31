@@ -87,8 +87,9 @@ public abstract class BaseProposalFactory<R extends Proposal> {
         try {
             Coin fee = ProposalConsensus.getFee(daoStateService, daoStateService.getChainHeight());
             // We create a prepared Bsq Tx for the proposal fee.
-            boolean requireChangeOutput = proposal instanceof IssuanceProposal;
-            Transaction preparedBurnFeeTx = bsqWalletService.getPreparedProposalTx(fee, requireChangeOutput);
+            Transaction preparedBurnFeeTx = proposal instanceof IssuanceProposal ?
+                    bsqWalletService.getPreparedIssuanceTx(fee) :
+                    bsqWalletService.getPreparedProposalTx(fee);
 
             // payload does not have txId at that moment
             byte[] hashOfPayload = ProposalConsensus.getHashOfPayload(proposal);

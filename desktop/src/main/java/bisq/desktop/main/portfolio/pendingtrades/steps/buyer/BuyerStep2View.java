@@ -494,7 +494,7 @@ public class BuyerStep2View extends TradeStepView {
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
                         amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
+                        paymentDetailsForTradePopup + "\n\n" +
                         copyPaste;
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.cash",

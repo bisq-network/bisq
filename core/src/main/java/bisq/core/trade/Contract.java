@@ -55,7 +55,6 @@ public final class Contract implements NetworkPayload {
     private final String takerFeeTxID;
     private final NodeAddress buyerNodeAddress;
     private final NodeAddress sellerNodeAddress;
-    private final NodeAddress arbitratorNodeAddress;
     private final NodeAddress mediatorNodeAddress;
     private final boolean isBuyerMakerAndSellerTaker;
     private final String makerAccountId;
@@ -73,13 +72,16 @@ public final class Contract implements NetworkPayload {
     @JsonExclude
     private final byte[] takerMultiSigPubKey;
 
+    // Added in v1.2.0
+    private long lockTime;
+    private final NodeAddress refundAgentNodeAddress;
+
     public Contract(OfferPayload offerPayload,
                     long tradeAmount,
                     long tradePrice,
                     String takerFeeTxID,
                     NodeAddress buyerNodeAddress,
                     NodeAddress sellerNodeAddress,
-                    NodeAddress arbitratorNodeAddress,
                     NodeAddress mediatorNodeAddress,
                     boolean isBuyerMakerAndSellerTaker,
                     String makerAccountId,
@@ -91,14 +93,15 @@ public final class Contract implements NetworkPayload {
                     String makerPayoutAddressString,
                     String takerPayoutAddressString,
                     byte[] makerMultiSigPubKey,
-                    byte[] takerMultiSigPubKey) {
+                    byte[] takerMultiSigPubKey,
+                    long lockTime,
+                    NodeAddress refundAgentNodeAddress) {
         this.offerPayload = offerPayload;
         this.tradeAmount = tradeAmount;
         this.tradePrice = tradePrice;
         this.takerFeeTxID = takerFeeTxID;
         this.buyerNodeAddress = buyerNodeAddress;
         this.sellerNodeAddress = sellerNodeAddress;
-        this.arbitratorNodeAddress = arbitratorNodeAddress;
         this.mediatorNodeAddress = mediatorNodeAddress;
         this.isBuyerMakerAndSellerTaker = isBuyerMakerAndSellerTaker;
         this.makerAccountId = makerAccountId;
@@ -111,6 +114,8 @@ public final class Contract implements NetworkPayload {
         this.takerPayoutAddressString = takerPayoutAddressString;
         this.makerMultiSigPubKey = makerMultiSigPubKey;
         this.takerMultiSigPubKey = takerMultiSigPubKey;
+        this.lockTime = lockTime;
+        this.refundAgentNodeAddress = refundAgentNodeAddress;
 
         String makerPaymentMethodId = makerPaymentAccountPayload.getPaymentMethodId();
         String takerPaymentMethodId = takerPaymentAccountPayload.getPaymentMethodId();
@@ -128,7 +133,6 @@ public final class Contract implements NetworkPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
     public static Contract fromProto(protobuf.Contract proto, CoreProtoResolver coreProtoResolver) {
         return new Contract(OfferPayload.fromProto(proto.getOfferPayload()),
                 proto.getTradeAmount(),
@@ -136,7 +140,6 @@ public final class Contract implements NetworkPayload {
                 proto.getTakerFeeTxId(),
                 NodeAddress.fromProto(proto.getBuyerNodeAddress()),
                 NodeAddress.fromProto(proto.getSellerNodeAddress()),
-                NodeAddress.fromProto(proto.getArbitratorNodeAddress()),
                 NodeAddress.fromProto(proto.getMediatorNodeAddress()),
                 proto.getIsBuyerMakerAndSellerTaker(),
                 proto.getMakerAccountId(),
@@ -148,7 +151,9 @@ public final class Contract implements NetworkPayload {
                 proto.getMakerPayoutAddressString(),
                 proto.getTakerPayoutAddressString(),
                 proto.getMakerMultiSigPubKey().toByteArray(),
-                proto.getTakerMultiSigPubKey().toByteArray());
+                proto.getTakerMultiSigPubKey().toByteArray(),
+                proto.getLockTime(),
+                NodeAddress.fromProto(proto.getRefundAgentNodeAddress()));
     }
 
     @Override
@@ -160,7 +165,6 @@ public final class Contract implements NetworkPayload {
                 .setTakerFeeTxId(takerFeeTxID)
                 .setBuyerNodeAddress(buyerNodeAddress.toProtoMessage())
                 .setSellerNodeAddress(sellerNodeAddress.toProtoMessage())
-                .setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage())
                 .setMediatorNodeAddress(mediatorNodeAddress.toProtoMessage())
                 .setIsBuyerMakerAndSellerTaker(isBuyerMakerAndSellerTaker)
                 .setMakerAccountId(makerAccountId)
@@ -173,6 +177,8 @@ public final class Contract implements NetworkPayload {
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
+                .setLockTime(lockTime)
+                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .build();
     }
 
@@ -289,8 +295,8 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerFeeTxID='" + takerFeeTxID + '\'' +
                 ",\n     buyerNodeAddress=" + buyerNodeAddress +
                 ",\n     sellerNodeAddress=" + sellerNodeAddress +
-                ",\n     arbitratorNodeAddress=" + arbitratorNodeAddress +
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
+                ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     isBuyerMakerAndSellerTaker=" + isBuyerMakerAndSellerTaker +
                 ",\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     takerAccountId='" + takerAccountId + '\'' +
@@ -304,6 +310,7 @@ public final class Contract implements NetworkPayload {
                 ",\n     takerMultiSigPubKey=" + Utilities.bytesAsHexString(takerMultiSigPubKey) +
                 ",\n     buyerMultiSigPubKey=" + Utilities.bytesAsHexString(getBuyerMultiSigPubKey()) +
                 ",\n     sellerMultiSigPubKey=" + Utilities.bytesAsHexString(getSellerMultiSigPubKey()) +
+                ",\n     lockTime=" + lockTime +
                 "\n}";
     }
 }

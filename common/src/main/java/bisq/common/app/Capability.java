@@ -35,9 +35,10 @@ public enum Capability {
     RECEIVE_BSQ_BLOCK,                  // Signaling that node which wants to receive BSQ blocks (DAO lite node)
     @Deprecated DAO_STATE,              // Not required anymore as no old clients out there not having that support
 
-    //TODO can be set deprecated after v1.1.6 as we enforce update there
-    BUNDLE_OF_ENVELOPES,                // Supports bundling of messages if many messages are sent in short interval
+    @Deprecated BUNDLE_OF_ENVELOPES,    // Supports bundling of messages if many messages are sent in short interval
 
     SIGNED_ACCOUNT_AGE_WITNESS,         // Supports the signed account age witness feature
-    MEDIATION                           // Supports mediation feature
+    MEDIATION,                          // Supports mediation feature
+    REFUND_AGENT,                       // Supports refund agents
+    TRADE_STATISTICS_HASH_UPDATE        // We changed the hash method in 1.2.0 and that requires update to 1.2.2 for handling it correctly, otherwise the seed nodes have to process too much data.
 }

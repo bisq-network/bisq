@@ -24,9 +24,12 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
 
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
+import bisq.common.app.Capabilities;
+import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.ExtraDataMapValidator;
@@ -60,9 +63,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Value
-public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope {
+public final class TradeStatistics2 implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope, CapabilityRequiringPayload {
+
+    //We don't support arbitrators anymore so this entry will be only for pre v1.2. trades
+    @Deprecated
     public static final String ARBITRATOR_ADDRESS = "arbAddr";
+
     public static final String MEDIATOR_ADDRESS = "medAddr";
+    public static final String REFUND_AGENT_ADDRESS = "refAddr";
 
     private final OfferPayload.Direction direction;
     private final String baseCurrency;
@@ -81,7 +89,8 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     private final long tradeDate;
     private final String depositTxId;
 
-    // hash get set in constructor from json of all the other data fields (with hash = null).
+    // Hash get set in constructor from json of all the other data fields (with hash = null).
+    @JsonExclude
     private final byte[] hash;
     // PB field signature_pub_key_bytes not used anymore from v0.6 on
 
@@ -89,6 +98,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
     // field in a class would break that hash and therefore break the storage mechanism.
     @Nullable
+    @JsonExclude
     private Map<String, String> extraDataMap;
 
     public TradeStatistics2(OfferPayload offerPayload,
@@ -151,12 +161,14 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         this.depositTxId = depositTxId;
         this.extraDataMap = ExtraDataMapValidator.getValidatedExtraDataMap(extraDataMap);
 
-        if (hash == null)
-            // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
-            // tradeDate is different for both peers so we ignore it for hash.
-            this.hash = Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
-        else
-            this.hash = hash;
+        this.hash = hash == null ? createHash() : hash;
+    }
+
+    public byte[] createHash() {
+        // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
+        // TradeDate is different for both peers so we ignore it for hash. ExtraDataMap is ignored as well as at
+        // software updates we might have different entries which would cause a different hash.
+        return Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
     }
 
     @Override
@@ -202,7 +214,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
                 proto.getDepositTxId(),
-                proto.getHash().toByteArray(),
+                null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
@@ -220,6 +232,16 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     public boolean verifyHashSize() {
         checkNotNull(hash, "hash must not be null");
         return hash.length == 20;
+    }
+
+    // With v1.2.0 we changed the way how the hash is created. To not create too heavy load for seed nodes from
+    // requests from old nodes we use the TRADE_STATISTICS_HASH_UPDATE capability to send trade statistics only to new
+    // nodes. As trade statistics are only used for informational purpose it will not have any critical issue for the
+    // old nodes beside that they don't see the latest trades. We added TRADE_STATISTICS_HASH_UPDATE in v1.2.2 to fix a
+    // problem of not handling the hashes correctly.
+    @Override
+    public Capabilities getRequiredCapabilities() {
+        return new Capabilities(Capability.TRADE_STATISTICS_HASH_UPDATE);
     }
 
 
@@ -258,7 +280,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         // Since the trade wasn't executed it's better to filter it out to avoid it having an undue influence on the
         // BSQ trade stats.
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
-        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade;
+        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade && !depositTxId.isEmpty();
     }
 
     @Override

@@ -10,3 +10,4 @@ resDir=p2p/src/main/resources
 cp "$dbDir/TradeStatistics2Store" "$resDir/TradeStatistics2Store_BTC_MAINNET"
 cp "$dbDir/AccountAgeWitnessStore" "$resDir/AccountAgeWitnessStore_BTC_MAINNET"
 cp "$dbDir/DaoStateStore" "$resDir/DaoStateStore_BTC_MAINNET"
+cp "$dbDir/SignedWitnessStore" "$resDir/SignedWitnessStore_BTC_MAINNET"

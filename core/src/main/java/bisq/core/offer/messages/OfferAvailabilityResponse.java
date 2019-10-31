@@ -49,17 +49,23 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
     @Nullable
     private final NodeAddress mediator;
 
+    // Added v1.2.0
+    @Nullable
+    private final NodeAddress refundAgent;
+
     public OfferAvailabilityResponse(String offerId,
                                      AvailabilityResult availabilityResult,
                                      NodeAddress arbitrator,
-                                     NodeAddress mediator) {
+                                     NodeAddress mediator,
+                                     NodeAddress refundAgent) {
         this(offerId,
                 availabilityResult,
                 Capabilities.app,
                 Version.getP2PMessageVersion(),
                 UUID.randomUUID().toString(),
                 arbitrator,
-                mediator);
+                mediator,
+                refundAgent);
     }
 
 
@@ -73,24 +79,27 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                                       int messageVersion,
                                       @Nullable String uid,
                                       NodeAddress arbitrator,
-                                      @Nullable NodeAddress mediator) {
+                                      @Nullable NodeAddress mediator,
+                                      @Nullable NodeAddress refundAgent) {
         super(messageVersion, offerId, uid);
         this.availabilityResult = availabilityResult;
         this.supportedCapabilities = supportedCapabilities;
         this.arbitrator = arbitrator;
         this.mediator = mediator;
+        this.refundAgent = refundAgent;
     }
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
         final protobuf.OfferAvailabilityResponse.Builder builder = protobuf.OfferAvailabilityResponse.newBuilder()
                 .setOfferId(offerId)
-                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()))
-                .setArbitrator(arbitrator.toProtoMessage());
+                .setAvailabilityResult(protobuf.AvailabilityResult.valueOf(availabilityResult.name()));
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
         Optional.ofNullable(mediator).ifPresent(e -> builder.setMediator(mediator.toProtoMessage()));
+        Optional.ofNullable(refundAgent).ifPresent(e -> builder.setRefundAgent(refundAgent.toProtoMessage()));
+        Optional.ofNullable(arbitrator).ifPresent(e -> builder.setArbitrator(arbitrator.toProtoMessage()));
 
         return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityResponse(builder)
@@ -103,7 +112,8 @@ public final class OfferAvailabilityResponse extends OfferMessage implements Sup
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid(),
-                NodeAddress.fromProto(proto.getArbitrator()),
-                proto.hasMediator() ? NodeAddress.fromProto(proto.getMediator()) : null);
+                proto.hasArbitrator() ? NodeAddress.fromProto(proto.getArbitrator()) : null,
+                proto.hasMediator() ? NodeAddress.fromProto(proto.getMediator()) : null,
+                proto.hasRefundAgent() ? NodeAddress.fromProto(proto.getRefundAgent()) : null);
     }
 }

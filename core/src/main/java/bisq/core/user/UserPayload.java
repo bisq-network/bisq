@@ -25,6 +25,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
@@ -73,6 +74,12 @@ public class UserPayload implements PersistableEnvelope {
     @Nullable
     private List<MarketAlertFilter> marketAlertFilters = new ArrayList<>();
 
+    // Added v1.2.0
+    @Nullable
+    private RefundAgent registeredRefundAgent;
+    @Nullable
+    private List<RefundAgent> acceptedRefundAgents = new ArrayList<>();
+
     public UserPayload() {
     }
 
@@ -105,6 +112,12 @@ public class UserPayload implements PersistableEnvelope {
         Optional.ofNullable(priceAlertFilter).ifPresent(priceAlertFilter -> builder.setPriceAlertFilter(priceAlertFilter.toProtoMessage()));
         Optional.ofNullable(marketAlertFilters)
                 .ifPresent(e -> builder.addAllMarketAlertFilters(ProtoUtil.collectionToProto(marketAlertFilters)));
+
+        Optional.ofNullable(registeredRefundAgent)
+                .ifPresent(registeredRefundAgent -> builder.setRegisteredRefundAgent(registeredRefundAgent.toProtoMessage().getRefundAgent()));
+        Optional.ofNullable(acceptedRefundAgents)
+                .ifPresent(e -> builder.addAllAcceptedRefundAgents(ProtoUtil.collectionToProto(acceptedRefundAgents,
+                        message -> ((protobuf.StoragePayload) message).getRefundAgent())));
         return protobuf.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
@@ -130,6 +143,11 @@ public class UserPayload implements PersistableEnvelope {
                 PriceAlertFilter.fromProto(proto.getPriceAlertFilter()),
                 proto.getMarketAlertFiltersList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getMarketAlertFiltersList().stream()
                         .map(e -> MarketAlertFilter.fromProto(e, coreProtoResolver))
-                        .collect(Collectors.toSet())));
+                        .collect(Collectors.toSet())),
+                proto.hasRegisteredRefundAgent() ? RefundAgent.fromProto(proto.getRegisteredRefundAgent()) : null,
+                proto.getAcceptedRefundAgentsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedRefundAgentsList().stream()
+                        .map(RefundAgent::fromProto)
+                        .collect(Collectors.toList()))
+        );
     }
 }

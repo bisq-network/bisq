@@ -20,6 +20,7 @@ package bisq.desktop.main.funds.locked;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -44,7 +45,6 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.fxml.FXML;
 
@@ -298,7 +298,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(address, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(address);
                                     hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(hyperlinkWithIcon);
