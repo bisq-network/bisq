@@ -800,8 +800,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                                 // Capabilities can be empty. We only check for mandatory if we get some capabilities.
                                 if (!capabilities.isEmpty() && !Capabilities.hasMandatoryCapability(capabilities)) {
-                                    log.warn("We close a connection to an old node. Capabilities of old node: {}",
-                                            capabilities.prettyPrint());
+                                    String senderNodeAddress = networkEnvelope instanceof SendersNodeAddressMessage ?
+                                            ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress().getFullAddress() :
+                                            "[unknown address]";
+                                    log.warn("We close a connection to old node {}. " +
+                                                    "Capabilities of old node: {}, networkEnvelope class name={}",
+                                            senderNodeAddress, capabilities.prettyPrint(), networkEnvelope.getClass().getSimpleName());
                                     shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
                                     return;
                                 }
