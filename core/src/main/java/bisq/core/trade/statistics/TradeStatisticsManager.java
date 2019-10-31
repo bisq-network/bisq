@@ -76,19 +76,6 @@ public class TradeStatisticsManager {
     }
 
     public void onAllServicesInitialized() {
-        if (dumpStatistics) {
-            ArrayList<CurrencyTuple> fiatCurrencyList = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
-                    .collect(Collectors.toCollection(ArrayList::new));
-            jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
-
-            ArrayList<CurrencyTuple> cryptoCurrencyList = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
-                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
-                    .collect(Collectors.toCollection(ArrayList::new));
-            cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
-            jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
-        }
-
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof TradeStatistics2)
                 addToSet((TradeStatistics2) payload);
@@ -149,6 +136,17 @@ public class TradeStatisticsManager {
 
     private void dump() {
         if (dumpStatistics) {
+            ArrayList<CurrencyTuple> fiatCurrencyList = CurrencyUtil.getAllSortedFiatCurrencies().stream()
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            jsonFileManager.writeToDisc(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
+
+            ArrayList<CurrencyTuple> cryptoCurrencyList = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
+                    .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
+            jsonFileManager.writeToDisc(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
+
             // We store the statistics as json so it is easy for further processing (e.g. for web based services)
             // TODO This is just a quick solution for storing to one file.
             // 1 statistic entry has 500 bytes as json.
