@@ -39,11 +39,8 @@ import javafx.collections.ObservableSet;
 import java.io.File;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +54,6 @@ public class TradeStatisticsManager {
     private final TradeStatistics2StorageService tradeStatistics2StorageService;
     private final boolean dumpStatistics;
     private final ObservableSet<TradeStatistics2> observableTradeStatisticsSet = FXCollections.observableSet();
-    private int duplicates = 0;
 
     @Inject
     public TradeStatisticsManager(P2PService p2PService,
@@ -81,33 +77,12 @@ public class TradeStatisticsManager {
                 addToSet((TradeStatistics2) payload);
         });
 
-        Map<String, TradeStatistics2> map = new HashMap<>();
-        AtomicInteger origSize = new AtomicInteger();
-        p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
+        Set<TradeStatistics2> collect = tradeStatistics2StorageService.getMap().values().stream()
                 .filter(e -> e instanceof TradeStatistics2)
                 .map(e -> (TradeStatistics2) e)
                 .filter(TradeStatistics2::isValid)
-                .forEach(tradeStatistics -> {
-                    origSize.getAndIncrement();
-                    TradeStatistics2 prevValue = map.putIfAbsent(tradeStatistics.getOfferId(), tradeStatistics);
-                    if (prevValue != null) {
-                        duplicates++;
-                    }
-                });
-
-        Collection<TradeStatistics2> items = map.values();
-        // At startup we check if we have duplicate entries. This might be the case from software updates when we
-        // introduced new entries to the extraMap. As that map is for flexibility in updates we keep it excluded from
-        // json so that it will not cause duplicates anymore. Until all users have updated we keep the cleanup code.
-        // Should not be needed later anymore, but will also not hurt if no duplicates exist.
-        if (duplicates > 0) {
-            long ts = System.currentTimeMillis();
-            items = tradeStatistics2StorageService.cleanupMap(items);
-            log.info("We found {} duplicate entries. Size of map entries before and after cleanup: {} / {}. Cleanup took {} ms.",
-                    duplicates, origSize, items.size(), System.currentTimeMillis() - ts);
-        }
-
-        observableTradeStatisticsSet.addAll(items);
+                .collect(Collectors.toSet());
+        observableTradeStatisticsSet.addAll(collect);
 
         priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
 
