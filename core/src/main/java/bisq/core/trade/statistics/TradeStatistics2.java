@@ -280,7 +280,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         // Since the trade wasn't executed it's better to filter it out to avoid it having an undue influence on the
         // BSQ trade stats.
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
-        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade;
+        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade && !depositTxId.isEmpty();
     }
 
     @Override
