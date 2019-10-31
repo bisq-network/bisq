@@ -250,4 +250,26 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
         ownerPubKeyBytes = Sig.getPublicKeyBytes(this.ownerPubKey);
     }
+
+    @Override
+    public String toString() {
+        return "Filter{" +
+                "\n     bannedOfferIds=" + bannedOfferIds +
+                ",\n     bannedNodeAddress=" + bannedNodeAddress +
+                ",\n     bannedPaymentAccounts=" + bannedPaymentAccounts +
+                ",\n     bannedCurrencies=" + bannedCurrencies +
+                ",\n     bannedPaymentMethods=" + bannedPaymentMethods +
+                ",\n     arbitrators=" + arbitrators +
+                ",\n     seedNodes=" + seedNodes +
+                ",\n     priceRelayNodes=" + priceRelayNodes +
+                ",\n     preventPublicBtcNetwork=" + preventPublicBtcNetwork +
+                ",\n     btcNodes=" + btcNodes +
+                ",\n     extraDataMap=" + extraDataMap +
+                ",\n     disableDao=" + disableDao +
+                ",\n     disableDaoBelowVersion='" + disableDaoBelowVersion + '\'' +
+                ",\n     disableTradeBelowVersion='" + disableTradeBelowVersion + '\'' +
+                ",\n     mediators=" + mediators +
+                ",\n     refundAgents=" + refundAgents +
+                "\n}";
+    }
 }

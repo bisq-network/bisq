@@ -214,7 +214,7 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
                 proto.getTradeAmount(),
                 proto.getTradeDate(),
                 proto.getDepositTxId(),
-                proto.getHash().toByteArray(),
+                null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
                 CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
     }
 
@@ -235,12 +235,13 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
     }
 
     // With v1.2.0 we changed the way how the hash is created. To not create too heavy load for seed nodes from
-    // requests from old nodes we use the SIGNED_ACCOUNT_AGE_WITNESS capability to send trade statistics only to new
+    // requests from old nodes we use the TRADE_STATISTICS_HASH_UPDATE capability to send trade statistics only to new
     // nodes. As trade statistics are only used for informational purpose it will not have any critical issue for the
-    // old nodes beside that they don't see the latest trades.
+    // old nodes beside that they don't see the latest trades. We added TRADE_STATISTICS_HASH_UPDATE in v1.2.2 to fix a
+    // problem of not handling the hashes correctly.
     @Override
     public Capabilities getRequiredCapabilities() {
-        return new Capabilities(Capability.SIGNED_ACCOUNT_AGE_WITNESS);
+        return new Capabilities(Capability.TRADE_STATISTICS_HASH_UPDATE);
     }
 
 
@@ -279,9 +280,8 @@ public final class TradeStatistics2 implements LazyProcessedPayload, Persistable
         // Since the trade wasn't executed it's better to filter it out to avoid it having an undue influence on the
         // BSQ trade stats.
         boolean excludedFailedTrade = offerId.equals("6E5KOI6O-3a06a037-6f03-4bfa-98c2-59f49f73466a-112");
-        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade;
+        return tradeAmount > 0 && tradePrice > 0 && !excludedFailedTrade && !depositTxId.isEmpty();
     }
-
 
     @Override
     public String toString() {

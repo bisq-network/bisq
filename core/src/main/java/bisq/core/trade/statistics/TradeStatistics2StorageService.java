@@ -29,8 +29,6 @@ import javax.inject.Inject;
 
 import java.io.File;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -68,19 +66,6 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
         return payload instanceof TradeStatistics2;
-    }
-
-    Collection<TradeStatistics2> cleanupMap(Collection<TradeStatistics2> collection) {
-        Map<P2PDataStorage.ByteArray, TradeStatistics2> tempMap = new HashMap<>();
-        // We recreate the hash as there have been duplicates from diff. extraMap entries introduced at software updates
-        collection.forEach(item -> tempMap.putIfAbsent(new P2PDataStorage.ByteArray(item.createHash()), item));
-
-        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map = getMap();
-        map.clear();
-        map.putAll(tempMap);
-        persist();
-
-        return tempMap.values();
     }
 
 

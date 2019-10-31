@@ -203,6 +203,7 @@ class RequestDataHandler implements MessageListener {
         if (networkEnvelope instanceof GetDataResponse) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
+                    long ts1 = System.currentTimeMillis();
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
@@ -219,7 +220,7 @@ class RequestDataHandler implements MessageListener {
 
                         final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
 
-                        long ts = System.currentTimeMillis();
+                        long ts2 = System.currentTimeMillis();
                         AtomicInteger counter = new AtomicInteger();
                         dataSet.forEach(e -> {
                             // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
@@ -227,14 +228,14 @@ class RequestDataHandler implements MessageListener {
                             counter.getAndIncrement();
 
                         });
-                        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts);
+                        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts2);
 
                         /* // engage the firstRequest logic only if we are a seed node. Normal clients get here twice at most.
                         if (!Capabilities.app.containsAll(Capability.SEED_NODE))
                             firstRequest = true;*/
 
                         if (persistableNetworkPayloadSet != null /*&& firstRequest*/) {
-                            ts = System.currentTimeMillis();
+                            ts2 = System.currentTimeMillis();
                             persistableNetworkPayloadSet.forEach(e -> {
                                 if (e instanceof LazyProcessedPayload) {
                                     // We use an optimized method as many checks are not required in that case to avoid
@@ -259,7 +260,7 @@ class RequestDataHandler implements MessageListener {
                             initialRequestApplied = true;
 
                             log.info("Processing {} persistableNetworkPayloads took {} ms.",
-                                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts);
+                                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts2);
                         }
 
                         cleanup();
@@ -272,6 +273,7 @@ class RequestDataHandler implements MessageListener {
                                         "We drop that message. nonce={} / requestNonce={}",
                                 nonce, getDataResponse.getRequestNonce());
                     }
+                    log.info("Processing GetDataResponse took {} ms", System.currentTimeMillis() - ts1);
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }

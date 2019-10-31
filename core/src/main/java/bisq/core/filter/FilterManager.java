@@ -297,7 +297,7 @@ public class FilterManager {
             ECKey.fromPublicOnly(HEX.decode(pubKeyAsHex)).verifyMessage(getHexFromData(filter), filter.getSignatureAsBase64());
             return true;
         } catch (SignatureException e) {
-            log.warn("verifySignature failed");
+            log.warn("verifySignature failed. filter={}", filter);
             return false;
         }
     }

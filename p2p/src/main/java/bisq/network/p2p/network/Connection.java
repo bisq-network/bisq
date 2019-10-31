@@ -358,7 +358,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     data = ((AddDataMessage) msg).getProtectedStorageEntry().getProtectedStoragePayload();
                 }
                 // Monitoring nodes have only one capability set, we don't want to log those
-                log.info("We did not send the message because the peer does not support our required capabilities. " +
+                log.debug("We did not send the message because the peer does not support our required capabilities. " +
                                 "messageClass={}, peer={}, peers supportedCapabilities={}",
                         data.getClass().getSimpleName(), peersNodeAddressOptional, capabilities);
             }
@@ -800,6 +800,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                                 // Capabilities can be empty. We only check for mandatory if we get some capabilities.
                                 if (!capabilities.isEmpty() && !Capabilities.hasMandatoryCapability(capabilities)) {
+                                    String senderNodeAddress = networkEnvelope instanceof SendersNodeAddressMessage ?
+                                            ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress().getFullAddress() :
+                                            "[unknown address]";
+                                    log.info("We close a connection to old node {}. " +
+                                                    "Capabilities of old node: {}, networkEnvelope class name={}",
+                                            senderNodeAddress, capabilities.prettyPrint(), networkEnvelope.getClass().getSimpleName());
                                     shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
                                     return;
                                 }
