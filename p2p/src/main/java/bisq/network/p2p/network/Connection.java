@@ -803,7 +803,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                                     String senderNodeAddress = networkEnvelope instanceof SendersNodeAddressMessage ?
                                             ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress().getFullAddress() :
                                             "[unknown address]";
-                                    log.warn("We close a connection to old node {}. " +
+                                    log.info("We close a connection to old node {}. " +
                                                     "Capabilities of old node: {}, networkEnvelope class name={}",
                                             senderNodeAddress, capabilities.prettyPrint(), networkEnvelope.getClass().getSimpleName());
                                     shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
