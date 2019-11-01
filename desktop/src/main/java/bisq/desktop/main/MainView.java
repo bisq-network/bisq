@@ -256,11 +256,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.available");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double availableBalance = Double.parseDouble(
                             model.getAvailableBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(availableBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -280,11 +281,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.reserved");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double reservedBalance = Double.parseDouble(
                             model.getReservedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(reservedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -304,11 +306,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.locked");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double lockedBalance = Double.parseDouble(
                             model.getLockedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(lockedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
