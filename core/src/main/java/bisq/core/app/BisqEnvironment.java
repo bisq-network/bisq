@@ -178,6 +178,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String appName;
     protected final String userDataDir;
+    @Getter
     protected final String appDataDir;
     protected final String btcNetworkDir, userAgent;
     protected final String logLevel, providers;
@@ -350,10 +351,6 @@ public class BisqEnvironment extends StandardEnvironment {
 
     public boolean getIgnoreLocalBtcNode() {
         return ignoreLocalBtcNode.equalsIgnoreCase("true");
-    }
-
-    public String getAppDataDir() {
-        return appDataDir;
     }
 
     private Resource getAppDirPropertiesResource() {
