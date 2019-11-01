@@ -613,6 +613,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return marketPricePresentation.getMarketPrice();
     }
 
+    StringProperty getMarketPrice(String currencyCode) {
+        return marketPricePresentation.getMarketPrice(currencyCode);
+    }
+
     public ObservableList<PriceFeedComboBoxItem> getPriceFeedComboBoxItems() {
         return marketPricePresentation.getPriceFeedComboBoxItems();
     }
