@@ -270,7 +270,10 @@ public class TradeManager implements PersistedDataHost {
         tradesForStatistics = new ArrayList<>();
         tradableList.forEach(trade -> {
             if (trade.getDepositTx() == null) {
-                addTradeToFailedTradesList.add(trade);
+                //TODO  deposit tx is null after resync for valid tx. seems it is not always but sometimes.
+                // probably the wallet receives it again from the network and then it is available again.
+                // need to find a more secure way to check for it...
+                //addTradeToFailedTradesList.add(trade);
             } else if (trade.isDepositPublished() ||
                             (trade.isTakerFeePublished() && !trade.hasFailed())) {
                         initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
