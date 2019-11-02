@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
@@ -141,6 +142,8 @@ public class WalletAppSetup {
                             } else if (spvFileCorruptedHandler != null) {
                                 spvFileCorruptedHandler.accept(Res.get("error.spvFileCorrupted", exception.getMessage()));
                             }
+                        } else if (exception instanceof RejectedTxException) {
+                            getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.rejectedTxException", exception.getMessage()));
                         } else {
                             getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.connectionError", exception.toString()));
                         }
