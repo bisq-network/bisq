@@ -613,7 +613,7 @@ public class BisqSetup {
 
     private void checkForLockedUpFunds() {
         // We check if there are locked up funds in failed or closed trades
-        Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedupFunds();
+        Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedInFunds();
         btcWalletService.getAddressEntriesForTrade().stream()
                 .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
                         e.getContext() == AddressEntry.Context.MULTI_SIG)
