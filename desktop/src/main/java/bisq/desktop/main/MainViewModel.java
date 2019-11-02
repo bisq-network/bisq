@@ -309,7 +309,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setChainFileLockedExceptionHandler(msg -> new Popup<>().warning(msg)
                 .useShutDownButton()
                 .show());
-        bisqSetup.setLockedUpFundsHandler(msg -> new Popup<>().warning(msg).show());
+        bisqSetup.setLockedUpFundsHandler(msg -> new Popup<>().width(850).warning(msg).show());
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
                 .onAesKey(aesKeyHandler::accept)

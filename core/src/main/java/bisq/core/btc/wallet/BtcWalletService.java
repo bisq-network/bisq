@@ -672,7 +672,13 @@ public class BtcWalletService extends WalletService {
 
     public void resetAddressEntriesForPendingTrade(String offerId) {
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
-        // Don't swap TRADE_PAYOUT as it might be still open in the last trade step to be used for external transfer
+        // We swap also TRADE_PAYOUT to be sure all is cleaned  up. There might be cases where a user cannot send the funds
+        // to an external wallet directly in the last step of the trade, but the funds are in the Bisq wallet anyway and
+        // the dealing with the external wallet is pure UI thing. The user can move the funds to the wallet and then
+        // send out the funds to the external wallet. As this cleanup is a rare situation and most users do not use
+        // the feature to send out the funds we prefer that strategy (if we keep the address entry it might cause
+        // complications in some edge cases after a SPV resync).
+        swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.TRADE_PAYOUT);
     }
 
     public void swapAnyTradeEntryContextToAvailableEntry(String offerId) {
