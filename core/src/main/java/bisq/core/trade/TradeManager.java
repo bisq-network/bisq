@@ -682,7 +682,7 @@ public class TradeManager implements PersistedDataHost {
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedupFunds() {
+    public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedInFunds() {
         Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
                 .filter(Trade::hasFailed)
                 .map(Trade::getId)
