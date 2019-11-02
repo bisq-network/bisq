@@ -107,6 +107,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -601,16 +602,20 @@ public class BisqSetup {
                 showFirstPopupIfResyncSPVRequestedHandler,
                 walletPasswordHandler,
                 () -> {
-                    if (allBasicServicesInitialized)
+                    if (allBasicServicesInitialized) {
                         checkForLockedUpFunds();
+                        checkForInvalidMakerFeeTxs();
+                    }
                 },
                 () -> walletInitialized.set(true));
     }
 
 
     private void checkForLockedUpFunds() {
+        // We check if there are locked up funds in failed or closed trades
+        Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedupFunds();
         btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> tradeManager.getSetOfAllTradeIds().contains(e.getOfferId()) &&
+                .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
                         e.getContext() == AddressEntry.Context.MULTI_SIG)
                 .forEach(e -> {
                     Coin balance = e.getCoinLockedInMultiSig();
@@ -623,6 +628,23 @@ public class BisqSetup {
                         }
                     }
                 });
+    }
+
+    private void checkForInvalidMakerFeeTxs() {
+        // We check if we have open offers with no confidence object at the maker fee tx. That can happen if the
+        // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
+        // resync.
+        openOfferManager.getObservableList().forEach(e -> {
+            String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
+            if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
+                String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",
+                        offerFeePaymentTxId, e.getOffer().getId());
+                log.warn(message);
+                if (lockedUpFundsHandler != null) {
+                    lockedUpFundsHandler.accept(message);
+                }
+            }
+        });
     }
 
     private void checkForCorrectOSArchitecture() {
@@ -651,8 +673,10 @@ public class BisqSetup {
 
         tradeManager.onAllServicesInitialized();
 
-        if (walletsSetup.downloadPercentageProperty().get() == 1)
+        if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
+            checkForInvalidMakerFeeTxs();
+        }
 
         openOfferManager.onAllServicesInitialized();
 
