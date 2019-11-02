@@ -84,7 +84,7 @@ public class FailedTradesManager implements PersistedDataHost {
         return failedTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
-    public Stream<Trade> getLockedTradesStream() {
+    public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return failedTrades.stream()
                 .filter(Trade::isFundsLockedIn);
     }

@@ -95,7 +95,7 @@ public class ClosedTradableManager implements PersistedDataHost {
         return closedTradables.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
-    public Stream<Trade> getLockedTradesStream() {
+    public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getClosedTrades().stream()
                 .filter(Trade::isFundsLockedIn);
     }

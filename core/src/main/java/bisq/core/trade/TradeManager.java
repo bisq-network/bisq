@@ -298,7 +298,7 @@ public class TradeManager implements PersistedDataHost {
     private void cleanUpAddressEntries() {
         // We check if we have address entries which are not in our pending trades and clean up those entries.
         // They might be either from closed or failed trades or from trades we do not have at all in our data base files.
-        Set<String> tradesIdSet = getLockedTradesStream()
+        Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
                 .map(Tradable::getId)
                 .collect(Collectors.toSet());
 
@@ -677,24 +677,24 @@ public class TradeManager implements PersistedDataHost {
         return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
-    public Stream<Trade> getLockedTradesStream() {
+    public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getTradableList().stream()
                 .filter(Trade::isFundsLockedIn);
     }
 
     public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedupFunds() {
-        Set<String> tradesIdSet = getLockedTradesStream()
+        Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
                 .filter(Trade::hasFailed)
                 .map(Trade::getId)
                 .collect(Collectors.toSet());
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
+        tradesIdSet.addAll(failedTradesManager.getTradesStreamWithFundsLockedIn()
                 .map(e -> {
                     log.warn("We found a failed trade with locked up funds. " +
                             "That should never happen. trade ID=" + e.getId());
                     return e.getId();
                 })
                 .collect(Collectors.toSet()));
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
+        tradesIdSet.addAll(closedTradableManager.getTradesStreamWithFundsLockedIn()
                 .map(e -> {
                     log.warn("We found a closed trade with locked up funds. " +
                             "That should never happen. trade ID=" + e.getId());
