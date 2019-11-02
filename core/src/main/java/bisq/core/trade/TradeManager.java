@@ -266,7 +266,9 @@ public class TradeManager implements PersistedDataHost {
         List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();
         tradableList.forEach(trade -> {
-                    if (trade.isDepositPublished() ||
+            if (trade.getDepositTx() == null) {
+                addTradeToFailedTradesList.add(trade);
+            } else if (trade.isDepositPublished() ||
                             (trade.isTakerFeePublished() && !trade.hasFailed())) {
                         initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
                                 trade.getProcessModel().getFundsNeededForTradeAsLong());
@@ -294,22 +296,16 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void cleanUpAddressEntries() {
+        // We check if we have address entries which are not in our pending trades and clean up those entries.
+        // They might be either from closed or failed trades or from trades we do not have at all in our data base files.
         Set<String> tradesIdSet = getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet());
-
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet()));
-
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
                 .map(Tradable::getId)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet());
 
         btcWalletService.getAddressEntriesForTrade().stream()
                 .filter(e -> !tradesIdSet.contains(e.getOfferId()))
                 .forEach(e -> {
-                    log.warn("We found an outdated addressEntry for trade {}", e.getOfferId());
+                    log.warn("We found an outdated addressEntry for trade {}: entry={}", e.getOfferId(), e);
                     btcWalletService.resetAddressEntriesForPendingTrade(e.getOfferId());
                 });
     }
@@ -686,13 +682,17 @@ public class TradeManager implements PersistedDataHost {
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public Set<String> getSetOfAllTradeIds() {
+    public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedupFunds() {
         Set<String> tradesIdSet = getLockedTradesStream()
                 .filter(Trade::hasFailed)
                 .map(Trade::getId)
                 .collect(Collectors.toSet());
         tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
+                .map(e -> {
+                    log.warn("We found a failed trade with locked up funds. " +
+                            "That should never happen. trade ID=" + e.getId());
+                    return e.getId();
+                })
                 .collect(Collectors.toSet()));
         tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
                 .map(e -> {
