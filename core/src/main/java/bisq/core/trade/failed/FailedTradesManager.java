@@ -60,16 +60,19 @@ public class FailedTradesManager implements PersistedDataHost {
     @Override
     public void readPersisted() {
         this.failedTrades = new TradableList<>(tradableListStorage, "FailedTrades");
-        failedTrades.forEach(e -> e.getOffer().setPriceFeedService(priceFeedService));
         failedTrades.forEach(trade -> {
-            trade.getOffer().setPriceFeedService(priceFeedService);
+            if (trade.getOffer() != null) {
+                trade.getOffer().setPriceFeedService(priceFeedService);
+            }
+
             trade.setTransientFields(tradableListStorage, btcWalletService);
         });
     }
 
     public void add(Trade trade) {
-        if (!failedTrades.contains(trade))
+        if (!failedTrades.contains(trade)) {
             failedTrades.add(trade);
+        }
     }
 
     public boolean wasMyOffer(Offer offer) {

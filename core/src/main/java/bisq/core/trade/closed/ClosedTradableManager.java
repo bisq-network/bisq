@@ -76,6 +76,10 @@ public class ClosedTradableManager implements PersistedDataHost {
         closedTradables.add(tradable);
     }
 
+    public void remove(Tradable tradable) {
+        closedTradables.remove(tradable);
+    }
+
     public boolean wasMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }

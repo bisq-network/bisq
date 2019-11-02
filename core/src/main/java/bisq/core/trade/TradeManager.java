@@ -28,6 +28,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
@@ -68,6 +69,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 
 import javax.inject.Inject;
 
@@ -89,6 +91,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -281,6 +284,17 @@ public class TradeManager implements PersistedDataHost {
                     }
                 }
         );
+
+        // If we have a closed trade where the deposit tx is still not confirmed we move it to failed trades as the
+        // payout tx cannot be valid as well in this case. As the trade do not progress without confirmation of the
+        // deposit tx this should normally not happen. If we detect such a trade at start up (done in BisqSetup)  we
+        // show a popup telling the user to do a SPV resync.
+        closedTradableManager.getClosedTradables().stream()
+                .filter(tradable -> tradable instanceof Trade)
+                .map(tradable -> (Trade) tradable)
+                .filter(Trade::isFundsLockedIn)
+                .forEach(addTradeToFailedTradesList::add);
+        addTradeToFailedTradesList.forEach(closedTradableManager::remove);
 
         addTradeToFailedTradesList.forEach(this::addTradeToFailedTrades);
 
@@ -682,25 +696,40 @@ public class TradeManager implements PersistedDataHost {
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedInFunds() {
+    public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedInFunds() throws TradeTxException {
+        AtomicReference<TradeTxException> tradeTxException = new AtomicReference<>();
         Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
                 .filter(Trade::hasFailed)
                 .map(Trade::getId)
                 .collect(Collectors.toSet());
         tradesIdSet.addAll(failedTradesManager.getTradesStreamWithFundsLockedIn()
-                .map(e -> {
+                .filter(trade -> trade.getDepositTx() != null)
+                .map(trade -> {
                     log.warn("We found a failed trade with locked up funds. " +
-                            "That should never happen. trade ID=" + e.getId());
-                    return e.getId();
+                            "That should never happen. trade ID=" + trade.getId());
+                    return trade.getId();
                 })
                 .collect(Collectors.toSet()));
         tradesIdSet.addAll(closedTradableManager.getTradesStreamWithFundsLockedIn()
-                .map(e -> {
-                    log.warn("We found a closed trade with locked up funds. " +
-                            "That should never happen. trade ID=" + e.getId());
-                    return e.getId();
+                .map(trade -> {
+                    Transaction depositTx = trade.getDepositTx();
+                    if (depositTx != null) {
+                        TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(depositTx.getHashAsString());
+                        if (confidence != null && confidence.getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING) {
+                            tradeTxException.set(new TradeTxException(Res.get("error.closedTradeWithUnconfirmedDepositTx", trade.getShortId())));
+                        } else {
+                            log.warn("We found a closed trade with locked up funds. " +
+                                    "That should never happen. trade ID=" + trade.getId());
+                        }
+                    } else {
+                        tradeTxException.set(new TradeTxException(Res.get("error.closedTradeWithNoDepositTx", trade.getShortId())));
+                    }
+                    return trade.getId();
                 })
                 .collect(Collectors.toSet()));
+
+        if (tradeTxException.get() != null)
+            throw tradeTxException.get();
 
         return tradesIdSet;
     }

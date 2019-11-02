@@ -55,6 +55,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.TradeTxException;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -613,21 +614,28 @@ public class BisqSetup {
 
     private void checkForLockedUpFunds() {
         // We check if there are locked up funds in failed or closed trades
-        Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedInFunds();
-        btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
-                        e.getContext() == AddressEntry.Context.MULTI_SIG)
-                .forEach(e -> {
-                    Coin balance = e.getCoinLockedInMultiSig();
-                    if (balance.isPositive()) {
-                        String message = Res.get("popup.warning.lockedUpFunds",
-                                formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                        log.warn(message);
-                        if (lockedUpFundsHandler != null) {
-                            lockedUpFundsHandler.accept(message);
+        try {
+            Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedInFunds();
+            btcWalletService.getAddressEntriesForTrade().stream()
+                    .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
+                            e.getContext() == AddressEntry.Context.MULTI_SIG)
+                    .forEach(e -> {
+                        Coin balance = e.getCoinLockedInMultiSig();
+                        if (balance.isPositive()) {
+                            String message = Res.get("popup.warning.lockedUpFunds",
+                                    formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                            log.warn(message);
+                            if (lockedUpFundsHandler != null) {
+                                lockedUpFundsHandler.accept(message);
+                            }
                         }
-                    }
-                });
+                    });
+        } catch (TradeTxException e) {
+            log.warn(e.getMessage());
+            if (lockedUpFundsHandler != null) {
+                lockedUpFundsHandler.accept(e.getMessage());
+            }
+        }
     }
 
     private void checkForInvalidMakerFeeTxs() {
