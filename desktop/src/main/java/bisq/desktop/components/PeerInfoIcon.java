@@ -288,13 +288,13 @@ public class PeerInfoIcon extends Group {
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
-                                    long makersAccountAge,
-                                    String makersAccountAgeInfo,
+                                    long peersAccountAge,
+                                    String peersAccountAgeInfo,
                                     String accountSigningState) {
 
-        final String accountAgeTagEditor = isFiatCurrency && makersAccountAgeInfo != null ?
-                makersAccountAge > -1 ?
-                        DisplayUtils.formatAccountAge(makersAccountAge) :
+        final String accountAgeTagEditor = isFiatCurrency && peersAccountAgeInfo != null ?
+                peersAccountAge > -1 ?
+                        DisplayUtils.formatAccountAge(peersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
 
@@ -302,7 +302,7 @@ public class PeerInfoIcon extends Group {
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
-                .accountAgeInfo(makersAccountAgeInfo)
+                .accountAgeInfo(peersAccountAgeInfo)
                 .accountSigningState(accountSigningState)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
