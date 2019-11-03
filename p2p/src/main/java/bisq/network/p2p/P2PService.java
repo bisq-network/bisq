@@ -700,12 +700,12 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                     };
                     boolean result = p2PDataStorage.addProtectedStorageEntry(protectedMailboxStorageEntry, networkNode.getNodeAddress(), listener, true);
                     if (!result) {
-                        //TODO remove and add again with a delay to ensure the data will be broadcasted
-                        // The p2PDataStorage.remove makes probably sense but need to be analysed more.
-                        // Don't change that if it is not 100% clear.
                         sendMailboxMessageListener.onFault("Data already exists in our local database");
-                        boolean removeResult = p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
-                        log.debug("remove result=" + removeResult);
+
+                        // This should only fail if there are concurrent calls to addProtectedStorageEntry with the
+                        // same ProtectedMailboxStorageEntry. This is an unexpected use case so if it happens we
+                        // want to see it, but it is not worth throwing an exception.
+                        log.error("Unexpected state: adding mailbox message that already exists.");
                     }
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
