@@ -93,6 +93,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class P2PDataStorage implements MessageListener, ConnectionListener, PersistedDataHost {
     /**
@@ -475,6 +477,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public boolean remove(ProtectedStorageEntry protectedStorageEntry,
                           @Nullable NodeAddress sender,
                           boolean isDataOwner) {
+        checkArgument(!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry), "Use removeMailboxData for ProtectedMailboxStorageEntry");
+
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
         boolean containsKey = map.containsKey(hashOfPayload);
