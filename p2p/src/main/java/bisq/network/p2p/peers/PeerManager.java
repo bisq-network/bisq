@@ -353,8 +353,7 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
                     connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
                 return true;
             } else {
-                log.warn("No candidates found to remove (That case should not be possible as we use in the " +
-                        "last case all connections).\n\t" +
+                log.debug("No candidates found to remove.\n\t" +
                         "size={}, allConnections={}", size, allConnections);
                 return false;
             }

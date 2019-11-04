@@ -20,12 +20,14 @@ package bisq.desktop.main.portfolio.openoffer;
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -38,17 +40,20 @@ import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
     private final P2PService p2PService;
-    final BSFormatter formatter;
+    private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
 
 
     @Inject
     public OpenOffersViewModel(OpenOffersDataModel dataModel,
                                P2PService p2PService,
-                               BSFormatter formatter) {
+                               BSFormatter btcFormatter,
+                               BsqFormatter bsqFormatter) {
         super(dataModel);
 
         this.p2PService = p2PService;
-        this.formatter = formatter;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
     }
 
     void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
@@ -72,7 +77,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     String getAmount(OpenOfferListItem item) {
-        return (item != null) ? DisplayUtils.formatAmount(item.getOffer(), formatter) : "";
+        return (item != null) ? DisplayUtils.formatAmount(item.getOffer(), btcFormatter) : "";
     }
 
     String getPrice(OpenOfferListItem item) {
@@ -117,7 +122,14 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return item != null && item.getOpenOffer() != null && item.getOpenOffer().isDeactivated();
     }
 
-    boolean isBootstrapped() {
-        return p2PService.isBootstrapped();
+    boolean isBootstrappedOrShowPopup() {
+        return GUIUtil.isBootstrappedOrShowPopup(p2PService);
+    }
+
+    public String getMakerFeeAsString(OpenOffer openOffer) {
+        Offer offer = openOffer.getOffer();
+        return offer.isCurrencyForMakerFeeBtc() ?
+                btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
+                bsqFormatter.formatCoinWithCode(offer.getMakerFee());
     }
 }

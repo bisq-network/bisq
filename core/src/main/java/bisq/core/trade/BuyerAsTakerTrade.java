@@ -50,10 +50,22 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                              long tradePrice,
                              NodeAddress tradingPeerNodeAddress,
                              @Nullable NodeAddress arbitratorNodeAddress,
+                             @Nullable NodeAddress mediatorNodeAddress,
+                             @Nullable NodeAddress refundAgentNodeAddress,
                              Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
-        super(offer, tradeAmount, txFee, takerFee, isCurrencyForTakerFeeBtc, tradePrice, tradingPeerNodeAddress,
-                arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                tradeAmount,
+                txFee,
+                takerFee,
+                isCurrencyForTakerFeeBtc,
+                tradePrice,
+                tradingPeerNodeAddress,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                storage,
+                btcWalletService);
     }
 
 
@@ -83,6 +95,8 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
                         proto.getTradePrice(),
                         proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null,
                         proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                        proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
+                        proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                         storage,
                         btcWalletService),
                 proto,

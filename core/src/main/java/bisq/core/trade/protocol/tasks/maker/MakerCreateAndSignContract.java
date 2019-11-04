@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class MakerCreateAndSignContract extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public MakerCreateAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -55,7 +55,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             TradingPeer taker = processModel.getTradingPeer();
             PaymentAccountPayload makerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
             checkNotNull(makerPaymentAccountPayload, "makerPaymentAccountPayload must not be null");
-            PaymentAccountPayload takerPaymentAccountPayload = taker.getPaymentAccountPayload();
+            PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(taker.getPaymentAccountPayload());
             boolean isBuyerMakerAndSellerTaker = trade instanceof BuyerAsMakerTrade;
 
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ?
@@ -79,7 +79,6 @@ public class MakerCreateAndSignContract extends TradeTask {
                     trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,
-                    trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     processModel.getAccountId(),
@@ -91,7 +90,9 @@ public class MakerCreateAndSignContract extends TradeTask {
                     takerAddressEntry.getAddressString(),
                     taker.getPayoutAddressString(),
                     makerMultiSigPubKey,
-                    taker.getMultiSigPubKey()
+                    taker.getMultiSigPubKey(),
+                    trade.getLockTime(),
+                    trade.getRefundAgentNodeAddress()
             );
             String contractAsJson = Utilities.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);

@@ -18,38 +18,46 @@
 package bisq.core.trade.protocol;
 
 
+import bisq.core.offer.Offer;
 import bisq.core.trade.BuyerAsTakerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.messages.InputsForDepositTxResponse;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.PublishDepositTxRequest;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.PublishTradeStatistics;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
-import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSignPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesDelayedPayoutTx;
 import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
-import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignAndPublishDepositTx;
+import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSendsDepositTxMessage;
+import bisq.core.trade.protocol.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.tasks.taker.CreateTakerFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerProcessPublishDepositTxRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.taker.TakerPublishFeeTx;
-import bisq.core.trade.protocol.tasks.taker.TakerSelectMediator;
-import bisq.core.trade.protocol.tasks.taker.TakerSendDepositTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.taker.TakerSendPayDepositRequest;
+import bisq.core.trade.protocol.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerAccount;
 import bisq.core.trade.protocol.tasks.taker.TakerVerifyMakerFeePayment;
 
-import bisq.network.p2p.MailboxMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.proto.network.NetworkEnvelope;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol, TakerProtocol {
@@ -65,9 +73,18 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
 
         this.buyerAsTakerTrade = trade;
 
-        processModel.getTradingPeer().setPubKeyRing(trade.getOffer().getPubKeyRing());
+        Offer offer = checkNotNull(trade.getOffer());
+        processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
 
-        if (trade.isFiatSent() && !trade.isPayoutPublished()) {
+        Trade.Phase phase = trade.getState().getPhase();
+        if (phase == Trade.Phase.TAKER_FEE_PUBLISHED) {
+            TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
+                    () -> handleTaskRunnerSuccess("BuyerSetupDepositTxListener"),
+                    this::handleTaskRunnerFault);
+
+            taskRunner.addTasks(BuyerSetupDepositTxListener.class);
+            taskRunner.run();
+        } else if (trade.isFiatSent() && !trade.isPayoutPublished()) {
             TradeTaskRunner taskRunner = new TradeTaskRunner(trade,
                     () -> handleTaskRunnerSuccess("BuyerSetupPayoutTxListener"),
                     this::handleTaskRunnerFault);
@@ -83,22 +100,13 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void doApplyMailboxMessage(NetworkEnvelope networkEnvelope, Trade trade) {
-        this.trade = trade;
+    public void doApplyMailboxTradeMessage(TradeMessage tradeMessage, NodeAddress peerNodeAddress) {
+        super.doApplyMailboxTradeMessage(tradeMessage, peerNodeAddress);
 
-        if (networkEnvelope instanceof MailboxMessage) {
-            final NodeAddress peerNodeAddress = ((MailboxMessage) networkEnvelope).getSenderNodeAddress();
-            if (networkEnvelope instanceof TradeMessage) {
-                TradeMessage tradeMessage = (TradeMessage) networkEnvelope;
-                log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
-                        tradeMessage.getClass().getSimpleName(), peerNodeAddress, tradeMessage.getTradeId(), tradeMessage.getUid());
-                if (tradeMessage instanceof PublishDepositTxRequest)
-                    handle((PublishDepositTxRequest) tradeMessage, peerNodeAddress);
-                else if (tradeMessage instanceof PayoutTxPublishedMessage) {
-                    handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
-                } else
-                    log.error("We received an unhandled tradeMessage" + tradeMessage.toString());
-            }
+        if (tradeMessage instanceof DepositTxAndDelayedPayoutTxMessage) {
+            handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, peerNodeAddress);
+        } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
+            handle((PayoutTxPublishedMessage) tradeMessage, peerNodeAddress);
         }
     }
 
@@ -114,12 +122,11 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 this::handleTaskRunnerFault);
 
         taskRunner.addTasks(
-                TakerSelectMediator.class,
                 TakerVerifyMakerAccount.class,
                 TakerVerifyMakerFeePayment.class,
                 CreateTakerFeeTx.class,
                 BuyerAsTakerCreatesDepositTxInputs.class,
-                TakerSendPayDepositRequest.class
+                TakerSendInputsForDepositTxRequest.class
         );
 
         //TODO if peer does get an error he does not respond and all we get is the timeout now knowing why it failed.
@@ -133,7 +140,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(PublishDepositTxRequest tradeMessage, NodeAddress sender) {
+    private void handle(InputsForDepositTxResponse tradeMessage, NodeAddress sender) {
         processModel.setTradeMessage(tradeMessage);
         processModel.setTempTradingPeerNodeAddress(sender);
 
@@ -144,15 +151,50 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                 },
                 errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
         taskRunner.addTasks(
-                TakerProcessPublishDepositTxRequest.class,
+                TakerProcessesInputsForDepositTxResponse.class,
                 ApplyFilter.class,
                 TakerVerifyMakerAccount.class,
                 VerifyPeersAccountAgeWitness.class,
                 TakerVerifyMakerFeePayment.class,
                 TakerVerifyAndSignContract.class,
                 TakerPublishFeeTx.class,
-                BuyerAsTakerSignAndPublishDepositTx.class,
-                TakerSendDepositTxPublishedMessage.class,
+                BuyerAsTakerSignsDepositTx.class,
+                BuyerSetupDepositTxListener.class,
+                BuyerAsTakerSendsDepositTxMessage.class
+        );
+        taskRunner.run();
+    }
+
+    private void handle(DelayedPayoutTxSignatureRequest tradeMessage, NodeAddress sender) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(sender);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
+                () -> {
+                    handleTaskRunnerSuccess(tradeMessage, "handle DelayedPayoutTxSignatureRequest");
+                },
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+        taskRunner.addTasks(
+                BuyerProcessDelayedPayoutTxSignatureRequest.class,
+                BuyerSignsDelayedPayoutTx.class,
+                BuyerSendsDelayedPayoutTxSignatureResponse.class
+        );
+        taskRunner.run();
+    }
+
+
+    private void handle(DepositTxAndDelayedPayoutTxMessage tradeMessage, NodeAddress peerNodeAddress) {
+        processModel.setTradeMessage(tradeMessage);
+        processModel.setTempTradingPeerNodeAddress(peerNodeAddress);
+
+        TradeTaskRunner taskRunner = new TradeTaskRunner(buyerAsTakerTrade,
+                () -> {
+                    handleTaskRunnerSuccess(tradeMessage, "handle DepositTxAndDelayedPayoutTxMessage");
+                },
+                errorMessage -> handleTaskRunnerFault(tradeMessage, errorMessage));
+        taskRunner.addTasks(
+                BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                BuyerVerifiesDelayedPayoutTx.class,
                 PublishTradeStatistics.class
         );
         taskRunner.run();
@@ -182,7 +224,7 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
                     ApplyFilter.class,
                     TakerVerifyMakerAccount.class,
                     TakerVerifyMakerFeePayment.class,
-                    BuyerAsMakerSignPayoutTx.class,
+                    BuyerSignPayoutTx.class,
                     BuyerSendCounterCurrencyTransferStartedMessage.class,
                     BuyerSetupPayoutTxListener.class
             );
@@ -191,7 +233,6 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
             log.warn("onFiatPaymentStarted called twice. tradeState=" + trade.getState());
         }
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Incoming message handling
@@ -212,21 +253,26 @@ public class BuyerAsTakerProtocol extends TradeProtocol implements BuyerProtocol
         taskRunner.run();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void doHandleDecryptedMessage(TradeMessage tradeMessage, NodeAddress sender) {
+        super.doHandleDecryptedMessage(tradeMessage, sender);
+
         log.info("Received {} from {} with tradeId {} and uid {}",
                 tradeMessage.getClass().getSimpleName(), sender, tradeMessage.getTradeId(), tradeMessage.getUid());
 
-        if (tradeMessage instanceof PublishDepositTxRequest) {
-            handle((PublishDepositTxRequest) tradeMessage, sender);
+        if (tradeMessage instanceof InputsForDepositTxResponse) {
+            handle((InputsForDepositTxResponse) tradeMessage, sender);
+        } else if (tradeMessage instanceof DelayedPayoutTxSignatureRequest) {
+            handle((DelayedPayoutTxSignatureRequest) tradeMessage, sender);
+        } else if (tradeMessage instanceof DepositTxAndDelayedPayoutTxMessage) {
+            handle((DepositTxAndDelayedPayoutTxMessage) tradeMessage, sender);
         } else if (tradeMessage instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) tradeMessage, sender);
-        } else {
-            log.error("Incoming message not supported. " + tradeMessage);
         }
     }
 }

@@ -32,7 +32,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ApplyFilter extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public ApplyFilter(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }

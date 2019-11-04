@@ -41,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class SellerSignAndFinalizePayoutTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public SellerSignAndFinalizePayoutTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -60,7 +60,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
 
             final byte[] buyerSignature = tradingPeer.getSignature();
 
-            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
+            Coin buyerPayoutAmount = checkNotNull(offer.getBuyerSecurityDeposit()).add(trade.getTradeAmount());
             Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
 
             final String buyerPayoutAddressString = tradingPeer.getPayoutAddressString();
@@ -78,7 +78,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
             DeterministicKey multiSigKeyPair = walletService.getMultiSigKeyPair(id, sellerMultiSigPubKey);
 
             Transaction transaction = processModel.getTradeWalletService().sellerSignsAndFinalizesPayoutTx(
-                    trade.getDepositTx(),
+                    checkNotNull(trade.getDepositTx()),
                     buyerSignature,
                     buyerPayoutAmount,
                     sellerPayoutAmount,
@@ -86,8 +86,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
                     sellerPayoutAddressString,
                     multiSigKeyPair,
                     buyerMultiSigPubKey,
-                    sellerMultiSigPubKey,
-                    trade.getArbitratorBtcPubKey()
+                    sellerMultiSigPubKey
             );
 
             trade.setPayoutTx(transaction);

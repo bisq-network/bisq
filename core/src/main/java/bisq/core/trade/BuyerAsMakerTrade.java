@@ -20,7 +20,7 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
-import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.BuyerAsMakerProtocol;
 import bisq.core.trade.protocol.MakerProtocol;
 
@@ -47,9 +47,19 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              Coin takeOfferFee,
                              boolean isCurrencyForTakerFeeBtc,
                              @Nullable NodeAddress arbitratorNodeAddress,
+                             @Nullable NodeAddress mediatorNodeAddress,
+                             @Nullable NodeAddress refundAgentNodeAddress,
                              Storage<? extends TradableList> storage,
                              BtcWalletService btcWalletService) {
-        super(offer, txFee, takeOfferFee, isCurrencyForTakerFeeBtc, arbitratorNodeAddress, storage, btcWalletService);
+        super(offer,
+                txFee,
+                takeOfferFee,
+                isCurrencyForTakerFeeBtc,
+                arbitratorNodeAddress,
+                mediatorNodeAddress,
+                refundAgentNodeAddress,
+                storage,
+                btcWalletService);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +85,8 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 Coin.valueOf(proto.getTakerFeeAsLong()),
                 proto.getIsCurrencyForTakerFeeBtc(),
                 proto.hasArbitratorNodeAddress() ? NodeAddress.fromProto(proto.getArbitratorNodeAddress()) : null,
+                proto.hasMediatorNodeAddress() ? NodeAddress.fromProto(proto.getMediatorNodeAddress()) : null,
+                proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                 storage,
                 btcWalletService);
 
@@ -98,7 +110,9 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
     }
 
     @Override
-    public void handleTakeOfferRequest(TradeMessage message, NodeAddress taker, ErrorMessageHandler errorMessageHandler) {
+    public void handleTakeOfferRequest(InputsForDepositTxRequest message,
+                                       NodeAddress taker,
+                                       ErrorMessageHandler errorMessageHandler) {
         ((MakerProtocol) tradeProtocol).handleTakeOfferRequest(message, taker, errorMessageHandler);
     }
 }

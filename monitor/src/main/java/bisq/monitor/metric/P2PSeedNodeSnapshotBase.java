@@ -58,7 +58,7 @@ import org.jetbrains.annotations.NotNull;
  *
  */
 @Slf4j
-abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageListener {
+public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageListener {
 
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
@@ -103,7 +103,7 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         report();
     }
 
-    abstract protected List<NetworkEnvelope> getRequests();
+    protected abstract List<NetworkEnvelope> getRequests();
 
     protected void send(NetworkNode networkNode, NetworkEnvelope message) {
 
@@ -172,5 +172,5 @@ abstract public class P2PSeedNodeSnapshotBase extends Metric implements MessageL
         connection.removeMessageListener(this);
     }
 
-    abstract protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection);
+    protected abstract boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection);
 }

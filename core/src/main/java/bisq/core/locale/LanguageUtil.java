@@ -85,6 +85,12 @@ public class LanguageUtil {
             */
     );
 
+    private static final List<String> rtlLanguagesCodes = Arrays.asList(
+            "fa", // Persian
+            "ar", // Arabic
+            "iw" // Hebrew
+    );
+
     public static List<String> getAllLanguageCodes() {
         List<Locale> allLocales = LocaleUtil.getAllLocales();
 
@@ -124,6 +130,10 @@ public class LanguageUtil {
         } else {
             return locale.getDisplayName(locale);
         }
+    }
+
+    public static boolean isDefaultLanguageRTL() {
+        return rtlLanguagesCodes.contains(LanguageUtil.getDefaultLanguageLocaleAsCode());
     }
 
     public static List<String> getUserLanguageCodes() {

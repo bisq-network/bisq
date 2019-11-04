@@ -24,16 +24,22 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.arbitration.Dispute;
-import bisq.core.arbitration.DisputeManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeList;
+import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
 import bisq.core.util.BSFormatter;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.PubKeyRing;
@@ -67,7 +73,9 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class ContractWindow extends Overlay<ContractWindow> {
-    private final DisputeManager disputeManager;
+    private final ArbitrationManager arbitrationManager;
+    private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final BSFormatter formatter;
     private Dispute dispute;
@@ -78,9 +86,14 @@ public class ContractWindow extends Overlay<ContractWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ContractWindow(DisputeManager disputeManager, AccountAgeWitnessService accountAgeWitnessService,
+    public ContractWindow(ArbitrationManager arbitrationManager,
+                          MediationManager mediationManager,
+                          RefundManager refundManager,
+                          AccountAgeWitnessService accountAgeWitnessService,
                           BSFormatter formatter) {
-        this.disputeManager = disputeManager;
+        this.arbitrationManager = arbitrationManager;
+        this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;
         type = Type.Confirmation;
@@ -124,6 +137,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
             rows++;
         if (dispute.getPayoutTxSerialized() != null)
             rows++;
+        if (dispute.getDelayedPayoutTxId() != null)
+            rows++;
         if (showAcceptedCountryCodes)
             rows++;
         if (showAcceptedBanks)
@@ -162,15 +177,40 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing(), offer.getCurrencyCode()) + " / " +
                         getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing(), offer.getCurrencyCode()));
 
+        DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager = getDisputeManager(dispute);
+        String nrOfDisputesAsBuyer = disputeManager != null ? disputeManager.getNrOfDisputes(true, contract) : "";
+        String nrOfDisputesAsSeller = disputeManager != null ? disputeManager.getNrOfDisputes(false, contract) : "";
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("contractWindow.numDisputes"),
-                disputeManager.getNrOfDisputes(true, contract) + " / " + disputeManager.getNrOfDisputes(false, contract));
+                nrOfDisputesAsBuyer + " / " + nrOfDisputesAsSeller);
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
                 contract.getBuyerPaymentAccountPayload().getPaymentDetails()).second.setMouseTransparent(false);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
                 sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
 
-        addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.arbitrator"), contract.getArbitratorNodeAddress().getFullAddress());
+        String title = "";
+        if (dispute.getSupportType() != null) {
+            switch (dispute.getSupportType()) {
+                case ARBITRATION:
+                    title = Res.get("shared.selectedArbitrator");
+                    break;
+                case MEDIATION:
+                    title = Res.get("shared.selectedMediator");
+                    break;
+                case TRADE:
+                    break;
+                case REFUND:
+                    title = Res.get("shared.selectedRefundAgent");
+                    break;
+            }
+        }
+
+        if (disputeManager != null) {
+            NodeAddress agentNodeAddress = disputeManager.getAgentNodeAddress(dispute);
+            if (agentNodeAddress != null) {
+                addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, title, agentNodeAddress.getFullAddress());
+            }
+        }
 
         if (showAcceptedCountryCodes) {
             String countries;
@@ -199,8 +239,13 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.makerFeeTxId"), offer.getOfferFeePaymentTxId());
         addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.takerFeeTxId"), contract.getTakerFeeTxID());
+
         if (dispute.getDepositTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.depositTransactionId"), dispute.getDepositTxId());
+
+        if (dispute.getDelayedPayoutTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
+
         if (dispute.getPayoutTxSerialized() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"), dispute.getPayoutTxId());
 
@@ -259,7 +304,25 @@ public class ContractWindow extends Overlay<ContractWindow> {
         });
     }
 
-    private String getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing, String currencyCode) {
+    private DisputeManager<? extends DisputeList<? extends DisputeList>> getDisputeManager(Dispute dispute) {
+        if (dispute.getSupportType() != null) {
+            switch (dispute.getSupportType()) {
+                case ARBITRATION:
+                    return arbitrationManager;
+                case MEDIATION:
+                    return mediationManager;
+                case TRADE:
+                    break;
+                case REFUND:
+                    return refundManager;
+            }
+        }
+        return null;
+    }
+
+    private String getAccountAge(PaymentAccountPayload paymentAccountPayload,
+                                 PubKeyRing pubKeyRing,
+                                 String currencyCode) {
         long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
         return CurrencyUtil.isFiatCurrency(currencyCode) ?
                 age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :

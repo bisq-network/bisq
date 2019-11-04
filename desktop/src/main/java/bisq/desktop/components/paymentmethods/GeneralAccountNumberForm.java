@@ -18,7 +18,7 @@ import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
-abstract public class GeneralAccountNumberForm extends PaymentMethodForm {
+public abstract class GeneralAccountNumberForm extends PaymentMethodForm {
 
     private InputTextField accountNrInputTextField;
 

@@ -30,6 +30,7 @@ import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
+import bisq.desktop.components.paymentmethods.JapanBankTransferForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
@@ -267,6 +268,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.INTERAC_E_TRANSFER_ID:
                 gridRow = InteracETransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.JAPAN_BANK_ID:
+                gridRow = JapanBankTransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.US_POSTAL_MONEY_ORDER_ID:
                 gridRow = USPostalMoneyOrderForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
@@ -338,8 +342,7 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getWarningText() {
-        setWarningHeadline();
+    protected String getFirstHalfOverWarnText() {
         return Res.get("portfolio.pending.step2_buyer.warn",
                 model.dataModel.getCurrencyCode(),
                 model.getDateForOpenDispute());
@@ -350,26 +353,22 @@ public class BuyerStep2View extends TradeStepView {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected String getOpenForDisputeText() {
+    protected String getPeriodOverWarnText() {
         return Res.get("portfolio.pending.step2_buyer.openForDispute");
     }
 
     @Override
     protected void applyOnDisputeOpened() {
-        // confirmButton.setDisable(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI Handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void onPaymentStarted() {
-        if (model.p2PService.isBootstrapped()) {
+        if (model.dataModel.isBootstrappedOrShowPopup()) {
             if (model.dataModel.getSellersPaymentAccountPayload() instanceof CashDepositAccountPayload) {
-                //noinspection UnusedAssignment
                 String key = "confirmPaperReceiptSent";
-                //noinspection ConstantConditions
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     Popup popup = new Popup<>();
                     popup.headLine(Res.get("portfolio.pending.step2_buyer.paperReceipt.headline"))
@@ -383,8 +382,6 @@ public class BuyerStep2View extends TradeStepView {
                     showConfirmPaymentStartedPopup();
                 }
             } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof WesternUnionAccountPayload) {
-                //noinspection UnusedAssignment
-                //noinspection ConstantConditions
                 String key = "westernUnionMTCNSent";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String email = ((WesternUnionAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
@@ -401,8 +398,6 @@ public class BuyerStep2View extends TradeStepView {
                     showConfirmPaymentStartedPopup();
                 }
             } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof MoneyGramAccountPayload) {
-                //noinspection UnusedAssignment
-                //noinspection ConstantConditions
                 String key = "moneyGramMTCNSent";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String email = ((MoneyGramAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getEmail();
@@ -419,8 +414,6 @@ public class BuyerStep2View extends TradeStepView {
                     showConfirmPaymentStartedPopup();
                 }
             } else if (model.dataModel.getSellersPaymentAccountPayload() instanceof HalCashAccountPayload) {
-                //noinspection UnusedAssignment
-                //noinspection ConstantConditions
                 String key = "halCashCodeInfo";
                 if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                     String mobileNr = ((HalCashAccountPayload) model.dataModel.getSellersPaymentAccountPayload()).getMobileNr();
@@ -440,16 +433,11 @@ public class BuyerStep2View extends TradeStepView {
             } else {
                 showConfirmPaymentStartedPopup();
             }
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void showConfirmPaymentStartedPopup() {
-        //noinspection UnusedAssignment
         String key = "confirmPaymentStarted";
-        //noinspection ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             Popup popup = new Popup<>();
             popup.headLine(Res.get("portfolio.pending.step2_buyer.confirmStart.headline"))
@@ -487,7 +475,6 @@ public class BuyerStep2View extends TradeStepView {
         });
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     private void showPopup() {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         if (paymentAccountPayload != null) {
@@ -503,15 +490,13 @@ public class BuyerStep2View extends TradeStepView {
             String paddedId = " " + id + " ";
             String amount = DisplayUtils.formatVolumeWithCode(trade.getTradeVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         CurrencyUtil.getNameByCode(trade.getOffer().getCurrencyCode()),
                         amount) +
                         accountDetails +
-                        paymentDetailsForTradePopup + ".\n\n" +
+                        paymentDetailsForTradePopup + "\n\n" +
                         copyPaste;
             } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.cash",
                         amount) +
                         accountDetails +
@@ -541,7 +526,6 @@ public class BuyerStep2View extends TradeStepView {
                         copyPaste + "\n\n" +
                         extra;
             } else if (paymentAccountPayload instanceof USPostalMoneyOrderAccountPayload) {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.postal", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
@@ -550,19 +534,16 @@ public class BuyerStep2View extends TradeStepView {
                         assign +
                         refTextWarn;
             } else if (paymentAccountPayload instanceof F2FAccountPayload) {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.f2f", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + "\n\n" +
                         copyPaste;
             } else if (paymentAccountPayload instanceof HalCashAccountPayload) {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
                         copyPaste;
             } else if (paymentAccountPayload instanceof FasterPaymentsAccountPayload) {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
@@ -573,7 +554,6 @@ public class BuyerStep2View extends TradeStepView {
                         refTextWarn + "\n\n" +
                         fees;
             } else {
-                //noinspection UnusedAssignment
                 message += Res.get("portfolio.pending.step2_buyer.bank", amount) +
                         accountDetails +
                         paymentDetailsForTradePopup + ".\n\n" +
@@ -583,9 +563,7 @@ public class BuyerStep2View extends TradeStepView {
                         refTextWarn + "\n\n" +
                         fees;
             }
-            //noinspection ConstantConditions,UnusedAssignment
             String key = "startPayment" + trade.getId();
-            //noinspection ConstantConditions,ConstantConditions
             if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
                 DontShowAgainLookup.dontShowAgain(key, true);
                 new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
@@ -593,5 +571,10 @@ public class BuyerStep2View extends TradeStepView {
                         .show();
             }
         }
+    }
+
+    @Override
+    protected void deactivatePaymentButtons(boolean isDisabled) {
+        confirmButton.setDisable(isDisabled);
     }
 }

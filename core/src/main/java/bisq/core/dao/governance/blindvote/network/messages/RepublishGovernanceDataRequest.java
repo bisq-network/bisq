@@ -28,6 +28,8 @@ import bisq.common.proto.network.NetworkEnvelope;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+
+// This message is sent only to full DAO nodes
 @EqualsAndHashCode(callSuper = true)
 @Getter
 public final class RepublishGovernanceDataRequest extends NetworkEnvelope implements DirectMessage, CapabilityRequiringPayload {

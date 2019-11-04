@@ -14,7 +14,7 @@ When developing Bisq, you usually want to use Bitcoin in **regtest** mode and do
 
  - Bitcoin Core or bitcoind in regtest mode
  - A local Bisq seed node
- - A local Bisq arbitrator instance
+ - A local Bisq arbitrator & mediator instance
  - 2 local Bisq trading instances (BTC buyer and BTC seller for executing a trade)
 
 You'll set up each of these in the steps that follow.
@@ -66,13 +66,14 @@ For localhost/regtest mode run the `SeedNodeMain` class or `./bisq-seednode` scr
     --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=2002 --appName=bisq-BTC_REGTEST_Seed_2002
 
 
-### Run Bisq arbitrator instance
+### Run Bisq arbitrator/mediator instance
 
 For localhost/regtest mode run the `BisqAppMain` class or `./bisq-desktop` script in the root project dir with following program arguments:
 
     --baseCurrencyNetwork=BTC_REGTEST --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=4444 --appName=bisq-BTC_REGTEST_arbitrator
 
-Once it has started up go to `Account` and click `cmd +r`. This will open a new tab for `Arbitration registration`. Select the tab and you will see a popup with a pre-filled private key. That is the developer private key (which is only valid if `--useDevPrivilegeKeys` is set) which allows you to register a new arbitrator. Follow the next screen and complete registration.
+Once it has started up go to `Account` and click `CMD +n`. This will open a new tab for `Arbitration registration`. Select the tab and you will see a popup with a pre-filled private key. That is the developer private key (which is only valid if `--useDevPrivilegeKeys` is set) which allows you to register a new arbitrator. Follow the next screen and complete registration.
+Next you have to register a mediator as well. Click `CMD + d`. This will open a new tab for `Mediator registration`. Follow the same steps as for the arbitrator registration before. Registration of legacy arbitrators was done with `CMD +n`. It is not needed anymore so we refer with the term arbitrator to the new arbitrator (or refund agent).
 
 _Note: You need only register once but if you have shut down all nodes (including seed node) you need to start up the arbitrator again after you start the seed node so the arbitrator re-publishes his data to the P2P network. After it has started up you can close it again. You cannot trade without having an arbitrator available._
 

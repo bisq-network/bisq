@@ -28,7 +28,6 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.NewBadge;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
@@ -181,8 +180,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public MutableOfferView(M model, Navigation navigation, Preferences preferences, Transitions transitions,
-                            OfferDetailsWindow offerDetailsWindow, BSFormatter btcFormatter, BsqFormatter bsqFormatter) {
+    public MutableOfferView(M model,
+                            Navigation navigation,
+                            Preferences preferences,
+                            Transitions transitions,
+                            OfferDetailsWindow offerDetailsWindow,
+                            BSFormatter btcFormatter,
+                            BsqFormatter bsqFormatter) {
         super(model);
 
         this.navigation = navigation;
@@ -209,6 +213,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
         paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.selectTradingAccount"),
                 paymentAccountsComboBox, false));
+        paymentAccountsComboBox.setCellFactory(model.getPaymentAccountListCellFactory(paymentAccountsComboBox));
 
         doSetFocus();
     }
@@ -344,38 +349,22 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
     // UI actions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void showFiatRoundingInfoPopup() {
-        if (CurrencyUtil.isFiatCurrency(model.tradeCurrencyCode.get()) && !DevEnv.isDevMode()) {
-            new Popup<>().headLine(Res.get("popup.roundedFiatValues.headline"))
-                    .information(Res.get("popup.roundedFiatValues.msg", model.tradeCurrencyCode.get()))
-                    .dontShowAgainId("FiatValuesRoundedWarning")
-                    .show();
-        }
-    }
-
     private void onPlaceOffer() {
-        if (model.isReadyForTxBroadcast()) {
+        if (model.getDataModel().canPlaceOffer()) {
             if (model.getDataModel().isMakerFeeValid()) {
-                if (model.hasAcceptedArbitrators()) {
-                    Offer offer = model.createAndGetOffer();
-                    //noinspection PointlessBooleanExpression
-                    if (!DevEnv.isDevMode()) {
-                        offerDetailsWindow.onPlaceOffer(() ->
-                                model.onPlaceOffer(offer, offerDetailsWindow::hide))
-                                .show(offer);
-                    } else {
-                        balanceSubscription.unsubscribe();
-                        model.onPlaceOffer(offer, () -> {
-                        });
-                    }
+                Offer offer = model.createAndGetOffer();
+                if (!DevEnv.isDevMode()) {
+                    offerDetailsWindow.onPlaceOffer(() ->
+                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
+                            .show(offer);
                 } else {
-                    new Popup<>().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
+                    balanceSubscription.unsubscribe();
+                    model.onPlaceOffer(offer, () -> {
+                    });
                 }
             } else {
                 showInsufficientBsqFundsForBtcFeePaymentPopup();
             }
-        } else {
-            model.showNotReadyForTxBroadcastPopups();
         }
     }
 
@@ -534,8 +523,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
                 model.onPaymentAccountSelected(paymentAccount);
                 model.onCurrencySelected(model.getDataModel().getTradeCurrency());
             }
-
-            showFiatRoundingInfoPopup();
         } else {
             currencySelection.setVisible(false);
             currencySelection.setManaged(false);
@@ -1050,13 +1037,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel> extends 
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        // add new badge for this new feature for this release
-        // TODO: remove it with 0.9.6+
-        NewBadge securityDepositBoxWithNewBadge = new NewBadge(getBuyerSecurityDepositBox(),
-                BUYER_SECURITY_DEPOSIT_NEWS, preferences);
-
-        advancedOptionsBox.getChildren().addAll(securityDepositBoxWithNewBadge, getTradeFeeFieldsBox());
-
+        advancedOptionsBox.getChildren().addAll(getBuyerSecurityDepositBox(), getTradeFeeFieldsBox());
 
         Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(gridPane, ++gridRow,
                 Res.get("shared.nextStep"), Res.get("shared.cancel"));

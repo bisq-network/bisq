@@ -17,6 +17,8 @@
 
 package bisq.core.arbitration;
 
+import bisq.core.support.dispute.mediation.mediator.Mediator;
+
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;

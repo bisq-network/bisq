@@ -18,18 +18,15 @@
 package bisq.desktop.components;
 
 import bisq.common.UserThread;
+import bisq.desktop.components.controlsfx.control.PopOver;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
-
-import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.layout.HBox;
-
-import javafx.geometry.Insets;
 
 import java.util.concurrent.TimeUnit;
 
@@ -67,7 +64,6 @@ public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
             final Label helpLabel = new Label(help);
             helpLabel.setMaxWidth(300);
             helpLabel.setWrapText(true);
-            helpLabel.setPadding(new Insets(10));
             showInfoPopOver(helpLabel);
         });
         helpIcon.setOnMouseExited(e -> {

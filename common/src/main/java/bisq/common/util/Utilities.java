@@ -23,7 +23,6 @@ import org.bitcoinj.core.Utils;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -50,17 +49,9 @@ import java.security.NoSuchAlgorithmException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
@@ -87,9 +78,6 @@ import static java.awt.Desktop.isDesktopSupported;
 
 @Slf4j
 public class Utilities {
-    private static long lastTimeStamp = System.currentTimeMillis();
-    public static final String LB = System.getProperty("line.separator");
-
     // TODO check out Jackson lib
     public static String objectToJson(Object object) {
         Gson gson = new GsonBuilder()
@@ -99,10 +87,6 @@ public class Utilities {
                 .setPrettyPrinting()
                 .create();
         return gson.toJson(object);
-    }
-
-    public static ListeningExecutorService getListeningSingleThreadExecutor(String name) {
-        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
     }
 
     public static ListeningExecutorService getSingleThreadExecutor(String name) {
@@ -279,10 +263,6 @@ public class Utilities {
         }
     }
 
-    public static String getTmpDir() {
-        return System.getProperty("java.io.tmpdir");
-    }
-
     public static String getDownloadOfHomeDir() {
         File file = new File(getSystemHomeDirectory() + "/Downloads");
         if (file.exists())
@@ -291,13 +271,6 @@ public class Utilities {
             return getSystemHomeDirectory();
     }
 
-    public static void printSystemLoad() {
-        Runtime runtime = Runtime.getRuntime();
-        long free = runtime.freeMemory() / 1024 / 1024;
-        long total = runtime.totalMemory() / 1024 / 1024;
-        long used = total - free;
-        log.info("System load (no. threads/used memory (MB)): " + Thread.activeCount() + "/" + used);
-    }
 
     public static void copyToClipboard(String content) {
         try {
@@ -311,99 +284,6 @@ public class Utilities {
             log.error("copyToClipboard failed " + e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    public static byte[] concatByteArrays(byte[]... arrays) {
-        int totalLength = 0;
-        for (byte[] array : arrays) {
-            totalLength += array.length;
-        }
-
-        byte[] result = new byte[totalLength];
-        int currentIndex = 0;
-        for (byte[] array : arrays) {
-            System.arraycopy(array, 0, result, currentIndex, array.length);
-            currentIndex += array.length;
-        }
-        return result;
-    }
-
-    public static <T> T jsonToObject(String jsonString, Class<T> classOfT) {
-        Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).setPrettyPrinting().create();
-        return gson.fromJson(jsonString, classOfT);
-    }
-
-    public static <T extends Serializable> T deserialize(byte[] data) {
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        ObjectInput in = null;
-        Object result = null;
-        try {
-            in = new ObjectInputStream(bis);
-            result = in.readObject();
-            if (!(result instanceof Serializable))
-                throw new RuntimeException("Object not of type Serializable");
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bis.close();
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException ex) {
-                // ignore close exception
-            }
-        }
-        //noinspection unchecked,ConstantConditions
-        return (T) result;
-    }
-
-    public static byte[] serialize(Serializable object) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectOutput out = null;
-        byte[] result = null;
-        try {
-            out = new ObjectOutputStream(bos);
-            out.writeObject(object);
-            out.flush();
-            result = bos.toByteArray().clone();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-            } catch (IOException ignore) {
-            }
-            try {
-                bos.close();
-            } catch (IOException ignore) {
-            }
-        }
-        return result;
-    }
-
-    public static <T extends Serializable> T cloneObject(Serializable object) {
-        return deserialize(serialize(object));
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private static void printElapsedTime(String msg) {
-        if (!msg.isEmpty()) {
-            msg += " / ";
-        }
-        long timeStamp = System.currentTimeMillis();
-        log.debug(msg + "Elapsed: " + String.valueOf(timeStamp - lastTimeStamp));
-        lastTimeStamp = timeStamp;
-    }
-
-    public static void printElapsedTime() {
-        printElapsedTime("");
     }
 
     public static void setThreadName(String name) {
@@ -452,18 +332,6 @@ public class Utilities {
 
     public static byte[] concatenateByteArrays(byte[] array1, byte[] array2) {
         return ArrayUtils.addAll(array1, array2);
-    }
-
-    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3) {
-        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, array3));
-    }
-
-    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4) {
-        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, array4)));
-    }
-
-    public static byte[] concatenateByteArrays(byte[] array1, byte[] array2, byte[] array3, byte[] array4, byte[] array5) {
-        return ArrayUtils.addAll(array1, ArrayUtils.addAll(array2, ArrayUtils.addAll(array3, ArrayUtils.addAll(array4, array5))));
     }
 
     public static Date getUTCDate(int year, int month, int dayOfMonth) {
@@ -520,10 +388,6 @@ public class Utilities {
         return toTruncatedString(message, maxLength, true);
     }
 
-    public static String toTruncatedString(Object message, boolean removeLinebreaks) {
-        return toTruncatedString(message, 200, removeLinebreaks);
-    }
-
     public static String toTruncatedString(Object message, int maxLength, boolean removeLinebreaks) {
         if (message == null)
             return "null";
@@ -577,10 +441,6 @@ public class Utilities {
             return chunks[0];
         else
             return id.substring(0, Math.min(8, id.length()));
-    }
-
-    public static String collectionToCSV(Collection<String> collection) {
-        return collection.stream().map(Object::toString).collect(Collectors.joining(","));
     }
 
     public static byte[] integerToByteArray(int intValue, int numBytes) {

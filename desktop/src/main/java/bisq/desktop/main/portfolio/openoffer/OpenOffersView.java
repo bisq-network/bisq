@@ -31,8 +31,6 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 
 import bisq.core.locale.Res;
-import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -115,16 +113,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         directionColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
-        priceColumn.setComparator((o1, o2) -> {
-            Price price1 = o1.getOffer().getPrice();
-            Price price2 = o2.getOffer().getPrice();
-            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
-        });
-        volumeColumn.setComparator((o1, o2) -> {
-            Volume offerVolume1 = o1.getOffer().getVolume();
-            Volume offerVolume2 = o2.getOffer().getVolume();
-            return offerVolume1 != null && offerVolume2 != null ? offerVolume1.compareTo(offerVolume2) : 0;
-        });
+        priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
@@ -144,45 +134,40 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onDeactivateOpenOffer(openOffer,
                     () -> log.debug("Deactivate offer was successful"),
                     (message) -> {
                         log.error(message);
                         new Popup<>().warning(Res.get("offerbook.deactivateOffer.failed", message)).show();
                     });
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onActivateOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             model.onActivateOpenOffer(openOffer,
                     () -> log.debug("Activate offer was successful"),
                     (message) -> {
                         log.error(message);
                         new Popup<>().warning(Res.get("offerbook.activateOffer.failed", message)).show();
                     });
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
     private void onRemoveOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
-            if (DontShowAgainLookup.showAgain(key))
-                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.formatter.formatCoinWithCode(openOffer.getOffer().getMakerFee())))
+            if (DontShowAgainLookup.showAgain(key)) {
+                new Popup<>().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(openOffer)))
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
                         .dontShowAgainId(key)
                         .show();
-            else
+            } else {
                 doRemoveOpenOffer(openOffer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            }
         }
     }
 
@@ -194,12 +179,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     tableView.refresh();
 
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
-                    if (DontShowAgainLookup.showAgain(key))
+                    if (DontShowAgainLookup.showAgain(key)) {
                         new Popup<>().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
                                 .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                                 .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, WithdrawalView.class))
                                 .dontShowAgainId(key)
                                 .show();
+                    }
                 },
                 (message) -> {
                     log.error(message);
@@ -208,10 +194,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onEditOpenOffer(OpenOffer openOffer) {
-        if (model.isBootstrapped()) {
+        if (model.isBootstrappedOrShowPopup()) {
             openOfferActionHandler.onEditOpenOffer(openOffer);
-        } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 

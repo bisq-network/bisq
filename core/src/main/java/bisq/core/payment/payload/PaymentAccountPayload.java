@@ -118,9 +118,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    abstract public String getPaymentDetails();
+    public abstract String getPaymentDetails();
 
-    abstract public String getPaymentDetailsForTradePopup();
+    public abstract String getPaymentDetailsForTradePopup();
 
     public byte[] getSalt() {
         checkNotNull(excludeFromJsonDataMap, "excludeFromJsonDataMap must not be null");

@@ -19,7 +19,7 @@ package bisq.desktop.main.presentation;
 
 import bisq.desktop.components.BalanceWithConfirmationTextField;
 import bisq.desktop.components.TxIdTextField;
-import bisq.desktop.main.PriceFeedComboBoxItem;
+import bisq.desktop.main.shared.PriceFeedComboBoxItem;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
@@ -87,7 +87,6 @@ public class MarketPricePresentation {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("WeakerAccess")
     @Inject
     public MarketPricePresentation(BtcWalletService btcWalletService,
                                    PriceFeedService priceFeedService,
@@ -241,6 +240,16 @@ public class MarketPricePresentation {
     }
 
     public StringProperty getMarketPrice() {
+        return marketPrice;
+    }
+
+    public StringProperty getMarketPrice(String currencyCode) {
+        SimpleStringProperty marketPrice = new SimpleStringProperty(Res.get("shared.na"));
+        try {
+            marketPrice.set(String.valueOf(priceFeedService.getMarketPrice(currencyCode).getPrice()));
+        } catch (NullPointerException e) {
+            // Market price is not available yet
+        }
         return marketPrice;
     }
 }

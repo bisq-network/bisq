@@ -27,12 +27,10 @@ import javax.inject.Inject;
 
 public class SecurityDepositValidator extends NumberValidator {
 
-    private final BSFormatter formatter;
     private PaymentAccount paymentAccount;
 
     @Inject
-    public SecurityDepositValidator(BSFormatter formatter) {
-        this.formatter = formatter;
+    public SecurityDepositValidator() {
     }
 
     public void setPaymentAccount(PaymentAccount paymentAccount) {

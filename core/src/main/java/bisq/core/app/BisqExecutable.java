@@ -17,7 +17,6 @@
 
 package bisq.core.app;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.btc.BtcOptionKeys;
 import bisq.core.btc.setup.RegTestHost;
 import bisq.core.btc.setup.WalletsSetup;
@@ -29,6 +28,7 @@ import bisq.core.exceptions.BisqException;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.trade.TradeManager;
 
 import bisq.network.NetworkOptionKeys;
@@ -72,7 +72,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 @Slf4j
-public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupCompleteListener {
+public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSetup.BisqSetupListener {
 
     private final String fullName;
     private final String scriptName;
@@ -242,11 +242,11 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         try {
             PersistedDataHost.apply(CorePersistedDataHost.getPersistedDataHosts(injector));
         } catch (Throwable t) {
+            log.error("Error at PersistedDataHost.apply: {}", t.toString(), t);
             // If we are in dev mode we want to get the exception if some db files are corrupted
             // We need to delay it as the stage is not created yet and so popups would not be shown.
             if (DevEnv.isDevMode())
                 UserThread.runAfter(() -> {
-                    log.error("Error at PersistedDataHost.apply: {}", t.toString());
                     throw t;
                 }, 2);
         }
@@ -261,7 +261,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
 
     protected void startAppSetup() {
         BisqSetup bisqSetup = injector.getInstance(BisqSetup.class);
-        bisqSetup.addBisqSetupCompleteListener(this);
+        bisqSetup.addBisqSetupListener(this);
         bisqSetup.start();
     }
 

@@ -43,7 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class TakerVerifyAndSignContract extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public TakerVerifyAndSignContract(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -56,8 +56,8 @@ public class TakerVerifyAndSignContract extends TradeTask {
             checkNotNull(trade.getTakerFeeTxId(), "TakeOfferFeeTxId must not be null");
 
             TradingPeer maker = processModel.getTradingPeer();
-            PaymentAccountPayload makerPaymentAccountPayload = maker.getPaymentAccountPayload();
-            PaymentAccountPayload takerPaymentAccountPayload = processModel.getPaymentAccountPayload(trade);
+            PaymentAccountPayload makerPaymentAccountPayload = checkNotNull(maker.getPaymentAccountPayload());
+            PaymentAccountPayload takerPaymentAccountPayload = checkNotNull(processModel.getPaymentAccountPayload(trade));
 
             boolean isBuyerMakerAndSellerTaker = trade instanceof SellerAsTakerTrade;
             NodeAddress buyerNodeAddress = isBuyerMakerAndSellerTaker ? processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
@@ -85,7 +85,6 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     trade.getTakerFeeTxId(),
                     buyerNodeAddress,
                     sellerNodeAddress,
-                    trade.getArbitratorNodeAddress(),
                     trade.getMediatorNodeAddress(),
                     isBuyerMakerAndSellerTaker,
                     maker.getAccountId(),
@@ -97,7 +96,9 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     maker.getPayoutAddressString(),
                     takerPayoutAddressString,
                     maker.getMultiSigPubKey(),
-                    takerMultiSigPubKey
+                    takerMultiSigPubKey,
+                    trade.getLockTime(),
+                    trade.getRefundAgentNodeAddress()
             );
             String contractAsJson = Utilities.objectToJson(contract);
             log.trace("Contract as json:{}", contractAsJson);

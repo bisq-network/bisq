@@ -17,13 +17,12 @@
 
 package bisq.core.trade.protocol.tasks.taker;
 
-import bisq.core.arbitration.Arbitrator;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
-import bisq.core.offer.availability.ArbitratorSelection;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
@@ -37,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CreateTakerFeeTx extends TradeTask {
 
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public CreateTakerFeeTx(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -47,8 +46,6 @@ public class CreateTakerFeeTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Arbitrator arbitrator = ArbitratorSelection.getLeastUsedArbitrator(processModel.getTradeStatisticsManager(),
-                    processModel.getArbitratorManager());
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
@@ -68,6 +65,7 @@ public class CreateTakerFeeTx extends TradeTask {
             Address changeAddress = changeAddressEntry.getAddress();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction transaction;
+            String feeReceiver = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
             if (trade.isCurrencyForTakerFeeBtc()) {
                 transaction = tradeWalletService.createBtcTradingFeeTx(
                         fundingAddress,
@@ -77,11 +75,11 @@ public class CreateTakerFeeTx extends TradeTask {
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
                         trade.getTxFee(),
-                        arbitrator.getBtcAddress(),
+                        feeReceiver,
                         false,
                         null);
             } else {
-                Transaction preparedBurnFeeTx = processModel.getBsqWalletService().getPreparedBurnFeeTx(trade.getTakerFee());
+                Transaction preparedBurnFeeTx = processModel.getBsqWalletService().getPreparedTradeFeeTx(trade.getTakerFee());
                 Transaction txWithBsqFee = tradeWalletService.completeBsqTradingFeeTx(preparedBurnFeeTx,
                         fundingAddress,
                         reservedForTradeAddress,

@@ -65,9 +65,9 @@ public abstract class CountryBasedPaymentAccountPayload extends PaymentAccountPa
                 .setCountryBasedPaymentAccountPayload(builder);
     }
 
-    abstract public String getPaymentDetails();
+    public abstract String getPaymentDetails();
 
-    abstract public String getPaymentDetailsForTradePopup();
+    public abstract String getPaymentDetailsForTradePopup();
 
     @Override
     protected byte[] getAgeWitnessInputData(byte[] data) {

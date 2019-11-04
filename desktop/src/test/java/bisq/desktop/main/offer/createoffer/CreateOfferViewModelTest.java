@@ -99,16 +99,21 @@ public class CreateOfferViewModelTest {
         when(user.findFirstPaymentAccountWithCurrency(any())).thenReturn(paymentAccount);
         when(user.getPaymentAccountsAsObservable()).thenReturn(FXCollections.observableSet());
         when(securityDepositValidator.validate(any())).thenReturn(new InputValidator.ValidationResult(false));
-        when(accountAgeWitnessService.getMyTradeLimit(any(), any())).thenReturn(100000000L);
+        when(accountAgeWitnessService.getMyTradeLimit(any(), any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService, bsqWalletService, empty, user, null, null, priceFeedService, null, accountAgeWitnessService, feeService, txFeeEstimationService, null, bsFormatter, mock(MakerFeeProvider.class));
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService,
+                bsqWalletService, empty, user, null, null, priceFeedService, null,
+                accountAgeWitnessService, feeService, txFeeEstimationService,
+                null, bsFormatter, mock(MakerFeeProvider.class), null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
-        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator, btcValidator, null, securityDepositValidator, null, null, priceFeedService, null, preferences, bsFormatter, bsqFormatter);
+        model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator,
+                btcValidator, null, securityDepositValidator, priceFeedService, null, null,
+                preferences, bsFormatter, bsqFormatter);
         model.activate();
     }
 

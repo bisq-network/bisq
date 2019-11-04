@@ -36,15 +36,15 @@ message NetworkEnvelope {
         CloseConnectionMessage close_connection_message = 15;
         PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 16;
 
-        PayDepositRequest pay_deposit_request = 17;
-        PublishDepositTxRequest publish_deposit_tx_request = 18;
-        DepositTxPublishedMessage deposit_tx_published_message = 19;
+        InputsForDepositTxRequest inputs_for_deposit_tx_request = 17;
+        InputsForDepositTxResponse inputs_for_deposit_tx_response = 18;
+        DepositTxMessage deposit_tx_message = 19;
         CounterCurrencyTransferStartedMessage counter_currency_transfer_started_message = 20;
         PayoutTxPublishedMessage payout_tx_published_message = 21;
 
         OpenNewDisputeMessage open_new_dispute_message = 22;
         PeerOpenedDisputeMessage peer_opened_dispute_message = 23;
-        DisputeCommunicationMessage dispute_communication_message = 24;
+        ChatMessage chat_message = 24;
         DisputeResultMessage dispute_result_message = 25;
         PeerPublishedDisputePayoutTxMessage peer_published_dispute_payout_tx_message = 26;
 
@@ -68,6 +68,13 @@ message NetworkEnvelope {
         GetBlindVoteStateHashesResponse get_blind_vote_state_hashes_response = 42;
 
         BundleOfEnvelopes bundle_of_envelopes = 43;
+        MediatedPayoutTxSignatureMessage mediated_payout_tx_signature_message = 44;
+        MediatedPayoutTxPublishedMessage mediated_payout_tx_published_message = 45;
+
+        DelayedPayoutTxSignatureRequest delayed_payout_tx_signature_request = 46;
+        DelayedPayoutTxSignatureResponse delayed_payout_tx_signature_response = 47;
+        DepositTxAndDelayedPayoutTxMessage deposit_tx_and_delayed_payout_tx_message = 48;
+        PeerPublishedDelayedPayoutTxMessage peer_published_delayed_payout_tx_message = 49;
     }
 }
 
@@ -141,6 +148,8 @@ message OfferAvailabilityResponse {
     repeated int32 supported_capabilities = 3;
     string uid = 4;
     NodeAddress arbitrator = 5;
+    NodeAddress mediator = 6;
+    NodeAddress refund_agent = 7;
 }
 
 message RefreshOfferMessage {
@@ -194,7 +203,7 @@ message PrefixedSealedAndSignedMessage {
 
 // trade
 
-message PayDepositRequest {
+message InputsForDepositTxRequest {
     string trade_id = 1;
     NodeAddress sender_node_address = 2;
     int64 trade_amount = 3;
@@ -218,9 +227,11 @@ message PayDepositRequest {
     string uid = 21;
     bytes account_age_witness_signature_of_offer_id = 22;
     int64 current_date = 23;
+    repeated NodeAddress accepted_refund_agent_node_addresses = 24;
+    NodeAddress refund_agent_node_address = 25;
 }
 
-message PublishDepositTxRequest {
+message InputsForDepositTxResponse {
     string trade_id = 1;
     PaymentAccountPayload maker_payment_account_payload = 2;
     string maker_account_id = 3;
@@ -234,13 +245,42 @@ message PublishDepositTxRequest {
     string uid = 11;
     bytes account_age_witness_signature_of_prepared_deposit_tx = 12;
     int64 current_date = 13;
+    int64 lock_time = 14;
 }
 
-message DepositTxPublishedMessage {
-    string trade_id = 1;
-    bytes deposit_tx = 2;
+message DelayedPayoutTxSignatureRequest {
+    string uid = 1;
+    string trade_id = 2;
     NodeAddress sender_node_address = 3;
-    string uid = 4;
+    bytes delayed_payout_tx = 4;
+}
+
+message DelayedPayoutTxSignatureResponse {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes delayed_payout_tx_signature = 4;
+}
+
+message DepositTxAndDelayedPayoutTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes deposit_tx = 4;
+    bytes delayed_payout_tx = 5;
+}
+
+message DepositTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes deposit_tx = 4;
+}
+
+message PeerPublishedDelayedPayoutTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
 }
 
 message CounterCurrencyTransferStartedMessage {
@@ -267,26 +307,44 @@ message PayoutTxPublishedMessage {
     string uid = 4;
 }
 
+message MediatedPayoutTxPublishedMessage {
+    string trade_id = 1;
+    bytes payout_tx = 2;
+    NodeAddress sender_node_address = 3;
+    string uid = 4;
+}
+
+message MediatedPayoutTxSignatureMessage {
+    string uid = 1;
+    string trade_id = 3;
+    bytes tx_signature = 2;
+    NodeAddress sender_node_address = 4;
+}
+
 // dispute
+
+enum SupportType {
+    ARBITRATION = 0;
+    MEDIATION = 1;
+    TRADE = 2;
+    REFUND = 3;
+}
 
 message OpenNewDisputeMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
+    SupportType type = 4;
 }
 
 message PeerOpenedDisputeMessage {
     Dispute dispute = 1;
     NodeAddress sender_node_address = 2;
     string uid = 3;
+    SupportType type = 4;
 }
 
-message DisputeCommunicationMessage {
-    enum Type {
-        MEDIATION = 0;
-        ARBITRATION = 1;
-        TRADE = 2;
-    }
+message ChatMessage {
     int64 date = 1;
     string trade_id = 2;
     int32 trader_id = 3;
@@ -301,7 +359,7 @@ message DisputeCommunicationMessage {
     string send_message_error = 12;
     bool acknowledged = 13;
     string ack_error = 14;
-    Type type = 15;
+    SupportType type = 15;
     bool was_displayed = 16;
 }
 
@@ -309,6 +367,7 @@ message DisputeResultMessage {
     string uid = 1;
     DisputeResult dispute_result = 2;
     NodeAddress sender_node_address = 3;
+    SupportType type = 4;
 }
 
 message PeerPublishedDisputePayoutTxMessage {
@@ -316,8 +375,8 @@ message PeerPublishedDisputePayoutTxMessage {
     bytes transaction = 2;
     string trade_id = 3;
     NodeAddress sender_node_address = 4;
+    SupportType type = 5;
 }
-
 
 message PrivateNotificationMessage {
     string uid = 1;
@@ -410,7 +469,7 @@ message Peer {
 message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
-    reserved 3;  // WAS: string pgp_pub_key_as_pem = 3;
+    reserved 3; // WAS: string pgp_pub_key_as_pem = 3;
 }
 
 message SealedAndSigned {
@@ -436,6 +495,7 @@ message StoragePayload {
         MailboxStoragePayload mailbox_storage_payload = 6;
         OfferPayload offer_payload = 7;
         TempProposalPayload temp_proposal_payload = 8;
+        RefundAgent refund_agent = 9;
     }
 }
 
@@ -529,6 +589,18 @@ message Mediator {
     map<string, string> extra_data = 9;
 }
 
+message RefundAgent {
+    NodeAddress node_address = 1;
+    repeated string language_codes = 2;
+    int64 registration_date = 3;
+    string registration_signature = 4;
+    bytes registration_pub_key = 5;
+    PubKeyRing pub_key_ring = 6;
+    string email_address = 7;
+    string info = 8;
+    map<string, string> extra_data = 9;
+}
+
 message Filter {
     repeated string banned_node_address = 1;
     repeated string banned_offer_ids = 2;
@@ -546,6 +618,8 @@ message Filter {
     bool disable_dao = 14;
     string disable_dao_below_version = 15;
     string disable_trade_below_version = 16;
+    repeated string mediators = 17;
+    repeated string refundAgents = 18;
 }
 
 // not used anymore from v0.6 on. But leave it for receiving TradeStatistics objects from older
@@ -614,8 +688,8 @@ message OfferPayload {
     int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
-    repeated NodeAddress arbitrator_node_addresses = 13;
-    repeated NodeAddress mediator_node_addresses = 14;
+    repeated NodeAddress arbitrator_node_addresses = 13 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
+    repeated NodeAddress mediator_node_addresses = 14 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
     string payment_method_id = 15;
     string maker_payment_account_id = 16;
     string offer_fee_payment_tx_id = 17;
@@ -648,8 +722,14 @@ message AccountAgeWitness {
 }
 
 message SignedWitness {
-    bool signed_by_arbitrator = 1;
-    bytes witness_hash = 2;
+    enum VerificationMethod {
+        PB_ERROR = 0;
+        ARBITRATOR = 1;
+        TRADE = 2;
+    }
+
+    VerificationMethod verification_method = 1;
+    bytes account_age_witness_hash = 2;
     bytes signature = 3;
     bytes signer_pub_key = 4;
     bytes witness_owner_pub_key = 5;
@@ -680,12 +760,15 @@ message Dispute {
     string contract_as_json = 15;
     string maker_contract_signature = 16;
     string taker_contract_signature = 17;
-    PubKeyRing arbitrator_pub_key_ring = 18;
+    PubKeyRing agent_pub_key_ring = 18;
     bool is_support_ticket = 19;
-    repeated DisputeCommunicationMessage dispute_communication_messages = 20;
+    repeated ChatMessage chat_message = 20;
     bool is_closed = 21;
     DisputeResult dispute_result = 22;
     string dispute_payout_tx_id = 23;
+    SupportType support_type = 24;
+    string mediators_dispute_result = 25;
+    string delayed_payout_tx_id = 26;
 }
 
 message Attachment {
@@ -719,7 +802,7 @@ message DisputeResult {
     bool id_verification = 6;
     bool screen_cast = 7;
     string summary_notes = 8;
-    DisputeCommunicationMessage dispute_communication_message = 9;
+    ChatMessage chat_message = 9;
     bytes arbitrator_signature = 10;
     int64 buyer_payout_amount = 11;
     int64 seller_payout_amount = 12;
@@ -737,7 +820,7 @@ message Contract {
     int64 trade_amount = 2;
     int64 trade_price = 3;
     string taker_fee_tx_id = 4;
-    NodeAddress arbitrator_node_address = 5;
+    reserved 5; // WAS: arbitrator_node_address
     bool is_buyer_maker_and_seller_taker = 6;
     string maker_account_id = 7;
     string taker_account_id = 8;
@@ -752,6 +835,8 @@ message Contract {
     bytes maker_multi_sig_pub_key = 17;
     bytes taker_multi_sig_pub_key = 18;
     NodeAddress mediator_node_address = 19;
+    int64 lock_time = 20;
+    NodeAddress refund_agent_node_address = 21;
 }
 
 message RawTransactionInput {
@@ -770,6 +855,8 @@ enum AvailabilityResult {
     NO_ARBITRATORS = 6;
     NO_MEDIATORS = 7;
     USER_IGNORED = 8;
+    MISSING_MANDATORY_CAPABILITY = 9;
+    NO_REFUND_AGENTS = 10;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1020,7 +1107,7 @@ message PersistableEnvelope {
 
         TradableList tradable_list = 6;
         TradeStatisticsList trade_statistics_list = 7 [deprecated = true]; // Was used in pre v0.6.0 version. Not used anymore.
-        DisputeList dispute_list = 8;
+        ArbitrationDisputeList arbitration_dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
@@ -1050,6 +1137,8 @@ message PersistableEnvelope {
         MyProofOfBurnList my_proof_of_burn_list = 26;
         UnconfirmedBsqChangeOutputList unconfirmed_bsq_change_output_list = 27;
         SignedWitnessStore signed_witness_store = 28;
+        MediationDisputeList mediation_dispute_list = 29;
+        RefundDisputeList refund_dispute_list = 30;
     }
 }
 
@@ -1173,6 +1262,8 @@ message OpenOffer {
     Offer offer = 1;
     State state = 2;
     NodeAddress arbitrator_node_address = 3;
+    NodeAddress mediator_node_address = 4;
+    NodeAddress refund_agent_node_address = 5;
 }
 
 message Tradable {
@@ -1195,13 +1286,13 @@ message Trade {
         MAKER_STORED_IN_MAILBOX_PUBLISH_DEPOSIT_TX_REQUEST = 5;
         MAKER_SEND_FAILED_PUBLISH_DEPOSIT_TX_REQUEST = 6;
         TAKER_RECEIVED_PUBLISH_DEPOSIT_TX_REQUEST = 7;
-        TAKER_PUBLISHED_DEPOSIT_TX = 8;
-        TAKER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 9;
-        TAKER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG = 10;
-        TAKER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG = 11;
-        TAKER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG = 12;
-        MAKER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 13;
-        MAKER_SAW_DEPOSIT_TX_IN_NETWORK = 14;
+        SELLER_PUBLISHED_DEPOSIT_TX = 8;
+        SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG = 9;
+        SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG = 10;
+        SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG = 11;
+        SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG = 12;
+        BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG = 13;
+        BUYER_SAW_DEPOSIT_TX_IN_NETWORK = 14;
         DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN = 15;
         BUYER_CONFIRMED_IN_UI_FIAT_PAYMENT_INITIATED = 16;
         BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG = 17;
@@ -1235,9 +1326,15 @@ message Trade {
     enum DisputeState {
         PB_ERROR_DISPUTE_STATE = 0;
         NO_DISPUTE = 1;
-        DISPUTE_REQUESTED = 2;
-        DISPUTE_STARTED_BY_PEER = 3;
-        DISPUTE_CLOSED = 4;
+        DISPUTE_REQUESTED = 2; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_STARTED_BY_PEER = 3; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_CLOSED = 4; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        MEDIATION_REQUESTED = 5;
+        MEDIATION_STARTED_BY_PEER = 6;
+        MEDIATION_CLOSED = 7;
+        REFUND_REQUESTED = 8;
+        REFUND_REQUEST_STARTED_BY_PEER = 9;
+        REFUND_REQUEST_CLOSED = 10;
     }
 
     enum TradePeriodState {
@@ -1275,7 +1372,13 @@ message Trade {
     PubKeyRing arbitrator_pub_key_ring = 26;
     PubKeyRing mediator_pub_key_ring = 27;
     string counter_currency_tx_id = 28;
-    repeated DisputeCommunicationMessage communication_messages = 29;
+    repeated ChatMessage chat_message = 29;
+    MediationResultState mediation_result_state = 30;
+    int64 lock_time = 31;
+    bytes delayed_payout_tx_bytes = 32;
+    NodeAddress refund_agent_node_address = 33;
+    PubKeyRing refund_agent_pub_key_ring = 34;
+    RefundResultState refund_result_state = 35;
 }
 
 message BuyerAsMakerTrade {
@@ -1301,8 +1404,8 @@ message ProcessModel {
     PubKeyRing pub_key_ring = 4;
     string take_offer_fee_tx_id = 5;
     bytes payout_tx_signature = 6;
-    repeated NodeAddress taker_accepted_arbitrator_node_addresses = 7;
-    repeated NodeAddress taker_accepted_mediator_node_addresses = 8;
+    reserved 7; // Not used anymore
+    reserved 8; // Not used anymore
     bytes prepared_deposit_tx = 9;
     repeated RawTransactionInput raw_transaction_inputs = 10;
     int64 change_output_value = 11;
@@ -1312,6 +1415,9 @@ message ProcessModel {
     bytes my_multi_sig_pub_key = 15;
     NodeAddress temp_trading_peer_node_address = 16;
     string payment_started_message_state = 17;
+    bytes mediated_payout_tx_signature = 18;
+    int64 buyer_payout_amount_from_mediation = 19;
+    int64 seller_payout_amount_from_mediation = 20;
 }
 
 message TradingPeer {
@@ -1329,14 +1435,48 @@ message TradingPeer {
     bytes account_age_witness_nonce = 12;
     bytes account_age_witness_signature = 13;
     int64 current_date = 14;
+    bytes mediated_payout_tx_signature = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Dispute
 ///////////////////////////////////////////////////////////////////////////////////////////
 
-message DisputeList {
+message ArbitrationDisputeList {
     repeated Dispute dispute = 1;
+}
+
+message MediationDisputeList {
+    repeated Dispute dispute = 1;
+}
+
+message RefundDisputeList {
+    repeated Dispute dispute = 1;
+}
+
+enum MediationResultState {
+    PB_ERROR_MEDIATION_RESULT = 0;
+    UNDEFINED_MEDIATION_RESULT = 1;
+    MEDIATION_RESULT_ACCEPTED = 2;
+    MEDIATION_RESULT_REJECTED = 3;
+    SIG_MSG_SENT = 4;
+    SIG_MSG_ARRIVED = 5;
+    SIG_MSG_IN_MAILBOX = 6;
+    SIG_MSG_SEND_FAILED = 7;
+    RECEIVED_SIG_MSG = 8;
+    PAYOUT_TX_PUBLISHED = 9;
+    PAYOUT_TX_PUBLISHED_MSG_SENT = 10;
+    PAYOUT_TX_PUBLISHED_MSG_ARRIVED = 11;
+    PAYOUT_TX_PUBLISHED_MSG_IN_MAILBOX = 12;
+    PAYOUT_TX_PUBLISHED_MSG_SEND_FAILED = 13;
+    RECEIVED_PAYOUT_TX_PUBLISHED_MSG = 14;
+    PAYOUT_TX_SEEN_IN_NETWORK = 15;
+}
+
+//todo
+enum RefundResultState {
+    PB_ERROR_REFUND_RESULT = 0;
+    UNDEFINED_REFUND_RESULT = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1398,6 +1538,7 @@ message PreferencesPayload {
     double buyer_security_deposit_as_percent_for_crypto = 52;
     int32 block_notify_port = 53;
     int32 css_theme = 54;
+    bool tac_accepted_v120 = 55;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1418,6 +1559,8 @@ message UserPayload {
     Mediator registered_mediator = 11;
     PriceAlertFilter price_alert_filter = 12;
     repeated MarketAlertFilter market_alert_filters = 13;
+    repeated RefundAgent accepted_refund_agents = 14;
+    RefundAgent registered_refund_agent = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

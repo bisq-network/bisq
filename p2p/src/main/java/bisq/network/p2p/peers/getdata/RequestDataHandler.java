@@ -58,8 +58,18 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 class RequestDataHandler implements MessageListener {
     private static final long TIMEOUT = 90;
-    private NodeAddress peersNodeAddress;
+    private static boolean initialRequestApplied = false;
 
+    private NodeAddress peersNodeAddress;
+    /*
+     */
+
+    /**
+     * when we are run as a seed node, we spawn a RequestDataHandler every hour. However, we do not want to receive
+     * {@link PersistableNetworkPayload}s (for now, as there are hardly any cases where such data goes out of sync). This
+     * flag indicates whether we already received our first set of {@link PersistableNetworkPayload}s.
+     *//*
+    private static boolean firstRequest = true;*/
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -153,7 +163,7 @@ class RequestDataHandler implements MessageListener {
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             //noinspection UnstableApiUsage
-            Futures.addCallback(future, new FutureCallback<Connection>() {
+            Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(Connection connection) {
                     if (!stopped) {
@@ -193,50 +203,12 @@ class RequestDataHandler implements MessageListener {
         if (networkEnvelope instanceof GetDataResponse) {
             if (connection.getPeersNodeAddressOptional().isPresent() && connection.getPeersNodeAddressOptional().get().equals(peersNodeAddress)) {
                 if (!stopped) {
+                    long ts1 = System.currentTimeMillis();
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
-                    Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
-                    dataSet.forEach(e -> {
-                        final ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
-                        if (protectedStoragePayload == null) {
-                            log.warn("StoragePayload was null: {}", networkEnvelope.toString());
-                            return;
-                        }
-
-                        // For logging different data types
-                        String className = protectedStoragePayload.getClass().getSimpleName();
-                        if (!payloadByClassName.containsKey(className))
-                            payloadByClassName.put(className, new HashSet<>());
-
-                        payloadByClassName.get(className).add(protectedStoragePayload);
-                    });
-
-
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-                    if (persistableNetworkPayloadSet != null) {
-                        persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
-                            // For logging different data types
-                            String className = persistableNetworkPayload.getClass().getSimpleName();
-                            if (!payloadByClassName.containsKey(className))
-                                payloadByClassName.put(className, new HashSet<>());
 
-                            payloadByClassName.get(className).add(persistableNetworkPayload);
-                        });
-                    }
-
-                    // Log different data types
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("\n#################################################################\n");
-                    sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
-                    final int items = dataSet.size() +
-                            (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
-                    sb.append("Received ").append(items).append(" instances\n");
-                    payloadByClassName.forEach((key, value) -> sb.append(key)
-                            .append(": ")
-                            .append(value.size())
-                            .append("\n"));
-                    sb.append("#################################################################");
-                    log.info(sb.toString());
+                    logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
                         stopTimeoutTimer();
@@ -248,7 +220,7 @@ class RequestDataHandler implements MessageListener {
 
                         final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
 
-                        long ts = System.currentTimeMillis();
+                        long ts2 = System.currentTimeMillis();
                         AtomicInteger counter = new AtomicInteger();
                         dataSet.forEach(e -> {
                             // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
@@ -256,10 +228,14 @@ class RequestDataHandler implements MessageListener {
                             counter.getAndIncrement();
 
                         });
-                        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts);
+                        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts2);
 
-                        if (persistableNetworkPayloadSet != null) {
-                            ts = System.currentTimeMillis();
+                        /* // engage the firstRequest logic only if we are a seed node. Normal clients get here twice at most.
+                        if (!Capabilities.app.containsAll(Capability.SEED_NODE))
+                            firstRequest = true;*/
+
+                        if (persistableNetworkPayloadSet != null /*&& firstRequest*/) {
+                            ts2 = System.currentTimeMillis();
                             persistableNetworkPayloadSet.forEach(e -> {
                                 if (e instanceof LazyProcessedPayload) {
                                     // We use an optimized method as many checks are not required in that case to avoid
@@ -267,19 +243,29 @@ class RequestDataHandler implements MessageListener {
                                     // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
                                     // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
                                     // trade stats stats and all account age witness data.
-                                    dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
+
+                                    // We only apply it once from first response
+                                    if (!initialRequestApplied) {
+                                        dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
+
+                                    }
                                 } else {
                                     // We don't broadcast here as we are only connected to the seed node and would be pointless
                                     dataStorage.addPersistableNetworkPayload(e, sender, false,
                                             false, false, false);
                                 }
                             });
+
+                            // We set initialRequestApplied to true after the loop, otherwise we would only process 1 entry
+                            initialRequestApplied = true;
+
                             log.info("Processing {} persistableNetworkPayloads took {} ms.",
-                                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts);
+                                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts2);
                         }
 
                         cleanup();
                         listener.onComplete();
+                        // firstRequest = false;
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
@@ -287,6 +273,7 @@ class RequestDataHandler implements MessageListener {
                                         "We drop that message. nonce={} / requestNonce={}",
                                 nonce, getDataResponse.getRequestNonce());
                     }
+                    log.info("Processing GetDataResponse took {} ms", System.currentTimeMillis() - ts1);
                 } else {
                     log.warn("We have stopped already. We ignore that onDataRequest call.");
                 }
@@ -304,6 +291,51 @@ class RequestDataHandler implements MessageListener {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void logContents(NetworkEnvelope networkEnvelope,
+                             Set<ProtectedStorageEntry> dataSet,
+                             Set<PersistableNetworkPayload> persistableNetworkPayloadSet) {
+        Map<String, Set<NetworkPayload>> payloadByClassName = new HashMap<>();
+        dataSet.forEach(e -> {
+            ProtectedStoragePayload protectedStoragePayload = e.getProtectedStoragePayload();
+            if (protectedStoragePayload == null) {
+                log.warn("StoragePayload was null: {}", networkEnvelope.toString());
+                return;
+            }
+
+            // For logging different data types
+            String className = protectedStoragePayload.getClass().getSimpleName();
+            if (!payloadByClassName.containsKey(className))
+                payloadByClassName.put(className, new HashSet<>());
+
+            payloadByClassName.get(className).add(protectedStoragePayload);
+        });
+
+
+        if (persistableNetworkPayloadSet != null) {
+            persistableNetworkPayloadSet.forEach(persistableNetworkPayload -> {
+                // For logging different data types
+                String className = persistableNetworkPayload.getClass().getSimpleName();
+                if (!payloadByClassName.containsKey(className))
+                    payloadByClassName.put(className, new HashSet<>());
+
+                payloadByClassName.get(className).add(persistableNetworkPayload);
+            });
+        }
+
+        // Log different data types
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n#################################################################\n");
+        sb.append("Connected to node: " + peersNodeAddress.getFullAddress() + "\n");
+        final int items = dataSet.size() +
+                (persistableNetworkPayloadSet != null ? persistableNetworkPayloadSet.size() : 0);
+        sb.append("Received ").append(items).append(" instances\n");
+        payloadByClassName.forEach((key, value) -> sb.append(key)
+                .append(": ")
+                .append(value.size())
+                .append("\n"));
+        sb.append("#################################################################");
+        log.info(sb.toString());
+    }
 
     @SuppressWarnings("UnusedParameters")
     private void handleFault(String errorMessage,

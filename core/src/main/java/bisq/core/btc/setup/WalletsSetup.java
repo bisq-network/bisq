@@ -122,6 +122,8 @@ public class WalletsSetup {
     private final File walletDir;
     private final int socks5DiscoverMode;
     private final IntegerProperty numPeers = new SimpleIntegerProperty(0);
+    private final IntegerProperty chainHeight = new SimpleIntegerProperty(0);
+    private final ObjectProperty<Peer> blocksDownloadedFromPeer = new SimpleObjectProperty<>();
     private final ObjectProperty<List<Peer>> connectedPeers = new SimpleObjectProperty<>();
     private final DownloadListener downloadListener = new DownloadListener();
     private final List<Runnable> setupCompletedHandlers = new ArrayList<>();
@@ -200,6 +202,7 @@ public class WalletsSetup {
                 super.onSetupCompleted();
 
                 final PeerGroup peerGroup = walletConfig.peerGroup();
+                final BlockChain chain = walletConfig.chain();
 
                 // We don't want to get our node white list polluted with nodes from AddressMessage calls.
                 if (preferences.getBitcoinNodes() != null && !preferences.getBitcoinNodes().isEmpty())
@@ -214,6 +217,13 @@ public class WalletsSetup {
                     // We get called here on our user thread
                     numPeers.set(peerCount);
                     connectedPeers.set(peerGroup.getConnectedPeers());
+                });
+                peerGroup.addBlocksDownloadedEventListener((peer, block, filteredBlock, blocksLeft) -> {
+                    blocksDownloadedFromPeer.set(peer);
+                });
+                chain.addNewBestBlockListener(block -> {
+                    connectedPeers.set(peerGroup.getConnectedPeers());
+                    chainHeight.set(block.getHeight());
                 });
 
                 // Map to user thread
@@ -427,6 +437,14 @@ public class WalletsSetup {
 
     public ReadOnlyObjectProperty<List<Peer>> connectedPeersProperty() {
         return connectedPeers;
+    }
+
+    public ReadOnlyIntegerProperty chainHeightProperty() {
+        return chainHeight;
+    }
+
+    public ReadOnlyObjectProperty<Peer> blocksDownloadedFromPeerProperty() {
+        return blocksDownloadedFromPeer;
     }
 
     public ReadOnlyDoubleProperty downloadPercentageProperty() {

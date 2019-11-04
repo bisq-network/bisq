@@ -22,20 +22,22 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIcon;
-import bisq.desktop.main.Chat.Chat;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.shared.ChatView;
+import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.CssTheme;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.mediation.MediationResultState;
+import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.traderchat.TradeChatSession;
+import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.Trade;
-import bisq.core.trade.TradeChatSession;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
@@ -123,8 +125,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private Map<String, Button> buttonByTrade = new HashMap<>();
     private Map<String, JFXBadge> badgeByTrade = new HashMap<>();
-    private Map<String, ListChangeListener<DisputeCommunicationMessage>> listenerByTrade = new HashMap<>();
-    private TradeChatSession.DisputeStateListener disputeStateListener;
+    private Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
+    private ChangeListener<Trade.State> tradeStateListener;
+    private ChangeListener<Trade.DisputeState> disputeStateListener;
+    private ChangeListener<MediationResultState> mediationResultStateListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -176,27 +180,17 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
-        volumeColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradeVolume() != null && o2.getTrade().getTradeVolume() != null)
-                return o1.getTrade().getTradeVolume().compareTo(o2.getTrade().getTradeVolume());
-            else
-                return 0;
-        });
-        amountColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradeAmount() != null && o2.getTrade().getTradeAmount() != null)
-                return o1.getTrade().getTradeAmount().compareTo(o2.getTrade().getTradeAmount());
-            else
-                return 0;
-        });
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
-        paymentMethodColumn.setComparator(Comparator.comparing(o -> o.getTrade().getOffer() != null ?
-                o.getTrade().getOffer().getPaymentMethod().getId() : null));
-        avatarColumn.setComparator((o1, o2) -> {
-            if (o1.getTrade().getTradingPeerNodeAddress() != null && o2.getTrade().getTradingPeerNodeAddress() != null)
-                return o1.getTrade().getTradingPeerNodeAddress().getFullAddress().compareTo(o2.getTrade().getTradingPeerNodeAddress().getFullAddress());
-            else
-                return 0;
-        });
+        paymentMethodColumn.setComparator(Comparator.comparing(
+                o -> o.getTrade().getOffer() != null ? o.getTrade().getOffer().getPaymentMethod().getId() : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
+        avatarColumn.setComparator(Comparator.comparing(
+                o -> o.getTrade().getTradingPeerNodeAddress() != null ? o.getTrade().getTradingPeerNodeAddress().getFullAddress() : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        ));
         roleColumn.setComparator(Comparator.comparing(model::getMyRole));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
@@ -319,7 +313,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         model.dataModel.list.forEach(t -> {
             Trade trade = t.getTrade();
             newChatMessagesByTradeMap.put(trade.getId(),
-                    trade.getCommunicationMessages().stream()
+                    trade.getChatMessages().stream()
                             .filter(m -> !m.isWasDisplayed())
                             .filter(m -> !m.isSystemMessage())
                             .count());
@@ -330,43 +324,59 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         if (chatPopupStage != null)
             chatPopupStage.close();
 
-        if (trade.getCommunicationMessages().isEmpty()) {
-            ((TradeChatSession) model.dataModel.tradeManager.getChatManager().getChatSession()).addSystemMsg(trade);
+        TraderChatManager traderChatManager = model.dataModel.getTraderChatManager();
+        if (trade.getChatMessages().isEmpty()) {
+            traderChatManager.addSystemMsg(trade);
         }
 
-        trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+        trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
         trade.persist();
         tradeIdOfOpenChat = trade.getId();
 
-        Chat tradeChat = new Chat(model.dataModel.tradeManager.getChatManager(), formatter);
-        tradeChat.setAllowAttachments(false);
-        tradeChat.setDisplayHeader(false);
-        tradeChat.initialize();
+        ChatView chatView = new ChatView(traderChatManager, formatter);
+        chatView.setAllowAttachments(false);
+        chatView.setDisplayHeader(false);
+        chatView.initialize();
 
-        AnchorPane pane = new AnchorPane(tradeChat);
+        AnchorPane pane = new AnchorPane(chatView);
         pane.setPrefSize(760, 500);
-        AnchorPane.setLeftAnchor(tradeChat, 10d);
-        AnchorPane.setRightAnchor(tradeChat, 10d);
-        AnchorPane.setTopAnchor(tradeChat, -20d);
-        AnchorPane.setBottomAnchor(tradeChat, 10d);
+        AnchorPane.setLeftAnchor(chatView, 10d);
+        AnchorPane.setRightAnchor(chatView, 10d);
+        AnchorPane.setTopAnchor(chatView, -20d);
+        AnchorPane.setBottomAnchor(chatView, 10d);
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
-        boolean isBuyer = model.dataModel.isBuyer();
-        TradeChatSession chatSession = new TradeChatSession(trade, isTaker, isBuyer,
-                model.dataModel.tradeManager,
-                model.dataModel.tradeManager.getChatManager());
+        TradeChatSession tradeChatSession = new TradeChatSession(trade, isTaker);
 
-        disputeStateListener = tradeId -> {
-            if (trade.getId().equals(tradeId)) {
+        tradeStateListener = (observable, oldValue, newValue) -> {
+            if (trade.isPayoutPublished()) {
+                if (chatPopupStage.isShowing()) {
+                    chatPopupStage.hide();
+                }
+            }
+        };
+        trade.stateProperty().addListener(tradeStateListener);
+
+        disputeStateListener = (observable, oldValue, newValue) -> {
+            if (newValue == Trade.DisputeState.DISPUTE_CLOSED || newValue == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
                 chatPopupStage.hide();
             }
         };
-        chatSession.addDisputeStateListener(disputeStateListener);
+        trade.disputeStateProperty().addListener(disputeStateListener);
 
-        tradeChat.display(chatSession, null, pane.widthProperty());
+        mediationResultStateListener = (observable, oldValue, newValue) -> {
+            if (newValue == MediationResultState.PAYOUT_TX_PUBLISHED ||
+                    newValue == MediationResultState.RECEIVED_PAYOUT_TX_PUBLISHED_MSG ||
+                    newValue == MediationResultState.PAYOUT_TX_SEEN_IN_NETWORK) {
+                chatPopupStage.hide();
+            }
+        };
+        trade.mediationResultStateProperty().addListener(mediationResultStateListener);
 
-        tradeChat.activate();
-        tradeChat.scrollToBottom();
+        chatView.display(tradeChatSession, pane.widthProperty());
+
+        chatView.activate();
+        chatView.scrollToBottom();
 
         chatPopupStage = new Stage();
         chatPopupStage.setTitle(Res.get("tradeChat.chatWindowTitle", trade.getShortId()));
@@ -376,9 +386,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         chatPopupStage.initModality(Modality.NONE);
         chatPopupStage.initStyle(StageStyle.DECORATED);
         chatPopupStage.setOnHiding(event -> {
-            tradeChat.deactivate();
+            chatView.deactivate();
             // at close we set all as displayed. While open we ignore updates of the numNewMsg in the list icon.
-            trade.getCommunicationMessages().forEach(m -> m.setWasDisplayed(true));
+            trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
             trade.persist();
             tradeIdOfOpenChat = null;
 
@@ -388,9 +398,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             if (yPositionListener != null) {
                 chatPopupStage.xProperty().removeListener(yPositionListener);
             }
-            if (disputeStateListener != null) {
-                chatSession.removeDisputeStateListener(disputeStateListener);
-            }
+
+            trade.stateProperty().removeListener(tradeStateListener);
+            trade.disputeStateProperty().addListener(disputeStateListener);
+            trade.mediationResultStateProperty().addListener(mediationResultStateListener);
         });
 
         Scene scene = new Scene(pane);
@@ -718,9 +729,9 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     });
 
                                     if (!listenerByTrade.containsKey(id)) {
-                                        ListChangeListener<DisputeCommunicationMessage> listener = c -> update(trade, badge);
+                                        ListChangeListener<ChatMessage> listener = c -> update(trade, badge);
                                         listenerByTrade.put(id, listener);
-                                        trade.getCommunicationMessages().addListener(listener);
+                                        trade.getChatMessages().addListener(listener);
                                     }
 
                                     update(trade, badge);

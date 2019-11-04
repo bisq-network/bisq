@@ -20,8 +20,8 @@ package bisq.desktop.main.settings.preferences;
 
 import bisq.desktop.common.model.ActivatableViewModel;
 
-import bisq.core.arbitration.ArbitratorManager;
 import bisq.core.locale.LanguageUtil;
+import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
 
 import com.google.inject.Inject;
@@ -40,11 +40,11 @@ public class PreferencesViewModel extends ActivatableViewModel {
     }
 
     boolean needsArbitrationLanguageWarning() {
-        return !arbitratorManager.isArbitratorAvailableForLanguage(preferences.getUserLanguage());
+        return !arbitratorManager.isAgentAvailableForLanguage(preferences.getUserLanguage());
     }
 
     String getArbitrationLanguages() {
-        return arbitratorManager.getArbitratorsObservableMap().values().stream()
+        return arbitratorManager.getObservableMap().values().stream()
                 .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
                 .distinct()
                 .map(languageCode -> LanguageUtil.getDisplayName(languageCode))

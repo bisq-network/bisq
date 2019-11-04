@@ -358,7 +358,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     data = ((AddDataMessage) msg).getProtectedStorageEntry().getProtectedStoragePayload();
                 }
                 // Monitoring nodes have only one capability set, we don't want to log those
-                log.info("We did not send the message because the peer does not support our required capabilities. " +
+                log.debug("We did not send the message because the peer does not support our required capabilities. " +
                                 "messageClass={}, peer={}, peers supportedCapabilities={}",
                         data.getClass().getSimpleName(), peersNodeAddressOptional, capabilities);
             }
@@ -759,9 +759,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     boolean exceeds;
                     if (networkEnvelope instanceof ExtendedDataSizePermission) {
                         exceeds = size > MAX_PERMITTED_MESSAGE_SIZE;
-                        if (log.isDebugEnabled()) {
-                            log.debug("size={}; object={}", size, Utilities.toTruncatedString(proto, 100));
-                        }
                     } else {
                         exceeds = size > PERMITTED_MESSAGE_SIZE;
                     }
@@ -803,6 +800,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                                 // Capabilities can be empty. We only check for mandatory if we get some capabilities.
                                 if (!capabilities.isEmpty() && !Capabilities.hasMandatoryCapability(capabilities)) {
+                                    String senderNodeAddress = networkEnvelope instanceof SendersNodeAddressMessage ?
+                                            ((SendersNodeAddressMessage) networkEnvelope).getSenderNodeAddress().getFullAddress() :
+                                            "[unknown address]";
+                                    log.info("We close a connection to old node {}. " +
+                                                    "Capabilities of old node: {}, networkEnvelope class name={}",
+                                            senderNodeAddress, capabilities.prettyPrint(), networkEnvelope.getClass().getSimpleName());
                                     shutDown(CloseConnectionReason.MANDATORY_CAPABILITIES_NOT_SUPPORTED);
                                     return;
                                 }

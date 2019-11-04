@@ -19,24 +19,18 @@ package bisq.core.offer.availability.tasks;
 
 import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
-import bisq.core.trade.protocol.ArbitratorSelectionRule;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
 
-import com.google.common.collect.Lists;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityModel> {
@@ -62,43 +56,18 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
             offer.setState(Offer.State.AVAILABLE);
 
-            NodeAddress selectedArbitrator = offerAvailabilityResponse.getArbitrator();
+            model.setSelectedArbitrator(offerAvailabilityResponse.getArbitrator());
 
-            if (selectedArbitrator != null) {
-                model.setSelectedArbitrator(selectedArbitrator);
-                complete();
-                return;
+            NodeAddress mediator = offerAvailabilityResponse.getMediator();
+            if (mediator == null) {
+                // We do not get a mediator from old clients so we need to handle the null case.
+                mediator = DisputeAgentSelection.getLeastUsedMediator(model.getTradeStatisticsManager(), model.getMediatorManager()).getNodeAddress();
             }
+            model.setSelectedMediator(mediator);
 
-            // We have an offer from a maker who runs a pre 0.9 version.
-            log.info("Maker has on old version and does not send the selected arbitrator in the offerAvailabilityResponse. " +
-                    "We use the old selection model instead with the supported arbitrators of the  offers");
+            model.setSelectedRefundAgent(offerAvailabilityResponse.getRefundAgent());
 
-            List<NodeAddress> userArbitratorAddresses = model.getUser().getAcceptedArbitratorAddresses();
-            checkNotNull(userArbitratorAddresses, "model.getUser().getAcceptedArbitratorAddresses() must not be null");
-
-            List<NodeAddress> offerArbitratorNodeAddresses = offer.getArbitratorNodeAddresses();
-
-            List<NodeAddress> matchingArbitrators = offerArbitratorNodeAddresses.stream()
-                    .filter(userArbitratorAddresses::contains)
-                    .collect(Collectors.toList());
-
-            if (!matchingArbitrators.isEmpty()) {
-                // We have at least one arbitrator which was used in the offer and is still available.
-                try {
-                    model.setSelectedArbitrator(ArbitratorSelectionRule.select(Lists.newArrayList(matchingArbitrators), offer));
-                    complete();
-                } catch (Throwable t) {
-                    failed("There is no arbitrator matching that offer. The maker has " +
-                            "not updated to the latest version and the arbitrators selected for that offer are not available anymore.");
-                }
-            } else {
-                // If an arbitrator which was selected in the offer from an old version has revoked we would get a failed take-offer attempt
-                // with lost trade fees. To avoid that we fail here after 1 week after the new rule is activated.
-                // Because one arbitrator need to revoke his application and register new as he gets too many transactions already
-                // we need to handle the planned revoke case.
-                failed("You cannot take that offer because the maker has not updated to version 0.9.");
-            }
+            complete();
         } catch (Throwable t) {
             offer.setErrorMessage("An error occurred.\n" +
                     "Error message:\n"

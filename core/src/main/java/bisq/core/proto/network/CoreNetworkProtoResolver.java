@@ -19,13 +19,6 @@ package bisq.core.proto.network;
 
 import bisq.core.alert.Alert;
 import bisq.core.alert.PrivateNotificationMessage;
-import bisq.core.arbitration.Arbitrator;
-import bisq.core.arbitration.Mediator;
-import bisq.core.arbitration.messages.DisputeCommunicationMessage;
-import bisq.core.arbitration.messages.DisputeResultMessage;
-import bisq.core.arbitration.messages.OpenNewDisputeMessage;
-import bisq.core.arbitration.messages.PeerOpenedDisputeMessage;
-import bisq.core.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDataRequest;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
@@ -45,11 +38,25 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
+import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.messages.DisputeResultMessage;
+import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
+import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
+import bisq.core.support.dispute.refund.refundagent.RefundAgent;
+import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.DepositTxPublishedMessage;
-import bisq.core.trade.messages.PayDepositRequest;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.messages.DepositTxMessage;
+import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.messages.InputsForDepositTxResponse;
+import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.PublishDepositTxRequest;
+import bisq.core.trade.messages.PeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.statistics.TradeStatistics;
 
 import bisq.network.p2p.AckMessage;
@@ -87,7 +94,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CoreNetworkProtoResolver extends CoreProtoResolver implements NetworkProtoResolver {
-
     @Inject
     public CoreNetworkProtoResolver() {
     }
@@ -132,23 +138,39 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case PREFIXED_SEALED_AND_SIGNED_MESSAGE:
                     return PrefixedSealedAndSignedMessage.fromProto(proto.getPrefixedSealedAndSignedMessage(), messageVersion);
 
-                case PAY_DEPOSIT_REQUEST:
-                    return PayDepositRequest.fromProto(proto.getPayDepositRequest(), this, messageVersion);
-                case DEPOSIT_TX_PUBLISHED_MESSAGE:
-                    return DepositTxPublishedMessage.fromProto(proto.getDepositTxPublishedMessage(), messageVersion);
-                case PUBLISH_DEPOSIT_TX_REQUEST:
-                    return PublishDepositTxRequest.fromProto(proto.getPublishDepositTxRequest(), this, messageVersion);
+                // trade protocol messages
+                case INPUTS_FOR_DEPOSIT_TX_REQUEST:
+                    return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), this, messageVersion);
+                case INPUTS_FOR_DEPOSIT_TX_RESPONSE:
+                    return InputsForDepositTxResponse.fromProto(proto.getInputsForDepositTxResponse(), this, messageVersion);
+                case DEPOSIT_TX_MESSAGE:
+                    return DepositTxMessage.fromProto(proto.getDepositTxMessage(), messageVersion);
+                case DELAYED_PAYOUT_TX_SIGNATURE_REQUEST:
+                    return DelayedPayoutTxSignatureRequest.fromProto(proto.getDelayedPayoutTxSignatureRequest(), messageVersion);
+                case DELAYED_PAYOUT_TX_SIGNATURE_RESPONSE:
+                    return DelayedPayoutTxSignatureResponse.fromProto(proto.getDelayedPayoutTxSignatureResponse(), messageVersion);
+                case DEPOSIT_TX_AND_DELAYED_PAYOUT_TX_MESSAGE:
+                    return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), messageVersion);
+
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
+
                 case PAYOUT_TX_PUBLISHED_MESSAGE:
                     return PayoutTxPublishedMessage.fromProto(proto.getPayoutTxPublishedMessage(), messageVersion);
+                case PEER_PUBLISHED_DELAYED_PAYOUT_TX_MESSAGE:
+                    return PeerPublishedDelayedPayoutTxMessage.fromProto(proto.getPeerPublishedDelayedPayoutTxMessage(), messageVersion);
+
+                case MEDIATED_PAYOUT_TX_SIGNATURE_MESSAGE:
+                    return MediatedPayoutTxSignatureMessage.fromProto(proto.getMediatedPayoutTxSignatureMessage(), messageVersion);
+                case MEDIATED_PAYOUT_TX_PUBLISHED_MESSAGE:
+                    return MediatedPayoutTxPublishedMessage.fromProto(proto.getMediatedPayoutTxPublishedMessage(), messageVersion);
 
                 case OPEN_NEW_DISPUTE_MESSAGE:
                     return OpenNewDisputeMessage.fromProto(proto.getOpenNewDisputeMessage(), this, messageVersion);
                 case PEER_OPENED_DISPUTE_MESSAGE:
                     return PeerOpenedDisputeMessage.fromProto(proto.getPeerOpenedDisputeMessage(), this, messageVersion);
-                case DISPUTE_COMMUNICATION_MESSAGE:
-                    return DisputeCommunicationMessage.fromProto(proto.getDisputeCommunicationMessage(), messageVersion);
+                case CHAT_MESSAGE:
+                    return ChatMessage.fromProto(proto.getChatMessage(), messageVersion);
                 case DISPUTE_RESULT_MESSAGE:
                     return DisputeResultMessage.fromProto(proto.getDisputeResultMessage(), messageVersion);
                 case PEER_PUBLISHED_DISPUTE_PAYOUT_TX_MESSAGE:
@@ -230,6 +252,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return Arbitrator.fromProto(proto.getArbitrator());
                 case MEDIATOR:
                     return Mediator.fromProto(proto.getMediator());
+                case REFUND_AGENT:
+                    return RefundAgent.fromProto(proto.getRefundAgent());
                 case FILTER:
                     return Filter.fromProto(proto.getFilter());
                 case TRADE_STATISTICS:

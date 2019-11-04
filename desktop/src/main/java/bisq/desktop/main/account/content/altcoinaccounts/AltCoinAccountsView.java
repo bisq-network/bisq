@@ -72,7 +72,6 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
 
     private final InputValidator inputValidator;
     private final AltCoinAddressValidator altCoinAddressValidator;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final BSFormatter formatter;
@@ -92,11 +91,10 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                FilterManager filterManager,
                                BSFormatter formatter,
                                Preferences preferences) {
-        super(model);
+        super(model, accountAgeWitnessService);
 
         this.inputValidator = inputValidator;
         this.altCoinAddressValidator = altCoinAddressValidator;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.formatter = formatter;

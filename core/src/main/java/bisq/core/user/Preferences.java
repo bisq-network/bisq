@@ -83,6 +83,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private static final ArrayList<BlockChainExplorer> BTC_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/tx/", "https://blockstream.info/address/"),
             new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/address/"),
+            new BlockChainExplorer("Blockstream.info + Mempool.space", "https://mempool.space/tx/", "https://blockstream.info/address/"),
             new BlockChainExplorer("OXT", "https://oxt.me/transaction/", "https://oxt.me/address/"),
             new BlockChainExplorer("Bitaps", "https://bitaps.com/", "https://bitaps.com/"),
             new BlockChainExplorer("Blockcypher", "https://live.blockcypher.com/btc/tx/", "https://live.blockcypher.com/btc/address/"),
@@ -391,6 +392,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setTacAccepted(boolean tacAccepted) {
         prefPayload.setTacAccepted(tacAccepted);
+        persist();
+    }
+
+    public void setTacAcceptedV120(boolean tacAccepted) {
+        prefPayload.setTacAcceptedV120(tacAccepted);
         persist();
     }
 
@@ -951,5 +957,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         String getRpcPw();
 
         int getBlockNotifyPort();
+
+        void setTacAcceptedV120(boolean tacAccepted);
     }
 }

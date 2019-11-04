@@ -7,7 +7,6 @@
 * Webpage (Prepare PR)
     * Update version number in:
         * [_config.yml](https://github.com/bisq-network/bisq-website/blob/master/_config.yml)
-        * [downloads.html](https://github.com/bisq-network/bisq-website/blob/master/downloads.html)
       
     * Update currency list in [market_currency_selector.html](https://github.com/bisq-network/bisq-website/blob/master/_includes/market_currency_selector.html) (use [MarketsPrintTool](https://github.com/bisq-network/bisq/blob/master/desktop/src/test/java/bisq/desktop/MarketsPrintTool.java)
     to create HTML content).

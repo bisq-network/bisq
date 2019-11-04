@@ -108,12 +108,17 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 .map(PersistableNetworkPayload::toProtoMessage)
                 .collect(Collectors.toList())));
 
-        return getNetworkEnvelopeBuilder()
+        protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetDataResponse(builder)
                 .build();
+        log.info("Sending a GetDataResponse with size = {} bytes", proto.toByteArray().length);
+        return proto;
     }
 
-    public static GetDataResponse fromProto(protobuf.GetDataResponse proto, NetworkProtoResolver resolver, int messageVersion) {
+    public static GetDataResponse fromProto(protobuf.GetDataResponse proto,
+                                            NetworkProtoResolver resolver,
+                                            int messageVersion) {
+        log.info("Received a GetDataResponse with size = {} bytes", proto.toByteArray().length);
         Set<ProtectedStorageEntry> dataSet = new HashSet<>(
                 proto.getDataSetList().stream()
                         .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry))

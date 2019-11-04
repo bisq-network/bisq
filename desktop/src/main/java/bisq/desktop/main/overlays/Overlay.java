@@ -31,6 +31,7 @@ import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.locale.LanguageUtil;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -68,6 +69,7 @@ import javafx.scene.transform.Rotate;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.NodeOrientation;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -150,6 +152,7 @@ public abstract class Overlay<T extends Overlay> {
     private boolean showBusyAnimation;
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
+    protected boolean disableActionButton;
 
     @Getter
     protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
@@ -191,6 +194,9 @@ public abstract class Overlay<T extends Overlay> {
     public void show(boolean showAgainChecked) {
         if (dontShowAgainId == null || DontShowAgainLookup.showAgain(dontShowAgainId)) {
             createGridPane();
+            if (LanguageUtil.isDefaultLanguageRTL())
+                getRootContainer().setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+
             addHeadLine();
 
             if (showBusyAnimation)
@@ -486,6 +492,12 @@ public abstract class Overlay<T extends Overlay> {
 
     public T setHeadlineStyle(String headlineStyle) {
         this.headlineStyle = headlineStyle;
+        //noinspection unchecked
+        return (T) this;
+    }
+
+    public T disableActionButton() {
+        this.disableActionButton = true;
         //noinspection unchecked
         return (T) this;
     }
@@ -920,16 +932,24 @@ public abstract class Overlay<T extends Overlay> {
 
         if (actionHandlerOptional.isPresent() || actionButtonText != null) {
             actionButton = new AutoTooltipButton(actionButtonText == null ? Res.get("shared.ok") : actionButtonText);
-            actionButton.setDefaultButton(true);
+
+            if (!disableActionButton)
+                actionButton.setDefaultButton(true);
+            else
+                actionButton.setDisable(true);
+
             HBox.setHgrow(actionButton, Priority.SOMETIMES);
 
             actionButton.getStyleClass().add("action-button");
             //TODO app wide focus
             //actionButton.requestFocus();
-            actionButton.setOnAction(event -> {
-                hide();
-                actionHandlerOptional.ifPresent(Runnable::run);
-            });
+
+            if (!disableActionButton) {
+                actionButton.setOnAction(event -> {
+                    hide();
+                    actionHandlerOptional.ifPresent(Runnable::run);
+                });
+            }
 
             buttonBox.setSpacing(10);
 

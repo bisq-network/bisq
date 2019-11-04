@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.tasks.buyer;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.tasks.TradeTask;
@@ -35,7 +36,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
-    @SuppressWarnings({"WeakerAccess", "unused"})
+    @SuppressWarnings({"unused"})
     public BuyerProcessPayoutTxPublishedMessage(TaskRunner taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
@@ -54,9 +55,9 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             if (trade.getPayoutTx() == null) {
-                Transaction walletTx = processModel.getTradeWalletService().addTxToWallet(message.getPayoutTx());
-                trade.setPayoutTx(walletTx);
-                BtcWalletService.printTx("payoutTx received from peer", walletTx);
+                Transaction committedPayoutTx = WalletService.maybeAddNetworkTxToWallet(message.getPayoutTx(), processModel.getBtcWalletService().getWallet());
+                trade.setPayoutTx(committedPayoutTx);
+                BtcWalletService.printTx("payoutTx received from peer", committedPayoutTx);
 
                 trade.setState(Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG);
                 processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
