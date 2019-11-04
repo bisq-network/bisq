@@ -771,21 +771,17 @@ public class P2PDataStorageTest {
         }
 
         // TESTCASE: Add w/ same sequence number after remove of sequence number
-        // XXXBUGXXX: Since removes aren't required to increase the sequence number, duplicate adds
-        // can occur that will cause listeners to be signaled. Any well-intentioned nodes will create remove messages
-        // that increment the seq #, but this may just fall into a larger effort to protect against malicious nodes.
-/*        @Test
+        // Regression test for old remove() behavior that succeeded if add.seq# == remove.seq#
+        @Test
         public void addProtectectedStorageEntry_afterRemoveSameSeqNr() throws CryptoException {
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
 
-            // Should be false, false. Instead, the hashmap is updated and hashmap listeners are signaled.
-            // Broadcast isn't called
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
-        }*/
+        }
 
         // TESTCASE: Entry signature does not match entry owner
         @Test
@@ -818,8 +814,6 @@ public class P2PDataStorageTest {
         }*/
 
         // TESTCASE: Removing an item after successfully added (remove seq # == add seq #)
-        // XXXBUGXXX A state change shouldn't occur. Any well-intentioned nodes will create remove messages
-        // that increment the seq #, but this may just fall into a larger effort to protect against malicious nodes.
         @Test
         public void remove_seqNrEqAddSeqNr() throws CryptoException {
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
@@ -827,8 +821,7 @@ public class P2PDataStorageTest {
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
-            // should be (false, false)
-            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
 
         // TESTCASE: Removing an item after successfully added (remove seq # > add seq #)
@@ -865,7 +858,7 @@ public class P2PDataStorageTest {
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
-            ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
+            ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
             entryForRemove.updateSignature(new byte[] { 0 });
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
@@ -880,7 +873,7 @@ public class P2PDataStorageTest {
 
             // For standard ProtectedStorageEntrys the entry owner must match the payload owner for removes
             ProtectedStorageEntry entryForRemove = buildProtectedStorageEntry(
-                    this.protectedStoragePayload, notOwner, notOwner, 1);
+                    this.protectedStoragePayload, notOwner, notOwner, 2);
 
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
@@ -1012,11 +1005,13 @@ public class P2PDataStorageTest {
         // TESTCASE: Refresh previously removed entry
         @Test
         public void refreshTTL_refreshAfterRemove() throws CryptoException {
-            ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
-            doProtectedStorageAddAndVerify(entry, true, true);
-            doProtectedStorageRemoveAndVerify(entry, true, true);
+            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
+            ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForAdd(2);
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,3), false, false);
+            doProtectedStorageAddAndVerify(entryForAdd, true, true);
+            doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
+
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entryForAdd, this.payloadOwnerKeys,3), false, false);
         }
 
         // TESTCASE: Refresh an entry, but owner doesn't match PubKey of original add owner
@@ -1128,7 +1123,7 @@ public class P2PDataStorageTest {
 
             KeyPair notReceiver = TestUtils.generateKeyPair();
 
-            ProtectedStorageEntry entryForRemove =  buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), notReceiver.getPrivate(), notReceiver.getPublic(), receiverKeys.getPublic(), 1);
+            ProtectedStorageEntry entryForRemove =  buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), notReceiver.getPrivate(), notReceiver.getPublic(), receiverKeys.getPublic(), 2);
 
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
@@ -1141,7 +1136,7 @@ public class P2PDataStorageTest {
 
             KeyPair notSender = TestUtils.generateKeyPair();
 
-            ProtectedStorageEntry entryForRemove = buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), receiverKeys.getPrivate(), receiverKeys.getPublic(), notSender.getPublic(), 1);
+            ProtectedStorageEntry entryForRemove = buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), receiverKeys.getPrivate(), receiverKeys.getPublic(), notSender.getPublic(), 2);
 
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }

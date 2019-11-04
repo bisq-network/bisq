@@ -497,7 +497,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         // If we have seen a more recent operation for this payload, ignore this one
-        if (!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
+        if (!hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the remove operation
@@ -585,7 +585,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         int sequenceNumber = protectedMailboxStorageEntry.getSequenceNumber();
 
-        if (!isSequenceNrValid(sequenceNumber, hashOfPayload))
+        if (!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
             return false;
 
         PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
@@ -708,24 +708,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
         hashMapChangedListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
-    }
-
-    private boolean isSequenceNrValid(int newSequenceNumber, ByteArray hashOfData) {
-        if (sequenceNumberMap.containsKey(hashOfData)) {
-            int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
-            if (newSequenceNumber >= storedSequenceNumber) {
-                log.trace("Sequence number is valid (>=). sequenceNumber = "
-                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
-                return true;
-            } else {
-                log.debug("Sequence number is invalid. sequenceNumber = "
-                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
-                        "That can happen if the data owner gets an old delayed data storage message.");
-                return false;
-            }
-        } else {
-            return true;
-        }
     }
 
     private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
