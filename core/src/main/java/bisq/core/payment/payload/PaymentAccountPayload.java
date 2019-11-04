@@ -75,7 +75,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     @JsonExclude
     @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)    
+    @Setter    
 	protected String paymentDetails;
 
 
@@ -125,10 +125,6 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-    
-    public void setPaymentDetails(String paymentDetails) {
-    	this.paymentDetails = paymentDetails;
-    }
 
     public abstract String getPaymentDetails();
 
