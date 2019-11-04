@@ -626,33 +626,51 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                      boolean isDataOwner) {
         ProtectedStoragePayload protectedStoragePayload = protectedMailboxStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
-        boolean containsKey = map.containsKey(hashOfPayload);
-        if (!containsKey)
-            log.debug("Remove data ignored as we don't have an entry for that data.");
+
+        if (!map.containsKey(hashOfPayload)) {
+            log.debug("removeMailboxData failed due to unknown entry");
+
+            return false;
+        }
 
         int sequenceNumber = protectedMailboxStorageEntry.getSequenceNumber();
-        PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
-        boolean result = containsKey &&
-                isSequenceNrValid(sequenceNumber, hashOfPayload) &&
-                checkPublicKeys(protectedMailboxStorageEntry, false) &&
-                protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(receiversPubKey) && // at remove both keys are the same (only receiver is able to remove data)
-                checkSignature(protectedMailboxStorageEntry) &&
-                checkIfStoredMailboxDataMatchesNewMailboxData(receiversPubKey, hashOfPayload);
 
-        // printData("before removeMailboxData");
-        if (result) {
-            doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfPayload);
-            printData("after removeMailboxData");
-            sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-            sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
+        if (!isSequenceNrValid(sequenceNumber, hashOfPayload)) {
+            log.trace("removeMailboxData failed due to old sequence number");
 
-            maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
-
-            broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
-        } else {
-            log.debug("removeMailboxData failed");
+            return false;
         }
-        return result;
+
+        PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
+
+        if (!checkPublicKeys(protectedMailboxStorageEntry, false) ||
+                !protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(receiversPubKey) || // at remove both keys are the same (only receiver is able to remove data)
+                !checkSignature(protectedMailboxStorageEntry)) {
+            log.trace("removeMailboxData failed due to invalid entry");
+
+            return false;
+        }
+
+        // In a hash collision between two well formed ProtectedMailboxStorageEntry, the first item wins and will not be overwritten
+        if (!checkIfStoredMailboxDataMatchesNewMailboxData(receiversPubKey, hashOfPayload)) {
+            log.trace("removeMailboxData failed due to hash collision");
+
+            return false;
+        }
+
+        // Valid remove ProtectedMailboxStorageEntry, do the remove and signal listeners
+        doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfPayload);
+        printData("after removeMailboxData");
+
+        // Record the latest sequence number and persist it
+        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
+
+        maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
+
+        broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
+
+        return true;
     }
 
     private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
