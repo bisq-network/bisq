@@ -528,32 +528,52 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
-        boolean containsKey = map.containsKey(hashOfPayload);
-        if (!containsKey)
+
+        // If we don't know about the target of this remove, ignore it
+        if (!map.containsKey(hashOfPayload)) {
             log.debug("Remove data ignored as we don't have an entry for that data.");
-        boolean result = containsKey
-                && checkPublicKeys(protectedStorageEntry, false)
-                && isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload)
-                && checkSignature(protectedStorageEntry)
-                && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload);
 
-        // printData("before remove");
-        if (result) {
-            doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
-            printData("after remove");
-            sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
-            sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
-
-            maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
-
-            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
-
-            removeFromProtectedDataStore(protectedStorageEntry);
-        } else {
-            log.debug("remove failed");
+            return false;
         }
-        return result;
-    }
+
+        // If we have seen a more recent operation for this payload, ignore this one
+        if (!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload)) {
+            log.trace("remove failed due to old sequence number");
+
+            return false;
+        }
+
+        // Verify the ProtectedStorageEntry is well formed and valid for the remove operation
+        if (!checkPublicKeys(protectedStorageEntry, false) ||
+                !checkSignature(protectedStorageEntry)) {
+            log.trace("remove failed due to invalid entry");
+
+            return false;
+        }
+
+        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
+        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
+            log.trace("remove failed due to hash collision");
+
+            return false;
+        }
+
+        // Valid remove entry, do the remove and signal listeners
+        doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
+        printData("after remove");
+
+        // Record the latest sequence number and persist it
+        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
+
+        maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
+
+        broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+
+        removeFromProtectedDataStore(protectedStorageEntry);
+
+        return true;
+}
 
 
     /**
