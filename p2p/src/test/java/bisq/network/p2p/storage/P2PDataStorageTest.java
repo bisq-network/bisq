@@ -737,12 +737,11 @@ public class P2PDataStorageTest {
         }
 
         // TESTCASE: Adding duplicate payload w/ same sequence number
-        // TODO: Should adds() of existing sequence #s return false since they don't update state?
         @Test
         public void addProtectedStorageEntry_duplicateSeqNrGt0() throws CryptoException {
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageAddAndVerify(entryForAdd, true, false);
+            doProtectedStorageAddAndVerify(entryForAdd, false, false);
         }
 
         // TESTCASE: Adding duplicate payload w/ 0 sequence number (special branch in code for logging)
@@ -750,7 +749,7 @@ public class P2PDataStorageTest {
         public void addProtectedStorageEntry_duplicateSeqNrEq0() throws CryptoException {
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(0);
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
-            doProtectedStorageAddAndVerify(entryForAdd, true, false);
+            doProtectedStorageAddAndVerify(entryForAdd, false, false);
         }
 
         // TESTCASE: Adding duplicate payload for w/ lower sequence number

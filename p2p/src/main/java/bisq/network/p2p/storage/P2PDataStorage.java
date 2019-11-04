@@ -390,28 +390,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
 
-        // TODO: Combine with hasSequenceNrIncreased check, but keep existing behavior for now
-        if(!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
+        // If we have seen a more recent operation for this payload, we ignore the current one
+        if(!hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
         if (!checkPublicKeys(protectedStorageEntry, true) || !checkSignature(protectedStorageEntry))
             return false;
 
-        boolean containsKey = map.containsKey(hashOfPayload);
-
-        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
-        if (containsKey && !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload))
+        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
+        if (map.containsKey(hashOfPayload) &&
+                !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
             return false;
-
-        boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
-
-        // If we have seen a more recent operation for this payload, we ignore the current one
-        // TODO: I think we can return false here. All callers use the Client API (addProtectedStorageEntry(getProtectedStorageEntry())
-        //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that adds() that don't
-        //  change state return false.
-        if (!hasSequenceNrIncreased)
-            return true;
+        }
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
