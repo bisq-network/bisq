@@ -447,17 +447,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         int sequenceNumber = refreshTTLMessage.getSequenceNumber();
 
-        // If we have seen a more recent operation for this payload, we ignore the current one
-        // TODO: I think we can return false here. All callers use the Client API (refreshTTL(getRefreshTTLMessage()) which increments the sequence number
-        //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that operations that don't
-        //  change state return false.
-        if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
-            log.trace("We got that message with that seq nr already from another peer. We ignore that message.");
-
-            return true;
-        }
-
-        // TODO: Combine with above in future work, but preserve existing behavior for now
         if(!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
             return false;
 

@@ -976,7 +976,7 @@ public class P2PDataStorageTest {
             ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entry, true, true);
 
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,1), true, false);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,1), false, false);
         }
 
         // TESTCASE: Duplicate refresh message (same seq #)
@@ -986,7 +986,7 @@ public class P2PDataStorageTest {
             doProtectedStorageAddAndVerify(entry, true, true);
 
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), true, true);
-            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), true, false);
+            doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), false, false);
         }
 
         // TESTCASE: Duplicate refresh message (greater seq #)
