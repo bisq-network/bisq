@@ -466,7 +466,7 @@ public class BisqSetup {
         // For DAO testnet we ignore local btc node
         if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ||
                 BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ||
-                bisqEnvironment.getIgnoreLocalBtcNode()) {
+                bisqEnvironment.isIgnoreLocalBtcNode()) {
             step3();
         } else {
             new Thread(() -> {

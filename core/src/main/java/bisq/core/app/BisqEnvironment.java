@@ -195,7 +195,10 @@ public class BisqEnvironment extends StandardEnvironment {
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
-            referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep, ignoreLocalBtcNode;
+            referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
+
+    @Getter
+    protected boolean ignoreLocalBtcNode;
 
     protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
 
@@ -264,7 +267,7 @@ public class BisqEnvironment extends StandardEnvironment {
         userAgent = getProperty(commandLineProperties, BtcOptionKeys.USER_AGENT, "Bisq");
         useAllProvidedNodes = getProperty(commandLineProperties, BtcOptionKeys.USE_ALL_PROVIDED_NODES, "false");
         numConnectionForBtc = getProperty(commandLineProperties, BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, "9");
-        ignoreLocalBtcNode = getProperty(commandLineProperties, BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, "false");
+        ignoreLocalBtcNode = getProperty(commandLineProperties, BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, "false").equalsIgnoreCase("true");
 
 
         MutablePropertySources propertySources = getPropertySources();
@@ -342,10 +345,6 @@ public class BisqEnvironment extends StandardEnvironment {
             e2.printStackTrace();
             throw new RuntimeException(e2);
         }
-    }
-
-    public boolean getIgnoreLocalBtcNode() {
-        return ignoreLocalBtcNode.equalsIgnoreCase("true");
     }
 
     private Resource getAppDirPropertiesResource() {
@@ -429,7 +428,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(BtcOptionKeys.USER_AGENT, userAgent);
                 setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
                 setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
-                setProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, ignoreLocalBtcNode);
+                setProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, String.valueOf(ignoreLocalBtcNode));
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);
