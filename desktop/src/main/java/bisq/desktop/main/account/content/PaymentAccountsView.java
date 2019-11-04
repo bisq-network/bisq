@@ -6,6 +6,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.account.sign.SignedWitnessService;
@@ -17,8 +18,6 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.common.UserThread;
 
 import org.apache.commons.lang3.StringUtils;
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -126,15 +125,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
                                                 item.paymentAccountPayload));
 
                                 String info = StringUtils.capitalize(signState.getPresentation());
-
-                                switch (signState) {
-                                    case PEER_SIGNER:
-                                    case ARBITRATOR:
-                                        label.setIcon(MaterialDesignIcon.APPROVAL, info);
-                                        break;
-                                    default:
-                                        label.setIcon(MaterialDesignIcon.ALERT_CIRCLE_OUTLINE, info);
-                                }
+                                label.setIcon(GUIUtil.getIconForSignState(signState), info);
                             } else {
                                 label.hideIcon();
                             }
