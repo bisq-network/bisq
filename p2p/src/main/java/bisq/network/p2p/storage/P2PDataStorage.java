@@ -461,39 +461,64 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                               @Nullable NodeAddress sender,
                               boolean isDataOwner) {
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
-        if (map.containsKey(hashOfPayload)) {
-            ProtectedStorageEntry storedData = map.get(hashOfPayload);
-            int sequenceNumber = refreshTTLMessage.getSequenceNumber();
 
-            if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
-                log.trace("We got that message with that seq nr already from another peer. We ignore that message.");
-                return true;
-            } else {
-                PublicKey ownerPubKey = storedData.getProtectedStoragePayload().getOwnerPubKey();
-                byte[] hashOfDataAndSeqNr = refreshTTLMessage.getHashOfDataAndSeqNr();
-                byte[] signature = refreshTTLMessage.getSignature();
-                // printData("before refreshTTL");
-                if (hasSequenceNrIncreased(sequenceNumber, hashOfPayload) &&
-                        checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload) &&
-                        checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature)) {
-                    log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
-                    storedData.refreshTTL();
-                    storedData.updateSequenceNumber(sequenceNumber);
-                    storedData.updateSignature(signature);
-                    printData("after refreshTTL");
-                    sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
-                    sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
-
-                    broadcast(refreshTTLMessage, sender, null, isDataOwner);
-                    return true;
-                }
-
-                return false;
-            }
-        } else {
+        if (!map.containsKey((hashOfPayload))) {
             log.debug("We don't have data for that refresh message in our map. That is expected if we missed the data publishing.");
+
             return false;
         }
+
+        int sequenceNumber = refreshTTLMessage.getSequenceNumber();
+
+        // If we have seen a more recent operation for this payload, we ignore the current one
+        // TODO: I think we can return false here. All callers use the Client API (refreshTTL(getRefreshTTLMessage()) which increments the sequence number
+        //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that operations that don't
+        //  change state return false.
+        if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
+            log.trace("We got that message with that seq nr already from another peer. We ignore that message.");
+
+            return true;
+        }
+
+        // TODO: Combine with above in future work, but preserve existing behavior for now
+        if(!hasSequenceNrIncreased(sequenceNumber, hashOfPayload)) {
+            return false;
+        }
+
+        ProtectedStorageEntry storedData = map.get(hashOfPayload);
+        PublicKey ownerPubKey = storedData.getProtectedStoragePayload().getOwnerPubKey();
+        byte[] hashOfDataAndSeqNr = refreshTTLMessage.getHashOfDataAndSeqNr();
+        byte[] signature = refreshTTLMessage.getSignature();
+
+        // Verify the RefreshOfferMessage is well formed and valid for the refresh operation
+        if (!checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature)) {
+            log.trace("refreshTTL failed due to invalid entry");
+
+            return false;
+        }
+
+        // In a hash collision between two well formed RefreshOfferMessage, the first item wins and will not be overwritten
+        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload)) {
+            log.trace("refreshTTL failed due to hash collision");
+
+            return false;
+        }
+
+        // This is a valid refresh, update the payload for it
+        log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
+        storedData.refreshTTL();
+        storedData.updateSequenceNumber(sequenceNumber);
+        storedData.updateSignature(signature);
+        printData("after refreshTTL");
+
+        // Record the latest sequence number and persist it
+        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
+
+        // Always broadcast refreshes
+        broadcast(refreshTTLMessage, sender, null, isDataOwner);
+
+        return true;
     }
 
     public boolean remove(ProtectedStorageEntry protectedStorageEntry,
