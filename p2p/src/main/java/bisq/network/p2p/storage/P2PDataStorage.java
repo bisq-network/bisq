@@ -390,50 +390,64 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
 
-        boolean sequenceNrValid = isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
-        boolean result = sequenceNrValid &&
-                checkPublicKeys(protectedStorageEntry, true)
-                && checkSignature(protectedStorageEntry);
+        // TODO: Combine with hasSequenceNrIncreased check, but keep existing behavior for now
+        if(!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload) ) {
+            log.trace("addProtectedStorageEntry failed due to invalid sequence number");
+
+            return false;
+        }
+
+        // Verify the ProtectedStorageEntry is well formed and valid for the add operation
+        if (!checkPublicKeys(protectedStorageEntry, true) ||
+                !checkSignature(protectedStorageEntry)) {
+
+            log.trace("addProtectedStorageEntry failed due to invalid entry");
+            return false;
+        }
 
         boolean containsKey = map.containsKey(hashOfPayload);
-        if (containsKey) {
-            result = result && checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload);
+
+        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
+        if (containsKey &&
+                !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
+
+            log.trace("addProtectedStorageEntry failed due to hash collision");
+            return false;
         }
 
-        // printData("before add");
-        if (result) {
-            boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
+        boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
 
-            if (!containsKey || hasSequenceNrIncreased) {
-                // At startup we don't have the item so we store it. At updates of the seq nr we store as well.
-                map.put(hashOfPayload, protectedStorageEntry);
-                hashMapChangedListeners.forEach(e -> e.onAdded(protectedStorageEntry));
-                // printData("after add");
-            } else {
-                log.trace("We got that version of the data already, so we don't store it.");
-            }
-
-            if (hasSequenceNrIncreased) {
-                sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
-                // We set the delay higher as we might receive a batch of items
-                sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 2000);
-
-                if (allowBroadcast)
-                    broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner);
-            } else {
-                log.trace("We got that version of the data already, so we don't broadcast it.");
-            }
-
-            if (protectedStoragePayload instanceof PersistablePayload) {
-                ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
-                ProtectedStorageEntry previous = protectedDataStoreService.putIfAbsent(compactHash, protectedStorageEntry);
-                if (previous == null)
-                    protectedDataStoreListeners.forEach(e -> e.onAdded(protectedStorageEntry));
-            }
-        } else {
-            log.trace("add failed");
+        // If we have seen a more recent operation for this payload, we ignore the current one
+        // TODO: I think we can return false here. All callers use the Client API (addProtectedStorageEntry(getProtectedStorageEntry())
+        //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that adds() that don't
+        //  change state return false.
+        if (!hasSequenceNrIncreased) {
+            log.trace("addProtectedStorageEntry failed due to old sequence number");
+            
+            return true;
         }
-        return result;
+
+        // This is an updated entry. Record it and signal listeners.
+        map.put(hashOfPayload, protectedStorageEntry);
+        hashMapChangedListeners.forEach(e -> e.onAdded(protectedStorageEntry));
+
+        // Record the updated sequence number and persist it. Higher delay so we can batch more items.
+        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 2000);
+
+        // Optionally, broadcast the add/update depending on the calling environment
+        if (allowBroadcast)
+            broadcastProtectedStorageEntry(protectedStorageEntry, sender, listener, isDataOwner);
+
+        // Persist ProtectedStorageEntrys carrying PersistablePayload payloads and signal listeners on changes
+        if (protectedStoragePayload instanceof PersistablePayload) {
+            ByteArray compactHash = P2PDataStorage.getCompactHashAsByteArray(protectedStoragePayload);
+            ProtectedStorageEntry previous = protectedDataStoreService.putIfAbsent(compactHash, protectedStorageEntry);
+            if (previous == null)
+                protectedDataStoreListeners.forEach(e -> e.onAdded(protectedStorageEntry));
+        }
+
+        return true;
     }
 
     private void broadcastProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry,
