@@ -1,9 +1,8 @@
 # Bisq Seed Node
 
-* Install bisq-seednode.service in /etc/systemd/system
-* Install bisq-seednode in /etc/default
-* Modify the executable paths and configuration as necessary
-* Then you can do:
+## Running using systemd
+
+The distribution ships with a systemd .desktop file. Validate/change the executable/config paths within the shipped `bisq-seednode.service` file and copy/move the file to your systemd directory (something along `/usr/lib/systemd/system/`). Now you can control your *Seed Node* via the usual systemd start/stop commands
 
 ```
 systemctl start bisq-seednode.service

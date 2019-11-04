@@ -8,7 +8,8 @@ WORKDIR /home/gradle/bisq/seednode
 # git sometimes complains about this, can be bogus because we're not going to commit things
 RUN git config --global user.email "you@example.com"
 RUN git config --global user.name "Your Name"
-RUN git pull origin $SEEDNODE_BRANCH && git checkout $SEEDNODE_BRANCH
+RUN git fetch origin $SEEDNODE_BRANCH && git checkout $SEEDNODE_BRANCH
+RUN git rev-parse --verify HEAD > git_head.txt
 RUN gradle build
 RUN chmod +x ./build/app/bin/bisq-seednode
 
@@ -20,6 +21,7 @@ EXPOSE 8000
 RUN mkdir /home/bisq
 COPY --from=builder /home/gradle/bisq/seednode/build/app/bin/bisq-seednode /home/bisq/bin/bisq-seednode
 COPY --from=builder /home/gradle/bisq/seednode/build/app/lib /home/bisq/lib/
+COPY --from=builder /home/gradle/bisq/seednode/git_head.txt /home/bisq/git_head.txt
 COPY ./docker/startSeedNode.sh /home/bisq/
 WORKDIR /home/bisq/
 CMD ./startSeedNode.sh
