@@ -274,7 +274,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.2.1-SNAPSHOT'
+    version = '1.2.2-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
