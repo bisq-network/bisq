@@ -21,12 +21,17 @@ import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.user.UserPayload;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 
 import java.util.Collections;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -70,5 +75,25 @@ public class PaymentAccountsTest {
         when(service.getMyWitness(payload)).thenReturn(witness);
 
         return account;
+    }
+
+    @Test
+    public void testRemoveAccount() {
+        PaymentAccountPayload payload = mock(PaymentAccountPayload.class);
+
+        PaymentAccount account = mock(PaymentAccount.class);
+        account.setAccountName("account name");
+        when(account.getPaymentAccountPayload()).thenReturn(payload);
+
+        ObservableSet<PaymentAccount> paymentAccountsAsObservable;
+        paymentAccountsAsObservable = FXCollections.observableSet(new UserPayload().getPaymentAccounts());
+
+        //add element
+        paymentAccountsAsObservable.add(account);
+
+        //remove element with some state change
+        account.setAccountName("new account name");
+
+        assertTrue(paymentAccountsAsObservable.remove(account));
     }
 }

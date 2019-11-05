@@ -29,6 +29,7 @@ import bisq.common.util.Utilities;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -146,6 +147,20 @@ public abstract class PaymentAccount implements PersistablePayload {
             return tradeCurrencies.get(0);
         else
             return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PaymentAccount that = (PaymentAccount) o;
+        return creationDate == that.creationDate &&
+                id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, creationDate);
     }
 
     public long getMaxTradePeriod() {
