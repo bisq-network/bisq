@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TableGroupHeadline;
 import bisq.desktop.main.dao.governance.PhasesView;
@@ -48,6 +49,7 @@ import bisq.core.dao.state.model.governance.ChangeParamProposal;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.ConfiscateBondProposal;
 import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
@@ -72,7 +74,6 @@ import com.google.gson.JsonObject;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.stage.Stage;
 
@@ -146,6 +147,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ProposalListItem selectedProposalListItem;
     private boolean isVoteIncludedInResult;
     private final Set<Cycle> cyclesAdded = new HashSet<>();
+    private boolean hasCalculatedResult = false;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -200,13 +202,20 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         daoFacade.addBsqStateListener(this);
         cyclesTableView.getSelectionModel().selectedItemProperty().addListener(selectedVoteResultListItemListener);
 
-        fillCycleList();
+        if (daoStateService.isParseBlockChainComplete()) {
+            checkForResultPhase(daoStateService.getChainHeight());
+            fillCycleList();
+        }
+
         exportButton.setOnAction(event -> {
             JsonElement cyclesJsonArray = getVotingHistoryJson();
             GUIUtil.exportJSON("voteResultsHistory.json", cyclesJsonArray, (Stage) root.getScene().getWindow());
         });
         if (proposalsTableView != null) {
             GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 6);
+
+            selectedProposalSubscription = EasyBind.subscribe(proposalsTableView.getSelectionModel().selectedItemProperty(),
+                    this::onSelectProposalResultListItem);
         }
         GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 6, 6);
     }
@@ -214,8 +223,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     @Override
     protected void deactivate() {
         super.deactivate();
-
-        onResultsListItemSelected(null);
 
         phasesView.deactivate();
 
@@ -234,7 +241,29 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        checkForResultPhase(daoStateService.getChainHeight());
         fillCycleList();
+    }
+
+    private void checkForResultPhase(int chainHeight) {
+        if (periodService.isInPhase(chainHeight, DaoPhase.Phase.RESULT)) {
+            if (!hasCalculatedResult) {
+                hasCalculatedResult = true;
+                // We had set the cycle initially but at the vote result we want to update it with the actual result.
+                // We remove the empty cycle to make space for the one with the result.
+                Optional<Cycle> optionalCurrentCycle = cyclesAdded.stream()
+                        .filter(cycle -> cycle.isInCycle(chainHeight))
+                        .findAny();
+                optionalCurrentCycle.ifPresent(cyclesAdded::remove);
+                Optional<CycleListItem> optionalCurrentCycleListItem = cycleListItemList.stream()
+                        .filter(cycleListItem -> cycleListItem.getResultsOfCycle().getCycle().isInCycle(chainHeight))
+                        .findAny();
+                optionalCurrentCycleListItem.ifPresent(cycleListItemList::remove);
+            }
+        } else {
+            // Reset to be ready to calculate result for next RESULT phase
+            hasCalculatedResult = false;
+        }
     }
 
 
@@ -296,7 +325,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
                         });
                     });
-            if (!sb.toString().isEmpty()) {
+            if (sb.length() != 0) {
                 new Popup<>().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
             }
         }
@@ -327,10 +356,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private void onSelectProposalResultListItem(ProposalListItem item) {
         selectedProposalListItem = item;
 
-        GUIUtil.removeChildrenFromGridPaneRows(root, 5, gridRow);
-        gridRow = 3;
-
-
         if (selectedProposalListItem != null) {
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
             Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
@@ -351,8 +376,10 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         }
     }
 
-    private void showProposalResultWindow(EvaluatedProposal evaluatedProposal, Ballot ballot,
-                                          boolean isVoteIncludedInResult, SortedList<VoteListItem> sortedVoteListItemList) {
+    private void showProposalResultWindow(EvaluatedProposal evaluatedProposal,
+                                          Ballot ballot,
+                                          boolean isVoteIncludedInResult,
+                                          SortedList<VoteListItem> sortedVoteListItemList) {
         proposalResultsWindow.show(evaluatedProposal, ballot, isVoteIncludedInResult, sortedVoteListItemList);
     }
 
@@ -465,8 +492,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalsTableView.setItems(sortedProposalList);
         sortedProposalList.comparatorProperty().bind(proposalsTableView.comparatorProperty());
 
-        proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
+        proposalList.clear();
 
         Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
@@ -696,7 +723,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     final Proposal proposal = item.getProposal();
-                                    field = new HyperlinkWithIcon(proposal.getLink(), MaterialDesignIcon.LINK);
+                                    field = new ExternalHyperlink(proposal.getLink());
                                     field.setOnAction(event -> GUIUtil.openWebPage(proposal.getLink()));
                                     field.setTooltip(new Tooltip(proposal.getLink()));
                                     setGraphic(field);

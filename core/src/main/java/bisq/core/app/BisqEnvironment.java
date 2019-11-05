@@ -178,6 +178,7 @@ public class BisqEnvironment extends StandardEnvironment {
 
     protected final String appName;
     protected final String userDataDir;
+    @Getter
     protected final String appDataDir;
     protected final String btcNetworkDir, userAgent;
     protected final String logLevel, providers;
@@ -194,7 +195,10 @@ public class BisqEnvironment extends StandardEnvironment {
             banList, dumpStatistics, maxMemory, socks5ProxyBtcAddress,
             torRcFile, torRcOptions, externalTorControlPort, externalTorPassword, externalTorCookieFile,
             socks5ProxyHttpAddress, useAllProvidedNodes, numConnectionForBtc, genesisTxId, genesisBlockHeight, genesisTotalSupply,
-            referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep, ignoreLocalBtcNode;
+            referralId, daoActivated, msgThrottlePerSec, msgThrottlePer10Sec, sendMsgThrottleTrigger, sendMsgThrottleSleep;
+
+    @Getter
+    protected boolean ignoreLocalBtcNode;
 
     protected final boolean externalTorUseSafeCookieAuthentication, torStreamIsolation;
 
@@ -263,7 +267,7 @@ public class BisqEnvironment extends StandardEnvironment {
         userAgent = getProperty(commandLineProperties, BtcOptionKeys.USER_AGENT, "Bisq");
         useAllProvidedNodes = getProperty(commandLineProperties, BtcOptionKeys.USE_ALL_PROVIDED_NODES, "false");
         numConnectionForBtc = getProperty(commandLineProperties, BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, "9");
-        ignoreLocalBtcNode = getProperty(commandLineProperties, BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, "false");
+        ignoreLocalBtcNode = getProperty(commandLineProperties, BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, "false").equalsIgnoreCase("true");
 
 
         MutablePropertySources propertySources = getPropertySources();
@@ -271,14 +275,9 @@ public class BisqEnvironment extends StandardEnvironment {
         try {
             propertySources.addLast(getAppDirProperties());
 
-            final String bannedPriceRelayNodesAsString = getProperty(FilterManager.BANNED_PRICE_RELAY_NODES, "");
-            bannedPriceRelayNodes = !bannedPriceRelayNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedPriceRelayNodesAsString).split(",")) : null;
-
-            final String bannedSeedNodesAsString = getProperty(FilterManager.BANNED_SEED_NODES, "");
-            bannedSeedNodes = !bannedSeedNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedSeedNodesAsString).split(",")) : new ArrayList<>();
-
-            final String bannedBtcNodesAsString = getProperty(FilterManager.BANNED_BTC_NODES, "");
-            bannedBtcNodes = !bannedBtcNodesAsString.isEmpty() ? Arrays.asList(StringUtils.deleteWhitespace(bannedBtcNodesAsString).split(",")) : null;
+            bannedPriceRelayNodes = getListProperty(FilterManager.BANNED_PRICE_RELAY_NODES, null);
+            bannedSeedNodes = getListProperty(FilterManager.BANNED_SEED_NODES, new ArrayList<>());
+            bannedBtcNodes = getListProperty(FilterManager.BANNED_BTC_NODES, null);
 
             baseCurrencyNetwork = BaseCurrencyNetwork.valueOf(getProperty(BtcOptionKeys.BASE_CURRENCY_NETWORK,
                     getDefaultBaseCurrencyNetwork().name()).toUpperCase());
@@ -348,14 +347,6 @@ public class BisqEnvironment extends StandardEnvironment {
         }
     }
 
-    public boolean getIgnoreLocalBtcNode() {
-        return ignoreLocalBtcNode.equalsIgnoreCase("true");
-    }
-
-    public String getAppDataDir() {
-        return appDataDir;
-    }
-
     private Resource getAppDirPropertiesResource() {
         String location = String.format("file:%s/bisq.properties", appDataDir);
         return resourceLoader.getResource(location);
@@ -372,6 +363,11 @@ public class BisqEnvironment extends StandardEnvironment {
 
     private String getProperty (PropertySource properties, String propertyKey, String defaultValue) {
         return properties.containsProperty(propertyKey) ? (String) properties.getProperty(propertyKey) : defaultValue;
+    }
+
+    private List<String> getListProperty (String key, List defaultValue) {
+        final String value = getProperty(key, "");
+        return value.isEmpty() ? defaultValue : Arrays.asList(StringUtils.deleteWhitespace(value).split(","));
     }
 
     private PropertySource<?> defaultProperties() {
@@ -432,7 +428,7 @@ public class BisqEnvironment extends StandardEnvironment {
                 setProperty(BtcOptionKeys.USER_AGENT, userAgent);
                 setProperty(BtcOptionKeys.USE_ALL_PROVIDED_NODES, useAllProvidedNodes);
                 setProperty(BtcOptionKeys.NUM_CONNECTIONS_FOR_BTC, numConnectionForBtc);
-                setProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, ignoreLocalBtcNode);
+                setProperty(BtcOptionKeys.IGNORE_LOCAL_BTC_NODE, String.valueOf(ignoreLocalBtcNode));
 
                 setProperty(UserAgent.NAME_KEY, appName);
                 setProperty(UserAgent.VERSION_KEY, Version.VERSION);

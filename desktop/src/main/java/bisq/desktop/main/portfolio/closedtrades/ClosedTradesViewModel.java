@@ -149,6 +149,8 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
                     return Res.get("portfolio.closed.ticketClosed");
                 } else if (trade.getDisputeState() == Trade.DisputeState.MEDIATION_CLOSED) {
                     return Res.get("portfolio.closed.mediationTicketClosed");
+                } else if (trade.getDisputeState() == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
+                    return Res.get("portfolio.closed.ticketClosed");
                 } else {
                     log.error("That must not happen. We got a pending state but we are in the closed trades list. state={}", trade.getState().toString());
                     return Res.get("shared.na");

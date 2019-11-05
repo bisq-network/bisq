@@ -17,6 +17,9 @@
 
 package bisq.core.account.witness;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.payment.ChargeBackRisk;
+
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Sig;
 
@@ -38,6 +41,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 // Restricted default Java security policy on Travis does not allow long keys, so test fails.
 // Using Utilities.removeCryptographyRestrictions(); did not work.
@@ -49,7 +53,9 @@ public class AccountAgeWitnessServiceTest {
 
     @Before
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
-        service = new AccountAgeWitnessService(null, null, null, null, null);
+        SignedWitnessService signedWitnessService = mock(SignedWitnessService.class);
+        ChargeBackRisk chargeBackRisk = mock(ChargeBackRisk.class);
+        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, null, null);
         keypair = Sig.generateKeyPair();
         publicKey = keypair.getPublic();
     }

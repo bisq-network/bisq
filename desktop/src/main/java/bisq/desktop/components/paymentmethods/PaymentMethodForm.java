@@ -25,6 +25,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
 
+import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
@@ -32,8 +33,10 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -43,6 +46,8 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 
 import org.apache.commons.lang3.StringUtils;
+
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -60,7 +65,9 @@ import javafx.collections.FXCollections;
 
 import javafx.util.StringConverter;
 
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -178,16 +185,61 @@ public abstract class PaymentMethodForm {
         final String limitationsText = paymentAccount instanceof AssetAccount ?
                 Res.get("payment.maxPeriodAndLimitCrypto",
                         getTimeText(hours),
-                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))))
+                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
+                                paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.BUY))))
                 :
                 Res.get("payment.maxPeriodAndLimit",
                         getTimeText(hours),
-                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(paymentAccount, tradeCurrency.getCode()))),
+                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
+                                paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.BUY))),
+                        formatter.formatCoinWithCode(Coin.valueOf(accountAgeWitnessService.getMyTradeLimit(
+                                paymentAccount, tradeCurrency.getCode(), OfferPayload.Direction.SELL))),
                         DisplayUtils.formatAccountAge(accountAge));
 
-        if (isDisplayForm)
+        if (isDisplayForm) {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
-        else
+
+            String accountSigningStateText;
+            MaterialDesignIcon icon;
+
+            boolean needsSigning = PaymentMethod.hasChargebackRisk(paymentAccount.getPaymentMethod(),
+                    paymentAccount.getTradeCurrencies());
+
+            if (needsSigning) {
+
+                AccountAgeWitness myWitness = accountAgeWitnessService.getMyWitness(
+                        paymentAccount.paymentAccountPayload);
+                AccountAgeWitnessService.SignState signState =
+                        accountAgeWitnessService.getSignState(myWitness);
+
+                accountSigningStateText = StringUtils.capitalize(signState.getPresentation());
+
+                long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
+                        accountAgeWitnessService.getWitnessSignAge(myWitness, new Date()));
+                String timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning.long",
+                        Res.get("offerbook.timeSinceSigning.daysSinceSigning",
+                                daysSinceSigning));
+
+                switch (signState) {
+                    case PEER_SIGNER:
+                    case ARBITRATOR:
+                        icon = MaterialDesignIcon.APPROVAL;
+                        accountSigningStateText += " / " + timeSinceSigning;
+                        break;
+                    case PEER_INITIAL:
+                    case PEER_LIMIT_LIFTED:
+                        accountSigningStateText += " / " + timeSinceSigning;
+                    default:
+                        icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                }
+
+                InfoTextField accountSigningField = addCompactTopLabelInfoTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"),
+                        accountSigningStateText).second;
+                //TODO: add additional information regarding account signing
+                accountSigningField.setContent(icon, accountSigningStateText, "", 0.4);
+            }
+
+        } else
             addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.limitations"), limitationsText);
 
         if (!(paymentAccount instanceof AssetAccount)) {

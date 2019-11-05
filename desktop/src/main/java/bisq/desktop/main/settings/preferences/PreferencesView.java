@@ -103,7 +103,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<String> userLanguageComboBox;
     private ComboBox<Country> userCountryComboBox;
     private ComboBox<TradeCurrency> preferredTradeCurrencyComboBox;
-    //private ComboBox<BaseCurrencyNetwork> selectBaseCurrencyNetworkComboBox;
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee;
@@ -227,26 +226,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void initializeGeneralOptions() {
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 8, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
-
-        // selectBaseCurrencyNetwork
-      /*  selectBaseCurrencyNetworkComboBox = FormBuilder.addComboBox(root, gridRow,
-                Res.get("settings.preferences.selectCurrencyNetwork"), Layout.FIRST_ROW_DISTANCE);
-
-        selectBaseCurrencyNetworkComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("settings.preferences.selectCurrencyNetwork"),
-                selectBaseCurrencyNetworkComboBox, false));
-        selectBaseCurrencyNetworkComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(BaseCurrencyNetwork baseCurrencyNetwork) {
-                return baseCurrencyNetwork != null ?
-                        Res.get(baseCurrencyNetwork.name()) :
-                        Res.get("na");
-            }
-
-            @Override
-            public BaseCurrencyNetwork fromString(String string) {
-                return null;
-            }
-        });*/
 
         userLanguageComboBox = addComboBox(root, gridRow,
                 Res.get("shared.language"), Layout.FIRST_ROW_DISTANCE);

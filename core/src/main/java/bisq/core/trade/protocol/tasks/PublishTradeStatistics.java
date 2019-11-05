@@ -66,9 +66,9 @@ public class PublishTradeStatistics extends TradeTask {
 
                 NodeAddress mediatorNodeAddress = trade.getMediatorNodeAddress();
                 if (mediatorNodeAddress != null) {
-                    // The first 4 chars are sufficient to identify an arbitrator.
+                    // The first 4 chars are sufficient to identify an mediator.
                     // For testing with regtest/localhost we use the full address as its localhost and would result in
-                    // same values for multiple arbitrators.
+                    // same values for multiple mediators.
                     NetworkNode networkNode = model.getProcessModel().getP2PService().getNetworkNode();
                     String address = networkNode instanceof TorNetworkNode ?
                             mediatorNodeAddress.getFullAddress().substring(0, 4) :

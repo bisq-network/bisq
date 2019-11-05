@@ -723,7 +723,7 @@ tree-table-view:focused {
  * Icons                                                                       *
  *                                                                             *
  ******************************************************************************/
-.icon, icon:hover {
+.icon, .icon:hover {
     -fx-cursor: hand;
 }
 
@@ -782,6 +782,18 @@ tree-table-view:focused {
     -fx-padding: 27 2 0 2;
 }
 
+.close-icon {
+    -fx-fill: -bs-text-color;
+}
+
+.close-icon:hover {
+    -fx-fill: -fx-accent;
+}
+
+.tooltip-icon {
+    -fx-fill: -bs-text-color;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *
@@ -836,6 +848,12 @@ textfield */
 .hyperlink:visited,
 .hyperlink:hover:visited {
     -fx-underline: false;
+}
+
+.hyperlink.highlight,
+.hyperlink.highlight .text.hyperlink.no-underline {
+    -fx-text-fill: -fx-accent;
+    -fx-fill: -fx-accent;
 }
 
 /*******************************************************************************
@@ -1967,56 +1985,6 @@ textfield */
     -fx-font-size: 0.923em;
 }
 
-.dao-launch-version {
-    -fx-font-size: 1.077em;
-}
-
-.dao-launch-headline {
-    -fx-font-size: 2.154em;
-    -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.dao-launch-description {
-    -fx-font-size: 1.538em;
-    -fx-text-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.dao-launch-paging-button {
-    -fx-text-fill: -bs-rd-font-light;
-    -fx-fill: -bs-rd-font-light;
-}
-
-.dao-launch-tab-box {
-    -fx-border-style: solid;
-    -fx-border-width: 1 0 0 0;
-    -fx-border-color: -bs-rd-tab-border;
-}
-
-.slider-section-button {
-    -fx-cursor: hand;
-    -fx-background-color: transparent;
-    -fx-translate-y: -1;
-    -fx-padding: 11;
-}
-
-.slider-section-button .text {
-    -fx-font-size: 0.923em;
-    -fx-fill: -bs-rd-font-dark-gray;
-    -fx-font-family: "IBM Plex Sans Light";
-}
-
-.slider-section-button:selected {
-    -fx-border-style: solid;
-    -fx-border-width: 1 0 0 0;
-    -fx-border-color: -bs-rd-green;
-}
-
-.slider-section-button:selected .text {
-    -fx-fill: -bs-rd-green;
-}
-
 .price-trend-up {
     -fx-text-fill: -bs-color-primary;
     -fx-padding: 2 0 0 0;
@@ -2027,6 +1995,33 @@ textfield */
     -fx-padding: 2 0 0 0;
 }
 
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * News                                                                                                             *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+
+.news-version {
+    -fx-alignment: center-left;
+    -fx-font-size: 1em;
+}
+
+.news-feature-headline {
+    -fx-font-size: 1.077em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+    -fx-font-family: "IBM Plex Sans Medium";
+}
+
+.news-feature-description {
+    -fx-font-size: 1em;
+    -fx-text-fill: -bs-rd-font-dark-gray;
+}
+
+.news-feature-image {
+    -fx-border-style: solid;
+    -fx-border-width: 1;
+    -fx-border-color: -bs-rd-separator-dark;
+}
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                    *
@@ -2040,3 +2035,18 @@ textfield */
 .status-icon {
     -fx-text-fill: -fx-faint-focus-color;
 }
+
+/********************************************************************************************************************
+ *                                                                                                                  *
+ * Popover                                                                                                    *
+ *                                                                                                                  *
+ ********************************************************************************************************************/
+.popover > .content {
+    -fx-padding: 10;
+}
+
+.popover > .content .default-text {
+    -fx-text-fill: -bs-text-color;
+}
+
+

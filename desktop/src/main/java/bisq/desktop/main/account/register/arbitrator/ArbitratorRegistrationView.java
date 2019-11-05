@@ -40,6 +40,6 @@ public class ArbitratorRegistrationView extends AgentRegistrationView<Arbitrator
 
     @Override
     protected String getRole() {
-        return Res.get("shared.arbitrator2");
+        return Res.get("shared.arbitrator");
     }
 }

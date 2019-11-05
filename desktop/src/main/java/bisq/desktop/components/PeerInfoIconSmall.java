@@ -35,11 +35,14 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
     @Override
     protected void addMouseListener(int numTrades,
                                     PrivateNotificationManager privateNotificationManager,
-                                    Offer offer, Preferences preferences,
+                                    Offer offer,
+                                    Preferences preferences,
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
-                                    long makersAccountAge) {
+                                    long makersAccountAge,
+                                    String makersAccountAgeInfo,
+                                    String accountSigningState) {
     }
 
     @Override

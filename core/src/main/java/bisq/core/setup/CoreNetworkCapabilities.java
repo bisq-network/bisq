@@ -37,7 +37,10 @@ public class CoreNetworkCapabilities {
                 Capability.BLIND_VOTE,
                 Capability.DAO_STATE,
                 Capability.BUNDLE_OF_ENVELOPES,
-                Capability.MEDIATION
+                Capability.MEDIATION,
+                Capability.SIGNED_ACCOUNT_AGE_WITNESS,
+                Capability.REFUND_AGENT,
+                Capability.TRADE_STATISTICS_HASH_UPDATE
         );
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {

@@ -348,7 +348,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Overwriting an entry would be also no issue. We also skip notifying listeners as we get called before the domain
     // is ready so no listeners are set anyway. We might get called twice from a redundant call later, so listeners
     // might be added then but as we have the data already added calling them would be irrelevant as well.
-    // TODO find a way to avoid the second call...
     public boolean addPersistableNetworkPayloadFromInitialRequest(PersistableNetworkPayload payload) {
         byte[] hash = payload.getHash();
         if (payload.verifyHashSize()) {

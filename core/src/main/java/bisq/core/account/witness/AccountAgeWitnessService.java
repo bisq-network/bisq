@@ -17,12 +17,22 @@
 
 package bisq.core.account.witness;
 
+import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.filter.FilterManager;
+import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AssetAccount;
+import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.TradingPeer;
 import bisq.core.user.User;
@@ -43,6 +53,7 @@ import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.ECKey;
 
 import javax.inject.Inject;
 
@@ -52,10 +63,14 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,16 +80,40 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AccountAgeWitnessService {
     private static final Date RELEASE = Utilities.getUTCDate(2017, GregorianCalendar.NOVEMBER, 11);
     public static final Date FULL_ACTIVATION = Utilities.getUTCDate(2018, GregorianCalendar.FEBRUARY, 15);
+    private static final long SAFE_ACCOUNT_AGE_DATE = Utilities.getUTCDate(2019, GregorianCalendar.MARCH, 1).getTime();
 
     public enum AccountAge {
+        UNVERIFIED,
         LESS_ONE_MONTH,
         ONE_TO_TWO_MONTHS,
         TWO_MONTHS_OR_MORE
     }
 
+    public enum SignState {
+        UNSIGNED(Res.get("offerbook.timeSinceSigning.notSigned")),
+        ARBITRATOR(Res.get("offerbook.timeSinceSigning.info.arbitrator")),
+        PEER_INITIAL(Res.get("offerbook.timeSinceSigning.info.peer")),
+        PEER_LIMIT_LIFTED(Res.get("offerbook.timeSinceSigning.info.peerLimitLifted")),
+        PEER_SIGNER(Res.get("offerbook.timeSinceSigning.info.signer"));
+
+        private String presentation;
+
+        SignState(String presentation) {
+            this.presentation = presentation;
+        }
+
+        public String getPresentation() {
+            return presentation;
+        }
+
+    }
+
     private final KeyRing keyRing;
     private final P2PService p2PService;
     private final User user;
+    private final SignedWitnessService signedWitnessService;
+    private final ChargeBackRisk chargeBackRisk;
+    private final FilterManager filterManager;
 
     private final Map<P2PDataStorage.ByteArray, AccountAgeWitness> accountAgeWitnessMap = new HashMap<>();
 
@@ -85,12 +124,20 @@ public class AccountAgeWitnessService {
 
 
     @Inject
-    public AccountAgeWitnessService(KeyRing keyRing, P2PService p2PService, User user,
+    public AccountAgeWitnessService(KeyRing keyRing,
+                                    P2PService p2PService,
+                                    User user,
+                                    SignedWitnessService signedWitnessService,
+                                    ChargeBackRisk chargeBackRisk,
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
-                                    AppendOnlyDataStoreService appendOnlyDataStoreService) {
+                                    AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                    FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.user = user;
+        this.signedWitnessService = signedWitnessService;
+        this.chargeBackRisk = chargeBackRisk;
+        this.filterManager = filterManager;
 
         // We need to add that early (before onAllServicesInitialized) as it will be used at startup.
         appendOnlyDataStoreService.addService(accountAgeWitnessStorageService);
@@ -164,12 +211,26 @@ public class AccountAgeWitnessService {
         return new AccountAgeWitness(hash, new Date().getTime());
     }
 
-    public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
+    private Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
+                                                    PubKeyRing pubKeyRing) {
         byte[] accountInputDataWithSalt = getAccountInputDataWithSalt(paymentAccountPayload);
         byte[] hash = Hash.getSha256Ripemd160hash(Utilities.concatenateByteArrays(accountInputDataWithSalt,
                 pubKeyRing.getSignaturePubKeyBytes()));
 
         return getWitnessByHash(hash);
+    }
+
+    private Optional<AccountAgeWitness> findWitness(Offer offer) {
+        final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
+        return accountAgeWitnessHash.isPresent() ?
+                getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
+                Optional.empty();
+    }
+
+    private Optional<AccountAgeWitness> findTradePeerWitness(Trade trade) {
+        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        return (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) ?
+                Optional.empty() : findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
     private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
@@ -186,19 +247,57 @@ public class AccountAgeWitnessService {
         return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Witness age
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public long getAccountAge(AccountAgeWitness accountAgeWitness, Date now) {
         log.debug("getAccountAge now={}, accountAgeWitness.getDate()={}", now.getTime(), accountAgeWitness.getDate());
         return now.getTime() - accountAgeWitness.getDate();
     }
 
+    // Return -1 if no witness found
     public long getAccountAge(PaymentAccountPayload paymentAccountPayload, PubKeyRing pubKeyRing) {
         return findWitness(paymentAccountPayload, pubKeyRing)
                 .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
                 .orElse(-1L);
     }
 
-    public AccountAge getAccountAgeCategory(long accountAge) {
-        if (accountAge < TimeUnit.DAYS.toMillis(30)) {
+    public long getAccountAge(Offer offer) {
+        return findWitness(offer)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Signed age
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Return -1 if not signed
+    public long getWitnessSignAge(AccountAgeWitness accountAgeWitness, Date now) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return now.getTime() - dates.get(0);
+        }
+    }
+
+    // Return -1 if not signed
+    public long getWitnessSignAge(Offer offer, Date now) {
+        return findWitness(offer)
+                .map(witness -> getWitnessSignAge(witness, now))
+                .orElse(-1L);
+    }
+
+    public AccountAge getPeersAccountAgeCategory(long peersAccountAge) {
+        return getAccountAgeCategory(peersAccountAge);
+    }
+
+    private AccountAge getAccountAgeCategory(long accountAge) {
+        if (accountAge < 0) {
+            return AccountAge.UNVERIFIED;
+        } else if (accountAge < TimeUnit.DAYS.toMillis(30)) {
             return AccountAge.LESS_ONE_MONTH;
         } else if (accountAge < TimeUnit.DAYS.toMillis(60)) {
             return AccountAge.ONE_TO_TWO_MONTHS;
@@ -207,41 +306,85 @@ public class AccountAgeWitnessService {
         }
     }
 
-    private long getTradeLimit(Coin maxTradeLimit, String currencyCode, Optional<AccountAgeWitness> accountAgeWitnessOptional, Date now) {
+    // Checks trade limit based on time since signing of AccountAgeWitness
+    private long getTradeLimit(Coin maxTradeLimit,
+                               String currencyCode,
+                               AccountAgeWitness accountAgeWitness,
+                               AccountAge accountAgeCategory,
+                               OfferPayload.Direction direction,
+                               PaymentMethod paymentMethod) {
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             double factor;
-
-            final long accountAge = getAccountAge((accountAgeWitnessOptional.get()), now);
-            AccountAge accountAgeCategory = accountAgeWitnessOptional
-                    .map(accountAgeWitness -> getAccountAgeCategory(accountAge))
-                    .orElse(AccountAge.LESS_ONE_MONTH);
-
-            switch (accountAgeCategory) {
-                case TWO_MONTHS_OR_MORE:
-                    factor = 1;
-                    break;
-                case ONE_TO_TWO_MONTHS:
-                    factor = 0.5;
-                    break;
-                case LESS_ONE_MONTH:
-                default:
-                    factor = 0.25;
-                    break;
+            boolean isRisky = PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode);
+            if (!isRisky || direction == OfferPayload.Direction.SELL) {
+                // Get age of witness rather than time since signing for non risky payment methods and for selling
+                accountAgeCategory = getAccountAgeCategory(getAccountAge(accountAgeWitness, new Date()));
+            }
+            long limit = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+            if (direction == OfferPayload.Direction.BUY && isRisky) {
+                // Used only for bying of BTC with risky payment methods
+                switch (accountAgeCategory) {
+                    case TWO_MONTHS_OR_MORE:
+                        factor = 1;
+                        break;
+                    case ONE_TO_TWO_MONTHS:
+                        factor = 0.5;
+                        break;
+                    case LESS_ONE_MONTH:
+                    case UNVERIFIED:
+                    default:
+                        factor = 0;
+                }
+            } else {
+                // Used by non risky payment methods and for selling BTC with risky methods
+                switch (accountAgeCategory) {
+                    case TWO_MONTHS_OR_MORE:
+                        factor = 1;
+                        break;
+                    case ONE_TO_TWO_MONTHS:
+                        factor = 0.5;
+                        break;
+                    case LESS_ONE_MONTH:
+                    case UNVERIFIED:
+                        factor = 0.25;
+                        break;
+                    default:
+                        factor = 0;
+                }
+            }
+            if (factor > 0) {
+                limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
             }
 
-            final long limit = MathUtils.roundDoubleToLong((double) maxTradeLimit.value * factor);
-            log.debug("accountAgeCategory={}, accountAge={}, limit={}, factor={}, accountAgeWitnessHash={}",
+            log.debug("accountAgeCategory={}, limit={}, factor={}, accountAgeWitnessHash={}",
                     accountAgeCategory,
-                    accountAge / TimeUnit.DAYS.toMillis(1) + " days",
                     Coin.valueOf(limit).toFriendlyString(),
                     factor,
-                    accountAgeWitnessOptional.map(accountAgeWitness -> Utilities.bytesAsHexString(accountAgeWitness.getHash())).orElse("accountAgeWitnessOptional not present"));
+                    Utilities.bytesAsHexString(accountAgeWitness.getHash()));
             return limit;
         } else {
             return maxTradeLimit.value;
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Trade limit exceptions
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isImmature(AccountAgeWitness accountAgeWitness) {
+        return accountAgeWitness.getDate() > SAFE_ACCOUNT_AGE_DATE;
+    }
+
+    public boolean myHasTradeLimitException(PaymentAccount myPaymentAccount) {
+        return hasTradeLimitException(getMyWitness(myPaymentAccount.getPaymentAccountPayload()));
+    }
+
+    // There are no trade limits on accounts that
+    // - are mature
+    // - were signed by an arbitrator
+    private boolean hasTradeLimitException(AccountAgeWitness accountAgeWitness) {
+        return !isImmature(accountAgeWitness) || signedWitnessService.isSignedByArbitrator(accountAgeWitness);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // My witness
@@ -264,43 +407,26 @@ public class AccountAgeWitnessService {
         return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
-    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode) {
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction
+            direction) {
         if (paymentAccount == null)
             return 0;
 
-        Optional<AccountAgeWitness> witnessOptional = Optional.of(getMyWitness(paymentAccount.getPaymentAccountPayload()));
-        return getTradeLimit(paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode),
-                currencyCode,
-                witnessOptional,
-                new Date());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Peers witness
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Return -1 if witness data is not found (old versions)
-    public long getMakersAccountAge(Offer offer, Date peersCurrentDate) {
-        final Optional<String> accountAgeWitnessHash = offer.getAccountAgeWitnessHashAsHex();
-        final Optional<AccountAgeWitness> witnessByHashAsHex = accountAgeWitnessHash.isPresent() ?
-                getWitnessByHashAsHex(accountAgeWitnessHash.get()) :
-                Optional.empty();
-        return witnessByHashAsHex
-                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, peersCurrentDate))
-                .orElse(-1L);
-    }
-
-    public long getTradingPeersAccountAge(Trade trade) {
-        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
-        if (tradingPeer.getPaymentAccountPayload() == null || tradingPeer.getPubKeyRing() == null) {
-            // unexpected
-            return -1;
+        AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccount.getPaymentAccountPayload());
+        Coin maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
+        if (hasTradeLimitException(accountAgeWitness)) {
+            return maxTradeLimit.value;
         }
+        final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
+        AccountAge accountAgeCategory = getAccountAgeCategory(accountSignAge);
 
-        return getAccountAge(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
+        return getTradeLimit(maxTradeLimit,
+                currencyCode,
+                accountAgeWitness,
+                accountAgeCategory,
+                direction,
+                paymentAccount.getPaymentMethod());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Verification
@@ -343,7 +469,8 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if the peers trade limit is not less than the trade amount
-        if (!verifyPeersTradeLimit(trade, peersWitness, peersCurrentDate, errorMessageHandler)) {
+        if (!verifyPeersTradeLimit(trade.getOffer(), trade.getTradeAmount(), peersWitness, peersCurrentDate,
+                errorMessageHandler)) {
             log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload {}", peersPaymentAccountPayload);
             return false;
         }
@@ -351,12 +478,22 @@ public class AccountAgeWitnessService {
         return verifySignature(peersPubKeyRing.getSignaturePubKey(), nonce, signature, errorMessageHandler);
     }
 
+    public boolean verifyPeersTradeAmount(Offer offer,
+                                          Coin tradeAmount,
+                                          ErrorMessageHandler errorMessageHandler) {
+        checkNotNull(offer);
+        return findWitness(offer)
+                .map(witness -> verifyPeersTradeLimit(offer, tradeAmount, witness, new Date(), errorMessageHandler))
+                .orElse(false);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope verification subroutines
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean isDateAfterReleaseDate(long witnessDateAsLong, Date ageWitnessReleaseDate, ErrorMessageHandler errorMessageHandler) {
+    boolean isDateAfterReleaseDate(long witnessDateAsLong,
+                                   Date ageWitnessReleaseDate,
+                                   ErrorMessageHandler errorMessageHandler) {
         // Release date minus 1 day as tolerance for not synced clocks
         Date releaseDateWithTolerance = new Date(ageWitnessReleaseDate.getTime() - TimeUnit.DAYS.toMillis(1));
         final Date witnessDate = new Date(witnessDateAsLong);
@@ -394,16 +531,23 @@ public class AccountAgeWitnessService {
         return result;
     }
 
-    private boolean verifyPeersTradeLimit(Trade trade,
+    private boolean verifyPeersTradeLimit(Offer offer,
+                                          Coin tradeAmount,
                                           AccountAgeWitness peersWitness,
                                           Date peersCurrentDate,
                                           ErrorMessageHandler errorMessageHandler) {
-        Offer offer = trade.getOffer();
-        Coin tradeAmount = checkNotNull(trade.getTradeAmount());
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
-        long peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, Optional.of(peersWitness), peersCurrentDate);
+        long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
+        if (!hasTradeLimitException(peersWitness)) {
+            final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
+            AccountAge accountAgeCategory = getPeersAccountAgeCategory(accountSignAge);
+            OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
+                    offer.getMirroredDirection() : offer.getDirection();
+            peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
+                    accountAgeCategory, direction, offer.getPaymentMethod());
+        }
         // Makers current trade limit cannot be smaller than that in the offer
         boolean result = tradeAmount.value <= peersCurrentTradeLimit;
         if (!result) {
@@ -435,5 +579,140 @@ public class AccountAgeWitnessService {
             errorMessageHandler.handleErrorMessage(msg);
         }
         return result;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Witness signing
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void arbitratorSignAccountAgeWitness(Coin tradeAmount,
+                                                AccountAgeWitness accountAgeWitness,
+                                                ECKey key,
+                                                PublicKey peersPubKey) {
+        signedWitnessService.signAccountAgeWitness(tradeAmount, accountAgeWitness, key, peersPubKey);
+    }
+
+    public void traderSignPeersAccountAgeWitness(Trade trade) {
+        AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
+        Coin tradeAmount = trade.getTradeAmount();
+        checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
+        PublicKey peersPubKey = trade.getProcessModel().getTradingPeer().getPubKeyRing().getSignaturePubKey();
+        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}", trade.toString());
+        checkNotNull(tradeAmount, "Trade amount must not be null");
+        checkNotNull(peersPubKey, "Peers pub key must not be null");
+
+        try {
+            signedWitnessService.signAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
+        } catch (CryptoException e) {
+            log.warn("Trader failed to sign witness, exception {}", e.toString());
+        }
+    }
+
+    // Arbitrator signing
+    public List<TraderDataItem> getTraderPaymentAccounts(long safeDate, PaymentMethod paymentMethod,
+                                                         List<Dispute> disputes) {
+        return disputes.stream()
+                .filter(dispute -> dispute.getContract().getPaymentMethodId().equals(paymentMethod.getId()))
+                .filter(this::isNotFiltered)
+                .filter(this::hasChargebackRisk)
+                .filter(this::isBuyerWinner)
+                .flatMap(this::getTraderData)
+                .filter(Objects::nonNull)
+                .filter(traderDataItem ->
+                        !signedWitnessService.isSignedAccountAgeWitness(traderDataItem.getAccountAgeWitness()))
+                .filter(traderDataItem -> traderDataItem.getAccountAgeWitness().getDate() < safeDate)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private boolean isNotFiltered(Dispute dispute) {
+        boolean isFiltered = filterManager.isNodeAddressBanned(dispute.getContract().getBuyerNodeAddress()) ||
+                filterManager.isNodeAddressBanned(dispute.getContract().getSellerNodeAddress()) ||
+                filterManager.isCurrencyBanned(dispute.getContract().getOfferPayload().getCurrencyCode()) ||
+                filterManager.isPaymentMethodBanned(
+                        PaymentMethod.getPaymentMethodById(dispute.getContract().getPaymentMethodId())) ||
+                filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getBuyerPaymentAccountPayload(),
+                        new PaymentAccountFilter[1]) ||
+                filterManager.isPeersPaymentAccountDataAreBanned(dispute.getContract().getSellerPaymentAccountPayload(),
+                        new PaymentAccountFilter[1]);
+        return !isFiltered;
+    }
+
+    private boolean hasChargebackRisk(Dispute dispute) {
+        return chargeBackRisk.hasChargebackRisk(dispute.getContract().getPaymentMethodId(),
+                dispute.getContract().getOfferPayload().getCurrencyCode());
+    }
+
+    private boolean isBuyerWinner(Dispute dispute) {
+        if (!dispute.isClosed() || dispute.getDisputeResultProperty() == null)
+            return false;
+        return dispute.getDisputeResultProperty().get().getWinner() == DisputeResult.Winner.BUYER;
+    }
+
+    private Stream<TraderDataItem> getTraderData(Dispute dispute) {
+        Coin tradeAmount = dispute.getContract().getTradeAmount();
+
+        PubKeyRing buyerPubKeyRing = dispute.getContract().getBuyerPubKeyRing();
+        PubKeyRing sellerPubKeyRing = dispute.getContract().getSellerPubKeyRing();
+
+        PaymentAccountPayload buyerPaymentAccountPaload = dispute.getContract().getBuyerPaymentAccountPayload();
+        PaymentAccountPayload sellerPaymentAccountPaload = dispute.getContract().getSellerPaymentAccountPayload();
+
+        TraderDataItem buyerData = findWitness(buyerPaymentAccountPaload, buyerPubKeyRing)
+                .map(witness -> new TraderDataItem(
+                        buyerPaymentAccountPaload,
+                        witness,
+                        tradeAmount,
+                        sellerPubKeyRing.getSignaturePubKey()))
+                .orElse(null);
+        TraderDataItem sellerData = findWitness(sellerPaymentAccountPaload, sellerPubKeyRing)
+                .map(witness -> new TraderDataItem(
+                        sellerPaymentAccountPaload,
+                        witness,
+                        tradeAmount,
+                        buyerPubKeyRing.getSignaturePubKey()))
+                .orElse(null);
+        return Stream.of(buyerData, sellerData);
+    }
+
+    public boolean hasSignedWitness(Offer offer) {
+        return findWitness(offer)
+                .map(signedWitnessService::isSignedAccountAgeWitness)
+                .orElse(false);
+    }
+
+    public boolean peerHasSignedWitness(Trade trade) {
+        return findTradePeerWitness(trade)
+                .map(signedWitnessService::isSignedAccountAgeWitness)
+                .orElse(false);
+    }
+
+    public boolean accountIsSigner(AccountAgeWitness accountAgeWitness) {
+        return signedWitnessService.isSignerAccountAgeWitness(accountAgeWitness);
+    }
+
+    public SignState getSignState(Offer offer) {
+        return findWitness(offer)
+                .map(this::getSignState)
+                .orElse(SignState.UNSIGNED);
+    }
+
+    public SignState getSignState(AccountAgeWitness accountAgeWitness) {
+        if (signedWitnessService.isSignedByArbitrator(accountAgeWitness)) {
+            return SignState.ARBITRATOR;
+        } else {
+            final long accountSignAge = getWitnessSignAge(accountAgeWitness, new Date());
+            switch (getAccountAgeCategory(accountSignAge)) {
+                case TWO_MONTHS_OR_MORE:
+                    return SignState.PEER_SIGNER;
+                case ONE_TO_TWO_MONTHS:
+                    return SignState.PEER_LIMIT_LIFTED;
+                case LESS_ONE_MONTH:
+                    return SignState.PEER_INITIAL;
+                case UNVERIFIED:
+                default:
+                    return SignState.UNSIGNED;
+            }
+        }
     }
 }

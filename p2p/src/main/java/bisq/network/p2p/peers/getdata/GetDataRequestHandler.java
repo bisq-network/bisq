@@ -90,6 +90,7 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void handle(GetDataRequest getDataRequest, final Connection connection) {
+        long ts = System.currentTimeMillis();
         GetDataResponse getDataResponse = new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connection),
                 getFilteredPersistableNetworkPayload(getDataRequest, connection),
                 getDataRequest.getNonce(),
@@ -105,7 +106,7 @@ public class GetDataRequestHandler {
         }
 
         SettableFuture<Connection> future = networkNode.sendMessage(connection, getDataResponse);
-        Futures.addCallback(future, new FutureCallback<Connection>() {
+        Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
                 if (!stopped) {
@@ -130,9 +131,11 @@ public class GetDataRequestHandler {
                 }
             }
         });
+        log.info("handle GetDataRequest took {} ms", System.currentTimeMillis() - ts);
     }
 
-    private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest, Connection connection) {
+    private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
+                                                                                Connection connection) {
         final Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
@@ -144,7 +147,8 @@ public class GetDataRequestHandler {
                 .collect(Collectors.toSet());
     }
 
-    private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest, Connection connection) {
+    private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
+                                                                          Connection connection) {
         final Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         final Set<Integer> lookupSet = new HashSet<>();
 

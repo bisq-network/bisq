@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -48,8 +49,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
-
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -163,6 +162,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
         proofOfBurnService.getUpdateFlag().addListener(updateListener);
         bsqWalletService.addBsqBalanceListener(this);
+        onUpdateAvailableConfirmedBalance(bsqWalletService.getAvailableConfirmedBalance());
 
         burnButton.setOnAction((event) -> {
             Coin amount = getAmountFee();
@@ -221,7 +221,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+        onUpdateAvailableConfirmedBalance(availableConfirmedBalance);
     }
 
 
@@ -251,6 +251,11 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         };
 
         updateListener = observable -> updateList();
+    }
+
+    private void onUpdateAvailableConfirmedBalance(Coin availableConfirmedBalance) {
+        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+        updateButtonState();
     }
 
     private void updateList() {
@@ -404,7 +409,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
@@ -567,7 +572,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(transactionId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);

@@ -242,4 +242,14 @@ public class MarketPricePresentation {
     public StringProperty getMarketPrice() {
         return marketPrice;
     }
+
+    public StringProperty getMarketPrice(String currencyCode) {
+        SimpleStringProperty marketPrice = new SimpleStringProperty(Res.get("shared.na"));
+        try {
+            marketPrice.set(String.valueOf(priceFeedService.getMarketPrice(currencyCode).getPrice()));
+        } catch (NullPointerException e) {
+            // Market price is not available yet
+        }
+        return marketPrice;
+    }
 }
