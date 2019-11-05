@@ -319,7 +319,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Payload hash size does not match expectation for that type of message.
         if (!payload.verifyHashSize()) {
-            log.warn("We got a hash exceeding our permitted size");
+            log.warn("addPersistableNetworkPayload failed due to unexpected hash size");
             return false;
         }
 
@@ -328,14 +328,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Store already knows about this payload. Ignore it unless the caller specifically requests a republish.
         if (payloadHashAlreadyInStore && !reBroadcast) {
-            log.trace("We have that payload already in our map.");
+            log.trace("addPersistableNetworkPayload failed due to duplicate payload");
             return false;
         }
 
         // DateTolerantPayloads are only checked for tolerance from the onMessage handler (checkDate == true). If not in
         // tolerance, ignore it.
         if (checkDate && payload instanceof DateTolerantPayload && !((DateTolerantPayload) payload).isDateInTolerance((clock))) {
-            log.warn("Publish date of payload is not matching our current time and outside of our tolerance.\n" +
+            log.warn("addPersistableNetworkPayload failed due to payload time outside tolerance.\n" +
                     "Payload={}; now={}", payload.toString(), new Date());
             return false;
         }
@@ -391,29 +391,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         // TODO: Combine with hasSequenceNrIncreased check, but keep existing behavior for now
-        if(!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload) ) {
-            log.trace("addProtectedStorageEntry failed due to invalid sequence number");
-
+        if(!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
-        }
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
-        if (!checkPublicKeys(protectedStorageEntry, true) ||
-                !checkSignature(protectedStorageEntry)) {
-
-            log.trace("addProtectedStorageEntry failed due to invalid entry");
+        if (!checkPublicKeys(protectedStorageEntry, true) || !checkSignature(protectedStorageEntry))
             return false;
-        }
 
         boolean containsKey = map.containsKey(hashOfPayload);
 
-        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
-        if (containsKey &&
-                !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
-
-            log.trace("addProtectedStorageEntry failed due to hash collision");
+        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
+        if (containsKey && !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload))
             return false;
-        }
 
         boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
 
@@ -421,11 +410,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // TODO: I think we can return false here. All callers use the Client API (addProtectedStorageEntry(getProtectedStorageEntry())
         //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that adds() that don't
         //  change state return false.
-        if (!hasSequenceNrIncreased) {
-            log.trace("addProtectedStorageEntry failed due to old sequence number");
-            
+        if (!hasSequenceNrIncreased)
             return true;
-        }
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
@@ -481,9 +467,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         // TODO: Combine with above in future work, but preserve existing behavior for now
-        if(!hasSequenceNrIncreased(sequenceNumber, hashOfPayload)) {
+        if(!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
             return false;
-        }
 
         ProtectedStorageEntry storedData = map.get(hashOfPayload);
         PublicKey ownerPubKey = storedData.getProtectedStoragePayload().getOwnerPubKey();
@@ -491,18 +476,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         byte[] signature = refreshTTLMessage.getSignature();
 
         // Verify the RefreshOfferMessage is well formed and valid for the refresh operation
-        if (!checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature)) {
-            log.trace("refreshTTL failed due to invalid entry");
-
+        if (!checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature))
             return false;
-        }
 
-        // In a hash collision between two well formed RefreshOfferMessage, the first item wins and will not be overwritten
-        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload)) {
-            log.trace("refreshTTL failed due to hash collision");
-
+        // Verify the Payload owner and the Entry owner for the stored Entry are the same
+        // TODO: This is also checked in the validation for the original add(), investigate if this can be removed
+        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload))
             return false;
-        }
 
         // This is a valid refresh, update the payload for it
         log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
@@ -537,26 +517,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         // If we have seen a more recent operation for this payload, ignore this one
-        if (!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload)) {
-            log.trace("remove failed due to old sequence number");
-
+        if (!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
-        }
 
         // Verify the ProtectedStorageEntry is well formed and valid for the remove operation
-        if (!checkPublicKeys(protectedStorageEntry, false) ||
-                !checkSignature(protectedStorageEntry)) {
-            log.trace("remove failed due to invalid entry");
-
+        if (!checkPublicKeys(protectedStorageEntry, false) || !checkSignature(protectedStorageEntry))
             return false;
-        }
 
-        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
-        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
-            log.trace("remove failed due to hash collision");
-
+        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
+        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload))
             return false;
-        }
 
         // Valid remove entry, do the remove and signal listeners
         doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
@@ -635,28 +605,23 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         int sequenceNumber = protectedMailboxStorageEntry.getSequenceNumber();
 
-        if (!isSequenceNrValid(sequenceNumber, hashOfPayload)) {
-            log.trace("removeMailboxData failed due to old sequence number");
-
+        if (!isSequenceNrValid(sequenceNumber, hashOfPayload))
             return false;
-        }
 
         PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
 
-        if (!checkPublicKeys(protectedMailboxStorageEntry, false) ||
-                !protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(receiversPubKey) || // at remove both keys are the same (only receiver is able to remove data)
-                !checkSignature(protectedMailboxStorageEntry)) {
-            log.trace("removeMailboxData failed due to invalid entry");
+        if (!checkPublicKeys(protectedMailboxStorageEntry, false) || !checkSignature(protectedMailboxStorageEntry))
+            return false;
 
+        // Verify the Entry has the correct receiversPubKey for removal.
+        if (!protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(receiversPubKey)) {
+            log.debug("Entry receiversPubKey does not match payload owner which is a requirement for removing MailboxStoragePayloads");
             return false;
         }
 
-        // In a hash collision between two well formed ProtectedMailboxStorageEntry, the first item wins and will not be overwritten
-        if (!checkIfStoredMailboxDataMatchesNewMailboxData(receiversPubKey, hashOfPayload)) {
-            log.trace("removeMailboxData failed due to hash collision");
-
+        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
+        if (!checkIfStoredMailboxDataMatchesNewMailboxData(receiversPubKey, hashOfPayload))
             return false;
-        }
 
         // Valid remove ProtectedMailboxStorageEntry, do the remove and signal listeners
         doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfPayload);
