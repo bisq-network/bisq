@@ -514,6 +514,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * @param protectedStorageEntry     The entry to be removed
      */
     public void removeInvalidProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry) {
+        log.warn("We remove an invalid protectedStorageEntry: {}", protectedStorageEntry);
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
