@@ -58,29 +58,22 @@ import org.junit.runners.Parameterized;
 
 import static org.mockito.Mockito.*;
 
-import bisq.core.alert.Alert;
-
 import org.mockito.ArgumentCaptor;
 
 @RunWith(Enclosed.class)
 public class P2PDataStorageTest {
 
     // Test class used for validating the ExpirablePayload, RequiresOwnerIsOnlinePayload marker interfaces
-    static class ExpirableAlertForTest extends Alert implements ExpirablePayload, RequiresOwnerIsOnlinePayload {
+    static class ExpirableProtectedStoragePayload extends ProtectedStoragePayloadStub implements ExpirablePayload, RequiresOwnerIsOnlinePayload {
         private long ttl;
 
-        ExpirableAlertForTest(byte[] ownerPubKeyBytes) {
-            super("FakeAlert", false, "version", ownerPubKeyBytes, "string", null);
+        ExpirableProtectedStoragePayload(KeyPair ownerKeys) {
+            super(ownerKeys.getPublic());
             ttl = TimeUnit.DAYS.toMillis(90);
-
         }
 
-        ExpirableAlertForTest(KeyPair ownerKeys) {
-            this(Sig.getPublicKeyBytes(ownerKeys.getPublic()));
-        }
-
-        ExpirableAlertForTest(KeyPair ownerKeys, long ttl) {
-            this(Sig.getPublicKeyBytes(ownerKeys.getPublic()));
+        ExpirableProtectedStoragePayload(KeyPair ownerKeys, long ttl) {
+            this(ownerKeys);
             this.ttl = ttl;
         }
 
@@ -947,12 +940,12 @@ public class P2PDataStorageTest {
         }
     }
 
-    // Runs the ProtectedStorageEntryTestBase tests against a basic ProtectedStoragePayload (Alert)
-    public static class AlertProtectedStorageEntryTest extends ProtectedStorageEntryTestBase {
+    // Runs the ProtectedStorageEntryTestBase tests against a basic (no marker interfaces) ProtectedStoragePayload
+    public static class ProtectedStorageEntryTest extends ProtectedStorageEntryTestBase {
+
         @Override
         protected ProtectedStoragePayload createInstance(KeyPair payloadOwnerKeys) {
-            return new Alert(
-                "FakeAlert", false, "version", Sig.getPublicKeyBytes(payloadOwnerKeys.getPublic()), "string", null);
+            return new ProtectedStoragePayloadStub(payloadOwnerKeys.getPublic());
         }
 
         RefreshOfferMessage buildRefreshOfferMessage(ProtectedStorageEntry protectedStorageEntry, KeyPair ownerKeys, int sequenceNumber) throws CryptoException {
@@ -1039,17 +1032,17 @@ public class P2PDataStorageTest {
     }
 
     // Runs the ProtectedStorageEntryTestBase tests against the PersistablePayload marker class
-    public static class PersistableAlertTest extends ProtectedStorageEntryTestBase {
-        private static class PersistableAlertForTest extends Alert implements PersistablePayload {
+    public static class PersistableProtectedStoragePayloadTest extends ProtectedStorageEntryTestBase {
+        private static class PersistableProtectedStoragePayload extends ProtectedStoragePayloadStub implements PersistablePayload {
 
-            PersistableAlertForTest(byte[] ownerPubKeyBytes) {
-                super("FakeAlert", false, "version", ownerPubKeyBytes, "string", null);
+            PersistableProtectedStoragePayload(PublicKey ownerPubKey) {
+                super(ownerPubKey);
             }
         }
 
         @Override
         protected ProtectedStoragePayload createInstance(KeyPair payloadOwnerKeys) {
-            return new PersistableAlertForTest(Sig.getPublicKeyBytes(payloadOwnerKeys.getPublic()));
+            return new PersistableProtectedStoragePayload(payloadOwnerKeys.getPublic());
         }
     }
 
@@ -1248,7 +1241,7 @@ public class P2PDataStorageTest {
         public void getProtectedStorageEntry_NoExist() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
             SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
@@ -1262,7 +1255,7 @@ public class P2PDataStorageTest {
         public void getProtectedStorageEntry() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
             Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
@@ -1279,7 +1272,7 @@ public class P2PDataStorageTest {
         public void getProtectedStorageEntry_FirstOnMessageSecondAPI() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
             Connection mockedConnection = mock(Connection.class);
@@ -1299,7 +1292,7 @@ public class P2PDataStorageTest {
         public void getRefreshTTLMessage_NoExists() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
 
             RefreshOfferMessage refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
 
@@ -1314,7 +1307,7 @@ public class P2PDataStorageTest {
         public void getRefreshTTLMessage() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true);
 
@@ -1334,7 +1327,7 @@ public class P2PDataStorageTest {
         public void getRefreshTTLMessage_FirstOnMessageSecondAPI() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true);
 
@@ -1423,7 +1416,7 @@ public class P2PDataStorageTest {
 
         private static ProtectedStorageEntry populateTestState(TestState testState, long ttl) throws CryptoException, NoSuchAlgorithmException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableAlertForTest(ownerKeys, ttl);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys, ttl);
 
             ProtectedStorageEntry protectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, false);
