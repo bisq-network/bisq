@@ -17,7 +17,6 @@
 
 package bisq.network.p2p.peers.getdata;
 
-import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.CloseConnectionReason;
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.NetworkNode;
@@ -40,7 +39,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -140,8 +138,11 @@ public class GetDataRequestHandler {
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
                                                                                 Connection connection) {
-        final Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
-        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
+
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
         AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
         Set<PersistableNetworkPayload> result = dataStorage.getAppendOnlyDataStoreMap().entrySet().stream()
@@ -155,20 +156,22 @@ public class GetDataRequestHandler {
                 })
                 .collect(Collectors.toSet());
         if (maxSize.get() <= 0) {
-            log.warn("The getData request from peer with node address {} caused too much PersistableNetworkPayload " +
+            log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
                             "entries to get delivered. We limited the entries for the response to {} entries",
-                    peersNodeAddressOptional, MAX_ENTRIES);
+                    connectionInfo, MAX_ENTRIES);
         }
-        log.info("The getData request from peer with node address {} contains {} PersistableNetworkPayload entries ",
-                peersNodeAddressOptional, result.size());
+        log.info("The getData request from peer with {} contains {} PersistableNetworkPayload entries ",
+                connectionInfo, result.size());
         return result;
     }
 
     private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
                                                                           Connection connection) {
-        final Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-        final Set<Integer> lookupSet = new HashSet<>();
-        Optional<NodeAddress> peersNodeAddressOptional = connection.getPeersNodeAddressOptional();
+        Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        Set<Integer> lookupSet = new HashSet<>();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
 
         AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
@@ -178,9 +181,9 @@ public class GetDataRequestHandler {
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
         if (maxSize.get() <= 0) {
-            log.warn("The getData request from peer with node address {} caused too much ProtectedStorageEntry " +
+            log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
                             "entries to get delivered. We limited the entries for the response to {} entries",
-                    peersNodeAddressOptional, MAX_ENTRIES);
+                    connectionInfo, MAX_ENTRIES);
         }
         log.info("getFilteredProtectedStorageEntries " + filteredSet.size());
 
@@ -203,8 +206,8 @@ public class GetDataRequestHandler {
             }
         }
 
-        log.info("The getData request from peer with node address {} contains {} ProtectedStorageEntry entries ",
-                peersNodeAddressOptional, filteredDataSet.size());
+        log.info("The getData request from peer with {} contains {} ProtectedStorageEntry entries ",
+                connectionInfo, filteredDataSet.size());
         return filteredDataSet;
     }
 
