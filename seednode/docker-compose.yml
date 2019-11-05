@@ -25,7 +25,7 @@ services:
         environment:
             - GRADLE_USER_HOME=/home/gradle
             - ONION_ADDRESS=${ONION_ADDRESS}
-            - MAX_MEMORY=1200
+            - MAX_MEMORY=8000
             - MAX_CONNECTIONS=30
             - BASE_CURRENCY_NETWORK=BTC_MAINNET
             - APP_NAME=${APP_NAME}
