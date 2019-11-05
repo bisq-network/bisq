@@ -27,7 +27,7 @@ public class Version {
     // VERSION = 0.5.0 introduces proto buffer for the P2P network and local DB and is a not backward compatible update
     // Therefore all sub versions start again with 1
     // We use semantic versioning with major, minor and patch
-    public static final String VERSION = "1.2.1";
+    public static final String VERSION = "1.2.2";
 
     public static int getMajorVersion(String version) {
         return getSubVersion(version, 0);
@@ -73,7 +73,7 @@ public class Version {
     // The version no. for the objects sent over the network. A change will break the serialization of old objects.
     // If objects are used for both network and database the network version is applied.
     // VERSION = 0.5.0 -> P2P_NETWORK_VERSION = 1
-    // With version 1.2.1 we change to version 2 (new trade protocol)
+    // With version 1.2.2 we change to version 2 (new trade protocol)
     public static final int P2P_NETWORK_VERSION = 1;
 
     // The version no. of the serialized data stored to disc. A change will break the serialization of old objects.
@@ -84,7 +84,7 @@ public class Version {
     // A taker will check the version of the offers to see if his version is compatible.
     // Offers created with the old version will become invalid and have to be canceled.
     // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
-    // Version 1.2.1 -> TRADE_PROTOCOL_VERSION = 2
+    // Version 1.2.2 -> TRADE_PROTOCOL_VERSION = 2
     public static final int TRADE_PROTOCOL_VERSION = 2;
     private static int p2pMessageVersion;
 

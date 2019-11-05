@@ -88,10 +88,10 @@ public class TacWindow extends Overlay<TacWindow> {
                 "    - If the bank of the fiat sender charges fees, the sender (" + Res.getBaseCurrencyCode() + " buyer) has to cover the fees.\n" +
                 "    - You must cooperate with the mediator during the mediation process, and respond to each mediator message within 48 hours.\n" +
                 "    - If either (or both) traders do not accept the mediator's suggested payout, traders can open a refund request from an arbitrator after 10 days in case of altcoin trades and 20 days for fiat trades.\n" +
-                "    - You should only open a refund request from an arbitrator if you think think the mediator's suggested payout is unfair, or if your trading peer is unresponsive." +
+                "    - You should only open a refund request from an arbitrator if you think the mediator's suggested payout is unfair, or if your trading peer is unresponsive.\n" +
                 "    - Opening a refund request from an arbitrator triggers the delayed payout transaction, sending all funds from the deposit transaction to the Bisq DAO receiver address ('collateral for refund to avoid scamming the refund process'). At this point, the arbitrator will re-investigate the case and personally refund (at their discretion) the trader who requested arbitration.\n" +
                 "The arbitrator may charge a small fee (max. the traders security deposit) as compensation for their work.\n" +
-                "    - The arbitrator will then make a reimbursement request to the Bisq DAO to get reimbursed for the refund they paid to the trader.\n" +
+                "    - The arbitrator will then make a reimbursement request to the Bisq DAO to get reimbursed for the refund they paid to the trader.\n\n" +
                 "For more details and a general overview please read the full documentation about the " +
                 "arbitration system and the dispute process.";
         message(text);

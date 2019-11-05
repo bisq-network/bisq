@@ -39,7 +39,8 @@ public class CoreNetworkCapabilities {
                 Capability.BUNDLE_OF_ENVELOPES,
                 Capability.MEDIATION,
                 Capability.SIGNED_ACCOUNT_AGE_WITNESS,
-                Capability.REFUND_AGENT
+                Capability.REFUND_AGENT,
+                Capability.TRADE_STATISTICS_HASH_UPDATE
         );
 
         if (BisqEnvironment.isDaoActivated(bisqEnvironment)) {

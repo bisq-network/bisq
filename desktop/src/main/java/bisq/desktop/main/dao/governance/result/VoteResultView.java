@@ -213,6 +213,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         });
         if (proposalsTableView != null) {
             GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 6);
+
+            selectedProposalSubscription = EasyBind.subscribe(proposalsTableView.getSelectionModel().selectedItemProperty(),
+                    this::onSelectProposalResultListItem);
         }
         GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 6, 6);
     }
@@ -220,8 +223,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     @Override
     protected void deactivate() {
         super.deactivate();
-
-        onResultsListItemSelected(null);
 
         phasesView.deactivate();
 
@@ -324,7 +325,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
                         });
                     });
-            if (!sb.toString().isEmpty()) {
+            if (sb.length() != 0) {
                 new Popup<>().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
             }
         }
@@ -354,10 +355,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
     private void onSelectProposalResultListItem(ProposalListItem item) {
         selectedProposalListItem = item;
-
-        GUIUtil.removeChildrenFromGridPaneRows(root, 5, gridRow);
-        gridRow = 3;
-
 
         if (selectedProposalListItem != null) {
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
@@ -495,8 +492,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalsTableView.setItems(sortedProposalList);
         sortedProposalList.comparatorProperty().bind(proposalsTableView.comparatorProperty());
 
-        proposalList.clear();
         proposalList.forEach(ProposalListItem::resetTableRow);
+        proposalList.clear();
 
         Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
                 .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));

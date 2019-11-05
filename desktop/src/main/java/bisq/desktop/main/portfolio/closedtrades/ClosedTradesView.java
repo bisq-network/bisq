@@ -32,8 +32,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Contract;
@@ -43,8 +41,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
-
-import org.bitcoinj.core.Coin;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -78,6 +74,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.function.Function;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
@@ -163,89 +160,26 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
-        priceColumn.setComparator((o1, o2) -> {
-            final Tradable tradable1 = o1.getTradable();
-            final Tradable tradable2 = o2.getTradable();
-            Price price1 = null;
-            Price price2 = null;
-            if (tradable1 != null)
-                price1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTradePrice() : tradable1.getOffer().getPrice();
-            if (tradable2 != null)
-                price2 = tradable2 instanceof Trade ? ((Trade) tradable2).getTradePrice() : tradable2.getOffer().getPrice();
-            return price1 != null && price2 != null ? price1.compareTo(price2) : 0;
-        });
-        volumeColumn.setComparator((o1, o2) -> {
-            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-                Volume tradeVolume1 = ((Trade) o1.getTradable()).getTradeVolume();
-                Volume tradeVolume2 = ((Trade) o2.getTradable()).getTradeVolume();
-                return tradeVolume1 != null && tradeVolume2 != null ? tradeVolume1.compareTo(tradeVolume2) : 0;
-            } else
-                return 0;
-        });
-        amountColumn.setComparator((o1, o2) -> {
-            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-                Coin amount1 = ((Trade) o1.getTradable()).getTradeAmount();
-                Coin amount2 = ((Trade) o2.getTradable()).getTradeAmount();
-                return amount1 != null && amount2 != null ? amount1.compareTo(amount2) : 0;
-            } else
-                return 0;
-        });
-        avatarColumn.setComparator((o1, o2) -> {
-            if (o1.getTradable() instanceof Trade && o2.getTradable() instanceof Trade) {
-                NodeAddress tradingPeerNodeAddress1 = ((Trade) o1.getTradable()).getTradingPeerNodeAddress();
-                NodeAddress tradingPeerNodeAddress2 = ((Trade) o2.getTradable()).getTradingPeerNodeAddress();
-                String address1 = tradingPeerNodeAddress1 != null ? tradingPeerNodeAddress1.getFullAddress() : "";
-                String address2 = tradingPeerNodeAddress2 != null ? tradingPeerNodeAddress2.getFullAddress() : "";
-                return address1.compareTo(address2);
-            } else
-                return 0;
-        });
-        txFeeColumn.setComparator((o1, o2) -> {
-			final Tradable tradable1 = o1.getTradable();
-			final Tradable tradable2 = o2.getTradable();
-			Coin txFee1 = null;
-			Coin txFee2 = null;
-			if (tradable1 != null)
-				txFee1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTxFee() : tradable1.getOffer().getTxFee();
-			if (tradable2 != null)
-				txFee2 = tradable2 instanceof Trade ? ((Trade) tradable2).getTxFee() : tradable2.getOffer().getTxFee();
-			return txFee1 != null && txFee2 != null ? txFee1.compareTo(txFee2) : 0;
-		});
-		makerFeeColumn.setComparator((o1, o2) -> {
-			final Tradable tradable1 = o1.getTradable();
-			final Tradable tradable2 = o2.getTradable();
-			Coin txFee1 = null;
-			Coin txFee2 = null;
-			if (tradable1 != null)
-				txFee1 = tradable1 instanceof Trade ? ((Trade) tradable1).getTakerFee()
-						: tradable1.getOffer().getMakerFee();
-			if (tradable2 != null)
-				txFee2 = tradable2 instanceof Trade ? ((Trade) tradable2).getTakerFee()
-						: tradable2.getOffer().getMakerFee();
-			return txFee1 != null && txFee2 != null ? txFee1.compareTo(txFee2) : 0;
-		});
-		buyerSecurityDepositColumn.setComparator((o1, o2) -> {
-			final Tradable tradable1 = o1.getTradable();
-			final Tradable tradable2 = o2.getTradable();
-			Coin txFee1 = null;
-			Coin txFee2 = null;
-			if (tradable1 != null && tradable1.getOffer() != null)
-				txFee1 = tradable1.getOffer().getBuyerSecurityDeposit();
-			if (tradable2 != null && tradable2.getOffer() != null)
-				txFee2 = tradable2.getOffer().getBuyerSecurityDeposit();
-			return txFee1 != null && txFee2 != null ? txFee1.compareTo(txFee2) : 0;
-		});
-		sellerSecurityDepositColumn.setComparator((o1, o2) -> {
-			final Tradable tradable1 = o1.getTradable();
-			final Tradable tradable2 = o2.getTradable();
-			Coin txFee1 = null;
-			Coin txFee2 = null;
-			if (tradable1 != null && tradable1.getOffer() != null)
-				txFee1 = tradable1.getOffer().getSellerSecurityDeposit();
-			if (tradable2 != null && tradable2.getOffer() != null)
-				txFee2 = tradable2.getOffer().getSellerSecurityDeposit();
-			return txFee1 != null && txFee2 != null ? txFee1.compareTo(txFee2) : 0;
-		});
+        priceColumn.setComparator(nullsFirstComparing(o ->
+                o instanceof Trade ? ((Trade) o).getTradePrice() : o.getOffer().getPrice()
+        ));
+        volumeColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeVolume));
+        amountColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeAmount));
+        avatarColumn.setComparator(nullsFirstComparingAsTrade(o ->
+                o.getTradingPeerNodeAddress() != null ? o.getTradingPeerNodeAddress().getFullAddress() : null
+        ));
+        txFeeColumn.setComparator(nullsFirstComparing(o ->
+                o instanceof Trade ? ((Trade) o).getTxFee() : o.getOffer().getTxFee()
+        ));
+        makerFeeColumn.setComparator(nullsFirstComparing(o ->
+                o instanceof Trade ? ((Trade) o).getTakerFee() : o.getOffer().getMakerFee()
+        ));
+        buyerSecurityDepositColumn.setComparator(nullsFirstComparing(o ->
+                o.getOffer() != null ? o.getOffer().getBuyerSecurityDeposit() : null
+        ));
+        sellerSecurityDepositColumn.setComparator(nullsFirstComparing(o ->
+                o.getOffer() != null ? o.getOffer().getSellerSecurityDeposit() : null
+        ));
         stateColumn.setComparator(Comparator.comparing(model::getState));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
@@ -259,6 +193,20 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         HBox.setHgrow(spacer, Priority.ALWAYS);
         exportButton.updateText(Res.get("shared.exportCSV"));
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
+    }
+
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparing(Function<Tradable, T> keyExtractor) {
+        return Comparator.comparing(
+                o -> o.getTradable() != null ? keyExtractor.apply(o.getTradable()) : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        );
+    }
+
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<Trade, T> keyExtractor) {
+        return Comparator.comparing(
+                o -> o.getTradable() instanceof Trade ? keyExtractor.apply((Trade) o.getTradable()) : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        );
     }
 
     @Override

@@ -31,6 +31,7 @@ import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
+import bisq.desktop.main.market.trades.TradesChartsView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -256,11 +257,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.available");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double availableBalance = Double.parseDouble(
                             model.getAvailableBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(availableBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -280,11 +282,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.reserved");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double reservedBalance = Double.parseDouble(
                             model.getReservedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(reservedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -304,11 +307,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.locked");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double lockedBalance = Double.parseDouble(
                             model.getLockedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(lockedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -378,12 +382,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             View view = viewLoader.load(viewClass);
             contentContainer.getChildren().setAll(view.getRoot());
 
-            navButtons.getToggles().stream()
+            try {
+            	navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof NavButton)
                     .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
                     .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
                     .setSelected(true);
+            } catch (BisqException e) {
+            	navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
+			}
         });
 
         VBox splashScreen = createSplashScreen();
