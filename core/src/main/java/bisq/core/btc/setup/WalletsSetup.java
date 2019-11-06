@@ -232,7 +232,7 @@ public class WalletsSetup {
                         UserThread.execute(() -> {
                             RejectMessage rejectMessage = (RejectMessage) message;
                             String msg = rejectMessage.toString();
-                            log.error(msg);
+                            log.warn(msg);
                             exceptionHandler.handleException(new RejectedTxException(msg, rejectMessage));
                         });
                     }
