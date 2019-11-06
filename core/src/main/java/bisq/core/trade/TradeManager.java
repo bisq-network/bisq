@@ -79,9 +79,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
@@ -141,7 +140,7 @@ public class TradeManager implements PersistedDataHost {
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
     @Getter
-    private final StringProperty depositTxIsNullWarning = new SimpleStringProperty();
+    private final ObservableList<Trade> tradesWithoutDepositTx = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -288,10 +287,10 @@ public class TradeManager implements PersistedDataHost {
 
             if (trade.getDepositTx() == null) {
                 log.warn("Deposit tx for trader with ID {} is null at initPendingTrades. " +
-                        "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
-                        "At the next startup usually the tx will arrive. We do not move the " +
-                        "trade to failed trades as we might risk to move a valid tx.", trade.getId());
-                depositTxIsNullWarning.set(Res.get("popup.warning.trade.depositTxNull", trade.getShortId()));
+                                "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
+                                "We leave it to the user to move the trade to failed trades if the problem persists.",
+                        trade.getId());
+                tradesWithoutDepositTx.add(trade);
             }
                 }
         );
