@@ -533,7 +533,7 @@ public class P2PDataStorageTest {
             // onMessage doesn't use other parameters
             data.add(new Object[] { TestCase.ON_MESSAGE, false, false, false });
 
-            // Public API uses two permutations
+            // Client API uses two permutations
             // Normal path
             data.add(new Object[] { TestCase.PUBLIC_API, true, true, false });
 
@@ -595,7 +595,7 @@ public class P2PDataStorageTest {
 
     /*
      * Run each test through both entry points to validate the correct behavior:
-     * 1. Public API [addProtectedStorageEntry(), refreshTTL(), remove()]
+     * 1. Client API [addProtectedStorageEntry(), refreshTTL(), remove()]
      * 2. onMessage() [AddDataMessage, RefreshOfferMessage, RemoveDataMessage]
      *
      * These Base tests do not handle the mailbox case. Those are found in the MailboxPayloadTest subclass that
@@ -616,7 +616,7 @@ public class P2PDataStorageTest {
 
         boolean expectIsDataOwner() {
             // The onMessage handler variant should always broadcast with isDataOwner == false
-            // The public API should always broadcast with isDataOwner == true
+            // The Client API should always broadcast with isDataOwner == true
             return !useMessageHandler;
         }
 
