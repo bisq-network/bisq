@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
@@ -70,6 +71,8 @@ public class WalletAppSetup {
     private final StringProperty btcSplashSyncIconId = new SimpleStringProperty();
     @Getter
     private final StringProperty btcInfo = new SimpleStringProperty(Res.get("mainView.footer.btcInfo.initializing"));
+    @Getter
+    private final ObjectProperty<RejectedTxException> rejectedTxException = new SimpleObjectProperty<>();
     @Getter
     private int numBtcPeers = 0;
     @Getter
@@ -132,7 +135,7 @@ public class WalletAppSetup {
                                 getNumBtcPeers(),
                                 Res.get("mainView.footer.btcInfo.connectionFailed"),
                                 getBtcNetworkAsString());
-                        log.error(exception.getMessage());
+                        log.error(exception.toString());
                         if (exception instanceof TimeoutException) {
                             getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.timeout"));
                         } else if (exception.getCause() instanceof BlockStoreException) {
@@ -141,6 +144,9 @@ public class WalletAppSetup {
                             } else if (spvFileCorruptedHandler != null) {
                                 spvFileCorruptedHandler.accept(Res.get("error.spvFileCorrupted", exception.getMessage()));
                             }
+                        } else if (exception instanceof RejectedTxException) {
+                            rejectedTxException.set((RejectedTxException) exception);
+                            getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.rejectedTxException", exception.getMessage()));
                         } else {
                             getWalletServiceErrorMsg().set(Res.get("mainView.walletServiceErrorMsg.connectionError", exception.toString()));
                         }
