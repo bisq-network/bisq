@@ -269,6 +269,12 @@ public class AccountAgeWitnessService {
                 .orElse(-1L);
     }
 
+    public long getAccountAge(Trade trade) {
+        return findTradePeerWitness(trade)
+                .map(accountAgeWitness -> getAccountAge(accountAgeWitness, new Date()))
+                .orElse(-1L);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Signed age
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -286,6 +292,12 @@ public class AccountAgeWitnessService {
     // Return -1 if not signed
     public long getWitnessSignAge(Offer offer, Date now) {
         return findWitness(offer)
+                .map(witness -> getWitnessSignAge(witness, now))
+                .orElse(-1L);
+    }
+
+    public long getWitnessSignAge(Trade trade, Date now) {
+        return findTradePeerWitness(trade)
                 .map(witness -> getWitnessSignAge(witness, now))
                 .orElse(-1L);
     }
@@ -693,6 +705,12 @@ public class AccountAgeWitnessService {
 
     public SignState getSignState(Offer offer) {
         return findWitness(offer)
+                .map(this::getSignState)
+                .orElse(SignState.UNSIGNED);
+    }
+
+    public SignState getSignState(Trade trade) {
+        return findTradePeerWitness(trade)
                 .map(this::getSignState)
                 .orElse(SignState.UNSIGNED);
     }

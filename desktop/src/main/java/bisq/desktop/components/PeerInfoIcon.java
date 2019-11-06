@@ -32,7 +32,7 @@ import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import com.google.common.base.Charsets;
 
@@ -136,7 +136,7 @@ public class PeerInfoIcon extends Group {
         peerTagMap = preferences.getPeerTagMap();
 
         boolean hasTraded = numTrades > 0;
-        Tuple2<Long, String> peersAccount = getPeersAccountAge(trade, offer);
+        Tuple3<Long, String, String> peersAccount = getPeersAccountAge(trade, offer);
         if (offer == null) {
             checkNotNull(trade, "Trade must not be null if offer is null.");
             offer = trade.getOffer();
@@ -147,7 +147,7 @@ public class PeerInfoIcon extends Group {
         boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
 
         String accountAge = isFiatCurrency ?
-                peersAccount.first  > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(peersAccount.first)) :
+                peersAccount.first > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(peersAccount.first)) :
                         Res.get("peerInfoIcon.tooltip.unknownAge") :
                 "";
         tooltipText = hasTraded ?
@@ -249,36 +249,39 @@ public class PeerInfoIcon extends Group {
 
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
-        boolean needsSigning = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
-        String accountSigningState = null;
-        String accountAgeInfo = peersAccount.second;
-
-        if (needsSigning) {
-            AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(offer);
-            accountSigningState = StringUtils.capitalize(signState.getPresentation());
-
-            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
-                accountAgeInfo = null;
-        }
-
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, formatter, useDevPrivilegeKeys,
-                isFiatCurrency, peersAccount.first, accountAgeInfo, accountSigningState);
+                isFiatCurrency, peersAccount.first, peersAccount.second, peersAccount.third);
     }
 
-    private Tuple2<Long, String> getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
+    // Return Sign age, account info, sign state
+    private Tuple3<Long, String, String> getPeersAccountAge(@Nullable Trade trade, @Nullable Offer offer) {
+        AccountAgeWitnessService.SignState signState;
+        long signAge = -1L;
+        long accountAge = -1L;
         if (trade != null) {
             offer = trade.getOffer();
             if (offer == null) {
                 // unexpected
-                return new Tuple2<>(-1L, Res.get("peerInfo.age.noRisk"));
+                return new Tuple3<>(-1L, Res.get("peerInfo.age.noRisk"), null);
             }
+            signState = accountAgeWitnessService.getSignState(trade);
+            signAge = accountAgeWitnessService.getWitnessSignAge(trade, new Date());
+            accountAge = accountAgeWitnessService.getAccountAge(trade);
+        } else {
+            checkNotNull(offer, "Offer must not be null if trade is null.");
+            signState = accountAgeWitnessService.getSignState(offer);
+            signAge = accountAgeWitnessService.getWitnessSignAge(offer, new Date());
+            accountAge = accountAgeWitnessService.getAccountAge(offer);
         }
-        checkNotNull(offer, "Offer must not be null if trade is null.");
         if (PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
-            return new Tuple2<>(accountAgeWitnessService.getWitnessSignAge(offer, new Date()),
-                    Res.get("peerInfo.age.chargeBackRisk"));
+            String accountAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
+            String accountSigningState = StringUtils.capitalize(signState.getPresentation());
+            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
+                accountAgeInfo = null;
+
+            return new Tuple3<>(signAge, accountAgeInfo, accountSigningState);
         }
-        return new Tuple2<>(accountAgeWitnessService.getAccountAge(offer), Res.get("peerInfo.age.noRisk"));
+        return new Tuple3<>(accountAge, Res.get("peerInfo.age.noRisk"), null);
     }
 
     protected void addMouseListener(int numTrades,
@@ -288,13 +291,13 @@ public class PeerInfoIcon extends Group {
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
-                                    long makersAccountAge,
-                                    String makersAccountAgeInfo,
+                                    long peersAccountAge,
+                                    String peersAccountAgeInfo,
                                     String accountSigningState) {
 
-        final String accountAgeTagEditor = isFiatCurrency && makersAccountAgeInfo != null ?
-                makersAccountAge > -1 ?
-                        DisplayUtils.formatAccountAge(makersAccountAge) :
+        final String accountAgeTagEditor = isFiatCurrency && peersAccountAgeInfo != null ?
+                peersAccountAge > -1 ?
+                        DisplayUtils.formatAccountAge(peersAccountAge) :
                         Res.get("peerInfo.unknownAge") :
                 null;
 
@@ -302,7 +305,7 @@ public class PeerInfoIcon extends Group {
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeTagEditor)
-                .accountAgeInfo(makersAccountAgeInfo)
+                .accountAgeInfo(peersAccountAgeInfo)
                 .accountSigningState(accountSigningState)
                 .position(localToScene(new Point2D(0, 0)))
                 .onSave(newTag -> {
