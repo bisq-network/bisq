@@ -409,7 +409,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         hashMapChangedListeners.forEach(e -> e.onAdded(protectedStorageEntry));
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
-        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 2000);
 
         // Optionally, broadcast the add/update depending on the calling environment
@@ -472,7 +472,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after refreshTTL");
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
@@ -492,7 +492,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // If we don't know about the target of this remove, ignore it
         if (!map.containsKey(hashOfPayload)) {
             log.debug("Remove data ignored as we don't have an entry for that data.");
-
             return false;
         }
 
@@ -513,7 +512,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after remove");
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
@@ -608,7 +607,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after removeMailboxData");
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
@@ -839,7 +838,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.
     private Map<ByteArray, MapValue> getPurgedSequenceNumberMap(Map<ByteArray, MapValue> persisted) {
         Map<ByteArray, MapValue> purged = new HashMap<>();
-        long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(PURGE_AGE_DAYS);
+        long maxAgeTs = this.clock.millis() - TimeUnit.DAYS.toMillis(PURGE_AGE_DAYS);
         persisted.forEach((key, value) -> {
             if (value.timeStamp > maxAgeTs)
                 purged.put(key, value);
