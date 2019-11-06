@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 90;
+    private static final int MAX_ENTRIES = 10000;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -136,27 +138,54 @@ public class GetDataRequestHandler {
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
                                                                                 Connection connection) {
-        final Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
-        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
 
-        return dataStorage.getAppendOnlyDataStoreMap().entrySet().stream()
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
+        Set<PersistableNetworkPayload> result = dataStorage.getAppendOnlyDataStoreMap().entrySet().stream()
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
+                .filter(e -> maxSize.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
-                .filter(payload -> (connection.noCapabilityRequiredOrCapabilityIsSupported(payload)))
-                .filter(payload -> tempLookupSet.add(new P2PDataStorage.ByteArray(payload.getHash())))
+                .filter(connection::noCapabilityRequiredOrCapabilityIsSupported)
+                .filter(payload -> {
+                    boolean notContained = tempLookupSet.add(new P2PDataStorage.ByteArray(payload.getHash()));
+                    return notContained;
+                })
                 .collect(Collectors.toSet());
+        if (maxSize.get() <= 0) {
+            log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+        log.info("The getData request from peer with {} contains {} PersistableNetworkPayload entries ",
+                connectionInfo, result.size());
+        return result;
     }
 
     private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
                                                                           Connection connection) {
-        final Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-        final Set<Integer> lookupSet = new HashSet<>();
+        Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        Set<Integer> lookupSet = new HashSet<>();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
 
+        AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
         Set<ProtectedStorageEntry> filteredSet = dataStorage.getMap().entrySet().stream()
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
+                .filter(e -> maxSize.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
+        if (maxSize.get() <= 0) {
+            log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+        log.info("getFilteredProtectedStorageEntries " + filteredSet.size());
 
         for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
@@ -171,11 +200,14 @@ public class GetDataRequestHandler {
                 doAdd = true;
             }
             if (doAdd) {
-                if (lookupSet.add(protectedStoragePayload.hashCode()))
+                boolean notContained = lookupSet.add(protectedStoragePayload.hashCode());
+                if (notContained)
                     filteredDataSet.add(protectedStorageEntry);
             }
         }
 
+        log.info("The getData request from peer with {} contains {} ProtectedStorageEntry entries ",
+                connectionInfo, filteredDataSet.size());
         return filteredDataSet;
     }
 

@@ -81,12 +81,12 @@ public final class GetUpdatedDataRequest extends GetDataRequest implements Sende
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetUpdatedDataRequest(builder)
                 .build();
-        log.info("Sending a GetUpdatedDataRequest with size = {} bytes", proto.toByteArray().length);
+        log.info("Sending a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         return proto;
     }
 
     public static GetUpdatedDataRequest fromProto(protobuf.GetUpdatedDataRequest proto, int messageVersion) {
-        log.info("Received a GetUpdatedDataRequest with size = {} bytes", proto.toByteArray().length);
+        log.info("Received a GetUpdatedDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         return new GetUpdatedDataRequest(NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getNonce(),
                 ProtoUtil.byteSetFromProtoByteStringList(proto.getExcludedKeysList()),
