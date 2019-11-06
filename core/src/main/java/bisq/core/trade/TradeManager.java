@@ -79,6 +79,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -138,6 +140,8 @@ public class TradeManager implements PersistedDataHost {
     private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
+    @Getter
+    private final StringProperty depositTxIsNullWarning = new SimpleStringProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -269,12 +273,7 @@ public class TradeManager implements PersistedDataHost {
         List<Trade> removePreparedTradeList = new ArrayList<>();
         tradesForStatistics = new ArrayList<>();
         tradableList.forEach(trade -> {
-            if (trade.getDepositTx() == null) {
-                //TODO  deposit tx is null after resync for valid tx. seems it is not always but sometimes.
-                // probably the wallet receives it again from the network and then it is available again.
-                // need to find a more secure way to check for it...
-                //addTradeToFailedTradesList.add(trade);
-            } else if (trade.isDepositPublished() ||
+            if (trade.isDepositPublished() ||
                             (trade.isTakerFeePublished() && !trade.hasFailed())) {
                         initTrade(trade, trade.getProcessModel().isUseSavingsWallet(),
                                 trade.getProcessModel().getFundsNeededForTradeAsLong());
@@ -282,9 +281,18 @@ public class TradeManager implements PersistedDataHost {
                         tradesForStatistics.add(trade);
                     } else if (trade.isTakerFeePublished() && !trade.isFundsLockedIn()) {
                         addTradeToFailedTradesList.add(trade);
+                trade.appendErrorMessage("Invalid state: trade.isTakerFeePublished() && !trade.isFundsLockedIn()");
                     } else {
                         removePreparedTradeList.add(trade);
                     }
+
+            if (trade.getDepositTx() == null) {
+                log.warn("Deposit tx for trader with ID {} is null at initPendingTrades. " +
+                        "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
+                        "At the next startup usually the tx will arrive. We do not move the " +
+                        "trade to failed trades as we might risk to move a valid tx.", trade.getId());
+                depositTxIsNullWarning.set(Res.get("popup.warning.trade.depositTxNull", trade.getShortId()));
+            }
                 }
         );
 

@@ -21,12 +21,26 @@ import org.bitcoinj.core.RejectMessage;
 
 import lombok.Getter;
 
+import javax.annotation.Nullable;
+
 public class RejectedTxException extends RuntimeException {
     @Getter
     private final RejectMessage rejectMessage;
+    @Getter
+    @Nullable
+    private final String txId;
 
     public RejectedTxException(String message, RejectMessage rejectMessage) {
         super(message);
         this.rejectMessage = rejectMessage;
+        txId = rejectMessage.getRejectedObjectHash() != null ? rejectMessage.getRejectedObjectHash().toString() : null;
+    }
+
+    @Override
+    public String toString() {
+        return "RejectedTxException{" +
+                "\n     rejectMessage=" + rejectMessage +
+                ",\n     txId='" + txId + '\'' +
+                "\n} " + super.toString();
     }
 }

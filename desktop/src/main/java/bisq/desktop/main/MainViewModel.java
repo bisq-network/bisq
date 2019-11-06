@@ -364,6 +364,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
 
+        bisqSetup.setRejectedTxErrorMessageHandler(msg -> new Popup<>().width(850).warning(msg).show());
+
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup<>()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
                         bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
@@ -373,6 +375,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
+
+        tradeManager.getDepositTxIsNullWarning().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                new Popup<>().warning(newValue).show();
+            }
+        });
 
         bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
         daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());

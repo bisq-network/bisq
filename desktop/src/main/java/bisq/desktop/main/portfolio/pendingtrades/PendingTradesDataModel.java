@@ -652,5 +652,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public boolean isBootstrappedOrShowPopup() {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
+
+    public void addTradeToFailedTrades() {
+        tradeManager.addTradeToFailedTrades(selectedTrade);
+    }
 }
 

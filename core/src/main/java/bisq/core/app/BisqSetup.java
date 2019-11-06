@@ -194,7 +194,8 @@ public class BisqSetup {
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
-            displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler;
+            displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler,
+            rejectedTxErrorMessageHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -646,7 +647,7 @@ public class BisqSetup {
             String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
             if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
                 String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",
-                        offerFeePaymentTxId, e.getOffer().getId());
+                        e.getOffer().getShortId(), offerFeePaymentTxId);
                 log.warn(message);
                 if (lockedUpFundsHandler != null) {
                     lockedUpFundsHandler.accept(message);
@@ -689,6 +690,51 @@ public class BisqSetup {
         openOfferManager.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
+
+        walletAppSetup.getRejectedTxException().addListener((observable, oldValue, newValue) -> {
+            // We delay as we might get the rejected tx error before we have completed the create offer protocol
+            UserThread.runAfter(() -> {
+                if (rejectedTxErrorMessageHandler != null && newValue != null && newValue.getTxId() != null) {
+                    String txId = newValue.getTxId();
+                    openOfferManager.getObservableList().stream()
+                            .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
+                            .forEach(openOffer -> {
+                                // We delay to avoid concurrent modification exceptions
+                                UserThread.runAfter(() -> {
+                                    openOffer.getOffer().setErrorMessage(newValue.getMessage());
+                                    rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
+                                    openOfferManager.removeOpenOffer(openOffer, () -> {
+                                        log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
+                                                "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
+                                    }, log::warn);
+                                }, 1);
+                            });
+
+                    tradeManager.getTradableList().stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> {
+                                String details = null;
+                                if (txId.equals(trade.getDepositTxId())) {
+                                    details = Res.get("popup.warning.trade.txRejected.deposit");
+                                }
+                                if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
+                                    details = Res.get("popup.warning.trade.txRejected.tradeFee");
+                                }
+
+                                if (details != null) {
+                                    // We delay to avoid concurrent modification exceptions
+                                    String finalDetails = details;
+                                    UserThread.runAfter(() -> {
+                                        trade.setErrorMessage(newValue.getMessage());
+                                        rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
+                                                finalDetails, trade.getShortId(), txId));
+                                        tradeManager.addTradeToFailedTrades(trade);
+                                    }, 1);
+                                }
+                            });
+                }
+            }, 3);
+        });
 
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
