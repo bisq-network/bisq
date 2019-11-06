@@ -55,6 +55,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.TradeTxException;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -107,6 +108,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -192,7 +194,8 @@ public class BisqSetup {
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
-            displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler;
+            displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler,
+            rejectedTxErrorMessageHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -601,28 +604,56 @@ public class BisqSetup {
                 showFirstPopupIfResyncSPVRequestedHandler,
                 walletPasswordHandler,
                 () -> {
-                    if (allBasicServicesInitialized)
+                    if (allBasicServicesInitialized) {
                         checkForLockedUpFunds();
+                        checkForInvalidMakerFeeTxs();
+                    }
                 },
                 () -> walletInitialized.set(true));
     }
 
 
     private void checkForLockedUpFunds() {
-        btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> tradeManager.getSetOfAllTradeIds().contains(e.getOfferId()) &&
-                        e.getContext() == AddressEntry.Context.MULTI_SIG)
-                .forEach(e -> {
-                    Coin balance = e.getCoinLockedInMultiSig();
-                    if (balance.isPositive()) {
-                        String message = Res.get("popup.warning.lockedUpFunds",
-                                formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                        log.warn(message);
-                        if (lockedUpFundsHandler != null) {
-                            lockedUpFundsHandler.accept(message);
+        // We check if there are locked up funds in failed or closed trades
+        try {
+            Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedInFunds();
+            btcWalletService.getAddressEntriesForTrade().stream()
+                    .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
+                            e.getContext() == AddressEntry.Context.MULTI_SIG)
+                    .forEach(e -> {
+                        Coin balance = e.getCoinLockedInMultiSig();
+                        if (balance.isPositive()) {
+                            String message = Res.get("popup.warning.lockedUpFunds",
+                                    formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                            log.warn(message);
+                            if (lockedUpFundsHandler != null) {
+                                lockedUpFundsHandler.accept(message);
+                            }
                         }
-                    }
-                });
+                    });
+        } catch (TradeTxException e) {
+            log.warn(e.getMessage());
+            if (lockedUpFundsHandler != null) {
+                lockedUpFundsHandler.accept(e.getMessage());
+            }
+        }
+    }
+
+    private void checkForInvalidMakerFeeTxs() {
+        // We check if we have open offers with no confidence object at the maker fee tx. That can happen if the
+        // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
+        // resync.
+        openOfferManager.getObservableList().forEach(e -> {
+            String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
+            if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
+                String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",
+                        e.getOffer().getShortId(), offerFeePaymentTxId);
+                log.warn(message);
+                if (lockedUpFundsHandler != null) {
+                    lockedUpFundsHandler.accept(message);
+                }
+            }
+        });
     }
 
     private void checkForCorrectOSArchitecture() {
@@ -651,12 +682,59 @@ public class BisqSetup {
 
         tradeManager.onAllServicesInitialized();
 
-        if (walletsSetup.downloadPercentageProperty().get() == 1)
+        if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
+            checkForInvalidMakerFeeTxs();
+        }
 
         openOfferManager.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
+
+        walletAppSetup.getRejectedTxException().addListener((observable, oldValue, newValue) -> {
+            // We delay as we might get the rejected tx error before we have completed the create offer protocol
+            UserThread.runAfter(() -> {
+                if (rejectedTxErrorMessageHandler != null && newValue != null && newValue.getTxId() != null) {
+                    String txId = newValue.getTxId();
+                    openOfferManager.getObservableList().stream()
+                            .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
+                            .forEach(openOffer -> {
+                                // We delay to avoid concurrent modification exceptions
+                                UserThread.runAfter(() -> {
+                                    openOffer.getOffer().setErrorMessage(newValue.getMessage());
+                                    rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
+                                    openOfferManager.removeOpenOffer(openOffer, () -> {
+                                        log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
+                                                "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
+                                    }, log::warn);
+                                }, 1);
+                            });
+
+                    tradeManager.getTradableList().stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> {
+                                String details = null;
+                                if (txId.equals(trade.getDepositTxId())) {
+                                    details = Res.get("popup.warning.trade.txRejected.deposit");
+                                }
+                                if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
+                                    details = Res.get("popup.warning.trade.txRejected.tradeFee");
+                                }
+
+                                if (details != null) {
+                                    // We delay to avoid concurrent modification exceptions
+                                    String finalDetails = details;
+                                    UserThread.runAfter(() -> {
+                                        trade.setErrorMessage(newValue.getMessage());
+                                        rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
+                                                finalDetails, trade.getShortId(), txId));
+                                        tradeManager.addTradeToFailedTrades(trade);
+                                    }, 1);
+                                }
+                            });
+                }
+            }, 3);
+        });
 
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();

@@ -523,6 +523,14 @@ public abstract class TradeStepView extends AnchorPane {
             return;
         }
 
+        if (trade.getDepositTx() == null || trade.getDelayedPayoutTx() == null) {
+            log.error("trade.getDepositTx() or trade.getDelayedPayoutTx() was null at openMediationResultPopup. " +
+                    "We add the trade to failed trades. TradeId={}", trade.getId());
+            model.dataModel.addTradeToFailedTrades();
+            new Popup<>().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
+            return;
+        }
+
         DisputeResult disputeResult = optionalDispute.get().getDisputeResultProperty().get();
         Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
         boolean isMyRoleBuyer = contract.isMyRoleBuyer(model.dataModel.getPubKeyRing());
@@ -531,8 +539,6 @@ public abstract class TradeStepView extends AnchorPane {
         String myPayoutAmount = isMyRoleBuyer ? buyerPayoutAmount : sellerPayoutAmount;
         String peersPayoutAmount = isMyRoleBuyer ? sellerPayoutAmount : buyerPayoutAmount;
 
-        checkNotNull(trade.getDelayedPayoutTx(),
-                "trade.getDelayedPayoutTx() must not be null at openMediationResultPopup");
         long lockTime = trade.getDelayedPayoutTx().getLockTime();
         int bestChainHeight = model.dataModel.btcWalletService.getBestChainHeight();
         long remaining = lockTime - bestChainHeight;

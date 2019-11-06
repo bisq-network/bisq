@@ -61,6 +61,7 @@ import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.inject.Inject;
 
@@ -76,8 +77,6 @@ import javafx.collections.ObservableList;
 
 import org.spongycastle.crypto.params.KeyParameter;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -448,41 +447,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             return;
         }
 
-        Transaction depositTx = trade.getDepositTx();
-        if (depositTx != null) {
-            doOpenDispute(isSupportTicket, depositTx);
-        } else {
-            //TODO consider to remove that
-            log.info("Trade.depositTx is null. We try to find the tx in our wallet.");
-            List<Transaction> candidates = new ArrayList<>();
-            List<Transaction> transactions = btcWalletService.getRecentTransactions(100, true);
-            transactions.forEach(transaction -> {
-                Coin valueSentFromMe = btcWalletService.getValueSentFromMeForTransaction(transaction);
-                if (!valueSentFromMe.isZero()) {
-                    // spending tx
-                    // MS tx
-                    candidates.addAll(transaction.getOutputs().stream()
-                            .filter(output -> !btcWalletService.isTransactionOutputMine(output))
-                            .filter(output -> output.getScriptPubKey().isPayToScriptHash())
-                            .map(transactionOutput -> transaction)
-                            .collect(Collectors.toList()));
-                }
-            });
-
-            if (candidates.size() > 0) {
-                log.error("Trade.depositTx is null. We take the first possible MultiSig tx just to be able to open a dispute. " +
-                        "candidates={}", candidates);
-                doOpenDispute(isSupportTicket, candidates.get(0));
-            } else if (transactions.size() > 0) {
-                doOpenDispute(isSupportTicket, transactions.get(0));
-                log.error("Trade.depositTx is null and we did not find any MultiSig transaction. We take any random tx just to be able to open a dispute");
-            } else {
-                log.error("Trade.depositTx is null and we did not find any transaction.");
-            }
-        }
+        doOpenDispute(isSupportTicket, trade.getDepositTx());
     }
 
     private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
+        // We do not support opening a dispute if the deposit tx is null. Traders have to use the support channel at keybase
+        // in such cases. The mediators or arbitrators could not help anyway with a payout in such cases.
+        if (depositTx == null) {
+            log.error("Deposit tx must not be null");
+            new Popup<>().instruction(Res.get("portfolio.pending.error.depositTxNull")).show();
+            return;
+        }
+        String depositTxId = depositTx.getHashAsString();
+
         Trade trade = getTrade();
         if (trade == null) {
             log.warn("trade is null at doOpenDispute");
@@ -523,7 +500,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             PubKeyRing mediatorPubKeyRing = trade.getMediatorPubKeyRing();
             checkNotNull(mediatorPubKeyRing, "mediatorPubKeyRing must not be null");
             byte[] depositTxSerialized = depositTx.bitcoinSerialize();
-            String depositTxHashAsString = depositTx.getHashAsString();
             Dispute dispute = new Dispute(disputeManager.getStorage(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
@@ -535,7 +511,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     trade.getContractHash(),
                     depositTxSerialized,
                     payoutTxSerialized,
-                    depositTxHashAsString,
+                    depositTxId,
                     payoutTxHashAsString,
                     trade.getContractAsJson(),
                     trade.getMakerContractSignature(),
@@ -569,6 +545,16 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
 
             if (trade.getDelayedPayoutTx() == null) {
+                return;
+            }
+
+            // We only require for refund agent a confirmed deposit tx. For mediation we tolerate a unconfirmed tx as
+            // no harm can be done to the mediator (refund agent who would accept a invalid deposit tx might reimburse
+            // the traders but the funds never have been spent).
+            TransactionConfidence confidenceForTxId = btcWalletService.getConfidenceForTxId(depositTxId);
+            if (confidenceForTxId == null || confidenceForTxId.getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING) {
+                log.error("Confidence for deposit tx must be BUILDING, confidenceForTxId={}", confidenceForTxId);
+                new Popup<>().instruction(Res.get("portfolio.pending.error.depositTxNotConfirmed")).show();
                 return;
             }
 
@@ -665,6 +651,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public boolean isBootstrappedOrShowPopup() {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
+    }
+
+    public void addTradeToFailedTrades() {
+        tradeManager.addTradeToFailedTrades(selectedTrade);
     }
 }
 

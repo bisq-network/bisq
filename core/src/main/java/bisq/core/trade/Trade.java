@@ -678,7 +678,9 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     public Transaction getDelayedPayoutTx() {
         if (delayedPayoutTx == null) {
-            delayedPayoutTx = delayedPayoutTxBytes != null ? processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxBytes) : null;
+            delayedPayoutTx = delayedPayoutTxBytes != null && processModel.getBtcWalletService() != null ?
+                    processModel.getBtcWalletService().getTxFromSerializedTx(delayedPayoutTxBytes) :
+                    null;
         }
         return delayedPayoutTx;
     }
@@ -711,6 +713,11 @@ public abstract class Trade implements Tradable, Model {
             log.error("Trade ChatMessage already exists");
         }
     }
+
+    public void appendErrorMessage(String msg) {
+        errorMessage = errorMessage == null ? msg : errorMessage + "\n" + msg;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Model implementation
