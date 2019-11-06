@@ -43,37 +43,50 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private long creationTimeStamp;
 
     public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                 PublicKey ownerPubKey,
-                                 int sequenceNumber,
-                                 byte[] signature) {
-        this.protectedStoragePayload = protectedStoragePayload;
-        ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
-        this.ownerPubKey = ownerPubKey;
-
-        this.sequenceNumber = sequenceNumber;
-        this.signature = signature;
-        this.creationTimeStamp = System.currentTimeMillis();
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected ProtectedStorageEntry(long creationTimeStamp,
-                                    ProtectedStoragePayload protectedStoragePayload,
-                                    byte[] ownerPubKeyBytes,
+                                    PublicKey ownerPubKey,
                                     int sequenceNumber,
                                     byte[] signature) {
+        this(protectedStoragePayload,
+                Sig.getPublicKeyBytes(ownerPubKey),
+                ownerPubKey,
+                sequenceNumber,
+                signature,
+                System.currentTimeMillis());
+    }
+
+    protected ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+                                 byte[] ownerPubKeyBytes,
+                                 PublicKey ownerPubKey,
+                                 int sequenceNumber,
+                                 byte[] signature,
+                                 long creationTimeStamp) {
+
         this.protectedStoragePayload = protectedStoragePayload;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
+        this.ownerPubKey = ownerPubKey;
 
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.creationTimeStamp = creationTimeStamp;
 
         maybeAdjustCreationTimeStamp();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+                                    byte[] ownerPubKeyBytes,
+                                    int sequenceNumber,
+                                    byte[] signature,
+                                    long creationTimeStamp) {
+        this(protectedStoragePayload,
+                ownerPubKeyBytes,
+                Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
+                sequenceNumber,
+                signature,
+                creationTimeStamp);
     }
 
     public Message toProtoMessage() {
@@ -93,11 +106,12 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
     public static ProtectedStorageEntry fromProto(protobuf.ProtectedStorageEntry proto,
                                                   NetworkProtoResolver resolver) {
-        return new ProtectedStorageEntry(proto.getCreationTimeStamp(),
+        return new ProtectedStorageEntry(
                 ProtectedStoragePayload.fromProto(proto.getStoragePayload(), resolver),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSequenceNumber(),
-                proto.getSignature().toByteArray());
+                proto.getSignature().toByteArray(),
+                proto.getCreationTimeStamp());
     }
 
 

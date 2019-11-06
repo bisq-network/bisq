@@ -41,10 +41,33 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                                         int sequenceNumber,
                                         byte[] signature,
                                         PublicKey receiversPubKey) {
-        super(mailboxStoragePayload, ownerPubKey, sequenceNumber, signature);
+        this(mailboxStoragePayload,
+                Sig.getPublicKeyBytes(ownerPubKey),
+                ownerPubKey,
+                sequenceNumber,
+                signature,
+                Sig.getPublicKeyBytes(receiversPubKey),
+                receiversPubKey,
+                System.currentTimeMillis());
+    }
+
+    private ProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload,
+                                        byte[] ownerPubKeyBytes,
+                                        PublicKey ownerPubKey,
+                                        int sequenceNumber,
+                                        byte[] signature,
+                                        byte[] receiversPubKeyBytes,
+                                        PublicKey receiversPubKey,
+                                        long creationTimeStamp) {
+        super(mailboxStoragePayload,
+                ownerPubKeyBytes,
+                ownerPubKey,
+                sequenceNumber,
+                signature,
+                creationTimeStamp);
 
         this.receiversPubKey = receiversPubKey;
-        receiversPubKeyBytes = Sig.getPublicKeyBytes(receiversPubKey);
+        this.receiversPubKeyBytes = receiversPubKeyBytes;
     }
 
     public MailboxStoragePayload getMailboxStoragePayload() {
@@ -56,22 +79,20 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private ProtectedMailboxStorageEntry(long creationTimeStamp,
-                                         MailboxStoragePayload mailboxStoragePayload,
-                                         byte[] ownerPubKey,
+    private ProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload,
+                                         byte[] ownerPubKeyBytes,
                                          int sequenceNumber,
                                          byte[] signature,
-                                         byte[] receiversPubKeyBytes) {
-        super(creationTimeStamp,
-                mailboxStoragePayload,
-                ownerPubKey,
+                                         byte[] receiversPubKeyBytes,
+                                         long creationTimeStamp) {
+        this(mailboxStoragePayload,
+                ownerPubKeyBytes,
+                Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
                 sequenceNumber,
-                signature);
-
-        this.receiversPubKeyBytes = receiversPubKeyBytes;
-        receiversPubKey = Sig.getPublicKeyFromBytes(receiversPubKeyBytes);
-
-        maybeAdjustCreationTimeStamp();
+                signature,
+                receiversPubKeyBytes,
+                Sig.getPublicKeyFromBytes(receiversPubKeyBytes),
+                creationTimeStamp);
     }
 
     public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
@@ -85,12 +106,12 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                                                          NetworkProtoResolver resolver) {
         ProtectedStorageEntry entry = ProtectedStorageEntry.fromProto(proto.getEntry(), resolver);
         return new ProtectedMailboxStorageEntry(
-                entry.getCreationTimeStamp(),
                 (MailboxStoragePayload) entry.getProtectedStoragePayload(),
                 entry.getOwnerPubKey().getEncoded(),
                 entry.getSequenceNumber(),
                 entry.getSignature(),
-                proto.getReceiversPubKeyBytes().toByteArray());
+                proto.getReceiversPubKeyBytes().toByteArray(),
+                entry.getCreationTimeStamp());
     }
 
 
