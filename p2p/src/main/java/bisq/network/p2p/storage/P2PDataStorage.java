@@ -504,6 +504,38 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return result;
     }
 
+
+    /**
+     * This method must be called only from client code not from network messages! We omit the ownership checks
+     * so we must apply it only if it comes from our trusted application code. It is used from client code which detects
+     * that the domain object violates specific domain rules.
+     * We could make it more generic by adding an Interface with a generic validation method.
+     *
+     * @param protectedStorageEntry     The entry to be removed
+     */
+    public void removeInvalidProtectedStorageEntry(ProtectedStorageEntry protectedStorageEntry) {
+        log.warn("We remove an invalid protectedStorageEntry: {}", protectedStorageEntry);
+        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+        ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
+
+        if (!map.containsKey(hashOfPayload)) {
+            return;
+        }
+
+        doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
+        removeFromProtectedDataStore(protectedStorageEntry);
+
+        // We do not update the sequence number as that method is only called if we have received an invalid
+        // protectedStorageEntry from a previous add operation.
+
+        // We do not call maybeAddToRemoveAddOncePayloads to avoid that an invalid object might block a valid object
+        // which we might receive in future (could be potential attack).
+
+        // We do not broadcast as this is a local operation only to avoid our maps get polluted with invalid objects
+        // and as we do not check for ownership a node would not accept such a procedure if it would come from untrusted
+        // source (network).
+    }
+
     private void removeFromProtectedDataStore(ProtectedStorageEntry protectedStorageEntry) {
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof PersistablePayload) {

@@ -136,7 +136,10 @@ public class FilterManager {
                 public void onAdded(ProtectedStorageEntry data) {
                     if (data.getProtectedStoragePayload() instanceof Filter) {
                         Filter filter = (Filter) data.getProtectedStoragePayload();
-                        addFilter(filter);
+                        boolean wasValid = addFilter(filter);
+                        if (!wasValid) {
+                            UserThread.runAfter(() -> p2PService.getP2PDataStorage().removeInvalidProtectedStorageEntry(data), 1);
+                        }
                     }
                 }
 
@@ -203,7 +206,7 @@ public class FilterManager {
         filterProperty.set(null);
     }
 
-    private void addFilter(Filter filter) {
+    private boolean addFilter(Filter filter) {
         if (verifySignature(filter)) {
             // Seed nodes are requested at startup before we get the filter so we only apply the banned
             // nodes at the next startup and don't update the list in the P2P network domain.
@@ -223,6 +226,9 @@ public class FilterManager {
             if (filter.isPreventPublicBtcNetwork() &&
                     preferences.getBitcoinNodesOptionOrdinal() == BtcNodes.BitcoinNodesOption.PUBLIC.ordinal())
                 preferences.setBitcoinNodesOptionOrdinal(BtcNodes.BitcoinNodesOption.PROVIDED.ordinal());
+            return true;
+        } else {
+            return false;
         }
     }
 

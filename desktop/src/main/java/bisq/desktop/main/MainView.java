@@ -31,7 +31,7 @@ import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
-import bisq.desktop.main.market.trades.TradesChartsView;
+import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -390,7 +390,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                     .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
                     .setSelected(true);
             } catch (BisqException e) {
-            	navigation.navigateTo(MainView.class, MarketView.class, TradesChartsView.class);
+                navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
 			}
         });
 

@@ -1084,9 +1084,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             String timeSinceSigning;
 
                             if (accountAgeWitnessService.hasSignedWitness(item.getOffer())) {
-                                icon = MaterialDesignIcon.APPROVAL;
+                                AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
+                                icon = GUIUtil.getIconForSignState(signState);
                                 info = Res.get("offerbook.timeSinceSigning.info",
-                                        accountAgeWitnessService.getSignState(item.getOffer()).getPresentation());
+                                        signState.getPresentation());
                                 long daysSinceSigning = TimeUnit.MILLISECONDS.toDays(
                                         accountAgeWitnessService.getWitnessSignAge(item.getOffer(), new Date()));
                                 timeSinceSigning = Res.get("offerbook.timeSinceSigning.daysSinceSigning",
@@ -1095,9 +1096,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 boolean needsSigning = PaymentMethod.hasChargebackRisk(
                                         item.getOffer().getPaymentMethod(), item.getOffer().getCurrencyCode());
                                 if (needsSigning) {
-                                    icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
-
                                     AccountAgeWitnessService.SignState signState = accountAgeWitnessService.getSignState(item.getOffer());
+
+                                    icon = GUIUtil.getIconForSignState(signState);
 
                                     if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
                                         info = Res.get("offerbook.timeSinceSigning.info", signState.getPresentation());

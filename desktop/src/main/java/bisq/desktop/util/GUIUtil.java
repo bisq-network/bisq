@@ -1098,4 +1098,10 @@ public class GUIUtil {
         Volume volumeByAmount = usdPrice.getVolumeByAmount(requiredBtc);
         return DisplayUtils.formatVolumeWithCode(volumeByAmount);
     }
+
+    public static MaterialDesignIcon getIconForSignState(AccountAgeWitnessService.SignState state) {
+        return (state.equals(AccountAgeWitnessService.SignState.ARBITRATOR) ||
+                state.equals(AccountAgeWitnessService.SignState.PEER_SIGNER)) ?
+                MaterialDesignIcon.APPROVAL : MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+    }
 }
