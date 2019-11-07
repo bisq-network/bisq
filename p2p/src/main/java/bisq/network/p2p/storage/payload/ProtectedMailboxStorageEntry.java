@@ -86,13 +86,24 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
 
     /*
      * Returns true if this Entry is valid for an add operation. For mailbox Entrys, the entry owner must
-     * match the valid sender Public Key specified in the payload.
+     * match the valid sender Public Key specified in the payload. (Only sender can add)
      */
     @Override
     public boolean isValidForAddOperation() {
         MailboxStoragePayload mailboxStoragePayload = this.getMailboxStoragePayload();
         return mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
                 mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+    }
+
+    /*
+     * Returns true if the Entry is valid for a remove operation. For mailbox Entrys, the entry owner must
+     * match the payload owner. (Only receiver can remove)
+     */
+    @Override
+    public boolean isValidForRemoveOperation() {
+        MailboxStoragePayload mailboxStoragePayload = this.getMailboxStoragePayload();
+        return mailboxStoragePayload.getOwnerPubKey() != null &&
+                mailboxStoragePayload.getOwnerPubKey().equals(this.getOwnerPubKey());
     }
 
 

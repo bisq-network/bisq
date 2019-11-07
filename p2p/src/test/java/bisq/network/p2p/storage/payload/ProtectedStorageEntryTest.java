@@ -94,4 +94,52 @@ public class ProtectedStorageEntryTest {
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
 
+    // TESTCASE: validForRemoveOperation() should return true if the Entry owner and payload owner match
+    @Test
+    public void isValidForRemoveOperation() throws NoSuchAlgorithmException {
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys);
+
+        Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
+    }
+
+    // TESTCASE: validForRemoveOperation() should return false if the Entry owner and payload owner don't match
+    @Test
+    public void isValidForRemoveOperation_Mismatch() throws NoSuchAlgorithmException {
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        KeyPair notOwnerKeys = TestUtils.generateKeyPair();
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, notOwnerKeys);
+
+        Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
+
+    // TESTCASE: validForRemoveOperation() should fail if the entry is a MailboxStoragePayload wrapped in a
+    // ProtectedStorageEntry and the Entry is owned by the sender
+    // XXXBUGXXX: Currently, a mis-wrapped MailboxStoragePayload will succeed
+    @Test
+    public void isValidForRemoveOperation_invalidMailboxPayloadSender() throws NoSuchAlgorithmException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(
+                mock(PrefixedSealedAndSignedMessage.class), senderKeys.getPublic(), receiverKeys.getPublic());
+
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(mailboxStoragePayload, senderKeys);
+
+        // should be assertFalse
+        Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
+    }
+
+    @Test
+    public void isValidForRemoveOperation_invalidMailboxPayloadReceiver() throws NoSuchAlgorithmException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = new MailboxStoragePayload(
+                mock(PrefixedSealedAndSignedMessage.class), senderKeys.getPublic(), receiverKeys.getPublic());
+
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(mailboxStoragePayload, receiverKeys);
+
+        Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
 }

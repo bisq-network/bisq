@@ -772,8 +772,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (isAddOperation)
                 result = protectedStorageEntry.isValidForAddOperation();
             else
-                result = payload.getOwnerPubKey() != null &&
-                        payload.getOwnerPubKey().equals(protectedStorageEntry.getOwnerPubKey());
+                result = protectedStorageEntry.isValidForRemoveOperation();
         } else {
             result = protectedStorageEntry.isValidForAddOperation();
         }

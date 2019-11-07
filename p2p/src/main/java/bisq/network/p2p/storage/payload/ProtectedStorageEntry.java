@@ -165,4 +165,14 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                     this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
         }
     }
+
+    /*
+     * Returns true if the Entry is valid for a remove operation. For non-mailbox Entrys, the entry owner must
+     * match the payload owner.
+     */
+    public boolean isValidForRemoveOperation() {
+
+        // Same requirements as add()
+        return this.isValidForAddOperation();
+    }
 }

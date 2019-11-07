@@ -81,4 +81,28 @@ public class ProtectedMailboxStorageEntryTest {
         // should be assertFalse
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
     }
+
+    // TESTCASE: validForRemoveOperation() should return true if the Entry owner and payload owner match
+    @Test
+    public void validForRemove() throws NoSuchAlgorithmException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys.getPublic(), receiverKeys.getPublic());
+
+        Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
+    }
+
+    // TESTCASE: validForRemoveOperation() should return false if the Entry owner and payload owner don't match
+    @Test
+    public void validForRemoveEntryOwnerPayloadOwnerMismatch() throws NoSuchAlgorithmException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys.getPublic(), receiverKeys.getPublic());
+
+        Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
 }
