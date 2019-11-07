@@ -281,6 +281,7 @@ public abstract class PaymentMethodForm {
 
     void setAccountNameWithString(String name) {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
+            name = name.trim();
             name = StringUtils.abbreviate(name, 9);
             String method = Res.get(paymentAccount.getPaymentMethod().getId());
             accountNameTextField.setText(method.concat(": ").concat(name));
