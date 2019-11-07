@@ -1145,6 +1145,75 @@ public class P2PDataStorageTest {
             return null;
         }
 
+        // TESTCASE: adding a MailboxStoragePayload wrapped in a ProtectedStorageEntry owned by the receiver should fail
+        @Test
+        public void addProtectedStorageEntry_badWrappingReceiverEntry() throws CryptoException, NoSuchAlgorithmException {
+            KeyPair senderKeys = TestUtils.generateKeyPair();
+            KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+            ProtectedStorageEntry entryForAdd = buildProtectedStorageEntry(
+                    buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), receiverKeys, receiverKeys, 1, this.testState.clockFake);
+
+            doProtectedStorageAddAndVerify(entryForAdd, false, false);
+        }
+
+        // TESTCASE: adding a MailboxStoragePayload wrapped in a ProtectedStorageEntry owned by the sender should fail
+        // XXXBUGXXX Miswrapped MailboxStoragePayload objects go through non-mailbox validation. This circumvents the
+        // Entry.ownerPubKey == Payload.senderPubKeyForAddOperation checks.
+        @Test
+        public void addProtectedStorageEntry_badWrappingSenderEntry() throws CryptoException, NoSuchAlgorithmException {
+            KeyPair senderKeys = TestUtils.generateKeyPair();
+            KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+            ProtectedStorageEntry entryForAdd = buildProtectedStorageEntry(
+                    buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), senderKeys, senderKeys, 1, this.testState.clockFake);
+
+            // should be (false, false)
+            doProtectedStorageAddAndVerify(entryForAdd, true, true);
+        }
+
+        // TESTCASE: removing a MailboxStoragePayload wrapped in a ProtectedStorageEntry owned by the receiver should fail
+        // XXX: The reason this fails correctly is extremely subtle. checkIfStoredDataPubKeyMatchesNewDataPubKey()
+        // in the non-mailbox path sees the the Entry owner changed from the initial add request and fails. If we see
+        // this invalid wrapper we should fail more explicitly.
+        @Test
+        public void remove_badWrappingReceiverEntry() throws CryptoException {
+            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
+            doProtectedStorageAddAndVerify(entryForAdd, true, true);
+
+            ProtectedStorageEntry entryForRemove = buildProtectedStorageEntry(
+                    buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), receiverKeys, receiverKeys, 2, this.testState.clockFake);
+
+            SavedTestState beforeState = new SavedTestState(this.testState, entryForRemove);
+
+            boolean addResult = super.doRemove(entryForRemove);
+
+            if (!this.useMessageHandler)
+                Assert.assertEquals(false, addResult);
+
+            verifyProtectedStorageRemove(this.testState, beforeState, entryForRemove, false, false, false, this.expectIsDataOwner());
+        }
+
+        // TESTCASE: removing a MailboxStoragePayload wrapped in a ProtectedStorageEntry owned by the sender should fail
+        @Test
+        public void remove_badWrappingSenderEntry() throws CryptoException {
+            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
+            doProtectedStorageAddAndVerify(entryForAdd, true, true);
+
+            ProtectedStorageEntry entryForRemove = buildProtectedStorageEntry(
+                    buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), senderKeys, senderKeys, 2, this.testState.clockFake);
+
+            SavedTestState beforeState = new SavedTestState(this.testState, entryForRemove);
+
+            boolean addResult = super.doRemove(entryForRemove);
+
+            // should be (false, false)
+            if (!this.useMessageHandler)
+                Assert.assertEquals(true, addResult);
+
+            verifyProtectedStorageRemove(this.testState, beforeState, entryForRemove, true, true, true, this.expectIsDataOwner());
+        }
+
         // TESTCASE: Adding fails when Entry owner is different from sender
         @Test
         public void addProtectedStorageEntry_payloadOwnerEntryOwnerNotCompatible() throws CryptoException, NoSuchAlgorithmException {
