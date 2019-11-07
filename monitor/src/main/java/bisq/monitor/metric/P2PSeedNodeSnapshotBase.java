@@ -39,6 +39,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
+import java.time.Clock;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +92,7 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
     protected void execute() {
         // start the network node
         final NetworkNode networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9054")),
-                new CoreNetworkProtoResolver(), false,
+                new CoreNetworkProtoResolver(Clock.systemDefaultZone()), false,
                 new AvailableTor(Monitor.TOR_WORKING_DIR, "unused"));
         // we do not need to start the networkNode, as we do not need the HS
         //networkNode.start(this);

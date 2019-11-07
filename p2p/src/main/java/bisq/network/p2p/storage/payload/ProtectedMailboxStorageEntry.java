@@ -25,6 +25,8 @@ import com.google.protobuf.ByteString;
 
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +42,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                                         PublicKey ownerPubKey,
                                         int sequenceNumber,
                                         byte[] signature,
-                                        PublicKey receiversPubKey) {
+                                        PublicKey receiversPubKey,
+                                        Clock clock) {
         this(mailboxStoragePayload,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 ownerPubKey,
@@ -48,7 +51,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                 signature,
                 Sig.getPublicKeyBytes(receiversPubKey),
                 receiversPubKey,
-                System.currentTimeMillis());
+                clock.millis(),
+                clock);
     }
 
     private ProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload,
@@ -58,13 +62,15 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                                         byte[] signature,
                                         byte[] receiversPubKeyBytes,
                                         PublicKey receiversPubKey,
-                                        long creationTimeStamp) {
+                                        long creationTimeStamp,
+                                        Clock clock) {
         super(mailboxStoragePayload,
                 ownerPubKeyBytes,
                 ownerPubKey,
                 sequenceNumber,
                 signature,
-                creationTimeStamp);
+                creationTimeStamp,
+                clock);
 
         this.receiversPubKey = receiversPubKey;
         this.receiversPubKeyBytes = receiversPubKeyBytes;
@@ -84,7 +90,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                                          int sequenceNumber,
                                          byte[] signature,
                                          byte[] receiversPubKeyBytes,
-                                         long creationTimeStamp) {
+                                         long creationTimeStamp,
+                                         Clock clock) {
         this(mailboxStoragePayload,
                 ownerPubKeyBytes,
                 Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
@@ -92,7 +99,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                 signature,
                 receiversPubKeyBytes,
                 Sig.getPublicKeyFromBytes(receiversPubKeyBytes),
-                creationTimeStamp);
+                creationTimeStamp,
+                clock);
     }
 
     public protobuf.ProtectedMailboxStorageEntry toProtoMessage() {
@@ -111,7 +119,8 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
                 entry.getSequenceNumber(),
                 entry.getSignature(),
                 proto.getReceiversPubKeyBytes().toByteArray(),
-                entry.getCreationTimeStamp());
+                entry.getCreationTimeStamp(),
+                resolver.getClock());
     }
 
 

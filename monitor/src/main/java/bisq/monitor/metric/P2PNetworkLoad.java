@@ -49,6 +49,8 @@ import bisq.common.storage.Storage;
 
 import org.springframework.core.env.PropertySource;
 
+import java.time.Clock;
+
 import java.io.File;
 
 import java.util.Collections;
@@ -118,7 +120,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
 
             // start the network node
             networkNode = new TorNetworkNode(Integer.parseInt(configuration.getProperty(TOR_PROXY_PORT, "9053")),
-                    new CoreNetworkProtoResolver(), false,
+                    new CoreNetworkProtoResolver(Clock.systemDefaultZone()), false,
                     new AvailableTor(Monitor.TOR_WORKING_DIR, torHiddenServiceDir.getName()));
             networkNode.start(this);
 
@@ -139,7 +141,7 @@ public class P2PNetworkLoad extends Metric implements MessageListener, SetupList
                 });
                 CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler = new CorruptedDatabaseFilesHandler();
                 int maxConnections = Integer.parseInt(configuration.getProperty(MAX_CONNECTIONS, "12"));
-                NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver();
+                NetworkProtoResolver networkProtoResolver = new CoreNetworkProtoResolver(Clock.systemDefaultZone());
                 CorePersistenceProtoResolver persistenceProtoResolver = new CorePersistenceProtoResolver(null,
                         networkProtoResolver, storageDir, corruptedDatabaseFilesHandler);
                 DefaultSeedNodeRepository seedNodeRepository = new DefaultSeedNodeRepository(environment, null);

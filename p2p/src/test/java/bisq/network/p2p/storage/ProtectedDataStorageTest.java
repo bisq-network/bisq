@@ -42,6 +42,8 @@ import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 
+import java.time.Clock;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -142,7 +144,7 @@ public class ProtectedDataStorageTest {
         int newSequenceNumber = data.getSequenceNumber() + 1;
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(data.getProtectedStoragePayload(), newSequenceNumber));
         byte[] signature = Sig.sign(storageSignatureKeyPair1.getPrivate(), hashOfDataAndSeqNr);
-        ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getProtectedStoragePayload(), data.getOwnerPubKey(), newSequenceNumber, signature);
+        ProtectedStorageEntry dataToRemove = new ProtectedStorageEntry(data.getProtectedStoragePayload(), data.getOwnerPubKey(), newSequenceNumber, signature, Clock.systemDefaultZone());
         Assert.assertTrue(dataStorage1.remove(dataToRemove, null, true));
         Assert.assertEquals(0, dataStorage1.getMap().size());
     }

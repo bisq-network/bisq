@@ -188,7 +188,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
             Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
             temp.entrySet().stream()
-                    .filter(entry -> entry.getValue().isExpired())
+                    .filter(entry -> entry.getValue().isExpired(this.clock))
                     .forEach(entry -> {
                         ByteArray hashOfPayload = entry.getKey();
                         ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
@@ -285,7 +285,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                     // TODO investigate what causes the disconnections.
                                     // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
                                     protectedStorageEntry.backDate();
-                                    if (protectedStorageEntry.isExpired()) {
+                                    if (protectedStorageEntry.isExpired(this.clock)) {
                                         log.info("We found an expired data entry which we have already back dated. " +
                                                 "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
                                         doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
@@ -466,7 +466,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // This is a valid refresh, update the payload for it
         log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
-        storedData.refreshTTL();
+        storedData.refreshTTL(this.clock);
         storedData.updateSequenceNumber(sequenceNumber);
         storedData.updateSignature(signature);
         printData("after refreshTTL");
@@ -636,7 +636,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new DataAndSeqNrPair(protectedStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
-        return new ProtectedStorageEntry(protectedStoragePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
+        return new ProtectedStorageEntry(protectedStoragePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature, this.clock);
     }
 
     public RefreshOfferMessage getRefreshTTLMessage(ProtectedStoragePayload protectedStoragePayload,
@@ -668,7 +668,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(expirableMailboxStoragePayload,
-                storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
+                storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey, this.clock);
     }
 
     public void addHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {

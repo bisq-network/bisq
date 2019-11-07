@@ -191,7 +191,7 @@ public class P2PDataStorageTest {
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(protectedStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(entrySignerKeys.getPrivate(), hashOfDataAndSeqNr);
 
-        return new ProtectedStorageEntry(protectedStoragePayload, entryOwnerKeys.getPublic(), sequenceNumber, signature);
+        return new ProtectedStorageEntry(protectedStoragePayload, entryOwnerKeys.getPublic(), sequenceNumber, signature, Clock.systemDefaultZone());
     }
 
     private static MailboxStoragePayload buildMailboxStoragePayload(PublicKey payloadSenderPubKeyForAddOperation,
@@ -220,7 +220,7 @@ public class P2PDataStorageTest {
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(payload, sequenceNumber));
         byte[] signature = Sig.sign(entrySigner, hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(payload,
-                entryOwnerPubKey, sequenceNumber, signature, entryReceiversPubKey);
+                entryOwnerPubKey, sequenceNumber, signature, entryReceiversPubKey, Clock.systemDefaultZone());
     }
 
     private static RefreshOfferMessage buildRefreshOfferMessage(ProtectedStoragePayload protectedStoragePayload,

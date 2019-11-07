@@ -27,6 +27,8 @@ import com.google.protobuf.Message;
 
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,13 +47,15 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
                                     PublicKey ownerPubKey,
                                     int sequenceNumber,
-                                    byte[] signature) {
+                                    byte[] signature,
+                                    Clock clock) {
         this(protectedStoragePayload,
                 Sig.getPublicKeyBytes(ownerPubKey),
                 ownerPubKey,
                 sequenceNumber,
                 signature,
-                System.currentTimeMillis());
+                clock.millis(),
+                clock);
     }
 
     protected ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
@@ -59,7 +63,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                                  PublicKey ownerPubKey,
                                  int sequenceNumber,
                                  byte[] signature,
-                                 long creationTimeStamp) {
+                                 long creationTimeStamp,
+                                 Clock clock) {
 
         this.protectedStoragePayload = protectedStoragePayload;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
@@ -69,7 +74,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         this.signature = signature;
         this.creationTimeStamp = creationTimeStamp;
 
-        maybeAdjustCreationTimeStamp();
+        maybeAdjustCreationTimeStamp(clock);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,13 +85,15 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                                     byte[] ownerPubKeyBytes,
                                     int sequenceNumber,
                                     byte[] signature,
-                                    long creationTimeStamp) {
+                                    long creationTimeStamp,
+                                    Clock clock) {
         this(protectedStoragePayload,
                 ownerPubKeyBytes,
                 Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
                 sequenceNumber,
                 signature,
-                creationTimeStamp);
+                creationTimeStamp,
+                clock);
     }
 
     public Message toProtoMessage() {
@@ -111,7 +118,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSequenceNumber(),
                 proto.getSignature().toByteArray(),
-                proto.getCreationTimeStamp());
+                proto.getCreationTimeStamp(),
+                resolver.getClock());
     }
 
 
@@ -119,14 +127,14 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeAdjustCreationTimeStamp() {
+    public void maybeAdjustCreationTimeStamp(Clock clock) {
         // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
-        if (creationTimeStamp > System.currentTimeMillis())
-            creationTimeStamp = System.currentTimeMillis();
+        if (creationTimeStamp > clock.millis())
+            creationTimeStamp = clock.millis();
     }
 
-    public void refreshTTL() {
-        creationTimeStamp = System.currentTimeMillis();
+    public void refreshTTL(Clock clock) {
+        creationTimeStamp = clock.millis();
     }
 
     public void backDate() {
@@ -142,8 +150,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         this.signature = signature;
     }
 
-    public boolean isExpired() {
+    public boolean isExpired(Clock clock) {
         return protectedStoragePayload instanceof ExpirablePayload &&
-                (System.currentTimeMillis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
+                (clock.millis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
     }
 }
