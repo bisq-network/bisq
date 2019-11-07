@@ -147,4 +147,22 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         return protectedStoragePayload instanceof ExpirablePayload &&
                 (clock.millis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
     }
+
+    /*
+     * Returns true if the Entry is valid for an add operation. For non-mailbox Entrys, the entry owner must
+     * match the payload owner.
+     */
+    public boolean isValidForAddOperation() {
+        // TODO: The code currently supports MailboxStoragePayload objects inside ProtectedStorageEntry. Fix this.
+        if (protectedStoragePayload instanceof MailboxStoragePayload) {
+            MailboxStoragePayload mailboxStoragePayload = (MailboxStoragePayload) this.getProtectedStoragePayload();
+            return mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
+                    mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+
+        } else {
+            return this.ownerPubKey != null &&
+                    this.protectedStoragePayload != null &&
+                    this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
+        }
+    }
 }

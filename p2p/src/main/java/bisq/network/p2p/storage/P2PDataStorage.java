@@ -770,15 +770,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (protectedStoragePayload instanceof MailboxStoragePayload) {
             MailboxStoragePayload payload = (MailboxStoragePayload) protectedStoragePayload;
             if (isAddOperation)
-                result = payload.getSenderPubKeyForAddOperation() != null &&
-                        payload.getSenderPubKeyForAddOperation().equals(protectedStorageEntry.getOwnerPubKey());
+                result = protectedStorageEntry.isValidForAddOperation();
             else
                 result = payload.getOwnerPubKey() != null &&
                         payload.getOwnerPubKey().equals(protectedStorageEntry.getOwnerPubKey());
         } else {
-            result = protectedStorageEntry.getOwnerPubKey() != null &&
-                    protectedStoragePayload != null &&
-                    protectedStorageEntry.getOwnerPubKey().equals(protectedStoragePayload.getOwnerPubKey());
+            result = protectedStorageEntry.isValidForAddOperation();
         }
 
         if (!result) {
