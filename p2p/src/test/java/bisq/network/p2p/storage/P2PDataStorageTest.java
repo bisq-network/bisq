@@ -24,7 +24,9 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 import bisq.network.p2p.storage.payload.RequiresOwnerIsOnlinePayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
+import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
+import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
@@ -111,12 +113,30 @@ public class P2PDataStorageTest {
         final Storage<SequenceNumberMap> mockSeqNrStorage;
         final ClockFake clockFake;
 
+        /**
+         * Subclass of P2PDataStorage that allows for easier testing, but keeps all functionality
+         */
+        static class P2PDataStorageForTest extends P2PDataStorage {
+
+            P2PDataStorageForTest(NetworkNode networkNode,
+                                  Broadcaster broadcaster,
+                                  AppendOnlyDataStoreService appendOnlyDataStoreService,
+                                  ProtectedDataStoreService protectedDataStoreService,
+                                  ResourceDataStoreService resourceDataStoreService,
+                                  Storage<SequenceNumberMap> sequenceNumberMapStorage,
+                                  Clock clock) {
+                super(networkNode, broadcaster, appendOnlyDataStoreService, protectedDataStoreService, resourceDataStoreService, sequenceNumberMapStorage, clock);
+
+                this.maxSequenceNumberMapSizeBeforePurge = 5;
+            }
+        }
+
         TestState() {
             this.mockBroadcaster = mock(Broadcaster.class);
             this.mockSeqNrStorage = mock(Storage.class);
             this.clockFake = new ClockFake();
 
-            this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
+            this.mockedStorage = new P2PDataStorageForTest(mock(NetworkNode.class),
                     this.mockBroadcaster,
                     new AppendOnlyDataStoreServiceFake(),
                     new ProtectedDataStoreServiceFake(), mock(ResourceDataStoreService.class),
@@ -1611,20 +1631,20 @@ public class P2PDataStorageTest {
             verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, true, false, false, false);
         }
 
-        // TESTCASE: Ensure we try to purge old entries sequence number map when size exceeds 1000 elements
+        // TESTCASE: Ensure we try to purge old entries sequence number map when size exceeds the maximum size
         // and that entries less than PURGE_AGE_DAYS remain
         @Test
         public void removeExpiredEntries_PurgeSeqNrMap() throws CryptoException, NoSuchAlgorithmException {
             final int initialClockIncrement = 5;
 
-            // Add 500 entries to our sequence number map that will be purged
+            // Add 4 entries to our sequence number map that will be purged
             KeyPair purgedOwnerKeys = TestUtils.generateKeyPair();
             ProtectedStoragePayload purgedProtectedStoragePayload = new PersistableExpirableProtectedStoragePayload(purgedOwnerKeys.getPublic(), 0);
             ProtectedStorageEntry purgedProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(purgedProtectedStoragePayload, purgedOwnerKeys);
 
             Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, getTestNodeAddress(), null, true));
 
-            for (int i = 0; i <= 499; ++i) {
+            for (int i = 0; i < 4; ++i) {
                 KeyPair ownerKeys = TestUtils.generateKeyPair();
                 ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayload(ownerKeys.getPublic(), 0);
                 ProtectedStorageEntry tmpEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
@@ -1635,19 +1655,12 @@ public class P2PDataStorageTest {
             // some values that will be purged and others that will stay.
             this.testState.clockFake.increment(TimeUnit.DAYS.toMillis(initialClockIncrement));
 
-            // Add another 501 entries that will not be purged
+            // Add a final entry that will not be purged
             KeyPair keepOwnerKeys = TestUtils.generateKeyPair();
             ProtectedStoragePayload keepProtectedStoragePayload = new PersistableExpirableProtectedStoragePayload(keepOwnerKeys.getPublic(), 0);
             ProtectedStorageEntry keepProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(keepProtectedStoragePayload, keepOwnerKeys);
 
             Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, getTestNodeAddress(), null, true));
-
-            for (int i = 0; i <= 500; ++i) {
-                KeyPair ownerKeys = TestUtils.generateKeyPair();
-                ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayload(ownerKeys.getPublic(), 0);
-                ProtectedStorageEntry tmpEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
-                Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(tmpEntry, getTestNodeAddress(), null, true));
-            }
 
             // P2PDataStorage::PURGE_AGE_DAYS == 10 days
             // Advance time past it so they will be valid purge targets

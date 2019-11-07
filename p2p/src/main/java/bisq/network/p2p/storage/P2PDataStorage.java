@@ -124,6 +124,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Clock clock;
 
+    protected int maxSequenceNumberMapSizeBeforePurge;
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -148,6 +150,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         this.sequenceNumberMapStorage = sequenceNumberMapStorage;
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
+        this.maxSequenceNumberMapSizeBeforePurge = 1000;
     }
 
     @Override
@@ -209,7 +212,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         });
         hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
 
-        if (sequenceNumberMap.size() > 1000)
+        if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
     }
 
