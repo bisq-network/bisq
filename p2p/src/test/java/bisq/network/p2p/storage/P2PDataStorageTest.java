@@ -98,16 +98,18 @@ public class P2PDataStorageTest {
         final ProtectedDataStoreListener protectedDataStoreListener;
         final HashMapChangedListener hashMapChangedListener;
         final Storage<SequenceNumberMap> mockSeqNrStorage;
+        final ClockFake clockFake;
 
         TestState() {
             this.mockBroadcaster = mock(Broadcaster.class);
             this.mockSeqNrStorage = mock(Storage.class);
+            this.clockFake = new ClockFake();
 
             this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
                     this.mockBroadcaster,
                     new AppendOnlyDataStoreServiceFake(),
                     new ProtectedDataStoreServiceFake(), mock(ResourceDataStoreService.class),
-                    this.mockSeqNrStorage, Clock.systemUTC());
+                    this.mockSeqNrStorage, this.clockFake);
 
             this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
             this.protectedDataStoreListener = mock(ProtectedDataStoreListener.class);
@@ -124,6 +126,10 @@ public class P2PDataStorageTest {
             reset(this.protectedDataStoreListener);
             reset(this.hashMapChangedListener);
             reset(this.mockSeqNrStorage);
+        }
+
+        void incrementClock() {
+            this.clockFake.increment(TimeUnit.HOURS.toMillis(1));
         }
     }
 
@@ -187,11 +193,12 @@ public class P2PDataStorageTest {
             ProtectedStoragePayload protectedStoragePayload,
             KeyPair entryOwnerKeys,
             KeyPair entrySignerKeys,
-            int sequenceNumber) throws CryptoException {
+            int sequenceNumber,
+            Clock clock) throws CryptoException {
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(protectedStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(entrySignerKeys.getPrivate(), hashOfDataAndSeqNr);
 
-        return new ProtectedStorageEntry(protectedStoragePayload, entryOwnerKeys.getPublic(), sequenceNumber, signature, Clock.systemDefaultZone());
+        return new ProtectedStorageEntry(protectedStoragePayload, entryOwnerKeys.getPublic(), sequenceNumber, signature, clock);
     }
 
     private static MailboxStoragePayload buildMailboxStoragePayload(PublicKey payloadSenderPubKeyForAddOperation,
@@ -213,14 +220,15 @@ public class P2PDataStorageTest {
             PrivateKey entrySigner,
             PublicKey entryOwnerPubKey,
             PublicKey entryReceiversPubKey,
-            int sequenceNumber) throws CryptoException {
+            int sequenceNumber,
+            Clock clock) throws CryptoException {
 
         MailboxStoragePayload payload = buildMailboxStoragePayload(payloadSenderPubKeyForAddOperation, payloadOwnerPubKey);
 
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(payload, sequenceNumber));
         byte[] signature = Sig.sign(entrySigner, hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(payload,
-                entryOwnerPubKey, sequenceNumber, signature, entryReceiversPubKey, Clock.systemDefaultZone());
+                entryOwnerPubKey, sequenceNumber, signature, entryReceiversPubKey, clock);
     }
 
     private static RefreshOfferMessage buildRefreshOfferMessage(ProtectedStoragePayload protectedStoragePayload,
@@ -689,7 +697,7 @@ public class P2PDataStorageTest {
         ProtectedStorageEntry getProtectedStorageEntryForAdd(int sequenceNumber) throws CryptoException {
 
             // Entry signed and owned by same owner as payload
-           return buildProtectedStorageEntry(this.protectedStoragePayload, this.payloadOwnerKeys, this.payloadOwnerKeys, sequenceNumber);
+           return buildProtectedStorageEntry(this.protectedStoragePayload, this.payloadOwnerKeys, this.payloadOwnerKeys, sequenceNumber, this.testState.clockFake);
         }
 
         // Return a ProtectedStorageEntry that is valid for remove.
@@ -697,7 +705,7 @@ public class P2PDataStorageTest {
         ProtectedStorageEntry getProtectedStorageEntryForRemove(int sequenceNumber) throws CryptoException {
 
             // Entry signed and owned by same owner as payload
-            return buildProtectedStorageEntry(this.protectedStoragePayload, this.payloadOwnerKeys, this.payloadOwnerKeys, sequenceNumber);
+            return buildProtectedStorageEntry(this.protectedStoragePayload, this.payloadOwnerKeys, this.payloadOwnerKeys, sequenceNumber, this.testState.clockFake);
         }
 
         void doProtectedStorageAddAndVerify(ProtectedStorageEntry protectedStorageEntry,
@@ -799,7 +807,7 @@ public class P2PDataStorageTest {
 
             // For standard ProtectedStorageEntrys the entry owner must match the payload owner for adds
             ProtectedStorageEntry entryForAdd = buildProtectedStorageEntry(
-                    this.protectedStoragePayload, notOwner, notOwner, 1);
+                    this.protectedStoragePayload, notOwner, notOwner, 1, this.testState.clockFake);
 
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
         }
@@ -873,7 +881,7 @@ public class P2PDataStorageTest {
 
             // For standard ProtectedStorageEntrys the entry owner must match the payload owner for removes
             ProtectedStorageEntry entryForRemove = buildProtectedStorageEntry(
-                    this.protectedStoragePayload, notOwner, notOwner, 2);
+                    this.protectedStoragePayload, notOwner, notOwner, 2, this.testState.clockFake);
 
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
@@ -978,7 +986,12 @@ public class P2PDataStorageTest {
             ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entry, true, true);
 
+            this.testState.incrementClock();
+
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), true, true);
+
+            this.testState.incrementClock();
+
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys, 2), false, false);
         }
 
@@ -988,7 +1001,12 @@ public class P2PDataStorageTest {
             ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entry, true, true);
 
+            this.testState.incrementClock();
+
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,2), true, true);
+
+            this.testState.incrementClock();
+
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,3), true, true);
         }
 
@@ -998,7 +1016,12 @@ public class P2PDataStorageTest {
             ProtectedStorageEntry entry = this.getProtectedStorageEntryForAdd(1);
             doProtectedStorageAddAndVerify(entry, true, true);
 
+            this.testState.incrementClock();
+
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,3), true, true);
+
+            this.testState.incrementClock();
+
             doRefreshTTLAndVerify(buildRefreshOfferMessage(entry, this.payloadOwnerKeys,2), false, false);
         }
 
@@ -1080,12 +1103,12 @@ public class P2PDataStorageTest {
 
         @Override
         ProtectedStorageEntry getProtectedStorageEntryForAdd(int sequenceNumber) throws CryptoException {
-            return buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), receiverKeys.getPublic(), sequenceNumber);
+            return buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), receiverKeys.getPublic(), sequenceNumber, this.testState.clockFake);
         }
 
         @Override
         ProtectedStorageEntry getProtectedStorageEntryForRemove(int sequenceNumber) throws CryptoException {
-            return buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), receiverKeys.getPrivate(), receiverKeys.getPublic(), receiverKeys.getPublic(), sequenceNumber);
+            return buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), receiverKeys.getPrivate(), receiverKeys.getPublic(), receiverKeys.getPublic(), sequenceNumber, this.testState.clockFake);
         }
 
         @Override
@@ -1098,7 +1121,7 @@ public class P2PDataStorageTest {
         public void addProtectedStorageEntry_payloadOwnerEntryOwnerNotCompatible() throws CryptoException, NoSuchAlgorithmException {
             KeyPair notSender = TestUtils.generateKeyPair();
 
-            ProtectedStorageEntry entryForAdd = buildProtectedMailboxStorageEntry(notSender.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), receiverKeys.getPublic(), 1);
+            ProtectedStorageEntry entryForAdd = buildProtectedMailboxStorageEntry(notSender.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), receiverKeys.getPublic(), 1, this.testState.clockFake);
 
             doProtectedStorageAddAndVerify(entryForAdd, false, false);
         }
@@ -1110,7 +1133,7 @@ public class P2PDataStorageTest {
 
             doProtectedStorageAddAndVerify(this.getProtectedStorageEntryForAdd(1), true, true);
 
-            ProtectedStorageEntry invalidEntryForAdd = buildProtectedMailboxStorageEntry(notSender.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), receiverKeys.getPublic(), 1);
+            ProtectedStorageEntry invalidEntryForAdd = buildProtectedMailboxStorageEntry(notSender.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), receiverKeys.getPublic(), 1, this.testState.clockFake);
 
             doProtectedStorageAddAndVerify(invalidEntryForAdd, false, false);
         }
@@ -1123,7 +1146,7 @@ public class P2PDataStorageTest {
 
             KeyPair notReceiver = TestUtils.generateKeyPair();
 
-            ProtectedStorageEntry entryForRemove =  buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), notReceiver.getPrivate(), notReceiver.getPublic(), receiverKeys.getPublic(), 2);
+            ProtectedStorageEntry entryForRemove =  buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), notReceiver.getPrivate(), notReceiver.getPublic(), receiverKeys.getPublic(), 2, this.testState.clockFake);
 
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
@@ -1136,7 +1159,7 @@ public class P2PDataStorageTest {
 
             KeyPair notSender = TestUtils.generateKeyPair();
 
-            ProtectedStorageEntry entryForRemove = buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), receiverKeys.getPrivate(), receiverKeys.getPublic(), notSender.getPublic(), 2);
+            ProtectedStorageEntry entryForRemove = buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), receiverKeys.getPrivate(), receiverKeys.getPublic(), notSender.getPublic(), 2, this.testState.clockFake);
 
             doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
         }
@@ -1149,7 +1172,7 @@ public class P2PDataStorageTest {
             KeyPair otherKeys = TestUtils.generateKeyPair();
 
             // Add an entry that has an invalid Entry.receiversPubKey. Unfortunately, this succeeds right now.
-            ProtectedStorageEntry entryForAdd = buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), otherKeys.getPublic(), 1);
+            ProtectedStorageEntry entryForAdd = buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(), senderKeys.getPublic(), otherKeys.getPublic(), 1, this.testState.clockFake);
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             doProtectedStorageRemoveAndVerify(this.getProtectedStorageEntryForRemove(2), false, false);
@@ -1276,6 +1299,8 @@ public class P2PDataStorageTest {
 
             refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
 
+            this.testState.incrementClock();
+
             SavedTestState beforeState = new SavedTestState(this.testState, refreshOfferMessage);
             Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, getTestNodeAddress(), true));
 
@@ -1297,6 +1322,8 @@ public class P2PDataStorageTest {
             this.testState.mockedStorage.onMessage(new AddDataMessage(protectedStorageEntry), mockedConnection);
 
             RefreshOfferMessage refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
+
+            this.testState.incrementClock();
 
             SavedTestState beforeState = new SavedTestState(this.testState, refreshOfferMessage);
             Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, getTestNodeAddress(), true));
@@ -1351,7 +1378,7 @@ public class P2PDataStorageTest {
 
             ProtectedStorageEntry protectedStorageEntry =
                     buildProtectedMailboxStorageEntry(senderKeys.getPublic(), receiverKeys.getPublic(), senderKeys.getPrivate(),
-                            senderKeys.getPublic(), receiverKeys.getPublic(), 1);
+                            senderKeys.getPublic(), receiverKeys.getPublic(), 1, this.testState.clockFake);
 
             Connection mockedConnection = mock(Connection.class);
             when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
@@ -1477,6 +1504,9 @@ public class P2PDataStorageTest {
             ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
 
             SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+
+            // Increment the time by 1 hour which will put the protectedStorageState outside TTL
+            this.testState.incrementClock();
 
             this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
