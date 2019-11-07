@@ -400,7 +400,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
-        if (!checkPublicKeys(protectedStorageEntry, true) || !checkSignature(protectedStorageEntry))
+        if (!protectedStorageEntry.isValidForAddOperation() || !checkSignature(protectedStorageEntry))
             return false;
 
         // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
@@ -505,7 +505,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the remove operation
-        if (!checkPublicKeys(protectedStorageEntry, false) || !checkSignature(protectedStorageEntry))
+        if (!protectedStorageEntry.isValidForRemoveOperation() || !checkSignature(protectedStorageEntry))
             return false;
 
         // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
@@ -594,7 +594,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
 
-        if (!checkPublicKeys(protectedMailboxStorageEntry, false) || !checkSignature(protectedMailboxStorageEntry))
+        if (!protectedMailboxStorageEntry.isValidForRemoveOperation() || !checkSignature(protectedMailboxStorageEntry))
             return false;
 
         // Verify the Entry has the correct receiversPubKey for removal.
@@ -760,34 +760,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private boolean checkSignature(ProtectedStorageEntry protectedStorageEntry) {
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new DataAndSeqNrPair(protectedStorageEntry.getProtectedStoragePayload(), protectedStorageEntry.getSequenceNumber()));
         return checkSignature(protectedStorageEntry.getOwnerPubKey(), hashOfDataAndSeqNr, protectedStorageEntry.getSignature());
-    }
-
-    // Check that the pubkey of the storage entry matches the allowed pubkey for the addition or removal operation
-    // in the contained mailbox message, or the pubKey of other kinds of network_messages.
-    private boolean checkPublicKeys(ProtectedStorageEntry protectedStorageEntry, boolean isAddOperation) {
-        boolean result;
-        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
-        if (protectedStoragePayload instanceof MailboxStoragePayload) {
-            MailboxStoragePayload payload = (MailboxStoragePayload) protectedStoragePayload;
-            if (isAddOperation)
-                result = protectedStorageEntry.isValidForAddOperation();
-            else
-                result = protectedStorageEntry.isValidForRemoveOperation();
-        } else {
-            result = protectedStorageEntry.isValidForAddOperation();
-        }
-
-        if (!result) {
-            String res1 = protectedStorageEntry.toString();
-            String res2 = "null";
-            if (protectedStoragePayload != null &&
-                    protectedStoragePayload.getOwnerPubKey() != null)
-                res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
-
-            log.warn("PublicKey of payload data and ProtectedStorageEntry are not matching. protectedStorageEntry=" + res1 +
-                    "protectedStorageEntry.getStoragePayload().getOwnerPubKey()=" + res2);
-        }
-        return result;
     }
 
     private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(PublicKey ownerPubKey, ByteArray hashOfData) {

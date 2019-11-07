@@ -21,6 +21,7 @@ import bisq.common.crypto.Sig;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -160,9 +161,21 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                     mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
 
         } else {
-            return this.ownerPubKey != null &&
+            boolean result = this.ownerPubKey != null &&
                     this.protectedStoragePayload != null &&
                     this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
+
+            if (!result) {
+                String res1 = this.toString();
+                String res2 = "null";
+                if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+                    res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
+
+                log.warn(String.format("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
+                        "ProtectedStorageEntry=%s\nPayloadOwner=%s", res1, res2));
+            }
+
+            return result;
         }
     }
 
@@ -173,6 +186,18 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public boolean isValidForRemoveOperation() {
 
         // Same requirements as add()
-        return this.isValidForAddOperation();
+        boolean result = this.isValidForAddOperation();
+
+        if (!result) {
+            String res1 = this.toString();
+            String res2 = "null";
+            if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+                res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
+
+            log.warn(String.format("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
+                    "ProtectedStorageEntry=%s\nPayloadOwner=%s", res1, res2));
+        }
+
+        return result;
     }
 }
