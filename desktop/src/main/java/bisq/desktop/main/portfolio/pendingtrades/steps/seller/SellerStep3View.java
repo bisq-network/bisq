@@ -193,10 +193,8 @@ public class SellerStep3View extends TradeStepView {
                 isBlockChain = true;
             } else {
             	String currencyCode = contract.getTradePrice().getCurrencyCode();
-            	myPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", currencyCode));
-                myPaymentDetails = myPaymentAccountPayload.getPaymentDetails();
-                peersPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.receiver.address", currencyCode));
-                peersPaymentDetails = peersPaymentAccountPayload.getPaymentDetails();
+                myPaymentDetails = Res.getWithCol("payment.altcoin.sender.address", currencyCode);
+                peersPaymentDetails = Res.getWithCol("payment.altcoin.receiver.address", currencyCode);
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAccount");
                 peersTitle = Res.get("portfolio.pending.step3_seller.buyersAccount");
             }

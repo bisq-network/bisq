@@ -233,8 +233,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         if (contract != null) {
         	String currencyCode = contract.getTradePrice().getCurrencyCode();
             if (buyerPaymentAccountPayload != null) {
-            	buyerPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", currencyCode));
-                String paymentDetails = buyerPaymentAccountPayload.getPaymentDetails();
+                String paymentDetails = Res.getWithCol("payment.altcoin.sender.address", currencyCode);
                 long age = accountAgeWitnessService.getAccountAge(buyerPaymentAccountPayload, contract.getBuyerPubKeyRing());
                 buyersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :
@@ -248,8 +247,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 tf.setTooltip(new Tooltip(tf.getText()));
             }
             if (sellerPaymentAccountPayload != null) {
-            	sellerPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.receiver.address", currencyCode));
-                String paymentDetails = sellerPaymentAccountPayload.getPaymentDetails();
+                String paymentDetails = Res.getWithCol("payment.altcoin.receiver.address", currencyCode);
                 long age = accountAgeWitnessService.getAccountAge(sellerPaymentAccountPayload, contract.getSellerPubKeyRing());
                 sellersAccountAge = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :

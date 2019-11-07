@@ -139,8 +139,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
         String currencyCode = offer.getCurrencyCode();
         PaymentAccountPayload sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
         PaymentAccountPayload buyerPaymentAccountPayload = contract.getBuyerPaymentAccountPayload();
-        buyerPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.receiver.address", currencyCode));
-        sellerPaymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", currencyCode));
+        String buyerPaymentDetails = Res.getWithCol("payment.altcoin.receiver.address", currencyCode);
+        String sellerPaymentDetails = Res.getWithCol("payment.altcoin.sender.address", currencyCode);
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("contractWindow.title"));
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, rowIndex, Res.get("shared.offerId"), offer.getId(),
@@ -179,9 +179,9 @@ public class ContractWindow extends Overlay<ContractWindow> {
                 nrOfDisputesAsBuyer + " / " + nrOfDisputesAsSeller);
 
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.buyer")),
-        		buyerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
+        		buyerPaymentDetails).second.setMouseTransparent(false);
         addConfirmationLabelTextFieldWithCopyIcon(gridPane, ++rowIndex, Res.get("shared.paymentDetails", Res.get("shared.seller")),
-                sellerPaymentAccountPayload.getPaymentDetails()).second.setMouseTransparent(false);
+                sellerPaymentDetails).second.setMouseTransparent(false);
 
         // TODO update in next release to shared.selectedArbitrator and delete shared.arbitrator entry
         String title = dispute.isMediationDispute() ? Res.get("shared.selectedMediator") : Res.get("shared.arbitrator");

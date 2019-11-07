@@ -61,9 +61,9 @@ public class ApplyFilter extends TradeTask {
                 failed("Payment method is banned.\n" +
                         "Payment method=" + trade.getOffer().getPaymentMethod().getId());
             } else if (filterManager.isPeersPaymentAccountDataAreBanned(paymentAccountPayload, appliedPaymentAccountFilter)) {
-            	paymentAccountPayload.setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", trade.getOffer().getCurrencyCode()));
+            	String paymentDetails = Res.getWithCol("payment.altcoin.sender.address", trade.getOffer().getCurrencyCode());
                 failed("Other trader is banned by their trading account data.\n" +
-                        "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails() + "\n" +
+                        "paymentAccountPayload=" + paymentDetails + "\n" +
                         "banFilter=" + appliedPaymentAccountFilter[0].toString());
             } else if (filterManager.requireUpdateToNewVersionForTrading()) {
                 failed("Your version of Bisq is not compatible for trading anymore. " +

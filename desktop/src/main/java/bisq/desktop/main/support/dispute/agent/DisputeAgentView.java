@@ -80,15 +80,15 @@ public abstract class DisputeAgentView extends DisputeView {
         // If in arbitrator view we must only display disputes where we are selected as arbitrator (must not receive others anyway)
         filteredList.setPredicate(dispute -> {
         	String currencyCode = dispute.getContract().getTradePrice().getCurrencyCode();
+        	String buyerPaymentDetails = Res.getWithCol("payment.altcoin.receiver.address", currencyCode);
+        	String sellerPaymentDetails = Res.getWithCol("payment.altcoin.sender.address", currencyCode);
             boolean matchesTradeId = dispute.getTradeId().contains(filterString);
             boolean matchesDate = DisplayUtils.formatDate(dispute.getOpeningDate()).contains(filterString);
             boolean isBuyerOnion = dispute.getContract().getBuyerNodeAddress().getFullAddress().contains(filterString);
             boolean isSellerOnion = dispute.getContract().getSellerNodeAddress().getFullAddress().contains(filterString);
-            dispute.getContract().getBuyerPaymentAccountPayload().setPaymentDetails(Res.getWithCol("payment.altcoin.receiver.address", currencyCode));
-            dispute.getContract().getSellerPaymentAccountPayload().setPaymentDetails(Res.getWithCol("payment.altcoin.sender.address", currencyCode));
             
-            boolean matchesBuyersPaymentAccountData = dispute.getContract().getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-            boolean matchesSellersPaymentAccountData = dispute.getContract().getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+            boolean matchesBuyersPaymentAccountData = buyerPaymentDetails.contains(filterString);
+            boolean matchesSellersPaymentAccountData = sellerPaymentDetails.contains(filterString);
 
             boolean anyMatch = matchesTradeId || matchesDate || isBuyerOnion || isSellerOnion ||
                     matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;

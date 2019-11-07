@@ -73,12 +73,6 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     @Nullable
     protected final Map<String, String> excludeFromJsonDataMap;
 
-    @JsonExclude
-    @Getter(AccessLevel.NONE)
-    @Setter    
-	protected String paymentDetails;
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
