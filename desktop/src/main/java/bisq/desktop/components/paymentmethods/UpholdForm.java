@@ -67,7 +67,7 @@ public class UpholdForm extends PaymentMethodForm {
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
         accountIdInputTextField.setValidator(upholdValidator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            upholdAccount.setAccountId(newValue);
+            upholdAccount.setAccountId(newValue.trim());
             updateFromInputs();
         });
 
