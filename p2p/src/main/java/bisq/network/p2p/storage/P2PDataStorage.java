@@ -100,7 +100,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * How many days to keep an entry before it is purged.
      */
-    private static final int PURGE_AGE_DAYS = 10;
+    @VisibleForTesting
+    public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
@@ -177,40 +178,43 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             removeExpiredEntriesTimer.stop();
     }
 
+    @VisibleForTesting
+    void removeExpiredEntries() {
+        log.trace("removeExpiredEntries");
+        // The moment when an object becomes expired will not be synchronous in the network and we could
+        // get add network_messages after the object has expired. To avoid repeated additions of already expired
+        // object when we get it sent from new peers, we don’t remove the sequence number from the map.
+        // That way an ADD message for an already expired data will fail because the sequence number
+        // is equal and not larger as expected.
+        Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
+        Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
+        temp.entrySet().stream()
+                .filter(entry -> entry.getValue().isExpired(this.clock))
+                .forEach(entry -> {
+                    ByteArray hashOfPayload = entry.getKey();
+                    ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
+                    if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
+                        toRemoveSet.add(protectedStorageEntry);
+                        log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                        map.remove(hashOfPayload);
+                    }
+                });
+
+        // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
+        // about start and end of iteration.
+        hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
+        toRemoveSet.forEach(protectedStorageEntry -> {
+            hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
+            removeFromProtectedDataStore(protectedStorageEntry);
+        });
+        hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
+
+        if (sequenceNumberMap.size() > 1000)
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
+    }
+
     public void onBootstrapComplete() {
-        removeExpiredEntriesTimer = UserThread.runPeriodically(() -> {
-            log.trace("removeExpiredEntries");
-            // The moment when an object becomes expired will not be synchronous in the network and we could
-            // get add network_messages after the object has expired. To avoid repeated additions of already expired
-            // object when we get it sent from new peers, we don’t remove the sequence number from the map.
-            // That way an ADD message for an already expired data will fail because the sequence number
-            // is equal and not larger as expected.
-            Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
-            Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
-            temp.entrySet().stream()
-                    .filter(entry -> entry.getValue().isExpired(this.clock))
-                    .forEach(entry -> {
-                        ByteArray hashOfPayload = entry.getKey();
-                        ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
-                        if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
-                            toRemoveSet.add(protectedStorageEntry);
-                            log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
-                            map.remove(hashOfPayload);
-                        }
-                    });
-
-            // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
-            // about start and end of iteration.
-            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
-            toRemoveSet.forEach(protectedStorageEntry -> {
-                hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
-                removeFromProtectedDataStore(protectedStorageEntry);
-            });
-            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
-
-            if (sequenceNumberMap.size() > 1000)
-                sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
-        }, CHECK_TTL_INTERVAL_SEC);
+        removeExpiredEntriesTimer = UserThread.runPeriodically(this::removeExpiredEntries, CHECK_TTL_INTERVAL_SEC);
     }
 
     public Map<ByteArray, PersistableNetworkPayload> getAppendOnlyDataStoreMap() {

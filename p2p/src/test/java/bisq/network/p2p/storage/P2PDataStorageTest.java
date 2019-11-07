@@ -67,13 +67,13 @@ public class P2PDataStorageTest {
     static class ExpirableProtectedStoragePayload extends ProtectedStoragePayloadStub implements ExpirablePayload, RequiresOwnerIsOnlinePayload {
         private long ttl;
 
-        ExpirableProtectedStoragePayload(KeyPair ownerKeys) {
-            super(ownerKeys.getPublic());
+        ExpirableProtectedStoragePayload(PublicKey ownerPubKey) {
+            super(ownerPubKey);
             ttl = TimeUnit.DAYS.toMillis(90);
         }
 
-        ExpirableProtectedStoragePayload(KeyPair ownerKeys, long ttl) {
-            this(ownerKeys);
+        ExpirableProtectedStoragePayload(PublicKey ownerPubKey, long ttl) {
+            this(ownerPubKey);
             this.ttl = ttl;
         }
 
@@ -85,6 +85,17 @@ public class P2PDataStorageTest {
         @Override
         public long getTTL() {
             return this.ttl;
+        }
+    }
+
+    static class PersistableExpirableProtectedStoragePayload extends ExpirableProtectedStoragePayload implements PersistablePayload {
+
+        PersistableExpirableProtectedStoragePayload(PublicKey ownerPubKey) {
+            super(ownerPubKey);
+        }
+
+        PersistableExpirableProtectedStoragePayload(PublicKey ownerPubKey, long ttl) {
+            super(ownerPubKey, ttl);
         }
     }
 
@@ -341,6 +352,8 @@ public class P2PDataStorageTest {
                                                      SavedTestState beforeState,
                                                      ProtectedStorageEntry protectedStorageEntry,
                                                      boolean expectedStateChange,
+                                                     boolean expectedBroadcastOnStateChange,
+                                                     boolean expectedSeqNrWriteOnStateChange,
                                                      boolean expectedIsDataOwner) {
         P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
         P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
@@ -356,9 +369,12 @@ public class P2PDataStorageTest {
 
             verify(currentState.hashMapChangedListener).onRemoved(protectedStorageEntry);
 
-            verify(currentState.mockBroadcaster).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+            if (expectedSeqNrWriteOnStateChange)
+                verifySequenceNumberMapWriteContains(currentState, P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
 
-            verifySequenceNumberMapWriteContains(currentState, P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
+            if (expectedBroadcastOnStateChange)
+                verify(currentState.mockBroadcaster).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+
         } else {
             Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, currentState.mockedStorage.getMap().get(hashMapHash));
 
@@ -733,7 +749,7 @@ public class P2PDataStorageTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            verifyProtectedStorageRemove(this.testState, beforeState, entry, expectInternalStateChange, this.expectIsDataOwner());
+            verifyProtectedStorageRemove(this.testState, beforeState, entry, expectInternalStateChange, true, true, this.expectIsDataOwner());
         }
 
         // TESTCASE: Adding a well-formed entry is successful
@@ -1049,17 +1065,10 @@ public class P2PDataStorageTest {
     }
 
     // Runs the ProtectedStorageEntryTestBase tests against the PersistablePayload marker class
-    public static class PersistableProtectedStoragePayloadTest extends ProtectedStorageEntryTestBase {
-        private static class PersistableProtectedStoragePayload extends ProtectedStoragePayloadStub implements PersistablePayload {
-
-            PersistableProtectedStoragePayload(PublicKey ownerPubKey) {
-                super(ownerPubKey);
-            }
-        }
-
+    public static class PersistableExpirableProtectedStoragePayloadTest extends ProtectedStorageEntryTestBase {
         @Override
         protected ProtectedStoragePayload createInstance(KeyPair payloadOwnerKeys) {
-            return new PersistableProtectedStoragePayload(payloadOwnerKeys.getPublic());
+            return new PersistableExpirableProtectedStoragePayload(payloadOwnerKeys.getPublic());
         }
     }
 
@@ -1224,7 +1233,7 @@ public class P2PDataStorageTest {
         public void getProtectedStorageEntry_NoExist() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
             SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
@@ -1238,7 +1247,7 @@ public class P2PDataStorageTest {
         public void getProtectedStorageEntry() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
             Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
@@ -1255,7 +1264,7 @@ public class P2PDataStorageTest {
         public void getProtectedStorageEntry_FirstOnMessageSecondAPI() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
 
             Connection mockedConnection = mock(Connection.class);
@@ -1275,7 +1284,7 @@ public class P2PDataStorageTest {
         public void getRefreshTTLMessage_NoExists() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
 
             RefreshOfferMessage refreshOfferMessage = this.testState.mockedStorage.getRefreshTTLMessage(protectedStoragePayload, ownerKeys);
 
@@ -1290,7 +1299,7 @@ public class P2PDataStorageTest {
         public void getRefreshTTLMessage() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true);
 
@@ -1312,7 +1321,7 @@ public class P2PDataStorageTest {
         public void getRefreshTTLMessage_FirstOnMessageSecondAPI() throws NoSuchAlgorithmException, CryptoException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
 
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
             ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true);
 
@@ -1345,7 +1354,7 @@ public class P2PDataStorageTest {
             SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
             Assert.assertFalse(this.testState.mockedStorage.removeMailboxData(protectedMailboxStorageEntry, getTestNodeAddress(), true));
 
-            verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, false, true);
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, false, true, true, true);
         }
 
         // TESTCASE: Adding, then removing a mailbox message from the getMailboxDataWithSignedSeqNr API
@@ -1367,7 +1376,7 @@ public class P2PDataStorageTest {
             SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
             Assert.assertTrue(this.testState.mockedStorage.removeMailboxData(protectedMailboxStorageEntry, getTestNodeAddress(), true));
 
-            verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true);
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true, true,true);
         }
 
         // TESTCASE: Removing a mailbox message that was added from the onMessage handler
@@ -1393,7 +1402,7 @@ public class P2PDataStorageTest {
             SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
             Assert.assertTrue(this.testState.mockedStorage.removeMailboxData(protectedMailboxStorageEntry, getTestNodeAddress(), true));
 
-            verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true);
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true, true,true);
         }
     }
 
@@ -1403,7 +1412,7 @@ public class P2PDataStorageTest {
 
         private static ProtectedStorageEntry populateTestState(TestState testState, long ttl) throws CryptoException, NoSuchAlgorithmException {
             KeyPair ownerKeys = TestUtils.generateKeyPair();
-            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys, ttl);
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic(), ttl);
 
             ProtectedStorageEntry protectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
             testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, false);
@@ -1511,6 +1520,153 @@ public class P2PDataStorageTest {
             this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
             verifyStateAfterDisconnect(this.testState, beforeState, true, false);
+        }
+    }
+
+    public static class RemoveExpiredTests {
+        TestState testState;
+
+        @Before
+        public void setUp() {
+            this.testState = new TestState();
+
+            // Deep in the bowels of protobuf we grab the messageID from the version module. This is required to hash the
+            // full MailboxStoragePayload so make sure it is initialized.
+            Version.setBaseCryptoNetworkId(1);
+        }
+
+        // TESTCASE: Correctly skips entries that are not expirable
+        @Test
+        public void removeExpiredEntries_SkipsNonExpirableEntries() throws NoSuchAlgorithmException, CryptoException {
+            KeyPair ownerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload protectedStoragePayload = new ProtectedStoragePayloadStub(ownerKeys.getPublic());
+            ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+            Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
+
+            SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+            this.testState.mockedStorage.removeExpiredEntries();
+
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, false, false, false, false);
+        }
+
+        // TESTCASE: Correctly skips non-persistable entries that are not expired
+        @Test
+        public void removeExpiredEntries_SkipNonExpiredExpirableEntries() throws CryptoException, NoSuchAlgorithmException {
+            KeyPair ownerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic());
+            ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+            Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
+
+            SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+            this.testState.mockedStorage.removeExpiredEntries();
+
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, false, false, false, false);
+        }
+
+        // TESTCASE: Correctly expires non-persistable entries that are expired
+        @Test
+        public void removeExpiredEntries_ExpiresExpiredExpirableEntries() throws CryptoException, NoSuchAlgorithmException {
+            KeyPair ownerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload protectedStoragePayload = new ExpirableProtectedStoragePayload(ownerKeys.getPublic(), 0);
+            ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+            Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
+
+            // Increment the clock by an hour which will cause the Payloads to be outside the TTL range
+            this.testState.incrementClock();
+
+            SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+            this.testState.mockedStorage.removeExpiredEntries();
+
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, true, false, false, false);
+        }
+
+        // TESTCASE: Correctly skips persistable entries that are not expired
+        @Test
+        public void removeExpiredEntries_SkipNonExpiredPersistableExpirableEntries() throws CryptoException, NoSuchAlgorithmException {
+            KeyPair ownerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayload(ownerKeys.getPublic());
+            ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+            Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
+
+            SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+            this.testState.mockedStorage.removeExpiredEntries();
+
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, false, false, false, false);
+        }
+
+        // TESTCASE: Correctly expires persistable entries that are expired
+        @Test
+        public void removeExpiredEntries_ExpiresExpiredPersistableExpirableEntries() throws CryptoException, NoSuchAlgorithmException {
+            KeyPair ownerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayload(ownerKeys.getPublic(), 0);
+            ProtectedStorageEntry protectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+            Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, getTestNodeAddress(), null, true));
+
+            // Increment the clock by an hour which will cause the Payloads to be outside the TTL range
+            this.testState.incrementClock();
+
+            SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+            this.testState.mockedStorage.removeExpiredEntries();
+
+            verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, true, false, false, false);
+        }
+
+        // TESTCASE: Ensure we try to purge old entries sequence number map when size exceeds 1000 elements
+        // and that entries less than PURGE_AGE_DAYS remain
+        @Test
+        public void removeExpiredEntries_PurgeSeqNrMap() throws CryptoException, NoSuchAlgorithmException {
+            final int initialClockIncrement = 5;
+
+            // Add 500 entries to our sequence number map that will be purged
+            KeyPair purgedOwnerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload purgedProtectedStoragePayload = new PersistableExpirableProtectedStoragePayload(purgedOwnerKeys.getPublic(), 0);
+            ProtectedStorageEntry purgedProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(purgedProtectedStoragePayload, purgedOwnerKeys);
+
+            Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, getTestNodeAddress(), null, true));
+
+            for (int i = 0; i <= 499; ++i) {
+                KeyPair ownerKeys = TestUtils.generateKeyPair();
+                ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayload(ownerKeys.getPublic(), 0);
+                ProtectedStorageEntry tmpEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+                Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(tmpEntry, getTestNodeAddress(), null, true));
+            }
+
+            // Increment the time by 5 days which is less than the purge requirement. This will allow the map to have
+            // some values that will be purged and others that will stay.
+            this.testState.clockFake.increment(TimeUnit.DAYS.toMillis(initialClockIncrement));
+
+            // Add another 501 entries that will not be purged
+            KeyPair keepOwnerKeys = TestUtils.generateKeyPair();
+            ProtectedStoragePayload keepProtectedStoragePayload = new PersistableExpirableProtectedStoragePayload(keepOwnerKeys.getPublic(), 0);
+            ProtectedStorageEntry keepProtectedStorageEntry = testState.mockedStorage.getProtectedStorageEntry(keepProtectedStoragePayload, keepOwnerKeys);
+
+            Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, getTestNodeAddress(), null, true));
+
+            for (int i = 0; i <= 500; ++i) {
+                KeyPair ownerKeys = TestUtils.generateKeyPair();
+                ProtectedStoragePayload protectedStoragePayload = new PersistableExpirableProtectedStoragePayload(ownerKeys.getPublic(), 0);
+                ProtectedStorageEntry tmpEntry = testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+                Assert.assertTrue(testState.mockedStorage.addProtectedStorageEntry(tmpEntry, getTestNodeAddress(), null, true));
+            }
+
+            // P2PDataStorage::PURGE_AGE_DAYS == 10 days
+            // Advance time past it so they will be valid purge targets
+            this.testState.clockFake.increment(TimeUnit.DAYS.toMillis(P2PDataStorage.PURGE_AGE_DAYS + 1 - initialClockIncrement));
+
+            // The first entry (11 days old) should be purged
+            SavedTestState beforeState = new SavedTestState(this.testState, purgedProtectedStorageEntry);
+            this.testState.mockedStorage.removeExpiredEntries();
+            verifyProtectedStorageRemove(this.testState, beforeState, purgedProtectedStorageEntry, true, false, false, false);
+
+            // Which means that an addition of a purged entry should succeed.
+            beforeState = new SavedTestState(this.testState, purgedProtectedStorageEntry);
+            Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, getTestNodeAddress(), null, false));
+            verifyProtectedStorageAdd(this.testState, beforeState, purgedProtectedStorageEntry, true, false);
+
+            // The second entry (5 days old) should still exist which means trying to add it again should fail.
+            beforeState = new SavedTestState(this.testState, keepProtectedStorageEntry);
+            Assert.assertFalse(this.testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, getTestNodeAddress(), null, false));
+            verifyProtectedStorageAdd(this.testState, beforeState, keepProtectedStorageEntry, false, false);
         }
     }
 }
