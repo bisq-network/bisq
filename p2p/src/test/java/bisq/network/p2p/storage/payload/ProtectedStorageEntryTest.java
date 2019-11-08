@@ -40,14 +40,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ProtectedStorageEntryTest {
-    private static ProtectedStorageEntry buildProtectedStorageEntry(KeyPair payloadOwner, KeyPair entryOwner) throws CryptoException {
-        return buildProtectedStorageEntry(new ProtectedStoragePayloadStub(payloadOwner.getPublic()), entryOwner);
+    private static ProtectedStorageEntry buildProtectedStorageEntry(KeyPair payloadOwner, KeyPair entryOwner, int sequenceNumber) throws CryptoException {
+        return buildProtectedStorageEntry(new ProtectedStoragePayloadStub(payloadOwner.getPublic()), entryOwner, sequenceNumber);
     }
 
     private static ProtectedStorageEntry buildProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                                                    KeyPair entryOwner) throws CryptoException {
-
-        int sequenceNumber = 1;
+                                                                    KeyPair entryOwner, int sequenceNumber) throws CryptoException {
 
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(protectedStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(entryOwner.getPrivate(), hashOfDataAndSeqNr);
@@ -82,7 +80,7 @@ public class ProtectedStorageEntryTest {
     @Test
     public void isValidForAddOperation() throws NoSuchAlgorithmException, CryptoException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys);
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
 
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
     }
@@ -92,7 +90,7 @@ public class ProtectedStorageEntryTest {
     public void isValidForAddOperation_Mismatch() throws NoSuchAlgorithmException, CryptoException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         KeyPair notOwnerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, notOwnerKeys);
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, notOwnerKeys, 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
@@ -106,7 +104,7 @@ public class ProtectedStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(
-                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), senderKeys);
+                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), senderKeys, 1);
 
         // should be assertFalse
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
@@ -120,7 +118,7 @@ public class ProtectedStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(
-                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), receiverKeys);
+                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), receiverKeys, 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
@@ -129,7 +127,7 @@ public class ProtectedStorageEntryTest {
     @Test
     public void isValidForAddOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys);
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
 
         protectedStorageEntry.updateSignature( new byte[] { 0 });
 
@@ -140,7 +138,7 @@ public class ProtectedStorageEntryTest {
     @Test
     public void isValidForRemoveOperation() throws NoSuchAlgorithmException, CryptoException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys);
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
 
         Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
     }
@@ -150,7 +148,7 @@ public class ProtectedStorageEntryTest {
     public void isValidForRemoveOperation_Mismatch() throws NoSuchAlgorithmException, CryptoException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         KeyPair notOwnerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, notOwnerKeys);
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, notOwnerKeys, 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }
@@ -164,7 +162,7 @@ public class ProtectedStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(
-                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), senderKeys);
+                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), senderKeys, 1);
 
         // should be assertFalse
         Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
@@ -176,7 +174,7 @@ public class ProtectedStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(
-                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), receiverKeys);
+                buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic()), receiverKeys, 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }
@@ -185,10 +183,34 @@ public class ProtectedStorageEntryTest {
     @Test
     public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
         KeyPair ownerKeys = TestUtils.generateKeyPair();
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys);
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
 
         protectedStorageEntry.updateSignature(new byte[] { 0 });
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
+
+    // TESTCASE: isMetadataEquals() should succeed if the sequence number changes
+    @Test
+    public void isMetadataEquals() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        ProtectedStorageEntry seqNrOne = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
+
+        ProtectedStorageEntry seqNrTwo = buildProtectedStorageEntry(ownerKeys, ownerKeys, 2);
+
+        Assert.assertTrue(seqNrOne.isMetadataEquals(seqNrTwo));
+    }
+
+    // TESTCASE: isMetadataEquals() should fail if the OwnerPubKey changes
+    @Test
+    public void isMetadataEquals_OwnerPubKeyChanged() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        KeyPair notOwner = TestUtils.generateKeyPair();
+
+        ProtectedStorageEntry protectedStorageEntryOne = buildProtectedStorageEntry(ownerKeys, ownerKeys, 1);
+
+        ProtectedStorageEntry protectedStorageEntryTwo = buildProtectedStorageEntry(ownerKeys, notOwner, 1);
+
+        Assert.assertFalse(protectedStorageEntryOne.isMetadataEquals(protectedStorageEntryTwo));
     }
 }

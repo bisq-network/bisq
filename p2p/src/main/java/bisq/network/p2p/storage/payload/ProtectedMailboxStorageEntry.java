@@ -145,6 +145,31 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
         return result;
     }
 
+    @Override
+    /*
+     * Returns true if the Entry metadata that is expected to stay constant between different versions of the same object
+     * matches. For ProtectedMailboxStorageEntry, the receiversPubKey must stay the same.
+     */
+    public boolean isMetadataEquals(ProtectedStorageEntry protectedStorageEntry) {
+        if (!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry)) {
+            log.error("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to object type mismatch. " +
+                    "ProtectedMailboxStorageEntry required, but got\n" + protectedStorageEntry);
+
+            return false;
+        }
+
+        ProtectedMailboxStorageEntry protectedMailboxStorageEntry = (ProtectedMailboxStorageEntry) protectedStorageEntry;
+
+        boolean result = protectedMailboxStorageEntry.getReceiversPubKey().equals(this.receiversPubKey);
+        if (!result) {
+            log.warn("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to metadata mismatch. " +
+                    "new.receiversPubKey=" + Utilities.bytesAsHexString(protectedMailboxStorageEntry.getReceiversPubKeyBytes()) +
+                    "stored.receiversPubKey=" + Utilities.bytesAsHexString(this.getReceiversPubKeyBytes()));
+        }
+
+        return result;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER

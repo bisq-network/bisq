@@ -54,9 +54,8 @@ public class ProtectedMailboxStorageEntryTest {
                 prefixedSealedAndSignedMessageMock, payloadSenderPubKeyForAddOperation, payloadOwnerPubKey);
     }
 
-    private static ProtectedMailboxStorageEntry buildProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload, KeyPair ownerKey, PublicKey receiverKey) throws CryptoException {
-        int sequenceNumber = 1;
-
+    private static ProtectedMailboxStorageEntry buildProtectedMailboxStorageEntry(
+            MailboxStoragePayload mailboxStoragePayload, KeyPair ownerKey, PublicKey receiverKey, int sequenceNumber) throws CryptoException {
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(mailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerKey.getPrivate(), hashOfDataAndSeqNr);
 
@@ -77,7 +76,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 1);
 
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
     }
@@ -89,7 +88,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic(), 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
@@ -103,7 +102,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, senderKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, senderKeys.getPublic(), 1);
 
         // should be assertFalse
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
@@ -116,7 +115,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 1);
 
         protectedStorageEntry.updateSignature( new byte[] { 0 });
 
@@ -130,7 +129,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic(), 1);
 
         Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
     }
@@ -142,7 +141,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }
@@ -154,7 +153,7 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic(), 1);
 
         protectedStorageEntry.updateSignature(new byte[] { 0 });
 
@@ -168,8 +167,36 @@ public class ProtectedMailboxStorageEntryTest {
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, senderKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, senderKeys.getPublic(), 1);
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
+
+    // TESTCASE: isMetadataEquals() should succeed if the sequence number changes
+    @Test
+    public void isMetadataEquals() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry seqNrOne = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 1);
+
+        ProtectedStorageEntry seqNrTwo = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 2);
+
+        Assert.assertTrue(seqNrOne.isMetadataEquals(seqNrTwo));
+    }
+
+    // TESTCASE: isMetadataEquals() should fail if the receiversPubKey changes
+    @Test
+    public void isMetadataEquals_receiverPubKeyChanged() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry seqNrOne = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 1);
+
+        ProtectedStorageEntry seqNrTwo = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, senderKeys.getPublic(), 1);
+
+        Assert.assertFalse(seqNrOne.isMetadataEquals(seqNrTwo));
     }
 }

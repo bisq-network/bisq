@@ -403,11 +403,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (!protectedStorageEntry.isValidForAddOperation())
             return false;
 
-        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
-        if (map.containsKey(hashOfPayload) &&
-                !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+
+        // If we have already seen an Entry with the same hash, verify the metadata is equal
+        if (storedEntry != null && !protectedStorageEntry.isMetadataEquals(storedEntry))
             return false;
-        }
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
@@ -444,8 +444,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                               boolean isDataOwner) {
 
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
+        ProtectedStorageEntry storedData = map.get(hashOfPayload);
 
-        if (!map.containsKey((hashOfPayload))) {
+        if (storedData == null) {
             log.debug("We don't have data for that refresh message in our map. That is expected if we missed the data publishing.");
 
             return false;
@@ -490,7 +491,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
         // If we don't know about the target of this remove, ignore it
-        if (!map.containsKey(hashOfPayload)) {
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+        if (storedEntry == null) {
             log.debug("Remove data ignored as we don't have an entry for that data.");
             return false;
         }
@@ -503,8 +505,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (!protectedStorageEntry.isValidForRemoveOperation())
             return false;
 
-        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
-        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload))
+        // If we have already seen an Entry with the same hash, verify the metadata is the same
+        if (!protectedStorageEntry.isMetadataEquals(storedEntry))
             return false;
 
         // Valid remove entry, do the remove and signal listeners
@@ -576,7 +578,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedMailboxStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
-        if (!map.containsKey(hashOfPayload)) {
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+        if (storedEntry == null) {
             log.debug("removeMailboxData failed due to unknown entry");
 
             return false;
@@ -587,14 +590,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
             return false;
 
-        PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
-
         if (!protectedMailboxStorageEntry.isValidForRemoveOperation())
             return false;
 
-
-        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
-        if (!checkIfStoredMailboxDataMatchesNewMailboxData(receiversPubKey, hashOfPayload))
+        // Verify the metadata between the stored entry and the new remove entry are the same
+        if (!protectedMailboxStorageEntry.isMetadataEquals(storedEntry))
             return false;
 
         // Valid remove ProtectedMailboxStorageEntry, do the remove and signal listeners
@@ -743,35 +743,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return result;
         } catch (CryptoException e) {
             log.error("Signature verification failed at checkSignature");
-            return false;
-        }
-    }
-
-    private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(PublicKey ownerPubKey, ByteArray hashOfData) {
-        ProtectedStorageEntry storedData = map.get(hashOfData);
-        boolean result = storedData.getOwnerPubKey() != null && storedData.getOwnerPubKey().equals(ownerPubKey);
-        if (!result)
-            log.warn("New data entry does not match our stored data. storedData.ownerPubKey=" +
-                    (storedData.getOwnerPubKey() != null ? storedData.getOwnerPubKey().toString() : "null") +
-                    ", ownerPubKey=" + ownerPubKey);
-
-        return result;
-    }
-
-    private boolean checkIfStoredMailboxDataMatchesNewMailboxData(PublicKey receiversPubKey, ByteArray hashOfData) {
-        ProtectedStorageEntry storedData = map.get(hashOfData);
-        if (storedData instanceof ProtectedMailboxStorageEntry) {
-            ProtectedMailboxStorageEntry entry = (ProtectedMailboxStorageEntry) storedData;
-            // publicKey is not the same (stored: sender, new: receiver)
-            boolean result = entry.getReceiversPubKey().equals(receiversPubKey)
-                    && get32ByteHashAsByteArray(entry.getProtectedStoragePayload()).equals(hashOfData);
-            if (!result)
-                log.warn("New data entry does not match our stored data. entry.receiversPubKey=" + entry.getReceiversPubKey()
-                        + ", receiversPubKey=" + receiversPubKey);
-
-            return result;
-        } else {
-            log.error("We expected a MailboxData but got other type. That must never happen. storedData=" + storedData);
             return false;
         }
     }
