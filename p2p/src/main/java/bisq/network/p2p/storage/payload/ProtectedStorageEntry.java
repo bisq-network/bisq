@@ -200,4 +200,15 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "ProtectedStorageEntry {" +
+                "\n\tPayload:                 " + protectedStoragePayload +
+                "\n\tOwner Public Key:        " + Utilities.bytesAsHexString(this.ownerPubKeyBytes) +
+                "\n\tSequence Number:         " + this.sequenceNumber +
+                "\n\tSignature:               " + Utilities.bytesAsHexString(this.signature) +
+                "\n\tTimestamp:               " + this.creationTimeStamp +
+                "\n} ";
+    }
 }

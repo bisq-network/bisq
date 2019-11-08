@@ -179,8 +179,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     @Override
     public String toString() {
         return "ProtectedMailboxStorageEntry{" +
-                "\n     receiversPubKeyBytes=" + Utilities.bytesAsHexString(receiversPubKeyBytes) +
-                ",\n     receiversPubKey=" + receiversPubKey +
-                "\n} " + super.toString();
+                "\n\tReceivers Public Key:    " + Utilities.bytesAsHexString(receiversPubKeyBytes) +
+                "\n" + super.toString();
     }
 }
