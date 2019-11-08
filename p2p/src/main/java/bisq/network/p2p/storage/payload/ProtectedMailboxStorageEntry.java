@@ -121,6 +121,13 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
             return false;
 
         MailboxStoragePayload mailboxStoragePayload = this.getMailboxStoragePayload();
+
+        // Verify the Entry has the correct receiversPubKey for removal
+        if (!mailboxStoragePayload.getOwnerPubKey().equals(this.receiversPubKey)) {
+            log.debug("Entry receiversPubKey does not match payload owner which is a requirement for removing MailboxStoragePayloads");
+            return false;
+        }
+
         boolean result = mailboxStoragePayload.getOwnerPubKey() != null &&
                 mailboxStoragePayload.getOwnerPubKey().equals(this.getOwnerPubKey());
 

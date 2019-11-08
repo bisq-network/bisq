@@ -160,4 +160,16 @@ public class ProtectedMailboxStorageEntryTest {
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }
+
+    // TESTCASE: isValidForRemoveOperation() should fail if the receiversPubKey does not match the Entry owner
+    @Test
+    public void isValidForRemoveOperation_ReceiversPubKeyMismatch() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, senderKeys.getPublic());
+
+        Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
 }

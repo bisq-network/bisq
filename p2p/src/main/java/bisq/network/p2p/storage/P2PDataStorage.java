@@ -597,11 +597,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         if (!protectedMailboxStorageEntry.isValidForRemoveOperation())
             return false;
 
-        // Verify the Entry has the correct receiversPubKey for removal.
-        if (!protectedMailboxStorageEntry.getMailboxStoragePayload().getOwnerPubKey().equals(receiversPubKey)) {
-            log.debug("Entry receiversPubKey does not match payload owner which is a requirement for removing MailboxStoragePayloads");
-            return false;
-        }
 
         // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
         if (!checkIfStoredMailboxDataMatchesNewMailboxData(receiversPubKey, hashOfPayload))
@@ -755,11 +750,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             log.error("Signature verification failed at checkSignature");
             return false;
         }
-    }
-
-    private boolean checkSignature(ProtectedStorageEntry protectedStorageEntry) {
-        byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new DataAndSeqNrPair(protectedStorageEntry.getProtectedStoragePayload(), protectedStorageEntry.getSequenceNumber()));
-        return checkSignature(protectedStorageEntry.getOwnerPubKey(), hashOfDataAndSeqNr, protectedStorageEntry.getSignature());
     }
 
     private boolean checkIfStoredDataPubKeyMatchesNewDataPubKey(PublicKey ownerPubKey, ByteArray hashOfData) {
