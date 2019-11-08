@@ -465,12 +465,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // Verify the updated ProtectedStorageEntry is well formed and valid for update
-        if (!checkSignature(updatedEntry))
-            return false;
-
-        // Verify the Payload owner and the Entry owner for the stored Entry are the same
-        // TODO: This is also checked in the validation for the original add(), investigate if this can be removed
-        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(updatedEntry.getOwnerPubKey(), hashOfPayload))
+        if (!updatedEntry.isValidForAddOperation())
             return false;
 
         // Update the hash map with the updated entry
