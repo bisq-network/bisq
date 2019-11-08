@@ -400,7 +400,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
-        if (!protectedStorageEntry.isValidForAddOperation() || !checkSignature(protectedStorageEntry))
+        if (!protectedStorageEntry.isValidForAddOperation())
             return false;
 
         // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten

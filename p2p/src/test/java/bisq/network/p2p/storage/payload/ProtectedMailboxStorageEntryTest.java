@@ -19,6 +19,11 @@ package bisq.network.p2p.storage.payload;
 
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.TestUtils;
+import bisq.network.p2p.storage.P2PDataStorage;
+
+import bisq.common.app.Version;
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Sig;
 
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -27,6 +32,7 @@ import java.security.PublicKey;
 import java.time.Clock;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.Mockito.*;
@@ -35,34 +41,55 @@ public class ProtectedMailboxStorageEntryTest {
 
     private static MailboxStoragePayload buildMailboxStoragePayload(PublicKey payloadSenderPubKeyForAddOperation,
                                                                     PublicKey payloadOwnerPubKey) {
+
+        // Mock out the PrefixedSealedAndSignedMessage with a version that just serializes to the DEFAULT_INSTANCE
+        // in protobuf. This object is never validated in the test, but needs to be hashed as part of the testing path.
+        PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessageMock = mock(PrefixedSealedAndSignedMessage.class);
+        protobuf.NetworkEnvelope networkEnvelopeMock = mock(protobuf.NetworkEnvelope.class);
+        when(networkEnvelopeMock.getPrefixedSealedAndSignedMessage()).thenReturn(
+                protobuf.PrefixedSealedAndSignedMessage.getDefaultInstance());
+        when(prefixedSealedAndSignedMessageMock.toProtoNetworkEnvelope()).thenReturn(networkEnvelopeMock);
+
         return new MailboxStoragePayload(
-                mock(PrefixedSealedAndSignedMessage.class), payloadSenderPubKeyForAddOperation, payloadOwnerPubKey);
+                prefixedSealedAndSignedMessageMock, payloadSenderPubKeyForAddOperation, payloadOwnerPubKey);
     }
 
-    private static ProtectedMailboxStorageEntry buildProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload, PublicKey ownerKey, PublicKey receiverKey) {
-        return new ProtectedMailboxStorageEntry(mailboxStoragePayload, ownerKey, 1, new byte[] { 0 }, receiverKey, Clock.systemDefaultZone());
+    private static ProtectedMailboxStorageEntry buildProtectedMailboxStorageEntry(MailboxStoragePayload mailboxStoragePayload, KeyPair ownerKey, PublicKey receiverKey) throws CryptoException {
+        int sequenceNumber = 1;
+
+        byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new P2PDataStorage.DataAndSeqNrPair(mailboxStoragePayload, sequenceNumber));
+        byte[] signature = Sig.sign(ownerKey.getPrivate(), hashOfDataAndSeqNr);
+
+        return new ProtectedMailboxStorageEntry(mailboxStoragePayload, ownerKey.getPublic(), sequenceNumber, signature, receiverKey, Clock.systemDefaultZone());
+    }
+
+    @Before
+    public void SetUp() {
+        // Deep in the bowels of protobuf we grab the messageID from the version module. This is required to hash the
+        // full MailboxStoragePayload so make sure it is initialized.
+        Version.setBaseCryptoNetworkId(1);
     }
 
     // TESTCASE: validForAddOperation() should return true if the Entry owner and sender key specified in payload match
     @Test
-    public void isValidForAddOperation() throws NoSuchAlgorithmException {
+    public void isValidForAddOperation() throws NoSuchAlgorithmException, CryptoException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic());
 
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
     }
 
     // TESTCASE: validForAddOperation() should return false if the Entry owner and sender key specified in payload don't match
     @Test
-    public void isValidForAddOperation_EntryOwnerPayloadReceiverMismatch() throws NoSuchAlgorithmException {
+    public void isValidForAddOperation_EntryOwnerPayloadReceiverMismatch() throws NoSuchAlgorithmException, CryptoException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
         Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
@@ -71,37 +98,51 @@ public class ProtectedMailboxStorageEntryTest {
     // XXXBUGXXX: The current code doesn't validate this mismatch, but it would create an added payload that could never
     // be removed since the remove code requires Entry.receiversPubKey == Payload.ownerPubKey
     @Test
-    public void isValidForAddOperation_EntryReceiverPayloadReceiverMismatch() throws NoSuchAlgorithmException {
+    public void isValidForAddOperation_EntryReceiverPayloadReceiverMismatch() throws NoSuchAlgorithmException, CryptoException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys.getPublic(), senderKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, senderKeys.getPublic());
 
         // should be assertFalse
         Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
     }
 
-    // TESTCASE: validForRemoveOperation() should return true if the Entry owner and payload owner match
+    // TESTCASE: validForAddOperation() should fail if the signature isn't valid
     @Test
-    public void validForRemove() throws NoSuchAlgorithmException {
+    public void isValidForAddOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic());
+
+        protectedStorageEntry.updateSignature( new byte[] { 0 });
+
+        Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
+    }
+
+    // TESTCASE: validForRemoveOperation() should return true if the Entry owner and payload owner match
+    @Test
+    public void validForRemove() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
         Assert.assertTrue(protectedStorageEntry.isValidForRemoveOperation());
     }
 
     // TESTCASE: validForRemoveOperation() should return false if the Entry owner and payload owner don't match
     @Test
-    public void validForRemoveEntryOwnerPayloadOwnerMismatch() throws NoSuchAlgorithmException {
+    public void validForRemoveEntryOwnerPayloadOwnerMismatch() throws NoSuchAlgorithmException, CryptoException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
         KeyPair receiverKeys = TestUtils.generateKeyPair();
 
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
-        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic());
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }

@@ -17,6 +17,9 @@
 
 package bisq.network.p2p.storage.payload;
 
+import bisq.network.p2p.storage.P2PDataStorage;
+
+import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
@@ -154,6 +157,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
      * match the payload owner.
      */
     public boolean isValidForAddOperation() {
+        if (!this.isSignatureValid())
+            return false;
+
         // TODO: The code currently supports MailboxStoragePayload objects inside ProtectedStorageEntry. Fix this.
         if (protectedStoragePayload instanceof MailboxStoragePayload) {
             MailboxStoragePayload mailboxStoragePayload = (MailboxStoragePayload) this.getProtectedStoragePayload();
@@ -199,6 +205,26 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         }
 
         return result;
+    }
+
+    /*
+     * Returns true if the signature for the Entry is valid for the payload, sequence number, and ownerPubKey
+     */
+    boolean isSignatureValid() {
+        try {
+            byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(
+                    new P2PDataStorage.DataAndSeqNrPair(this.protectedStoragePayload, this.sequenceNumber));
+
+            boolean result = Sig.verify(this.ownerPubKey, hashOfDataAndSeqNr, this.signature);
+
+            if (!result)
+                log.warn(String.format("ProtectedStorageEntry::isSignatureValid() failed.\n%s", this));
+
+            return result;
+        } catch (CryptoException e) {
+            log.error(String.format("ProtectedStorageEntry::isSignatureValid() exception %s", e.toString()));
+            return false;
+        }
     }
 
     @Override
