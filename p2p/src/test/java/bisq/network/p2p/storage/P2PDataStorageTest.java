@@ -392,8 +392,12 @@ public class P2PDataStorageTest {
             if (expectedSeqNrWriteOnStateChange)
                 verifySequenceNumberMapWriteContains(currentState, P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
 
-            if (expectedBroadcastOnStateChange)
-                verify(currentState.mockBroadcaster).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+            if (expectedBroadcastOnStateChange) {
+                if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                    verify(currentState.mockBroadcaster).broadcast(any(RemoveMailboxDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+                else
+                    verify(currentState.mockBroadcaster).broadcast(any(RemoveDataMessage.class), any(NodeAddress.class), eq(null), eq(expectedIsDataOwner));
+            }
 
         } else {
             Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, currentState.mockedStorage.getMap().get(hashMapHash));
