@@ -40,8 +40,8 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
                                     BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
-                                    long makersAccountAge,
-                                    String makersAccountAgeInfo,
+                                    long peersAccountAge,
+                                    String peersAccountAgeInfo,
                                     String accountSigningState) {
     }
 

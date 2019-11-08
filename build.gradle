@@ -59,7 +59,7 @@ configure(subprojects) {
         logbackVersion = '1.1.10'
         lombokVersion = '1.18.2'
         mockitoVersion = '3.0.0'
-        netlayerVersion = '0.6.6'
+        netlayerVersion = '0.6.5.2'
         protobufVersion = '3.9.1'
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
@@ -274,7 +274,7 @@ configure(project(':desktop')) {
     apply plugin: 'witness'
     apply from: '../gradle/witness/gradle-witness.gradle'
 
-    version = '1.2.2-SNAPSHOT'
+    version = '1.2.3-SNAPSHOT'
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 

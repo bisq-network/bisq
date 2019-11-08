@@ -28,6 +28,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOffer;
@@ -68,6 +69,7 @@ import org.bitcoinj.core.AddressFormatException;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 
 import javax.inject.Inject;
 
@@ -78,6 +80,7 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
@@ -89,6 +92,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -135,6 +139,8 @@ public class TradeManager implements PersistedDataHost {
     private ErrorMessageHandler takeOfferRequestErrorMessageHandler;
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
+    @Getter
+    private final ObservableList<Trade> tradesWithoutDepositTx = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -274,11 +280,32 @@ public class TradeManager implements PersistedDataHost {
                         tradesForStatistics.add(trade);
                     } else if (trade.isTakerFeePublished() && !trade.isFundsLockedIn()) {
                         addTradeToFailedTradesList.add(trade);
+                        trade.appendErrorMessage("Invalid state: trade.isTakerFeePublished() && !trade.isFundsLockedIn()");
                     } else {
                         removePreparedTradeList.add(trade);
                     }
+
+            if (trade.getDepositTx() == null) {
+                log.warn("Deposit tx for trader with ID {} is null at initPendingTrades. " +
+                                "This can happen for valid transaction in rare cases (e.g. after a SPV resync). " +
+                                "We leave it to the user to move the trade to failed trades if the problem persists.",
+                        trade.getId());
+                tradesWithoutDepositTx.add(trade);
+            }
                 }
         );
+
+        // If we have a closed trade where the deposit tx is still not confirmed we move it to failed trades as the
+        // payout tx cannot be valid as well in this case. As the trade do not progress without confirmation of the
+        // deposit tx this should normally not happen. If we detect such a trade at start up (done in BisqSetup)  we
+        // show a popup telling the user to do a SPV resync.
+        closedTradableManager.getClosedTradables().stream()
+                .filter(tradable -> tradable instanceof Trade)
+                .map(tradable -> (Trade) tradable)
+                .filter(Trade::isFundsLockedIn)
+                .forEach(addTradeToFailedTradesList::add);
+
+        addTradeToFailedTradesList.forEach(closedTradableManager::remove);
 
         addTradeToFailedTradesList.forEach(this::addTradeToFailedTrades);
 
@@ -294,22 +321,16 @@ public class TradeManager implements PersistedDataHost {
     }
 
     private void cleanUpAddressEntries() {
-        Set<String> tradesIdSet = getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet());
-
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet()));
-
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
+        // We check if we have address entries which are not in our pending trades and clean up those entries.
+        // They might be either from closed or failed trades or from trades we do not have at all in our data base files.
+        Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
                 .map(Tradable::getId)
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet());
 
         btcWalletService.getAddressEntriesForTrade().stream()
                 .filter(e -> !tradesIdSet.contains(e.getOfferId()))
                 .forEach(e -> {
-                    log.warn("We found an outdated addressEntry for trade {}", e.getOfferId());
+                    log.warn("We found an outdated addressEntry for trade {}: entry={}", e.getOfferId(), e);
                     btcWalletService.resetAddressEntriesForPendingTrade(e.getOfferId());
                 });
     }
@@ -681,26 +702,45 @@ public class TradeManager implements PersistedDataHost {
         return available.filter(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).isPositive());
     }
 
-    public Stream<Trade> getLockedTradesStream() {
+    public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getTradableList().stream()
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public Set<String> getSetOfAllTradeIds() {
-        Set<String> tradesIdSet = getLockedTradesStream()
+    public Set<String> getSetOfFailedOrClosedTradeIdsFromLockedInFunds() throws TradeTxException {
+        AtomicReference<TradeTxException> tradeTxException = new AtomicReference<>();
+        Set<String> tradesIdSet = getTradesStreamWithFundsLockedIn()
                 .filter(Trade::hasFailed)
                 .map(Trade::getId)
                 .collect(Collectors.toSet());
-        tradesIdSet.addAll(failedTradesManager.getLockedTradesStream()
-                .map(Trade::getId)
-                .collect(Collectors.toSet()));
-        tradesIdSet.addAll(closedTradableManager.getLockedTradesStream()
-                .map(e -> {
-                    log.warn("We found a closed trade with locked up funds. " +
-                            "That should never happen. trade ID=" + e.getId());
-                    return e.getId();
+        tradesIdSet.addAll(failedTradesManager.getTradesStreamWithFundsLockedIn()
+                .filter(trade -> trade.getDepositTx() != null)
+                .map(trade -> {
+                    log.warn("We found a failed trade with locked up funds. " +
+                            "That should never happen. trade ID=" + trade.getId());
+                    return trade.getId();
                 })
                 .collect(Collectors.toSet()));
+        tradesIdSet.addAll(closedTradableManager.getTradesStreamWithFundsLockedIn()
+                .map(trade -> {
+                    Transaction depositTx = trade.getDepositTx();
+                    if (depositTx != null) {
+                        TransactionConfidence confidence = btcWalletService.getConfidenceForTxId(depositTx.getHashAsString());
+                        if (confidence != null && confidence.getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING) {
+                            tradeTxException.set(new TradeTxException(Res.get("error.closedTradeWithUnconfirmedDepositTx", trade.getShortId())));
+                        } else {
+                            log.warn("We found a closed trade with locked up funds. " +
+                                    "That should never happen. trade ID=" + trade.getId());
+                        }
+                    } else {
+                        tradeTxException.set(new TradeTxException(Res.get("error.closedTradeWithNoDepositTx", trade.getShortId())));
+                    }
+                    return trade.getId();
+                })
+                .collect(Collectors.toSet()));
+
+        if (tradeTxException.get() != null)
+            throw tradeTxException.get();
 
         return tradesIdSet;
     }

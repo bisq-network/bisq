@@ -165,7 +165,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         observableList.forEach(LockedListItem::cleanup);
-        observableList.setAll(tradeManager.getLockedTradesStream()
+        observableList.setAll(tradeManager.getTradesStreamWithFundsLockedIn()
                 .map(trade -> {
                     final Optional<AddressEntry> addressEntryOptional = btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG);
                     return addressEntryOptional.map(addressEntry -> new LockedListItem(trade,

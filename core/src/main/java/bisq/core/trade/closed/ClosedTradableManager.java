@@ -76,6 +76,10 @@ public class ClosedTradableManager implements PersistedDataHost {
         closedTradables.add(tradable);
     }
 
+    public void remove(Tradable tradable) {
+        closedTradables.remove(tradable);
+    }
+
     public boolean wasMyOffer(Offer offer) {
         return offer.isMyOffer(keyRing);
     }
@@ -95,7 +99,7 @@ public class ClosedTradableManager implements PersistedDataHost {
         return closedTradables.stream().filter(e -> e.getId().equals(id)).findFirst();
     }
 
-    public Stream<Trade> getLockedTradesStream() {
+    public Stream<Trade> getTradesStreamWithFundsLockedIn() {
         return getClosedTrades().stream()
                 .filter(Trade::isFundsLockedIn);
     }
