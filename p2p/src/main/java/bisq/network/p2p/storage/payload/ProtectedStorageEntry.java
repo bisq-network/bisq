@@ -40,7 +40,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private final ProtectedStoragePayload protectedStoragePayload;
     private final byte[] ownerPubKeyBytes;
     transient private final PublicKey ownerPubKey;
-    private int sequenceNumber;
+    private final int sequenceNumber;
     private byte[] signature;
     private long creationTimeStamp;
 
@@ -133,19 +133,12 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             creationTimeStamp = clock.millis();
     }
 
-    public void refreshTTL(Clock clock) {
-        creationTimeStamp = clock.millis();
-    }
-
     public void backDate() {
         if (protectedStoragePayload instanceof ExpirablePayload)
             creationTimeStamp -= ((ExpirablePayload) protectedStoragePayload).getTTL() / 2;
     }
 
-    public void updateSequenceNumber(int sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
-    }
-
+    // TODO: only used in tests so find a better way to test and delete public API
     public void updateSignature(byte[] signature) {
         this.signature = signature;
     }

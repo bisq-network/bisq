@@ -67,8 +67,6 @@ import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.security.KeyPair;
 import java.security.PublicKey;
 
@@ -444,6 +442,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
                               @Nullable NodeAddress sender,
                               boolean isDataOwner) {
+
         ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
 
         if (!map.containsKey((hashOfPayload))) {
@@ -452,34 +451,33 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
 
-        int sequenceNumber = refreshTTLMessage.getSequenceNumber();
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+        ProtectedStorageEntry updatedEntry = new ProtectedStorageEntry(
+                storedEntry.getProtectedStoragePayload(),
+                storedEntry.getOwnerPubKey(),
+                refreshTTLMessage.getSequenceNumber(),
+                refreshTTLMessage.getSignature(),
+                this.clock);
 
-        if(!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
+
+        // If we have seen a more recent operation for this payload, we ignore the current one
+        if(!hasSequenceNrIncreased(updatedEntry.getSequenceNumber(), hashOfPayload))
             return false;
 
-        ProtectedStorageEntry storedData = map.get(hashOfPayload);
-        PublicKey ownerPubKey = storedData.getProtectedStoragePayload().getOwnerPubKey();
-        byte[] hashOfDataAndSeqNr = refreshTTLMessage.getHashOfDataAndSeqNr();
-        byte[] signature = refreshTTLMessage.getSignature();
-
-        // Verify the RefreshOfferMessage is well formed and valid for the refresh operation
-        if (!checkSignature(ownerPubKey, hashOfDataAndSeqNr, signature))
+        // Verify the updated ProtectedStorageEntry is well formed and valid for update
+        if (!checkSignature(updatedEntry))
             return false;
 
         // Verify the Payload owner and the Entry owner for the stored Entry are the same
         // TODO: This is also checked in the validation for the original add(), investigate if this can be removed
-        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(ownerPubKey, hashOfPayload))
+        if (!checkIfStoredDataPubKeyMatchesNewDataPubKey(updatedEntry.getOwnerPubKey(), hashOfPayload))
             return false;
 
-        // This is a valid refresh, update the payload for it
-        log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
-        storedData.refreshTTL(this.clock);
-        storedData.updateSequenceNumber(sequenceNumber);
-        storedData.updateSignature(signature);
-        printData("after refreshTTL");
+        // Update the hash map with the updated entry
+        map.put(hashOfPayload, updatedEntry);
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, this.clock.millis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(updatedEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
