@@ -505,7 +505,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the remove operation
-        if (!protectedStorageEntry.isValidForRemoveOperation() || !checkSignature(protectedStorageEntry))
+        if (!protectedStorageEntry.isValidForRemoveOperation())
             return false;
 
         // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
@@ -594,7 +594,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
 
-        if (!protectedMailboxStorageEntry.isValidForRemoveOperation() || !checkSignature(protectedMailboxStorageEntry))
+        if (!protectedMailboxStorageEntry.isValidForRemoveOperation())
             return false;
 
         // Verify the Entry has the correct receiversPubKey for removal.

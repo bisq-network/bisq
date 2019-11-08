@@ -180,4 +180,15 @@ public class ProtectedStorageEntryTest {
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }
+
+    // TESTCASE: isValidForRemoveOperation() should fail if the signature is bad
+    @Test
+    public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedStorageEntry(ownerKeys, ownerKeys);
+
+        protectedStorageEntry.updateSignature(new byte[] { 0 });
+
+        Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
 }

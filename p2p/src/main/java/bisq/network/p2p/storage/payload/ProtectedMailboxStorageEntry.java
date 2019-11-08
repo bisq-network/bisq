@@ -117,6 +117,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
      */
     @Override
     public boolean isValidForRemoveOperation() {
+        if (!this.isSignatureValid())
+            return false;
+
         MailboxStoragePayload mailboxStoragePayload = this.getMailboxStoragePayload();
         boolean result = mailboxStoragePayload.getOwnerPubKey() != null &&
                 mailboxStoragePayload.getOwnerPubKey().equals(this.getOwnerPubKey());

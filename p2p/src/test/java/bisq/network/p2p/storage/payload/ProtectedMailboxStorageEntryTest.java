@@ -146,4 +146,18 @@ public class ProtectedMailboxStorageEntryTest {
 
         Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
     }
+
+    // TESTCASE: isValidForRemoveOperation() should fail if the signature is bad
+    @Test
+    public void isValidForRemoveOperation_BadSignature() throws NoSuchAlgorithmException, CryptoException {
+        KeyPair senderKeys = TestUtils.generateKeyPair();
+        KeyPair receiverKeys = TestUtils.generateKeyPair();
+
+        MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
+        ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
+
+        protectedStorageEntry.updateSignature(new byte[] { 0 });
+
+        Assert.assertFalse(protectedStorageEntry.isValidForRemoveOperation());
+    }
 }
