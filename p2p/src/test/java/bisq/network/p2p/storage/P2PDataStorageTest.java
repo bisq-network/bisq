@@ -1130,7 +1130,7 @@ public class P2PDataStorageTest {
                 return true;
             } else {
                 // XXX: All external callers just pass in true, a future patch can remove the argument.
-                return testState.mockedStorage.removeMailboxData((ProtectedMailboxStorageEntry) entry, getTestNodeAddress(), true);
+                return testState.mockedStorage.remove(entry, getTestNodeAddress(), true);
             }
         }
 
@@ -1278,20 +1278,6 @@ public class P2PDataStorageTest {
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
             doProtectedStorageRemoveAndVerify(this.getProtectedStorageEntryForRemove(2), false, false);
-        }
-
-
-        @Test(expected = IllegalArgumentException.class)
-        public void remove_canCallWrongRemoveAndFail() throws CryptoException {
-
-            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
-            ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
-
-            doProtectedStorageAddAndVerify(entryForAdd, true, true);
-
-            // Call remove(ProtectedStorageEntry) instead of removeFromMailbox(ProtectedMailboxStorageEntry) and verify
-            // it fails spectacularly
-            super.doRemove(entryForRemove);
         }
 
         // TESTCASE: Add after removed when add-once required (greater seq #)
@@ -1445,7 +1431,7 @@ public class P2PDataStorageTest {
                     this.testState.mockedStorage.getMailboxDataWithSignedSeqNr(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
             SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
-            Assert.assertFalse(this.testState.mockedStorage.removeMailboxData(protectedMailboxStorageEntry, getTestNodeAddress(), true));
+            Assert.assertFalse(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, getTestNodeAddress(), true));
 
             verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, false, true, true, true);
         }
@@ -1467,7 +1453,7 @@ public class P2PDataStorageTest {
                     this.testState.mockedStorage.getMailboxDataWithSignedSeqNr(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
             SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
-            Assert.assertTrue(this.testState.mockedStorage.removeMailboxData(protectedMailboxStorageEntry, getTestNodeAddress(), true));
+            Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, getTestNodeAddress(), true));
 
             verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true, true,true);
         }
@@ -1493,7 +1479,7 @@ public class P2PDataStorageTest {
                     this.testState.mockedStorage.getMailboxDataWithSignedSeqNr(mailboxStoragePayload, receiverKeys, receiverKeys.getPublic());
 
             SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
-            Assert.assertTrue(this.testState.mockedStorage.removeMailboxData(protectedMailboxStorageEntry, getTestNodeAddress(), true));
+            Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, getTestNodeAddress(), true));
 
             verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true, true,true);
         }

@@ -240,7 +240,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 } else if (networkEnvelope instanceof RemoveDataMessage) {
                     remove(((RemoveDataMessage) networkEnvelope).getProtectedStorageEntry(), peersNodeAddress, false);
                 } else if (networkEnvelope instanceof RemoveMailboxDataMessage) {
-                    removeMailboxData(((RemoveMailboxDataMessage) networkEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
+                    remove(((RemoveMailboxDataMessage) networkEnvelope).getProtectedMailboxStorageEntry(), peersNodeAddress, false);
                 } else if (networkEnvelope instanceof RefreshOfferMessage) {
                     refreshTTL((RefreshOfferMessage) networkEnvelope, peersNodeAddress, false);
                 } else if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
@@ -485,8 +485,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public boolean remove(ProtectedStorageEntry protectedStorageEntry,
                           @Nullable NodeAddress sender,
                           boolean isDataOwner) {
-        checkArgument(!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry), "Use removeMailboxData for ProtectedMailboxStorageEntry");
-
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
@@ -519,7 +517,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
 
-        broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
+            broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null, isDataOwner);
+        } else {
+            broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
+        }
 
         removeFromProtectedDataStore(protectedStorageEntry);
 
@@ -570,48 +572,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         }
     }
-
-    @SuppressWarnings("UnusedReturnValue")
-    public boolean removeMailboxData(ProtectedMailboxStorageEntry protectedMailboxStorageEntry,
-                                     @Nullable NodeAddress sender,
-                                     boolean isDataOwner) {
-        ProtectedStoragePayload protectedStoragePayload = protectedMailboxStorageEntry.getProtectedStoragePayload();
-        ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
-
-        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
-        if (storedEntry == null) {
-            log.debug("removeMailboxData failed due to unknown entry");
-
-            return false;
-        }
-
-        int sequenceNumber = protectedMailboxStorageEntry.getSequenceNumber();
-
-        if (!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
-            return false;
-
-        if (!protectedMailboxStorageEntry.isValidForRemoveOperation())
-            return false;
-
-        // Verify the metadata between the stored entry and the new remove entry are the same
-        if (!protectedMailboxStorageEntry.isMetadataEquals(storedEntry))
-            return false;
-
-        // Valid remove ProtectedMailboxStorageEntry, do the remove and signal listeners
-        doRemoveProtectedExpirableData(protectedMailboxStorageEntry, hashOfPayload);
-        printData("after removeMailboxData");
-
-        // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, this.clock.millis()));
-        sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
-
-        maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
-
-        broadcast(new RemoveMailboxDataMessage(protectedMailboxStorageEntry), sender, null, isDataOwner);
-
-        return true;
-    }
-
+    
     private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
                                                  ByteArray hashOfData) {
         if (protectedStoragePayload instanceof AddOncePayload) {
