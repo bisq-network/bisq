@@ -19,31 +19,34 @@ package bisq.common.util;
 
 import java.util.Objects;
 
-public class Tuple4<A, B, C, D> {
+public class Tuple5<A, B, C, D, E> {
     final public A first;
     final public B second;
     final public C third;
     final public D forth;
+    final public E fifth;
 
-    public Tuple4(A first, B second, C third, D forth) {
+    public Tuple5(A first, B second, C third, D forth, E fifth) {
         this.first = first;
         this.second = second;
         this.third = third;
         this.forth = forth;
+        this.fifth = fifth;
     }
 
     @SuppressWarnings("SimplifiableIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Tuple4)) return false;
+        if (!(o instanceof Tuple5)) return false;
 
-        Tuple4<?, ?, ?, ?> tuple4 = (Tuple4<?, ?, ?, ?>) o;
+        Tuple5<?, ?, ?, ?, ?> tuple5 = (Tuple5<?, ?, ?, ?, ?>) o;
 
-        if (!Objects.equals(first, tuple4.first)) return false;
-        if (!Objects.equals(second, tuple4.second)) return false;
-        if (!Objects.equals(third, tuple4.third)) return false;
-        return Objects.equals(forth, tuple4.forth);
+        if (!Objects.equals(first, tuple5.first)) return false;
+        if (!Objects.equals(second, tuple5.second)) return false;
+        if (!Objects.equals(third, tuple5.third)) return false;
+        if (!Objects.equals(forth, tuple5.forth)) return false;
+        return Objects.equals(fifth, tuple5.fifth);
 
     }
 
@@ -53,6 +56,7 @@ public class Tuple4<A, B, C, D> {
         result = 31 * result + (second != null ? second.hashCode() : 0);
         result = 31 * result + (third != null ? third.hashCode() : 0);
         result = 31 * result + (forth != null ? forth.hashCode() : 0);
+        result = 31 * result + (fifth != null ? fifth.hashCode() : 0);
         return result;
     }
 }

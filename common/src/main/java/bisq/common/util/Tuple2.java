@@ -19,6 +19,8 @@ package bisq.common.util;
 
 import java.io.Serializable;
 
+import java.util.Objects;
+
 public class Tuple2<A, B> implements Serializable {
     private static final long serialVersionUID = 1;
 
@@ -38,8 +40,8 @@ public class Tuple2<A, B> implements Serializable {
 
         Tuple2<?, ?> tuple2 = (Tuple2<?, ?>) o;
 
-        if (first != null ? !first.equals(tuple2.first) : tuple2.first != null) return false;
-        return !(second != null ? !second.equals(tuple2.second) : tuple2.second != null);
+        if (!Objects.equals(first, tuple2.first)) return false;
+        return Objects.equals(second, tuple2.second);
 
     }
 
