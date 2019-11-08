@@ -416,7 +416,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             trade,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
