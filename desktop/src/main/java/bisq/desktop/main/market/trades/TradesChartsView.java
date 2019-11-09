@@ -330,7 +330,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @SuppressWarnings("unchecked")
-	private void createCharts() {
+    private void createCharts() {
         priceSeries = new XYChart.Series<>();
 
         priceAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
