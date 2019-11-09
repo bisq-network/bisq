@@ -22,7 +22,6 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.common.crypto.KeyRing;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.fee.FeeService;
@@ -39,17 +38,17 @@ import java.util.stream.Collectors;
 class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     private final BSFormatter formatter;
     final AccountAgeWitnessService accountAgeWitnessService;
-	final private KeyRing keyRing;
+    final private KeyRing keyRing;
 
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
-                                 AccountAgeWitnessService accountAgeWitnessService, 
-                                 KeyRing keyRing,
-                                 BSFormatter formatter) {
+                                 AccountAgeWitnessService accountAgeWitnessService,
+                                 BSFormatter formatter,
+                                 KeyRing keyRing) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.keyRing = keyRing;
         this.formatter = formatter;
+        this.keyRing = keyRing;
     }
 
     public ObservableList<ClosedTradableListItem> getList() {
@@ -93,7 +92,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatCoin(((Trade) tradable).getOffer().getTxFee());
+            return formatter.formatCoin(((Trade) tradable).getTxFee());
         else
             return formatter.formatCoin(tradable.getOffer().getTxFee());
     }
@@ -103,7 +102,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return formatter.formatCoin(((Trade) tradable).getOffer().getTxFee().multiply(3L));
+            return formatter.formatCoin(((Trade) tradable).getTakerFee());
         else
             return formatter.formatCoin(tradable.getOffer().getTxFee().multiply(3L));
     }
@@ -156,11 +155,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
-    	if (item == null) {
-    		return "";
-    	} else {
-            return isBuyerMakerAndSellerTaker(item) + " " + ((item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "");
-    	}
+        return (item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTradable().getOffer()), item.getTradable().getOffer().getCurrencyCode()) : "";
     }
 
     String getDate(ClosedTradableListItem item) {
