@@ -47,7 +47,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
     }
 
     // TESTCASE: Correctly skips non-persistable entries that are not expired
@@ -61,7 +61,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
     }
 
     // TESTCASE: Correctly expires non-persistable entries that are expired
@@ -78,7 +78,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
     }
 
     // TESTCASE: Correctly skips persistable entries that are not expired
@@ -92,7 +92,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, false, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
     }
 
     // TESTCASE: Correctly expires persistable entries that are expired
@@ -109,7 +109,7 @@ public class P2PDataStorageRemoveExpiredTest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
     }
 
     // TESTCASE: Ensure we try to purge old entries sequence number map when size exceeds the maximum size
@@ -150,16 +150,16 @@ public class P2PDataStorageRemoveExpiredTest {
         // The first entry (11 days old) should be purged
         SavedTestState beforeState = new SavedTestState(this.testState, purgedProtectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, purgedProtectedStorageEntry, true, false, false, false);
+        this.testState.verifyProtectedStorageRemove(beforeState, purgedProtectedStorageEntry, true, false, false, false);
 
         // Which means that an addition of a purged entry should succeed.
         beforeState = new SavedTestState(this.testState, purgedProtectedStorageEntry);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
-        TestState.verifyProtectedStorageAdd(this.testState, beforeState, purgedProtectedStorageEntry, true, false);
+        this.testState.verifyProtectedStorageAdd(beforeState, purgedProtectedStorageEntry, true, false);
 
         // The second entry (5 days old) should still exist which means trying to add it again should fail.
         beforeState = new SavedTestState(this.testState, keepProtectedStorageEntry);
         Assert.assertFalse(this.testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
-        TestState.verifyProtectedStorageAdd(this.testState, beforeState, keepProtectedStorageEntry, false, false);
+        this.testState.verifyProtectedStorageAdd(beforeState, keepProtectedStorageEntry, false, false);
     }
 }

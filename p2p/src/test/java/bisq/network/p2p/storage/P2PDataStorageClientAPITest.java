@@ -56,7 +56,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        TestState.verifyProtectedStorageAdd(this.testState, beforeState, protectedStorageEntry, true, true);
+        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true);
     }
 
     // TESTCASE: Adding an entry from the getProtectedStorageEntry API of an existing item correctly updates the item
@@ -73,7 +73,7 @@ public class P2PDataStorageClientAPITest {
         protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true);
 
-        TestState.verifyProtectedStorageAdd(this.testState, beforeState, protectedStorageEntry, true, true);
+        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true);
     }
 
     // TESTCASE: Adding an entry from the getProtectedStorageEntry API of an existing item (added from onMessage path) correctly updates the item
@@ -93,7 +93,7 @@ public class P2PDataStorageClientAPITest {
         protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        TestState.verifyProtectedStorageAdd(this.testState, beforeState, protectedStorageEntry, true, true);
+        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true);
     }
 
     // TESTCASE: Updating an entry from the getRefreshTTLMessage API correctly errors if the item hasn't been seen
@@ -108,7 +108,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, refreshOfferMessage);
         Assert.assertFalse(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true));
 
-        TestState.verifyRefreshTTL(this.testState, beforeState, refreshOfferMessage, false, true);
+        this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, false, true);
     }
 
     // TESTCASE: Updating an entry from the getRefreshTTLMessage API correctly "refreshes" the item
@@ -130,7 +130,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, refreshOfferMessage);
         Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true));
 
-        TestState.verifyRefreshTTL(this.testState, beforeState, refreshOfferMessage, true, true);
+        this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, true, true);
     }
 
     // TESTCASE: Updating an entry from the getRefreshTTLMessage API correctly "refreshes" the item when it was originally added from onMessage path
@@ -154,7 +154,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, refreshOfferMessage);
         Assert.assertTrue(this.testState.mockedStorage.refreshTTL(refreshOfferMessage, TestState.getTestNodeAddress(), true));
 
-        TestState.verifyRefreshTTL(this.testState, beforeState, refreshOfferMessage, true, true);
+        this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, true, true);
     }
 
     // TESTCASE: Removing a non-existent mailbox entry from the getMailboxDataWithSignedSeqNr API
@@ -171,7 +171,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
         Assert.assertFalse(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress(), true));
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, false, true, true, true);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedMailboxStorageEntry, false, true, true, true);
     }
 
     // TESTCASE: Adding, then removing a mailbox message from the getMailboxDataWithSignedSeqNr API
@@ -193,7 +193,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
         Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress(), true));
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true, true,true);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedMailboxStorageEntry, true, true, true,true);
     }
 
     // TESTCASE: Removing a mailbox message that was added from the onMessage handler
@@ -220,6 +220,6 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = new SavedTestState(this.testState, protectedMailboxStorageEntry);
         Assert.assertTrue(this.testState.mockedStorage.remove(protectedMailboxStorageEntry, TestState.getTestNodeAddress(), true));
 
-        TestState.verifyProtectedStorageRemove(this.testState, beforeState, protectedMailboxStorageEntry, true, true, true,true);
+        this.testState.verifyProtectedStorageRemove(beforeState, protectedMailboxStorageEntry, true, true, true,true);
     }
 }

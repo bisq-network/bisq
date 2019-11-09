@@ -195,7 +195,7 @@ public class P2PDataStorageTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            TestState.verifyProtectedStorageAdd(this.testState, beforeState, protectedStorageEntry, expectedStateChange, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, expectedStateChange, this.expectIsDataOwner());
         }
 
         void doProtectedStorageRemoveAndVerify(ProtectedStorageEntry entry,
@@ -209,7 +209,7 @@ public class P2PDataStorageTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            TestState.verifyProtectedStorageRemove(this.testState, beforeState, entry, expectInternalStateChange, true, true, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, true, true, this.expectIsDataOwner());
         }
 
         /// Valid Add Tests (isValidForAdd() and matchesRelevantPubKey() return true)
@@ -467,7 +467,7 @@ public class P2PDataStorageTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, returnValue);
 
-            TestState.verifyRefreshTTL(this.testState, beforeState, refreshOfferMessage, expectStateChange, this.expectIsDataOwner());
+            this.testState.verifyRefreshTTL(beforeState, refreshOfferMessage, expectStateChange, this.expectIsDataOwner());
         }
 
         // TESTCASE: Refresh an entry that doesn't exist
