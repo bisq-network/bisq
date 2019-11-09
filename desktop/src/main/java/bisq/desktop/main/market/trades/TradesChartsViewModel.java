@@ -399,13 +399,13 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 DisplayUtils.formatDateTimeSpan(dateFrom, dateTo) :
                 DisplayUtils.formatDate(dateFrom) + " - " + DisplayUtils.formatDate(dateTo);
         
-		for (Tx item : burntBsqSet) {
-			accumulatedBisqBurn += item.getBurntBsq();
-		}
-                
+        for (Tx item : burntBsqSet) {
+            accumulatedBisqBurn += item.getBurntBsq();
+        }
+               
         //TODO compute bisqBurnVolumeRatio
-		double accumulatedBisqBurnAsDouble = (double) accumulatedBisqBurn;
-		bisqBurnVolumeRatio = accumulatedMetricAsDouble != 0 ? accumulatedBisqBurnAsDouble * 100.0 / accumulatedMetricAsDouble : 0l;//Percentage calculation
+        double accumulatedBisqBurnAsDouble = (double) accumulatedBisqBurn;
+        bisqBurnVolumeRatio = accumulatedMetricAsDouble != 0 ? accumulatedBisqBurnAsDouble * 100.0 / accumulatedMetricAsDouble : 0l;//Percentage calculation
 				
         return new CandleData(tick, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
                 numTrades, bisqBurnVolumeRatio, isBullish, dateString);
