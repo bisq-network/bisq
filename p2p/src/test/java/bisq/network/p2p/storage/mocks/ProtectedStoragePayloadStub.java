@@ -34,8 +34,12 @@ import javax.annotation.Nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-/*
- * Stub ProtectedStoragePayload whose hash is equal to the ownerPubKey
+/**
+ * Stub implementation of a ProtectedStoragePayload that can be used in tests
+ * to provide canned answers to calls. Useful if the tests don't care about the implementation
+ * details of the ProtectedStoragePayload.
+ *
+ * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
  */
 public class ProtectedStoragePayloadStub implements ProtectedStoragePayload {
     @Getter

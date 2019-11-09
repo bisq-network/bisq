@@ -21,6 +21,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 
+/**
+ * Fake implementation of the Clock object that can be used in tests that need finer control over the current time.
+ *
+ * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
+ */
 public class ClockFake extends Clock {
     private Instant currentInstant;
 
