@@ -91,8 +91,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class P2PDataStorage implements MessageListener, ConnectionListener, PersistedDataHost {
     /**
@@ -691,20 +689,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         } else {
             return true;
-        }
-    }
-
-    private boolean checkSignature(PublicKey ownerPubKey, byte[] hashOfDataAndSeqNr, byte[] signature) {
-        try {
-            boolean result = Sig.verify(ownerPubKey, hashOfDataAndSeqNr, signature);
-            if (!result)
-                log.warn("Signature verification failed at checkSignature. " +
-                        "That should not happen.");
-
-            return result;
-        } catch (CryptoException e) {
-            log.error("Signature verification failed at checkSignature");
-            return false;
         }
     }
 
