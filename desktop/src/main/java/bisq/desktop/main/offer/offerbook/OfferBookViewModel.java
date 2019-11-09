@@ -48,6 +48,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -101,7 +102,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final FilterManager filterManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
-    final BSFormatter formatter;
+    private final BSFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
     final ObjectProperty<TableColumn.SortType> priceSortTypeProperty = new SimpleObjectProperty<>();
 
 
@@ -143,7 +145,8 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              BSFormatter formatter) {
+                              BSFormatter btcFormatter,
+                              BsqFormatter bsqFormatter) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -156,7 +159,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
-        this.formatter = formatter;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.sortedItems = new SortedList<>(filteredItems);
@@ -286,6 +290,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         showAllPaymentMethods = isShowAllEntry(paymentMethod.getId());
         if (!showAllPaymentMethods)
             this.selectedPaymentMethod = paymentMethod;
+        else
+            this.selectedPaymentMethod = PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
 
         applyFilterPredicate();
     }
@@ -341,7 +347,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private String formatAmount(Offer offer, boolean decimalAligned) {
-        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), formatter);
+        return DisplayUtils.formatAmount(offer, GUIUtil.AMOUNT_DECIMALS, decimalAligned, maxPlacesForAmount.get(), btcFormatter);
     }
 
 
@@ -509,26 +515,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 PaymentAccountUtil.isAnyTakerPaymentAccountValidForOffer(offer, user.getPaymentAccounts());
     }
 
-    boolean isSellOfferAndAllTakerPaymentAccountsForOfferImmature(Offer offer) {
-        return user.getPaymentAccounts() != null &&
-                PaymentAccountUtil.isSellOfferAndAllTakerPaymentAccountsForOfferImmature(offer, user.getPaymentAccounts(), accountAgeWitnessService);
-    }
-
-    boolean isRiskyBuyOfferWithImmatureAccountAge(Offer offer) {
-        return PaymentAccountUtil.isRiskyBuyOfferWithImmatureAccountAge(offer, accountAgeWitnessService);
-    }
-
     boolean hasPaymentAccountForCurrency() {
         return (showAllTradeCurrenciesProperty.get() &&
                 user.getPaymentAccounts() != null &&
                 !user.getPaymentAccounts().isEmpty()) ||
                 user.hasPaymentAccountForCurrency(selectedTradeCurrency);
-    }
-
-    boolean hasMakerAnyMatureAccountForBuyOffer() {
-        return direction == OfferPayload.Direction.SELL ||
-                (user.getPaymentAccounts() != null &&
-                        PaymentAccountUtil.hasMakerAnyMatureAccountForBuyOffer(user.getPaymentAccounts(), accountAgeWitnessService));
     }
 
     boolean canCreateOrTakeOffer() {
@@ -579,10 +570,17 @@ class OfferBookViewModel extends ActivatableViewModel {
         return filterManager.requireUpdateToNewVersionForTrading();
     }
 
-    boolean isInsufficientTradeLimit(Offer offer) {
+    boolean isInsufficientCounterpartyTradeLimit(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+                !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(), errorMessage -> {
+                });
+    }
+
+    boolean isMyInsufficientTradeLimit(Offer offer) {
         Optional<PaymentAccount> accountOptional = getMostMaturePaymentAccountForOffer(offer);
         final long myTradeLimit = accountOptional
-                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount, offer.getCurrencyCode()))
+                .map(paymentAccount -> accountAgeWitnessService.getMyTradeLimit(paymentAccount,
+                        offer.getCurrencyCode(), offer.getMirroredDirection()))
                 .orElse(0L);
         final long offerMinAmount = offer.getMinAmount().value;
         log.debug("isInsufficientTradeLimit accountOptional={}, myTradeLimit={}, offerMinAmount={}, ",
@@ -615,5 +613,26 @@ class OfferBookViewModel extends ActivatableViewModel {
                 })
                 .collect(Collectors.toSet())
                 .size();
+    }
+
+    public boolean hasSelectionAccountSigning() {
+        if (showAllTradeCurrenciesProperty.get()) {
+            if (!selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG)) {
+                return PaymentMethod.hasChargebackRisk(selectedPaymentMethod);
+            }
+        } else {
+            if (selectedPaymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG))
+                return CurrencyUtil.getMatureMarketCurrencies().stream()
+                        .anyMatch(c -> c.getCode().equals(selectedTradeCurrency.getCode()));
+            else
+                return PaymentMethod.hasChargebackRisk(selectedPaymentMethod, tradeCurrencyCode.get());
+        }
+        return true;
+    }
+
+    public String getMakerFeeAsString(Offer offer) {
+        return offer.isCurrencyForMakerFeeBtc() ?
+                btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
+                bsqFormatter.formatCoinWithCode(offer.getMakerFee());
     }
 }

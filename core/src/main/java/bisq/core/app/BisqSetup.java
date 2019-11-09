@@ -17,6 +17,7 @@
 
 package bisq.core.app;
 
+import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
@@ -43,14 +44,18 @@ import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.dispute.refund.RefundManager;
+import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.TradeTxException;
 import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -61,6 +66,7 @@ import bisq.network.crypto.DecryptedDataTuple;
 import bisq.network.crypto.EncryptionService;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.keepalive.messages.Ping;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
 import bisq.common.ClockWatcher;
 import bisq.common.Timer;
@@ -100,7 +106,9 @@ import java.net.Socket;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -116,7 +124,19 @@ import javax.annotation.Nullable;
 @Slf4j
 @Singleton
 public class BisqSetup {
-    public interface BisqSetupCompleteListener {
+    public interface BisqSetupListener {
+        default void onInitP2pNetwork() {
+            log.info("onInitP2pNetwork");
+        }
+
+        default void onInitWallet() {
+            log.info("onInitWallet");
+        }
+
+        default void onRequestWalletPassword() {
+            log.info("onRequestWalletPassword");
+        }
+
         void onSetupComplete();
     }
 
@@ -131,11 +151,13 @@ public class BisqSetup {
     private final PriceFeedService priceFeedService;
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
+    private final RefundAgentManager refundAgentManager;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
     private final ArbitrationManager arbitrationManager;
     private final MediationManager mediationManager;
+    private final RefundManager refundManager;
     private final TraderChatManager traderChatManager;
     private final Preferences preferences;
     private final User user;
@@ -171,7 +193,9 @@ public class BisqSetup {
     private Consumer<String> cryptoSetupFailedHandler, chainFileLockedExceptionHandler,
             spvFileCorruptedHandler, lockedUpFundsHandler, daoErrorMessageHandler, daoWarnMessageHandler,
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
-            wrongOSArchitectureHandler;
+            wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
+            displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler,
+            rejectedTxErrorMessageHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -201,7 +225,7 @@ public class BisqSetup {
     private boolean allBasicServicesInitialized;
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
-    private List<BisqSetupCompleteListener> bisqSetupCompleteListeners = new ArrayList<>();
+    private List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
 
     @Inject
     public BisqSetup(P2PNetworkSetup p2PNetworkSetup,
@@ -213,11 +237,13 @@ public class BisqSetup {
                      PriceFeedService priceFeedService,
                      ArbitratorManager arbitratorManager,
                      MediatorManager mediatorManager,
+                     RefundAgentManager refundAgentManager,
                      P2PService p2PService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
                      ArbitrationManager arbitrationManager,
                      MediationManager mediationManager,
+                     RefundManager refundManager,
                      TraderChatManager traderChatManager,
                      Preferences preferences,
                      User user,
@@ -257,11 +283,13 @@ public class BisqSetup {
         this.priceFeedService = priceFeedService;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
+        this.refundAgentManager = refundAgentManager;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
+        this.refundManager = refundManager;
         this.traderChatManager = traderChatManager;
         this.preferences = preferences;
         this.user = user;
@@ -296,16 +324,13 @@ public class BisqSetup {
     // Setup
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void addBisqSetupCompleteListener(BisqSetupCompleteListener listener) {
-        bisqSetupCompleteListeners.add(listener);
+    public void addBisqSetupListener(BisqSetupListener listener) {
+        bisqSetupListeners.add(listener);
     }
 
     public void start() {
-        if (log.isDebugEnabled()) {
-            UserThread.runPeriodically(() -> {
-                log.debug("1 second heartbeat");
-            }, 1);
-        }
+        UserThread.runPeriodically(() -> {
+        }, 1);
         maybeReSyncSPVChain();
         maybeShowTac();
     }
@@ -328,12 +353,13 @@ public class BisqSetup {
     private void step5() {
         initDomainServices();
 
-        bisqSetupCompleteListeners.forEach(BisqSetupCompleteListener::onSetupComplete);
+        bisqSetupListeners.forEach(BisqSetupListener::onSetupComplete);
 
         // We set that after calling the setupCompleteHandler to not trigger a popup from the dev dummy accounts
         // in MainViewModel
         maybeShowSecurityRecommendation();
         maybeShowLocalhostRunningInfo();
+        maybeShowAccountSigningStateInfo();
     }
 
 
@@ -428,10 +454,10 @@ public class BisqSetup {
     }
 
     private void maybeShowTac() {
-        if (!preferences.isTacAccepted() && !DevEnv.isDevMode()) {
+        if (!preferences.isTacAcceptedV120() && !DevEnv.isDevMode()) {
             if (displayTacHandler != null)
                 displayTacHandler.accept(() -> {
-                    preferences.setTacAccepted(true);
+                    preferences.setTacAcceptedV120(true);
                     step2();
                 });
         } else {
@@ -443,7 +469,7 @@ public class BisqSetup {
         // For DAO testnet we ignore local btc node
         if (BisqEnvironment.getBaseCurrencyNetwork().isDaoRegTest() ||
                 BisqEnvironment.getBaseCurrencyNetwork().isDaoTestNet() ||
-                bisqEnvironment.getIgnoreLocalBtcNode()) {
+                bisqEnvironment.isIgnoreLocalBtcNode()) {
             step3();
         } else {
             new Thread(() -> {
@@ -524,6 +550,7 @@ public class BisqSetup {
 
         }, STARTUP_TIMEOUT_MINUTES, TimeUnit.MINUTES);
 
+        bisqSetupListeners.forEach(BisqSetupListener::onInitP2pNetwork);
         p2pNetworkReady = p2PNetworkSetup.init(this::initWallet, displayTorNetworkSettingsHandler);
 
         // We only init wallet service here if not using Tor for bitcoinj.
@@ -550,7 +577,10 @@ public class BisqSetup {
     }
 
     private void initWallet() {
+        bisqSetupListeners.forEach(BisqSetupListener::onInitWallet);
         Runnable walletPasswordHandler = () -> {
+            log.info("Wallet password required");
+            bisqSetupListeners.forEach(BisqSetupListener::onRequestWalletPassword);
             if (p2pNetworkReady.get())
                 p2PNetworkSetup.setSplashP2PNetworkAnimationVisible(true);
 
@@ -561,6 +591,9 @@ public class BisqSetup {
                         if (showFirstPopupIfResyncSPVRequestedHandler != null)
                             showFirstPopupIfResyncSPVRequestedHandler.run();
                     } else {
+                        // TODO no guarantee here that the wallet is really fully initialized
+                        // We would need a new walletInitializedButNotEncrypted state to track
+                        // Usually init is fast and we have our wallet initialized at that state though.
                         walletInitialized.set(true);
                     }
                 });
@@ -571,30 +604,56 @@ public class BisqSetup {
                 showFirstPopupIfResyncSPVRequestedHandler,
                 walletPasswordHandler,
                 () -> {
-                    if (allBasicServicesInitialized)
+                    if (allBasicServicesInitialized) {
                         checkForLockedUpFunds();
+                        checkForInvalidMakerFeeTxs();
+                    }
                 },
-                () -> {
-                    walletInitialized.set(true);
-                });
+                () -> walletInitialized.set(true));
     }
 
 
     private void checkForLockedUpFunds() {
-        btcWalletService.getAddressEntriesForTrade().stream()
-                .filter(e -> tradeManager.getSetOfAllTradeIds().contains(e.getOfferId()) &&
-                        e.getContext() == AddressEntry.Context.MULTI_SIG)
-                .forEach(e -> {
-                    Coin balance = e.getCoinLockedInMultiSig();
-                    if (balance.isPositive()) {
-                        String message = Res.get("popup.warning.lockedUpFunds",
-                                formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
-                        log.warn(message);
-                        if (lockedUpFundsHandler != null) {
-                            lockedUpFundsHandler.accept(message);
+        // We check if there are locked up funds in failed or closed trades
+        try {
+            Set<String> setOfAllTradeIds = tradeManager.getSetOfFailedOrClosedTradeIdsFromLockedInFunds();
+            btcWalletService.getAddressEntriesForTrade().stream()
+                    .filter(e -> setOfAllTradeIds.contains(e.getOfferId()) &&
+                            e.getContext() == AddressEntry.Context.MULTI_SIG)
+                    .forEach(e -> {
+                        Coin balance = e.getCoinLockedInMultiSig();
+                        if (balance.isPositive()) {
+                            String message = Res.get("popup.warning.lockedUpFunds",
+                                    formatter.formatCoinWithCode(balance), e.getAddressString(), e.getOfferId());
+                            log.warn(message);
+                            if (lockedUpFundsHandler != null) {
+                                lockedUpFundsHandler.accept(message);
+                            }
                         }
-                    }
-                });
+                    });
+        } catch (TradeTxException e) {
+            log.warn(e.getMessage());
+            if (lockedUpFundsHandler != null) {
+                lockedUpFundsHandler.accept(e.getMessage());
+            }
+        }
+    }
+
+    private void checkForInvalidMakerFeeTxs() {
+        // We check if we have open offers with no confidence object at the maker fee tx. That can happen if the
+        // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
+        // resync.
+        openOfferManager.getObservableList().forEach(e -> {
+            String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
+            if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
+                String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",
+                        e.getOffer().getShortId(), offerFeePaymentTxId);
+                log.warn(message);
+                if (lockedUpFundsHandler != null) {
+                    lockedUpFundsHandler.accept(message);
+                }
+            }
+        });
     }
 
     private void checkForCorrectOSArchitecture() {
@@ -618,19 +677,68 @@ public class BisqSetup {
 
         arbitrationManager.onAllServicesInitialized();
         mediationManager.onAllServicesInitialized();
+        refundManager.onAllServicesInitialized();
         traderChatManager.onAllServicesInitialized();
 
         tradeManager.onAllServicesInitialized();
 
-        if (walletsSetup.downloadPercentageProperty().get() == 1)
+        if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
+            checkForInvalidMakerFeeTxs();
+        }
 
         openOfferManager.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
 
+        walletAppSetup.getRejectedTxException().addListener((observable, oldValue, newValue) -> {
+            // We delay as we might get the rejected tx error before we have completed the create offer protocol
+            UserThread.runAfter(() -> {
+                if (rejectedTxErrorMessageHandler != null && newValue != null && newValue.getTxId() != null) {
+                    String txId = newValue.getTxId();
+                    openOfferManager.getObservableList().stream()
+                            .filter(openOffer -> txId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
+                            .forEach(openOffer -> {
+                                // We delay to avoid concurrent modification exceptions
+                                UserThread.runAfter(() -> {
+                                    openOffer.getOffer().setErrorMessage(newValue.getMessage());
+                                    rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.openOffer.makerFeeTxRejected", openOffer.getId(), txId));
+                                    openOfferManager.removeOpenOffer(openOffer, () -> {
+                                        log.warn("We removed an open offer because the maker fee was rejected by the Bitcoin " +
+                                                "network. OfferId={}, txId={}", openOffer.getShortId(), txId);
+                                    }, log::warn);
+                                }, 1);
+                            });
+
+                    tradeManager.getTradableList().stream()
+                            .filter(trade -> trade.getOffer() != null)
+                            .forEach(trade -> {
+                                String details = null;
+                                if (txId.equals(trade.getDepositTxId())) {
+                                    details = Res.get("popup.warning.trade.txRejected.deposit");
+                                }
+                                if (txId.equals(trade.getOffer().getOfferFeePaymentTxId()) || txId.equals(trade.getTakerFeeTxId())) {
+                                    details = Res.get("popup.warning.trade.txRejected.tradeFee");
+                                }
+
+                                if (details != null) {
+                                    // We delay to avoid concurrent modification exceptions
+                                    String finalDetails = details;
+                                    UserThread.runAfter(() -> {
+                                        trade.setErrorMessage(newValue.getMessage());
+                                        rejectedTxErrorMessageHandler.accept(Res.get("popup.warning.trade.txRejected",
+                                                finalDetails, trade.getShortId(), txId));
+                                        tradeManager.addTradeToFailedTrades(trade);
+                                    }, 1);
+                                }
+                            });
+                }
+            }, 3);
+        });
+
         arbitratorManager.onAllServicesInitialized();
         mediatorManager.onAllServicesInitialized();
+        refundAgentManager.onAllServicesInitialized();
 
         alertManager.alertMessageProperty().addListener((observable, oldValue, newValue) ->
                 displayAlertIfPresent(newValue, false));
@@ -696,9 +804,7 @@ public class BisqSetup {
         voteResultService.getVoteResultExceptions().addListener((ListChangeListener<VoteResultException>) c -> {
             c.next();
             if (c.wasAdded() && voteResultExceptionHandler != null) {
-                c.getAddedSubList().forEach(e -> {
-                    voteResultExceptionHandler.accept(e);
-                });
+                c.getAddedSubList().forEach(e -> voteResultExceptionHandler.accept(e));
             }
         });
 
@@ -722,9 +828,62 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        String key = "bitcoinLocalhostNode";
-        if (bisqEnvironment.isBitcoinLocalhostNodeRunning() && preferences.showAgain(key) &&
-                displayLocalhostHandler != null)
-            displayLocalhostHandler.accept(key);
+        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, bisqEnvironment.isBitcoinLocalhostNodeRunning());
+    }
+
+    private void maybeShowAccountSigningStateInfo() {
+        String keySignedByArbitrator = "accountSignedByArbitrator";
+        String keySignedByPeer = "accountSignedByPeer";
+        String keyPeerLimitedLifted = "accountLimitLifted";
+        String keyPeerSigner = "accountPeerSigner";
+
+        // check signed witness on startup
+        checkSigningState(AccountAgeWitnessService.SignState.ARBITRATOR, keySignedByArbitrator, displaySignedByArbitratorHandler);
+        checkSigningState(AccountAgeWitnessService.SignState.PEER_INITIAL, keySignedByPeer, displaySignedByPeerHandler);
+        checkSigningState(AccountAgeWitnessService.SignState.PEER_LIMIT_LIFTED, keyPeerLimitedLifted, displayPeerLimitLiftedHandler);
+        checkSigningState(AccountAgeWitnessService.SignState.PEER_SIGNER, keyPeerSigner, displayPeerSignerHandler);
+
+        // check signed witness during runtime
+        p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(
+                payload -> {
+                    maybeTriggerDisplayHandler(keySignedByArbitrator, displaySignedByArbitratorHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.ARBITRATOR));
+                    maybeTriggerDisplayHandler(keySignedByPeer, displaySignedByPeerHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.PEER_INITIAL));
+                    maybeTriggerDisplayHandler(keyPeerLimitedLifted, displayPeerLimitLiftedHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.PEER_LIMIT_LIFTED));
+                    maybeTriggerDisplayHandler(keyPeerSigner, displayPeerSignerHandler,
+                            isSignedWitnessOfMineWithState(payload, AccountAgeWitnessService.SignState.PEER_SIGNER));
+                });
+    }
+
+    private void checkSigningState(AccountAgeWitnessService.SignState state,
+                                   String key, Consumer<String> displayHandler) {
+        boolean signingStateFound = p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().stream()
+                .anyMatch(payload -> isSignedWitnessOfMineWithState(payload, state));
+
+        maybeTriggerDisplayHandler(key, displayHandler, signingStateFound);
+    }
+
+    private boolean isSignedWitnessOfMineWithState(PersistableNetworkPayload payload,
+                                                   AccountAgeWitnessService.SignState state) {
+        if (payload instanceof SignedWitness && user.getPaymentAccounts() != null) {
+            // We know at this point that it is already added to the signed witness list
+            // Check if new signed witness is for one of my own accounts
+            return user.getPaymentAccounts().stream()
+                    .filter(a -> PaymentMethod.hasChargebackRisk(a.getPaymentMethod(), a.getTradeCurrencies()))
+                    .filter(a -> Arrays.equals(((SignedWitness) payload).getAccountAgeWitnessHash(),
+                            accountAgeWitnessService.getMyWitness(a.getPaymentAccountPayload()).getHash()))
+                    .anyMatch(a -> accountAgeWitnessService.getSignState(accountAgeWitnessService.getMyWitness(
+                            a.getPaymentAccountPayload())).equals(state));
+        }
+        return false;
+    }
+
+    private void maybeTriggerDisplayHandler(String key, Consumer<String> displayHandler, boolean signingStateFound) {
+        if (signingStateFound && preferences.showAgain(key) &&
+                displayHandler != null) {
+            displayHandler.accept(key);
+        }
     }
 }

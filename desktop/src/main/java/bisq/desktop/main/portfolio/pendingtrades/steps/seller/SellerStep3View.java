@@ -294,6 +294,9 @@ public class SellerStep3View extends TradeStepView {
                     }
                 }
                 message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.note");
+                if (model.isSignWitnessTrade(true)) {
+                    message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
+                }
                 new Popup<>()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
@@ -345,7 +348,11 @@ public class SellerStep3View extends TradeStepView {
 
             Optional<String> optionalHolderName = getOptionalHolderName();
             if (optionalHolderName.isPresent()) {
-                message = message + Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
+                message += Res.get("portfolio.pending.step3_seller.bankCheck", optionalHolderName.get(), part);
+            }
+
+            if (model.isSignWitnessTrade(true)) {
+                message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
             }
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
@@ -362,6 +369,8 @@ public class SellerStep3View extends TradeStepView {
         statusLabel.setText(Res.get("shared.sendingConfirmation"));
         if (!trade.isPayoutPublished())
             trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+
+        model.maybeSignWitness(true);
 
         model.dataModel.onFiatPaymentReceived(() -> {
             // In case the first send failed we got the support button displayed.

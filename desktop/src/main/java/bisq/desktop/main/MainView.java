@@ -31,6 +31,7 @@ import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.market.MarketView;
+import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -44,9 +45,9 @@ import bisq.desktop.util.Transitions;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.exceptions.BisqException;
 import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
-import bisq.core.locale.LanguageUtil;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -82,9 +83,9 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.geometry.NodeOrientation;
 
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
@@ -194,6 +195,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
         JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
         daoButtonWithBadge.getStyleClass().add("new");
+        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
+        accountButtonWithBadge.getStyleClass().add("new");
 
         Locale locale = GlobalSettings.getLocale();
         DecimalFormat currencyFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
@@ -254,11 +257,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.available");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double availableBalance = Double.parseDouble(
                             model.getAvailableBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(availableBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -278,11 +282,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.reserved");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double reservedBalance = Double.parseDouble(
                             model.getReservedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(reservedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -302,11 +307,12 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             protected Tooltip computeValue() {
                 String tooltipText = Res.get("mainView.balance.locked");
                 try {
+                    String preferredTradeCurrency = model.getPreferences().getPreferredTradeCurrency().getCode();
                     double lockedBalance = Double.parseDouble(
                             model.getLockedBalance().getValue().replace("BTC", ""));
-                    double marketPrice = Double.parseDouble(model.getMarketPrice().getValue());
+                    double marketPrice = Double.parseDouble(model.getMarketPrice(preferredTradeCurrency).getValue());
                     tooltipText += "\n" + currencyFormat.format(lockedBalance * marketPrice) +
-                            " " + model.getPreferences().getPreferredTradeCurrency().getCode();
+                            " " + preferredTradeCurrency;
                 } catch (NullPointerException | NumberFormatException e) {
                     // Either the balance or market price is not available yet
                 }
@@ -322,7 +328,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButton,
-                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButtonWithBadge);
+                getNavigationSpacer(), accountButtonWithBadge, getNavigationSpacer(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -366,6 +372,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
         setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
+        setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
 
         navigation.addListener(viewPath -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
@@ -375,12 +382,16 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             View view = viewLoader.load(viewClass);
             contentContainer.getChildren().setAll(view.getRoot());
 
-            navButtons.getToggles().stream()
+            try {
+            	navButtons.getToggles().stream()
                     .filter(toggle -> toggle instanceof NavButton)
                     .filter(button -> viewClass == ((NavButton) button).viewClass)
                     .findFirst()
                     .orElseThrow(() -> new BisqException("No button matching %s found", viewClass))
                     .setSelected(true);
+            } catch (BisqException e) {
+                navigation.navigateTo(MainView.class, MarketView.class, OfferBookChartView.class);
+			}
         });
 
         VBox splashScreen = createSplashScreen();

@@ -17,9 +17,8 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.NewBadge;
 import bisq.desktop.components.AutocompleteComboBox;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.Layout;
@@ -48,12 +47,9 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 
 import javafx.util.StringConverter;
 
@@ -120,19 +116,10 @@ public class AssetsForm extends PaymentMethodForm {
                 new Popup<>().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
         });
 
-        // add new badge for this new feature for this release
-        // TODO: remove it with 0.9.6+
         gridPane.getChildren().remove(tradeInstantCheckBox);
         tradeInstantCheckBox.setPadding(new Insets(0, 40, 0, 0));
 
-        NewBadge instantTradeNewsBadge = new NewBadge(tradeInstantCheckBox, INSTANT_TRADE_NEWS, preferences);
-        instantTradeNewsBadge.setAlignment(Pos.CENTER_LEFT);
-        instantTradeNewsBadge.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
-
-        GridPane.setRowIndex(instantTradeNewsBadge, gridRow);
-        GridPane.setHgrow(instantTradeNewsBadge, Priority.NEVER);
-        GridPane.setMargin(instantTradeNewsBadge, new Insets(10, 0, 0, 0));
-        gridPane.getChildren().add(instantTradeNewsBadge);
+        gridPane.getChildren().add(tradeInstantCheckBox);
 
         addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.altcoin.address"));

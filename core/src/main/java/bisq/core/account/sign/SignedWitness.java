@@ -26,6 +26,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.util.Utilities;
 
@@ -46,10 +47,24 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPayload, PersistableEnvelope,
         DateTolerantPayload, CapabilityRequiringPayload {
+
+    public enum VerificationMethod {
+        ARBITRATOR,
+        TRADE;
+
+        public static SignedWitness.VerificationMethod fromProto(protobuf.SignedWitness.VerificationMethod method) {
+            return ProtoUtil.enumFromProto(SignedWitness.VerificationMethod.class, method.name());
+        }
+
+        public static protobuf.SignedWitness.VerificationMethod toProtoMessage(SignedWitness.VerificationMethod method) {
+            return protobuf.SignedWitness.VerificationMethod.valueOf(method.name());
+        }
+    }
+
     private static final long TOLERANCE = TimeUnit.DAYS.toMillis(1);
 
-    private final boolean signedByArbitrator;
-    private final byte[] witnessHash;
+    private final VerificationMethod verificationMethod;
+    private final byte[] accountAgeWitnessHash;
     private final byte[] signature;
     private final byte[] signerPubKey;
     private final byte[] witnessOwnerPubKey;
@@ -58,15 +73,15 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
 
     transient private final byte[] hash;
 
-    public SignedWitness(boolean signedByArbitrator,
-                         byte[] witnessHash,
+    public SignedWitness(VerificationMethod verificationMethod,
+                         byte[] accountAgeWitnessHash,
                          byte[] signature,
                          byte[] signerPubKey,
                          byte[] witnessOwnerPubKey,
                          long date,
                          long tradeAmount) {
-        this.signedByArbitrator = signedByArbitrator;
-        this.witnessHash = witnessHash.clone();
+        this.verificationMethod = verificationMethod;
+        this.accountAgeWitnessHash = accountAgeWitnessHash.clone();
         this.signature = signature.clone();
         this.signerPubKey = signerPubKey.clone();
         this.witnessOwnerPubKey = witnessOwnerPubKey.clone();
@@ -80,7 +95,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         // same peer to add more security as if that one would be colluding it would be not detected anyway. The total
         // number of signed trades with different peers is still available and can be considered more valuable data for
         // security.
-        byte[] data = Utilities.concatenateByteArrays(witnessHash, signature);
+        byte[] data = Utilities.concatenateByteArrays(accountAgeWitnessHash, signature);
         data = Utilities.concatenateByteArrays(data, signerPubKey);
         hash = Hash.getSha256Ripemd160hash(data);
     }
@@ -93,8 +108,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     @Override
     public protobuf.PersistableNetworkPayload toProtoMessage() {
         final protobuf.SignedWitness.Builder builder = protobuf.SignedWitness.newBuilder()
-                .setSignedByArbitrator(signedByArbitrator)
-                .setWitnessHash(ByteString.copyFrom(witnessHash))
+                .setVerificationMethod(VerificationMethod.toProtoMessage(verificationMethod))
+                .setAccountAgeWitnessHash(ByteString.copyFrom(accountAgeWitnessHash))
                 .setSignature(ByteString.copyFrom(signature))
                 .setSignerPubKey(ByteString.copyFrom(signerPubKey))
                 .setWitnessOwnerPubKey(ByteString.copyFrom(witnessOwnerPubKey))
@@ -108,8 +123,9 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     }
 
     public static SignedWitness fromProto(protobuf.SignedWitness proto) {
-        return new SignedWitness(proto.getSignedByArbitrator(),
-                proto.getWitnessHash().toByteArray(),
+        return new SignedWitness(
+                SignedWitness.VerificationMethod.fromProto(proto.getVerificationMethod()),
+                proto.getAccountAgeWitnessHash().toByteArray(),
                 proto.getSignature().toByteArray(),
                 proto.getSignerPubKey().toByteArray(),
                 proto.getWitnessOwnerPubKey().toByteArray(),
@@ -124,7 +140,7 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
 
     @Override
     public boolean isDateInTolerance(Clock clock) {
-        // We don't allow older or newer then 1 day.
+        // We don't allow older or newer than 1 day.
         // Preventing forward dating is also important to protect against a sophisticated attack
         return Math.abs(new Date().getTime() - date) <= TOLERANCE;
     }
@@ -145,6 +161,9 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
         return hash;
     }
 
+    public boolean isSignedByArbitrator() {
+        return verificationMethod == VerificationMethod.ARBITRATOR;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -157,8 +176,8 @@ public class SignedWitness implements LazyProcessedPayload, PersistableNetworkPa
     @Override
     public String toString() {
         return "SignedWitness{" +
-                ",\n     signedByArbitrator=" + signedByArbitrator +
-                ",\n     witnessHash=" + Utilities.bytesAsHexString(witnessHash) +
+                ",\n     verificationMethod=" + verificationMethod +
+                ",\n     witnessHash=" + Utilities.bytesAsHexString(accountAgeWitnessHash) +
                 ",\n     signature=" + Utilities.bytesAsHexString(signature) +
                 ",\n     signerPubKey=" + Utilities.bytesAsHexString(signerPubKey) +
                 ",\n     witnessOwnerPubKey=" + Utilities.bytesAsHexString(witnessOwnerPubKey) +

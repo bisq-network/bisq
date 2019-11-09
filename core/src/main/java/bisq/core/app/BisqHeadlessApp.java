@@ -43,7 +43,7 @@ public class BisqHeadlessApp implements HeadlessApp {
     @Setter
     private GracefulShutDownHandler gracefulShutDownHandler;
     private boolean shutDownRequested;
-    private BisqSetup bisqSetup;
+    protected BisqSetup bisqSetup;
     private CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler;
     private TradeManager tradeManager;
 
@@ -54,7 +54,7 @@ public class BisqHeadlessApp implements HeadlessApp {
     public void startApplication() {
         try {
             bisqSetup = injector.getInstance(BisqSetup.class);
-            bisqSetup.addBisqSetupCompleteListener(this);
+            bisqSetup.addBisqSetupListener(this);
 
             corruptedDatabaseFilesHandler = injector.getInstance(CorruptedDatabaseFilesHandler.class);
             tradeManager = injector.getInstance(TradeManager.class);
@@ -93,7 +93,8 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setDisplaySecurityRecommendationHandler(key -> log.info("onDisplaySecurityRecommendationHandler"));
         bisqSetup.setDisplayLocalhostHandler(key -> log.info("onDisplayLocalhostHandler"));
         bisqSetup.setWrongOSArchitectureHandler(msg -> log.error("onWrongOSArchitectureHandler. msg={}", msg));
-        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException));
+        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException.toString()));
+        bisqSetup.setRejectedTxErrorMessageHandler(errorMessage -> log.warn("setRejectedTxErrorMessageHandler. errorMessage={}", errorMessage));
 
         //TODO move to bisqSetup
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));

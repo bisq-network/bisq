@@ -125,6 +125,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private int ignoreDustThreshold = 600;
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent(new CryptoCurrencyAccount());
     private int blockNotifyPort;
+    private boolean tacAcceptedV120;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +186,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
                 .setIgnoreDustThreshold(ignoreDustThreshold)
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
-                .setBlockNotifyPort(blockNotifyPort);
+                .setBlockNotifyPort(blockNotifyPort)
+                .setTacAcceptedV120(tacAcceptedV120);
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
         Optional.ofNullable(offerBookChartScreenCurrencyCode).ifPresent(builder::setOfferBookChartScreenCurrencyCode);
@@ -271,7 +273,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getBuyerSecurityDepositAsPercent(),
                 proto.getIgnoreDustThreshold(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
-                proto.getBlockNotifyPort());
+                proto.getBlockNotifyPort(),
+                proto.getTacAcceptedV120());
 
     }
 }

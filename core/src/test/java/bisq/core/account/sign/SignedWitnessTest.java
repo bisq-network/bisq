@@ -13,6 +13,8 @@ import java.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
 
+import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR;
+import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -33,17 +35,17 @@ public class SignedWitnessTest {
 
     @Test
     public void testProtoRoundTrip() {
-        SignedWitness signedWitness = new SignedWitness(true, witnessHash, witnessHashSignature, arbitrator1Key.getPubKey(), witnessOwner1PubKey, Instant.now().getEpochSecond(), 100);
+        SignedWitness signedWitness = new SignedWitness(ARBITRATOR, witnessHash, witnessHashSignature, arbitrator1Key.getPubKey(), witnessOwner1PubKey, Instant.now().getEpochSecond(), 100);
         assertEquals(signedWitness, SignedWitness.fromProto(signedWitness.toProtoMessage().getSignedWitness()));
     }
 
     @Test
     public void isImmutable() {
         byte[] signerPubkey = arbitrator1Key.getPubKey();
-        SignedWitness signedWitness = new SignedWitness(true, witnessHash, witnessHashSignature, signerPubkey, witnessOwner1PubKey, Instant.now().getEpochSecond(), 100);
-        byte[] originalWitnessHash = signedWitness.getWitnessHash().clone();
+        SignedWitness signedWitness = new SignedWitness(TRADE, witnessHash, witnessHashSignature, signerPubkey, witnessOwner1PubKey, Instant.now().getEpochSecond(), 100);
+        byte[] originalWitnessHash = signedWitness.getAccountAgeWitnessHash().clone();
         witnessHash[0] += 1;
-        assertArrayEquals(originalWitnessHash, signedWitness.getWitnessHash());
+        assertArrayEquals(originalWitnessHash, signedWitness.getAccountAgeWitnessHash());
 
         byte[] originalWitnessHashSignature = signedWitness.getSignature().clone();
         witnessHashSignature[0] += 1;

@@ -22,6 +22,8 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
@@ -52,6 +54,7 @@ public class Balances {
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
+    private final RefundManager refundManager;
 
     @Getter
     private final ObjectProperty<Coin> availableBalance = new SimpleObjectProperty<>();
@@ -65,17 +68,20 @@ public class Balances {
                     BtcWalletService btcWalletService,
                     OpenOfferManager openOfferManager,
                     ClosedTradableManager closedTradableManager,
-                    FailedTradesManager failedTradesManager) {
+                    FailedTradesManager failedTradesManager,
+                    RefundManager refundManager) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
+        this.refundManager = refundManager;
     }
 
     public void onAllServicesInitialized() {
         openOfferManager.getObservableList().addListener((ListChangeListener<OpenOffer>) c -> updateBalance());
         tradeManager.getTradableList().addListener((ListChangeListener<Trade>) change -> updateBalance());
+        refundManager.getDisputesAsObservableList().addListener((ListChangeListener<Dispute>) c -> updateBalance());
         btcWalletService.addBalanceListener(new BalanceListener() {
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
@@ -113,8 +119,8 @@ public class Balances {
     }
 
     private void updateLockedBalance() {
-        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
-        lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
+        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getTradesStreamWithFundsLockedIn(), failedTradesManager.getTradesStreamWithFundsLockedIn());
+        lockedTrades = Stream.concat(lockedTrades, tradeManager.getTradesStreamWithFundsLockedIn());
         long sum = lockedTrades.map(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG)
                 .orElse(null))
                 .filter(Objects::nonNull)

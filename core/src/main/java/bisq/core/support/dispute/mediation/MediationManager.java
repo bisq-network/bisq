@@ -20,6 +20,7 @@ package bisq.core.support.dispute.mediation;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.SupportType;
@@ -43,21 +44,21 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -65,14 +66,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class MediationManager extends DisputeManager<MediationDisputeList> {
-
-    // The date when mediation is activated
-    private static final Date MEDIATION_ACTIVATED_DATE = Utilities.getUTCDate(2019, GregorianCalendar.SEPTEMBER, 26);
-
-    public static boolean isMediationActivated() {
-        return new Date().after(MEDIATION_ACTIVATED_DATE);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -141,6 +134,22 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         });
     }
 
+    @Override
+    protected String getDisputeInfo(Dispute dispute) {
+        String role = Res.get("shared.mediator").toLowerCase();
+        String link = "https://docs.bisq.network/trading-rules.html#mediation";
+        return Res.get("support.initialInfo", role, role, link);
+    }
+
+    @Override
+    protected String getDisputeIntroForPeer(String disputeInfo) {
+        return Res.get("support.peerOpenedDisputeForMediation", disputeInfo, Version.VERSION);
+    }
+
+    @Override
+    protected String getDisputeIntroForDisputeCreator(String disputeInfo) {
+        return Res.get("support.youOpenedDisputeForMediation", disputeInfo, Version.VERSION);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
@@ -205,6 +214,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Nullable
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getMediatorNodeAddress();

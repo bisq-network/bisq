@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.funds.transactions;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Trade;
 
 import org.bitcoinj.core.Transaction;
@@ -42,15 +44,19 @@ public class TransactionAwareTradeTest {
     private ArbitrationManager arbitrationManager;
     private Trade delegate;
     private TransactionAwareTradable trade;
+    private RefundManager refundManager;
+    private BtcWalletService btcWalletService;
 
     @Before
     public void setUp() {
         this.transaction = mock(Transaction.class);
         when(transaction.getHashAsString()).thenReturn(XID);
 
-        this.delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
-        this.arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
-        this.trade = new TransactionAwareTrade(this.delegate, this.arbitrationManager);
+        delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
+        arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
+        refundManager = mock(RefundManager.class, RETURNS_DEEP_STUBS);
+        btcWalletService = mock(BtcWalletService.class, RETURNS_DEEP_STUBS);
+        trade = new TransactionAwareTrade(delegate, arbitrationManager, refundManager, btcWalletService, null);
     }
 
     @Test

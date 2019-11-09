@@ -120,6 +120,12 @@ public class BuyerStep4View extends TradeStepView {
         withdrawAddressTextField.setManaged(false);
         withdrawAddressTextField.setVisible(false);
 
+        if (model.isSignWitnessTrade(false)) {
+            Label signLabel = new Label(Res.get("portfolio.pending.step5_buyer.signer"));
+            GridPane.setRowIndex(signLabel, ++gridRow);
+            gridPane.getChildren().add(signLabel);
+        }
+
         HBox hBox = new HBox();
         hBox.setSpacing(10);
         useSavingsWalletButton = new AutoTooltipButton(Res.get("portfolio.pending.step5_buyer.moveToBisqWallet"));
@@ -135,10 +141,14 @@ public class BuyerStep4View extends TradeStepView {
         gridPane.getChildren().add(hBox);
 
         useSavingsWalletButton.setOnAction(e -> {
+            model.maybeSignWitness(false);
             handleTradeCompleted();
             model.dataModel.tradeManager.addTradeToClosedTrades(trade);
         });
-        withdrawToExternalWalletButton.setOnAction(e -> onWithdrawal());
+        withdrawToExternalWalletButton.setOnAction(e -> {
+            model.maybeSignWitness(false);
+            onWithdrawal();
+        });
 
         String key = "tradeCompleted" + trade.getId();
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {

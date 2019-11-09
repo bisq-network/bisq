@@ -20,6 +20,7 @@ package bisq.desktop.main.dao.bonding.bonds;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.util.FormBuilder;
@@ -37,7 +38,6 @@ import bisq.core.util.BsqFormatter;
 import javax.inject.Inject;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
-import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
@@ -323,7 +323,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
 
                                 if (item != null && !empty) {
                                     String lockupTxId = item.getLockupTxId();
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(lockupTxId, MaterialDesignIcon.LINK);
+                                    hyperlinkWithIcon = new ExternalHyperlink(lockupTxId);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId, preferences));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                     if (item.getLockupDateString().equals("-")) hyperlinkWithIcon.hideIcon();

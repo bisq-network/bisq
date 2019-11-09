@@ -120,20 +120,15 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         InputTextField sellerPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "sellerPubKeyAsHex");
         InputTextField arbitratorPubKeyAsHex = addInputTextField(gridPane, ++rowIndex, "arbitratorPubKeyAsHex");
 
-        InputTextField P2SHMultiSigOutputScript = addInputTextField(gridPane, ++rowIndex, "P2SHMultiSigOutputScript");
-
-
         // Notes:
         // Open with alt+g and enable DEV mode
         // Priv key is only visible if pw protection is removed (wallet details data (alt+j))
-        // Take P2SHMultiSigOutputScript from depositTx in blockexplorer
         // Take missing buyerPubKeyAsHex and sellerPubKeyAsHex from contract data!
         // Lookup sellerPrivateKeyAsHex associated with sellerPubKeyAsHex (or buyers) in wallet details data
         // sellerPubKeys/buyerPubKeys are auto generated if used the fields below
         // Never set the priv arbitr. key here!
 
         depositTxHex.setText("");
-        P2SHMultiSigOutputScript.setText("");
 
         buyerPayoutAmount.setText("");
         sellerPayoutAmount.setText("");
@@ -158,9 +153,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 log.error("onSuccess");
                 UserThread.execute(() -> {
                     String txId = result != null ? result.getHashAsString() : "null";
-                    new Popup<>()
-                            .information("Transaction successful published. Transaction ID: " + txId)
-                            .show();
+                    new Popup<>().information("Transaction successful published. Transaction ID: " + txId).show();
                 });
             }
 
@@ -173,7 +166,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         onAction(() -> {
             if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
                 try {
-                    tradeWalletService.emergencySignAndPublishPayoutTx(depositTxHex.getText(),
+                    tradeWalletService.emergencySignAndPublishPayoutTxFrom2of3MultiSig(depositTxHex.getText(),
                             Coin.parseCoin(buyerPayoutAmount.getText()),
                             Coin.parseCoin(sellerPayoutAmount.getText()),
                             Coin.parseCoin(arbitratorPayoutAmount.getText()),
@@ -187,7 +180,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                             buyerPubKeyAsHex.getText(),
                             sellerPubKeyAsHex.getText(),
                             arbitratorPubKeyAsHex.getText(),
-                            P2SHMultiSigOutputScript.getText(),
                             callback);
                 } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                     log.error(e.toString());

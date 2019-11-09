@@ -26,6 +26,7 @@ import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -44,7 +45,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -126,13 +126,6 @@ public class User implements PersistedDataHost {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /*  public Optional<TradeCurrency> getPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
-          return getPaymentAccounts().stream()
-                  .flatMap(e -> e.getTradeCurrencies().stream())
-                  .filter(e -> e.equals(tradeCurrency))
-                  .findFirst();
-      }*/
-
     @Nullable
     public Arbitrator getAcceptedArbitratorByAddress(NodeAddress nodeAddress) {
         final List<Arbitrator> acceptedArbitrators = userPayload.getAcceptedArbitrators();
@@ -160,6 +153,19 @@ public class User implements PersistedDataHost {
     }
 
     @Nullable
+    public RefundAgent getAcceptedRefundAgentByAddress(NodeAddress nodeAddress) {
+        final List<RefundAgent> acceptedRefundAgents = userPayload.getAcceptedRefundAgents();
+        if (acceptedRefundAgents != null) {
+            Optional<RefundAgent> refundAgentOptional = acceptedRefundAgents.stream()
+                    .filter(e -> e.getNodeAddress().equals(nodeAddress))
+                    .findFirst();
+            return refundAgentOptional.orElse(null);
+        } else {
+            return null;
+        }
+    }
+
+    @Nullable
     public PaymentAccount findFirstPaymentAccountWithCurrency(TradeCurrency tradeCurrency) {
         if (userPayload.getPaymentAccounts() != null) {
             for (PaymentAccount paymentAccount : userPayload.getPaymentAccounts()) {
@@ -171,21 +177,6 @@ public class User implements PersistedDataHost {
             return null;
         } else {
             return null;
-        }
-    }
-
-    public boolean hasMatchingLanguage(Arbitrator arbitrator) {
-        final List<String> codes = userPayload.getAcceptedLanguageLocaleCodes();
-        if (arbitrator != null && codes != null) {
-            for (String acceptedCode : codes) {
-                for (String itemCode : arbitrator.getLanguageCodes()) {
-                    if (acceptedCode.equals(itemCode))
-                        return true;
-                }
-            }
-            return false;
-        } else {
-            return false;
         }
     }
 
@@ -222,26 +213,6 @@ public class User implements PersistedDataHost {
             persist();
     }
 
-    public boolean addAcceptedLanguageLocale(String localeCode) {
-        final List<String> codes = userPayload.getAcceptedLanguageLocaleCodes();
-        if (codes != null && !codes.contains(localeCode)) {
-            boolean changed = codes.add(localeCode);
-            if (changed)
-                persist();
-            return changed;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean removeAcceptedLanguageLocale(String languageLocaleCode) {
-        boolean changed = userPayload.getAcceptedLanguageLocaleCodes() != null &&
-                userPayload.getAcceptedLanguageLocaleCodes().remove(languageLocaleCode);
-        if (changed)
-            persist();
-        return changed;
-    }
-
     public boolean addAcceptedArbitrator(Arbitrator arbitrator) {
         final List<Arbitrator> arbitrators = userPayload.getAcceptedArbitrators();
         if (arbitrators != null && !arbitrators.contains(arbitrator) && !isMyOwnRegisteredArbitrator(arbitrator)) {
@@ -253,19 +224,6 @@ public class User implements PersistedDataHost {
             return false;
         }
     }
-
-    public boolean addAcceptedMediator(Mediator mediator) {
-        final List<Mediator> mediators = userPayload.getAcceptedMediators();
-        if (mediators != null && !mediators.contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
-            boolean changed = mediators.add(mediator);
-            if (changed)
-                persist();
-            return changed;
-        } else {
-            return false;
-        }
-    }
-
 
     public void removeAcceptedArbitrator(Arbitrator arbitrator) {
         if (userPayload.getAcceptedArbitrators() != null) {
@@ -282,6 +240,18 @@ public class User implements PersistedDataHost {
         }
     }
 
+    public boolean addAcceptedMediator(Mediator mediator) {
+        final List<Mediator> mediators = userPayload.getAcceptedMediators();
+        if (mediators != null && !mediators.contains(mediator) && !isMyOwnRegisteredMediator(mediator)) {
+            boolean changed = mediators.add(mediator);
+            if (changed)
+                persist();
+            return changed;
+        } else {
+            return false;
+        }
+    }
+
     public void removeAcceptedMediator(Mediator mediator) {
         if (userPayload.getAcceptedMediators() != null) {
             boolean changed = userPayload.getAcceptedMediators().remove(mediator);
@@ -293,6 +263,33 @@ public class User implements PersistedDataHost {
     public void clearAcceptedMediators() {
         if (userPayload.getAcceptedMediators() != null) {
             userPayload.getAcceptedMediators().clear();
+            persist();
+        }
+    }
+
+    public boolean addAcceptedRefundAgent(RefundAgent refundAgent) {
+        final List<RefundAgent> refundAgents = userPayload.getAcceptedRefundAgents();
+        if (refundAgents != null && !refundAgents.contains(refundAgent) && !isMyOwnRegisteredRefundAgent(refundAgent)) {
+            boolean changed = refundAgents.add(refundAgent);
+            if (changed)
+                persist();
+            return changed;
+        } else {
+            return false;
+        }
+    }
+
+    public void removeAcceptedRefundAgent(RefundAgent refundAgent) {
+        if (userPayload.getAcceptedRefundAgents() != null) {
+            boolean changed = userPayload.getAcceptedRefundAgents().remove(refundAgent);
+            if (changed)
+                persist();
+        }
+    }
+
+    public void clearAcceptedRefundAgents() {
+        if (userPayload.getAcceptedRefundAgents() != null) {
+            userPayload.getAcceptedRefundAgents().clear();
             persist();
         }
     }
@@ -314,6 +311,11 @@ public class User implements PersistedDataHost {
 
     public void setRegisteredMediator(@Nullable Mediator mediator) {
         userPayload.setRegisteredMediator(mediator);
+        persist();
+    }
+
+    public void setRegisteredRefundAgent(@Nullable RefundAgent refundAgent) {
+        userPayload.setRegisteredRefundAgent(refundAgent);
         persist();
     }
 
@@ -385,6 +387,12 @@ public class User implements PersistedDataHost {
         return paymentAccountsAsObservable;
     }
 
+
+    /**
+     * If this user is an arbitrator it returns the registered arbitrator.
+     *
+     * @return The arbitrator registered for this user
+     */
     @Nullable
     public Arbitrator getRegisteredArbitrator() {
         return userPayload.getRegisteredArbitrator();
@@ -395,10 +403,26 @@ public class User implements PersistedDataHost {
         return userPayload.getRegisteredMediator();
     }
 
+    @Nullable
+    public RefundAgent getRegisteredRefundAgent() {
+        return userPayload.getRegisteredRefundAgent();
+    }
+
+
     //TODO
     @Nullable
     public List<Arbitrator> getAcceptedArbitrators() {
         return userPayload.getAcceptedArbitrators();
+    }
+
+    @Nullable
+    public List<Mediator> getAcceptedMediators() {
+        return userPayload.getAcceptedMediators();
+    }
+
+    @Nullable
+    public List<RefundAgent> getAcceptedRefundAgents() {
+        return userPayload.getAcceptedRefundAgents();
     }
 
     @Nullable
@@ -407,8 +431,13 @@ public class User implements PersistedDataHost {
     }
 
     @Nullable
-    public List<Mediator> getAcceptedMediators() {
-        return userPayload.getAcceptedMediators();
+    public List<NodeAddress> getAcceptedMediatorAddresses() {
+        return userPayload.getAcceptedMediators() != null ? userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList()) : null;
+    }
+
+    @Nullable
+    public List<NodeAddress> getAcceptedRefundAgentAddresses() {
+        return userPayload.getAcceptedRefundAgents() != null ? userPayload.getAcceptedRefundAgents().stream().map(RefundAgent::getNodeAddress).collect(Collectors.toList()) : null;
     }
 
     public boolean hasAcceptedArbitrators() {
@@ -419,13 +448,8 @@ public class User implements PersistedDataHost {
         return getAcceptedMediators() != null && !getAcceptedMediators().isEmpty();
     }
 
-    @Nullable
-    public List<NodeAddress> getAcceptedMediatorAddresses() {
-        return userPayload.getAcceptedMediators() != null ? userPayload.getAcceptedMediators().stream().map(Mediator::getNodeAddress).collect(Collectors.toList()) : null;
-    }
-
-    public List<String> getAcceptedLanguageLocaleCodes() {
-        return userPayload.getAcceptedLanguageLocaleCodes() != null ? userPayload.getAcceptedLanguageLocaleCodes() : new ArrayList<>();
+    public boolean hasAcceptedRefundAgents() {
+        return getAcceptedRefundAgents() != null && !getAcceptedRefundAgents().isEmpty();
     }
 
     @Nullable
@@ -449,6 +473,10 @@ public class User implements PersistedDataHost {
 
     public boolean isMyOwnRegisteredMediator(Mediator mediator) {
         return mediator.equals(userPayload.getRegisteredMediator());
+    }
+
+    public boolean isMyOwnRegisteredRefundAgent(RefundAgent refundAgent) {
+        return refundAgent.equals(userPayload.getRegisteredRefundAgent());
     }
 
     public List<MarketAlertFilter> getMarketAlertFilters() {

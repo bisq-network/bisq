@@ -33,8 +33,6 @@ import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class TradeStatistics2StorageService extends MapStoreService<TradeStatistics2Store, PersistableNetworkPayload> {
     private static final String FILE_NAME = "TradeStatistics2Store";
@@ -83,8 +81,5 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
     @Override
     protected void readStore() {
         super.readStore();
-        checkArgument(store instanceof TradeStatistics2Store,
-                "Store is not instance of TradeStatistics2Store. That can happen if the ProtoBuffer " +
-                        "file got changed. We clear the data store and recreated it again.");
     }
 }

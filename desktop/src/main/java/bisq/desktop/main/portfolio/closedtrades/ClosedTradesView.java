@@ -32,8 +32,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
-import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Contract;
@@ -43,8 +41,6 @@ import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.NodeAddress;
-
-import org.bitcoinj.core.Coin;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
@@ -78,6 +74,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.function.Function;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
@@ -261,6 +258,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 				txFee2 = tradable2.getOffer().getSellerSecurityDeposit();
 			return txFee1 != null && txFee2 != null ? txFee1.compareTo(txFee2) : 0;
 		});
+
         stateColumn.setComparator(Comparator.comparing(model::getState));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
@@ -274,6 +272,20 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         HBox.setHgrow(spacer, Priority.ALWAYS);
         exportButton.updateText(Res.get("shared.exportCSV"));
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
+    }
+
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparing(Function<Tradable, T> keyExtractor) {
+        return Comparator.comparing(
+                o -> o.getTradable() != null ? keyExtractor.apply(o.getTradable()) : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        );
+    }
+
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<Trade, T> keyExtractor) {
+        return Comparator.comparing(
+                o -> o.getTradable() instanceof Trade ? keyExtractor.apply((Trade) o.getTradable()) : null,
+                Comparator.nullsFirst(Comparator.naturalOrder())
+        );
     }
 
     @Override

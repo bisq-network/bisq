@@ -17,22 +17,12 @@
 
 package bisq.common.util;
 
-import java.util.Arrays;
-
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class UtilitiesTest {
-
-    @Test
-    public void testConcatenateByteArrays() {
-        assertTrue(Arrays.equals(new byte[]{0x01, 0x02}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02})));
-        assertTrue(Arrays.equals(new byte[]{0x01, 0x02, 0x03}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02}, new byte[]{0x03})));
-        assertTrue(Arrays.equals(new byte[]{0x01, 0x02, 0x03, 0x04}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02}, new byte[]{0x03}, new byte[]{0x04})));
-        assertTrue(Arrays.equals(new byte[]{0x01, 0x02, 0x03, 0x04, 0x05}, Utilities.concatenateByteArrays(new byte[]{0x01}, new byte[]{0x02}, new byte[]{0x03}, new byte[]{0x04}, new byte[]{0x05})));
-    }
 
     @Test
     public void testToStringList() {

@@ -130,11 +130,6 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         removeBindings();
     }
 
-    @Override
-    protected void showFiatRoundingInfoPopup() {
-        // don't show it again as it was already shown when creating the offer in the first place
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
