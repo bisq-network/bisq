@@ -188,7 +188,7 @@ public class P2PDataStorageTest {
                                             boolean expectedReturnValue,
                                             boolean expectedStateChange) {
 
-            SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+            SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
             boolean addResult = this.doAdd(protectedStorageEntry);
 
@@ -202,7 +202,7 @@ public class P2PDataStorageTest {
                                                boolean expectedReturnValue,
                                                boolean expectInternalStateChange) {
 
-            SavedTestState beforeState = new SavedTestState(this.testState, entry);
+            SavedTestState beforeState = this.testState.saveTestState(entry);
 
             boolean addResult = this.doRemove(entry);
 
@@ -460,7 +460,7 @@ public class P2PDataStorageTest {
         }
 
         void doRefreshTTLAndVerify(RefreshOfferMessage refreshOfferMessage, boolean expectedReturnValue, boolean expectStateChange) {
-            SavedTestState beforeState = new SavedTestState(this.testState, refreshOfferMessage);
+            SavedTestState beforeState = this.testState.saveTestState(refreshOfferMessage);
 
             boolean returnValue = this.doRefreshTTL(refreshOfferMessage);
 

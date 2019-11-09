@@ -96,7 +96,7 @@ public class P2PDataStoreDisconnectTest {
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
@@ -111,7 +111,7 @@ public class P2PDataStoreDisconnectTest {
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, TimeUnit.DAYS.toMillis(90));
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
@@ -126,7 +126,7 @@ public class P2PDataStoreDisconnectTest {
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
         this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
 
@@ -141,7 +141,7 @@ public class P2PDataStoreDisconnectTest {
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
         // Increment the time by 1 hour which will put the protectedStorageState outside TTL
         this.testState.incrementClock();

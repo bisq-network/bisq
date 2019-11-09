@@ -292,6 +292,18 @@ public class TestState {
         return payloadMock;
     }
 
+    SavedTestState saveTestState(PersistableNetworkPayload persistableNetworkPayload) {
+        return new SavedTestState(this, persistableNetworkPayload);
+    }
+
+    SavedTestState saveTestState(ProtectedStorageEntry protectedStorageEntry) {
+        return new SavedTestState(this, protectedStorageEntry);
+    }
+
+    SavedTestState saveTestState(RefreshOfferMessage refreshOfferMessage) {
+        return new SavedTestState(this, refreshOfferMessage);
+    }
+
     /**
      * Wrapper object for TestState state that needs to be saved for future validation. Used in multiple tests
      * to verify that the state before and after an operation matched the expectation.
@@ -314,13 +326,13 @@ public class TestState {
             this.state.resetState();
         }
 
-        SavedTestState(TestState testState, PersistableNetworkPayload persistableNetworkPayload) {
+        private SavedTestState(TestState testState, PersistableNetworkPayload persistableNetworkPayload) {
             this(testState);
             P2PDataStorage.ByteArray hash = new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash());
             this.persistableNetworkPayloadBeforeOp = testState.mockedStorage.getAppendOnlyDataStoreMap().get(hash);
         }
 
-        SavedTestState(TestState testState, ProtectedStorageEntry protectedStorageEntry) {
+        private SavedTestState(TestState testState, ProtectedStorageEntry protectedStorageEntry) {
             this(testState);
 
             P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
@@ -332,7 +344,7 @@ public class TestState {
             this.creationTimestampBeforeUpdate = (this.protectedStorageEntryBeforeOp != null) ? this.protectedStorageEntryBeforeOp.getCreationTimeStamp() : 0;
         }
 
-        SavedTestState(TestState testState, RefreshOfferMessage refreshOfferMessage) {
+        private SavedTestState(TestState testState, RefreshOfferMessage refreshOfferMessage) {
             this(testState);
 
             P2PDataStorage.ByteArray hashMapHash = new P2PDataStorage.ByteArray(refreshOfferMessage.getHashOfPayload());

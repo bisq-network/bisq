@@ -44,7 +44,7 @@ public class P2PDataStorageRemoveExpiredTest {
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
@@ -58,7 +58,7 @@ public class P2PDataStorageRemoveExpiredTest {
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
@@ -75,7 +75,7 @@ public class P2PDataStorageRemoveExpiredTest {
         // Increment the clock by an hour which will cause the Payloads to be outside the TTL range
         this.testState.incrementClock();
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
@@ -89,7 +89,7 @@ public class P2PDataStorageRemoveExpiredTest {
         ProtectedStorageEntry protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
@@ -106,7 +106,7 @@ public class P2PDataStorageRemoveExpiredTest {
         // Increment the clock by an hour which will cause the Payloads to be outside the TTL range
         this.testState.incrementClock();
 
-        SavedTestState beforeState = new SavedTestState(this.testState, protectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, true, false, false, false);
@@ -148,17 +148,17 @@ public class P2PDataStorageRemoveExpiredTest {
         this.testState.clockFake.increment(TimeUnit.DAYS.toMillis(P2PDataStorage.PURGE_AGE_DAYS + 1 - initialClockIncrement));
 
         // The first entry (11 days old) should be purged
-        SavedTestState beforeState = new SavedTestState(this.testState, purgedProtectedStorageEntry);
+        SavedTestState beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
         this.testState.mockedStorage.removeExpiredEntries();
         this.testState.verifyProtectedStorageRemove(beforeState, purgedProtectedStorageEntry, true, false, false, false);
 
         // Which means that an addition of a purged entry should succeed.
-        beforeState = new SavedTestState(this.testState, purgedProtectedStorageEntry);
+        beforeState = this.testState.saveTestState(purgedProtectedStorageEntry);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(purgedProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
         this.testState.verifyProtectedStorageAdd(beforeState, purgedProtectedStorageEntry, true, false);
 
         // The second entry (5 days old) should still exist which means trying to add it again should fail.
-        beforeState = new SavedTestState(this.testState, keepProtectedStorageEntry);
+        beforeState = this.testState.saveTestState(keepProtectedStorageEntry);
         Assert.assertFalse(this.testState.mockedStorage.addProtectedStorageEntry(keepProtectedStorageEntry, TestState.getTestNodeAddress(), null, false));
         this.testState.verifyProtectedStorageAdd(beforeState, keepProtectedStorageEntry, false, false);
     }

@@ -75,7 +75,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
         }
 
         void doAddAndVerify(PersistableNetworkPayload persistableNetworkPayload, boolean expectedReturnValue, boolean expectedStateChange) {
-            SavedTestState beforeState = new SavedTestState(this.testState, persistableNetworkPayload);
+            SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
 
             if (this.testCase == TestCase.INIT) {
                 Assert.assertEquals(expectedReturnValue, this.testState.mockedStorage.addPersistableNetworkPayloadFromInitialRequest(persistableNetworkPayload));
