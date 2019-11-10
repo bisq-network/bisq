@@ -305,60 +305,77 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
 
-        if (size > maxConnections) {
-            log.info("We have too many connections open. " +
-                    "Lets try first to remove the inbound connections of type PEER.");
-            List<Connection> candidates = allConnections.stream()
-                    .filter(e -> e instanceof InboundConnection)
+        if (size <= maxConnections) {
+            log.debug("We have not exceeded the maxConnections limit of {} " +
+                    "so don't need to close any connections.", size);
+            return false;
+        }
+
+        log.info("We have too many connections open. " +
+                "Lets try first to remove the inbound connections of type PEER.");
+        List<Connection> candidates = allConnections.stream()
+                .filter(e -> e instanceof InboundConnection)
+                .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
+                .collect(Collectors.toList());
+
+        if (candidates.isEmpty()) {
+            log.info("No candidates found. We check if we exceed our " +
+                    "maxConnectionsPeer limit of {}", maxConnectionsPeer);
+            if (size <= maxConnectionsPeer) {
+                log.info("We have not exceeded maxConnectionsPeer limit of {} " +
+                        "so don't need to close any connections", maxConnectionsPeer);
+                return false;
+            }
+
+            log.info("We have exceeded maxConnectionsPeer limit of {}. " +
+                    "Lets try to remove ANY connection of type PEER.", maxConnectionsPeer);
+            candidates = allConnections.stream()
                     .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
                     .collect(Collectors.toList());
 
             if (candidates.isEmpty()) {
                 log.info("No candidates found. We check if we exceed our " +
-                        "maxConnectionsPeer limit of {}", maxConnectionsPeer);
-                if (size > maxConnectionsPeer) {
-                    log.info("Lets try to remove ANY connection of type PEER.");
-                    candidates = allConnections.stream()
-                            .filter(e -> e.getPeerType() == Connection.PeerType.PEER)
-                            .collect(Collectors.toList());
+                        "maxConnectionsNonDirect limit of {}", maxConnectionsNonDirect);
+                if (size <= maxConnectionsNonDirect) {
+                    log.info("We have not exceeded maxConnectionsNonDirect limit of {} " +
+                            "so don't need to close any connections", maxConnectionsNonDirect);
+                    return false;
+                }
 
-                    if (candidates.isEmpty()) {
-                        log.debug("No candidates found. We check if we exceed our " +
-                                "maxConnectionsNonDirect limit of {}", maxConnectionsNonDirect);
-                        if (size > maxConnectionsNonDirect) {
-                            log.info("Lets try to remove any connection which is not of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.");
-                            candidates = allConnections.stream()
-                                    .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER && e.getPeerType() != Connection.PeerType.INITIAL_DATA_REQUEST)
-                                    .collect(Collectors.toList());
+                log.info("We have exceeded maxConnectionsNonDirect limit of {} " +
+                        "Lets try to remove any connection which is not " +
+                        "of type DIRECT_MSG_PEER or INITIAL_DATA_REQUEST.", maxConnectionsNonDirect);
+                candidates = allConnections.stream()
+                        .filter(e -> e.getPeerType() != Connection.PeerType.DIRECT_MSG_PEER &&
+                                e.getPeerType() != Connection.PeerType.INITIAL_DATA_REQUEST)
+                        .collect(Collectors.toList());
 
-                            if (candidates.isEmpty()) {
-                                log.debug("No candidates found. We check if we exceed our " +
-                                        "maxConnectionsAbsolute limit of {}", maxConnectionsAbsolute);
-                                if (size > maxConnectionsAbsolute) {
-                                    log.info("We reached abs. max. connections. Lets try to remove ANY connection.");
-                                    candidates = new ArrayList<>(allConnections);
-                                }
-                            }
-                        }
+                if (candidates.isEmpty()) {
+                    log.info("No candidates found. We check if we exceed our " +
+                            "maxConnectionsAbsolute limit of {}", maxConnectionsAbsolute);
+                    if (size <= maxConnectionsAbsolute) {
+                        log.info("We have not exceeded maxConnectionsAbsolute limit of {} " +
+                                "so don't need to close any connections", maxConnectionsAbsolute);
+                        return false;
                     }
+
+                    log.info("We reached abs. max. connections. Lets try to remove ANY connection.");
+                    candidates = new ArrayList<>(allConnections);
                 }
             }
+        }
 
-            if (!candidates.isEmpty()) {
-                candidates.sort(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()));
-                Connection connection = candidates.remove(0);
-                log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection: {}", candidates.size(), connection);
-                log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
-                if (!connection.isStopped())
-                    connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
-                return true;
-            } else {
-                log.debug("No candidates found to remove.\n\t" +
-                        "size={}, allConnections={}", size, allConnections);
-                return false;
-            }
+        if (!candidates.isEmpty()) {
+            candidates.sort(Comparator.comparingLong(o -> o.getStatistic().getLastActivityTimestamp()));
+            Connection connection = candidates.remove(0);
+            log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection: {}", candidates.size(), connection);
+            log.debug("We are going to shut down the oldest connection.\n\tconnection={}", connection.toString());
+            if (!connection.isStopped())
+                connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN, () -> UserThread.runAfter(this::checkMaxConnections, 100, TimeUnit.MILLISECONDS));
+            return true;
         } else {
-            log.trace("We only have {} connections open and don't need to close any.", size);
+            log.info("No candidates found to remove.\n\t" +
+                    "size={}, allConnections={}", size, allConnections);
             return false;
         }
     }
