@@ -40,6 +40,8 @@ import com.google.inject.name.Named;
 
 import javax.inject.Inject;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -300,7 +302,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
         }
     }
 
-    private boolean checkMaxConnections() {
+    @VisibleForTesting
+    boolean checkMaxConnections() {
         Set<Connection> allConnections = new HashSet<>(networkNode.getAllConnections());
         int size = allConnections.size();
         log.info("We have {} connections open. Our limit is {}", size, maxConnections);
