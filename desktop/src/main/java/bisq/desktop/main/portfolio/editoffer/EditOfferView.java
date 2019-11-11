@@ -175,7 +175,7 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
         int tmpGridRow = 4;
         final Tuple4<Button, BusyAnimation, Label, HBox> editOfferTuple = addButtonBusyAnimationLabelAfterGroup(gridPane, tmpGridRow++, Res.get("editOffer.confirmEdit"));
 
-        final HBox editOfferConfirmationBox = editOfferTuple.forth;
+        final HBox editOfferConfirmationBox = editOfferTuple.fourth;
         editOfferConfirmationBox.setAlignment(Pos.CENTER_LEFT);
         GridPane.setHalignment(editOfferConfirmationBox, HPos.LEFT);
 

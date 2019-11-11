@@ -247,7 +247,7 @@ public class PeerInfoIcon extends Group {
         getChildren().addAll(outerBackground, innerBackground, avatarImageView, tagPane, numTradesPane);
 
         addMouseListener(numTrades, privateNotificationManager, offer, preferences, useDevPrivilegeKeys,
-                isFiatCurrency, accountAge, signAge, peersAccount.third, peersAccount.forth, peersAccount.fifth);
+                isFiatCurrency, accountAge, signAge, peersAccount.third, peersAccount.fourth, peersAccount.fifth);
     }
 
     /**

@@ -692,7 +692,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                 Res.get("dao.proposal.myVote.button"));
         voteButton = voteButtonTuple.first;
         voteButtons.add(voteButton);
-        voteFields.add(voteButtonTuple.forth);
+        voteFields.add(voteButtonTuple.fourth);
         voteButtonBusyAnimation = voteButtonTuple.second;
         voteButtonInfoLabel = voteButtonTuple.third;
     }

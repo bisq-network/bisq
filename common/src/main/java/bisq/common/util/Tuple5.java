@@ -23,14 +23,14 @@ public class Tuple5<A, B, C, D, E> {
     final public A first;
     final public B second;
     final public C third;
-    final public D forth;
+    final public D fourth;
     final public E fifth;
 
-    public Tuple5(A first, B second, C third, D forth, E fifth) {
+    public Tuple5(A first, B second, C third, D fourth, E fifth) {
         this.first = first;
         this.second = second;
         this.third = third;
-        this.forth = forth;
+        this.fourth = fourth;
         this.fifth = fifth;
     }
 
@@ -45,9 +45,8 @@ public class Tuple5<A, B, C, D, E> {
         if (!Objects.equals(first, tuple5.first)) return false;
         if (!Objects.equals(second, tuple5.second)) return false;
         if (!Objects.equals(third, tuple5.third)) return false;
-        if (!Objects.equals(forth, tuple5.forth)) return false;
+        if (!Objects.equals(fourth, tuple5.fourth)) return false;
         return Objects.equals(fifth, tuple5.fifth);
-
     }
 
     @Override
@@ -55,7 +54,7 @@ public class Tuple5<A, B, C, D, E> {
         int result = first != null ? first.hashCode() : 0;
         result = 31 * result + (second != null ? second.hashCode() : 0);
         result = 31 * result + (third != null ? third.hashCode() : 0);
-        result = 31 * result + (forth != null ? forth.hashCode() : 0);
+        result = 31 * result + (fourth != null ? fourth.hashCode() : 0);
         result = 31 * result + (fifth != null ? fifth.hashCode() : 0);
         return result;
     }
