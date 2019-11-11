@@ -155,7 +155,7 @@ public class PeerInfoIcon extends Group {
         Color ringColor;
         if (isFiatCurrency) {
 
-            switch (accountAgeWitnessService.getPeersAccountAgeCategory(accountAge)) {
+            switch (accountAgeWitnessService.getPeersAccountAgeCategory(hasChargebackRisk(trade, offer) ? signAge : accountAge)) {
                 case TWO_MONTHS_OR_MORE:
                     ringColor = Color.rgb(0, 225, 0); // > 2 months green
                     break;
@@ -277,7 +277,7 @@ public class PeerInfoIcon extends Group {
             accountAge = accountAgeWitnessService.getAccountAge(offer);
         }
 
-        if (PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode())) {
+        if (hasChargebackRisk(trade, offer)) {
             String signAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
             String accountSigningState = StringUtils.capitalize(signState.getPresentation());
             if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
@@ -286,6 +286,13 @@ public class PeerInfoIcon extends Group {
             return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), signAgeInfo, accountSigningState);
         }
         return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), null, null);
+    }
+
+    private boolean hasChargebackRisk(@Nullable Trade trade, @Nullable Offer offer) {
+        Offer offerToCheck = trade != null ? trade.getOffer() : offer;
+
+        return offerToCheck != null &&
+                PaymentMethod.hasChargebackRisk(offerToCheck.getPaymentMethod(), offerToCheck.getCurrencyCode());
     }
 
     protected void addMouseListener(int numTrades,
