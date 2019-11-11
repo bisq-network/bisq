@@ -23,7 +23,6 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
                 offer,
                 preferences,
                 accountAgeWitnessService,
-                formatter,
                 useDevPrivilegeKeys);
     }
 
@@ -37,11 +36,12 @@ public class PeerInfoIconSmall extends PeerInfoIcon {
                                     PrivateNotificationManager privateNotificationManager,
                                     Offer offer,
                                     Preferences preferences,
-                                    BSFormatter formatter,
                                     boolean useDevPrivilegeKeys,
                                     boolean isFiatCurrency,
                                     long peersAccountAge,
+                                    long peersSignAge,
                                     String peersAccountAgeInfo,
+                                    String peersSignAgeInfo,
                                     String accountSigningState) {
     }
 

@@ -93,6 +93,10 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private String accountAgeInfo;
     @Nullable
     private String accountSigningState;
+    @Nullable
+    private String signAge;
+    @Nullable
+    private String signAgeInfo;
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
                                  Offer offer,
@@ -131,6 +135,16 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
 
     public PeerInfoWithTagEditor accountAgeInfo(String accountAgeInfo) {
         this.accountAgeInfo = accountAgeInfo;
+        return this;
+    }
+
+    public PeerInfoWithTagEditor signAge(@Nullable String signAge) {
+        this.signAge = signAge;
+        return this;
+    }
+
+    public PeerInfoWithTagEditor signAgeInfo(String signAgeInfo) {
+        this.signAgeInfo = signAgeInfo;
         return this;
     }
 
@@ -205,18 +219,23 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 Res.get("peerInfo.nrOfTrades"),
                 numTrades > 0 ? String.valueOf(numTrades) : Res.get("peerInfo.notTradedYet")).third, 2);
 
-        if (accountSigningState != null) {
-            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.accountSigningState"), accountSigningState).third, 2);
-        }
-
         if (accountAge != null) {
             GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, accountAgeInfo, accountAge).third, 2);
         }
 
+        if (accountSigningState != null) {
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, Res.get("shared.accountSigningState"), accountSigningState).third, 2);
+        }
+
+        if (signAge != null) {
+            GridPane.setColumnSpan(addCompactTopLabelTextField(gridPane, ++rowIndex, signAgeInfo, signAge).third, 2);
+        }
+
+
         inputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("peerInfo.setTag"));
         GridPane.setColumnSpan(inputTextField, 2);
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
-        String tag = peerTagMap.containsKey(hostName) ? peerTagMap.get(hostName) : "";
+        String tag = peerTagMap.getOrDefault(hostName, "");
         inputTextField.setText(tag);
 
         keyEventEventHandler = event -> {

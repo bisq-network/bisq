@@ -1160,7 +1160,6 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             offer,
                                             model.preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
                                     setGraphic(peerInfoIcon);
                                 } else {

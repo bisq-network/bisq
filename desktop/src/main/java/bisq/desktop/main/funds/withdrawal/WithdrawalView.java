@@ -206,7 +206,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         amountTextField = feeTuple3.second;
         amountTextField.setMinWidth(180);
         feeExcludedRadioButton = feeTuple3.third;
-        RadioButton feeIncludedRadioButton = feeTuple3.forth;
+        RadioButton feeIncludedRadioButton = feeTuple3.fourth;
 
         withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;

@@ -389,7 +389,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
             hide();
         });
 
-        placeOfferTuple.forth.getChildren().add(cancelButton);
+        placeOfferTuple.fourth.getChildren().add(cancelButton);
 
         button.setOnAction(e -> {
             if (GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation)) {

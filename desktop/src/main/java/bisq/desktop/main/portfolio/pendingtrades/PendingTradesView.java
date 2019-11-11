@@ -664,7 +664,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             trade,
                                             preferences,
                                             model.accountAgeWitnessService,
-                                            formatter,
                                             useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);

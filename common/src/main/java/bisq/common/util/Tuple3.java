@@ -17,6 +17,8 @@
 
 package bisq.common.util;
 
+import java.util.Objects;
+
 public class Tuple3<A, B, C> {
     final public A first;
     final public B second;
@@ -36,9 +38,9 @@ public class Tuple3<A, B, C> {
 
         Tuple3<?, ?, ?> tuple3 = (Tuple3<?, ?, ?>) o;
 
-        if (first != null ? !first.equals(tuple3.first) : tuple3.first != null) return false;
-        if (second != null ? !second.equals(tuple3.second) : tuple3.second != null) return false;
-        return !(third != null ? !third.equals(tuple3.third) : tuple3.third != null);
+        if (!Objects.equals(first, tuple3.first)) return false;
+        if (!Objects.equals(second, tuple3.second)) return false;
+        return Objects.equals(third, tuple3.third);
 
     }
 

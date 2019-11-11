@@ -182,7 +182,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
         bankCodeField.setEditable(false);
 
         // Bank Selector
-        bankComboBox = tuple4.forth;
+        bankComboBox = tuple4.fourth;
         bankComboBox.setPromptText(JapanBankData.getString("bank.select"));
         bankComboBox.setButtonCell(getComboBoxButtonCell(JapanBankData.getString("bank.name"), bankComboBox));
         bankComboBox.getEditor().focusedProperty().addListener(observable -> {
