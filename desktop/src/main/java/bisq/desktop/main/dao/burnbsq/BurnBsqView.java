@@ -18,7 +18,7 @@
 package bisq.desktop.main.dao.burnbsq;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -44,7 +44,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @FxmlView
-public class BurnBsqView extends ActivatableViewAndModel {
+public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;

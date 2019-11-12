@@ -18,8 +18,7 @@
 package bisq.desktop.main.settings.network;
 
 import bisq.desktop.app.BisqApp;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
@@ -74,7 +73,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class NetworkSettingsView extends ActivatableViewAndModel<GridPane, Activatable> {
+public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
 
     @FXML
     TitledGroupBg p2pHeader, btcHeader;

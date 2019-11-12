@@ -22,16 +22,4 @@ public interface Activatable {
     void _activate();
 
     void _deactivate();
-
-
-    Activatable NO_OP_INSTANCE = new Activatable() {
-        @Override
-        public void _activate() {
-        }
-
-        @Override
-        public void _deactivate() {
-        }
-    };
-
 }
