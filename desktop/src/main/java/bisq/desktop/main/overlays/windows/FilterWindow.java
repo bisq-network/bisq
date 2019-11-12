@@ -41,8 +41,8 @@ import javafx.scene.layout.HBox;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -197,90 +197,33 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
-            List<String> offerIds = new ArrayList<>();
-            List<String> nodes = new ArrayList<>();
-            List<PaymentAccountFilter> paymentAccountFilters = new ArrayList<>();
-            List<String> bannedCurrencies = new ArrayList<>();
-            List<String> bannedPaymentMethods = new ArrayList<>();
-            List<String> arbitrators = new ArrayList<>();
-            List<String> mediators = new ArrayList<>();
-            List<String> refundAgents = new ArrayList<>();
-            List<String> seedNodes = new ArrayList<>();
-            List<String> priceRelayNodes = new ArrayList<>();
-            List<String> btcNodes = new ArrayList<>();
+            List<PaymentAccountFilter> paymentAccountFilters = readAsList(paymentAccountFilterInputTextField)
+                    .stream().map(item -> {
+                        String[] list = item.split("\\|");
+                        if (list.length == 3)
+                            return new PaymentAccountFilter(list[0], list[1], list[2]);
+                        else
+                            return new PaymentAccountFilter("", "", "");
+                    })
+                    .collect(Collectors.toList());
 
-            if (!offerIdsInputTextField.getText().isEmpty()) {
-                offerIds = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(offerIdsInputTextField.getText())
-                        .split(",")));
-            }
 
-            if (!nodesInputTextField.getText().isEmpty()) {
-                nodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(nodesInputTextField.getText()).split(",")));
-            }
-
-            if (!paymentAccountFilterInputTextField.getText().isEmpty()) {
-                paymentAccountFilters = new ArrayList<>(Arrays.asList(paymentAccountFilterInputTextField.getText()
-                        .replace(", ", ",")
-                        .split(","))
-                        .stream().map(item -> {
-                            String[] list = item.split("\\|");
-                            if (list.length == 3)
-                                return new PaymentAccountFilter(list[0], list[1], list[2]);
-                            else
-                                return new PaymentAccountFilter("", "", "");
-                        })
-                        .collect(Collectors.toList()));
-            }
-
-            if (!bannedCurrenciesInputTextField.getText().isEmpty()) {
-                bannedCurrencies = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedCurrenciesInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!bannedPaymentMethodsInputTextField.getText().isEmpty()) {
-                bannedPaymentMethods = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(bannedPaymentMethodsInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (!arbitratorsInputTextField.getText().isEmpty()) {
-                arbitrators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(arbitratorsInputTextField.getText()).split(",")));
-            }
-
-            if (!mediatorsInputTextField.getText().isEmpty()) {
-                mediators = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(mediatorsInputTextField.getText()).split(",")));
-            }
-            if (!refundAgentsInputTextField.getText().isEmpty()) {
-                refundAgents = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(refundAgentsInputTextField.getText()).split(",")));
-            }
-
-            if (!seedNodesInputTextField.getText().isEmpty()) {
-                seedNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(seedNodesInputTextField.getText()).split(",")));
-            }
-
-            if (!priceRelayNodesInputTextField.getText().isEmpty()) {
-                priceRelayNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(priceRelayNodesInputTextField.getText()).split(",")));
-            }
-
-            if (!btcNodesInputTextField.getText().isEmpty()) {
-                btcNodes = new ArrayList<>(Arrays.asList(StringUtils.deleteWhitespace(btcNodesInputTextField.getText())
-                        .split(",")));
-            }
-
-            if (sendFilterMessageHandler.handle(new Filter(offerIds,
-                            nodes,
+            if (sendFilterMessageHandler.handle(new Filter(
+                            readAsList(offerIdsInputTextField),
+                            readAsList(nodesInputTextField),
                             paymentAccountFilters,
-                            bannedCurrencies,
-                            bannedPaymentMethods,
-                            arbitrators,
-                            seedNodes,
-                            priceRelayNodes,
+                            readAsList(bannedCurrenciesInputTextField),
+                            readAsList(bannedPaymentMethodsInputTextField),
+                            readAsList(arbitratorsInputTextField),
+                            readAsList(seedNodesInputTextField),
+                            readAsList(priceRelayNodesInputTextField),
                             preventPublicBtcNetworkCheckBox.isSelected(),
-                            btcNodes,
+                            readAsList(btcNodesInputTextField),
                             disableDaoCheckBox.isSelected(),
                             disableDaoBelowVersionInputTextField.getText(),
                             disableTradeBelowVersionInputTextField.getText(),
-                            mediators,
-                            refundAgents),
+                            readAsList(mediatorsInputTextField),
+                            readAsList(refundAgentsInputTextField)),
                     keyInputTextField.getText()))
                 hide();
             else
@@ -309,5 +252,13 @@ public class FilterWindow extends Overlay<FilterWindow> {
         hBox.getChildren().addAll(sendButton, removeFilterMessageButton, closeButton);
         gridPane.getChildren().add(hBox);
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
+    }
+
+    private List<String> readAsList(InputTextField field) {
+        if (field.getText().isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return Arrays.asList(StringUtils.deleteWhitespace(field.getText()).split(","));
+        }
     }
 }
