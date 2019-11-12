@@ -430,7 +430,7 @@ abstract class BankForm extends GeneralBankForm {
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(250);
-            tuple.forth.setText(bankAccountPayload.getHolderTaxId());
+            tuple.fourth.setText(bankAccountPayload.getHolderTaxId());
         } else {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
         }

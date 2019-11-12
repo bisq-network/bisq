@@ -23,9 +23,9 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.PeerInfoIconSmall;
-import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
@@ -164,8 +164,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         leftButton = (AutoTooltipButton) tupleBuy.third;
         rightButton = (AutoTooltipButton) tupleSell.third;
 
-        leftHeaderLabel = tupleBuy.forth;
-        rightHeaderLabel = tupleSell.forth;
+        leftHeaderLabel = tupleBuy.fourth;
+        rightHeaderLabel = tupleSell.fourth;
 
         bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30

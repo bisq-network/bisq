@@ -43,8 +43,8 @@ public class MobileModelTest {
                 new Tuple2<>("iPhone 5c", false),
                 new Tuple2<>("iPhone 5s", false),
 
-                new Tuple2<>("iPhone 6", true),
-                new Tuple2<>("iPhone 6 Plus", true),
+                new Tuple2<>("iPhone 6", false),
+                new Tuple2<>("iPhone 6 Plus", false),
                 new Tuple2<>("iPhone 6s", true),
                 new Tuple2<>("iPhone 6s Plus", true),
 
@@ -54,6 +54,14 @@ public class MobileModelTest {
                 new Tuple2<>("iPhone 8", true),
                 new Tuple2<>("iPhone 8 Plus", true),
                 new Tuple2<>("iPhone X", true),
+                new Tuple2<>("iPhone XS", true),
+                new Tuple2<>("iPhone XS Max", true),
+                new Tuple2<>("iPhone XR", true),
+                new Tuple2<>("iPhone 11", true),
+                new Tuple2<>("iPhone 11 Pro", true),
+                new Tuple2<>("iPhone 11 Pro Max", true),
+                new Tuple2<>("iPhone 11S", true), // not sure if this model will exist, but based on past versioning it is possible
+                                                  // need to ensure it will be parsed correctly just in case
 
                 new Tuple2<>("iPad 2", false),
                 new Tuple2<>("iPad 3", false),
@@ -74,8 +82,7 @@ public class MobileModelTest {
         );
 
         list.forEach(tuple -> {
-            log.error(tuple.toString());
-
+            log.info(tuple.toString());
             assertEquals("tuple: " + tuple, mobileModel.parseDescriptor(tuple.first), tuple.second);
         });
 

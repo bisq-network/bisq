@@ -79,12 +79,12 @@ public final class PreliminaryGetDataRequest extends GetDataRequest implements A
         NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setPreliminaryGetDataRequest(builder)
                 .build();
-        log.info("Sending a PreliminaryGetDataRequest with size = {} bytes", proto.toByteArray().length);
+        log.info("Sending a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         return proto;
     }
 
     public static PreliminaryGetDataRequest fromProto(protobuf.PreliminaryGetDataRequest proto, int messageVersion) {
-        log.info("Received a PreliminaryGetDataRequest with size = {} bytes", proto.toByteArray().length);
+        log.info("Received a PreliminaryGetDataRequest with {} kB", proto.getSerializedSize() / 1000d);
         Capabilities supportedCapabilities = proto.getSupportedCapabilitiesList().isEmpty() ?
                 null :
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList());

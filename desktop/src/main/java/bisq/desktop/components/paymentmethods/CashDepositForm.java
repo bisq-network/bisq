@@ -478,7 +478,7 @@ public class CashDepositForm extends GeneralBankForm {
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(cashDepositAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(300);
-            tuple.forth.setText(cashDepositAccountPayload.getHolderTaxId());
+            tuple.fourth.setText(cashDepositAccountPayload.getHolderTaxId());
         } else {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                     cashDepositAccountPayload.getHolderName());

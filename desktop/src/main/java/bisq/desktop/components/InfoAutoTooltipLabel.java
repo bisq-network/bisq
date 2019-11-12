@@ -19,8 +19,6 @@ package bisq.desktop.components;
 
 import bisq.desktop.components.controlsfx.control.PopOver;
 
-import bisq.common.UserThread;
-
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.GlyphIcons;
 
@@ -30,16 +28,13 @@ import javafx.scene.control.Label;
 
 import javafx.geometry.Insets;
 
-import java.util.concurrent.TimeUnit;
-
 import static bisq.desktop.util.FormBuilder.getIcon;
 
 public class InfoAutoTooltipLabel extends AutoTooltipLabel {
 
     public static final int DEFAULT_WIDTH = 300;
     private Node textIcon;
-    private Boolean hidePopover;
-    private PopOver infoPopover;
+    private PopOverWrapper popoverWrapper = new PopOverWrapper();
     private ContentDisplay contentDisplay;
 
     public InfoAutoTooltipLabel(String text, GlyphIcons icon, ContentDisplay contentDisplay, String info) {
@@ -82,42 +77,31 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
     private void positionAndActivateIcon(ContentDisplay contentDisplay, String info, double width) {
         textIcon.setOpacity(0.4);
         textIcon.getStyleClass().add("tooltip-icon");
-
-        textIcon.setOnMouseEntered(e -> {
-            hidePopover = false;
-            final Label helpLabel = new Label(info);
-            helpLabel.setMaxWidth(width);
-            helpLabel.setWrapText(true);
-            helpLabel.setPadding(new Insets(10));
-            showInfoPopOver(helpLabel);
-        });
-
-        textIcon.setOnMouseExited(e -> {
-            if (infoPopover != null)
-                infoPopover.hide();
-            hidePopover = true;
-            UserThread.runAfter(() -> {
-                if (hidePopover) {
-                    infoPopover.hide();
-                    hidePopover = false;
-                }
-            }, 250, TimeUnit.MILLISECONDS);
-        });
+        textIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(info, width)));
+        textIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());
 
         setGraphic(textIcon);
         setContentDisplay(contentDisplay);
     }
 
+    private PopOver createInfoPopOver(String info, double width) {
+        Label helpLabel = new Label(info);
+        helpLabel.setMaxWidth(width);
+        helpLabel.setWrapText(true);
+        helpLabel.setPadding(new Insets(10));
+        return createInfoPopOver(helpLabel);
+    }
 
-    private void showInfoPopOver(Node node) {
+    private PopOver createInfoPopOver(Node node) {
         node.getStyleClass().add("default-text");
 
-        infoPopover = new PopOver(node);
+        PopOver infoPopover = new PopOver(node);
         if (textIcon.getScene() != null) {
             infoPopover.setDetachable(false);
             infoPopover.setArrowLocation(PopOver.ArrowLocation.LEFT_CENTER);
 
             infoPopover.show(textIcon, -10);
         }
+        return infoPopover;
     }
 }

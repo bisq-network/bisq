@@ -592,7 +592,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 Tuple4<Date, Integer, Integer, Integer> tuple = dataByDayMap.get(day);
                 int prev = tuple.second;
                 int numOffers = tuple.third;
-                int numTrades = tuple.forth;
+                int numTrades = tuple.fourth;
                 if (amountAsCoin.compareTo(createOfferFee.subtract(txFee)) == 0)
                     numOffers++;
                 else if (amountAsCoin.compareTo(takeOfferFee.subtract(txFee)) == 0)
@@ -615,7 +615,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         List<Tuple4<String, Date, Integer, Tuple2<Integer, Integer>>> sortedDataByDayList = dataByDayMap.entrySet().stream().
                 map(e -> {
                     Tuple4<Date, Integer, Integer, Integer> data = e.getValue();
-                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.forth));
+                    return new Tuple4<>(e.getKey(), data.first, data.second, new Tuple2<>(data.third, data.fourth));
                 }).sorted((o1, o2) -> o2.second.compareTo(o1.second))
                 .collect(Collectors.toList());
         StringBuilder transactionsByDayStringBuilder = new StringBuilder();
@@ -625,17 +625,17 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         // This is not intended for the public so we don't translate here
         allStringBuilder.append(Res.get("shared.date")).append(";").append("Offers").append(";").append("Trades").append("\n");
         sortedDataByDayList.forEach(tuple4 -> {
-            offersStringBuilder.append(tuple4.forth.first).append(",");
-            tradesStringBuilder.append(tuple4.forth.second).append(",");
-            allStringBuilder.append(tuple4.first).append(";").append(tuple4.forth.first).append(";").append(tuple4.forth.second).append("\n");
+            offersStringBuilder.append(tuple4.fourth.first).append(",");
+            tradesStringBuilder.append(tuple4.fourth.second).append(",");
+            allStringBuilder.append(tuple4.first).append(";").append(tuple4.fourth.first).append(";").append(tuple4.fourth.second).append("\n");
             transactionsByDayStringBuilder.append("\n").
                     append(tuple4.first).
                     append(": ").
                     append(tuple4.third).
                     append(" (Offers: ").
-                    append(tuple4.forth.first).
+                    append(tuple4.fourth.first).
                     append(" / Trades: ").
-                    append(tuple4.forth.second).
+                    append(tuple4.fourth.second).
                     append(")");
         });
         // This is not intended for the public so we don't translate here

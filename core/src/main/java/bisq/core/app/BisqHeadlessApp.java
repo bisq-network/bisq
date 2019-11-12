@@ -93,7 +93,8 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setDisplaySecurityRecommendationHandler(key -> log.info("onDisplaySecurityRecommendationHandler"));
         bisqSetup.setDisplayLocalhostHandler(key -> log.info("onDisplayLocalhostHandler"));
         bisqSetup.setWrongOSArchitectureHandler(msg -> log.error("onWrongOSArchitectureHandler. msg={}", msg));
-        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException));
+        bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn("voteResultException={}", voteResultException.toString()));
+        bisqSetup.setRejectedTxErrorMessageHandler(errorMessage -> log.warn("setRejectedTxErrorMessageHandler. errorMessage={}", errorMessage));
 
         //TODO move to bisqSetup
         corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> log.warn("getCorruptedDatabaseFiles. files={}", files));

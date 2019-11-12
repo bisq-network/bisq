@@ -57,13 +57,15 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
 
     @Override
     public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
+        protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
                 .setGetBlocksResponse(protobuf.GetBlocksResponse.newBuilder()
                         .addAllRawBlocks(blocks.stream()
                                 .map(RawBlock::toProtoMessage)
                                 .collect(Collectors.toList()))
                         .setRequestNonce(requestNonce))
                 .build();
+        log.info("Sending a GetBlocksResponse with {} kB", proto.getSerializedSize() / 1000d);
+        return proto;
     }
 
     public static NetworkEnvelope fromProto(protobuf.GetBlocksResponse proto, int messageVersion) {

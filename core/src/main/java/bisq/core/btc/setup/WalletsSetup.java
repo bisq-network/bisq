@@ -19,6 +19,7 @@ package bisq.core.btc.setup;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BtcOptionKeys;
+import bisq.core.btc.exceptions.RejectedTxException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.nodes.BtcNetworkConfig;
@@ -44,6 +45,7 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.PeerGroup;
+import org.bitcoinj.core.RejectMessage;
 import org.bitcoinj.core.listeners.DownloadProgressTracker;
 import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.utils.Threading;
@@ -170,7 +172,9 @@ public class WalletsSetup {
     // Lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void initialize(@Nullable DeterministicSeed seed,
+                           ResultHandler resultHandler,
+                           ExceptionHandler exceptionHandler) {
         // Tell bitcoinj to execute event handlers on the JavaFX UI thread. This keeps things simple and means
         // we cannot forget to switch threads when adding event handlers. Unfortunately, the DownloadListener
         // we give to the app kit is currently an exception and runs on a library thread. It'll get fixed in
@@ -221,6 +225,20 @@ public class WalletsSetup {
                 peerGroup.addBlocksDownloadedEventListener((peer, block, filteredBlock, blocksLeft) -> {
                     blocksDownloadedFromPeer.set(peer);
                 });
+
+                // Need to be Threading.SAME_THREAD executor otherwise BitcoinJ will skip that listener
+                peerGroup.addPreMessageReceivedEventListener(Threading.SAME_THREAD, (peer, message) -> {
+                    if (message instanceof RejectMessage) {
+                        UserThread.execute(() -> {
+                            RejectMessage rejectMessage = (RejectMessage) message;
+                            String msg = rejectMessage.toString();
+                            log.warn(msg);
+                            exceptionHandler.handleException(new RejectedTxException(msg, rejectMessage));
+                        });
+                    }
+                    return message;
+                });
+
                 chain.addNewBestBlockListener(block -> {
                     connectedPeers.set(peerGroup.getConnectedPeers());
                     chainHeight.set(block.getHeight());
@@ -372,7 +390,9 @@ public class WalletsSetup {
     // Restore
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void restoreSeedWords(@Nullable DeterministicSeed seed, ResultHandler resultHandler, ExceptionHandler exceptionHandler) {
+    public void restoreSeedWords(@Nullable DeterministicSeed seed,
+                                 ResultHandler resultHandler,
+                                 ExceptionHandler exceptionHandler) {
         checkNotNull(seed, "Seed must be not be null.");
 
         backupWallets();

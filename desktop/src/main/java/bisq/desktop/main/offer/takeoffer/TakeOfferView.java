@@ -858,7 +858,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         final Tuple2<Label, VBox> tradeCurrencyTuple = getTopLabelWithVBox(Res.get("shared.tradeCurrency"), currencyTextField);
         HBox.setMargin(tradeCurrencyTuple.second, new Insets(5, 0, 0, 0));
 
-        final HBox hBox = paymentAccountTuple.forth;
+        final HBox hBox = paymentAccountTuple.fourth;
         hBox.setSpacing(30);
         hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setPadding(new Insets(10, 0, 18, 0));

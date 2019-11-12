@@ -23,6 +23,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitness;
@@ -220,18 +221,11 @@ public abstract class PaymentMethodForm {
                         Res.get("offerbook.timeSinceSigning.daysSinceSigning",
                                 daysSinceSigning));
 
-                switch (signState) {
-                    case PEER_SIGNER:
-                    case ARBITRATOR:
-                        icon = MaterialDesignIcon.APPROVAL;
-                        accountSigningStateText += " / " + timeSinceSigning;
-                        break;
-                    case PEER_INITIAL:
-                    case PEER_LIMIT_LIFTED:
-                        accountSigningStateText += " / " + timeSinceSigning;
-                    default:
-                        icon = MaterialDesignIcon.ALERT_CIRCLE_OUTLINE;
+                if (!signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
+                    accountSigningStateText += " / " + timeSinceSigning;
                 }
+
+                icon = GUIUtil.getIconForSignState(signState);
 
                 InfoTextField accountSigningField = addCompactTopLabelInfoTextField(gridPane, ++gridRow, Res.get("shared.accountSigningState"),
                         accountSigningStateText).second;

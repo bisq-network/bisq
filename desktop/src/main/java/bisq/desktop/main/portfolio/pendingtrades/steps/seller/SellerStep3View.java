@@ -220,7 +220,7 @@ public class SellerStep3View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step3_seller.confirmReceipt"));
 
-        GridPane.setColumnSpan(tuple.forth, 2);
+        GridPane.setColumnSpan(tuple.fourth, 2);
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;

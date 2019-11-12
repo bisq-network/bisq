@@ -119,8 +119,8 @@ public class Balances {
     }
 
     private void updateLockedBalance() {
-        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getLockedTradesStream(), failedTradesManager.getLockedTradesStream());
-        lockedTrades = Stream.concat(lockedTrades, tradeManager.getLockedTradesStream());
+        Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getTradesStreamWithFundsLockedIn(), failedTradesManager.getTradesStreamWithFundsLockedIn());
+        lockedTrades = Stream.concat(lockedTrades, tradeManager.getTradesStreamWithFundsLockedIn());
         long sum = lockedTrades.map(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG)
                 .orElse(null))
                 .filter(Objects::nonNull)

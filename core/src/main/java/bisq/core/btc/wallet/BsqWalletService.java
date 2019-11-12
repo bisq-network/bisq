@@ -168,7 +168,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                         // We are only interested in updates from unconfirmed txs and confirmed txs at the
                         // time when it gets into a block. Otherwise we would get called
                         // updateBsqWalletTransactions for each tx as the block depth changes for all.
-                        if (tx.getConfidence().getDepthInBlocks() <= 1 &&
+                        if (tx != null && tx.getConfidence() != null && tx.getConfidence().getDepthInBlocks() <= 1 &&
                                 daoStateService.isParseBlockChainComplete()) {
                             updateBsqWalletTransactions();
                         }
