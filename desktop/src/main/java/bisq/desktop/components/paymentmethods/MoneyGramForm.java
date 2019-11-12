@@ -146,7 +146,8 @@ public class MoneyGramForm extends PaymentMethodForm {
     }
 
     private void addCurrenciesGrid(boolean isEditable) {
-        final Tuple2<Label, FlowPane> labelFlowPaneTuple2 = addTopLabelFlowPane(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"), 0);
+        final Tuple2<Label, FlowPane> labelFlowPaneTuple2 = addTopLabelFlowPane(gridPane, ++gridRow, Res.get("payment.supportedCurrencies"),
+                Layout.FLOATING_LABEL_DISTANCE * 3, Layout.FLOATING_LABEL_DISTANCE * 3);
 
         FlowPane flowPane = labelFlowPaneTuple2.second;
 
