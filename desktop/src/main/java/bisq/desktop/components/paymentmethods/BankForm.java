@@ -240,28 +240,28 @@ abstract class BankForm extends GeneralBankForm {
         bankNameInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.bank.name"));
 
         bankNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setBankName(newValue);
+            bankAccountPayload.setBankName(newValue.trim());
             updateFromInputs();
 
         });
 
         bankIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getBankIdLabel(""));
         bankIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setBankId(newValue);
+            bankAccountPayload.setBankId(newValue.trim());
             updateFromInputs();
 
         });
 
         branchIdInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(""));
         branchIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setBranchId(newValue);
+            bankAccountPayload.setBranchId(newValue.trim());
             updateFromInputs();
 
         });
 
         accountNrInputTextField = addInputTextField(gridPane, ++gridRow, BankUtil.getAccountNrLabel(""));
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setAccountNr(newValue);
+            bankAccountPayload.setAccountNr(newValue.trim());
             updateFromInputs();
 
         });
@@ -381,7 +381,7 @@ abstract class BankForm extends GeneralBankForm {
         holderNameInputTextField = tuple.first;
         holderNameInputTextField.setMinWidth(250);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            bankAccountPayload.setHolderName(newValue);
+            bankAccountPayload.setHolderName(newValue.trim());
             updateFromInputs();
         });
         holderNameInputTextField.minWidthProperty().bind(currencyComboBox.widthProperty());

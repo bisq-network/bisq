@@ -117,7 +117,7 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
             bankNameInputTextField.setValidator(null);
             bankIdInputTextField.setValidator(null);
             branchIdInputTextField.setValidator(null);
-            accountNrInputTextField.setValidator(null);
+            accountNrInputTextField.setValidator(inputValidator);
             nationalAccountIdInputTextField.setValidator(null);
         }
     }
@@ -142,20 +142,20 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
-                bankId = bankIdInputTextField.getText();
+                bankId = bankIdInputTextField.getText().trim();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBranchIdRequired(countryCode)) {
-                bankId = branchIdInputTextField.getText();
+                bankId = branchIdInputTextField.getText().trim();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBankNameRequired(countryCode)) {
-                bankId = bankNameInputTextField.getText();
+                bankId = bankNameInputTextField.getText().trim();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             }
 
-            String accountNr = accountNrInputTextField.getText();
+            String accountNr = accountNrInputTextField.getText().trim();
             if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 
@@ -200,7 +200,10 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
 
             if (BankUtil.isNationalAccountIdRequired(countryCode))
                 result = result && nationalAccountIdInputTextField.getValidator().validate(nationalAccountId).isValid;
+        } else {   // only account number not empty validation
+            result = result && accountNrInputTextField.getValidator().validate(accountNr).isValid;
         }
+
         return result;
     }
 }

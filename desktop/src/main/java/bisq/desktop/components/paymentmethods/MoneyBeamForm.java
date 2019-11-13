@@ -62,7 +62,7 @@ public class MoneyBeamForm extends PaymentMethodForm {
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
+            account.setAccountId(newValue.trim());
             updateFromInputs();
         });
 

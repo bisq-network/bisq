@@ -28,7 +28,8 @@ public class InputValidator {
     }
 
     protected ValidationResult validateIfNotEmpty(String input) {
-        if (input == null || input.length() == 0)
+        //trim added to avoid empty input
+        if (input == null || input.trim().length() == 0)
             return new ValidationResult(false, Res.get("validation.empty"));
         else
             return new ValidationResult(true);
