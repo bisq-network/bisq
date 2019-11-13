@@ -205,6 +205,7 @@ configure(project(':common')) {
 configure(project(':p2p')) {
     dependencies {
         compile project(':common')
+        testCompile project(':core')
         compile("com.github.JesusMcCloud.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
