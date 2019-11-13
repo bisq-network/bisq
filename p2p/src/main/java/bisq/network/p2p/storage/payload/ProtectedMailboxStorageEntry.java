@@ -103,9 +103,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
             if (mailboxStoragePayload != null && mailboxStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(mailboxStoragePayload.getSenderPubKeyForAddOperation().getEncoded(),true);
 
-            log.warn(String.format("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. " +
-                    "Entry owner does not match sender key in payload:\nProtectedStorageEntry=%s\n" +
-                    "SenderPubKeyForAddOperation=%s", res1, res2));
+            log.warn("ProtectedMailboxStorageEntry::isValidForAddOperation() failed. " +
+                    "Entry owner does not match sender key in payload:\nProtectedStorageEntry=%{}\n" +
+                    "SenderPubKeyForAddOperation=%{}", res1, res2);
         }
 
         return result;
@@ -137,9 +137,9 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
             if (mailboxStoragePayload != null && mailboxStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(mailboxStoragePayload.getOwnerPubKey().getEncoded(), true);
 
-            log.warn(String.format("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. " +
-                    "Entry owner does not match Payload owner:\nProtectedStorageEntry=%s\n" +
-                    "PayloadOwner=%s", res1, res2));
+            log.warn("ProtectedMailboxStorageEntry::isValidForRemoveOperation() failed. " +
+                    "Entry owner does not match Payload owner:\nProtectedStorageEntry={}\n" +
+                    "PayloadOwner={}", res1, res2);
         }
 
         return result;
@@ -150,7 +150,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
      * Returns true if the Entry metadata that is expected to stay constant between different versions of the same object
      * matches. For ProtectedMailboxStorageEntry, the receiversPubKey must stay the same.
      */
-    public boolean isMetadataEquals(ProtectedStorageEntry protectedStorageEntry) {
+    public boolean matchesRelevantPubKey(ProtectedStorageEntry protectedStorageEntry) {
         if (!(protectedStorageEntry instanceof ProtectedMailboxStorageEntry)) {
             log.error("ProtectedMailboxStorageEntry::isMetadataEquals() failed due to object type mismatch. " +
                     "ProtectedMailboxStorageEntry required, but got\n" + protectedStorageEntry);

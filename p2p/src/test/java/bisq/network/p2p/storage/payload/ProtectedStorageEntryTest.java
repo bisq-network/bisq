@@ -198,7 +198,7 @@ public class ProtectedStorageEntryTest {
 
         ProtectedStorageEntry seqNrTwo = buildProtectedStorageEntry(ownerKeys, ownerKeys, 2);
 
-        Assert.assertTrue(seqNrOne.isMetadataEquals(seqNrTwo));
+        Assert.assertTrue(seqNrOne.matchesRelevantPubKey(seqNrTwo));
     }
 
     // TESTCASE: isMetadataEquals() should fail if the OwnerPubKey changes
@@ -211,6 +211,6 @@ public class ProtectedStorageEntryTest {
 
         ProtectedStorageEntry protectedStorageEntryTwo = buildProtectedStorageEntry(ownerKeys, notOwner, 1);
 
-        Assert.assertFalse(protectedStorageEntryOne.isMetadataEquals(protectedStorageEntryTwo));
+        Assert.assertFalse(protectedStorageEntryOne.matchesRelevantPubKey(protectedStorageEntryTwo));
     }
 }

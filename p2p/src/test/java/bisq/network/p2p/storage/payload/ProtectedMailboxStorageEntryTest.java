@@ -183,7 +183,7 @@ public class ProtectedMailboxStorageEntryTest {
 
         ProtectedStorageEntry seqNrTwo = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, receiverKeys.getPublic(), 2);
 
-        Assert.assertTrue(seqNrOne.isMetadataEquals(seqNrTwo));
+        Assert.assertTrue(seqNrOne.matchesRelevantPubKey(seqNrTwo));
     }
 
     // TESTCASE: isMetadataEquals() should fail if the receiversPubKey changes
@@ -197,6 +197,6 @@ public class ProtectedMailboxStorageEntryTest {
 
         ProtectedStorageEntry seqNrTwo = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, senderKeys.getPublic(), 1);
 
-        Assert.assertFalse(seqNrOne.isMetadataEquals(seqNrTwo));
+        Assert.assertFalse(seqNrOne.matchesRelevantPubKey(seqNrTwo));
     }
 }

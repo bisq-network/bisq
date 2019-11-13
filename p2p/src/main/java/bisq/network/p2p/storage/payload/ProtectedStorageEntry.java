@@ -177,8 +177,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                 if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
                     res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
 
-                log.warn(String.format("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
-                        "ProtectedStorageEntry=%s\nPayloadOwner=%s", res1, res2));
+                log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
+                        "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
             }
 
             return result;
@@ -200,8 +200,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
                 res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
 
-            log.warn(String.format("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
-                    "ProtectedStorageEntry=%s\nPayloadOwner=%s", res1, res2));
+            log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
+                    "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
         }
 
         return result;
@@ -218,11 +218,11 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             boolean result = Sig.verify(this.ownerPubKey, hashOfDataAndSeqNr, this.signature);
 
             if (!result)
-                log.warn(String.format("ProtectedStorageEntry::isSignatureValid() failed.\n%s", this));
+                log.warn("ProtectedStorageEntry::isSignatureValid() failed.\n{}}", this);
 
             return result;
         } catch (CryptoException e) {
-            log.error(String.format("ProtectedStorageEntry::isSignatureValid() exception %s", e.toString()));
+            log.error("ProtectedStorageEntry::isSignatureValid() exception {}", e.toString());
             return false;
         }
     }
@@ -231,7 +231,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
      * Returns true if the Entry metadata that is expected to stay constant between different versions of the same object
      * matches.
      */
-    public boolean isMetadataEquals(ProtectedStorageEntry protectedStorageEntry) {
+    public boolean matchesRelevantPubKey(ProtectedStorageEntry protectedStorageEntry) {
         boolean result = protectedStorageEntry.getOwnerPubKey().equals(this.ownerPubKey);
 
         if (!result) {

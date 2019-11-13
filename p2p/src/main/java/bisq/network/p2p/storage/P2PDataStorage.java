@@ -406,7 +406,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
 
         // If we have already seen an Entry with the same hash, verify the metadata is equal
-        if (storedEntry != null && !protectedStorageEntry.isMetadataEquals(storedEntry))
+        if (storedEntry != null && !protectedStorageEntry.matchesRelevantPubKey(storedEntry))
             return false;
 
         // This is an updated entry. Record it and signal listeners.
@@ -504,7 +504,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // If we have already seen an Entry with the same hash, verify the metadata is the same
-        if (!protectedStorageEntry.isMetadataEquals(storedEntry))
+        if (!protectedStorageEntry.matchesRelevantPubKey(storedEntry))
             return false;
 
         // Valid remove entry, do the remove and signal listeners
