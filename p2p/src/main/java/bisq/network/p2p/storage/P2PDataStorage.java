@@ -199,10 +199,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             ByteArray payloadHash = mapEntry.getKey();
 
             log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
-            map.remove(payloadHash);
-
-            hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
-            removeFromProtectedDataStore(protectedStorageEntry);
+            removeFromMapAndDataStore(protectedStorageEntry, payloadHash);
         });
         hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
 
@@ -289,8 +286,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                     if (protectedStorageEntry.isExpired(this.clock)) {
                                         log.info("We found an expired data entry which we have already back dated. " +
                                                 "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
-                                        doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
-                                        removeFromProtectedDataStore(protectedStorageEntry);
+                                        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
                                     }
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");
@@ -505,7 +501,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // Valid remove entry, do the remove and signal listeners
-        doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
+        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
         printData("after remove");
 
         // Record the latest sequence number and persist it
@@ -519,8 +515,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         } else {
             broadcast(new RemoveDataMessage(protectedStorageEntry), sender, null, isDataOwner);
         }
-
-        removeFromProtectedDataStore(protectedStorageEntry);
 
         return true;
 }
@@ -543,8 +537,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return;
         }
 
-        doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
-        removeFromProtectedDataStore(protectedStorageEntry);
+        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
 
         // We do not update the sequence number as that method is only called if we have received an invalid
         // protectedStorageEntry from a previous add operation.
@@ -555,19 +548,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // We do not broadcast as this is a local operation only to avoid our maps get polluted with invalid objects
         // and as we do not check for ownership a node would not accept such a procedure if it would come from untrusted
         // source (network).
-    }
-
-    private void removeFromProtectedDataStore(ProtectedStorageEntry protectedStorageEntry) {
-        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
-        if (protectedStoragePayload instanceof PersistablePayload) {
-            ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
-            ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
-            if (previous != null) {
-                protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
-            } else {
-                log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
-            }
-        }
     }
 
     private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
@@ -656,10 +636,20 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void doRemoveProtectedExpirableData(ProtectedStorageEntry protectedStorageEntry, ByteArray hashOfPayload) {
+    private void removeFromMapAndDataStore(ProtectedStorageEntry protectedStorageEntry, ByteArray hashOfPayload) {
         map.remove(hashOfPayload);
-        log.trace("Data removed from our map. We broadcast the message to our peers.");
         hashMapChangedListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
+
+        ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+        if (protectedStoragePayload instanceof PersistablePayload) {
+            ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
+            ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
+            if (previous != null) {
+                protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
+            } else {
+                log.info("We cannot remove the protectedStorageEntry from the persistedEntryMap as it does not exist.");
+            }
+        }
     }
 
     private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
