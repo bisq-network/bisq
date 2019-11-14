@@ -77,7 +77,7 @@ public class RevolutForm extends PaymentMethodForm {
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.revolut.phoneNr"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
+            account.setAccountId(newValue.trim());
             updateFromInputs();
         });
 

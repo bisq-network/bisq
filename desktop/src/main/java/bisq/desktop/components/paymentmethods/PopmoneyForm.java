@@ -65,14 +65,14 @@ public class PopmoneyForm extends PaymentMethodForm {
                 Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setHolderName(newValue);
+            account.setHolderName(newValue.trim());
             updateFromInputs();
         });
 
         accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.popmoney.accountId"));
         accountIdInputTextField.setValidator(validator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            account.setAccountId(newValue);
+            account.setAccountId(newValue.trim());
             updateFromInputs();
         });
 
