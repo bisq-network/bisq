@@ -72,6 +72,7 @@ import java.security.PublicKey;
 
 import java.time.Clock;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -185,22 +186,21 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // object when we get it sent from new peers, we don’t remove the sequence number from the map.
         // That way an ADD message for an already expired data will fail because the sequence number
         // is equal and not larger as expected.
-        Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
-        Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
-        temp.entrySet().stream()
+        ArrayList<Map.Entry<ByteArray, ProtectedStorageEntry>> toRemoveList =
+                map.entrySet().stream()
                 .filter(entry -> entry.getValue().isExpired(this.clock))
-                .forEach(entry -> {
-                    ByteArray hashOfPayload = entry.getKey();
-                    ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
-                    toRemoveSet.add(protectedStorageEntry);
-                    log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
-                    map.remove(hashOfPayload);
-                });
+                .collect(Collectors.toCollection(ArrayList::new));
 
         // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
         // about start and end of iteration.
         hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
-        toRemoveSet.forEach(protectedStorageEntry -> {
+        toRemoveList.forEach(mapEntry -> {
+            ProtectedStorageEntry protectedStorageEntry = mapEntry.getValue();
+            ByteArray payloadHash = mapEntry.getKey();
+
+            log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+            map.remove(payloadHash);
+
             hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
             removeFromProtectedDataStore(protectedStorageEntry);
         });
