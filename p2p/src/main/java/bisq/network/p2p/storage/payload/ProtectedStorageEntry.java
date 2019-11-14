@@ -29,6 +29,8 @@ import bisq.common.util.Utilities;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
+import com.google.common.base.Preconditions;
+
 import java.security.PublicKey;
 
 import java.time.Clock;
@@ -69,6 +71,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
                                  byte[] signature,
                                  long creationTimeStamp,
                                  Clock clock) {
+
+        Preconditions.checkArgument(!(protectedStoragePayload instanceof PersistableNetworkPayload));
 
         this.protectedStoragePayload = protectedStoragePayload;
         this.ownerPubKeyBytes = ownerPubKeyBytes;

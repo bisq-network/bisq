@@ -192,11 +192,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .forEach(entry -> {
                     ByteArray hashOfPayload = entry.getKey();
                     ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
-                    if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
-                        toRemoveSet.add(protectedStorageEntry);
-                        log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
-                        map.remove(hashOfPayload);
-                    }
+                    toRemoveSet.add(protectedStorageEntry);
+                    log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                    map.remove(hashOfPayload);
                 });
 
         // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
@@ -570,7 +568,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         }
     }
-    
+
     private void maybeAddToRemoveAddOncePayloads(ProtectedStoragePayload protectedStoragePayload,
                                                  ByteArray hashOfData) {
         if (protectedStoragePayload instanceof AddOncePayload) {

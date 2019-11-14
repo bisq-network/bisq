@@ -20,7 +20,9 @@ package bisq.network.p2p.storage;
 import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.storage.mocks.ExpirableProtectedStoragePayloadStub;
 import bisq.network.p2p.storage.mocks.PersistableExpirableProtectedStoragePayloadStub;
+import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
 import bisq.network.p2p.storage.mocks.ProtectedStoragePayloadStub;
+import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
@@ -65,6 +67,18 @@ public class P2PDataStorageRemoveExpiredTest {
         this.testState.mockedStorage.removeExpiredEntries();
 
         this.testState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry, false, false, false, false);
+    }
+
+    // TESTCASE: Correctly skips all PersistableNetworkPayloads since they are not expirable
+    @Test
+    public void removeExpiredEntries_skipsPersistableNetworkPayload() {
+        PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(true);
+
+        Assert.assertTrue(this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,getTestNodeAddress(), true, true, false, false));
+
+        this.testState.mockedStorage.removeExpiredEntries();
+
+        Assert.assertTrue(this.testState.mockedStorage.getAppendOnlyDataStoreMap().containsKey(new P2PDataStorage.ByteArray(persistableNetworkPayload.getHash())));
     }
 
     // TESTCASE: Correctly skips non-persistable entries that are not expired
