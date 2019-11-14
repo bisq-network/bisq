@@ -290,6 +290,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                         log.info("We found an expired data entry which we have already back dated. " +
                                                 "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
                                         doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
+                                        removeFromProtectedDataStore(protectedStorageEntry);
                                     }
                                 } else {
                                     log.debug("Remove data ignored as we don't have an entry for that data.");

@@ -26,9 +26,11 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.CryptoException;
+import bisq.common.proto.persistable.PersistablePayload;
 
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -69,14 +71,8 @@ public class P2PDataStoreDisconnectTest {
                                                    boolean wasTTLReduced) {
         ProtectedStorageEntry protectedStorageEntry = beforeState.protectedStorageEntryBeforeOp;
 
-        P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-
-        Assert.assertNotEquals(wasRemoved, currentState.mockedStorage.getMap().containsKey(hashMapHash));
-
-        if (wasRemoved)
-            verify(currentState.hashMapChangedListener).onRemoved(protectedStorageEntry);
-        else
-            verify(currentState.hashMapChangedListener, never()).onRemoved(any(ProtectedStorageEntry.class));
+        currentState.verifyProtectedStorageRemove(beforeState, protectedStorageEntry,
+                wasRemoved, false, false, false);
 
         if (wasTTLReduced)
             Assert.assertTrue(protectedStorageEntry.getCreationTimeStamp() < beforeState.creationTimestampBeforeUpdate);
@@ -157,6 +153,43 @@ public class P2PDataStoreDisconnectTest {
         when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
 
         ProtectedStorageEntry protectedStorageEntry = populateTestState(testState, 1);
+
+        SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
+
+        // Increment the time by 1 hour which will put the protectedStorageState outside TTL
+        this.testState.incrementClock();
+
+        this.testState.mockedStorage.onDisconnect(CloseConnectionReason.SOCKET_CLOSED, mockedConnection);
+
+        verifyStateAfterDisconnect(this.testState, beforeState, true, false);
+    }
+
+    // TESTCASE: ProtectedStoragePayloads implementing the PersistablePayload interface are correctly removed
+    // from the persistent store during the onDisconnect path.
+    @Test
+    public void connectionClosedReduceTTLAndExpireItemsFromPeerPersistable()
+                                                                    throws NoSuchAlgorithmException, CryptoException {
+
+        class ExpirablePersistentProtectedStoragePayloadStub
+                                         extends ExpirableProtectedStoragePayloadStub implements PersistablePayload {
+
+            public ExpirablePersistentProtectedStoragePayloadStub(PublicKey ownerPubKey) {
+                super(ownerPubKey, 0);
+            }
+        }
+
+        when(this.mockedConnection.hasPeersNodeAddress()).thenReturn(true);
+        when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
+
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        ProtectedStoragePayload protectedStoragePayload =
+                new ExpirablePersistentProtectedStoragePayloadStub(ownerKeys.getPublic());
+
+        ProtectedStorageEntry protectedStorageEntry =
+                testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
+
+        testState.mockedStorage.addProtectedStorageEntry(
+                protectedStorageEntry, TestState.getTestNodeAddress(), null, false);
 
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
 
