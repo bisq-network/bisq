@@ -43,6 +43,7 @@ import bisq.core.util.validation.InputValidator;
 
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Asset;
+import bisq.asset.coins.Monero;
 
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -138,7 +139,10 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
             if (asset.isPresent()) {
                 final AltCoinAccountDisclaimer disclaimerAnnotation = asset.get().getClass().getAnnotation(AltCoinAccountDisclaimer.class);
                 if (disclaimerAnnotation != null) {
-                    new Popup<>().information(Res.get(disclaimerAnnotation.value()))
+                    new Popup<>()
+                            .width(asset.get() instanceof Monero ? 1000 : 669)
+                            .maxMessageLength(2500)
+                            .information(Res.get(disclaimerAnnotation.value()))
                             .useIUnderstandButton()
                             .show();
                 }
