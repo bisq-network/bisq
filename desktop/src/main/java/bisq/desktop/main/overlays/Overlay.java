@@ -183,6 +183,8 @@ public abstract class Overlay<T extends Overlay> {
     protected Timer centerTime;
     protected Type type = Type.Undefined;
 
+    protected int maxChar = 1800;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -457,6 +459,11 @@ public abstract class Overlay<T extends Overlay> {
     public T width(double width) {
         this.width = width;
         //noinspection unchecked
+        return (T) this;
+    }
+
+    public T maxMessageLength(int maxChar) {
+        this.maxChar = maxChar;
         return (T) this;
     }
 
@@ -984,8 +991,8 @@ public abstract class Overlay<T extends Overlay> {
     }
 
     protected void setTruncatedMessage() {
-        if (message != null && message.length() > 1800)
-            truncatedMessage = StringUtils.abbreviate(message, 1800);
+        if (message != null && message.length() > maxChar)
+            truncatedMessage = StringUtils.abbreviate(message, maxChar);
         else truncatedMessage = Objects.requireNonNullElse(message, "");
     }
 
