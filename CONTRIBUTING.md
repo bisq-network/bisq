@@ -67,8 +67,6 @@ See also [bisq-network/style#9](https://github.com/bisq-network/style/issues/9).
 
 ### Sign your commits with GPG
 
-_Not strictly required, but recommended for those who commit frequently._
-
 See https://github.com/blog/2144-gpg-signature-verification for background and
 https://help.github.com/articles/signing-commits-with-gpg/ for instructions.
 
