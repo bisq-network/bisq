@@ -43,15 +43,17 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 @Getter
 @Slf4j
 public abstract class PaymentAccount implements PersistablePayload {
     protected final PaymentMethod paymentMethod;
     @Setter
+    @EqualsAndHashCode.Include
     protected String id;
     @Setter
+    @EqualsAndHashCode.Include
     protected long creationDate;
     @Setter
     public PaymentAccountPayload paymentAccountPayload;
