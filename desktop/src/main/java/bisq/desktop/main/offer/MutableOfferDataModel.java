@@ -29,7 +29,6 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
@@ -44,7 +43,6 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
-import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
@@ -52,7 +50,6 @@ import bisq.core.util.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.crypto.KeyRing;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -92,15 +89,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     protected final User user;
-    private final KeyRing keyRing;
     private final P2PService p2PService;
     protected final PriceFeedService priceFeedService;
     final String shortOfferId;
-    private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final FeeService feeService;
-    private final TxFeeEstimationService txFeeEstimationService;
-    private final ReferralIdService referralIdService;
     private final BSFormatter btcFormatter;
     private final MakerFeeProvider makerFeeProvider;
     private final Navigation navigation;
@@ -148,14 +141,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  BsqWalletService bsqWalletService,
                                  Preferences preferences,
                                  User user,
-                                 KeyRing keyRing,
                                  P2PService p2PService,
                                  PriceFeedService priceFeedService,
-                                 FilterManager filterManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  FeeService feeService,
-                                 TxFeeEstimationService txFeeEstimationService,
-                                 ReferralIdService referralIdService,
                                  BSFormatter btcFormatter,
                                  MakerFeeProvider makerFeeProvider,
                                  Navigation navigation) {
@@ -166,14 +155,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.user = user;
-        this.keyRing = keyRing;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
-        this.filterManager = filterManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.feeService = feeService;
-        this.txFeeEstimationService = txFeeEstimationService;
-        this.referralIdService = referralIdService;
         this.btcFormatter = btcFormatter;
         this.makerFeeProvider = makerFeeProvider;
         this.navigation = navigation;
