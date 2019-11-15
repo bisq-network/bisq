@@ -120,11 +120,7 @@ public class CreateOfferService {
     }
 
 
-    public long getPriceAsLong(Price price,
-                               PaymentAccount paymentAccount,
-                               boolean useMarketBasedPrice,
-                               String currencyCode) {
-        boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue(useMarketBasedPrice, currencyCode, paymentAccount);
+    public long getPriceAsLong(Price price, boolean useMarketBasedPriceValue) {
         return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
     }
 

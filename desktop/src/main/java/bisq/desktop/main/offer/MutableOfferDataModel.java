@@ -305,7 +305,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     Offer createAndGetOffer() {
         boolean useMarketBasedPriceValue = createOfferService.isUseMarketBasedPriceValue(useMarketBasedPrice.get(), tradeCurrencyCode.get(), paymentAccount);
 
-        long priceAsLong = createOfferService.getPriceAsLong(price.get(), paymentAccount, useMarketBasedPrice.get(), tradeCurrencyCode.get());
+        long priceAsLong = createOfferService.getPriceAsLong(price.get(), useMarketBasedPriceValue);
 
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
