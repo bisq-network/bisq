@@ -201,28 +201,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             @Override
             public void onBalanceChanged(Coin balance, Transaction tx) {
                 updateBalance();
-
-               /* if (isMainNet.get()) {
-                    SettableFuture<Coin> future = blockchainService.requestFee(tx.getHashAsString());
-                    Futures.addCallback(future, new FutureCallback<Coin>() {
-                        public void onSuccess(Coin fee) {
-                            UserThread.execute(() -> feeFromFundingTxProperty.set(fee));
-                        }
-
-                        public void onFailure(@NotNull Throwable throwable) {
-                            UserThread.execute(() -> new Popup<>()
-                                    .warning("We did not get a response for the request of the mining fee used " +
-                                            "in the funding transaction.\n\n" +
-                                            "Are you sure you used a sufficiently high fee of at least " +
-                                            formatter.formatCoinWithCode(FeePolicy.getMinRequiredFeeForFundingTx()) + "?")
-                                    .actionButtonText("Yes, I used a sufficiently high fee.")
-                                    .onAction(() -> feeFromFundingTxProperty.set(FeePolicy.getMinRequiredFeeForFundingTx()))
-                                    .closeButtonText("No. Let's cancel that payment.")
-                                    .onClose(() -> feeFromFundingTxProperty.set(Coin.ZERO))
-                                    .show());
-                        }
-                    });
-                }*/
             }
         };
 
