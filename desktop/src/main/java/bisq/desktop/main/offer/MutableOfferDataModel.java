@@ -390,13 +390,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     // This works only if we have already funds in the wallet
-    public void estimateTxSize() {
-        Coin reservedFundsForOffer = getSecurityDeposit();
-        if (!isBuyOffer())
-            reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
-
-        Tuple2<Coin, Integer> estimatedFeeAndTxSize = txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer,
-                getMakerFee());
+    public void updateEstimatedFeeAndTxSize() {
+        Tuple2<Coin, Integer> estimatedFeeAndTxSize = createOfferService.getEstimatedFeeAndTxSize(amount.get(),
+                direction,
+                buyerSecurityDeposit.get(),
+                sellerSecurityDeposit.get());
         txFeeFromFeeService = estimatedFeeAndTxSize.first;
         feeTxSize = estimatedFeeAndTxSize.second;
     }

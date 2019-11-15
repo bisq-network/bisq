@@ -681,7 +681,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     void onShowPayFundsScreen(Runnable actionHandler) {
-        dataModel.estimateTxSize();
+        dataModel.updateEstimatedFeeAndTxSize();
         dataModel.requestTxFee(actionHandler);
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();

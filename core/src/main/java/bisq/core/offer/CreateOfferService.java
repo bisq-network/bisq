@@ -17,10 +17,17 @@
 
 package bisq.core.offer;
 
+import bisq.core.btc.TxFeeEstimationService;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.user.Preferences;
+import bisq.core.util.CoinUtil;
 
 import bisq.common.app.Version;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,6 +39,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CreateOfferService {
+    private final TxFeeEstimationService txFeeEstimationService;
+    private final MakerFeeProvider makerFeeProvider;
+    private final BsqWalletService bsqWalletService;
+    private final Preferences preferences;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +50,15 @@ public class CreateOfferService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public CreateOfferService() {
+    public CreateOfferService(TxFeeEstimationService txFeeEstimationService,
+                              MakerFeeProvider makerFeeProvider,
+                              BsqWalletService bsqWalletService,
+                              Preferences preferences
+    ) {
+        this.txFeeEstimationService = txFeeEstimationService;
+        this.makerFeeProvider = makerFeeProvider;
+        this.bsqWalletService = bsqWalletService;
+        this.preferences = preferences;
     }
 
 
@@ -57,4 +76,78 @@ public class CreateOfferService {
         return Restrictions.getSellerSecurityDepositAsPercent();
     }
 
+    public Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(Coin amount,
+                                                          OfferPayload.Direction direction,
+                                                          double buyerSecurityDeposit,
+                                                          double sellerSecurityDeposit) {
+        Coin reservedFundsForOffer = getReservedFundsForOffer(direction, amount, buyerSecurityDeposit, sellerSecurityDeposit);
+
+        return txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer,
+                getMakerFee(amount));
+    }
+
+    public Coin getReservedFundsForOffer(OfferPayload.Direction direction,
+                                         Coin amount,
+                                         double buyerSecurityDeposit,
+                                         double sellerSecurityDeposit) {
+
+        Coin reservedFundsForOffer = getSecurityDeposit(direction,
+                amount,
+                buyerSecurityDeposit,
+                sellerSecurityDeposit);
+        if (!isBuyOffer(direction))
+            reservedFundsForOffer = reservedFundsForOffer.add(amount);
+
+        return reservedFundsForOffer;
+    }
+
+    public Coin getSecurityDeposit(OfferPayload.Direction direction,
+                                   Coin amount,
+                                   double buyerSecurityDeposit,
+                                   double sellerSecurityDeposit) {
+        return isBuyOffer(direction) ?
+                getBuyerSecurityDepositAsCoin(amount, buyerSecurityDeposit) :
+                getSellerSecurityDepositAsCoin(amount, sellerSecurityDeposit);
+    }
+
+    public Coin getMakerFee(Coin amount) {
+        return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isBuyOffer(OfferPayload.Direction direction) {
+        return OfferUtil.isBuyOffer(direction);
+    }
+
+
+    private Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(buyerSecurityDeposit, amount);
+        return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
+    }
+
+    private Coin getSellerSecurityDepositAsCoin(Coin amount, double sellerSecurityDeposit) {
+        Coin amountAsCoin = amount;
+        if (amountAsCoin == null)
+            amountAsCoin = Coin.ZERO;
+
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(sellerSecurityDeposit, amountAsCoin);
+        return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
+    }
+
+
+    private Coin getBoundedBuyerSecurityDepositAsCoin(Coin value) {
+        // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
+        // MinBuyerSecurityDepositAsCoin from Restrictions.
+        return Coin.valueOf(Math.max(Restrictions.getMinBuyerSecurityDepositAsCoin().value, value.value));
+    }
+
+    private Coin getBoundedSellerSecurityDepositAsCoin(Coin value) {
+        // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
+        // MinSellerSecurityDepositAsCoin from Restrictions.
+        return Coin.valueOf(Math.max(Restrictions.getMinSellerSecurityDepositAsCoin().value, value.value));
+    }
 }
