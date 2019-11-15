@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.overlays.windows;
 
+import bisq.core.alert.AlertManager;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
@@ -46,28 +47,15 @@ import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
+    private final AlertManager alertManager;
     private final boolean useDevPrivilegeKeys;
-    private SendAlertMessageHandler sendAlertMessageHandler;
-    private RemoveAlertMessageHandler removeAlertMessageHandler;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    public interface SendAlertMessageHandler {
-        boolean handle(Alert alert, String privKey);
-    }
-
-    public interface RemoveAlertMessageHandler {
-        boolean handle(String privKey);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public SendAlertMessageWindow(boolean useDevPrivilegeKeys) {
+    public SendAlertMessageWindow(AlertManager alertManager, boolean useDevPrivilegeKeys) {
+        this.alertManager = alertManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
@@ -82,16 +70,6 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         addContent();
         applyStyles();
         display();
-    }
-
-    public SendAlertMessageWindow onAddAlertMessage(SendAlertMessageHandler sendAlertMessageHandler) {
-        this.sendAlertMessageHandler = sendAlertMessageHandler;
-        return this;
-    }
-
-    public SendAlertMessageWindow onRemoveAlertMessage(RemoveAlertMessageHandler removeAlertMessageHandler) {
-        this.removeAlertMessageHandler = removeAlertMessageHandler;
-        return this;
     }
 
 
@@ -151,11 +129,10 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
             }
             if (!isUpdate || versionOK) {
                 if (alertMessageTextArea.getText().length() > 0 && keyInputTextField.getText().length() > 0) {
-                    if (sendAlertMessageHandler.handle(
-                            new Alert(alertMessageTextArea.getText(),
-                                    isUpdate,
-                                    version),
-                            keyInputTextField.getText()))
+                    if (alertManager.addAlertMessageIfKeyIsValid(
+                            new Alert(alertMessageTextArea.getText(), isUpdate, version),
+                            keyInputTextField.getText())
+                    )
                         hide();
                     else
                         new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
@@ -166,7 +143,7 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
         Button removeAlertMessageButton = new AutoTooltipButton(Res.get("sendAlertMessageWindow.remove"));
         removeAlertMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
-                if (removeAlertMessageHandler.handle(keyInputTextField.getText()))
+                if (alertManager.removeAlertMessageIfKeyIsValid(keyInputTextField.getText()))
                     hide();
                 else
                     new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();

@@ -340,10 +340,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private void showSendAlertMessagePopup(Injector injector) {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new SendAlertMessageWindow(useDevPrivilegeKeys)
-                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
-                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
-                .show();
+        new SendAlertMessageWindow(alertManager, useDevPrivilegeKeys).show();
     }
 
     private void showFilterPopup(Injector injector) {
