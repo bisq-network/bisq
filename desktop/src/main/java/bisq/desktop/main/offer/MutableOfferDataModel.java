@@ -113,7 +113,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     // Percentage value of buyer security deposit. E.g. 0.01 means 1% of trade amount
     protected final DoubleProperty buyerSecurityDeposit = new SimpleDoubleProperty();
-    private final DoubleProperty sellerSecurityDeposit = new SimpleDoubleProperty();
 
     protected final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
@@ -165,7 +164,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
         buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(null));
-        sellerSecurityDeposit.set(createOfferService.getSellerSecurityDeposit());
 
         btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
@@ -280,8 +278,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 tradeCurrencyCode.get(),
                 amount.get(),
                 minAmount.get(),
-                useMarketBasedPrice.get(),
                 price.get(),
+                useMarketBasedPrice.get(),
                 marketPriceMargin,
                 buyerSecurityDeposit.get(),
                 paymentAccount);
@@ -292,20 +290,14 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         Tuple2<Coin, Integer> estimatedFeeAndTxSize = createOfferService.getEstimatedFeeAndTxSize(amount.get(),
                 direction,
                 buyerSecurityDeposit.get(),
-                sellerSecurityDeposit.get());
+                createOfferService.getSellerSecurityDepositAsDouble());
         txFeeFromFeeService = estimatedFeeAndTxSize.first;
         feeTxSize = estimatedFeeAndTxSize.second;
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        checkNotNull(offer.getMakerFee(), "makerFee must not be null");
-
-        Coin reservedFundsForOffer = createOfferService.getReservedFundsForOffer(direction,
-                amount.get(),
-                buyerSecurityDeposit.get(),
-                sellerSecurityDeposit.get());
         openOfferManager.placeOffer(offer,
-                reservedFundsForOffer,
+                buyerSecurityDeposit.get(),
                 useSavingsWallet,
                 resultHandler,
                 log::error);
@@ -654,7 +646,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;
 
-        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(sellerSecurityDeposit.get(), amountAsCoin);
+        Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(createOfferService.getSellerSecurityDepositAsDouble(), amountAsCoin);
         return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 

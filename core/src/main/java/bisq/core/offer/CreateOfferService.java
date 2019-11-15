@@ -123,10 +123,10 @@ public class CreateOfferService {
                                    String currencyCode,
                                    Coin amount,
                                    Coin minAmount,
-                                   boolean useMarketBasedPrice,
                                    Price price,
+                                   boolean useMarketBasedPrice,
                                    double marketPriceMargin,
-                                   double buyerSecurityDeposit,
+                                   double buyerSecurityDepositAsDouble,
                                    PaymentAccount paymentAccount) {
 
         log.info("offerId={}, \n" +
@@ -140,7 +140,7 @@ public class CreateOfferService {
                         "buyerSecurityDeposit={}, \n" +
                         "paymentAccount={}, \n",
                 offerId, currencyCode, direction, price.getValue(), useMarketBasedPrice, marketPriceMargin,
-                amount.value, minAmount.value, buyerSecurityDeposit, paymentAccount);
+                amount.value, minAmount.value, buyerSecurityDepositAsDouble, paymentAccount);
 
         // prints our param list for dev testing api
         log.info("{} " +
@@ -154,7 +154,7 @@ public class CreateOfferService {
                         "{} " +
                         "{}",
                 offerId, currencyCode, direction.name(), price.getValue(), useMarketBasedPrice, marketPriceMargin,
-                amount.value, minAmount.value, buyerSecurityDeposit, paymentAccount.getId());
+                amount.value, minAmount.value, buyerSecurityDepositAsDouble, paymentAccount.getId());
 
         long creationTime = new Date().getTime();
         NodeAddress makerAddress = p2PService.getAddress();
@@ -181,12 +181,12 @@ public class CreateOfferService {
         List<String> acceptedCountryCodes = PaymentAccountUtil.getAcceptedCountryCodes(paymentAccount);
         String bankId = PaymentAccountUtil.getBankId(paymentAccount);
         List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
-        double sellerSecurityDeposit = getSellerSecurityDeposit();
-        Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDeposit, sellerSecurityDeposit).first;
+        double sellerSecurityDeposit = getSellerSecurityDepositAsDouble();
+        Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDepositAsDouble, sellerSecurityDeposit).first;
         Coin makerFeeAsCoin = getMakerFee(amount);
         boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
-        Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDeposit);
-        Coin sellerSecurityDepositAsCoin = getSellerSecurityDeposit(amount, getSellerSecurityDeposit());
+        Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDepositAsDouble);
+        Coin sellerSecurityDepositAsCoin = getSellerSecurityDeposit(amount, sellerSecurityDeposit);
         long maxTradeLimit = getMaxTradeLimit(paymentAccount, currencyCode, direction);
         long maxTradePeriod = paymentAccount.getMaxTradePeriod();
 
@@ -206,7 +206,7 @@ public class CreateOfferService {
 
         OfferUtil.validateOfferData(filterManager,
                 p2PService,
-                buyerSecurityDeposit,
+                buyerSecurityDepositAsDouble,
                 paymentAccount,
                 currencyCode,
                 makerFeeAsCoin);
@@ -286,7 +286,7 @@ public class CreateOfferService {
                 getSellerSecurityDeposit(amount, sellerSecurityDeposit);
     }
 
-    public double getSellerSecurityDeposit() {
+    public double getSellerSecurityDepositAsDouble() {
         return Restrictions.getSellerSecurityDepositAsPercent();
     }
 
