@@ -52,7 +52,8 @@ import com.google.inject.Inject;
 class CreateOfferDataModel extends MutableOfferDataModel {
 
     @Inject
-    public CreateOfferDataModel(OpenOfferManager openOfferManager,
+    public CreateOfferDataModel(CreateOfferService createOfferService,
+                                OpenOfferManager openOfferManager,
                                 BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 Preferences preferences,
@@ -68,7 +69,8 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 BSFormatter btcFormatter,
                                 MakerFeeProvider makerFeeProvider,
                                 Navigation navigation) {
-        super(openOfferManager,
+        super(createOfferService,
+                openOfferManager,
                 btcWalletService,
                 bsqWalletService,
                 preferences,

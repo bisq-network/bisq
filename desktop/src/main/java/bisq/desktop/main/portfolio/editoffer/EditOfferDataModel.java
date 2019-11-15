@@ -61,7 +61,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
     private OpenOffer.State initialState;
 
     @Inject
-    EditOfferDataModel(OpenOfferManager openOfferManager,
+    EditOfferDataModel(CreateOfferService createOfferService,
+                       OpenOfferManager openOfferManager,
                        BtcWalletService btcWalletService,
                        BsqWalletService bsqWalletService,
                        Preferences preferences,
@@ -78,7 +79,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
                        CorePersistenceProtoResolver corePersistenceProtoResolver,
                        MakerFeeProvider makerFeeProvider,
                        Navigation navigation) {
-        super(openOfferManager,
+        super(createOfferService,
+                openOfferManager,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
