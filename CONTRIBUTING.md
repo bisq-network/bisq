@@ -22,7 +22,7 @@ All Bisq contributors submit changes via pull requests. The workflow is as follo
  - Squash redundant or unnecessary commits
  - Submit a pull request from your topic branch back to the `master` branch of the main repository
 
-Pull requests should be focused on a single change. Do not mix, for example, refactorings with a bug fix or implementation of a new feature. This practice makes it easier for fellow contributors to review each pull request on its merits and and to give a clear ACK/NACK (see below).
+Pull requests should be focused on a single change. Do not mix, for example, refactorings with a bug fix or implementation of a new feature. This practice makes it easier for fellow contributors to review each pull request on its merits and to give a clear ACK/NACK (see below).
 
 
 ## Reviewing Pull Requests
