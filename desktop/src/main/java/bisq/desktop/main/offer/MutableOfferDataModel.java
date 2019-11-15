@@ -111,7 +111,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final TxFeeEstimationService txFeeEstimationService;
     private final ReferralIdService referralIdService;
     private final BSFormatter btcFormatter;
-    private MakerFeeProvider makerFeeProvider;
+    private final MakerFeeProvider makerFeeProvider;
     private final Navigation navigation;
     private final String offerId;
     private final BalanceListener btcBalanceListener;
@@ -133,7 +133,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     // Percentage value of buyer security deposit. E.g. 0.01 means 1% of trade amount
     protected final DoubleProperty buyerSecurityDeposit = new SimpleDoubleProperty();
-    protected final DoubleProperty sellerSecurityDeposit = new SimpleDoubleProperty();
+    private final DoubleProperty sellerSecurityDeposit = new SimpleDoubleProperty();
 
     protected final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
@@ -757,7 +757,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 
-    Coin getSellerSecurityDepositAsCoin() {
+    private Coin getSellerSecurityDepositAsCoin() {
         Coin amountAsCoin = this.amount.get();
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;
