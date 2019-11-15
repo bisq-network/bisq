@@ -123,13 +123,12 @@ public class CreateOfferService {
         return OfferUtil.isBuyOffer(direction);
     }
 
-
-    private Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
+    public Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
         Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(buyerSecurityDeposit, amount);
         return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 
-    private Coin getSellerSecurityDepositAsCoin(Coin amount, double sellerSecurityDeposit) {
+    public Coin getSellerSecurityDepositAsCoin(Coin amount, double sellerSecurityDeposit) {
         Coin amountAsCoin = amount;
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;

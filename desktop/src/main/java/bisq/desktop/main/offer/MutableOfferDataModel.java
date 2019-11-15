@@ -346,6 +346,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 currencyCode,
                 makerFeeAsCoin);
 
+        Coin buyerSecurityDepositAsCoin = createOfferService.getBuyerSecurityDepositAsCoin(amount.get(), buyerSecurityDeposit.get());
+        Coin sellerSecurityDepositAsCoin = createOfferService.getSellerSecurityDepositAsCoin(amount.get(), sellerSecurityDeposit.get());
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
@@ -372,8 +374,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 txFeeFromFeeService.value,
                 makerFeeAsCoin.value,
                 isCurrencyForMakerFeeBtc(),
-                getBuyerSecurityDepositAsCoin().value,
-                getSellerSecurityDepositAsCoin().value,
+                buyerSecurityDepositAsCoin.value,
+                sellerSecurityDepositAsCoin.value,
                 maxTradeLimit,
                 maxTradePeriod,
                 useAutoClose,
