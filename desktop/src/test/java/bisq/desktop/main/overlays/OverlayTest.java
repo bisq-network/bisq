@@ -15,31 +15,33 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.overlays.popups;
+package bisq.desktop.main.overlays;
 
-import bisq.desktop.main.overlays.Overlay;
+import org.junit.Test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class OverlayTest {
 
-// TODO: Type parameter is unused - remove:
-public class Popup<T> extends Overlay<Popup<T>> {
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    public Popup() {
+    @Test
+    public void typeSafeCreation() {
+        new A();
+        new C();
+        new D<>();
     }
 
-    public void onReadyForDisplay() {
-        super.display();
+    @Test(expected = RuntimeException.class)
+    public void typeUnsafeCreation() {
+        new B();
     }
 
-    @Override
-    protected void onShow() {
-        PopupManager.queueForDisplay(this);
+    private static class A extends Overlay<A> {
     }
 
-    @Override
-    protected void onHidden() {
-        PopupManager.onHidden(this);
+    private static class B extends Overlay<A> {
+    }
+
+    private static class C extends TabbedOverlay<C> {
+    }
+
+    private static class D<T> extends Overlay<D<T>> {
     }
 }
