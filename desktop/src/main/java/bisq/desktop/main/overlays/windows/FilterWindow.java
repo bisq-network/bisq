@@ -166,7 +166,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
-            if (sendFilterMessageHandler.handle(new Filter(
+            if (sendFilterMessageHandler.handle(
+                    new Filter(
                             readAsList(offerIdsInputTextField),
                             readAsList(nodesInputTextField),
                             readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
@@ -181,8 +182,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
                             disableDaoBelowVersionInputTextField.getText(),
                             disableTradeBelowVersionInputTextField.getText(),
                             readAsList(mediatorsInputTextField),
-                            readAsList(refundAgentsInputTextField)),
-                    keyInputTextField.getText()))
+                            readAsList(refundAgentsInputTextField)
+                    ),
+                    keyInputTextField.getText())
+            )
                 hide();
             else
                 new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
