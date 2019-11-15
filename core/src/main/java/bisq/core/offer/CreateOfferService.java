@@ -158,13 +158,13 @@ public class CreateOfferService {
 
         boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue(useMarketBasedPrice, currencyCode, paymentAccount);
 
-        long priceAsLong = getPriceAsLong(price, useMarketBasedPriceValue);
+        long priceAsLong = price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
 
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
         String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
 
-        double marketPriceMarginParam = marketPriceMarginParam(useMarketBasedPriceValue, marketPriceMargin);
+        double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
 
         long amountAsLong = amount != null ? amount.getValue() : 0L;
         long minAmountAsLong = minAmount != null ? minAmount.getValue() : 0L;
@@ -258,10 +258,6 @@ public class CreateOfferService {
         return offer;
     }
 
-    public double getSellerSecurityDeposit() {
-        return Restrictions.getSellerSecurityDepositAsPercent();
-    }
-
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(Coin amount,
                                                           OfferPayload.Direction direction,
                                                           double buyerSecurityDeposit,
@@ -294,17 +290,12 @@ public class CreateOfferService {
                 getSellerSecurityDepositAsCoin(amount, sellerSecurityDeposit);
     }
 
+    public double getSellerSecurityDeposit() {
+        return Restrictions.getSellerSecurityDepositAsPercent();
+    }
+
     public Coin getMakerFee(Coin amount) {
         return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
-    }
-
-    private boolean isHalCashAccount(PaymentAccount paymentAccount) {
-        return paymentAccount instanceof HalCashAccount;
-    }
-
-    private boolean isMarketPriceAvailable(String currencyCode) {
-        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-        return marketPrice != null && marketPrice.isExternallyProvidedPrice();
     }
 
     public long getMaxTradeLimit(PaymentAccount paymentAccount,
@@ -326,12 +317,8 @@ public class CreateOfferService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private double marketPriceMarginParam(boolean useMarketBasedPriceValue, double marketPriceMargin) {
-        return useMarketBasedPriceValue ? marketPriceMargin : 0;
-    }
-
-    private long getPriceAsLong(Price price, boolean useMarketBasedPriceValue) {
-        return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
+    private boolean isCurrencyForMakerFeeBtc(Coin amount) {
+        return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
     }
 
     private boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
@@ -340,6 +327,15 @@ public class CreateOfferService {
         return useMarketBasedPrice &&
                 isMarketPriceAvailable(currencyCode) &&
                 !isHalCashAccount(paymentAccount);
+    }
+
+    private boolean isMarketPriceAvailable(String currencyCode) {
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        return marketPrice != null && marketPrice.isExternallyProvidedPrice();
+    }
+
+    private boolean isHalCashAccount(PaymentAccount paymentAccount) {
+        return paymentAccount instanceof HalCashAccount;
     }
 
     private Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
@@ -366,9 +362,5 @@ public class CreateOfferService {
         // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
         // MinSellerSecurityDepositAsCoin from Restrictions.
         return Coin.valueOf(Math.max(Restrictions.getMinSellerSecurityDepositAsCoin().value, value.value));
-    }
-
-    private boolean isCurrencyForMakerFeeBtc(Coin amount) {
-        return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
     }
 }
