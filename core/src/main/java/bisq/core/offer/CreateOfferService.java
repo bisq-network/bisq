@@ -156,26 +156,37 @@ public class CreateOfferService {
                 offerId, currencyCode, direction.name(), price.getValue(), useMarketBasedPrice, marketPriceMargin,
                 amount.value, minAmount.value, buyerSecurityDeposit, paymentAccount.getId());
 
+        long creationTime = new Date().getTime();
+        NodeAddress makerAddress = p2PService.getAddress();
         boolean useMarketBasedPriceValue = useMarketBasedPrice &&
                 isMarketPriceAvailable(currencyCode) &&
                 !isHalCashAccount(paymentAccount);
 
         long priceAsLong = price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
-
+        double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
+        long amountAsLong = amount != null ? amount.getValue() : 0L;
+        long minAmountAsLong = minAmount != null ? minAmount.getValue() : 0L;
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
         String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
-
-        double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
-
-        long amountAsLong = amount != null ? amount.getValue() : 0L;
-        long minAmountAsLong = minAmount != null ? minAmount.getValue() : 0L;
-
-        List<String> acceptedCountryCodes = PaymentAccountUtil.getAcceptedCountryCodes(paymentAccount);
-        List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
-        String bankId = PaymentAccountUtil.getBankId(paymentAccount);
+        List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
+        ArrayList<NodeAddress> arbitratorNodeAddresses = acceptedArbitratorAddresses != null ?
+                Lists.newArrayList(acceptedArbitratorAddresses) :
+                new ArrayList<>();
+        List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
+        ArrayList<NodeAddress> mediatorNodeAddresses = acceptedMediatorAddresses != null ?
+                Lists.newArrayList(acceptedMediatorAddresses) :
+                new ArrayList<>();
         String countryCode = PaymentAccountUtil.getCountryCode(paymentAccount);
-
+        List<String> acceptedCountryCodes = PaymentAccountUtil.getAcceptedCountryCodes(paymentAccount);
+        String bankId = PaymentAccountUtil.getBankId(paymentAccount);
+        List<String> acceptedBanks = PaymentAccountUtil.getAcceptedBanks(paymentAccount);
+        double sellerSecurityDeposit = getSellerSecurityDeposit();
+        Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDeposit, sellerSecurityDeposit).first;
+        Coin makerFeeAsCoin = getMakerFee(amount);
+        boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
+        Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDeposit);
+        Coin sellerSecurityDepositAsCoin = getSellerSecurityDeposit(amount, getSellerSecurityDeposit());
         long maxTradeLimit = getMaxTradeLimit(paymentAccount, currencyCode, direction);
         long maxTradePeriod = paymentAccount.getMaxTradePeriod();
 
@@ -187,9 +198,6 @@ public class CreateOfferService {
         long lowerClosePrice = 0;
         long upperClosePrice = 0;
         String hashOfChallenge = null;
-
-        Coin makerFeeAsCoin = getMakerFee(amount);
-
         Map<String, String> extraDataMap = OfferUtil.getExtraDataMap(accountAgeWitnessService,
                 referralIdService,
                 paymentAccount,
@@ -203,24 +211,9 @@ public class CreateOfferService {
                 currencyCode,
                 makerFeeAsCoin);
 
-        Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDeposit);
-        double sellerSecurityDeposit = getSellerSecurityDeposit();
-        Coin sellerSecurityDepositAsCoin = getSellerSecurityDeposit(amount, getSellerSecurityDeposit());
-        Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDeposit, sellerSecurityDeposit).first;
-        boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
-
-        List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
-        ArrayList<NodeAddress> arbitratorNodeAddresses = acceptedArbitratorAddresses != null ?
-                Lists.newArrayList(acceptedArbitratorAddresses) :
-                new ArrayList<>();
-        List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
-        ArrayList<NodeAddress> mediatorNodeAddresses = acceptedMediatorAddresses != null ?
-                Lists.newArrayList(acceptedMediatorAddresses) :
-                new ArrayList<>();
-
         OfferPayload offerPayload = new OfferPayload(offerId,
-                new Date().getTime(),
-                p2PService.getAddress(),
+                creationTime,
+                makerAddress,
                 pubKeyRing,
                 OfferPayload.Direction.valueOf(direction.name()),
                 priceAsLong,
