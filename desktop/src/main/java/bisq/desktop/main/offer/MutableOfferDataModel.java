@@ -122,7 +122,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
 
     protected PaymentAccount paymentAccount;
-    protected boolean isTabSelected;
+    boolean isTabSelected;
     protected double marketPriceMargin = 0;
     private Coin txFeeFromFeeService = Coin.ZERO;
     private boolean marketPriceAvailable;
@@ -418,7 +418,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isMinAmountLessOrEqualAmount() {
         //noinspection SimplifiableIfStatement
         if (minAmount.get() != null && amount.get() != null)
@@ -579,7 +578,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             return txFeeFromFeeService.subtract(getMakerFee());
     }
 
-    public void swapTradeToSavings() {
+    void swapTradeToSavings() {
         btcWalletService.resetAddressEntriesForOpenOffer(offerId);
     }
 
@@ -679,7 +678,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return totalToPayAsCoin;
     }
 
-    public Coin getBsqBalance() {
+    Coin getBsqBalance() {
         return bsqWalletService.getAvailableConfirmedBalance();
     }
 
@@ -707,11 +706,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount.get());
     }
 
-    public boolean isPreferredFeeCurrencyBtc() {
+    boolean isPreferredFeeCurrencyBtc() {
         return preferences.isPayFeeInBtc();
     }
 
-    public boolean isBsqForFeeAvailable() {
+    boolean isBsqForFeeAvailable() {
         return OfferUtil.isBsqForMakerFeeAvailable(bsqWalletService, amount.get());
     }
 
@@ -719,7 +718,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return paymentAccount instanceof HalCashAccount;
     }
 
-    public boolean canPlaceOffer() {
+    boolean canPlaceOffer() {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
                 GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
     }
