@@ -150,22 +150,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         if (filter != null) {
             setupFieldFromList(offerIdsInputTextField, filter.getBannedOfferIds());
             setupFieldFromList(nodesInputTextField, filter.getBannedNodeAddress());
-
-            if (filter.getBannedPaymentAccounts() != null) {
-                StringBuilder sb = new StringBuilder();
-                filter.getBannedPaymentAccounts().stream().forEach(e -> {
-                    if (e != null && e.getPaymentMethodId() != null) {
-                        sb.append(e.getPaymentMethodId())
-                                .append("|")
-                                .append(e.getGetMethodName())
-                                .append("|")
-                                .append(e.getValue())
-                                .append(", ");
-                    }
-                });
-                paymentAccountFilterInputTextField.setText(sb.toString());
-            }
-
+            setupFieldFromPaymentAccountFiltersList(paymentAccountFilterInputTextField, filter.getBannedPaymentAccounts());
             setupFieldFromList(bannedCurrenciesInputTextField, filter.getBannedCurrencies());
             setupFieldFromList(bannedPaymentMethodsInputTextField, filter.getBannedPaymentMethods());
             setupFieldFromList(arbitratorsInputTextField, filter.getArbitrators());
@@ -174,9 +159,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(seedNodesInputTextField, filter.getSeedNodes());
             setupFieldFromList(priceRelayNodesInputTextField, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesInputTextField, filter.getBtcNodes());
-
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
-
             disableDaoCheckBox.setSelected(filter.isDisableDao());
             disableDaoBelowVersionInputTextField.setText(filter.getDisableDaoBelowVersion());
             disableTradeBelowVersionInputTextField.setText(filter.getDisableTradeBelowVersion());
@@ -232,6 +215,24 @@ public class FilterWindow extends Overlay<FilterWindow> {
     private void setupFieldFromList(InputTextField field, List<String> values) {
         if (values != null)
             field.setText(values.stream().collect(Collectors.joining(", ")));
+    }
+
+    private void setupFieldFromPaymentAccountFiltersList(InputTextField field, List<PaymentAccountFilter> values) {
+        if (values != null) {
+            StringBuilder sb = new StringBuilder();
+            values.stream().forEach(e -> {
+                if (e != null && e.getPaymentMethodId() != null) {
+                    sb
+                            .append(e.getPaymentMethodId())
+                            .append("|")
+                            .append(e.getGetMethodName())
+                            .append("|")
+                            .append(e.getValue())
+                            .append(", ");
+                }
+            });
+            field.setText(sb.toString());
+        }
     }
 
     private List<String> readAsList(InputTextField field) {
