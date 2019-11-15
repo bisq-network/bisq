@@ -183,21 +183,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
-            List<PaymentAccountFilter> paymentAccountFilters = readAsList(paymentAccountFilterInputTextField)
-                    .stream().map(item -> {
-                        String[] list = item.split("\\|");
-                        if (list.length == 3)
-                            return new PaymentAccountFilter(list[0], list[1], list[2]);
-                        else
-                            return new PaymentAccountFilter("", "", "");
-                    })
-                    .collect(Collectors.toList());
-
-
             if (sendFilterMessageHandler.handle(new Filter(
                             readAsList(offerIdsInputTextField),
                             readAsList(nodesInputTextField),
-                            paymentAccountFilters,
+                            readAsPaymentAccountFiltersList(paymentAccountFilterInputTextField),
                             readAsList(bannedCurrenciesInputTextField),
                             readAsList(bannedPaymentMethodsInputTextField),
                             readAsList(arbitratorsInputTextField),
@@ -251,5 +240,17 @@ public class FilterWindow extends Overlay<FilterWindow> {
         } else {
             return Arrays.asList(StringUtils.deleteWhitespace(field.getText()).split(","));
         }
+    }
+
+    private List<PaymentAccountFilter> readAsPaymentAccountFiltersList(InputTextField field) {
+        return readAsList(field)
+                .stream().map(item -> {
+                    String[] list = item.split("\\|");
+                    if (list.length == 3)
+                        return new PaymentAccountFilter(list[0], list[1], list[2]);
+                    else
+                        return new PaymentAccountFilter("", "", "");
+                })
+                .collect(Collectors.toList());
     }
 }
