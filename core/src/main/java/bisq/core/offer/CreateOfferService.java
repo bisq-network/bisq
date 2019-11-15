@@ -17,6 +17,7 @@
 
 package bisq.core.offer;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -49,6 +50,7 @@ public class CreateOfferService {
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -60,12 +62,14 @@ public class CreateOfferService {
                               MakerFeeProvider makerFeeProvider,
                               BsqWalletService bsqWalletService,
                               Preferences preferences,
-                              PriceFeedService priceFeedService) {
+                              PriceFeedService priceFeedService,
+                              AccountAgeWitnessService accountAgeWitnessService) {
         this.txFeeEstimationService = txFeeEstimationService;
         this.makerFeeProvider = makerFeeProvider;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
 
@@ -144,6 +148,16 @@ public class CreateOfferService {
 
     public double marketPriceMarginParam(boolean useMarketBasedPriceValue, double marketPriceMargin) {
         return useMarketBasedPriceValue ? marketPriceMargin : 0;
+    }
+
+    public long getMaxTradeLimit(PaymentAccount paymentAccount,
+                                 String currencyCode,
+                                 OfferPayload.Direction direction) {
+        if (paymentAccount != null) {
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction);
+        } else {
+            return 0;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

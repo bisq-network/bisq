@@ -322,7 +322,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         String bankId = PaymentAccountUtil.getBankId(paymentAccount);
         String countryCode = PaymentAccountUtil.getCountryCode(paymentAccount);
 
-        long maxTradeLimit = getMaxTradeLimit();
+        long maxTradeLimit = createOfferService.getMaxTradeLimit(paymentAccount, tradeCurrencyCode.get(), direction);
         long maxTradePeriod = paymentAccount.getMaxTradePeriod();
 
         // reserved for future use cases
