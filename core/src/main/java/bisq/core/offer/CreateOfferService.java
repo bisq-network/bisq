@@ -128,13 +128,14 @@ public class CreateOfferService {
         return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
     }
 
-    private boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
-                                               String currencyCode,
-                                               PaymentAccount paymentAccount) {
+    public boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
+                                              String currencyCode,
+                                              PaymentAccount paymentAccount) {
         return useMarketBasedPrice &&
                 isMarketPriceAvailable(currencyCode) &&
                 !isHalCashAccount(paymentAccount);
     }
+
 
     private boolean isHalCashAccount(PaymentAccount paymentAccount) {
         return paymentAccount instanceof HalCashAccount;
@@ -145,6 +146,9 @@ public class CreateOfferService {
         return marketPrice != null && marketPrice.isExternallyProvidedPrice();
     }
 
+    public double marketPriceMarginParam(boolean useMarketBasedPriceValue, double marketPriceMargin) {
+        return useMarketBasedPriceValue ? marketPriceMargin : 0;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -180,4 +184,5 @@ public class CreateOfferService {
         // MinSellerSecurityDepositAsCoin from Restrictions.
         return Coin.valueOf(Math.max(Restrictions.getMinSellerSecurityDepositAsCoin().value, value.value));
     }
+
 }

@@ -303,7 +303,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     @SuppressWarnings("ConstantConditions")
     Offer createAndGetOffer() {
-        boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue();
+        boolean useMarketBasedPriceValue = createOfferService.isUseMarketBasedPriceValue(useMarketBasedPrice.get(), tradeCurrencyCode.get(), paymentAccount);
 
         long priceAsLong = createOfferService.getPriceAsLong(price.get(), paymentAccount, useMarketBasedPrice.get(), tradeCurrencyCode.get());
 
@@ -312,7 +312,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();
         String counterCurrencyCode = isCryptoCurrency ? Res.getBaseCurrencyCode() : currencyCode;
 
-        double marketPriceMarginParam = useMarketBasedPriceValue ? marketPriceMargin : 0;
+        double marketPriceMarginParam = createOfferService.marketPriceMarginParam(useMarketBasedPriceValue, marketPriceMargin);
+
         long amountAsLong = this.amount.get() != null ? this.amount.get().getValue() : 0L;
         long minAmountAsLong = this.minAmount.get() != null ? this.minAmount.get().getValue() : 0L;
 
