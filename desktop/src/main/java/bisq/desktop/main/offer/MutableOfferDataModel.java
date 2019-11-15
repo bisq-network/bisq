@@ -348,6 +348,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         Coin buyerSecurityDepositAsCoin = createOfferService.getBuyerSecurityDepositAsCoin(amount.get(), buyerSecurityDeposit.get());
         Coin sellerSecurityDepositAsCoin = createOfferService.getSellerSecurityDepositAsCoin(amount.get(), sellerSecurityDeposit.get());
+        Coin txFeeFromFeeService = createOfferService.getEstimatedFeeAndTxSize(amount.get(), direction, buyerSecurityDeposit.get(), sellerSecurityDeposit.get()).first;
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),

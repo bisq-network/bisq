@@ -81,9 +81,7 @@ public class CreateOfferService {
                                                           double buyerSecurityDeposit,
                                                           double sellerSecurityDeposit) {
         Coin reservedFundsForOffer = getReservedFundsForOffer(direction, amount, buyerSecurityDeposit, sellerSecurityDeposit);
-
-        return txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer,
-                getMakerFee(amount));
+        return txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer, getMakerFee(amount));
     }
 
     public Coin getReservedFundsForOffer(OfferPayload.Direction direction,
