@@ -304,7 +304,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     @SuppressWarnings("ConstantConditions")
     Offer createAndGetOffer() {
         boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue();
-        long priceAsLong = price.get() != null && !useMarketBasedPriceValue ? price.get().getValue() : 0L;
+
+        long priceAsLong = createOfferService.getPriceAsLong(price.get(), paymentAccount, useMarketBasedPrice.get(), tradeCurrencyCode.get());
+
         String currencyCode = tradeCurrencyCode.get();
         boolean isCryptoCurrency = CurrencyUtil.isCryptoCurrency(currencyCode);
         String baseCurrencyCode = isCryptoCurrency ? currencyCode : Res.getBaseCurrencyCode();

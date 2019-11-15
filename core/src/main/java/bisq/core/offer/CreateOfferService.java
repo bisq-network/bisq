@@ -20,6 +20,11 @@ package bisq.core.offer;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.monetary.Price;
+import bisq.core.payment.HalCashAccount;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.provider.price.MarketPrice;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.CoinUtil;
 
@@ -43,6 +48,7 @@ public class CreateOfferService {
     private final MakerFeeProvider makerFeeProvider;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
+    private final PriceFeedService priceFeedService;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -53,12 +59,13 @@ public class CreateOfferService {
     public CreateOfferService(TxFeeEstimationService txFeeEstimationService,
                               MakerFeeProvider makerFeeProvider,
                               BsqWalletService bsqWalletService,
-                              Preferences preferences
-    ) {
+                              Preferences preferences,
+                              PriceFeedService priceFeedService) {
         this.txFeeEstimationService = txFeeEstimationService;
         this.makerFeeProvider = makerFeeProvider;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
+        this.priceFeedService = priceFeedService;
     }
 
 
@@ -110,6 +117,32 @@ public class CreateOfferService {
 
     public Coin getMakerFee(Coin amount) {
         return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
+    }
+
+
+    public long getPriceAsLong(Price price,
+                               PaymentAccount paymentAccount,
+                               boolean useMarketBasedPrice,
+                               String currencyCode) {
+        boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue(useMarketBasedPrice, currencyCode, paymentAccount);
+        return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
+    }
+
+    private boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
+                                               String currencyCode,
+                                               PaymentAccount paymentAccount) {
+        return useMarketBasedPrice &&
+                isMarketPriceAvailable(currencyCode) &&
+                !isHalCashAccount(paymentAccount);
+    }
+
+    private boolean isHalCashAccount(PaymentAccount paymentAccount) {
+        return paymentAccount instanceof HalCashAccount;
+    }
+
+    private boolean isMarketPriceAvailable(String currencyCode) {
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        return marketPrice != null && marketPrice.isExternallyProvidedPrice();
     }
 
 
