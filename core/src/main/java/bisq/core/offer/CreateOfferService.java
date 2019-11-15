@@ -17,6 +17,8 @@
 
 package bisq.core.offer;
 
+import bisq.core.btc.wallet.Restrictions;
+
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
@@ -50,4 +52,9 @@ public class CreateOfferService {
                 UUID.randomUUID().toString() + "-" +
                 Version.VERSION.replace(".", "");
     }
+
+    public double getSellerSecurityDeposit() {
+        return Restrictions.getSellerSecurityDepositAsPercent();
+    }
+
 }

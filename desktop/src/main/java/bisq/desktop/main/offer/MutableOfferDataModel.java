@@ -192,7 +192,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
         useMarketBasedPrice.set(preferences.isUsePercentageBasedPrice());
         buyerSecurityDeposit.set(preferences.getBuyerSecurityDepositAsPercent(null));
-        sellerSecurityDeposit.set(Restrictions.getSellerSecurityDepositAsPercent());
+        sellerSecurityDeposit.set(createOfferService.getSellerSecurityDeposit());
 
         btcBalanceListener = new BalanceListener(getAddressEntry().getAddress()) {
             @Override
