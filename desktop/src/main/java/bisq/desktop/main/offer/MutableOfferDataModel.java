@@ -105,10 +105,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     protected TradeCurrency tradeCurrency;
     protected final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     protected final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
-    //final BooleanProperty isMainNet = new SimpleBooleanProperty();
-    //final BooleanProperty isFeeFromFundingTxSufficient = new SimpleBooleanProperty();
-
-    // final ObjectProperty<Coin> feeFromFundingTxProperty = new SimpleObjectProperty(Coin.NEGATIVE_SATOSHI);
     protected final ObjectProperty<Coin> amount = new SimpleObjectProperty<>();
     protected final ObjectProperty<Coin> minAmount = new SimpleObjectProperty<>();
     protected final ObjectProperty<Price> price = new SimpleObjectProperty<>();
