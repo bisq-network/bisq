@@ -156,7 +156,9 @@ public class CreateOfferService {
                 offerId, currencyCode, direction.name(), price.getValue(), useMarketBasedPrice, marketPriceMargin,
                 amount.value, minAmount.value, buyerSecurityDeposit, paymentAccount.getId());
 
-        boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue(useMarketBasedPrice, currencyCode, paymentAccount);
+        boolean useMarketBasedPriceValue = useMarketBasedPrice &&
+                isMarketPriceAvailable(currencyCode) &&
+                !isHalCashAccount(paymentAccount);
 
         long priceAsLong = price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
 
@@ -201,10 +203,11 @@ public class CreateOfferService {
                 currencyCode,
                 makerFeeAsCoin);
 
-        Coin buyerSecurityDepositAsCoin = getBuyerSecurityDepositAsCoin(amount, buyerSecurityDeposit);
+        Coin buyerSecurityDepositAsCoin = getBuyerSecurityDeposit(amount, buyerSecurityDeposit);
         double sellerSecurityDeposit = getSellerSecurityDeposit();
-        Coin sellerSecurityDepositAsCoin = getSellerSecurityDepositAsCoin(amount, getSellerSecurityDeposit());
+        Coin sellerSecurityDepositAsCoin = getSellerSecurityDeposit(amount, getSellerSecurityDeposit());
         Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDeposit, sellerSecurityDeposit).first;
+        boolean isCurrencyForMakerFeeBtc = OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
 
         List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
         ArrayList<NodeAddress> arbitratorNodeAddresses = acceptedArbitratorAddresses != null ?
@@ -240,7 +243,7 @@ public class CreateOfferService {
                 btcWalletService.getLastBlockSeenHeight(),
                 txFeeFromFeeService.value,
                 makerFeeAsCoin.value,
-                isCurrencyForMakerFeeBtc(amount),
+                isCurrencyForMakerFeeBtc,
                 buyerSecurityDepositAsCoin.value,
                 sellerSecurityDepositAsCoin.value,
                 maxTradeLimit,
@@ -286,8 +289,8 @@ public class CreateOfferService {
                                    double buyerSecurityDeposit,
                                    double sellerSecurityDeposit) {
         return isBuyOffer(direction) ?
-                getBuyerSecurityDepositAsCoin(amount, buyerSecurityDeposit) :
-                getSellerSecurityDepositAsCoin(amount, sellerSecurityDeposit);
+                getBuyerSecurityDeposit(amount, buyerSecurityDeposit) :
+                getSellerSecurityDeposit(amount, sellerSecurityDeposit);
     }
 
     public double getSellerSecurityDeposit() {
@@ -317,18 +320,6 @@ public class CreateOfferService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isCurrencyForMakerFeeBtc(Coin amount) {
-        return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
-    }
-
-    private boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
-                                               String currencyCode,
-                                               PaymentAccount paymentAccount) {
-        return useMarketBasedPrice &&
-                isMarketPriceAvailable(currencyCode) &&
-                !isHalCashAccount(paymentAccount);
-    }
-
     private boolean isMarketPriceAvailable(String currencyCode) {
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
         return marketPrice != null && marketPrice.isExternallyProvidedPrice();
@@ -338,27 +329,27 @@ public class CreateOfferService {
         return paymentAccount instanceof HalCashAccount;
     }
 
-    private Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
+    private Coin getBuyerSecurityDeposit(Coin amount, double buyerSecurityDeposit) {
         Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(buyerSecurityDeposit, amount);
-        return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
+        return getBoundedBuyerSecurityDeposit(percentOfAmountAsCoin);
     }
 
-    private Coin getSellerSecurityDepositAsCoin(Coin amount, double sellerSecurityDeposit) {
+    private Coin getSellerSecurityDeposit(Coin amount, double sellerSecurityDeposit) {
         Coin amountAsCoin = amount;
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;
 
         Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(sellerSecurityDeposit, amountAsCoin);
-        return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
+        return getBoundedSellerSecurityDeposit(percentOfAmountAsCoin);
     }
 
-    private Coin getBoundedBuyerSecurityDepositAsCoin(Coin value) {
+    private Coin getBoundedBuyerSecurityDeposit(Coin value) {
         // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
         // MinBuyerSecurityDepositAsCoin from Restrictions.
         return Coin.valueOf(Math.max(Restrictions.getMinBuyerSecurityDepositAsCoin().value, value.value));
     }
 
-    private Coin getBoundedSellerSecurityDepositAsCoin(Coin value) {
+    private Coin getBoundedSellerSecurityDeposit(Coin value) {
         // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
         // MinSellerSecurityDepositAsCoin from Restrictions.
         return Coin.valueOf(Math.max(Restrictions.getMinSellerSecurityDepositAsCoin().value, value.value));
