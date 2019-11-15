@@ -118,82 +118,6 @@ public class CreateOfferService {
                 Version.VERSION.replace(".", "");
     }
 
-    public double getSellerSecurityDeposit() {
-        return Restrictions.getSellerSecurityDepositAsPercent();
-    }
-
-    public Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(Coin amount,
-                                                          OfferPayload.Direction direction,
-                                                          double buyerSecurityDeposit,
-                                                          double sellerSecurityDeposit) {
-        Coin reservedFundsForOffer = getReservedFundsForOffer(direction, amount, buyerSecurityDeposit, sellerSecurityDeposit);
-        return txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer, getMakerFee(amount));
-    }
-
-    public Coin getReservedFundsForOffer(OfferPayload.Direction direction,
-                                         Coin amount,
-                                         double buyerSecurityDeposit,
-                                         double sellerSecurityDeposit) {
-
-        Coin reservedFundsForOffer = getSecurityDeposit(direction,
-                amount,
-                buyerSecurityDeposit,
-                sellerSecurityDeposit);
-        if (!isBuyOffer(direction))
-            reservedFundsForOffer = reservedFundsForOffer.add(amount);
-
-        return reservedFundsForOffer;
-    }
-
-    public Coin getSecurityDeposit(OfferPayload.Direction direction,
-                                   Coin amount,
-                                   double buyerSecurityDeposit,
-                                   double sellerSecurityDeposit) {
-        return isBuyOffer(direction) ?
-                getBuyerSecurityDepositAsCoin(amount, buyerSecurityDeposit) :
-                getSellerSecurityDepositAsCoin(amount, sellerSecurityDeposit);
-    }
-
-    public Coin getMakerFee(Coin amount) {
-        return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
-    }
-
-    public long getPriceAsLong(Price price, boolean useMarketBasedPriceValue) {
-        return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
-    }
-
-    public boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
-                                              String currencyCode,
-                                              PaymentAccount paymentAccount) {
-        return useMarketBasedPrice &&
-                isMarketPriceAvailable(currencyCode) &&
-                !isHalCashAccount(paymentAccount);
-    }
-
-
-    private boolean isHalCashAccount(PaymentAccount paymentAccount) {
-        return paymentAccount instanceof HalCashAccount;
-    }
-
-    private boolean isMarketPriceAvailable(String currencyCode) {
-        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-        return marketPrice != null && marketPrice.isExternallyProvidedPrice();
-    }
-
-    public double marketPriceMarginParam(boolean useMarketBasedPriceValue, double marketPriceMargin) {
-        return useMarketBasedPriceValue ? marketPriceMargin : 0;
-    }
-
-    public long getMaxTradeLimit(PaymentAccount paymentAccount,
-                                 String currencyCode,
-                                 OfferPayload.Direction direction) {
-        if (paymentAccount != null) {
-            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction);
-        } else {
-            return 0;
-        }
-    }
-
     public Offer createAndGetOffer(String offerId,
                                    OfferPayload.Direction direction,
                                    String currencyCode,
@@ -334,20 +258,96 @@ public class CreateOfferService {
         return offer;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
+    public double getSellerSecurityDeposit() {
+        return Restrictions.getSellerSecurityDepositAsPercent();
+    }
+
+    public Tuple2<Coin, Integer> getEstimatedFeeAndTxSize(Coin amount,
+                                                          OfferPayload.Direction direction,
+                                                          double buyerSecurityDeposit,
+                                                          double sellerSecurityDeposit) {
+        Coin reservedFundsForOffer = getReservedFundsForOffer(direction, amount, buyerSecurityDeposit, sellerSecurityDeposit);
+        return txFeeEstimationService.getEstimatedFeeAndTxSizeForMaker(reservedFundsForOffer, getMakerFee(amount));
+    }
+
+    public Coin getReservedFundsForOffer(OfferPayload.Direction direction,
+                                         Coin amount,
+                                         double buyerSecurityDeposit,
+                                         double sellerSecurityDeposit) {
+
+        Coin reservedFundsForOffer = getSecurityDeposit(direction,
+                amount,
+                buyerSecurityDeposit,
+                sellerSecurityDeposit);
+        if (!isBuyOffer(direction))
+            reservedFundsForOffer = reservedFundsForOffer.add(amount);
+
+        return reservedFundsForOffer;
+    }
+
+    public Coin getSecurityDeposit(OfferPayload.Direction direction,
+                                   Coin amount,
+                                   double buyerSecurityDeposit,
+                                   double sellerSecurityDeposit) {
+        return isBuyOffer(direction) ?
+                getBuyerSecurityDepositAsCoin(amount, buyerSecurityDeposit) :
+                getSellerSecurityDepositAsCoin(amount, sellerSecurityDeposit);
+    }
+
+    public Coin getMakerFee(Coin amount) {
+        return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
+    }
+
+    private boolean isHalCashAccount(PaymentAccount paymentAccount) {
+        return paymentAccount instanceof HalCashAccount;
+    }
+
+    private boolean isMarketPriceAvailable(String currencyCode) {
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        return marketPrice != null && marketPrice.isExternallyProvidedPrice();
+    }
+
+    public long getMaxTradeLimit(PaymentAccount paymentAccount,
+                                 String currencyCode,
+                                 OfferPayload.Direction direction) {
+        if (paymentAccount != null) {
+            return accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction);
+        } else {
+            return 0;
+        }
+    }
 
     public boolean isBuyOffer(OfferPayload.Direction direction) {
         return OfferUtil.isBuyOffer(direction);
     }
 
-    public Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private double marketPriceMarginParam(boolean useMarketBasedPriceValue, double marketPriceMargin) {
+        return useMarketBasedPriceValue ? marketPriceMargin : 0;
+    }
+
+    private long getPriceAsLong(Price price, boolean useMarketBasedPriceValue) {
+        return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
+    }
+
+    private boolean isUseMarketBasedPriceValue(boolean useMarketBasedPrice,
+                                               String currencyCode,
+                                               PaymentAccount paymentAccount) {
+        return useMarketBasedPrice &&
+                isMarketPriceAvailable(currencyCode) &&
+                !isHalCashAccount(paymentAccount);
+    }
+
+    private Coin getBuyerSecurityDepositAsCoin(Coin amount, double buyerSecurityDeposit) {
         Coin percentOfAmountAsCoin = CoinUtil.getPercentOfAmountAsCoin(buyerSecurityDeposit, amount);
         return getBoundedBuyerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 
-    public Coin getSellerSecurityDepositAsCoin(Coin amount, double sellerSecurityDeposit) {
+    private Coin getSellerSecurityDepositAsCoin(Coin amount, double sellerSecurityDeposit) {
         Coin amountAsCoin = amount;
         if (amountAsCoin == null)
             amountAsCoin = Coin.ZERO;
