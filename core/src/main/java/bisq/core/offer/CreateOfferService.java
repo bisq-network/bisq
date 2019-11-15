@@ -36,6 +36,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.CoinUtil;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
@@ -50,6 +51,7 @@ import javax.inject.Singleton;
 
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -252,6 +254,16 @@ public class CreateOfferService {
         double sellerSecurityDeposit = getSellerSecurityDeposit();
         Coin sellerSecurityDepositAsCoin = getSellerSecurityDepositAsCoin(amount, getSellerSecurityDeposit());
         Coin txFeeFromFeeService = getEstimatedFeeAndTxSize(amount, direction, buyerSecurityDeposit, sellerSecurityDeposit).first;
+
+        List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses();
+        ArrayList<NodeAddress> arbitratorNodeAddresses = acceptedArbitratorAddresses != null ?
+                Lists.newArrayList(acceptedArbitratorAddresses) :
+                new ArrayList<>();
+        List<NodeAddress> acceptedMediatorAddresses = user.getAcceptedMediatorAddresses();
+        ArrayList<NodeAddress> mediatorNodeAddresses = acceptedMediatorAddresses != null ?
+                Lists.newArrayList(acceptedMediatorAddresses) :
+                new ArrayList<>();
+
         OfferPayload offerPayload = new OfferPayload(offerId,
                 new Date().getTime(),
                 p2PService.getAddress(),
@@ -264,8 +276,8 @@ public class CreateOfferService {
                 minAmountAsLong,
                 baseCurrencyCode,
                 counterCurrencyCode,
-                Lists.newArrayList(user.getAcceptedArbitratorAddresses()),
-                Lists.newArrayList(user.getAcceptedMediatorAddresses()),
+                arbitratorNodeAddresses,
+                mediatorNodeAddresses,
                 paymentAccount.getPaymentMethod().getId(),
                 paymentAccount.getId(),
                 null,
