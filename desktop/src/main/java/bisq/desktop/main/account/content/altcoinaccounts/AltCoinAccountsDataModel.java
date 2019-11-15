@@ -103,7 +103,6 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
-        user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
         if (singleTradeCurrency != null) {
@@ -119,6 +118,8 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                     preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
             });
         }
+
+        user.addPaymentAccount(paymentAccount);
 
         if (!(paymentAccount instanceof AssetAccount))
             accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());

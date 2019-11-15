@@ -106,7 +106,6 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
-        user.addPaymentAccount(paymentAccount);
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
         if (singleTradeCurrency != null) {
@@ -127,6 +126,8 @@ class FiatAccountsDataModel extends ActivatableDataModel {
                     preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
             });
         }
+
+        user.addPaymentAccount(paymentAccount);
 
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
     }
