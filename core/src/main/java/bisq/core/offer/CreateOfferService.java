@@ -17,8 +17,13 @@
 
 package bisq.core.offer;
 
+import bisq.common.app.Version;
+import bisq.common.util.Utilities;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,5 +45,9 @@ public class CreateOfferService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
+    public String getRandomOfferId() {
+        return Utilities.getRandomPrefix(5, 8) + "-" +
+                UUID.randomUUID().toString() + "-" +
+                Version.VERSION.replace(".", "");
+    }
 }

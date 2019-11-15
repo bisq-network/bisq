@@ -89,7 +89,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -169,8 +168,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  MakerFeeProvider makerFeeProvider,
                                  Navigation navigation) {
         super(btcWalletService);
-        this.createOfferService = createOfferService;
 
+        this.createOfferService = createOfferService;
         this.openOfferManager = openOfferManager;
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
@@ -187,9 +186,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.makerFeeProvider = makerFeeProvider;
         this.navigation = navigation;
 
-        offerId = Utilities.getRandomPrefix(5, 8) + "-" +
-                UUID.randomUUID().toString() + "-" +
-                Version.VERSION.replace(".", "");
+        offerId = createOfferService.getRandomOfferId();
         shortOfferId = Utilities.getShortId(offerId);
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 
