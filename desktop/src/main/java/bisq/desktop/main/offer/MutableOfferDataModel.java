@@ -298,12 +298,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void onPlaceOffer(Offer offer, TransactionResultHandler resultHandler) {
-        checkNotNull(getMakerFee(), "makerFee must not be null");
+        checkNotNull(offer.getMakerFee(), "makerFee must not be null");
 
-        Coin reservedFundsForOffer = getSecurityDeposit();
-        if (!isBuyOffer())
-            reservedFundsForOffer = reservedFundsForOffer.add(amount.get());
-
+        Coin reservedFundsForOffer = createOfferService.getReservedFundsForOffer(direction,
+                amount.get(),
+                buyerSecurityDeposit.get(),
+                sellerSecurityDeposit.get());
         openOfferManager.placeOffer(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
