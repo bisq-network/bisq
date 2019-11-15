@@ -158,7 +158,6 @@ public class CreateOfferService {
         return makerFeeProvider.getMakerFee(bsqWalletService, preferences, amount);
     }
 
-
     public long getPriceAsLong(Price price, boolean useMarketBasedPriceValue) {
         return price != null && !useMarketBasedPriceValue ? price.getValue() : 0L;
     }
@@ -205,6 +204,34 @@ public class CreateOfferService {
                                    double marketPriceMargin,
                                    double buyerSecurityDeposit,
                                    PaymentAccount paymentAccount) {
+
+        log.info("offerId={}, \n" +
+                        "currencyCode={}, \n" +
+                        "direction={}, \n" +
+                        "price={}, \n" +
+                        "useMarketBasedPrice={}, \n" +
+                        "marketPriceMargin={}, \n" +
+                        "amount={}, \n" +
+                        "minAmount={}, \n" +
+                        "buyerSecurityDeposit={}, \n" +
+                        "paymentAccount={}, \n",
+                offerId, currencyCode, direction, price.getValue(), useMarketBasedPrice, marketPriceMargin,
+                amount.value, minAmount.value, buyerSecurityDeposit, paymentAccount);
+
+        // prints our param list for dev testing api
+        log.info("{} " +
+                        "{} " +
+                        "{} " +
+                        "{} " +
+                        "{} " +
+                        "{} " +
+                        "{} " +
+                        "{} " +
+                        "{} " +
+                        "{}",
+                offerId, currencyCode, direction.name(), price.getValue(), useMarketBasedPrice, marketPriceMargin,
+                amount.value, minAmount.value, buyerSecurityDeposit, paymentAccount.getId());
+
         boolean useMarketBasedPriceValue = isUseMarketBasedPriceValue(useMarketBasedPrice, currencyCode, paymentAccount);
 
         long priceAsLong = getPriceAsLong(price, useMarketBasedPriceValue);
@@ -329,7 +356,6 @@ public class CreateOfferService {
         return getBoundedSellerSecurityDepositAsCoin(percentOfAmountAsCoin);
     }
 
-
     private Coin getBoundedBuyerSecurityDepositAsCoin(Coin value) {
         // We need to ensure that for small amount values we don't get a too low BTC amount. We limit it with using the
         // MinBuyerSecurityDepositAsCoin from Restrictions.
@@ -345,5 +371,4 @@ public class CreateOfferService {
     private boolean isCurrencyForMakerFeeBtc(Coin amount) {
         return OfferUtil.isCurrencyForMakerFeeBtc(preferences, bsqWalletService, amount);
     }
-
 }
