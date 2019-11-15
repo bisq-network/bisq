@@ -35,6 +35,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OfferUtil;
@@ -95,6 +96,7 @@ import javax.annotation.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public abstract class MutableOfferDataModel extends OfferDataModel implements BsqBalanceListener {
+    private final CreateOfferService createOfferService;
     protected final OpenOfferManager openOfferManager;
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
@@ -149,7 +151,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public MutableOfferDataModel(OpenOfferManager openOfferManager,
+    public MutableOfferDataModel(CreateOfferService createOfferService,
+                                 OpenOfferManager openOfferManager,
                                  BtcWalletService btcWalletService,
                                  BsqWalletService bsqWalletService,
                                  Preferences preferences,
@@ -166,6 +169,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  MakerFeeProvider makerFeeProvider,
                                  Navigation navigation) {
         super(btcWalletService);
+        this.createOfferService = createOfferService;
 
         this.openOfferManager = openOfferManager;
         this.bsqWalletService = bsqWalletService;
