@@ -63,6 +63,8 @@ import static org.mockito.Mockito.*;
  * Used in the P2PDataStorage*Test(s) in order to leverage common test set up and validation.
  */
 public class TestState {
+    static final int MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE = 5;
+
     final P2PDataStorage mockedStorage;
     final Broadcaster mockBroadcaster;
 
@@ -72,34 +74,16 @@ public class TestState {
     private final Storage<SequenceNumberMap> mockSeqNrStorage;
     final ClockFake clockFake;
 
-    /**
-     * Subclass of P2PDataStorage that allows for easier testing, but keeps all functionality
-     */
-    static class P2PDataStorageForTest extends P2PDataStorage {
-
-        P2PDataStorageForTest(NetworkNode networkNode,
-                              Broadcaster broadcaster,
-                              AppendOnlyDataStoreService appendOnlyDataStoreService,
-                              ProtectedDataStoreService protectedDataStoreService,
-                              ResourceDataStoreService resourceDataStoreService,
-                              Storage<SequenceNumberMap> sequenceNumberMapStorage,
-                              Clock clock) {
-            super(networkNode, broadcaster, appendOnlyDataStoreService, protectedDataStoreService, resourceDataStoreService, sequenceNumberMapStorage, clock);
-
-            this.maxSequenceNumberMapSizeBeforePurge = 5;
-        }
-    }
-
     TestState() {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrStorage = mock(Storage.class);
         this.clockFake = new ClockFake();
 
-        this.mockedStorage = new P2PDataStorageForTest(mock(NetworkNode.class),
+        this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
                 this.mockBroadcaster,
                 new AppendOnlyDataStoreServiceFake(),
                 new ProtectedDataStoreServiceFake(), mock(ResourceDataStoreService.class),
-                this.mockSeqNrStorage, this.clockFake);
+                this.mockSeqNrStorage, this.clockFake, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
         this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
         this.protectedDataStoreListener = mock(ProtectedDataStoreListener.class);

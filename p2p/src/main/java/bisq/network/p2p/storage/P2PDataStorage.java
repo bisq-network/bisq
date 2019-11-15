@@ -63,6 +63,8 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import com.google.inject.name.Named;
+
 import javax.inject.Inject;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -121,7 +123,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Clock clock;
 
-    protected int maxSequenceNumberMapSizeBeforePurge;
+    /// The maximum number of items that must exist in the SequenceNumberMap before it is scheduled for a purge
+    /// which removes entries after PURGE_AGE_DAYS.
+    private final int maxSequenceNumberMapSizeBeforePurge;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -134,12 +138,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                           ProtectedDataStoreService protectedDataStoreService,
                           ResourceDataStoreService resourceDataStoreService,
                           Storage<SequenceNumberMap> sequenceNumberMapStorage,
-                          Clock clock) {
+                          Clock clock,
+                          @Named("MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE") int maxSequenceNumberBeforePurge) {
         this.broadcaster = broadcaster;
         this.appendOnlyDataStoreService = appendOnlyDataStoreService;
         this.protectedDataStoreService = protectedDataStoreService;
         this.resourceDataStoreService = resourceDataStoreService;
         this.clock = clock;
+        this.maxSequenceNumberMapSizeBeforePurge = maxSequenceNumberBeforePurge;
 
 
         networkNode.addMessageListener(this);
@@ -147,7 +153,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         this.sequenceNumberMapStorage = sequenceNumberMapStorage;
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
-        this.maxSequenceNumberMapSizeBeforePurge = 1000;
     }
 
     @Override
