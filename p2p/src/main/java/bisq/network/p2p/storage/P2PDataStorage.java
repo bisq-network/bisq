@@ -651,12 +651,17 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     private void removeFromMapAndDataStore(
             Collection<Map.Entry<ByteArray, ProtectedStorageEntry>> entriesToRemoveWithPayloadHash) {
+
+        if (entriesToRemoveWithPayloadHash.isEmpty())
+            return;
+
+        ArrayList<ProtectedStorageEntry> entriesForSignal = new ArrayList<>(entriesToRemoveWithPayloadHash.size());
         entriesToRemoveWithPayloadHash.forEach(entryToRemoveWithPayloadHash -> {
             ByteArray hashOfPayload = entryToRemoveWithPayloadHash.getKey();
             ProtectedStorageEntry protectedStorageEntry = entryToRemoveWithPayloadHash.getValue();
 
             map.remove(hashOfPayload);
-            hashMapChangedListeners.forEach(e -> e.onRemoved(Collections.singletonList(protectedStorageEntry)));
+            entriesForSignal.add(protectedStorageEntry);
 
             ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             if (protectedStoragePayload instanceof PersistablePayload) {
@@ -669,6 +674,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 }
             }
         });
+
+        hashMapChangedListeners.forEach(e -> e.onRemoved(entriesForSignal));
     }
 
     private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
