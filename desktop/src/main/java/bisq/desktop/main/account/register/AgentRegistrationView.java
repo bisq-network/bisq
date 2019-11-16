@@ -32,6 +32,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.agent.DisputeAgent;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
@@ -70,7 +71,8 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 // TODO translation string keys should renamed to be more generic.
 // Lets do it for 1.1.7 the translator have time to add new string.
 @FxmlView
-public abstract class AgentRegistrationView<R, T extends AgentRegistrationViewModel> extends ActivatableViewAndModel<VBox, T> {
+public abstract class AgentRegistrationView<R extends DisputeAgent, T extends AgentRegistrationViewModel<R, ?>>
+        extends ActivatableViewAndModel<VBox, T> {
 
     private final boolean useDevPrivilegeKeys;
     private ListView<String> languagesListView;
