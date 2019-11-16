@@ -200,15 +200,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .filter(entry -> entry.getValue().isExpired(this.clock))
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
-        // about start and end of iteration.
-        hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
+        // Batch processing can cause performance issues, so do all of the removes first, then update the listeners
+        // to let them know about the removes.
         toRemoveList.forEach(toRemoveItem -> {
             log.debug("We found an expired data entry. We remove the protectedData:\n\t" +
                     Utilities.toTruncatedString(toRemoveItem.getValue()));
         });
         removeFromMapAndDataStore(toRemoveList);
-        hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
 
         if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge)
             sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));

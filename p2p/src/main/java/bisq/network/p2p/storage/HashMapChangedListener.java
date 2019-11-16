@@ -26,12 +26,4 @@ public interface HashMapChangedListener {
 
     @SuppressWarnings("UnusedParameters")
     void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries);
-
-    // We process all expired entries after a delay (60 s) after onBootstrapComplete.
-    // We notify listeners of start and completion so they can optimize to only update after batch processing is done.
-    default void onBatchRemoveExpiredDataStarted() {
-    }
-
-    default void onBatchRemoveExpiredDataCompleted() {
-    }
 }

@@ -20,15 +20,10 @@ package bisq.core.dao.governance.proposal;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
-import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Proposal;
-
-import bisq.network.p2p.storage.HashMapChangedListener;
-import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import bisq.common.UserThread;
 
@@ -41,7 +36,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,8 +50,7 @@ import lombok.extern.slf4j.Slf4j;
  * our own proposal that is not critical). Foreign proposals are only shown if confirmed and fully validated.
  */
 @Slf4j
-public class ProposalListPresentation implements DaoStateListener, HashMapChangedListener,
-        MyProposalListService.Listener, DaoSetupService {
+public class ProposalListPresentation implements DaoStateListener, MyProposalListService.Listener, DaoSetupService {
     private final ProposalService proposalService;
     private final DaoStateService daoStateService;
     private final MyProposalListService myProposalListService;
@@ -67,7 +60,6 @@ public class ProposalListPresentation implements DaoStateListener, HashMapChange
     @Getter
     private final FilteredList<Proposal> activeOrMyUnconfirmedProposals = new FilteredList<>(allProposals);
     private final ListChangeListener<Proposal> proposalListChangeListener;
-    private boolean tempProposalsChanged;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +69,6 @@ public class ProposalListPresentation implements DaoStateListener, HashMapChange
     @Inject
     public ProposalListPresentation(ProposalService proposalService,
                                     DaoStateService daoStateService,
-                                    P2PDataStorage p2PDataStorage,
                                     MyProposalListService myProposalListService,
                                     BsqWalletService bsqWalletService,
                                     ProposalValidatorProvider validatorProvider) {
@@ -88,7 +79,6 @@ public class ProposalListPresentation implements DaoStateListener, HashMapChange
         this.validatorProvider = validatorProvider;
 
         daoStateService.addDaoStateListener(this);
-        p2PDataStorage.addHashMapChangedListener(this);
         myProposalListService.addListener(this);
 
         proposalListChangeListener = c -> updateLists();
@@ -124,48 +114,6 @@ public class ProposalListPresentation implements DaoStateListener, HashMapChange
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateLists();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // HashMapChangedListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-        protectedStorageEntries.forEach(protectedStorageEntry -> {
-            if (protectedStorageEntry.getProtectedStoragePayload() instanceof TempProposalPayload) {
-                tempProposalsChanged = true;
-            }
-        });
-    }
-
-    @Override
-    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
-        protectedStorageEntries.forEach(protectedStorageEntry -> {
-            if (protectedStorageEntry.getProtectedStoragePayload() instanceof TempProposalPayload) {
-                tempProposalsChanged = true;
-            }
-        });
-    }
-
-    @Override
-    public void onBatchRemoveExpiredDataStarted() {
-        // We temporary remove the listener when batch processing starts to avoid that we rebuild our lists at each
-        // remove call. After batch processing at onBatchRemoveExpiredDataCompleted we add again our listener and call
-        // the updateLists method.
-        proposalService.getTempProposals().removeListener(proposalListChangeListener);
-    }
-
-    @Override
-    public void onBatchRemoveExpiredDataCompleted() {
-        proposalService.getTempProposals().addListener(proposalListChangeListener);
-        // We only call updateLists if tempProposals have changed. updateLists() is an expensive call and takes 200 ms.
-        if (tempProposalsChanged) {
-            updateLists();
-            tempProposalsChanged = false;
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MyProposalListService.Listener
