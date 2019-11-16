@@ -44,6 +44,8 @@ import java.security.SignatureException;
 
 import java.math.BigInteger;
 
+import java.util.Collection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,22 +81,26 @@ public class AlertManager {
         if (!ignoreDevMsg) {
             p2PService.addHashSetChangedListener(new HashMapChangedListener() {
                 @Override
-                public void onAdded(ProtectedStorageEntry data) {
-                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
-                    if (protectedStoragePayload instanceof Alert) {
-                        Alert alert = (Alert) protectedStoragePayload;
-                        if (verifySignature(alert))
-                            alertMessageProperty.set(alert);
-                    }
+                public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                    protectedStorageEntries.forEach(protectedStorageEntry -> {
+                        final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+                        if (protectedStoragePayload instanceof Alert) {
+                            Alert alert = (Alert) protectedStoragePayload;
+                            if (verifySignature(alert))
+                                alertMessageProperty.set(alert);
+                        }
+                    });
                 }
 
                 @Override
-                public void onRemoved(ProtectedStorageEntry data) {
-                    final ProtectedStoragePayload protectedStoragePayload = data.getProtectedStoragePayload();
-                    if (protectedStoragePayload instanceof Alert) {
-                        if (verifySignature((Alert) protectedStoragePayload))
-                            alertMessageProperty.set(null);
-                    }
+                public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+                    protectedStorageEntries.forEach(protectedStorageEntry -> {
+                        final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+                        if (protectedStoragePayload instanceof Alert) {
+                            if (verifySignature((Alert) protectedStoragePayload))
+                                alertMessageProperty.set(null);
+                        }
+                    });
                 }
             });
         }

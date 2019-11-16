@@ -75,6 +75,7 @@ import java.security.PublicKey;
 import java.time.Clock;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -409,7 +410,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
-        hashMapChangedListeners.forEach(e -> e.onAdded(protectedStorageEntry));
+        hashMapChangedListeners.forEach(e -> e.onAdded(Collections.singletonList(protectedStorageEntry)));
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
@@ -643,7 +644,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     private void removeFromMapAndDataStore(ProtectedStorageEntry protectedStorageEntry, ByteArray hashOfPayload) {
         map.remove(hashOfPayload);
-        hashMapChangedListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
+        hashMapChangedListeners.forEach(e -> e.onRemoved(Collections.singletonList(protectedStorageEntry)));
 
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         if (protectedStoragePayload instanceof PersistablePayload) {

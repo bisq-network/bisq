@@ -45,6 +45,7 @@ import bisq.common.storage.Storage;
 
 import java.security.PublicKey;
 
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -174,7 +175,7 @@ public class TestState {
                 verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             }
 
-            verify(this.hashMapChangedListener).onAdded(protectedStorageEntry);
+            verify(this.hashMapChangedListener).onAdded(Collections.singletonList(protectedStorageEntry));
 
             final ArgumentCaptor<BroadcastMessage> captor = ArgumentCaptor.forClass(BroadcastMessage.class);
             verify(this.mockBroadcaster).broadcast(captor.capture(), any(NodeAddress.class),
@@ -192,7 +193,7 @@ public class TestState {
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
 
             // Internal state didn't change... nothing should be notified
-            verify(this.hashMapChangedListener, never()).onAdded(protectedStorageEntry);
+            verify(this.hashMapChangedListener, never()).onAdded(Collections.singletonList(protectedStorageEntry));
             verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }
@@ -216,7 +217,7 @@ public class TestState {
                 verify(this.protectedDataStoreListener).onRemoved(protectedStorageEntry);
             }
 
-            verify(this.hashMapChangedListener).onRemoved(protectedStorageEntry);
+            verify(this.hashMapChangedListener).onRemoved(Collections.singletonList(protectedStorageEntry));
 
             if (expectedSeqNrWriteOnStateChange)
                 this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
@@ -232,7 +233,7 @@ public class TestState {
             Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
-            verify(this.hashMapChangedListener, never()).onAdded(protectedStorageEntry);
+            verify(this.hashMapChangedListener, never()).onAdded(Collections.singletonList(protectedStorageEntry));
             verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
         }

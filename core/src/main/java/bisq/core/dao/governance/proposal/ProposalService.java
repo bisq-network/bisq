@@ -50,6 +50,7 @@ import javax.inject.Named;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -133,13 +134,17 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedStorageEntry entry) {
-        onProtectedDataAdded(entry, true);
+    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            onProtectedDataAdded(protectedStorageEntry, true);
+        });
     }
 
     @Override
-    public void onRemoved(ProtectedStorageEntry entry) {
-        onProtectedDataRemoved(entry);
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            onProtectedDataRemoved(protectedStorageEntry);
+        });
     }
 
 

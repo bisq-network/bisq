@@ -41,6 +41,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -130,17 +131,21 @@ public class ProposalListPresentation implements DaoStateListener, HashMapChange
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedStorageEntry entry) {
-        if (entry.getProtectedStoragePayload() instanceof TempProposalPayload) {
-            tempProposalsChanged = true;
-        }
+    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            if (protectedStorageEntry.getProtectedStoragePayload() instanceof TempProposalPayload) {
+                tempProposalsChanged = true;
+            }
+        });
     }
 
     @Override
-    public void onRemoved(ProtectedStorageEntry entry) {
-        if (entry.getProtectedStoragePayload() instanceof TempProposalPayload) {
-            tempProposalsChanged = true;
-        }
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            if (protectedStorageEntry.getProtectedStoragePayload() instanceof TempProposalPayload) {
+                tempProposalsChanged = true;
+            }
+        });
     }
 
     @Override

@@ -75,6 +75,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import java.security.PublicKey;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -432,15 +433,15 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onAdded(ProtectedStorageEntry protectedStorageEntry) {
-        if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
-            processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+    public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
+                processMailboxEntry((ProtectedMailboxStorageEntry) protectedStorageEntry);
+        });
     }
 
     @Override
-    public void onRemoved(ProtectedStorageEntry data) {
-    }
-
+    public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) { }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DirectMessages
