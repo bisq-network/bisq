@@ -65,7 +65,7 @@ public class PaymentAccountUtil {
                                                 AccountAgeWitnessService accountAgeWitnessService) {
         boolean hasChargebackRisk = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
         boolean hasValidAccountAgeWitness = accountAgeWitnessService.getMyTradeLimit(paymentAccount,
-                offer.getCurrencyCode(), offer.getMirroredDirection()) >= offer.getAmount().value;
+                offer.getCurrencyCode(), offer.getMirroredDirection()) >= offer.getMinAmount().value;
         return !hasChargebackRisk || hasValidAccountAgeWitness;
     }
 
