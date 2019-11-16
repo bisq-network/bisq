@@ -89,10 +89,8 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
@@ -102,7 +100,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private final boolean useDevPrivilegeKeys;
 
     private NumberAxis xAxis;
-    private XYChart.Series seriesBuy, seriesSell;
+    private XYChart.Series<Number, Number> seriesBuy, seriesSell;
     private final Navigation navigation;
     private final BSFormatter formatter;
     private TableView<OfferListItem> buyOfferTableView;
@@ -369,7 +367,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart.setPrefHeight(270);
         areaChart.setCreateSymbols(true);
         areaChart.setPadding(new Insets(0, 10, 0, 10));
-        areaChart.getData().addAll(seriesBuy, seriesSell);
+        areaChart.getData().addAll(List.of(seriesBuy, seriesSell));
 
         chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
@@ -387,33 +385,32 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesSell.getData().clear();
         areaChart.getData().clear();
 
-        final Supplier<Optional<? extends XYChart.Data>> optionalMaxSupplier = () ->
-                Optional.of(new XYChart.Data<>(Double.MAX_VALUE, Double.MAX_VALUE));
+        double buyMinValue = model.getBuyData().stream()
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .min()
+                .orElse(Double.MAX_VALUE);
 
-        final Optional<XYChart.Data> buyMinOptional = model.getBuyData().stream()
-                .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(optionalMaxSupplier);
+        // Hide buy offers that are more than a factor 3 higher than the lowest buy offer
+        double buyMaxValue = model.getBuyData().stream()
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .filter(o -> o < buyMinValue * 3)
+                .max()
+                .orElse(Double.MIN_VALUE);
 
-        final Supplier<Optional<? extends XYChart.Data>> optionalMinSupplier = () ->
-                Optional.of(new XYChart.Data<>(Double.MIN_VALUE, Double.MIN_VALUE));
+        double sellMaxValue = model.getSellData().stream()
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .max()
+                .orElse(Double.MIN_VALUE);
 
-        // Hide buy offers that are more than a factor 5 higher than the lowest buy offer
-        final Optional<XYChart.Data> buyMaxOptional = model.getBuyData().stream()
-                .filter(o -> (double) o.getXValue() < (double) buyMinOptional.get().getXValue() * 3)
-                .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(optionalMinSupplier);
+        // Hide sell offers that are less than a factor 3 lower than the highest sell offer
+        double sellMinValue = model.getSellData().stream()
+                .mapToDouble(o -> o.getXValue().doubleValue())
+                .filter(o -> o > sellMaxValue / 3)
+                .min()
+                .orElse(Double.MAX_VALUE);
 
-        final Optional<XYChart.Data> sellMaxOptional = model.getSellData().stream()
-                .max(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(optionalMinSupplier);
-
-        final Optional<XYChart.Data> sellMinOptional = model.getSellData().stream()
-                .filter(o -> (double) o.getXValue() > (double) sellMaxOptional.get().getXValue() / 3)
-                .min(Comparator.comparingDouble(o -> (double) o.getXValue()))
-                .or(optionalMaxSupplier);
-
-        final double minValue = Double.min((double) buyMinOptional.get().getXValue(), (double) sellMinOptional.get().getXValue());
-        final double maxValue = Double.max((double) buyMaxOptional.get().getXValue(), (double) sellMaxOptional.get().getXValue());
+        double minValue = Double.min(buyMinValue, sellMinValue);
+        double maxValue = Double.max(buyMaxValue, sellMaxValue);
 
         if (minValue == Double.MAX_VALUE || maxValue == Double.MIN_VALUE) {
             xAxis.setAutoRanging(true);
@@ -424,11 +421,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
             xAxis.setTickUnit((maxValue - minValue) / 13);
         }
 
-        //noinspection unchecked
         seriesBuy.getData().addAll(model.getBuyData());
-        //noinspection unchecked
         seriesSell.getData().addAll(model.getSellData());
-        areaChart.getData().addAll(seriesBuy, seriesSell);
+        areaChart.getData().addAll(List.of(seriesBuy, seriesSell));
     }
 
     private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferPayload.Direction direction) {
