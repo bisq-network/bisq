@@ -46,7 +46,7 @@ import java.util.List;
 public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     private ArrayList<T> completeList;
     private ArrayList<T> matchingList;
-    private JFXComboBoxListViewSkin comboBoxListViewSkin;
+    private JFXComboBoxListViewSkin<T> comboBoxListViewSkin;
 
     public AutocompleteComboBox() {
         this(FXCollections.observableArrayList());
@@ -65,7 +65,7 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     /**
      * Set the complete list of ComboBox items. Use this instead of setItems().
      */
-    public void setAutocompleteItems(List<T> items) {
+    public void setAutocompleteItems(List<? extends T> items) {
         completeList = new ArrayList<>(items);
         matchingList = new ArrayList<>(completeList);
         setValue(null);

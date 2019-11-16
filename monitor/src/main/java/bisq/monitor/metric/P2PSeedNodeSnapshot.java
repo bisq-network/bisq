@@ -84,7 +84,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
     private static final String DATABASE_DIR = "run.dbDir";
 
     Statistics statistics;
-    final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
+    final Map<NodeAddress, Statistics<Set<Integer>>> bucketsPerHost = new ConcurrentHashMap<>();
     protected final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
     private int daostateheight = 594000;
     private int proposalheight = daostateheight;
@@ -174,19 +174,19 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         Map<String, String> report = new HashMap<>();
         // - assemble histograms
         bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((type, set) -> report
-                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, Integer.toString(((Set) set).size()))));
+                .put(OnionParser.prettyPrint(host) + ".numberOfMessages." + type, Integer.toString(set.size()))));
 
         // - assemble diffs
         //   - transfer values
-        Map<String, Statistics> messagesPerHost = new HashMap<>();
+        Map<String, Statistics<Set<Integer>>> messagesPerHost = new HashMap<>();
         bucketsPerHost.forEach((host, value) -> messagesPerHost.put(OnionParser.prettyPrint(host), value));
 
         //   - pick reference seed node and its values
         String referenceHost = "overall_number_of_unique_messages";
         Map<String, Set<Object>> referenceValues = new HashMap<>();
         messagesPerHost.forEach((host, statistics) -> statistics.values().forEach((type, set) -> {
-            referenceValues.putIfAbsent((String) type, new HashSet<>());
-            referenceValues.get(type).addAll((Set) set);
+            referenceValues.putIfAbsent(type, new HashSet<>());
+            referenceValues.get(type).addAll(set);
         }));
 
         //   - calculate diffs
@@ -195,7 +195,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
                 statistics.values().forEach((messageType, set) -> {
                     try {
                         report.put(OnionParser.prettyPrint(host) + ".relativeNumberOfMessages." + messageType,
-                                String.valueOf(((Set) set).size() - referenceValues.get(messageType).size()));
+                                String.valueOf(set.size() - referenceValues.get(messageType).size()));
                     } catch (MalformedURLException | NullPointerException ignore) {
                         log.error("we should never have gotten here", ignore);
                     }
@@ -223,8 +223,8 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         //   - transcode
         Map<String, Map<NodeAddress, Tuple>> perType = new HashMap<>();
         daoData.forEach((nodeAddress, daostatistics) -> daostatistics.values().forEach((type, tuple) -> {
-            perType.putIfAbsent((String) type, new HashMap<>());
-            perType.get(type).put(nodeAddress, (Tuple) tuple);
+            perType.putIfAbsent(type, new HashMap<>());
+            perType.get(type).put(nodeAddress, tuple);
         }));
 
         //   - process dao data
@@ -311,7 +311,7 @@ public class P2PSeedNodeSnapshot extends P2PSeedNodeSnapshotBase {
         }
     }
 
-    private Map<NodeAddress, Statistics> daoData = new ConcurrentHashMap<>();
+    private Map<NodeAddress, Statistics<Tuple>> daoData = new ConcurrentHashMap<>();
 
     protected boolean treatMessage(NetworkEnvelope networkEnvelope, Connection connection) {
         checkNotNull(connection.getPeersNodeAddressProperty(),

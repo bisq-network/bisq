@@ -68,7 +68,7 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
 
     private final Set<byte[]> hashes = new TreeSet<>(Arrays::compare);
 
-    final Map<NodeAddress, Statistics> versionBucketsPerHost = new ConcurrentHashMap<>();
+    final Map<NodeAddress, Statistics<Counter>> versionBucketsPerHost = new ConcurrentHashMap<>();
 
     /**
      * Efficient way to count occurrences.
@@ -189,13 +189,13 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
     @Override
     protected void report() {
         Map<String, String> report = new HashMap<>();
-        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((market, numberOfOffers) -> report.put(OnionParser.prettyPrint(host) + "." + market.toString(), String.valueOf(((Counter) numberOfOffers).value()))));
+        bucketsPerHost.forEach((host, statistics) -> statistics.values().forEach((market, numberOfOffers) -> report.put(OnionParser.prettyPrint(host) + "." + market, String.valueOf(((Counter) numberOfOffers).value()))));
 
         reporter.report(report, getName());
 
         // do version statistics
         report.clear();
-        versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version.toString(), String.valueOf(((Counter) numberOfOccurrences).value())));
+        versionBucketsPerHost.values().stream().findAny().get().values().forEach((version, numberOfOccurrences) -> report.put(version, String.valueOf(numberOfOccurrences.value())));
         reporter.report(report, "versions");
     }
 

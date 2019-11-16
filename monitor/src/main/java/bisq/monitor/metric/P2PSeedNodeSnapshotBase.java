@@ -63,7 +63,7 @@ public abstract class P2PSeedNodeSnapshotBase extends Metric implements MessageL
     private static final String HOSTS = "run.hosts";
     private static final String TOR_PROXY_PORT = "run.torProxyPort";
     Statistics statistics;
-    final Map<NodeAddress, Statistics> bucketsPerHost = new ConcurrentHashMap<>();
+    final Map<NodeAddress, Statistics<?>> bucketsPerHost = new ConcurrentHashMap<>();
     private final ThreadGate gate = new ThreadGate();
 
     /**
