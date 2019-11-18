@@ -45,7 +45,7 @@ public class ProtectedStoragePayloadStub implements ProtectedStoragePayload {
     @Getter
     private PublicKey ownerPubKey;
 
-    protected Message messageMock;
+    protected final Message messageMock;
 
     public ProtectedStoragePayloadStub(PublicKey ownerPubKey) {
         this.ownerPubKey = ownerPubKey;

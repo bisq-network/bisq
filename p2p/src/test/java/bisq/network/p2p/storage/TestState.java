@@ -35,9 +35,7 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
-import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
-import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
@@ -46,8 +44,6 @@ import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.storage.Storage;
 
 import java.security.PublicKey;
-
-import java.time.Clock;
 
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +66,7 @@ public class TestState {
 
     final AppendOnlyDataStoreListener appendOnlyDataStoreListener;
     private final ProtectedDataStoreListener protectedDataStoreListener;
-    final HashMapChangedListener hashMapChangedListener;
+    private final HashMapChangedListener hashMapChangedListener;
     private final Storage<SequenceNumberMap> mockSeqNrStorage;
     final ClockFake clockFake;
 

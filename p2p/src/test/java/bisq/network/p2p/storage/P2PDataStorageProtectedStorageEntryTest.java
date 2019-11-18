@@ -65,6 +65,7 @@ import static bisq.network.p2p.storage.TestState.*;
  * 1. Client API [addProtectedStorageEntry(), refreshTTL(), remove()]
  * 2. onMessage() [AddDataMessage, RefreshOfferMessage, RemoveDataMessage]
  */
+@SuppressWarnings("unused")
 public class P2PDataStorageProtectedStorageEntryTest {
     @RunWith(Parameterized.class)
     abstract public static class ProtectedStorageEntryTestBase {
