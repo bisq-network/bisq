@@ -188,11 +188,8 @@ public class GUIUtil {
         });
     }
 
-    @SuppressWarnings("PointlessBooleanExpression")
     public static void showFeeInfoBeforeExecute(Runnable runnable) {
-        //noinspection UnusedAssignment
         String key = "miningFeeInfo";
-        //noinspection ConstantConditions,ConstantConditions
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             new Popup<>().attention(Res.get("guiUtil.miningFeeInfo", String.valueOf(GUIUtil.feeService.getTxFeePerByte().value)))
                     .onClose(runnable)
@@ -682,8 +679,7 @@ public class GUIUtil {
                 parent = parent.getParent();
             }
         }
-        //noinspection unchecked
-        return parent != null ? (T) parent : null;
+        return t.cast(parent);
     }
 
     public static void showClearXchangeWarning() {

@@ -77,15 +77,14 @@ public class ProtoUtil {
         return result;
     }
 
-    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection) {
+    public static <T extends Message> Iterable<T> collectionToProto(Collection<? extends Proto> collection, Class<T> messageType) {
         return collection.stream()
                 .map(e -> {
                     final Message message = e.toProtoMessage();
                     try {
-                        //noinspection unchecked
-                        return (T) message;
-                    } catch (Throwable t) {
-                        log.error("message could not be casted. message=" + message);
+                        return messageType.cast(message);
+                    } catch (ClassCastException t) {
+                        log.error("Message could not be cast. message={}, messageType={}", message, messageType);
                         return null;
                     }
                 })

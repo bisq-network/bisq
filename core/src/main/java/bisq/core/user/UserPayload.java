@@ -88,7 +88,7 @@ public class UserPayload implements PersistableEnvelope {
         protobuf.UserPayload.Builder builder = protobuf.UserPayload.newBuilder();
         Optional.ofNullable(accountId).ifPresent(e -> builder.setAccountId(accountId));
         Optional.ofNullable(paymentAccounts)
-                .ifPresent(e -> builder.addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts)));
+                .ifPresent(e -> builder.addAllPaymentAccounts(ProtoUtil.collectionToProto(paymentAccounts, protobuf.PaymentAccount.class)));
         Optional.ofNullable(currentPaymentAccount)
                 .ifPresent(e -> builder.setCurrentPaymentAccount(currentPaymentAccount.toProtoMessage()));
         Optional.ofNullable(acceptedLanguageLocaleCodes)
@@ -111,7 +111,7 @@ public class UserPayload implements PersistableEnvelope {
                         message -> ((protobuf.StoragePayload) message).getMediator())));
         Optional.ofNullable(priceAlertFilter).ifPresent(priceAlertFilter -> builder.setPriceAlertFilter(priceAlertFilter.toProtoMessage()));
         Optional.ofNullable(marketAlertFilters)
-                .ifPresent(e -> builder.addAllMarketAlertFilters(ProtoUtil.collectionToProto(marketAlertFilters)));
+                .ifPresent(e -> builder.addAllMarketAlertFilters(ProtoUtil.collectionToProto(marketAlertFilters, protobuf.MarketAlertFilter.class)));
 
         Optional.ofNullable(registeredRefundAgent)
                 .ifPresent(registeredRefundAgent -> builder.setRegisteredRefundAgent(registeredRefundAgent.toProtoMessage().getRefundAgent()));

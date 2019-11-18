@@ -18,8 +18,7 @@
 package bisq.desktop.main.market;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -65,7 +64,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @FxmlView
-public class MarketView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class MarketView extends ActivatableView<TabPane, Void> {
     @FXML
     Tab offerBookTab, tradesTab, spreadTab;
     private final ViewLoader viewLoader;

@@ -74,8 +74,8 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private final Navigation navigation;
 
     final ObjectProperty<TradeCurrency> selectedTradeCurrencyProperty = new SimpleObjectProperty<>();
-    private final List<XYChart.Data> buyData = new ArrayList<>();
-    private final List<XYChart.Data> sellData = new ArrayList<>();
+    private final List<XYChart.Data<Number, Number>> buyData = new ArrayList<>();
+    private final List<XYChart.Data<Number, Number>> sellData = new ArrayList<>();
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> offerBookListItemsListener;
     final CurrencyList currencyListItems;
@@ -131,7 +131,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
         };
 
-        currenciesUpdatedListener = new ChangeListener<Number>() {
+        currenciesUpdatedListener = new ChangeListener<>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 if (!isAnyPricePresent()) {
@@ -210,11 +210,11 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<XYChart.Data> getBuyData() {
+    public List<XYChart.Data<Number, Number>> getBuyData() {
         return buyData;
     }
 
-    public List<XYChart.Data> getSellData() {
+    public List<XYChart.Data<Number, Number>> getSellData() {
         return sellData;
     }
 
@@ -359,7 +359,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         buildChartAndTableEntries(allSellOffers, OfferPayload.Direction.SELL, sellData, topSellOfferList);
     }
 
-    private void buildChartAndTableEntries(List<Offer> sortedList, OfferPayload.Direction direction, List<XYChart.Data> data, ObservableList<OfferListItem> offerTableList) {
+    private void buildChartAndTableEntries(List<Offer> sortedList,
+                                           OfferPayload.Direction direction,
+                                           List<XYChart.Data<Number, Number>> data,
+                                           ObservableList<OfferListItem> offerTableList) {
         data.clear();
         double accumulatedAmount = 0;
         List<OfferListItem> offerTableListTemp = new ArrayList<>();

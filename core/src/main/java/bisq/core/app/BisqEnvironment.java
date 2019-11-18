@@ -361,11 +361,11 @@ public class BisqEnvironment extends StandardEnvironment {
         return new ResourcePropertySource(BISQ_APP_DIR_PROPERTY_SOURCE_NAME, resource);
     }
 
-    private String getProperty (PropertySource properties, String propertyKey, String defaultValue) {
+    private String getProperty(PropertySource properties, String propertyKey, String defaultValue) {
         return properties.containsProperty(propertyKey) ? (String) properties.getProperty(propertyKey) : defaultValue;
     }
 
-    private List<String> getListProperty (String key, List defaultValue) {
+    private List<String> getListProperty(String key, List<String> defaultValue) {
         final String value = getProperty(key, "");
         return value.isEmpty() ? defaultValue : Arrays.asList(StringUtils.deleteWhitespace(value).split(","));
     }

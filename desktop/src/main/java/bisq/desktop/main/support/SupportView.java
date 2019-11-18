@@ -18,8 +18,7 @@
 package bisq.desktop.main.support;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -62,7 +61,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 
 @FxmlView
-public class SupportView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class SupportView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab tradersMediationDisputesTab, tradersRefundDisputesTab, tradersArbitrationDisputesTab;

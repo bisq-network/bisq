@@ -18,8 +18,7 @@
 package bisq.desktop.main.funds;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.common.model.Activatable;
-import bisq.desktop.common.view.ActivatableViewAndModel;
+import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
@@ -43,7 +42,7 @@ import javafx.scene.control.TabPane;
 import javafx.beans.value.ChangeListener;
 
 @FxmlView
-public class FundsView extends ActivatableViewAndModel<TabPane, Activatable> {
+public class FundsView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab depositTab, withdrawalTab, reservedTab, lockedTab, transactionsTab;

@@ -195,7 +195,6 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
                 Res.get("dao.factsAndFigures.supply.totalConfiscatedAmount")).second;
     }
 
-    @SuppressWarnings("unchecked")
     private void createChart(XYChart.Series<Number, Number> series, String seriesLabel, String datePattern) {
         NumberAxis xAxis = new NumberAxis();
         xAxis.setForceZeroInRange(false);
@@ -246,7 +245,7 @@ public class SupplyView extends ActivatableView<GridPane, Void> implements DaoSt
         chart.setPrefHeight(250);
         chart.setCreateSymbols(true);
         chart.setPadding(new Insets(0));
-        chart.getData().addAll(series);
+        chart.getData().add(series);
 
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");

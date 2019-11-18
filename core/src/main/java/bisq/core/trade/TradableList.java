@@ -74,7 +74,7 @@ public final class TradableList<T extends Tradable> implements PersistableEnvelo
         ArrayList<T> clonedList = new ArrayList<>(this.list);
         return protobuf.PersistableEnvelope.newBuilder()
                 .setTradableList(protobuf.TradableList.newBuilder()
-                        .addAllTradable(ProtoUtil.collectionToProto(clonedList)))
+                        .addAllTradable(ProtoUtil.collectionToProto(clonedList, protobuf.Tradable.class)))
                 .build();
     }
 

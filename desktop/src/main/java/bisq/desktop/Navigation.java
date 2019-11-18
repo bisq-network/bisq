@@ -84,8 +84,7 @@ public final class Navigation implements PersistedDataHost {
             List<Class<? extends View>> viewClasses = persisted.getPath().stream()
                     .map(className -> {
                         try {
-                            //noinspection unchecked
-                            return ((Class<? extends View>) Class.forName(className));
+                            return (Class<? extends View>) Class.forName(className).asSubclass(View.class);
                         } catch (ClassNotFoundException e) {
                             log.warn("Could not find the viewPath class {}; exception: {}", className, e);
                         }
@@ -118,13 +117,12 @@ public final class Navigation implements PersistedDataHost {
             Class<? extends View> viewClass = newPath.get(i);
             temp.add(viewClass);
             if (currentPath == null ||
-                    (currentPath != null &&
-                            currentPath.size() > i &&
+                    (currentPath.size() > i &&
                             viewClass != currentPath.get(i) &&
                             i != newPath.size() - 1)) {
                 ArrayList<Class<? extends View>> temp2 = new ArrayList<>(temp);
                 for (int n = i + 1; n < newPath.size(); n++) {
-                    //noinspection unchecked,unchecked,unchecked
+                    //noinspection unchecked
                     Class<? extends View>[] newTemp = new Class[i + 1];
                     currentPath = ViewPath.to(temp2.toArray(newTemp));
                     navigateTo(currentPath, data);

@@ -88,7 +88,7 @@ import javafx.util.StringConverter;
 
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Objects;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
@@ -184,7 +184,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     @Override
     protected void activate() {
         // root.getParent() is null at initialize
-        tabPaneSelectionModel = Objects.requireNonNull(GUIUtil.getParentOfType(root, JFXTabPane.class)).getSelectionModel();
+        tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
         tabPaneSelectionModel.selectedIndexProperty().addListener(selectedTabIndexListener);
@@ -380,8 +380,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setMaxHeight(300);
         priceChart.setLegendVisible(false);
         priceChart.setPadding(new Insets(0));
-        //noinspection unchecked
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
+        priceChart.setData(FXCollections.observableArrayList(List.of(priceSeries)));
 
         priceChartPane = new AnchorPane();
         priceChartPane.getStyleClass().add("chart-pane");
@@ -428,9 +427,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 return null;
             }
         });
-        //noinspection unchecked
         volumeChart.setId("volume-chart");
-        volumeChart.setData(FXCollections.observableArrayList(volumeSeries));
+        volumeChart.setData(FXCollections.observableArrayList(List.of(volumeSeries)));
         volumeChart.setMinHeight(128);
         volumeChart.setPrefHeight(128);
         volumeChart.setMaxHeight(200);
@@ -457,8 +455,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries = new XYChart.Series<>();
         priceSeries.getData().setAll(model.priceItems);
         priceChart.getData().clear();
-        //noinspection unchecked
-        priceChart.setData(FXCollections.observableArrayList(priceSeries));
+        priceChart.setData(FXCollections.observableArrayList(List.of(priceSeries)));
     }
 
     private void layoutChart() {

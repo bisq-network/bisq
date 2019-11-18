@@ -91,7 +91,7 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setCreationDate(creationDate)
                 .setPaymentAccountPayload((protobuf.PaymentAccountPayload) paymentAccountPayload.toProtoMessage())
                 .setAccountName(accountName)
-                .addAllTradeCurrencies(ProtoUtil.<protobuf.TradeCurrency>collectionToProto(tradeCurrencies));
+                .addAllTradeCurrencies(ProtoUtil.collectionToProto(tradeCurrencies, protobuf.TradeCurrency.class));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((protobuf.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
         return builder.build();
     }

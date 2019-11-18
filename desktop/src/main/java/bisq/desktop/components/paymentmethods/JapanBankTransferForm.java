@@ -197,12 +197,12 @@ public class JapanBankTransferForm extends PaymentMethodForm
                 return s != null ? s : "";
             }
         });
-        ((AutocompleteComboBox) bankComboBox).setAutocompleteItems(JapanBankData.prettyPrintBankList());
+        ((AutocompleteComboBox<String>) bankComboBox).setAutocompleteItems(JapanBankData.prettyPrintBankList());
 
         bankComboBox.setPrefWidth(430);
         bankComboBox.setVisibleRowCount(430);
 
-        ((AutocompleteComboBox) bankComboBox).setOnChangeConfirmed(e -> {
+        ((AutocompleteComboBox<?>) bankComboBox).setOnChangeConfirmed(e -> {
             // get selected value
             String bank = bankComboBox.getSelectionModel().getSelectedItem();
 

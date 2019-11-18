@@ -105,7 +105,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
 
     private ChangeListener<Number> priceChangeListener;
 
-    private AreaChart bsqPriceChart;
+    private AreaChart<Number, Number> bsqPriceChart;
     private XYChart.Series<Number, Number> seriesBSQPrice;
 
     private TextField avgPrice90TextField, marketCapTextField, availableAmountTextField;
@@ -254,7 +254,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         bsqPriceChart.setPrefHeight(bsqPriceChart.getMinHeight());
         bsqPriceChart.setCreateSymbols(true);
         bsqPriceChart.setPadding(new Insets(0));
-        bsqPriceChart.getData().addAll(seriesBSQPrice);
+        bsqPriceChart.getData().add(seriesBSQPrice);
 
         AnchorPane chartPane = new AnchorPane();
         chartPane.getStyleClass().add("chart-pane");
@@ -368,7 +368,7 @@ public class BsqDashboardView extends ActivatableView<GridPane, Void> implements
         long average = getAverage(bsqTradePast90Days);
         Coin oneBsq = Coin.valueOf(100);
         Price avgPrice = Price.valueOf("BSQ", average);
-        String avg = bsqFormatter.formatPrice(avgPrice);
+        String avg = BsqFormatter.formatPrice(avgPrice);
         String bsqInUsdAvg = average > 0 ? GUIUtil.getBsqInUsd(avgPrice, oneBsq, priceFeedService, bsqFormatter) : Res.get("shared.na");
         textField.setText(avg + " BSQ/BTC (" + "1 BSQ = " + bsqInUsdAvg + ")");
         return average;
