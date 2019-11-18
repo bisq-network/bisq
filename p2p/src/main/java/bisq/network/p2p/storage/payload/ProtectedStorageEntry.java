@@ -17,10 +17,14 @@
 
 package bisq.network.p2p.storage.payload;
 
+import bisq.network.p2p.storage.P2PDataStorage;
+
+import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -146,5 +150,107 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public boolean isExpired(Clock clock) {
         return protectedStoragePayload instanceof ExpirablePayload &&
                 (clock.millis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
+    }
+
+    /*
+     * Returns true if the Entry is valid for an add operation. For non-mailbox Entrys, the entry owner must
+     * match the payload owner.
+     */
+    public boolean isValidForAddOperation() {
+        if (!this.isSignatureValid())
+            return false;
+
+        // TODO: The code currently supports MailboxStoragePayload objects inside ProtectedStorageEntry. Fix this.
+        if (protectedStoragePayload instanceof MailboxStoragePayload) {
+            MailboxStoragePayload mailboxStoragePayload = (MailboxStoragePayload) this.getProtectedStoragePayload();
+            return mailboxStoragePayload.getSenderPubKeyForAddOperation() != null &&
+                    mailboxStoragePayload.getSenderPubKeyForAddOperation().equals(this.getOwnerPubKey());
+
+        } else {
+            boolean result = this.ownerPubKey != null &&
+                    this.protectedStoragePayload != null &&
+                    this.ownerPubKey.equals(protectedStoragePayload.getOwnerPubKey());
+
+            if (!result) {
+                String res1 = this.toString();
+                String res2 = "null";
+                if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+                    res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
+
+                log.warn("ProtectedStorageEntry::isValidForAddOperation() failed. Entry owner does not match Payload owner:\n" +
+                        "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
+            }
+
+            return result;
+        }
+    }
+
+    /*
+     * Returns true if the Entry is valid for a remove operation. For non-mailbox Entrys, the entry owner must
+     * match the payload owner.
+     */
+    public boolean isValidForRemoveOperation() {
+
+        // Same requirements as add()
+        boolean result = this.isValidForAddOperation();
+
+        if (!result) {
+            String res1 = this.toString();
+            String res2 = "null";
+            if (protectedStoragePayload != null && protectedStoragePayload.getOwnerPubKey() != null)
+                res2 = Utilities.encodeToHex(protectedStoragePayload.getOwnerPubKey().getEncoded(), true);
+
+            log.warn("ProtectedStorageEntry::isValidForRemoveOperation() failed. Entry owner does not match Payload owner:\n" +
+                    "ProtectedStorageEntry={}\nPayloadOwner={}", res1, res2);
+        }
+
+        return result;
+    }
+
+    /*
+     * Returns true if the signature for the Entry is valid for the payload, sequence number, and ownerPubKey
+     */
+    boolean isSignatureValid() {
+        try {
+            byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(
+                    new P2PDataStorage.DataAndSeqNrPair(this.protectedStoragePayload, this.sequenceNumber));
+
+            boolean result = Sig.verify(this.ownerPubKey, hashOfDataAndSeqNr, this.signature);
+
+            if (!result)
+                log.warn("ProtectedStorageEntry::isSignatureValid() failed.\n{}}", this);
+
+            return result;
+        } catch (CryptoException e) {
+            log.error("ProtectedStorageEntry::isSignatureValid() exception {}", e.toString());
+            return false;
+        }
+    }
+
+    /*
+     * Returns true if the Entry metadata that is expected to stay constant between different versions of the same object
+     * matches.
+     */
+    public boolean matchesRelevantPubKey(ProtectedStorageEntry protectedStorageEntry) {
+        boolean result = protectedStorageEntry.getOwnerPubKey().equals(this.ownerPubKey);
+
+        if (!result) {
+            log.warn("New data entry does not match our stored data. storedData.ownerPubKey=" +
+                    (protectedStorageEntry.getOwnerPubKey() != null ? protectedStorageEntry.getOwnerPubKey().toString() : "null") +
+                    ", ownerPubKey=" + this.ownerPubKey);
+        }
+
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ProtectedStorageEntry {" +
+                "\n\tPayload:                 " + protectedStoragePayload +
+                "\n\tOwner Public Key:        " + Utilities.bytesAsHexString(this.ownerPubKeyBytes) +
+                "\n\tSequence Number:         " + this.sequenceNumber +
+                "\n\tSignature:               " + Utilities.bytesAsHexString(this.signature) +
+                "\n\tTimestamp:               " + this.creationTimeStamp +
+                "\n} ";
     }
 }

@@ -759,7 +759,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
                             expirableMailboxStoragePayload,
                             keyRing.getSignatureKeyPair(),
                             receiversPubKey);
-                    p2PDataStorage.removeMailboxData(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
+                    p2PDataStorage.remove(protectedMailboxStorageEntry, networkNode.getNodeAddress(), true);
                 } catch (CryptoException e) {
                     log.error("Signing at getDataWithSignedSeqNr failed. That should never happen.");
                 }
