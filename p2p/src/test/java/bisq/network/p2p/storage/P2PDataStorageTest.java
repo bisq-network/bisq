@@ -1162,12 +1162,7 @@ public class P2PDataStorageTest {
         }
 
 
-        // XXXBUGXXX: The P2PService calls remove() instead of removeFromMailbox() in the addMailboxData() path.
-        // This test shows it will always fail even with a valid remove entry. Future work should be able to
-        // combine the remove paths in the same way the add() paths are combined. This will require deprecating
-        // the receiversPubKey field which is a duplicate of the ownerPubKey in the MailboxStoragePayload.
-        // More investigation is needed.
-        @Test
+        @Test(expected = IllegalArgumentException.class)
         public void remove_canCallWrongRemoveAndFail() throws CryptoException {
 
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
@@ -1175,38 +1170,9 @@ public class P2PDataStorageTest {
 
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
 
-            SavedTestState beforeState = new SavedTestState(this.testState, entryForRemove);
-
             // Call remove(ProtectedStorageEntry) instead of removeFromMailbox(ProtectedMailboxStorageEntry) and verify
-            // it fails
-            boolean addResult = super.doRemove(entryForRemove);
-
-            if (!this.useMessageHandler)
-                Assert.assertFalse(addResult);
-
-            // should succeed with expectedStatechange==true when remove paths are combined
-            verifyProtectedStorageRemove(this.testState, beforeState, entryForRemove, false, this.expectIsDataOwner());
-        }
-
-        // TESTCASE: Verify misuse of the API (calling remove() instead of removeFromMailbox correctly errors with
-        // a payload that is valid for remove of a non-mailbox entry.
-        @Test
-        public void remove_canCallWrongRemoveAndFailInvalidPayload() throws CryptoException {
-
-            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
-
-            doProtectedStorageAddAndVerify(entryForAdd, true, true);
-
-            SavedTestState beforeState = new SavedTestState(this.testState, entryForAdd);
-
-            // Call remove(ProtectedStorageEntry) instead of removeFromMailbox(ProtectedMailboxStorageEntry) and verify
-            // it fails with a payload that isn't signed by payload.ownerPubKey
-            boolean addResult = super.doRemove(entryForAdd);
-
-            if (!this.useMessageHandler)
-                Assert.assertFalse(addResult);
-
-            verifyProtectedStorageRemove(this.testState, beforeState, entryForAdd, false, this.expectIsDataOwner());
+            // it fails spectacularly
+            super.doRemove(entryForRemove);
         }
 
         // TESTCASE: Add after removed when add-once required (greater seq #)
