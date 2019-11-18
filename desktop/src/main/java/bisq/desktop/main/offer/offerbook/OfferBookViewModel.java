@@ -478,7 +478,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     String getDirectionLabelTooltip(Offer offer) {
-        return BSFormatter.getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
+        return getDirectionWithCodeDetailed(offer.getMirroredDirection(), offer.getCurrencyCode());
     }
 
     Optional<PaymentAccount> getMostMaturePaymentAccountForOffer(Offer offer) {
@@ -635,5 +635,12 @@ class OfferBookViewModel extends ActivatableViewModel {
         return offer.isCurrencyForMakerFeeBtc() ?
                 btcFormatter.formatCoinWithCode(offer.getMakerFee()) :
                 bsqFormatter.formatCoinWithCode(offer.getMakerFee());
+    }
+
+    private static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode))
+            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+        else
+            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 }

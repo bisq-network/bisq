@@ -256,7 +256,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return BSFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -482,4 +482,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
         }
     }
+
+    private static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String baseCurrencyCode = Res.getBaseCurrencyCode();
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
+        } else {
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
+        }
+
+    }
+
 }

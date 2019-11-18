@@ -104,42 +104,10 @@ public class BSFormatter {
         return FormattingUtils.formatCoinWithCode(Coin.valueOf(value), monetaryFormat);
     }
 
-    public static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
-        else
-            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
-    }
-
     public static String getDateFromBlockHeight(long blockHeight) {
         long now = new Date().getTime();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
         SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
         return FormattingUtils.formatDateTime(new Date(now + blockHeight * 10 * 60 * 1000L), dateFormatter, timeFormatter);
     }
-
-    public static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            String baseCurrencyCode = Res.getBaseCurrencyCode();
-            if (isBuyerMakerAndSellerTaker)
-                return isMaker ?
-                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
-                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
-            else
-                return isMaker ?
-                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
-                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
-        } else {
-            if (isBuyerMakerAndSellerTaker)
-                return isMaker ?
-                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
-                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
-            else
-                return isMaker ?
-                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
-                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
-        }
-
-    }
-
 }
