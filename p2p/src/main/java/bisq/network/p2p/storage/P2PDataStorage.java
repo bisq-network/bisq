@@ -390,28 +390,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
         }
 
-        // TODO: Combine with hasSequenceNrIncreased check, but keep existing behavior for now
-        if(!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
+        // If we have seen a more recent operation for this payload, we ignore the current one
+        if(!hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the add operation
         if (!checkPublicKeys(protectedStorageEntry, true) || !checkSignature(protectedStorageEntry))
             return false;
 
-        boolean containsKey = map.containsKey(hashOfPayload);
-
-        // If we have already seen an Entry with the same hash, verify the new Entry has the same owner
-        if (containsKey && !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload))
+        // In a hash collision between two well formed ProtectedStorageEntry, the first item wins and will not be overwritten
+        if (map.containsKey(hashOfPayload) &&
+                !checkIfStoredDataPubKeyMatchesNewDataPubKey(protectedStorageEntry.getOwnerPubKey(), hashOfPayload)) {
             return false;
-
-        boolean hasSequenceNrIncreased = hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload);
-
-        // If we have seen a more recent operation for this payload, we ignore the current one
-        // TODO: I think we can return false here. All callers use the Client API (addProtectedStorageEntry(getProtectedStorageEntry())
-        //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that adds() that don't
-        //  change state return false.
-        if (!hasSequenceNrIncreased)
-            return true;
+        }
 
         // This is an updated entry. Record it and signal listeners.
         map.put(hashOfPayload, protectedStorageEntry);
@@ -456,17 +447,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         int sequenceNumber = refreshTTLMessage.getSequenceNumber();
 
-        // If we have seen a more recent operation for this payload, we ignore the current one
-        // TODO: I think we can return false here. All callers use the Client API (refreshTTL(getRefreshTTLMessage()) which increments the sequence number
-        //  leaving only the onMessage() handler which doesn't look at the return value. It makes more intuitive sense that operations that don't
-        //  change state return false.
-        if (sequenceNumberMap.containsKey(hashOfPayload) && sequenceNumberMap.get(hashOfPayload).sequenceNr == sequenceNumber) {
-            log.trace("We got that message with that seq nr already from another peer. We ignore that message.");
-
-            return true;
-        }
-
-        // TODO: Combine with above in future work, but preserve existing behavior for now
         if(!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
             return false;
 
@@ -517,7 +497,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         // If we have seen a more recent operation for this payload, ignore this one
-        if (!isSequenceNrValid(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
+        if (!hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
 
         // Verify the ProtectedStorageEntry is well formed and valid for the remove operation
@@ -605,7 +585,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         int sequenceNumber = protectedMailboxStorageEntry.getSequenceNumber();
 
-        if (!isSequenceNrValid(sequenceNumber, hashOfPayload))
+        if (!hasSequenceNrIncreased(sequenceNumber, hashOfPayload))
             return false;
 
         PublicKey receiversPubKey = protectedMailboxStorageEntry.getReceiversPubKey();
@@ -728,24 +708,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         map.remove(hashOfPayload);
         log.trace("Data removed from our map. We broadcast the message to our peers.");
         hashMapChangedListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
-    }
-
-    private boolean isSequenceNrValid(int newSequenceNumber, ByteArray hashOfData) {
-        if (sequenceNumberMap.containsKey(hashOfData)) {
-            int storedSequenceNumber = sequenceNumberMap.get(hashOfData).sequenceNr;
-            if (newSequenceNumber >= storedSequenceNumber) {
-                log.trace("Sequence number is valid (>=). sequenceNumber = "
-                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber);
-                return true;
-            } else {
-                log.debug("Sequence number is invalid. sequenceNumber = "
-                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
-                        "That can happen if the data owner gets an old delayed data storage message.");
-                return false;
-            }
-        } else {
-            return true;
-        }
     }
 
     private boolean hasSequenceNrIncreased(int newSequenceNumber, ByteArray hashOfData) {
