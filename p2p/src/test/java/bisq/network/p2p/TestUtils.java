@@ -27,6 +27,8 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
+import java.time.Clock;
+
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -184,6 +186,9 @@ public class TestUtils {
             public NetworkPayload fromProto(protobuf.StorageEntryWrapper proto) {
                 return null;
             }
+
+            @Override
+            public Clock getClock() { return null; }
         };
     }
 }

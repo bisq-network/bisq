@@ -100,7 +100,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * How many days to keep an entry before it is purged.
      */
-    private static final int PURGE_AGE_DAYS = 10;
+    @VisibleForTesting
+    public static final int PURGE_AGE_DAYS = 10;
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
@@ -122,6 +123,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Clock clock;
+
+    protected int maxSequenceNumberMapSizeBeforePurge;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -147,6 +150,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         this.sequenceNumberMapStorage = sequenceNumberMapStorage;
         sequenceNumberMapStorage.setNumMaxBackupFiles(5);
+        this.maxSequenceNumberMapSizeBeforePurge = 1000;
     }
 
     @Override
@@ -177,40 +181,43 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             removeExpiredEntriesTimer.stop();
     }
 
+    @VisibleForTesting
+    void removeExpiredEntries() {
+        log.trace("removeExpiredEntries");
+        // The moment when an object becomes expired will not be synchronous in the network and we could
+        // get add network_messages after the object has expired. To avoid repeated additions of already expired
+        // object when we get it sent from new peers, we don’t remove the sequence number from the map.
+        // That way an ADD message for an already expired data will fail because the sequence number
+        // is equal and not larger as expected.
+        Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
+        Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
+        temp.entrySet().stream()
+                .filter(entry -> entry.getValue().isExpired(this.clock))
+                .forEach(entry -> {
+                    ByteArray hashOfPayload = entry.getKey();
+                    ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
+                    if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
+                        toRemoveSet.add(protectedStorageEntry);
+                        log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
+                        map.remove(hashOfPayload);
+                    }
+                });
+
+        // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
+        // about start and end of iteration.
+        hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
+        toRemoveSet.forEach(protectedStorageEntry -> {
+            hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
+            removeFromProtectedDataStore(protectedStorageEntry);
+        });
+        hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
+
+        if (sequenceNumberMap.size() > this.maxSequenceNumberMapSizeBeforePurge)
+            sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
+    }
+
     public void onBootstrapComplete() {
-        removeExpiredEntriesTimer = UserThread.runPeriodically(() -> {
-            log.trace("removeExpiredEntries");
-            // The moment when an object becomes expired will not be synchronous in the network and we could
-            // get add network_messages after the object has expired. To avoid repeated additions of already expired
-            // object when we get it sent from new peers, we don’t remove the sequence number from the map.
-            // That way an ADD message for an already expired data will fail because the sequence number
-            // is equal and not larger as expected.
-            Map<ByteArray, ProtectedStorageEntry> temp = new HashMap<>(map);
-            Set<ProtectedStorageEntry> toRemoveSet = new HashSet<>();
-            temp.entrySet().stream()
-                    .filter(entry -> entry.getValue().isExpired())
-                    .forEach(entry -> {
-                        ByteArray hashOfPayload = entry.getKey();
-                        ProtectedStorageEntry protectedStorageEntry = map.get(hashOfPayload);
-                        if (!(protectedStorageEntry.getProtectedStoragePayload() instanceof PersistableNetworkPayload)) {
-                            toRemoveSet.add(protectedStorageEntry);
-                            log.debug("We found an expired data entry. We remove the protectedData:\n\t" + Utilities.toTruncatedString(protectedStorageEntry));
-                            map.remove(hashOfPayload);
-                        }
-                    });
-
-            // Batch processing can cause performance issues, so we give listeners a chance to deal with it by notifying
-            // about start and end of iteration.
-            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataStarted);
-            toRemoveSet.forEach(protectedStorageEntry -> {
-                hashMapChangedListeners.forEach(l -> l.onRemoved(protectedStorageEntry));
-                removeFromProtectedDataStore(protectedStorageEntry);
-            });
-            hashMapChangedListeners.forEach(HashMapChangedListener::onBatchRemoveExpiredDataCompleted);
-
-            if (sequenceNumberMap.size() > 1000)
-                sequenceNumberMap.setMap(getPurgedSequenceNumberMap(sequenceNumberMap.getMap()));
-        }, CHECK_TTL_INTERVAL_SEC);
+        removeExpiredEntriesTimer = UserThread.runPeriodically(this::removeExpiredEntries, CHECK_TTL_INTERVAL_SEC);
     }
 
     public Map<ByteArray, PersistableNetworkPayload> getAppendOnlyDataStoreMap() {
@@ -285,7 +292,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                     // TODO investigate what causes the disconnections.
                                     // Usually the are: SOCKET_TIMEOUT ,TERMINATED (EOFException)
                                     protectedStorageEntry.backDate();
-                                    if (protectedStorageEntry.isExpired()) {
+                                    if (protectedStorageEntry.isExpired(this.clock)) {
                                         log.info("We found an expired data entry which we have already back dated. " +
                                                 "We remove the protectedStoragePayload:\n\t" + Utilities.toTruncatedString(protectedStorageEntry.getProtectedStoragePayload(), 100));
                                         doRemoveProtectedExpirableData(protectedStorageEntry, hashOfPayload);
@@ -409,7 +416,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         hashMapChangedListeners.forEach(e -> e.onAdded(protectedStorageEntry));
 
         // Record the updated sequence number and persist it. Higher delay so we can batch more items.
-        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 2000);
 
         // Optionally, broadcast the add/update depending on the calling environment
@@ -466,13 +473,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // This is a valid refresh, update the payload for it
         log.debug("refreshDate called for storedData:\n\t" + StringUtils.abbreviate(storedData.toString(), 100));
-        storedData.refreshTTL();
+        storedData.refreshTTL(this.clock);
         storedData.updateSequenceNumber(sequenceNumber);
         storedData.updateSignature(signature);
         printData("after refreshTTL");
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 1000);
 
         // Always broadcast refreshes
@@ -492,7 +499,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // If we don't know about the target of this remove, ignore it
         if (!map.containsKey(hashOfPayload)) {
             log.debug("Remove data ignored as we don't have an entry for that data.");
-
             return false;
         }
 
@@ -513,7 +519,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after remove");
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
@@ -608,7 +614,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         printData("after removeMailboxData");
 
         // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, System.currentTimeMillis()));
+        sequenceNumberMap.put(hashOfPayload, new MapValue(sequenceNumber, this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
@@ -637,7 +643,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new DataAndSeqNrPair(protectedStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(ownerStoragePubKey.getPrivate(), hashOfDataAndSeqNr);
-        return new ProtectedStorageEntry(protectedStoragePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature);
+        return new ProtectedStorageEntry(protectedStoragePayload, ownerStoragePubKey.getPublic(), sequenceNumber, signature, this.clock);
     }
 
     public RefreshOfferMessage getRefreshTTLMessage(ProtectedStoragePayload protectedStoragePayload,
@@ -669,7 +675,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         byte[] hashOfDataAndSeqNr = P2PDataStorage.get32ByteHash(new DataAndSeqNrPair(expirableMailboxStoragePayload, sequenceNumber));
         byte[] signature = Sig.sign(storageSignaturePubKey.getPrivate(), hashOfDataAndSeqNr);
         return new ProtectedMailboxStorageEntry(expirableMailboxStoragePayload,
-                storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey);
+                storageSignaturePubKey.getPublic(), sequenceNumber, signature, receiversPublicKey, this.clock);
     }
 
     public void addHashMapChangedListener(HashMapChangedListener hashMapChangedListener) {
@@ -839,7 +845,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.
     private Map<ByteArray, MapValue> getPurgedSequenceNumberMap(Map<ByteArray, MapValue> persisted) {
         Map<ByteArray, MapValue> purged = new HashMap<>();
-        long maxAgeTs = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(PURGE_AGE_DAYS);
+        long maxAgeTs = this.clock.millis() - TimeUnit.DAYS.toMillis(PURGE_AGE_DAYS);
         persisted.forEach((key, value) -> {
             if (value.timeStamp > maxAgeTs)
                 purged.put(key, value);

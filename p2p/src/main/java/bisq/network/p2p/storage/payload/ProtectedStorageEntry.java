@@ -27,6 +27,8 @@ import com.google.protobuf.Message;
 
 import java.security.PublicKey;
 
+import java.time.Clock;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,37 +45,55 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     private long creationTimeStamp;
 
     public ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
-                                 PublicKey ownerPubKey,
-                                 int sequenceNumber,
-                                 byte[] signature) {
-        this.protectedStoragePayload = protectedStoragePayload;
-        ownerPubKeyBytes = Sig.getPublicKeyBytes(ownerPubKey);
-        this.ownerPubKey = ownerPubKey;
-
-        this.sequenceNumber = sequenceNumber;
-        this.signature = signature;
-        this.creationTimeStamp = System.currentTimeMillis();
+                                    PublicKey ownerPubKey,
+                                    int sequenceNumber,
+                                    byte[] signature,
+                                    Clock clock) {
+        this(protectedStoragePayload,
+                Sig.getPublicKeyBytes(ownerPubKey),
+                ownerPubKey,
+                sequenceNumber,
+                signature,
+                clock.millis(),
+                clock);
     }
 
+    protected ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+                                 byte[] ownerPubKeyBytes,
+                                 PublicKey ownerPubKey,
+                                 int sequenceNumber,
+                                 byte[] signature,
+                                 long creationTimeStamp,
+                                 Clock clock) {
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    protected ProtectedStorageEntry(long creationTimeStamp,
-                                    ProtectedStoragePayload protectedStoragePayload,
-                                    byte[] ownerPubKeyBytes,
-                                    int sequenceNumber,
-                                    byte[] signature) {
         this.protectedStoragePayload = protectedStoragePayload;
         this.ownerPubKeyBytes = ownerPubKeyBytes;
-        ownerPubKey = Sig.getPublicKeyFromBytes(ownerPubKeyBytes);
+        this.ownerPubKey = ownerPubKey;
 
         this.sequenceNumber = sequenceNumber;
         this.signature = signature;
         this.creationTimeStamp = creationTimeStamp;
 
-        maybeAdjustCreationTimeStamp();
+        maybeAdjustCreationTimeStamp(clock);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private ProtectedStorageEntry(ProtectedStoragePayload protectedStoragePayload,
+                                    byte[] ownerPubKeyBytes,
+                                    int sequenceNumber,
+                                    byte[] signature,
+                                    long creationTimeStamp,
+                                    Clock clock) {
+        this(protectedStoragePayload,
+                ownerPubKeyBytes,
+                Sig.getPublicKeyFromBytes(ownerPubKeyBytes),
+                sequenceNumber,
+                signature,
+                creationTimeStamp,
+                clock);
     }
 
     public Message toProtoMessage() {
@@ -93,11 +113,13 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
 
     public static ProtectedStorageEntry fromProto(protobuf.ProtectedStorageEntry proto,
                                                   NetworkProtoResolver resolver) {
-        return new ProtectedStorageEntry(proto.getCreationTimeStamp(),
+        return new ProtectedStorageEntry(
                 ProtectedStoragePayload.fromProto(proto.getStoragePayload(), resolver),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSequenceNumber(),
-                proto.getSignature().toByteArray());
+                proto.getSignature().toByteArray(),
+                proto.getCreationTimeStamp(),
+                resolver.getClock());
     }
 
 
@@ -105,14 +127,14 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void maybeAdjustCreationTimeStamp() {
+    public void maybeAdjustCreationTimeStamp(Clock clock) {
         // We don't allow creation date in the future, but we cannot be too strict as clocks are not synced
-        if (creationTimeStamp > System.currentTimeMillis())
-            creationTimeStamp = System.currentTimeMillis();
+        if (creationTimeStamp > clock.millis())
+            creationTimeStamp = clock.millis();
     }
 
-    public void refreshTTL() {
-        creationTimeStamp = System.currentTimeMillis();
+    public void refreshTTL(Clock clock) {
+        creationTimeStamp = clock.millis();
     }
 
     public void backDate() {
@@ -128,8 +150,8 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
         this.signature = signature;
     }
 
-    public boolean isExpired() {
+    public boolean isExpired(Clock clock) {
         return protectedStoragePayload instanceof ExpirablePayload &&
-                (System.currentTimeMillis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
+                (clock.millis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
     }
 }
