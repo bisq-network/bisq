@@ -130,7 +130,8 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
         availableNonBsqBalanceTextField.setManaged(isNonBsqBalanceAvailable);
         availableNonBsqBalanceTextField.setText(bsqFormatter.formatBTCWithCode(availableNonBsqBalance.value));
         
-        reputationBalanceTextField.setText(bsqFormatter.formatBSQSatoshisWithCode(daoFacade.getAvailableMerit())); 
+        String bsqSatoshi = bsqFormatter.formatBSQSatoshisWithCode(daoFacade.getAvailableMerit());
+        reputationBalanceTextField.setText(bsqSatoshi); 
     }
 
 
