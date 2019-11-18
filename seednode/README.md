@@ -2,6 +2,7 @@
 
 * Install bisq-seednode.service in /etc/systemd/system
 * Install bisq-seednode in /etc/default
+* Install blocknotify.sh in bitcoind's ~/.bitcoin/ folder and chmod 700 it
 * Modify the executable paths and configuration as necessary
 * Then you can do:
 
