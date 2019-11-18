@@ -94,8 +94,6 @@ public class ProtectedMailboxStorageEntryTest {
     }
 
     // TESTCASE: validForAddOperation() should fail if Entry.receiversPubKey and Payload.ownerPubKey don't match
-    // XXXBUGXXX: The current code doesn't validate this mismatch, but it would create an added payload that could never
-    // be removed since the remove code requires Entry.receiversPubKey == Payload.ownerPubKey
     @Test
     public void isValidForAddOperation_EntryReceiverPayloadReceiverMismatch() throws NoSuchAlgorithmException, CryptoException {
         KeyPair senderKeys = TestUtils.generateKeyPair();
@@ -104,8 +102,7 @@ public class ProtectedMailboxStorageEntryTest {
         MailboxStoragePayload mailboxStoragePayload = buildMailboxStoragePayload(senderKeys.getPublic(), receiverKeys.getPublic());
         ProtectedStorageEntry protectedStorageEntry = buildProtectedMailboxStorageEntry(mailboxStoragePayload, senderKeys, senderKeys.getPublic(), 1);
 
-        // should be assertFalse
-        Assert.assertTrue(protectedStorageEntry.isValidForAddOperation());
+        Assert.assertFalse(protectedStorageEntry.isValidForAddOperation());
     }
 
     // TESTCASE: validForAddOperation() should fail if the signature isn't valid

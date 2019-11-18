@@ -213,4 +213,40 @@ public class ProtectedStorageEntryTest {
 
         Assert.assertFalse(protectedStorageEntryOne.matchesRelevantPubKey(protectedStorageEntryTwo));
     }
+
+    // TESTCASE: Payload implementing ProtectedStoragePayload & PersistableNetworkPayload is invalid
+    // We rely on the fact that a payload is either a ProtectedStoragePayload OR PersistableNetworkPayload, but Java
+    // does not have a clean way to specify mutually exclusive interfaces.
+    //
+    // We also want to guarantee that ONLY ProtectedStoragePayload objects are valid as payloads in
+    // ProtectedStorageEntrys. This test will give a defense in case future development work breaks that expectation.
+    @Test(expected = IllegalArgumentException.class)
+    public void ProtectedStoragePayload_PersistableNetworkPayload_incompatible() throws NoSuchAlgorithmException {
+        class IncompatiblePayload extends ProtectedStoragePayloadStub implements PersistableNetworkPayload {
+
+            private IncompatiblePayload(PublicKey ownerPubKey) {
+                super(ownerPubKey);
+            }
+
+            @Override
+            public byte[] getHash() {
+                return new byte[0];
+            }
+
+            @Override
+            public boolean verifyHashSize() {
+                return true;
+            }
+
+            @Override
+            public protobuf.PersistableNetworkPayload toProtoMessage() {
+                return (protobuf.PersistableNetworkPayload) this.messageMock;
+            }
+        }
+
+        KeyPair ownerKeys = TestUtils.generateKeyPair();
+        IncompatiblePayload incompatiblePayload = new IncompatiblePayload(ownerKeys.getPublic());
+        new ProtectedStorageEntry(incompatiblePayload,ownerKeys.getPublic(), 1,
+                new byte[] { 0 }, Clock.systemDefaultZone());
+    }
 }

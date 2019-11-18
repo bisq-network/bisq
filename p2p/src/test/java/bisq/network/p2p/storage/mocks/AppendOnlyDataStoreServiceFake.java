@@ -24,6 +24,12 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Implementation of an in-memory AppendOnlyDataStoreService that can be used in tests. Removes overhead
+ * involving files, resources, and services for tests that don't need it.
+ *
+ * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
+ */
 public class AppendOnlyDataStoreServiceFake extends AppendOnlyDataStoreService {
     private final Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> map;
 

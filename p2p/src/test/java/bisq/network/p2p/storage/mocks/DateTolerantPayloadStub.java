@@ -21,6 +21,13 @@ import bisq.network.p2p.storage.payload.DateTolerantPayload;
 
 import java.time.Clock;
 
+/**
+ * Stub implementation of a ProtectedStoragePayload implementing the DateTolerantPayload marker interface
+ * that can be used in tests to provide canned answers to calls. Useful if the tests don't care about the implementation
+ * details of the ProtectedStoragePayload.
+ *
+ * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
+ */
 public class DateTolerantPayloadStub implements DateTolerantPayload {
     private final boolean dateInTolerance;
 
