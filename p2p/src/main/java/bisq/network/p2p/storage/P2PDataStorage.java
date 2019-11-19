@@ -121,7 +121,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private Timer removeExpiredEntriesTimer;
 
     private final Storage<SequenceNumberMap> sequenceNumberMapStorage;
-    private final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
+
+    @VisibleForTesting
+    final SequenceNumberMap sequenceNumberMap = new SequenceNumberMap();
 
     private final Set<AppendOnlyDataStoreListener> appendOnlyDataStoreListeners = new CopyOnWriteArraySet<>();
     private final Set<ProtectedDataStoreListener> protectedDataStoreListeners = new CopyOnWriteArraySet<>();

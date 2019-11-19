@@ -38,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.Assert;
@@ -571,6 +572,23 @@ public class P2PDataStorageProtectedStorageEntryTest {
             return ProtectedStorageEntry.class;
         }
 
+
+        // Tests that just apply to PersistablePayload objects
+
+        // XXXBUG_3629XXX: Persisted ProtectedStorageEntries are saved to disk via their 20-byte hash. This causes
+        // the internal hash map to be reloaded with the 20-byte key instead of the 32-byte key.
+        @Test
+        public void addProtectedStorageEntry_afterReadFromResourcesWithDuplicate_3629RegressionTest() {
+            ProtectedStorageEntry protectedStorageEntry = this.getProtectedStorageEntryForAdd(1);
+            doProtectedStorageAddAndVerify(protectedStorageEntry, true, true);
+
+            Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> beforeRestart = this.testState.mockedStorage.getMap();
+
+            this.testState.simulateRestart();
+
+            // Should be equal
+            Assert.assertNotEquals(beforeRestart, this.testState.mockedStorage.getMap());
+        }
     }
 
     /**

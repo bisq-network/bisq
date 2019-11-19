@@ -36,6 +36,7 @@ import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
+import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
@@ -65,33 +66,86 @@ import static org.mockito.Mockito.*;
 public class TestState {
     static final int MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE = 5;
 
-    final P2PDataStorage mockedStorage;
+    P2PDataStorage mockedStorage;
     final Broadcaster mockBroadcaster;
 
     final AppendOnlyDataStoreListener appendOnlyDataStoreListener;
     private final ProtectedDataStoreListener protectedDataStoreListener;
     private final HashMapChangedListener hashMapChangedListener;
     private final Storage<SequenceNumberMap> mockSeqNrStorage;
+    private final ProtectedDataStoreService protectedDataStoreService;
     final ClockFake clockFake;
 
     TestState() {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrStorage = mock(Storage.class);
         this.clockFake = new ClockFake();
+        this.protectedDataStoreService = new ProtectedDataStoreServiceFake();
 
         this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
                 this.mockBroadcaster,
                 new AppendOnlyDataStoreServiceFake(),
-                new ProtectedDataStoreServiceFake(), mock(ResourceDataStoreService.class),
+                this.protectedDataStoreService, mock(ResourceDataStoreService.class),
                 this.mockSeqNrStorage, this.clockFake, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
 
         this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
         this.protectedDataStoreListener = mock(ProtectedDataStoreListener.class);
         this.hashMapChangedListener = mock(HashMapChangedListener.class);
 
-        this.mockedStorage.addHashMapChangedListener(this.hashMapChangedListener);
-        this.mockedStorage.addAppendOnlyDataStoreListener(this.appendOnlyDataStoreListener);
-        this.mockedStorage.addProtectedDataStoreListener(this.protectedDataStoreListener);
+        this.mockedStorage = createP2PDataStorageForTest(
+                this.mockBroadcaster,
+                this.protectedDataStoreService,
+                this.mockSeqNrStorage,
+                this.clockFake,
+                this.hashMapChangedListener,
+                this.appendOnlyDataStoreListener,
+                this.protectedDataStoreListener);
+    }
+
+
+    /**
+     * Re-initializes the in-memory data structures from the storage objects to simulate a node restarting. Important
+     * to note that the current TestState uses Test Doubles instead of actual disk storage so this is just "simulating"
+     * not running the entire storage code paths.
+     */
+    void simulateRestart() {
+        when(this.mockSeqNrStorage.initAndGetPersisted(any(SequenceNumberMap.class), anyLong()))
+                .thenReturn(this.mockedStorage.sequenceNumberMap);
+
+        this.mockedStorage = createP2PDataStorageForTest(
+                this.mockBroadcaster,
+                this.protectedDataStoreService,
+                this.mockSeqNrStorage,
+                this.clockFake,
+                this.hashMapChangedListener,
+                this.appendOnlyDataStoreListener,
+                this.protectedDataStoreListener);
+    }
+
+    private static P2PDataStorage createP2PDataStorageForTest(
+            Broadcaster broadcaster,
+            ProtectedDataStoreService protectedDataStoreService,
+            Storage<SequenceNumberMap> sequenceNrMapStorage,
+            ClockFake clock,
+            HashMapChangedListener hashMapChangedListener,
+            AppendOnlyDataStoreListener appendOnlyDataStoreListener,
+            ProtectedDataStoreListener protectedDataStoreListener) {
+
+        P2PDataStorage p2PDataStorage = new P2PDataStorage(mock(NetworkNode.class),
+                broadcaster,
+                new AppendOnlyDataStoreServiceFake(),
+                protectedDataStoreService, mock(ResourceDataStoreService.class),
+                sequenceNrMapStorage, clock, MAX_SEQUENCE_NUMBER_MAP_SIZE_BEFORE_PURGE);
+
+        // Currently TestState only supports reading ProtectedStorageEntries off disk.
+        p2PDataStorage.readFromResources("unused");
+        p2PDataStorage.readPersisted();
+
+        p2PDataStorage.addHashMapChangedListener(hashMapChangedListener);
+        p2PDataStorage.addAppendOnlyDataStoreListener(appendOnlyDataStoreListener);
+        p2PDataStorage.addProtectedDataStoreListener(protectedDataStoreListener);
+
+        return p2PDataStorage;
     }
 
     private void resetState() {
