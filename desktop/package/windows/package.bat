@@ -17,7 +17,7 @@ if not exist "%JAVA_HOME%\bin\javapackager.exe" (
     set JAVA_HOME=%ProgramFiles%\Java\jdk-10.0.2
 )
 set package_dir=%~dp0..
-for /F "tokens=1.2.3-SNAPSHOT delims=.-" %%a in ("%version%") do (
+for /F "tokens=1,2,3 delims=.-" %%a in ("%version%") do (
    set file_version=%%a.%%b.%%c
 )
 
