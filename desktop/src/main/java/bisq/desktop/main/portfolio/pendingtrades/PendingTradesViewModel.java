@@ -46,6 +46,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
@@ -112,7 +114,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     @Inject
     public PendingTradesViewModel(PendingTradesDataModel dataModel,
-                                  CoinFormatter btcFormatter,
+                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                   BsqFormatter bsqFormatter,
                                   BtcAddressValidator btcAddressValidator,
                                   P2PService p2PService,

@@ -158,7 +158,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            AssetService assetService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
-                           CoinFormatter formatter,
+                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            @Named(DaoOptionKeys.FULL_DAO_NODE) String fullDaoNode,
                            @Named(DaoOptionKeys.RPC_USER) String rpcUser,
                            @Named(DaoOptionKeys.RPC_PASSWORD) String rpcPassword,

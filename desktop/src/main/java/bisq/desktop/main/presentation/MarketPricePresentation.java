@@ -36,6 +36,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
@@ -93,7 +94,7 @@ public class MarketPricePresentation {
                                    PriceFeedService priceFeedService,
                                    Preferences preferences,
                                    FeeService feeService,
-                                   CoinFormatter formatter) {
+                                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.formatter = formatter;

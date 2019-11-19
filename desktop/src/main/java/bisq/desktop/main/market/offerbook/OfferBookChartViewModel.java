@@ -38,9 +38,12 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import com.google.common.math.LongMath;
 
@@ -96,7 +99,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     @SuppressWarnings("WeakerAccess")
     @Inject
     public OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
-                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, CoinFormatter formatter) {
+                                   AccountAgeWitnessService accountAgeWitnessService, Navigation navigation, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.offerBook = offerBook;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;

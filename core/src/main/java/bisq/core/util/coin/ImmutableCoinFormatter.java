@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
-@Singleton
 public class ImmutableCoinFormatter implements CoinFormatter {
 
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
@@ -45,8 +44,8 @@ public class ImmutableCoinFormatter implements CoinFormatter {
     private MonetaryFormat monetaryFormat;
 
     @Inject
-    public ImmutableCoinFormatter() {
-        monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+    public ImmutableCoinFormatter(MonetaryFormat monetaryFormat) {
+        this.monetaryFormat = monetaryFormat;
     }
 
 

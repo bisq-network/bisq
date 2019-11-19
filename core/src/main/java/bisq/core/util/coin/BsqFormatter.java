@@ -73,7 +73,7 @@ public class BsqFormatter implements CoinFormatter {
     @Inject
     public BsqFormatter() {
         this.monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
-        this.immutableCoinFormatter = new ImmutableCoinFormatter();
+        this.immutableCoinFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
 
         GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> switchLocale(newValue));
         switchLocale(GlobalSettings.getLocale());

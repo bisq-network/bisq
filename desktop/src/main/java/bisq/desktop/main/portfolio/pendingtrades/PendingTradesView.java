@@ -139,7 +139,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Inject
     public PendingTradesView(PendingTradesViewModel model,
                              TradeDetailsWindow tradeDetailsWindow,
-                             CoinFormatter formatter,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
                              @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {

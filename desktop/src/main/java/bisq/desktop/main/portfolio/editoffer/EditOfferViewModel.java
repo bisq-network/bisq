@@ -39,6 +39,8 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
 
     @Inject
@@ -53,7 +55,7 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               Preferences preferences,
-                              CoinFormatter btcFormatter,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super(dataModel,
                 fiatVolumeValidator,

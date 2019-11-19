@@ -67,6 +67,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -197,7 +198,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  Navigation navigation,
                                  Preferences preferences,
-                                 CoinFormatter btcFormatter,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  BsqFormatter bsqFormatter) {
         super(dataModel);
 

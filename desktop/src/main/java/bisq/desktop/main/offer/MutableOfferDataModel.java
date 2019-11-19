@@ -45,6 +45,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.handlers.TransactionResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 
@@ -58,6 +59,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -140,7 +143,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                                  PriceFeedService priceFeedService,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  FeeService feeService,
-                                 CoinFormatter btcFormatter,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  MakerFeeProvider makerFeeProvider,
                                  Navigation navigation) {
         super(btcWalletService);

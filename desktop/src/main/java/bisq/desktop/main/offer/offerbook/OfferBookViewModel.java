@@ -62,6 +62,8 @@ import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import com.google.common.base.Joiner;
 
 import javafx.scene.control.TableColumn;
@@ -146,7 +148,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               FilterManager filterManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              CoinFormatter btcFormatter,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
 

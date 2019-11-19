@@ -32,6 +32,8 @@ import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;
@@ -43,7 +45,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
                                  AccountAgeWitnessService accountAgeWitnessService,
-                                 CoinFormatter formatter) {
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.formatter = formatter;

@@ -53,6 +53,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -67,6 +68,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.jfoenix.controls.JFXButton;
 
@@ -170,7 +172,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                           MyBlindVoteListService myBlindVoteListService,
                           Preferences preferences,
                           BsqFormatter bsqFormatter,
-                          CoinFormatter btcFormatter,
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                           SelectProposalWindow selectProposalWindow) {
         this.daoFacade = daoFacade;
         this.bsqWalletService = bsqWalletService;

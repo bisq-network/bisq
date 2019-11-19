@@ -38,6 +38,8 @@ import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -74,7 +76,7 @@ class SpreadViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, CoinFormatter formatter) {
+    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.offerBook = offerBook;
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;

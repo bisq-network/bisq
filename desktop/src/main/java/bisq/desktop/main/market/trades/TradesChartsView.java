@@ -47,6 +47,7 @@ import bisq.common.util.Tuple3;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.jfoenix.controls.JFXTabPane;
 
@@ -140,7 +141,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public TradesChartsView(TradesChartsViewModel model, CoinFormatter formatter) {
+    public TradesChartsView(TradesChartsViewModel model, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model);
         this.formatter = formatter;
 

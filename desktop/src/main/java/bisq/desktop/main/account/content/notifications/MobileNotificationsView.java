@@ -57,6 +57,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -127,7 +128,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                                     PriceFeedService priceFeedService,
                                     MarketAlerts marketAlerts,
                                     MobileNotificationService mobileNotificationService,
-                                    CoinFormatter formatter) {
+                                    @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super();
         this.preferences = preferences;
         this.user = user;

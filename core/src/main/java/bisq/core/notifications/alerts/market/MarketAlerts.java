@@ -39,6 +39,7 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public class MarketAlerts {
 
     @Inject
     public MarketAlerts(OfferBookService offerBookService, MobileNotificationService mobileNotificationService,
-                        User user, PriceFeedService priceFeedService, KeyRing keyRing, CoinFormatter formatter) {
+                        User user, PriceFeedService priceFeedService, KeyRing keyRing, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.offerBookService = offerBookService;
         this.mobileNotificationService = mobileNotificationService;
         this.user = user;

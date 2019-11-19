@@ -44,6 +44,7 @@ import bisq.common.util.Tuple4;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -86,7 +87,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferDetailsWindow(CoinFormatter formatter, User user, KeyRing keyRing,
+    public OfferDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, User user, KeyRing keyRing,
                               Navigation navigation) {
         this.formatter = formatter;
         this.user = user;

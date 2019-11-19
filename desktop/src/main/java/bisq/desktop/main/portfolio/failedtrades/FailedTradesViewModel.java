@@ -28,6 +28,8 @@ import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.collections.ObservableList;
 
 class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataModel> implements ViewModel {
@@ -35,7 +37,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
 
     @Inject
-    public FailedTradesViewModel(FailedTradesDataModel dataModel, CoinFormatter formatter) {
+    public FailedTradesViewModel(FailedTradesDataModel dataModel, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(dataModel);
 
         this.formatter = formatter;

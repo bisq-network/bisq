@@ -38,6 +38,8 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.collections.ObservableList;
 
 class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> implements ViewModel {
@@ -49,7 +51,7 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     @Inject
     public OpenOffersViewModel(OpenOffersDataModel dataModel,
                                P2PService p2PService,
-                               CoinFormatter btcFormatter,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                BsqFormatter bsqFormatter) {
         super(dataModel);
 

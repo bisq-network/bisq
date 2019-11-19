@@ -45,6 +45,7 @@ import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.fxml.FXML;
 
@@ -142,7 +143,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                                BisqEnvironment bisqEnvironment,
                                TorNetworkSettingsWindow torNetworkSettingsWindow,
                                ClockWatcher clockWatcher,
-                               CoinFormatter formatter) {
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super();
         this.walletsSetup = walletsSetup;
         this.p2PService = p2PService;

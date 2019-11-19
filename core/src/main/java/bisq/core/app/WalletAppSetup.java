@@ -30,6 +30,7 @@ import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.ChainFileLockedException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.fxmisc.easybind.EasyBind;
@@ -84,7 +85,7 @@ public class WalletAppSetup {
                           WalletsSetup walletsSetup,
                           BisqEnvironment bisqEnvironment,
                           Preferences preferences,
-                          CoinFormatter formatter) {
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.walletsManager = walletsManager;
         this.walletsSetup = walletsSetup;
         this.bisqEnvironment = bisqEnvironment;

@@ -40,6 +40,7 @@ import bisq.core.locale.Res;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.ParsingUtils;
@@ -58,6 +59,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.wallet.Wallet;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.util.concurrent.FutureCallback;
 
@@ -156,7 +158,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                            TradeManager tradeManager,
                            P2PService p2PService,
                            WalletsSetup walletsSetup,
-                           CoinFormatter formatter,
+                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                            Preferences preferences,
                            BtcAddressValidator btcAddressValidator,
                            WalletPasswordWindow walletPasswordWindow) {

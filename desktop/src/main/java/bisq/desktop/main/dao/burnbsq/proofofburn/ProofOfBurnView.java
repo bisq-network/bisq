@@ -37,6 +37,7 @@ import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -49,6 +50,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.TableCell;
@@ -116,7 +118,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                             ProofOfBurnService proofOfBurnService,
                             MyProofOfBurnListService myProofOfBurnListService,
                             Preferences preferences,
-                            CoinFormatter btcFormatter) {
+                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;

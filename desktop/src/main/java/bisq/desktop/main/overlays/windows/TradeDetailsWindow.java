@@ -43,6 +43,7 @@ import bisq.common.UserThread;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -86,7 +87,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public TradeDetailsWindow(CoinFormatter formatter,
+    public TradeDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               ArbitrationManager arbitrationManager,
                               TradeManager tradeManager,
                               AccountAgeWitnessService accountAgeWitnessService) {

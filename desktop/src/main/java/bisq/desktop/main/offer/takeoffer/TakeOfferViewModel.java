@@ -58,6 +58,7 @@ import bisq.common.app.DevEnv;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
@@ -152,7 +153,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               PriceFeedService priceFeedService,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
-                              CoinFormatter btcFormatter,
+                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super(dataModel);
         this.dataModel = dataModel;

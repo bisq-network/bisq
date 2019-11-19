@@ -34,6 +34,7 @@ import bisq.core.dao.governance.asset.StatefulAsset;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -45,6 +46,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -109,7 +111,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                          BsqWalletService bsqWalletService,
                          BsqValidator bsqValidator,
                          AssetService assetService,
-                         CoinFormatter btcFormatter) {
+                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;

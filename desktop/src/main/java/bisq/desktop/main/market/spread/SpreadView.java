@@ -26,11 +26,13 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
@@ -61,7 +63,7 @@ public class SpreadView extends ActivatableViewAndModel<GridPane, SpreadViewMode
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadView(SpreadViewModel model, CoinFormatter formatter) {
+    public SpreadView(SpreadViewModel model, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model);
         this.formatter = formatter;
     }

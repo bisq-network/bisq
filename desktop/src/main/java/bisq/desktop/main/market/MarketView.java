@@ -44,6 +44,7 @@ import bisq.network.p2p.P2PService;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -81,7 +82,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
 
 
     @Inject
-    public MarketView(CachingViewLoader viewLoader, P2PService p2PService, OfferBook offerBook, CoinFormatter formatter,
+    public MarketView(CachingViewLoader viewLoader, P2PService p2PService, OfferBook offerBook, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                       Navigation navigation) {
         this.viewLoader = viewLoader;
         this.p2PService = p2PService;

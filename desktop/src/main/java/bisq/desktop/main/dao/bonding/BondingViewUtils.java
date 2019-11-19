@@ -114,14 +114,13 @@ public class BondingViewUtils {
                     Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getLockupTxMiningFeeAndTxSize(lockupAmount, lockupTime, lockupReason, hash);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
-                    CoinFormatter formatter = new ImmutableCoinFormatter();
                     String duration = FormattingUtils.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
                             .confirmation(Res.get("dao.bond.reputation.lockup.details",
                                     bsqFormatter.formatCoinWithCode(lockupAmount),
                                     lockupTime,
                                     duration,
-                                    formatter.formatCoinWithCode(miningFee),
+                                    bsqFormatter.formatBTCWithCode(miningFee),
                                     CoinUtil.getFeePerByte(miningFee, txSize),
                                     txSize / 1000d
                             ))
@@ -173,14 +172,13 @@ public class BondingViewUtils {
                     Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getUnlockTxMiningFeeAndTxSize(lockupTxId);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
-                    CoinFormatter formatter = new ImmutableCoinFormatter();
                     String duration = FormattingUtils.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",
                                     bsqFormatter.formatCoinWithCode(unlockAmount),
                                     lockTime,
                                     duration,
-                                    formatter.formatCoinWithCode(miningFee),
+                                    bsqFormatter.formatBTCWithCode(miningFee),
                                     CoinUtil.getFeePerByte(miningFee, txSize),
                                     txSize / 1000d
                             ))

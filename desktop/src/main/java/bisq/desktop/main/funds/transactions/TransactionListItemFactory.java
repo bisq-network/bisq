@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.PubKeyRing;
@@ -28,6 +29,7 @@ import bisq.common.crypto.PubKeyRing;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import javax.annotation.Nullable;
@@ -47,7 +49,7 @@ public class TransactionListItemFactory {
                                BsqWalletService bsqWalletService,
                                DaoFacade daoFacade,
                                PubKeyRing pubKeyRing,
-                               CoinFormatter formatter,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                Preferences preferences) {
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;

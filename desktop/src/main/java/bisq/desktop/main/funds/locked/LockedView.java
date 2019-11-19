@@ -37,12 +37,14 @@ import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -96,7 +98,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Inject
     private LockedView(BtcWalletService btcWalletService, TradeManager tradeManager, OpenOfferManager openOfferManager, Preferences preferences,
-                       CoinFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
+                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter, OfferDetailsWindow offerDetailsWindow, TradeDetailsWindow tradeDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;

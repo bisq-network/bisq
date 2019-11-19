@@ -60,6 +60,7 @@ import bisq.core.trade.statistics.AssetTradeActivityCheck;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.crypto.DecryptedDataTuple;
@@ -82,6 +83,7 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import com.google.common.net.InetAddresses;
@@ -270,7 +272,7 @@ public class BisqSetup {
                      AssetService assetService,
                      TorSetup torSetup,
                      TradeLimits tradeLimits,
-                     CoinFormatter formatter) {
+                     @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
 
 
         this.p2PNetworkSetup = p2PNetworkSetup;

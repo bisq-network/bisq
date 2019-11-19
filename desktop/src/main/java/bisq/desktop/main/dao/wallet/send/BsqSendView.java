@@ -44,6 +44,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -59,6 +60,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
@@ -105,7 +107,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         WalletsSetup walletsSetup,
                         P2PService p2PService,
                         BsqFormatter bsqFormatter,
-                        CoinFormatter btcFormatter,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                         Navigation navigation,
                         BsqBalanceUtil bsqBalanceUtil,
                         BsqValidator bsqValidator,

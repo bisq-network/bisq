@@ -48,6 +48,7 @@ import bisq.common.crypto.PubKeyRing;
 import org.bitcoinj.core.Utils;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.base.Joiner;
 
@@ -91,7 +92,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                           MediationManager mediationManager,
                           RefundManager refundManager,
                           AccountAgeWitnessService accountAgeWitnessService,
-                          CoinFormatter formatter) {
+                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
         this.refundManager = refundManager;

@@ -24,6 +24,7 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -69,6 +70,7 @@ import static org.mockito.Mockito.when;
 public class CreateOfferViewModelTest {
 
     private CreateOfferViewModel model;
+    private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {
@@ -76,7 +78,6 @@ public class CreateOfferViewModelTest {
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
 
-        final CoinFormatter coinFormatter = new ImmutableCoinFormatter();
         final BtcValidator btcValidator = new BtcValidator(coinFormatter);
         final AltcoinValidator altcoinValidator = new AltcoinValidator();
         final FiatPriceValidator fiatPriceValidator = new FiatPriceValidator();

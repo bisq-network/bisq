@@ -134,7 +134,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, CoinFormatter formatter,
+    public OfferBookChartView(OfferBookChartViewModel model, Navigation navigation, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.navigation = navigation;

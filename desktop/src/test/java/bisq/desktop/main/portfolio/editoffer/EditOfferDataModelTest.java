@@ -4,6 +4,7 @@ import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -65,8 +66,6 @@ public class EditOfferDataModelTest {
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
-
-        final CoinFormatter coinFormatter = new ImmutableCoinFormatter();
 
         FeeService feeService = mock(FeeService.class);
         AddressEntry addressEntry = mock(AddressEntry.class);

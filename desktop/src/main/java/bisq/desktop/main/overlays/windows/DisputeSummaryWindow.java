@@ -61,6 +61,7 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -131,7 +132,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryWindow(CoinFormatter formatter,
+    public DisputeSummaryWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                 MediationManager mediationManager,
                                 RefundManager refundManager,
                                 TradeWalletService tradeWalletService,
