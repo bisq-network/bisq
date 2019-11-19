@@ -2,13 +2,13 @@ package bisq.desktop.main.offer.createoffer;
 
 import bisq.desktop.main.offer.MakerFeeProvider;
 
-import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.PaymentAccount;
@@ -21,6 +21,7 @@ import bisq.core.user.User;
 import org.bitcoinj.core.Coin;
 
 import java.util.HashSet;
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -48,20 +49,20 @@ public class CreateOfferDataModelTest {
         BtcWalletService btcWalletService = mock(BtcWalletService.class);
         PriceFeedService priceFeedService = mock(PriceFeedService.class);
         FeeService feeService = mock(FeeService.class);
-        TxFeeEstimationService feeEstimationService = mock(TxFeeEstimationService.class);
+        CreateOfferService createOfferService = mock(CreateOfferService.class);
         preferences = mock(Preferences.class);
         user = mock(User.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(preferences.isUsePercentageBasedPrice()).thenReturn(true);
         when(preferences.getBuyerSecurityDepositAsPercent(null)).thenReturn(0.01);
+        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
 
         makerFeeProvider = mock(MakerFeeProvider.class);
-        model = new CreateOfferDataModel(null, btcWalletService,
+        model = new CreateOfferDataModel(createOfferService, null, btcWalletService,
                 null, preferences, user, null,
-                null, priceFeedService, null,
-                null, feeService, feeEstimationService,
-                null, null, makerFeeProvider, null);
+                priceFeedService, null,
+                feeService, null, makerFeeProvider, null);
     }
 
     @Test

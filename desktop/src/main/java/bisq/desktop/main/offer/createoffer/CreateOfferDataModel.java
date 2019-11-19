@@ -26,21 +26,17 @@ import bisq.desktop.main.offer.MakerFeeProvider;
 import bisq.desktop.main.offer.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.filter.FilterManager;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 
 import bisq.network.p2p.P2PService;
-
-import bisq.common.crypto.KeyRing;
 
 import com.google.inject.Inject;
 
@@ -52,35 +48,29 @@ import com.google.inject.Inject;
 class CreateOfferDataModel extends MutableOfferDataModel {
 
     @Inject
-    public CreateOfferDataModel(OpenOfferManager openOfferManager,
+    public CreateOfferDataModel(CreateOfferService createOfferService,
+                                OpenOfferManager openOfferManager,
                                 BtcWalletService btcWalletService,
                                 BsqWalletService bsqWalletService,
                                 Preferences preferences,
                                 User user,
-                                KeyRing keyRing,
                                 P2PService p2PService,
                                 PriceFeedService priceFeedService,
-                                FilterManager filterManager,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 FeeService feeService,
-                                TxFeeEstimationService txFeeEstimationService,
-                                ReferralIdService referralIdService,
                                 BSFormatter btcFormatter,
                                 MakerFeeProvider makerFeeProvider,
                                 Navigation navigation) {
-        super(openOfferManager,
+        super(createOfferService,
+                openOfferManager,
                 btcWalletService,
                 bsqWalletService,
                 preferences,
                 user,
-                keyRing,
                 p2PService,
                 priceFeedService,
-                filterManager,
                 accountAgeWitnessService,
                 feeService,
-                txFeeEstimationService,
-                referralIdService,
                 btcFormatter,
                 makerFeeProvider,
                 navigation);

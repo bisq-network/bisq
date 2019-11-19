@@ -1,4 +1,4 @@
-# By default developers use either port 2002 or 3002 or both as local seed nodes. If they want to use regtest 
+# By default developers use either port 2002 or 3002 or both as local seed nodes. If they want to use regtest
 # with Tor they have to add a program argument to pass the custom onion address of the local Tor seed node.
 # E.g. --seedNodes=YOUR_ONION.onion:2002
 
@@ -6,7 +6,7 @@
 # 1. Run a seed node with prog args: --bitcoinNetwork=regtest --nodePort=2002 --appName=bisq_seed_node_localhost_YOUR_ONION
 # 2. Find your local onion address in bisq_seed_node_localhost_YOUR_ONION/regtest/tor/hiddenservice/hostname
 # 3. Shut down the seed node
-# 4. Rename YOUR_ONION at the directory with your local onion address as well as the appName program argument to reflect 
+# 4. Rename YOUR_ONION at the directory with your local onion address as well as the appName program argument to reflect
 # the real onion address.
 # 5. Start the seed node again
 # 6. Start the Bisq app which wants to connect to that seed node with program argument `--seedNodes=YOUR_ONION.onion:2002`

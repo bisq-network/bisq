@@ -24,7 +24,6 @@ import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -32,6 +31,7 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
+import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -50,6 +50,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 
 import java.time.Instant;
+
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -89,7 +91,7 @@ public class CreateOfferViewModelTest {
         BsqWalletService bsqWalletService = mock(BsqWalletService.class);
         SecurityDepositValidator securityDepositValidator = mock(SecurityDepositValidator.class);
         AccountAgeWitnessService accountAgeWitnessService = mock(AccountAgeWitnessService.class);
-        TxFeeEstimationService txFeeEstimationService = mock(TxFeeEstimationService.class);
+        CreateOfferService createOfferService = mock(CreateOfferService.class);
 
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(btcWalletService.getBalanceForAddress(any())).thenReturn(Coin.valueOf(1000L));
@@ -103,11 +105,12 @@ public class CreateOfferViewModelTest {
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
+        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
 
-        CreateOfferDataModel dataModel = new CreateOfferDataModel(null, btcWalletService,
-                bsqWalletService, empty, user, null, null, priceFeedService, null,
-                accountAgeWitnessService, feeService, txFeeEstimationService,
-                null, bsFormatter, mock(MakerFeeProvider.class), null);
+        CreateOfferDataModel dataModel = new CreateOfferDataModel(createOfferService, null, btcWalletService,
+                bsqWalletService, empty, user, null, priceFeedService,
+                accountAgeWitnessService, feeService,
+                bsFormatter, mock(MakerFeeProvider.class), null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
