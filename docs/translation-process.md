@@ -15,7 +15,7 @@ Being a base language English is managed directly in the project.
 Edit `core/src/main/resources/i18n/displayStrings.properties` to add or modify English texts.
 Mind the chapters. Fit your entry properly.
 
-Once your changes get merged the Transifex will sync itself with Github.
+Once your changes get merged the Transifex will sync itself with GitHub.
 
 However, **do not** edit files for other languages. They are synced from Transifex.
 
