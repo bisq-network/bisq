@@ -44,9 +44,6 @@ public class ImmutableCoinFormatter implements CoinFormatter {
     @Getter
     private MonetaryFormat monetaryFormat;
 
-    //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
-
-
     @Inject
     public ImmutableCoinFormatter() {
         monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();

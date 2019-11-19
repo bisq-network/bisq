@@ -159,28 +159,12 @@ public class BsqFormatter implements CoinFormatter {
         return FormattingUtils.formatCoinWithCode(coin, btcCoinFormat);
     }
 
-    public String formatBTC(Coin coin) {
+    private String formatBTC(Coin coin) {
         return FormattingUtils.formatCoin(coin.value, btcCoinFormat);
     }
 
     public Coin parseToBTC(String input) {
         return ParsingUtils.parseToCoin(input, btcCoinFormat);
-    }
-
-    public void validateBtcInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, btcCoinFormat);
-    }
-
-    public void validateBsqInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, monetaryFormat);
-    }
-
-    private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ProposalValidationException {
-        try {
-            coinFormat.parse(ParsingUtils.cleanDoubleInput(input));
-        } catch (Throwable t) {
-            throw new ProposalValidationException("Invalid format for a " + coinFormat.code() + " value");
-        }
     }
 
     public String formatParamValue(Param param, String value) {
@@ -215,7 +199,7 @@ public class BsqFormatter implements CoinFormatter {
         }
     }
 
-    public int parseParamValueToBlocks(Param param, String inputValue) {
+    private int parseParamValueToBlocks(Param param, String inputValue) {
         switch (param.getParamType()) {
             case BLOCK:
                 return Integer.parseInt(inputValue);
