@@ -19,18 +19,15 @@ package bisq.desktop.util;
 
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
-import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.CoinMaker;
 
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.desktop.maker.PriceMaker.priceString;
-import static bisq.desktop.maker.PriceMaker.usdPrice;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
@@ -42,7 +39,7 @@ import static org.mockito.Mockito.mock;
 
 public class BSFormatterTest {
 
-    private BSFormatter formatter;
+    private CoinFormatter formatter;
 
     @Before
     public void setUp() {

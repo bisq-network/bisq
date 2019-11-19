@@ -37,8 +37,8 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -78,7 +78,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private Dispute dispute;
 
 
@@ -91,7 +91,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
                           MediationManager mediationManager,
                           RefundManager refundManager,
                           AccountAgeWitnessService accountAgeWitnessService,
-                          BSFormatter formatter) {
+                          CoinFormatter formatter) {
         this.arbitrationManager = arbitrationManager;
         this.mediationManager = mediationManager;
         this.refundManager = refundManager;

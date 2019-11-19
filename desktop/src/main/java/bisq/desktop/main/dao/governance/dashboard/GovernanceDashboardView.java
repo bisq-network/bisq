@@ -30,7 +30,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import javax.inject.Inject;
 
@@ -48,7 +48,7 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     private final DaoFacade daoFacade;
     private final PeriodService periodService;
     private final PhasesView phasesView;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     private int gridRow = 0;
     private TextField currentPhaseTextField, currentBlockHeightTextField, proposalTextField, blindVoteTextField, voteRevealTextField, voteResultTextField;
@@ -59,7 +59,7 @@ public class GovernanceDashboardView extends ActivatableView<GridPane, Void> imp
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public GovernanceDashboardView(DaoFacade daoFacade, PeriodService periodService, PhasesView phasesView, BSFormatter formatter) {
+    public GovernanceDashboardView(DaoFacade daoFacade, PeriodService periodService, PhasesView phasesView, CoinFormatter formatter) {
         this.daoFacade = daoFacade;
         this.periodService = periodService;
         this.phasesView = phasesView;

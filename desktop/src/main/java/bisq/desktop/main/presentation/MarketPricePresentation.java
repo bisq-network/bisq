@@ -30,8 +30,8 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 
@@ -65,7 +65,7 @@ import lombok.Getter;
 @Singleton
 public class MarketPricePresentation {
     private final Preferences preferences;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final PriceFeedService priceFeedService;
     @Getter
     private final ObservableList<PriceFeedComboBoxItem> priceFeedComboBoxItems = FXCollections.observableArrayList();
@@ -93,7 +93,7 @@ public class MarketPricePresentation {
                                    PriceFeedService priceFeedService,
                                    Preferences preferences,
                                    FeeService feeService,
-                                   BSFormatter formatter) {
+                                   CoinFormatter formatter) {
         this.priceFeedService = priceFeedService;
         this.preferences = preferences;
         this.formatter = formatter;

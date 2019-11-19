@@ -34,7 +34,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -58,7 +58,7 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                                 PriceFeedService priceFeedService,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 FeeService feeService,
-                                BSFormatter btcFormatter,
+                                CoinFormatter btcFormatter,
                                 MakerFeeProvider makerFeeProvider,
                                 Navigation navigation) {
         super(createOfferService,

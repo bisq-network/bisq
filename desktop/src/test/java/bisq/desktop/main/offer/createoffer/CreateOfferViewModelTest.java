@@ -41,6 +41,7 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import org.bitcoinj.core.Coin;
@@ -75,8 +76,8 @@ public class CreateOfferViewModelTest {
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
 
-        final BSFormatter bsFormatter = new BSFormatter();
-        final BtcValidator btcValidator = new BtcValidator(bsFormatter);
+        final CoinFormatter coinFormatter = new BSFormatter();
+        final BtcValidator btcValidator = new BtcValidator(coinFormatter);
         final AltcoinValidator altcoinValidator = new AltcoinValidator();
         final FiatPriceValidator fiatPriceValidator = new FiatPriceValidator();
 
@@ -110,13 +111,13 @@ public class CreateOfferViewModelTest {
         CreateOfferDataModel dataModel = new CreateOfferDataModel(createOfferService, null, btcWalletService,
                 bsqWalletService, empty, user, null, priceFeedService,
                 accountAgeWitnessService, feeService,
-                bsFormatter, mock(MakerFeeProvider.class), null);
+                coinFormatter, mock(MakerFeeProvider.class), null);
         dataModel.initWithData(OfferPayload.Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
         model = new CreateOfferViewModel(dataModel, null, fiatPriceValidator, altcoinValidator,
                 btcValidator, null, securityDepositValidator, priceFeedService, null, null,
-                preferences, bsFormatter, bsqFormatter);
+                preferences, coinFormatter, bsqFormatter);
         model.activate();
     }
 

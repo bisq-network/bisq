@@ -45,7 +45,7 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -105,7 +105,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     protected final DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager;
     protected final KeyRing keyRing;
     private final TradeManager tradeManager;
-    protected final BSFormatter formatter;
+    protected final CoinFormatter formatter;
     protected final DisputeSummaryWindow disputeSummaryWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private final ContractWindow contractWindow;
@@ -139,7 +139,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> {
     public DisputeView(DisputeManager<? extends DisputeList<? extends DisputeList>> disputeManager,
                        KeyRing keyRing,
                        TradeManager tradeManager,
-                       BSFormatter formatter,
+                       CoinFormatter formatter,
                        DisputeSummaryWindow disputeSummaryWindow,
                        PrivateNotificationManager privateNotificationManager,
                        ContractWindow contractWindow,

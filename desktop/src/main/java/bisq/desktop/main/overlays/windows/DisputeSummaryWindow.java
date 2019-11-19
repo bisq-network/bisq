@@ -45,7 +45,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.Contract;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -97,7 +97,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private static final Logger log = LoggerFactory.getLogger(DisputeSummaryWindow.class);
 
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
     private final TradeWalletService tradeWalletService;
@@ -131,7 +131,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public DisputeSummaryWindow(BSFormatter formatter,
+    public DisputeSummaryWindow(CoinFormatter formatter,
                                 MediationManager mediationManager,
                                 RefundManager refundManager,
                                 TradeWalletService tradeWalletService,

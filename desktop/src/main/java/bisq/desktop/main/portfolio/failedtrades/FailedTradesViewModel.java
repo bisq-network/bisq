@@ -23,19 +23,19 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
 
 import javafx.collections.ObservableList;
 
 class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataModel> implements ViewModel {
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
 
     @Inject
-    public FailedTradesViewModel(FailedTradesDataModel dataModel, BSFormatter formatter) {
+    public FailedTradesViewModel(FailedTradesDataModel dataModel, CoinFormatter formatter) {
         super(dataModel);
 
         this.formatter = formatter;

@@ -44,7 +44,6 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -78,7 +77,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final WalletsSetup walletsSetup;
     private final P2PService p2PService;
     private final BsqFormatter bsqFormatter;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final Navigation navigation;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final BsqValidator bsqValidator;
@@ -106,7 +105,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         WalletsSetup walletsSetup,
                         P2PService p2PService,
                         BsqFormatter bsqFormatter,
-                        BSFormatter btcFormatter,
+                        CoinFormatter btcFormatter,
                         Navigation navigation,
                         BsqBalanceUtil bsqBalanceUtil,
                         BsqValidator bsqValidator,
@@ -349,7 +348,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     Coin miningFee,
                                     int txSize, String address,
                                     CoinFormatter amountFormatter, // can be BSQ or BTC formatter
-                                    BSFormatter feeFormatter,
+                                    CoinFormatter feeFormatter,
                                     ResultHandler resultHandler) {
         new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                 .confirmation(Res.get("dao.wallet.send.sendFunds.details",

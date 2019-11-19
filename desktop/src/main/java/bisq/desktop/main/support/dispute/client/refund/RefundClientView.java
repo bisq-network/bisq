@@ -32,7 +32,7 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.RefundSession;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
@@ -46,7 +46,7 @@ public class RefundClientView extends DisputeClientView {
     public RefundClientView(RefundManager refundManager,
                             KeyRing keyRing,
                             TradeManager tradeManager,
-                            BSFormatter formatter,
+                            CoinFormatter formatter,
                             DisputeSummaryWindow disputeSummaryWindow,
                             PrivateNotificationManager privateNotificationManager,
                             ContractWindow contractWindow,
