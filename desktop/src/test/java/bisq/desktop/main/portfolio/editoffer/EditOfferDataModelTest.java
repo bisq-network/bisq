@@ -21,7 +21,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ImmutableCoinFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -66,7 +66,7 @@ public class EditOfferDataModelTest {
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
 
-        final CoinFormatter coinFormatter = new BSFormatter();
+        final CoinFormatter coinFormatter = new ImmutableCoinFormatter();
 
         FeeService feeService = mock(FeeService.class);
         AddressEntry addressEntry = mock(AddressEntry.class);

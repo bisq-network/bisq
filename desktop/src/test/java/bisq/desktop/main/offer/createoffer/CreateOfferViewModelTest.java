@@ -39,7 +39,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ImmutableCoinFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -76,7 +76,7 @@ public class CreateOfferViewModelTest {
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();
 
-        final CoinFormatter coinFormatter = new BSFormatter();
+        final CoinFormatter coinFormatter = new ImmutableCoinFormatter();
         final BtcValidator btcValidator = new BtcValidator(coinFormatter);
         final AltcoinValidator altcoinValidator = new AltcoinValidator();
         final FiatPriceValidator fiatPriceValidator = new FiatPriceValidator();

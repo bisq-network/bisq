@@ -4,7 +4,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DisplayUtilsTest {
-    private final CoinFormatter formatter = new BSFormatter();
+    private final CoinFormatter formatter = new ImmutableCoinFormatter();
 
     @Before
     public void setUp() {

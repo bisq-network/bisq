@@ -34,7 +34,7 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ImmutableCoinFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
@@ -114,7 +114,7 @@ public class BondingViewUtils {
                     Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getLockupTxMiningFeeAndTxSize(lockupAmount, lockupTime, lockupReason, hash);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
-                    CoinFormatter formatter = new BSFormatter();
+                    CoinFormatter formatter = new ImmutableCoinFormatter();
                     String duration = FormattingUtils.formatDurationAsWords(lockupTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.lockup.headline"))
                             .confirmation(Res.get("dao.bond.reputation.lockup.details",
@@ -173,7 +173,7 @@ public class BondingViewUtils {
                     Tuple2<Coin, Integer> miningFeeAndTxSize = daoFacade.getUnlockTxMiningFeeAndTxSize(lockupTxId);
                     Coin miningFee = miningFeeAndTxSize.first;
                     int txSize = miningFeeAndTxSize.second;
-                    CoinFormatter formatter = new BSFormatter();
+                    CoinFormatter formatter = new ImmutableCoinFormatter();
                     String duration = FormattingUtils.formatDurationAsWords(lockTime * 10 * 60 * 1000L, false, false);
                     new Popup<>().headLine(Res.get("dao.bond.reputation.unlock.headline"))
                             .confirmation(Res.get("dao.bond.reputation.unlock.details",

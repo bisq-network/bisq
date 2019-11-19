@@ -34,7 +34,6 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.FormattingUtils;
 

@@ -18,7 +18,7 @@
 package bisq.desktop.util;
 
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.CoinMaker;
@@ -37,14 +37,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class BSFormatterTest {
+public class ImmutableCoinFormatterTest {
 
     private CoinFormatter formatter;
 
     @Before
     public void setUp() {
         Locale.setDefault(new Locale("en", "US"));
-        formatter = new BSFormatter();
+        formatter = new ImmutableCoinFormatter();
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
     }

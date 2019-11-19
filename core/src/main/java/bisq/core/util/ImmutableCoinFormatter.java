@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
-public class BSFormatter implements CoinFormatter {
+public class ImmutableCoinFormatter implements CoinFormatter {
 
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
@@ -41,13 +41,13 @@ public class BSFormatter implements CoinFormatter {
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     @Getter
-    protected MonetaryFormat monetaryFormat;
+    private MonetaryFormat monetaryFormat;
 
     //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
 
 
     @Inject
-    public BSFormatter() {
+    public ImmutableCoinFormatter() {
         monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
     }
 

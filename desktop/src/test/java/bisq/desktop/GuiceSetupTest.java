@@ -47,7 +47,7 @@ import bisq.core.support.dispute.mediation.mediator.MediatorService;
 import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.ImmutableCoinFormatter;
 import bisq.core.util.BsqFormatter;
 
 import bisq.network.p2p.network.BridgeAddressProvider;
@@ -95,7 +95,7 @@ public class GuiceSetupTest {
         assertSingleton(Navigation.class);
         assertSingleton(InjectorViewFactory.class);
         assertSingleton(NotificationCenter.class);
-        assertSingleton(BSFormatter.class);
+        assertSingleton(ImmutableCoinFormatter.class);
         assertSingleton(BsqFormatter.class);
         assertSingleton(TorNetworkSettingsWindow.class);
         assertSingleton(MarketPricePresentation.class);

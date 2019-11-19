@@ -30,7 +30,6 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.Tuple2;

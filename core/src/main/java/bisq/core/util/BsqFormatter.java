@@ -43,6 +43,7 @@ import java.text.NumberFormat;
 
 import java.util.Locale;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -50,27 +51,38 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @Singleton
 public class BsqFormatter implements CoinFormatter {
+    private final ImmutableCoinFormatter immutableCoinFormatter;
+
+    // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
+    // Input of "," as decimal mark (like in german locale) will be replaced with ".".
+    // Input of a group separator (1,123,45) lead to an validation error.
+    // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
+    // no way to remove grouping separator). It seems to be not optimal for user input formatting.
+    @Getter
+    private MonetaryFormat monetaryFormat;
+
+
     @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
     private final String prefix = "B";
-    private final BSFormatter bsFormatter;
     private DecimalFormat amountFormat;
     private DecimalFormat marketCapFormat;
     private final MonetaryFormat btcCoinFormat;
 
     @Inject
     public BsqFormatter() {
-        bsFormatter = new BSFormatter();
+        this.monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+        this.immutableCoinFormatter = new ImmutableCoinFormatter();
 
-        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> setFormatter(newValue));
-        setFormatter(GlobalSettings.getLocale());
+        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> switchLocale(newValue));
+        switchLocale(GlobalSettings.getLocale());
 
-        btcCoinFormat = bsFormatter.monetaryFormat;
+        btcCoinFormat = monetaryFormat;
 
         final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
             case "BTC":
-                bsFormatter.monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
+                monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
                 break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
@@ -79,7 +91,7 @@ public class BsqFormatter implements CoinFormatter {
         amountFormat.setMinimumFractionDigits(2);
     }
 
-    private void setFormatter(Locale locale) {
+    private void switchLocale(Locale locale) {
         amountFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
         amountFormat.setMinimumFractionDigits(2);
         amountFormat.setMaximumFractionDigits(2);
@@ -127,11 +139,11 @@ public class BsqFormatter implements CoinFormatter {
     }
 
     public String formatBSQSatoshis(long satoshi) {
-        return FormattingUtils.formatCoin(satoshi, bsFormatter.monetaryFormat);
+        return FormattingUtils.formatCoin(satoshi, monetaryFormat);
     }
 
     public String formatBSQSatoshisWithCode(long satoshi) {
-        return FormattingUtils.formatCoinWithCode(satoshi, bsFormatter.monetaryFormat);
+        return FormattingUtils.formatCoinWithCode(satoshi, monetaryFormat);
     }
 
     public String formatBTCSatoshis(long satoshi) {
@@ -159,7 +171,7 @@ public class BsqFormatter implements CoinFormatter {
     }
 
     public void validateBsqInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, bsFormatter.monetaryFormat);
+        validateCoinInput(input, monetaryFormat);
     }
 
     private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ProposalValidationException {
@@ -236,30 +248,26 @@ public class BsqFormatter implements CoinFormatter {
     }
 
     public String formatCoin(Coin coin) {
-        return bsFormatter.formatCoin(coin);
+        return immutableCoinFormatter.formatCoin(coin);
     }
 
     @NotNull
     public String formatCoin(Coin coin, int decimalPlaces) {
-        return bsFormatter.formatCoin(coin, decimalPlaces);
+        return immutableCoinFormatter.formatCoin(coin, decimalPlaces);
     }
 
     public String formatCoin(Coin coin,
                              int decimalPlaces,
                              boolean decimalAligned,
                              int maxNumberOfDigits) {
-        return bsFormatter.formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits);
+        return immutableCoinFormatter.formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits);
     }
 
     public String formatCoinWithCode(Coin coin) {
-        return bsFormatter.formatCoinWithCode(coin);
+        return immutableCoinFormatter.formatCoinWithCode(coin);
     }
 
     public String formatCoinWithCode(long value) {
-        return bsFormatter.formatCoinWithCode(value);
-    }
-
-    public MonetaryFormat getMonetaryFormat() {
-        return bsFormatter.getMonetaryFormat();
+        return immutableCoinFormatter.formatCoinWithCode(value);
     }
 }
