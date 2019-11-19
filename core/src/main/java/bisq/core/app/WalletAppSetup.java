@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.store.BlockStoreException;
@@ -123,7 +124,7 @@ public class WalletAppSetup {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,
                                     Res.get("mainView.footer.btcInfo.synchronizingWith"),
-                                    getBtcNetworkAsString() + ": " + BSFormatter.formatToPercentWithSymbol(percentage));
+                                    getBtcNetworkAsString() + ": " + FormattingUtils.formatToPercentWithSymbol(percentage));
                         } else {
                             result = Res.get("mainView.footer.btcInfo",
                                     peers,

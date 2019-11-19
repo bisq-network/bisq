@@ -37,6 +37,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
 import bisq.common.util.MathUtils;
@@ -346,9 +347,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 double doubleValue = (double) object;
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
                     final double value = MathUtils.scaleDownByPowerOf10(doubleValue, 8);
-                    return BSFormatter.formatRoundedDoubleWithPrecision(value, 8);
+                    return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return BSFormatter.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
+                    return FormattingUtils.formatPrice(Price.valueOf(currencyCode, MathUtils.doubleToLong(doubleValue)));
                 }
             }
 
@@ -363,9 +364,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             public String toString(Number object) {
                 if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                     final double value = MathUtils.scaleDownByPowerOf10((long) object, 8);
-                    return BSFormatter.formatRoundedDoubleWithPrecision(value, 8);
+                    return FormattingUtils.formatRoundedDoubleWithPrecision(value, 8);
                 } else {
-                    return BSFormatter.formatPrice(Price.valueOf(model.getCurrencyCode(), (long) object));
+                    return FormattingUtils.formatPrice(Price.valueOf(model.getCurrencyCode(), (long) object));
                 }
             }
 
@@ -619,7 +620,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                             public void updateItem(final TradeStatistics2 item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setText(BSFormatter.formatPrice(item.getTradePrice()));
+                                    setText(FormattingUtils.formatPrice(item.getTradePrice()));
                                 else
                                     setText("");
                             }

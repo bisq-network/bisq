@@ -31,6 +31,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
 
@@ -137,7 +138,7 @@ public class MarketPricePresentation {
     }
 
     private void setupMarketPriceFeed() {
-        priceFeedService.requestPriceFeed(price -> marketPrice.set(BSFormatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
+        priceFeedService.requestPriceFeed(price -> marketPrice.set(FormattingUtils.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
                 (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
 
         marketPriceBinding = EasyBind.combine(
@@ -194,7 +195,7 @@ public class MarketPricePresentation {
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
             if (marketPrice != null && marketPrice.isPriceAvailable()) {
-                priceString = BSFormatter.formatMarketPrice(marketPrice.getPrice(), currencyCode);
+                priceString = FormattingUtils.formatMarketPrice(marketPrice.getPrice(), currencyCode);
                 item.setPriceAvailable(true);
                 item.setExternallyProvidedPrice(marketPrice.isExternallyProvidedPrice());
             } else {

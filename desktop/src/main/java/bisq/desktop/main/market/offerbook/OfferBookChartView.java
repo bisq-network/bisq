@@ -39,6 +39,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -221,15 +222,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
-                                final String withCryptoPrecision = BSFormatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                final String withCryptoPrecision = FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 if (withCryptoPrecision.equals("0.000")) {
                                     cryptoPrecision = 8;
-                                    return BSFormatter.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
+                                    return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
                                 } else {
                                     return withCryptoPrecision;
                                 }
                             } else {
-                                return BSFormatter.formatRoundedDoubleWithPrecision(doubleValue, 2);
+                                return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 2);
                             }
                         }
 

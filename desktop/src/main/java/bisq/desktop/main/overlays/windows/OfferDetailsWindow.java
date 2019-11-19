@@ -35,6 +35,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;
@@ -207,15 +208,15 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String priceLabel = Res.get("shared.price");
         if (takeOfferHandlerOptional.isPresent()) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(tradePrice));
+            addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(tradePrice));
         } else {
             Price price = offer.getPrice();
             if (offer.isUseMarketBasedPrice()) {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price) +
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(price) +
                         " " + Res.get("offerDetailsWindow.distance",
-                        BSFormatter.formatPercentagePrice(offer.getMarketPriceMargin())));
+                        FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin())));
             } else {
-                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, BSFormatter.formatPrice(price));
+                addConfirmationLabelLabel(gridPane, ++rowIndex, priceLabel, FormattingUtils.formatPrice(price));
             }
         }
         final PaymentMethod paymentMethod = offer.getPaymentMethod();

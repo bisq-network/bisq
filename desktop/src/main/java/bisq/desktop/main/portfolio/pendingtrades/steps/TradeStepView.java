@@ -32,7 +32,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.BootstrapListener;
 
@@ -551,7 +551,7 @@ public abstract class TradeStepView extends AnchorPane {
                 .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
                         myPayoutAmount,
                         peersPayoutAmount,
-                        BSFormatter.getDateFromBlockHeight(remaining),
+                        FormattingUtils.getDateFromBlockHeight(remaining),
                         lockTime))
                 .actionButtonText(actionButtonText)
                 .onAction(() -> {

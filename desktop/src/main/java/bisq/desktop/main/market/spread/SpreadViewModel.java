@@ -31,6 +31,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -185,7 +186,7 @@ class SpreadViewModel extends ActivatableViewModel {
                                 .multiply(BigDecimal.valueOf(10000))
                                 .divide(marketPriceAsBigDecimal, RoundingMode.HALF_UP)
                                 .doubleValue() / 10000;
-                        percentage = BSFormatter.formatPercentagePrice(percentageValue);
+                        percentage = FormattingUtils.formatPercentagePrice(percentageValue);
                     }
                 } catch (Throwable t) {
                     try {

@@ -27,6 +27,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import com.google.inject.Inject;
 
@@ -69,9 +70,9 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return BSFormatter.formatPrice(((Trade) tradable).getTradePrice());
+            return FormattingUtils.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return BSFormatter.formatPrice(tradable.getOffer().getPrice());
+            return FormattingUtils.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {

@@ -123,27 +123,27 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatBSQSatoshis(long satoshi) {
-        return super.formatCoin(satoshi, monetaryFormat);
+        return FormattingUtils.formatCoin(satoshi, monetaryFormat);
     }
 
     public String formatBSQSatoshisWithCode(long satoshi) {
-        return super.formatCoinWithCode(satoshi, monetaryFormat);
+        return FormattingUtils.formatCoinWithCode(satoshi, monetaryFormat);
     }
 
     public String formatBTCSatoshis(long satoshi) {
-        return super.formatCoin(satoshi, btcCoinFormat);
+        return FormattingUtils.formatCoin(satoshi, btcCoinFormat);
     }
 
     public String formatBTCWithCode(long satoshi) {
-        return BSFormatter.formatCoinWithCode(satoshi, btcCoinFormat);
+        return FormattingUtils.formatCoinWithCode(satoshi, btcCoinFormat);
     }
 
     public String formatBTCWithCode(Coin coin) {
-        return BSFormatter.formatCoinWithCode(coin, btcCoinFormat);
+        return FormattingUtils.formatCoinWithCode(coin, btcCoinFormat);
     }
 
     public String formatBTC(Coin coin) {
-        return super.formatCoin(coin.value, btcCoinFormat);
+        return FormattingUtils.formatCoin(coin.value, btcCoinFormat);
     }
 
     public Coin parseToBTC(String input) {
@@ -176,7 +176,7 @@ public class BsqFormatter extends BSFormatter {
             case BTC:
                 return formatBTCWithCode(parseToBTC(value));
             case PERCENT:
-                return formatToPercentWithSymbol(ParsingUtils.parsePercentStringToDouble(value));
+                return FormattingUtils.formatToPercentWithSymbol(ParsingUtils.parsePercentStringToDouble(value));
             case BLOCK:
                 return Res.get("dao.param.blocks", Integer.parseInt(value));
             case ADDRESS:
@@ -216,7 +216,7 @@ public class BsqFormatter extends BSFormatter {
             case BTC:
                 return formatBTC(parseParamValueToCoin(param, inputValue));
             case PERCENT:
-                return formatToPercent(ParsingUtils.parsePercentStringToDouble(inputValue));
+                return FormattingUtils.formatToPercent(ParsingUtils.parsePercentStringToDouble(inputValue));
             case BLOCK:
                 return Integer.toString(parseParamValueToBlocks(param, inputValue));
             case ADDRESS:

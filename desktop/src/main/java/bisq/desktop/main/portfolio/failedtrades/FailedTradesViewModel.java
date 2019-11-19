@@ -23,6 +23,7 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import com.google.inject.Inject;
 
@@ -55,7 +56,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
     }
 
     String getPrice(FailedTradesListItem item) {
-        return (item != null) ? BSFormatter.formatPrice(item.getTrade().getTradePrice()) : "";
+        return (item != null) ? FormattingUtils.formatPrice(item.getTrade().getTradePrice()) : "";
     }
 
     String getVolume(FailedTradesListItem item) {
