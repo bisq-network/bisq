@@ -224,10 +224,10 @@ public class TestState {
             // TODO: Should the behavior be identical between this and the HashMap listeners?
             // TODO: Do we want ot overwrite stale values in order to persist updated sequence numbers and timestamps?
             if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload && beforeState.protectedStorageEntryBeforeOpDataStoreMap == null) {
-                Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
+                Assert.assertEquals(protectedStorageEntry, this.protectedDataStoreService.getMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener).onAdded(protectedStorageEntry);
             } else {
-                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
+                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             }
 
@@ -244,7 +244,7 @@ public class TestState {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
         } else {
             Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
-            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
+            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
 
@@ -298,7 +298,7 @@ public class TestState {
                 Assert.assertNull(this.mockedStorage.getMap().get(hashMapHash));
 
                 if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload) {
-                    Assert.assertNull(this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
+                    Assert.assertNull(this.protectedDataStoreService.getMap().get(hashMapHash));
 
                     verify(this.protectedDataStoreListener).onRemoved(protectedStorageEntry);
                 }
@@ -420,7 +420,7 @@ public class TestState {
 
             P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
             this.protectedStorageEntryBeforeOp = testState.mockedStorage.getMap().get(hashMapHash);
-            this.protectedStorageEntryBeforeOpDataStoreMap = testState.mockedStorage.getProtectedDataStoreMap().get(hashMapHash);
+            this.protectedStorageEntryBeforeOpDataStoreMap = testState.protectedDataStoreService.getMap().get(hashMapHash);
 
 
             this.creationTimestampBeforeUpdate = (this.protectedStorageEntryBeforeOp != null) ? this.protectedStorageEntryBeforeOp.getCreationTimeStamp() : 0;

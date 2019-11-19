@@ -222,11 +222,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return appendOnlyDataStoreService.getMap();
     }
 
-    public Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> getProtectedDataStoreMap() {
-        return protectedDataStoreService.getMap();
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
