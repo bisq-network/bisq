@@ -41,8 +41,8 @@ import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.util.ImmutableCoinFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import javafx.beans.property.SimpleIntegerProperty;
 

@@ -43,7 +43,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;

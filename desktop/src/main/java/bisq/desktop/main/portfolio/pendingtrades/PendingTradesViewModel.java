@@ -32,7 +32,7 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;

@@ -18,7 +18,7 @@
 package bisq.desktop.util;
 
 import bisq.core.locale.Res;
-import bisq.core.util.ImmutableCoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.CoinMaker;

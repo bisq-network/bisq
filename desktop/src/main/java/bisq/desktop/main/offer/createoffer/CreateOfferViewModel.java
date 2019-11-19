@@ -30,7 +30,7 @@ import bisq.desktop.util.validation.SecurityDepositValidator;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;

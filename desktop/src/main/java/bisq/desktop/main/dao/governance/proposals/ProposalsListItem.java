@@ -25,7 +25,7 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 

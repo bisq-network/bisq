@@ -27,7 +27,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Tuple3;
 

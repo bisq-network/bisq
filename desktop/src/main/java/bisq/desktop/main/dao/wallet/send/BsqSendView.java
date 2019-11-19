@@ -44,7 +44,7 @@ import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.ParsingUtils;

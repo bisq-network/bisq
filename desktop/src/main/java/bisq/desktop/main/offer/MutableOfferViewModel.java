@@ -51,7 +51,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;

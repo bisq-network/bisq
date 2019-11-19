@@ -4,7 +4,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
-import bisq.core.util.ImmutableCoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;

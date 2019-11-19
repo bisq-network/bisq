@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util;
+package bisq.core.util.coin;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
@@ -23,7 +23,8 @@ import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
-import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 

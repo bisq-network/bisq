@@ -23,7 +23,7 @@ import bisq.desktop.main.offer.offerbook.OfferBookListItemMaker;
 
 import bisq.core.locale.GlobalSettings;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.util.ImmutableCoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import javafx.beans.property.SimpleIntegerProperty;
 

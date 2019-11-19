@@ -31,7 +31,7 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.WalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;

@@ -54,7 +54,7 @@ import bisq.core.offer.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;

@@ -27,7 +27,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 

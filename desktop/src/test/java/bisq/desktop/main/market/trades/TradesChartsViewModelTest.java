@@ -27,7 +27,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.ImmutableCoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.KeyStorage;

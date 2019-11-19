@@ -50,7 +50,7 @@ import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 

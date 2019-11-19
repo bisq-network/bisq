@@ -24,7 +24,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;

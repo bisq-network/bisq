@@ -34,7 +34,7 @@ import bisq.core.dao.governance.asset.StatefulAsset;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
 

@@ -35,7 +35,7 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ParamChange;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;

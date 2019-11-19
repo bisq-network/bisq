@@ -49,7 +49,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.FormattingUtils;

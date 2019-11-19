@@ -15,9 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util;
+package bisq.core.util.coin;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
