@@ -18,40 +18,11 @@
 package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.GlobalSettings;
-import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
-import bisq.core.monetary.Price;
-import bisq.core.offer.OfferPayload;
-
-import bisq.network.p2p.NodeAddress;
-
-import bisq.common.util.MathUtils;
-
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Monetary;
-import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
-
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-
-import java.math.BigDecimal;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -102,12 +73,5 @@ public class BSFormatter {
 
     public String formatCoinWithCode(long value) {
         return FormattingUtils.formatCoinWithCode(Coin.valueOf(value), monetaryFormat);
-    }
-
-    public static String getDateFromBlockHeight(long blockHeight) {
-        long now = new Date().getTime();
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
-        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        return FormattingUtils.formatDateTime(new Date(now + blockHeight * 10 * 60 * 1000L), dateFormatter, timeFormatter);
     }
 }
