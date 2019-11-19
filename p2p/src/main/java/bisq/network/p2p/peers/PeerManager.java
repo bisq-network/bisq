@@ -584,7 +584,8 @@ public class PeerManager implements ConnectionListener, PersistedDataHost {
     }
 
     public boolean isSelf(NodeAddress nodeAddress) {
-        return nodeAddress.equals(networkNode.getNodeAddress());
+
+        return nodeAddress.equals(networkNode.getNodeAddress()) || networkNode.getPassiveNodeAddresses().contains(nodeAddress);
     }
 
     public boolean isConfirmed(Peer reportedPeer) {

@@ -242,6 +242,11 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     @Override
+    public Set<NodeAddress> getPassiveNodeAddresses() {
+        return nodeAddressToHSDirectory.keySet();
+    }
+
+    @Override
     public void start(@Nullable SetupListener setupListener) {
         if (setupListener != null)
             addSetupListener(setupListener);

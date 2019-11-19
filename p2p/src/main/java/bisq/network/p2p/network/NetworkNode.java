@@ -483,4 +483,13 @@ public abstract class NetworkNode implements MessageListener {
     public NodeAddress getNodeAddress() {
         return nodeAddressProperty.get();
     }
+
+    /**
+     * Returns a collection of node addresses, which have been used in the past and are
+     * kept active until no longer needed.
+     * @return
+     */
+    public Set<NodeAddress> getPassiveNodeAddresses() {
+        return new HashSet<>();
+    }
 }
