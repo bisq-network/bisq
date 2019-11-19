@@ -36,7 +36,7 @@ import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;

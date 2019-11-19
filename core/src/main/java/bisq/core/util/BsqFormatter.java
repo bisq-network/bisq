@@ -23,6 +23,7 @@ import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
@@ -44,29 +45,32 @@ import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.NotNull;
+
 @Slf4j
 @Singleton
-public class BsqFormatter extends BSFormatter {
+public class BsqFormatter implements CoinFormatter {
     @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
     private final String prefix = "B";
+    private final BSFormatter bsFormatter;
     private DecimalFormat amountFormat;
     private DecimalFormat marketCapFormat;
     private final MonetaryFormat btcCoinFormat;
 
     @Inject
     public BsqFormatter() {
-        super();
+        bsFormatter = new BSFormatter();
 
         GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> setFormatter(newValue));
         setFormatter(GlobalSettings.getLocale());
 
-        btcCoinFormat = super.monetaryFormat;
+        btcCoinFormat = bsFormatter.monetaryFormat;
 
         final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
             case "BTC":
-                monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
+                bsFormatter.monetaryFormat = new MonetaryFormat().shift(6).code(6, "BSQ").minDecimals(2);
                 break;
             default:
                 throw new RuntimeException("baseCurrencyCode not defined. baseCurrencyCode=" + baseCurrencyCode);
@@ -123,11 +127,11 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public String formatBSQSatoshis(long satoshi) {
-        return FormattingUtils.formatCoin(satoshi, monetaryFormat);
+        return FormattingUtils.formatCoin(satoshi, bsFormatter.monetaryFormat);
     }
 
     public String formatBSQSatoshisWithCode(long satoshi) {
-        return FormattingUtils.formatCoinWithCode(satoshi, monetaryFormat);
+        return FormattingUtils.formatCoinWithCode(satoshi, bsFormatter.monetaryFormat);
     }
 
     public String formatBTCSatoshis(long satoshi) {
@@ -155,7 +159,7 @@ public class BsqFormatter extends BSFormatter {
     }
 
     public void validateBsqInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, this.monetaryFormat);
+        validateCoinInput(input, bsFormatter.monetaryFormat);
     }
 
     private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ProposalValidationException {
@@ -229,5 +233,33 @@ public class BsqFormatter extends BSFormatter {
                 log.warn("Param type {} not handled in switch case at parseParamValueToString", param.getParamType());
                 return Res.get("shared.na");
         }
+    }
+
+    public String formatCoin(Coin coin) {
+        return bsFormatter.formatCoin(coin);
+    }
+
+    @NotNull
+    public String formatCoin(Coin coin, int decimalPlaces) {
+        return bsFormatter.formatCoin(coin, decimalPlaces);
+    }
+
+    public String formatCoin(Coin coin,
+                             int decimalPlaces,
+                             boolean decimalAligned,
+                             int maxNumberOfDigits) {
+        return bsFormatter.formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits);
+    }
+
+    public String formatCoinWithCode(Coin coin) {
+        return bsFormatter.formatCoinWithCode(coin);
+    }
+
+    public String formatCoinWithCode(long value) {
+        return bsFormatter.formatCoinWithCode(value);
+    }
+
+    public MonetaryFormat getMonetaryFormat() {
+        return bsFormatter.getMonetaryFormat();
     }
 }

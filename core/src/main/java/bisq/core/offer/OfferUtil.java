@@ -32,8 +32,8 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -281,7 +281,7 @@ public class OfferUtil {
 
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             Preferences preferences, PriceFeedService priceFeedService,
-                                                            BsqFormatter bsqFormatter) {
+                                                            CoinFormatter bsqFormatter) {
         String countryCode = preferences.getUserCountry().code;
         String userCurrencyCode = CurrencyUtil.getCurrencyByCountryCode(countryCode).getCode();
         return getFeeInUserFiatCurrency(makerFee,
@@ -293,7 +293,7 @@ public class OfferUtil {
 
     public static Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee, boolean isCurrencyForMakerFeeBtc,
                                                             String userCurrencyCode, PriceFeedService priceFeedService,
-                                                            BsqFormatter bsqFormatter) {
+                                                            CoinFormatter bsqFormatter) {
         // We use the users currency derived from his selected country.
         // We don't use the preferredTradeCurrency from preferences as that can be also set to an altcoin.
 

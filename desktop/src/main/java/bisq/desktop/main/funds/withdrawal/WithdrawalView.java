@@ -41,7 +41,7 @@ import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 

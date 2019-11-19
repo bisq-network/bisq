@@ -17,6 +17,8 @@
 
 package bisq.core.util;
 
+import bisq.core.util.coin.CoinUtil;
+
 import org.bitcoinj.core.Coin;
 
 import org.slf4j.Logger;

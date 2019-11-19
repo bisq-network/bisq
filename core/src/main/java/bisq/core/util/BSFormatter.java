@@ -18,6 +18,8 @@
 package bisq.core.util;
 
 import bisq.core.app.BisqEnvironment;
+import bisq.core.util.coin.CoinFormatter;
+
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.MonetaryFormat;
 
@@ -31,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
-public class BSFormatter {
+public class BSFormatter implements CoinFormatter {
 
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
@@ -54,23 +56,28 @@ public class BSFormatter {
     // BTC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public String formatCoin(Coin coin) {
         return formatCoin(coin, -1);
     }
 
+    @Override
     @NotNull
     public String formatCoin(Coin coin, int decimalPlaces) {
         return formatCoin(coin, decimalPlaces, false, 0);
     }
 
+    @Override
     public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
         return FormattingUtils.formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits, monetaryFormat);
     }
 
+    @Override
     public String formatCoinWithCode(Coin coin) {
         return FormattingUtils.formatCoinWithCode(coin, monetaryFormat);
     }
 
+    @Override
     public String formatCoinWithCode(long value) {
         return FormattingUtils.formatCoinWithCode(Coin.valueOf(value), monetaryFormat);
     }

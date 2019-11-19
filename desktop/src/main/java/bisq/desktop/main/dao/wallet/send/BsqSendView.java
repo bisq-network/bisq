@@ -46,7 +46,8 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
@@ -347,7 +348,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     TxType txType,
                                     Coin miningFee,
                                     int txSize, String address,
-                                    BSFormatter amountFormatter, // can be BSQ or BTC formatter
+                                    CoinFormatter amountFormatter, // can be BSQ or BTC formatter
                                     BSFormatter feeFormatter,
                                     ResultHandler resultHandler) {
         new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))

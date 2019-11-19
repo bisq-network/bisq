@@ -34,7 +34,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;

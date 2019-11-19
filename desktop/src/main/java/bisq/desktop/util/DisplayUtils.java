@@ -9,6 +9,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 
@@ -245,7 +246,7 @@ public class DisplayUtils {
 
     public static String getFeeWithFiatAmount(Coin makerFeeAsCoin,
                                               Optional<Volume> optionalFeeInFiat,
-                                              BSFormatter formatter) {
+                                              CoinFormatter formatter) {
         String fee = makerFeeAsCoin != null ? formatter.formatCoinWithCode(makerFeeAsCoin) : Res.get("shared.na");
         String feeInFiatAsString;
         if (optionalFeeInFiat != null && optionalFeeInFiat.isPresent()) {

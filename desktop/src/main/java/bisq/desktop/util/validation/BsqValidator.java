@@ -20,7 +20,7 @@ package bisq.desktop.util.validation;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;

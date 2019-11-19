@@ -1,6 +1,7 @@
 package bisq.core.util;
 
 import bisq.core.monetary.Price;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.util.MathUtils;
 
@@ -13,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ParsingUtils {
-    public static Coin parseToCoin(String input, BSFormatter bsFormatter) {
-        return parseToCoin(input, bsFormatter.getMonetaryFormat());
+    public static Coin parseToCoin(String input, CoinFormatter coinFormatter) {
+        return parseToCoin(input, coinFormatter.getMonetaryFormat());
     }
 
     public static Coin parseToCoin(String input, MonetaryFormat coinFormat) {

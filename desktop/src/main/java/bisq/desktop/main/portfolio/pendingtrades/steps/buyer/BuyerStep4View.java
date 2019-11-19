@@ -39,7 +39,7 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.BSFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.UserThread;
