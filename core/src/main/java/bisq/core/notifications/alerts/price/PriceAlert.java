@@ -27,6 +27,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.MathUtils;
 
@@ -70,8 +71,8 @@ public class PriceAlert {
                 if (priceAsLong > filter.getHigh() || priceAsLong < filter.getLow()) {
                     String msg = Res.get("account.notifications.priceAlert.message.msg",
                             currencyName,
-                            BSFormatter.formatMarketPrice(priceAsDouble, currencyCode),
-                            BSFormatter.getCurrencyPair(currencyCode));
+                            FormattingUtils.formatMarketPrice(priceAsDouble, currencyCode),
+                            CurrencyUtil.getCurrencyPair(currencyCode));
                     MobileMessage message = new MobileMessage(Res.get("account.notifications.priceAlert.message.title", currencyName),
                             msg,
                             MobileMessageType.PRICE);

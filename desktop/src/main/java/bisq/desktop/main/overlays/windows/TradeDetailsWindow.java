@@ -34,6 +34,7 @@ import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -155,7 +156,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 DisplayUtils.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
                 DisplayUtils.formatVolumeWithCode(trade.getTradeVolume()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                BSFormatter.formatPrice(trade.getTradePrice()));
+                FormattingUtils.formatPrice(trade.getTradePrice()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.paymentMethod"),
                 Res.get(offer.getPaymentMethod().getId()));
 

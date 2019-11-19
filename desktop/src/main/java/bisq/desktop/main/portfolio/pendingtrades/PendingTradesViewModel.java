@@ -24,6 +24,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -33,6 +34,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.network.p2p.P2PService;
@@ -201,7 +203,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
     }
 
     private long getMaxTradePeriod() {
@@ -223,7 +225,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getRemainingTradeDurationAsWords() {
-        return BSFormatter.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
+        return FormattingUtils.formatDurationAsWords(Math.max(0, getRemainingTradeDuration()));
     }
 
     public double getRemainingTradeDurationAsPercentage() {
@@ -254,7 +256,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         Contract contract = trade.getContract();
         if (contract != null) {
             Offer offer = trade.getOffer();
-            return BSFormatter.getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
+            return getRole(contract.isBuyerMakerAndSellerTaker(), dataModel.isMaker(offer), offer.getCurrencyCode());
         } else {
             return "";
         }
@@ -480,4 +482,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                 break;
         }
     }
+
+    private static String getRole(boolean isBuyerMakerAndSellerTaker, boolean isMaker, String currencyCode) {
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            String baseCurrencyCode = Res.getBaseCurrencyCode();
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.seller"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", baseCurrencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", baseCurrencyCode, Res.get("shared.buyer"));
+        } else {
+            if (isBuyerMakerAndSellerTaker)
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.seller")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.buyer"));
+            else
+                return isMaker ?
+                        Res.get("formatter.asMaker", currencyCode, Res.get("shared.buyer")) :
+                        Res.get("formatter.asTaker", currencyCode, Res.get("shared.seller"));
+        }
+
+    }
+
 }

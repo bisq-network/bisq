@@ -31,6 +31,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.MathUtils;
@@ -180,9 +181,9 @@ public class MarketAlerts {
                             ratio = Math.abs(ratio);
                             String msg = Res.get("account.notifications.marketAlert.message.msg",
                                     direction,
-                                    BSFormatter.getCurrencyPair(currencyCode),
-                                    BSFormatter.formatPrice(offerPrice),
-                                    BSFormatter.formatToPercentWithSymbol(ratio / 10000d),
+                                    CurrencyUtil.getCurrencyPair(currencyCode),
+                                    FormattingUtils.formatPrice(offerPrice),
+                                    FormattingUtils.formatToPercentWithSymbol(ratio / 10000d),
                                     marketDir,
                                     Res.get(offer.getPaymentMethod().getId()),
                                     shortOfferId);

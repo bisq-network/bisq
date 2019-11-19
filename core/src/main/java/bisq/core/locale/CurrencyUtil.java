@@ -507,4 +507,29 @@ public class CurrencyUtil {
                 .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
     }
+
+    public static String getCurrencyPair(String currencyCode) {
+        if (isFiatCurrency(currencyCode))
+            return Res.getBaseCurrencyCode() + "/" + currencyCode;
+        else
+            return currencyCode + "/" + Res.getBaseCurrencyCode();
+    }
+
+    public static String getCounterCurrency(String currencyCode) {
+        if (isFiatCurrency(currencyCode))
+            return currencyCode;
+        else
+            return Res.getBaseCurrencyCode();
+    }
+
+    public static String getPriceWithCurrencyCode(String currencyCode) {
+        return getPriceWithCurrencyCode(currencyCode, "shared.priceInCurForCur");
+    }
+
+    public static String getPriceWithCurrencyCode(String currencyCode, String translationKey) {
+        if (isCryptoCurrency(currencyCode))
+            return Res.get(translationKey, Res.getBaseCurrencyCode(), currencyCode);
+        else
+            return Res.get(translationKey, currencyCode, Res.getBaseCurrencyCode());
+    }
 }

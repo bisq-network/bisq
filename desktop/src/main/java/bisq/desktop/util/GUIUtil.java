@@ -52,6 +52,7 @@ import bisq.core.user.User;
 import bisq.core.util.BSFormatter;
 import bisq.core.util.BsqFormatter;
 import bisq.core.util.CoinUtil;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
@@ -667,7 +668,7 @@ public class GUIUtil {
     }
 
     public static String getPercentage(Coin part, Coin total) {
-        return BSFormatter.formatToPercentWithSymbol((double) part.value / (double) total.value);
+        return FormattingUtils.formatToPercentWithSymbol((double) part.value / (double) total.value);
     }
 
     public static <T> T getParentOfType(Node node, Class<T> t) {

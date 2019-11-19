@@ -21,6 +21,7 @@ import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.locale.Res;
 import bisq.core.util.BsqFormatter;
+import bisq.core.util.FormattingUtils;
 
 import org.bitcoinj.core.Coin;
 
@@ -45,7 +46,7 @@ public class CycleListItem {
 
     public String getCycleDateTime(boolean useLocaleAndLocalTimezone) {
         long cycleStartTime = resultsOfCycle.getCycleStartTime();
-        return cycleStartTime > 0 ? bsqFormatter.formatDateTime(new Date(cycleStartTime), useLocaleAndLocalTimezone) : Res.get("shared.na");
+        return cycleStartTime > 0 ? FormattingUtils.formatDateTime(new Date(cycleStartTime), useLocaleAndLocalTimezone) : Res.get("shared.na");
     }
 
     public int getCycleIndex() {

@@ -18,12 +18,9 @@
 package bisq.desktop.util;
 
 import bisq.core.locale.Res;
-import bisq.core.monetary.Volume;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.CoinMaker;
 
 import java.util.Locale;
@@ -32,11 +29,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.desktop.maker.OfferMaker.btcUsdOffer;
 import static bisq.desktop.maker.PriceMaker.priceString;
 import static bisq.desktop.maker.PriceMaker.usdPrice;
-import static bisq.desktop.maker.VolumeMaker.usdVolume;
-import static bisq.desktop.maker.VolumeMaker.volumeString;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
@@ -45,7 +39,6 @@ import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class BSFormatterTest {
 
@@ -57,38 +50,6 @@ public class BSFormatterTest {
         formatter = new BSFormatter();
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
-    }
-
-    @Test
-    public void testFormatDurationAsWords() {
-        long oneDay = TimeUnit.DAYS.toMillis(1);
-        long oneHour = TimeUnit.HOURS.toMillis(1);
-        long oneMinute = TimeUnit.MINUTES.toMillis(1);
-        long oneSecond = TimeUnit.SECONDS.toMillis(1);
-
-        assertEquals("1 hour, 0 minutes", BSFormatter.formatDurationAsWords(oneHour));
-        assertEquals("1 day, 0 hours, 0 minutes", BSFormatter.formatDurationAsWords(oneDay));
-        assertEquals("2 days, 0 hours, 1 minute", BSFormatter.formatDurationAsWords(oneDay * 2 + oneMinute));
-        assertEquals("2 days, 0 hours, 2 minutes", BSFormatter.formatDurationAsWords(oneDay * 2 + oneMinute * 2));
-        assertEquals("1 hour, 0 minutes, 0 seconds", BSFormatter.formatDurationAsWords(oneHour, true, true));
-        assertEquals("1 hour, 0 minutes, 1 second", BSFormatter.formatDurationAsWords(oneHour + oneSecond, true, true));
-        assertEquals("1 hour, 0 minutes, 2 seconds", BSFormatter.formatDurationAsWords(oneHour + oneSecond * 2, true, true));
-        assertEquals("2 days, 21 hours, 28 minutes", BSFormatter.formatDurationAsWords(oneDay * 2 + oneHour * 21 + oneMinute * 28));
-        assertEquals("110 days", BSFormatter.formatDurationAsWords(oneDay * 110, false, false));
-        assertEquals("10 days, 10 hours, 10 minutes, 10 seconds", BSFormatter.formatDurationAsWords(oneDay * 10 + oneHour * 10 + oneMinute * 10 + oneSecond * 10, true, false));
-        assertEquals("1 hour, 2 seconds", BSFormatter.formatDurationAsWords(oneHour + oneSecond * 2, true, false));
-        assertEquals("1 hour", BSFormatter.formatDurationAsWords(oneHour + oneSecond * 2, false, false));
-        assertEquals("0 hours, 0 minutes, 1 second", BSFormatter.formatDurationAsWords(oneSecond, true, true));
-        assertEquals("1 second", BSFormatter.formatDurationAsWords(oneSecond, true, false));
-        assertEquals("0 hours", BSFormatter.formatDurationAsWords(oneSecond, false, false));
-        assertEquals("", BSFormatter.formatDurationAsWords(0));
-        assertTrue(BSFormatter.formatDurationAsWords(0).isEmpty());
-    }
-
-    @Test
-    public void testFormatPrice() {
-        assertEquals("100.0000", BSFormatter.formatPrice(make(usdPrice)));
-        assertEquals("7098.4700", BSFormatter.formatPrice(make(usdPrice.but(with(priceString, "7098.4700")))));
     }
 
     @Test

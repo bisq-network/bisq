@@ -9,6 +9,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 
 import org.bitcoinj.core.Coin;
@@ -34,14 +35,14 @@ public class DisplayUtils {
     private static final MonetaryFormat fiatVolumeFormat = new MonetaryFormat().shift(0).minDecimals(2).repeatOptionalDecimals(0, 0);
 
     public static String formatDateTime(Date date) {
-        return BSFormatter.formatDateTime(date, true);
+        return FormattingUtils.formatDateTime(date, true);
     }
 
     public static String formatDateTimeSpan(Date dateFrom, Date dateTo) {
         if (dateFrom != null && dateTo != null) {
             DateFormat dateFormatter = DateFormat.getDateInstance(DateFormat.DEFAULT, GlobalSettings.getLocale());
             DateFormat timeFormatter = DateFormat.getTimeInstance(DateFormat.DEFAULT, GlobalSettings.getLocale());
-            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + BSFormatter.RANGE_SEPARATOR + timeFormatter.format(dateTo);
+            return dateFormatter.format(dateFrom) + " " + timeFormatter.format(dateFrom) + FormattingUtils.RANGE_SEPARATOR + timeFormatter.format(dateTo);
         } else {
             return "";
         }
@@ -86,10 +87,10 @@ public class DisplayUtils {
     }
 
     public static String formatVolume(Offer offer, Boolean decimalAligned, int maxNumberOfDigits, boolean showRange) {
-        String formattedVolume = offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + BSFormatter.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
+        String formattedVolume = offer.isRange() && showRange ? formatVolume(offer.getMinVolume()) + FormattingUtils.RANGE_SEPARATOR + formatVolume(offer.getVolume()) : formatVolume(offer.getVolume());
 
         if (decimalAligned) {
-            formattedVolume = BSFormatter.fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
+            formattedVolume = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedVolume, maxNumberOfDigits);
         }
         return formattedVolume;
     }
@@ -102,9 +103,9 @@ public class DisplayUtils {
         if (volume != null) {
             Monetary monetary = volume.getMonetary();
             if (monetary instanceof Fiat)
-                return BSFormatter.formatFiat((Fiat) monetary, fiatVolumeFormat, appendCurrencyCode);
+                return FormattingUtils.formatFiat((Fiat) monetary, fiatVolumeFormat, appendCurrencyCode);
             else
-                return BSFormatter.formatAltcoinVolume((Altcoin) monetary, appendCurrencyCode);
+                return FormattingUtils.formatAltcoinVolume((Altcoin) monetary, appendCurrencyCode);
         } else {
             return "";
         }
@@ -209,9 +210,9 @@ public class DisplayUtils {
     }
 
     private static String formatAmount(Offer offer, boolean decimalAligned, BSFormatter bsFormatter) {
-        String formattedAmount = offer.isRange() ? bsFormatter.formatCoin(offer.getMinAmount()) + BSFormatter.RANGE_SEPARATOR + bsFormatter.formatCoin(offer.getAmount()) : bsFormatter.formatCoin(offer.getAmount());
+        String formattedAmount = offer.isRange() ? bsFormatter.formatCoin(offer.getMinAmount()) + FormattingUtils.RANGE_SEPARATOR + bsFormatter.formatCoin(offer.getAmount()) : bsFormatter.formatCoin(offer.getAmount());
         if (decimalAligned) {
-            formattedAmount = BSFormatter.fillUpPlacesWithEmptyStrings(formattedAmount, 15);
+            formattedAmount = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedAmount, 15);
         }
         return formattedAmount;
     }
@@ -221,10 +222,10 @@ public class DisplayUtils {
                                       boolean decimalAligned,
                                       int maxPlaces,
                                       BSFormatter bsFormatter) {
-        String formattedAmount = offer.isRange() ? bsFormatter.formatCoin(offer.getMinAmount(), decimalPlaces) + BSFormatter.RANGE_SEPARATOR + bsFormatter.formatCoin(offer.getAmount(), decimalPlaces) : bsFormatter.formatCoin(offer.getAmount(), decimalPlaces);
+        String formattedAmount = offer.isRange() ? bsFormatter.formatCoin(offer.getMinAmount(), decimalPlaces) + FormattingUtils.RANGE_SEPARATOR + bsFormatter.formatCoin(offer.getAmount(), decimalPlaces) : bsFormatter.formatCoin(offer.getAmount(), decimalPlaces);
 
         if (decimalAligned) {
-            formattedAmount = BSFormatter.fillUpPlacesWithEmptyStrings(formattedAmount, maxPlaces);
+            formattedAmount = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedAmount, maxPlaces);
         }
         return formattedAmount;
     }
@@ -234,10 +235,10 @@ public class DisplayUtils {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static String formatPrice(Price price, Boolean decimalAligned, int maxPlaces) {
-        String formattedPrice = BSFormatter.formatPrice(price);
+        String formattedPrice = FormattingUtils.formatPrice(price);
 
         if (decimalAligned) {
-            formattedPrice = BSFormatter.fillUpPlacesWithEmptyStrings(formattedPrice, maxPlaces);
+            formattedPrice = FormattingUtils.fillUpPlacesWithEmptyStrings(formattedPrice, maxPlaces);
         }
         return formattedPrice;
     }

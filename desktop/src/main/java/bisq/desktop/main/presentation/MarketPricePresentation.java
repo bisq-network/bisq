@@ -31,6 +31,7 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
 
@@ -137,12 +138,12 @@ public class MarketPricePresentation {
     }
 
     private void setupMarketPriceFeed() {
-        priceFeedService.requestPriceFeed(price -> marketPrice.set(BSFormatter.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
+        priceFeedService.requestPriceFeed(price -> marketPrice.set(FormattingUtils.formatMarketPrice(price, priceFeedService.getCurrencyCode())),
                 (errorMessage, throwable) -> marketPrice.set(Res.get("shared.na")));
 
         marketPriceBinding = EasyBind.combine(
                 marketPriceCurrencyCode, marketPrice,
-                (currencyCode, price) -> BSFormatter.getCurrencyPair(currencyCode) + ": " + price);
+                (currencyCode, price) -> CurrencyUtil.getCurrencyPair(currencyCode) + ": " + price);
 
         marketPriceBinding.subscribe((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(oldValue)) {
@@ -194,14 +195,14 @@ public class MarketPricePresentation {
             MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
             String priceString;
             if (marketPrice != null && marketPrice.isPriceAvailable()) {
-                priceString = BSFormatter.formatMarketPrice(marketPrice.getPrice(), currencyCode);
+                priceString = FormattingUtils.formatMarketPrice(marketPrice.getPrice(), currencyCode);
                 item.setPriceAvailable(true);
                 item.setExternallyProvidedPrice(marketPrice.isExternallyProvidedPrice());
             } else {
                 priceString = Res.get("shared.na");
                 item.setPriceAvailable(false);
             }
-            item.setDisplayString(BSFormatter.getCurrencyPair(currencyCode) + ": " + priceString);
+            item.setDisplayString(CurrencyUtil.getCurrencyPair(currencyCode) + ": " + priceString);
 
             final String code = item.currencyCode;
             if (selectedPriceFeedComboBoxItemProperty.get() != null &&

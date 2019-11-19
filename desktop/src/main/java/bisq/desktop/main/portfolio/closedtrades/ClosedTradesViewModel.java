@@ -22,11 +22,13 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import com.google.inject.Inject;
 
@@ -69,9 +71,9 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
             return "";
         Tradable tradable = item.getTradable();
         if (tradable instanceof Trade)
-            return BSFormatter.formatPrice(((Trade) tradable).getTradePrice());
+            return FormattingUtils.formatPrice(((Trade) tradable).getTradePrice());
         else
-            return BSFormatter.formatPrice(tradable.getOffer().getPrice());
+            return FormattingUtils.formatPrice(tradable.getOffer().getPrice());
     }
 
     String getVolume(ClosedTradableListItem item) {
@@ -135,7 +137,7 @@ class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataMod
         if ((item == null))
             return "";
 
-        return BSFormatter.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
+        return CurrencyUtil.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode());
     }
 
     String getState(ClosedTradableListItem item) {

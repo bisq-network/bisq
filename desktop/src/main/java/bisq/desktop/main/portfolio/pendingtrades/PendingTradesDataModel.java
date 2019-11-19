@@ -50,7 +50,7 @@ import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
@@ -564,7 +564,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             if (remaining > 0) {
                 new Popup<>()
                         .instruction(Res.get("portfolio.pending.timeLockNotOver",
-                                BSFormatter.getDateFromBlockHeight(remaining), remaining))
+                                FormattingUtils.getDateFromBlockHeight(remaining), remaining))
                         .show();
                 return;
             }

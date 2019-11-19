@@ -27,6 +27,7 @@ import bisq.core.locale.Res;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
 
 import bisq.common.UserThread;
 
@@ -140,7 +141,7 @@ public class ManageMarketAlertsWindow extends Overlay<ManageMarketAlertsWindow> 
                             public void updateItem(final MarketAlertFilter item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    setText(BSFormatter.formatPercentagePrice(item.getTriggerValue() / 10000d));
+                                    setText(FormattingUtils.formatPercentagePrice(item.getTriggerValue() / 10000d));
                                 } else {
                                     setText("");
                                 }

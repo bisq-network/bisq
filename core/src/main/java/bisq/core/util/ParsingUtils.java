@@ -48,7 +48,7 @@ public class ParsingUtils {
         long value = 0;
         try {
             double amountValue = Double.parseDouble(amount);
-            amount = BSFormatter.formatRoundedDoubleWithPrecision(amountValue, precision);
+            amount = FormattingUtils.formatRoundedDoubleWithPrecision(amountValue, precision);
             value = Price.parse(currencyCode, amount).getValue();
         } catch (NumberFormatException ignore) {
             // expected NumberFormatException if input is not a number
