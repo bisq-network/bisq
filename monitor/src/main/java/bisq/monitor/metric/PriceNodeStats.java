@@ -40,6 +40,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,8 +82,12 @@ public class PriceNodeStats extends Metric {
             checkNotNull(tor, "tor must not be null");
             Socks5Proxy proxy = tor.getProxy();
 
+            String[] hosts = configuration.getProperty(HOSTS, "").split(",");
+
+            Collections.shuffle(Arrays.asList(hosts));
+
             // for each configured host
-            for (String current : configuration.getProperty(HOSTS, "").split(",")) {
+            for (String current : hosts) {
                 Map<String, String> result = new HashMap<>();
                 // parse Url
                 NodeAddress tmp = OnionParser.getNodeAddress(current);
