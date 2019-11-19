@@ -46,6 +46,7 @@ configure(subprojects) {
         httpclientVersion = '4.5.3'
         ioVersion = '2.4'
         jacksonVersion = '2.8.10'
+        javafxVersion = '11.0.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.6'
@@ -173,8 +174,8 @@ configure(project(':common')) {
 
     dependencies {
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-        compile "org.openjfx:javafx-base:11:$os"
-        compile "org.openjfx:javafx-graphics:11:$os"
+        compile "org.openjfx:javafx-base:$javafxVersion:$os"
+        compile "org.openjfx:javafx-graphics:$javafxVersion:$os"
         compile "com.google.protobuf:protobuf-java:$protobufVersion"
         compile 'com.google.code.gson:gson:2.7'
         compile "org.springframework:spring-core:$springVersion"
@@ -293,9 +294,9 @@ configure(project(':desktop')) {
         compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
         compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
         compile "com.github.sarxos:webcam-capture:$sarxosVersion"
-        compile "org.openjfx:javafx-controls:11:$os"
-        compile "org.openjfx:javafx-fxml:11:$os"
-        compile "org.openjfx:javafx-swing:11:$os"
+        compile "org.openjfx:javafx-controls:$javafxVersion:$os"
+        compile "org.openjfx:javafx-fxml:$javafxVersion:$os"
+        compile "org.openjfx:javafx-swing:$javafxVersion:$os"
         compile "com.jfoenix:jfoenix:$jfoenixVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
