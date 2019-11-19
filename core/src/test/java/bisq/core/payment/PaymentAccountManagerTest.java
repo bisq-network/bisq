@@ -46,7 +46,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import static java.lang.String.format;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -282,58 +281,67 @@ public class PaymentAccountManagerTest {
         expectedException.expect(NotFoundException.class);
         expectedException.expectMessage("Payment account null not found");
 //        When
-        paymentAccountManager.removePaymentAccount(null);
+        paymentAccountManager.removePaymentAccount((String) null);
     }
 
     @Test
     public void removePaymentAccount_accountUsedInOpenOffer_throwsException() {
 //        Given
         String id = getRandomString();
-        when(user.getPaymentAccount(id)).thenReturn(mock(PaymentAccount.class));
+        PaymentAccount paymentAccount = mock(PaymentAccount.class);
+        when(paymentAccount.getId()).thenReturn(id);
+        when(user.getPaymentAccount(id)).thenReturn(paymentAccount);
         Offer offer = mock(Offer.class);
         when(offer.getMakerPaymentAccountId()).thenReturn(id);
         OpenOffer openOffer = mock(OpenOffer.class);
         when(openOffer.getOffer()).thenReturn(offer);
         when(openOfferManager.getObservableList()).thenReturn(FXCollections.observableArrayList(openOffer));
-        expectedException.expect(PaymentAccountInUseException.class);
-        expectedException.expectMessage(format("Payment account %s is used for open offer", id));
 
 //        When
-        paymentAccountManager.removePaymentAccount(id);
+        boolean result = paymentAccountManager.removePaymentAccount(id);
+
+//        Then
+        assertFalse(result);
     }
 
     @Test
     public void removePaymentAccount_accountUsedInOpenTradeForMaker_throwsException() {
 //        Given
         String id = getRandomString();
-        when(user.getPaymentAccount(id)).thenReturn(mock(PaymentAccount.class));
+        PaymentAccount paymentAccount = mock(PaymentAccount.class);
+        when(paymentAccount.getId()).thenReturn(id);
+        when(user.getPaymentAccount(id)).thenReturn(paymentAccount);
         Offer offer = mock(Offer.class);
         when(offer.getMakerPaymentAccountId()).thenReturn(id);
         Trade trade = mock(Trade.class);
         when(trade.getOffer()).thenReturn(offer);
         when(tradeManager.getTradableList()).thenReturn(FXCollections.observableArrayList(trade));
         when(openOfferManager.getObservableList()).thenReturn(FXCollections.observableArrayList());
-        expectedException.expect(PaymentAccountInUseException.class);
-        expectedException.expectMessage(format("Payment account %s is used for open trade", id));
 
 //        When
-        paymentAccountManager.removePaymentAccount(id);
+        boolean result = paymentAccountManager.removePaymentAccount(id);
+
+//        Then
+        assertFalse(result);
     }
 
     @Test
     public void removePaymentAccount_accountUsedInOpenTradeForTaker_throwsException() {
 //        Given
         String id = getRandomString();
-        when(user.getPaymentAccount(id)).thenReturn(mock(PaymentAccount.class));
+        PaymentAccount paymentAccount = mock(PaymentAccount.class);
+        when(paymentAccount.getId()).thenReturn(id);
+        when(user.getPaymentAccount(id)).thenReturn(paymentAccount);
         Trade trade = mock(Trade.class);
         when(trade.getTakerPaymentAccountId()).thenReturn(id);
         when(tradeManager.getTradableList()).thenReturn(FXCollections.observableArrayList(trade));
         when(openOfferManager.getObservableList()).thenReturn(FXCollections.observableArrayList());
-        expectedException.expect(PaymentAccountInUseException.class);
-        expectedException.expectMessage(format("Payment account %s is used for open trade", id));
 
 //        When
-        paymentAccountManager.removePaymentAccount(id);
+        boolean result = paymentAccountManager.removePaymentAccount(id);
+
+//        Then
+        assertFalse(result);
     }
 
     @Test
@@ -350,6 +358,22 @@ public class PaymentAccountManagerTest {
 
 //        Then
         verify(user).removePaymentAccount(paymentAccount);
+    }
+
+    @Test
+    public void removePaymentAccount_accountExistAndIsNotUsed_returnsTrue() {
+//        Given
+        String id = getRandomString();
+        PaymentAccount paymentAccount = mock(PaymentAccount.class);
+        when(user.getPaymentAccount(id)).thenReturn(paymentAccount);
+        when(tradeManager.getTradableList()).thenReturn(FXCollections.observableArrayList());
+        when(openOfferManager.getObservableList()).thenReturn(FXCollections.observableArrayList());
+
+//        When
+        boolean result = paymentAccountManager.removePaymentAccount(id);
+
+//        Then
+        assertTrue(result);
     }
 
     private String getRandomString() {

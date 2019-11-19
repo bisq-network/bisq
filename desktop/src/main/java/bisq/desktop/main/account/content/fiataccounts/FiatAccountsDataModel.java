@@ -22,7 +22,6 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.PaymentAccountInUseException;
 import bisq.core.payment.PaymentAccountManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -98,12 +97,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
-        try {
-            paymentAccountManager.removePaymentAccount(paymentAccount.getId());
-            return false;
-        } catch (PaymentAccountInUseException e) {
-            return true;
-        }
+        return paymentAccountManager.removePaymentAccount(paymentAccount);
     }
 
     public void onSelectAccount(PaymentAccount paymentAccount) {

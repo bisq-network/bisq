@@ -107,15 +107,12 @@ public class PaymentAccountManager {
         return paymentAccount;
     }
 
-    public void removePaymentAccount(String id) {
-        PaymentAccount paymentAccount = user.getPaymentAccount(id);
-        if (paymentAccount == null) {
-            throw new NotFoundException(format("Payment account %s not found", id));
-        }
+    public boolean removePaymentAccount(PaymentAccount paymentAccount) {
+        String id = paymentAccount.getId();
         boolean isPaymentAccountUsed = openOfferManager.getObservableList().stream()
                 .anyMatch(openOffer -> id.equals(openOffer.getOffer().getMakerPaymentAccountId()));
         if (isPaymentAccountUsed) {
-            throw new PaymentAccountInUseException(format("Payment account %s is used for open offer", id));
+            return false;
         }
         isPaymentAccountUsed = tradeManager.getTradableList().stream()
                 .anyMatch(trade -> {
@@ -123,8 +120,17 @@ public class PaymentAccountManager {
                     return null != offer && id.equals(offer.getMakerPaymentAccountId()) || id.equals(trade.getTakerPaymentAccountId());
                 });
         if (isPaymentAccountUsed) {
-            throw new PaymentAccountInUseException(format("Payment account %s is used for open trade", id));
+            return false;
         }
         user.removePaymentAccount(paymentAccount);
+        return true;
+    }
+
+    public boolean removePaymentAccount(String id) {
+        PaymentAccount paymentAccount = user.getPaymentAccount(id);
+        if (paymentAccount == null) {
+            throw new NotFoundException(format("Payment account %s not found", id));
+        }
+        return removePaymentAccount(paymentAccount);
     }
 }
