@@ -423,8 +423,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Persist ProtectedStorageEntrys carrying PersistablePayload payloads and signal listeners on changes
         if (protectedStoragePayload instanceof PersistablePayload) {
-            ByteArray compactHash = P2PDataStorage.getCompactHashAsByteArray(protectedStoragePayload);
-            ProtectedStorageEntry previous = protectedDataStoreService.putIfAbsent(compactHash, protectedStorageEntry);
+            ProtectedStorageEntry previous = protectedDataStoreService.putIfAbsent(hashOfPayload, protectedStorageEntry);
             if (previous == null)
                 protectedDataStoreListeners.forEach(e -> e.onAdded(protectedStorageEntry));
         }
@@ -663,8 +662,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
             ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             if (protectedStoragePayload instanceof PersistablePayload) {
-                ByteArray compactHash = getCompactHashAsByteArray(protectedStoragePayload);
-                ProtectedStorageEntry previous = protectedDataStoreService.remove(compactHash, protectedStorageEntry);
+                ProtectedStorageEntry previous = protectedDataStoreService.remove(hashOfPayload, protectedStorageEntry);
                 if (previous != null) {
                     protectedDataStoreListeners.forEach(e -> e.onRemoved(protectedStorageEntry));
                 } else {
@@ -712,14 +710,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     public static ByteArray get32ByteHashAsByteArray(NetworkPayload data) {
         return new ByteArray(P2PDataStorage.get32ByteHash(data));
-    }
-
-    public static ByteArray getCompactHashAsByteArray(ProtectedStoragePayload protectedStoragePayload) {
-        return new ByteArray(getCompactHash(protectedStoragePayload));
-    }
-
-    private static byte[] getCompactHash(ProtectedStoragePayload protectedStoragePayload) {
-        return Hash.getSha256Ripemd160hash(protectedStoragePayload.toProtoMessage().toByteArray());
     }
 
     // Get a new map with entries older than PURGE_AGE_DAYS purged from the given map.

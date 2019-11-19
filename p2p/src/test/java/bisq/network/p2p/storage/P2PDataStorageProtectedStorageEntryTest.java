@@ -575,8 +575,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
 
         // Tests that just apply to PersistablePayload objects
 
-        // XXXBUG_3629XXX: Persisted ProtectedStorageEntries are saved to disk via their 20-byte hash. This causes
-        // the internal hash map to be reloaded with the 20-byte key instead of the 32-byte key.
+        // TESTCASE: Ensure the HashMap is the same before and after a restart
         @Test
         public void addProtectedStorageEntry_afterReadFromResourcesWithDuplicate_3629RegressionTest() {
             ProtectedStorageEntry protectedStorageEntry = this.getProtectedStorageEntryForAdd(1);
@@ -585,9 +584,8 @@ public class P2PDataStorageProtectedStorageEntryTest {
             Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> beforeRestart = this.testState.mockedStorage.getMap();
 
             this.testState.simulateRestart();
-
-            // Should be equal
-            Assert.assertNotEquals(beforeRestart, this.testState.mockedStorage.getMap());
+            
+            Assert.assertEquals(beforeRestart, this.testState.mockedStorage.getMap());
         }
     }
 

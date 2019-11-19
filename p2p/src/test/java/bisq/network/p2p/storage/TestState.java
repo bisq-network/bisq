@@ -215,7 +215,6 @@ public class TestState {
                                    boolean expectedStateChange,
                                    boolean expectedIsDataOwner) {
         P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-        P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
         if (expectedStateChange) {
             Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getMap().get(hashMapHash));
@@ -225,10 +224,10 @@ public class TestState {
             // TODO: Should the behavior be identical between this and the HashMap listeners?
             // TODO: Do we want ot overwrite stale values in order to persist updated sequence numbers and timestamps?
             if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload && beforeState.protectedStorageEntryBeforeOpDataStoreMap == null) {
-                Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+                Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener).onAdded(protectedStorageEntry);
             } else {
-                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             }
 
@@ -245,7 +244,7 @@ public class TestState {
             this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
         } else {
             Assert.assertEquals(beforeState.protectedStorageEntryBeforeOp, this.mockedStorage.getMap().get(hashMapHash));
-            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+            Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
 
             verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
 
@@ -294,13 +293,12 @@ public class TestState {
 
         protectedStorageEntries.forEach(protectedStorageEntry -> {
             P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-            P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
             if (expectedStateChange) {
                 Assert.assertNull(this.mockedStorage.getMap().get(hashMapHash));
 
                 if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload) {
-                    Assert.assertNull(this.mockedStorage.getProtectedDataStoreMap().get(storageHash));
+                    Assert.assertNull(this.mockedStorage.getProtectedDataStoreMap().get(hashMapHash));
 
                     verify(this.protectedDataStoreListener).onRemoved(protectedStorageEntry);
                 }
@@ -420,11 +418,10 @@ public class TestState {
         private SavedTestState(TestState testState, ProtectedStorageEntry protectedStorageEntry) {
             this(testState);
 
-            P2PDataStorage.ByteArray storageHash = P2PDataStorage.getCompactHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
-            this.protectedStorageEntryBeforeOpDataStoreMap = testState.mockedStorage.getProtectedDataStoreMap().get(storageHash);
-
             P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
             this.protectedStorageEntryBeforeOp = testState.mockedStorage.getMap().get(hashMapHash);
+            this.protectedStorageEntryBeforeOpDataStoreMap = testState.mockedStorage.getProtectedDataStoreMap().get(hashMapHash);
+
 
             this.creationTimestampBeforeUpdate = (this.protectedStorageEntryBeforeOp != null) ? this.protectedStorageEntryBeforeOp.getCreationTimeStamp() : 0;
         }
