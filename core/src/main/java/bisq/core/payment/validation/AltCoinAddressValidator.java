@@ -35,7 +35,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AltCoinAddressValidator extends InputValidator {
+public final class AltCoinAddressValidator extends InputValidator {
 
     private final AssetRegistry assetRegistry;
     private String currencyCode;
