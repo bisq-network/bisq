@@ -132,7 +132,7 @@ class RequestDataHandler implements MessageListener {
                     .map(e -> e.bytes)
                     .collect(Collectors.toSet());
 
-            Set<byte[]> excludedKeysFromPersistedEntryMap = dataStorage.getProtectedDataStoreMap().keySet()
+            Set<byte[]> excludedKeysFromPersistedEntryMap = dataStorage.getMap().keySet()
                     .stream()
                     .map(e -> e.bytes)
                     .collect(Collectors.toSet());
