@@ -258,7 +258,7 @@ public abstract class WalletService {
         KeyBag maybeDecryptingKeyBag = new DecryptingKeyBag(wallet, aesKey);
         if (txIn.getConnectedOutput() != null) {
             try {
-                // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                 // we sign missing pieces (to check this would require either assuming any signatures are signing
                 // standard output types or a way to get processed signatures out of script execution)
                 txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);
@@ -277,11 +277,11 @@ public abstract class WalletService {
             Transaction partialTx = propTx.partialTx;
             txIn = partialTx.getInput(index);
             if (txIn.getConnectedOutput() != null) {
-                // If we dont have a sig we don't do the check to avoid error reports of failed sig checks
+                // If we don't have a sig we don't do the check to avoid error reports of failed sig checks
                 final List<ScriptChunk> chunks = txIn.getConnectedOutput().getScriptPubKey().getChunks();
                 if (!chunks.isEmpty() && chunks.get(0).data != null && chunks.get(0).data.length > 0) {
                     try {
-                        // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
+                        // We assume if it's already signed, it's hopefully got a SIGHASH type that will not invalidate when
                         // we sign missing pieces (to check this would require either assuming any signatures are signing
                         // standard output types or a way to get processed signatures out of script execution)
                         txIn.getScriptSig().correctlySpends(tx, index, txIn.getConnectedOutput().getScriptPubKey(), Script.ALL_VERIFY_FLAGS);

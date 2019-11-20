@@ -408,13 +408,13 @@ public class BtcWalletService extends WalletService {
             TransactionVerificationException, WalletException, InsufficientMoneyException {
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
-        // outputs [1] BSQ receivers output
+        // outputs [1] BSQ receiver's output
         // outputs [0-1] BSQ change output
 
         // We add BTC mining fee. Result tx looks like:
         // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [1] BSQ receivers output
+        // outputs [1] BSQ receiver's output
         // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // mining fee: BTC mining fee
@@ -426,14 +426,14 @@ public class BtcWalletService extends WalletService {
 
         // preparedBsqTx has following structure:
         // inputs [1-n] BSQ inputs
-        // outputs [1] BSQ receivers output
+        // outputs [1] BSQ receiver's output
         // outputs [0-1] BSQ change output
         // mining fee: optional burned BSQ fee (only if opReturnData != null)
 
         // We add BTC mining fee. Result tx looks like:
         // inputs [1-n] BSQ inputs
         // inputs [1-n] BTC inputs
-        // outputs [0-1] BSQ receivers output
+        // outputs [0-1] BSQ receiver's output
         // outputs [0-1] BSQ change output
         // outputs [0-1] BTC change output
         // outputs [0-1] OP_RETURN with opReturnData (only if opReturnData != null)
@@ -672,7 +672,7 @@ public class BtcWalletService extends WalletService {
 
     public void resetAddressEntriesForPendingTrade(String offerId) {
         swapTradeEntryToAvailableEntry(offerId, AddressEntry.Context.MULTI_SIG);
-        // We swap also TRADE_PAYOUT to be sure all is cleaned  up. There might be cases where a user cannot send the funds
+        // We swap also TRADE_PAYOUT to be sure all is cleaned up. There might be cases where a user cannot send the funds
         // to an external wallet directly in the last step of the trade, but the funds are in the Bisq wallet anyway and
         // the dealing with the external wallet is pure UI thing. The user can move the funds to the wallet and then
         // send out the funds to the external wallet. As this cleanup is a rare situation and most users do not use
@@ -1110,7 +1110,7 @@ public class BtcWalletService extends WalletService {
         return sendRequest;
     }
 
-    // We ignore utxos which are considered dust attacks for spying on users wallets.
+    // We ignore utxos which are considered dust attacks for spying on users' wallets.
     // The ignoreDustThreshold value is set in the preferences. If not set we use default non dust
     // value of 546 sat.
     @Override

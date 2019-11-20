@@ -261,7 +261,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                 baseCurrencyNetwork.isDaoBetaNet() ? BSQ_BETA_NET_EXPLORER :
                         BSQ_TEST_NET_EXPLORER);
 
-        // We don't want to pass Preferences to all popups where the dont show again checkbox is used, so we use
+        // We don't want to pass Preferences to all popups where the don't show again checkbox is used, so we use
         // that static lookup class to avoid static access to the Preferences directly.
         DontShowAgainLookup.setPreferences(this);
 
@@ -568,7 +568,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         storage.queueUpForSave(prefPayload, 1);
     }
 
-    // Only used from PB but keep it explicit as maybe it get used from the client and then we want to persist
+    // Only used from PB but keep it explicit as it may be used from the client and then we want to persist
     public void setPeerTagMap(Map<String, String> peerTagMap) {
         prefPayload.setPeerTagMap(peerTagMap);
         persist();

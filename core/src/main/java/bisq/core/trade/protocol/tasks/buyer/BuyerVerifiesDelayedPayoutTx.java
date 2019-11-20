@@ -45,7 +45,7 @@ public class BuyerVerifiesDelayedPayoutTx extends TradeTask {
             if (processModel.getTradeWalletService().verifiesDepositTxAndDelayedPayoutTx(depositTx, delayedPayoutTx)) {
                 complete();
             } else {
-                failed("DelayedPayoutTx is not spending correctly depositTx");
+                failed("DelayedPayoutTx is not spending depositTx correctly");
             }
         } catch (Throwable t) {
             failed(t);

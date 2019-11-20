@@ -169,7 +169,7 @@ public class FilterManager {
 
             @Override
             public void onUpdatedDataReceived() {
-                // We should have received all data at that point and if the filers was not set we
+                // We should have received all data at that point and if the filers were not set we
                 // clean up as it might be that we missed the filter remove message if we have not been online.
                 UserThread.runAfter(() -> {
                     if (filterProperty.get() == null)
@@ -308,7 +308,7 @@ public class FilterManager {
         }
     }
 
-    // We dont use full data from Filter as we are only interested in the filter data not the sig and keys
+    // We don't use full data from Filter as we are only interested in the filter data not the sig and keys
     private String getHexFromData(Filter filter) {
         protobuf.Filter.Builder builder = protobuf.Filter.newBuilder()
                 .addAllBannedOfferIds(filter.getBannedOfferIds())

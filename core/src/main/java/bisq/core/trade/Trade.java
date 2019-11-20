@@ -685,9 +685,9 @@ public abstract class Trade implements Tradable, Model {
         return delayedPayoutTx;
     }
 
-    // We don't need to persist the msg as if we dont apply it it will not be removed from the P2P network and we
-    // will received it again at next startup. Such might happen in edge cases when the user shuts down after we
-    // received the msb but before the init is called.
+    // We don't need to persist the msg as if we don't apply it it will not be removed from the P2P network and we
+    // will receive it again on next startup. This might happen in edge cases when the user shuts down after we
+    // received the msg but before the init is called.
     void addDecryptedMessageWithPubKey(DecryptedMessageWithPubKey decryptedMessageWithPubKey) {
         if (!decryptedMessageWithPubKeySet.contains(decryptedMessageWithPubKey)) {
             decryptedMessageWithPubKeySet.add(decryptedMessageWithPubKey);

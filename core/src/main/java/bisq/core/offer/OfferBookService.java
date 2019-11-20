@@ -241,7 +241,7 @@ public class OfferBookService {
                                 offer.getOfferFeePaymentTxId()
                         );
                     } catch (Throwable t) {
-                        // In case a offer was corrupted with null values we ignore it
+                        // In case an offer was corrupted with null values we ignore it
                         return null;
                     }
                 })

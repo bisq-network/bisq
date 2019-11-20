@@ -154,7 +154,7 @@ public class AccountAgeWitnessService {
                 addToMap((AccountAgeWitness) payload);
         });
 
-        // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
+        // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
         p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
             if (e instanceof AccountAgeWitness)
                 addToMap((AccountAgeWitness) e);
@@ -522,7 +522,7 @@ public class AccountAgeWitnessService {
     private boolean verifyPeersCurrentDate(Date peersCurrentDate, ErrorMessageHandler errorMessageHandler) {
         final boolean result = Math.abs(peersCurrentDate.getTime() - new Date().getTime()) <= TimeUnit.DAYS.toMillis(1);
         if (!result) {
-            final String msg = "Peers current date is further then 1 day off to our current date. " +
+            final String msg = "Peers current date is further than 1 day off to our current date. " +
                     "PeersCurrentDate=" + peersCurrentDate + "; myCurrentDate=" + new Date();
             log.warn(msg);
             errorMessageHandler.handleErrorMessage(msg);

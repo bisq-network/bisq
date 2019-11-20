@@ -132,7 +132,7 @@ public class MobileModel {
         iPad Pro 10.5 Inch
         */
         // iPhone 6 does not support isContentAvailable, iPhone 6s and 7 does.
-        // We don't know for other versions, but lets assume all above iPhone 6 are ok.
+        // We don't know about other versions, but let's assume all above iPhone 6 are ok.
         if (descriptor != null) {
             String[] descriptorTokens = descriptor.split(" ");
             if (descriptorTokens.length >= 1) {

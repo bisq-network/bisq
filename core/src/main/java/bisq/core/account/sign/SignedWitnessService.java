@@ -100,7 +100,7 @@ public class SignedWitnessService {
                 addToMap((SignedWitness) payload);
         });
 
-        // At startup the P2PDataStorage initializes earlier, otherwise we ge the listener called.
+        // At startup the P2PDataStorage initializes earlier, otherwise we get the listener called.
         p2PService.getP2PDataStorage().getAppendOnlyDataStoreMap().values().forEach(e -> {
             if (e instanceof SignedWitness)
                 addToMap((SignedWitness) e);

@@ -192,7 +192,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
     // Called from UI
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // User clicked the "bank transfer received" button, so we release the funds for pay out
+    // User clicked the "bank transfer received" button, so we release the funds for payout
     @Override
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         if (trade.getPayoutTx() == null) {
@@ -219,7 +219,7 @@ public class SellerAsTakerProtocol extends TradeProtocol implements SellerProtoc
         } else {
             // we don't set the state as we have already a higher phase reached
             log.info("onFiatPaymentReceived called twice. " +
-                    "That can happen if message did not arrive first time and we send msg again.\n" +
+                    "That can happen if message did not arrive the first time and we send msg again.\n" +
                     "state=" + sellerAsTakerTrade.getState());
 
             TradeTaskRunner taskRunner = new TradeTaskRunner(sellerAsTakerTrade,

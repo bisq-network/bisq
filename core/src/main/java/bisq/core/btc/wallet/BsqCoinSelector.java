@@ -61,7 +61,7 @@ public class BsqCoinSelector extends BisqDefaultCoinSelector {
         if (daoStateService.getTxOutput(new TxOutputKey(parentTransaction.getHashAsString(), output.getIndex())).isPresent())
             return false;
 
-        // Only if its not existing yet in the dao state (unconfirmed) we use our unconfirmedBsqChangeOutputList to
+        // Only if it's not existing yet in the dao state (unconfirmed) we use our unconfirmedBsqChangeOutputList to
         // check if it is an own change output.
         return unconfirmedBsqChangeOutputListService.hasTransactionOutput(output);
     }

@@ -501,7 +501,7 @@ public class BisqSetup {
         // We want to test if the client is compiled with the correct crypto provider (BountyCastle)
         // and if the unlimited Strength for cryptographic keys is set.
         // If users compile themselves they might miss that step and then would get an exception in the trade.
-        // To avoid that we add here at startup a sample encryption and signing to see if it don't causes an exception.
+        // To avoid that we add a sample encryption and signing here at startup to see if it doesn't cause an exception.
         // See: https://github.com/bisq-network/exchange/blob/master/doc/build.md#7-enable-unlimited-strength-for-cryptographic-keys
         new Thread(() -> {
             try {
@@ -780,13 +780,13 @@ public class BisqSetup {
             if (filter != null && filterWarningHandler != null) {
                 if (filter.getSeedNodes() != null && !filter.getSeedNodes().isEmpty()) {
                     log.warn(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
-                    // Lets keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
                     // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.seed")));
                 }
 
                 if (filter.getPriceRelayNodes() != null && !filter.getPriceRelayNodes().isEmpty()) {
                     log.warn(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
-                    // Lets keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
+                    // Let's keep that more silent. Might be used in case a node is unstable and we don't want to confuse users.
                     // filterWarningHandler.accept(Res.get("popup.warning.nodeBanned", Res.get("popup.warning.priceRelay")));
                 }
 

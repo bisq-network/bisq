@@ -206,7 +206,7 @@ public class OfferUtil {
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
      * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
+     * @param price             Price used in relation to that amount.
      * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
      * @return The adjusted amount
      */
@@ -223,7 +223,7 @@ public class OfferUtil {
      * {@code price} and {@code maxTradeLimit} and {@code factor}.
      *
      * @param amount            Bitcoin amount which is a candidate for getting rounded.
-     * @param price             Price used in relation ot that amount.
+     * @param price             Price used in relation to that amount.
      * @param maxTradeLimit     The max. trade limit of the users account, in satoshis.
      * @param factor            The factor used for rounding. E.g. 1 means rounded to units of
      *                          1 EUR, 10 means rounded to 10 EUR, etc.
@@ -233,7 +233,7 @@ public class OfferUtil {
     static Coin getAdjustedAmount(Coin amount, Price price, long maxTradeLimit, int factor) {
         checkArgument(
                 amount.getValue() >= 10_000,
-                "amount needs to be above minimum of 10k satoshi"
+                "amount needs to be above minimum of 10k satoshis"
         );
         checkArgument(
                 factor > 0,
@@ -251,7 +251,7 @@ public class OfferUtil {
         // We use 10 000 satoshi as min allowed amount
         checkArgument(
                 minTradeAmount >= 10_000,
-                "MinTradeAmount must be at least 10k satoshi"
+                "MinTradeAmount must be at least 10k satoshis"
         );
         smallestUnitForAmount = Coin.valueOf(Math.max(minTradeAmount, smallestUnitForAmount.value));
         // We don't allow smaller amount values than smallestUnitForAmount

@@ -49,7 +49,7 @@ public class OfferUtilTest {
         } catch (IllegalArgumentException iae) {
             Assert.assertEquals(
                     "Unexpected exception message.",
-                    "amount needs to be above minimum of 10k satoshi",
+                    "amount needs to be above minimum of 10k satoshis",
                     iae.getMessage()
             );
         }

@@ -147,13 +147,13 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // Close offer when certain price is reached
     private final boolean useAutoClose;
     // If useReOpenAfterAutoClose=true we re-open a new offer with the remaining funds if the trade amount
-    // was less then the offer's max. trade amount.
+    // was less than the offer's max. trade amount.
     private final boolean useReOpenAfterAutoClose;
     // Used when useAutoClose is set for canceling the offer when lowerClosePrice is triggered
     private final long lowerClosePrice;
     // Used when useAutoClose is set for canceling the offer when upperClosePrice is triggered
     private final long upperClosePrice;
-    // Reserved for possible future use to support private trades where the taker need to have an accessKey
+    // Reserved for possible future use to support private trades where the taker needs to have an accessKey
     private final boolean isPrivateOffer;
     @Nullable
     private final String hashOfChallenge;

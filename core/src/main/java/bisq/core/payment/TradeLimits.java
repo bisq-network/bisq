@@ -83,7 +83,7 @@ public class TradeLimits {
         return getFirstMonthRiskBasedTradeLimit(maxLimit, riskFactor) * 4;
     }
 
-    // The first month we allow only 0.25% of he trade limit. We want to ensure that precision is <=4 otherwise we round.
+    // The first month we allow only 0.25% of the trade limit. We want to ensure that precision is <=4 otherwise we round.
 
     /**
      *
@@ -96,7 +96,7 @@ public class TradeLimits {
         // The first month we use 1/4 of the max limit. We multiply with riskFactor, so 1/ (4 * 8) is smallest limit in
         // first month of a maxTradeLimitHighRisk method
         long smallestLimit = maxLimit / (4 * riskFactor);  // e.g. 100000000 / 32 = 3125000
-        // We want to avoid more then 4 decimal places (100000000 / 32 = 3125000 or 1 BTC / 32 = 0.03125 BTC).
+        // We want to avoid more than 4 decimal places (100000000 / 32 = 3125000 or 1 BTC / 32 = 0.03125 BTC).
         // We want rounding to 0.0313 BTC
         double decimalForm = MathUtils.scaleDownByPowerOf10((double) smallestLimit, 8);
         double rounded = MathUtils.roundDouble(decimalForm, 4);

@@ -70,7 +70,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
             throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.name = name;
         this.link = link;
-        // As we don't know the txId yes we create a temp proposal with txId set to an empty string.
+        // As we don't know the txId yet we create a temp proposal with txId set to an empty string.
         R proposal = createProposalWithoutTxId();
         proposalValidator.validateDataFields(proposal);
         Transaction transaction = createTransaction(proposal);
