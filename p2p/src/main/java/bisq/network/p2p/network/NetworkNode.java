@@ -485,11 +485,11 @@ public abstract class NetworkNode implements MessageListener {
     }
 
     /**
-     * Returns a collection of node addresses, which have been used in the past and are
+     * Returns a collection of node addresses which have been used in the past and are
      * kept active until no longer needed.
      * @return
      */
-    public Set<NodeAddress> getPassiveNodeAddresses() {
-        return new HashSet<>();
+    public Set<NodeAddress> getActiveNodeAddresses() {
+        return Set.of(getNodeAddress());
     }
 }

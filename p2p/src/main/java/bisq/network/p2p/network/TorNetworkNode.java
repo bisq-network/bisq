@@ -242,7 +242,7 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     @Override
-    public Set<NodeAddress> getPassiveNodeAddresses() {
+    public Set<NodeAddress> getActiveNodeAddresses() {
         return nodeAddressToHSDirectory.keySet();
     }
 

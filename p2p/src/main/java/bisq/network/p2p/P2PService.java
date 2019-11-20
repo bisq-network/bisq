@@ -910,14 +910,14 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean verifyAddressPrefixHash(PrefixedSealedAndSignedMessage prefixedSealedAndSignedMessage) {
-        if (networkNode.getNodeAddress() != null) {
-            byte[] blurredAddressHash = networkNode.getNodeAddress().getAddressPrefixHash();
-            return blurredAddressHash != null &&
-                    Arrays.equals(blurredAddressHash, prefixedSealedAndSignedMessage.getAddressPrefixHash());
-        } else {
+        if (networkNode.getNodeAddress() == null) {
             log.debug("myOnionAddress is null at verifyAddressPrefixHash. That is expected at startup.");
             return false;
         }
+
+        Set<NodeAddress> activeNodeAddresses = networkNode.getActiveNodeAddresses();
+
+        return activeNodeAddresses.stream().map(nodeAddress -> Arrays.equals(nodeAddress.getAddressPrefixHash(), prefixedSealedAndSignedMessage.getAddressPrefixHash())).reduce(false, (a, b) -> a || b);
     }
 
     /**
