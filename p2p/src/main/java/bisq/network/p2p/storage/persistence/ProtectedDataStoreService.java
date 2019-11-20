@@ -65,7 +65,7 @@ public class ProtectedDataStoreService {
         services.stream()
                 .filter(service -> service.canHandle(entry))
                 .forEach(service -> {
-                    service.putIfAbsent(hash, entry);
+                    service.put(hash, entry);
                 });
     }
 

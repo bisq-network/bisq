@@ -221,16 +221,9 @@ public class TestState {
         if (expectedStateChange) {
             Assert.assertEquals(protectedStorageEntry, this.mockedStorage.getMap().get(hashMapHash));
 
-            // PersistablePayload payloads need to be written to disk and listeners signaled... unless the hash already exists in the protectedDataStore.
-            // Note: this behavior is different from the HashMap listeners that are signaled on an increase in seq #, even if the hash already exists.
-            // TODO: Should the behavior be identical between this and the HashMap listeners?
-            // TODO: Do we want ot overwrite stale values in order to persist updated sequence numbers and timestamps?
-            if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload && beforeState.protectedStorageEntryBeforeOpDataStoreMap == null) {
+            if (protectedStorageEntry.getProtectedStoragePayload() instanceof PersistablePayload) {
                 Assert.assertEquals(protectedStorageEntry, this.protectedDataStoreService.getMap().get(hashMapHash));
                 verify(this.protectedDataStoreListener).onAdded(protectedStorageEntry);
-            } else {
-                Assert.assertEquals(beforeState.protectedStorageEntryBeforeOpDataStoreMap, this.protectedDataStoreService.getMap().get(hashMapHash));
-                verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
             }
 
             verify(this.hashMapChangedListener).onAdded(Collections.singletonList(protectedStorageEntry));

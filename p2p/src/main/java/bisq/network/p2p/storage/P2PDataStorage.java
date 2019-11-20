@@ -428,9 +428,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
         // Persist ProtectedStorageEntrys carrying PersistablePayload payloads and signal listeners on changes
         if (protectedStoragePayload instanceof PersistablePayload) {
-            ProtectedStorageEntry previous = protectedDataStoreService.putIfAbsent(hashOfPayload, protectedStorageEntry);
-            if (previous == null)
-                protectedDataStoreListeners.forEach(e -> e.onAdded(protectedStorageEntry));
+            protectedDataStoreService.put(hashOfPayload, protectedStorageEntry);
+            protectedDataStoreListeners.forEach(e -> e.onAdded(protectedStorageEntry));
         }
 
         return true;
