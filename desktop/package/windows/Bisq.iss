@@ -22,13 +22,13 @@ VersionInfoVersion={#FileVersion}
 VersionInfoDescription=Bisq Setup
 VersionInfoCopyright=Copyright (C) {#AppCopyrightYear}
 DefaultDirName={code:GetDefaultDirName}
+DefaultGroupName=Bisq
 DisableStartupPrompt=Yes
+DisableWelcomePage=No
 DisableDirPage=No
 DisableProgramGroupPage=Yes
 DisableReadyPage=No
 DisableFinishedPage=No
-DisableWelcomePage=No
-DefaultGroupName=Bisq
 ;Optional License
 LicenseFile=
 ;Windows 7 with Service Pack 1 or above
