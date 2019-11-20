@@ -87,7 +87,7 @@ class ExchangeRateService {
             t.printStackTrace();
         }
 
-        if (provider instanceof BitcoinAverage.Local) {
+        if (provider instanceof BitcoinAverage.Global) {
             metadata.put("btcAverageTs", timestamp);
         }
 
