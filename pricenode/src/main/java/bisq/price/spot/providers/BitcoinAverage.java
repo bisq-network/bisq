@@ -142,18 +142,19 @@ public abstract class BitcoinAverage extends ExchangeRateProvider {
 
     @Component
     @Order(1)
+    public static class Local extends BitcoinAverage {
+        public Local(Environment env) {
+            super("BTCA_L", "btcAverageL", 0.7, "local", env);
+        }
+    }
+    
+    
+    @Component
+    @Order(2)
     public static class Global extends BitcoinAverage {
         public Global(Environment env) {
             super("BTCA_G", "btcAverageG", 0.3, "global", env);
         }
     }
 
-
-    @Component
-    @Order(2)
-    public static class Local extends BitcoinAverage {
-        public Local(Environment env) {
-            super("BTCA_L", "btcAverageL", 0.7, "local", env);
-        }
-    }
 }
