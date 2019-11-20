@@ -69,20 +69,6 @@ public class ProtectedDataStoreService {
                 });
     }
 
-    public ProtectedStorageEntry putIfAbsent(P2PDataStorage.ByteArray hash, ProtectedStorageEntry entry) {
-        Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map = getMap();
-        if (!map.containsKey(hash)) {
-            put(hash, entry);
-            return null;
-        } else {
-            return map.get(hash);
-        }
-    }
-
-    public boolean containsKey(P2PDataStorage.ByteArray hash) {
-        return getMap().containsKey(hash);
-    }
-
     public ProtectedStorageEntry remove(P2PDataStorage.ByteArray hash, ProtectedStorageEntry protectedStorageEntry) {
         final ProtectedStorageEntry[] result = new ProtectedStorageEntry[1];
         services.stream()
