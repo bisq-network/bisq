@@ -17,20 +17,18 @@
 
 package bisq.desktop.util;
 
+import bisq.core.app.BisqEnvironment;
 import bisq.core.locale.Res;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.CoinMaker;
 
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.desktop.maker.PriceMaker.priceString;
-import static bisq.desktop.maker.PriceMaker.usdPrice;
 import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
@@ -40,14 +38,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class BSFormatterTest {
+public class ImmutableCoinFormatterTest {
 
-    private BSFormatter formatter;
+    private final CoinFormatter formatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
 
     @Before
     public void setUp() {
         Locale.setDefault(new Locale("en", "US"));
-        formatter = new BSFormatter();
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
     }

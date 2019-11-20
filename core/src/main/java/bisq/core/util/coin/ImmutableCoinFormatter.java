@@ -15,43 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util;
+package bisq.core.util.coin;
 
 import bisq.core.app.BisqEnvironment;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.GlobalSettings;
-import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
-import bisq.core.monetary.Price;
-import bisq.core.offer.OfferPayload;
-
-import bisq.network.p2p.NodeAddress;
-
-import bisq.common.util.MathUtils;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.Monetary;
-import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.utils.MonetaryFormat;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.apache.commons.lang3.time.DurationFormatUtils;
-
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-
-import java.math.BigDecimal;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
-@Singleton
-public class BSFormatter {
+public class ImmutableCoinFormatter implements CoinFormatter {
 
     // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
     // Input of "," as decimal mark (like in german locale) will be replaced with ".".
@@ -68,14 +41,11 @@ public class BSFormatter {
     // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
     // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     @Getter
-    protected MonetaryFormat monetaryFormat;
-
-    //  protected String currencyCode = CurrencyUtil.getDefaultFiatCurrencyAsCode();
-
+    private MonetaryFormat monetaryFormat;
 
     @Inject
-    public BSFormatter() {
-        monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+    public ImmutableCoinFormatter(MonetaryFormat monetaryFormat) {
+        this.monetaryFormat = monetaryFormat;
     }
 
 
@@ -83,31 +53,29 @@ public class BSFormatter {
     // BTC
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public String formatCoin(Coin coin) {
         return formatCoin(coin, -1);
     }
 
+    @Override
     @NotNull
     public String formatCoin(Coin coin, int decimalPlaces) {
         return formatCoin(coin, decimalPlaces, false, 0);
     }
 
+    @Override
     public String formatCoin(Coin coin, int decimalPlaces, boolean decimalAligned, int maxNumberOfDigits) {
         return FormattingUtils.formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits, monetaryFormat);
     }
 
+    @Override
     public String formatCoinWithCode(Coin coin) {
         return FormattingUtils.formatCoinWithCode(coin, monetaryFormat);
     }
 
+    @Override
     public String formatCoinWithCode(long value) {
         return FormattingUtils.formatCoinWithCode(Coin.valueOf(value), monetaryFormat);
-    }
-
-    public static String getDateFromBlockHeight(long blockHeight) {
-        long now = new Date().getTime();
-        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMM", Locale.getDefault());
-        SimpleDateFormat timeFormatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        return FormattingUtils.formatDateTime(new Date(now + blockHeight * 10 * 60 * 1000L), dateFormatter, timeFormatter);
     }
 }

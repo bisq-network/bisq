@@ -56,8 +56,8 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
@@ -127,7 +127,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private final Preferences preferences;
     private final Transitions transitions;
     private final OfferDetailsWindow offerDetailsWindow;
-    private final BSFormatter btcFormatter;
+    private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
     private ScrollPane scrollPane;
@@ -185,7 +185,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                             Preferences preferences,
                             Transitions transitions,
                             OfferDetailsWindow offerDetailsWindow,
-                            BSFormatter btcFormatter,
+                            CoinFormatter btcFormatter,
                             BsqFormatter bsqFormatter) {
         super(model);
 

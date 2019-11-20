@@ -18,7 +18,7 @@
 package bisq.desktop.util.validation;
 
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javax.inject.Inject;

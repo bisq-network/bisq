@@ -31,6 +31,8 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class FormattingUtils {
+    public static final String BTC_FORMATTER_KEY = "BTC";
+
     public final static String RANGE_SEPARATOR = " - ";
 
     private static final MonetaryFormat fiatPriceFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);

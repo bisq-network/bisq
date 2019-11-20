@@ -49,9 +49,9 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
-import bisq.core.util.BsqFormatter;
-import bisq.core.util.CoinUtil;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.CoinUtil;
 import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
@@ -752,7 +752,7 @@ public class GUIUtil {
         return true;
     }
 
-    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, BSFormatter btcFormatter) {
+    public static void showWantToBurnBTCPopup(Coin miningFee, Coin amount, CoinFormatter btcFormatter) {
         new Popup<>().warning(Res.get("popup.warning.burnBTC", btcFormatter.formatCoinWithCode(miningFee),
                 btcFormatter.formatCoinWithCode(amount))).show();
     }
@@ -904,7 +904,7 @@ public class GUIUtil {
                                            Coin btcForIssuance,
                                            int txSize,
                                            BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter,
+                                           CoinFormatter btcFormatter,
                                            String type,
                                            Runnable actionHandler) {
         String confirmationMessage;
@@ -937,7 +937,7 @@ public class GUIUtil {
     }
 
     public static void showBsqFeeInfoPopup(Coin fee, Coin miningFee, int txSize, BsqFormatter bsqFormatter,
-                                           BSFormatter btcFormatter, String type,
+                                           CoinFormatter btcFormatter, String type,
                                            Runnable actionHandler) {
         showBsqFeeInfoPopup(fee, miningFee, null, txSize, bsqFormatter, btcFormatter, type, actionHandler);
     }

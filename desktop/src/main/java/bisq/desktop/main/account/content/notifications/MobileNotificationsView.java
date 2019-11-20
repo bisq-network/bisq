@@ -47,9 +47,9 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;
@@ -57,6 +57,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -90,7 +91,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private final PriceFeedService priceFeedService;
     private final MarketAlerts marketAlerts;
     private final MobileNotificationService mobileNotificationService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     private WebCamWindow webCamWindow;
     private QrCodeReader qrCodeReader;
@@ -127,7 +128,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                                     PriceFeedService priceFeedService,
                                     MarketAlerts marketAlerts,
                                     MobileNotificationService mobileNotificationService,
-                                    BSFormatter formatter) {
+                                    @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super();
         this.preferences = preferences;
         this.user = user;

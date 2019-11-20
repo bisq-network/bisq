@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.util;
+package bisq.core.util.coin;
 
 import bisq.core.app.BisqEnvironment;
 import bisq.core.dao.governance.param.Param;
@@ -23,6 +23,8 @@ import bisq.core.dao.governance.proposal.ProposalValidationException;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.MarketPrice;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 
@@ -42,11 +44,25 @@ import java.text.NumberFormat;
 
 import java.util.Locale;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
-public class BsqFormatter extends BSFormatter {
+public class BsqFormatter implements CoinFormatter {
+    private final ImmutableCoinFormatter immutableCoinFormatter;
+
+    // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
+    // Input of "," as decimal mark (like in german locale) will be replaced with ".".
+    // Input of a group separator (1,123,45) lead to an validation error.
+    // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
+    // no way to remove grouping separator). It seems to be not optimal for user input formatting.
+    @Getter
+    private MonetaryFormat monetaryFormat;
+
+
     @SuppressWarnings("PointlessBooleanExpression")
     private static final boolean useBsqAddressFormat = true || !DevEnv.isDevMode();
     private final String prefix = "B";
@@ -56,12 +72,13 @@ public class BsqFormatter extends BSFormatter {
 
     @Inject
     public BsqFormatter() {
-        super();
+        this.monetaryFormat = BisqEnvironment.getParameters().getMonetaryFormat();
+        this.immutableCoinFormatter = new ImmutableCoinFormatter(BisqEnvironment.getParameters().getMonetaryFormat());
 
-        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> setFormatter(newValue));
-        setFormatter(GlobalSettings.getLocale());
+        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> switchLocale(newValue));
+        switchLocale(GlobalSettings.getLocale());
 
-        btcCoinFormat = super.monetaryFormat;
+        btcCoinFormat = monetaryFormat;
 
         final String baseCurrencyCode = BisqEnvironment.getBaseCurrencyNetwork().getCurrencyCode();
         switch (baseCurrencyCode) {
@@ -75,7 +92,7 @@ public class BsqFormatter extends BSFormatter {
         amountFormat.setMinimumFractionDigits(2);
     }
 
-    private void setFormatter(Locale locale) {
+    private void switchLocale(Locale locale) {
         amountFormat = (DecimalFormat) NumberFormat.getNumberInstance(locale);
         amountFormat.setMinimumFractionDigits(2);
         amountFormat.setMaximumFractionDigits(2);
@@ -142,28 +159,12 @@ public class BsqFormatter extends BSFormatter {
         return FormattingUtils.formatCoinWithCode(coin, btcCoinFormat);
     }
 
-    public String formatBTC(Coin coin) {
+    private String formatBTC(Coin coin) {
         return FormattingUtils.formatCoin(coin.value, btcCoinFormat);
     }
 
     public Coin parseToBTC(String input) {
         return ParsingUtils.parseToCoin(input, btcCoinFormat);
-    }
-
-    public void validateBtcInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, btcCoinFormat);
-    }
-
-    public void validateBsqInput(String input) throws ProposalValidationException {
-        validateCoinInput(input, this.monetaryFormat);
-    }
-
-    private void validateCoinInput(String input, MonetaryFormat coinFormat) throws ProposalValidationException {
-        try {
-            coinFormat.parse(ParsingUtils.cleanDoubleInput(input));
-        } catch (Throwable t) {
-            throw new ProposalValidationException("Invalid format for a " + coinFormat.code() + " value");
-        }
     }
 
     public String formatParamValue(Param param, String value) {
@@ -198,7 +199,7 @@ public class BsqFormatter extends BSFormatter {
         }
     }
 
-    public int parseParamValueToBlocks(Param param, String inputValue) {
+    private int parseParamValueToBlocks(Param param, String inputValue) {
         switch (param.getParamType()) {
             case BLOCK:
                 return Integer.parseInt(inputValue);
@@ -229,5 +230,29 @@ public class BsqFormatter extends BSFormatter {
                 log.warn("Param type {} not handled in switch case at parseParamValueToString", param.getParamType());
                 return Res.get("shared.na");
         }
+    }
+
+    public String formatCoin(Coin coin) {
+        return immutableCoinFormatter.formatCoin(coin);
+    }
+
+    @NotNull
+    public String formatCoin(Coin coin, int decimalPlaces) {
+        return immutableCoinFormatter.formatCoin(coin, decimalPlaces);
+    }
+
+    public String formatCoin(Coin coin,
+                             int decimalPlaces,
+                             boolean decimalAligned,
+                             int maxNumberOfDigits) {
+        return immutableCoinFormatter.formatCoin(coin, decimalPlaces, decimalAligned, maxNumberOfDigits);
+    }
+
+    public String formatCoinWithCode(Coin coin) {
+        return immutableCoinFormatter.formatCoinWithCode(coin);
+    }
+
+    public String formatCoinWithCode(long value) {
+        return immutableCoinFormatter.formatCoinWithCode(value);
     }
 }

@@ -30,7 +30,7 @@ import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeSession;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
@@ -39,7 +39,7 @@ public abstract class DisputeClientView extends DisputeView {
     public DisputeClientView(DisputeManager<? extends DisputeList<? extends DisputeList>> DisputeManager,
                              KeyRing keyRing,
                              TradeManager tradeManager,
-                             BSFormatter formatter,
+                             CoinFormatter formatter,
                              DisputeSummaryWindow disputeSummaryWindow,
                              PrivateNotificationManager privateNotificationManager,
                              ContractWindow contractWindow,

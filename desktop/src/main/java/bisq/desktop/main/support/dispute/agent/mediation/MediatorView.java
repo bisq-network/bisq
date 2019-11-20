@@ -32,7 +32,8 @@ import bisq.core.support.dispute.DisputeSession;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.mediation.MediationSession;
 import bisq.core.trade.TradeManager;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.crypto.KeyRing;
 
@@ -47,7 +48,7 @@ public class MediatorView extends DisputeAgentView {
     public MediatorView(MediationManager mediationManager,
                         KeyRing keyRing,
                         TradeManager tradeManager,
-                        BSFormatter formatter,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                         DisputeSummaryWindow disputeSummaryWindow,
                         PrivateNotificationManager privateNotificationManager,
                         ContractWindow contractWindow,

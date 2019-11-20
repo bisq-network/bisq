@@ -30,13 +30,15 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -62,7 +64,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
     private final OfferBook offerBook;
     private final PriceFeedService priceFeedService;
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
     private final ObservableList<OfferBookListItem> offerBookListItems;
     private final ListChangeListener<OfferBookListItem> listChangeListener;
     final ObservableList<SpreadItem> spreadItems = FXCollections.observableArrayList();
@@ -74,7 +76,7 @@ class SpreadViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, BSFormatter formatter) {
+    public SpreadViewModel(OfferBook offerBook, PriceFeedService priceFeedService, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.offerBook = offerBook;
         this.priceFeedService = priceFeedService;
         this.formatter = formatter;

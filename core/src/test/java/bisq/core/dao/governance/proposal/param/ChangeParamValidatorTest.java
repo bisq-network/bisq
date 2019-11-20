@@ -19,7 +19,7 @@ package bisq.core.dao.governance.proposal.param;
 
 import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import org.junit.Assert;
 import org.junit.Before;

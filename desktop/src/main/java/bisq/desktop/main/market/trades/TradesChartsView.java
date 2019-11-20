@@ -36,8 +36,8 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.util.MathUtils;
@@ -47,6 +47,7 @@ import bisq.common.util.Tuple3;
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.jfoenix.controls.JFXTabPane;
 
@@ -100,7 +101,7 @@ import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 @FxmlView
 public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesChartsViewModel> {
 
-    private final BSFormatter formatter;
+    private final CoinFormatter formatter;
 
     private TableView<TradeStatistics2> tableView;
     private AutocompleteComboBox<CurrencyListItem> currencyComboBox;
@@ -140,7 +141,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     @SuppressWarnings("WeakerAccess")
     @Inject
-    public TradesChartsView(TradesChartsViewModel model, BSFormatter formatter) {
+    public TradesChartsView(TradesChartsViewModel model, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model);
         this.formatter = formatter;
 

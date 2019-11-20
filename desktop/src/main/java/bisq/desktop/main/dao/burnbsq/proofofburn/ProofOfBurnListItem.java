@@ -21,7 +21,7 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.state.model.blockchain.Tx;
-import bisq.core.util.BsqFormatter;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Utilities;
 

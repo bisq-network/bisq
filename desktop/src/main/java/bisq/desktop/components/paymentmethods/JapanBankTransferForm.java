@@ -36,7 +36,7 @@ import bisq.core.payment.JapanBankAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -96,7 +96,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
                                   AccountAgeWitnessService accountAgeWitnessService,
                                   JapanBankTransferValidator japanBankTransferValidator,
                                   InputValidator inputValidator, GridPane gridPane,
-                                  int gridRow, BSFormatter formatter)
+                                  int gridRow, CoinFormatter formatter)
     {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.japanBankAccount = (JapanBankAccount) paymentAccount;

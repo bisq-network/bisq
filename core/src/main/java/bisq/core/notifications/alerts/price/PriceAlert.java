@@ -26,7 +26,6 @@ import bisq.core.notifications.MobileNotificationService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
-import bisq.core.util.BSFormatter;
 import bisq.core.util.FormattingUtils;
 
 import bisq.common.util.MathUtils;
@@ -44,14 +43,12 @@ public class PriceAlert {
     private final PriceFeedService priceFeedService;
     private final MobileNotificationService mobileNotificationService;
     private final User user;
-    private final BSFormatter formatter;
 
     @Inject
-    public PriceAlert(PriceFeedService priceFeedService, MobileNotificationService mobileNotificationService, User user, BSFormatter formatter) {
+    public PriceAlert(PriceFeedService priceFeedService, MobileNotificationService mobileNotificationService, User user) {
         this.priceFeedService = priceFeedService;
         this.user = user;
         this.mobileNotificationService = mobileNotificationService;
-        this.formatter = formatter;
     }
 
     public void onAllServicesInitialized() {

@@ -33,7 +33,7 @@ import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
@@ -167,7 +167,7 @@ abstract class BankForm extends GeneralBankForm {
     private Country selectedCountry;
 
     BankForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator,
-             GridPane gridPane, int gridRow, BSFormatter formatter) {
+             GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.bankAccountPayload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
     }

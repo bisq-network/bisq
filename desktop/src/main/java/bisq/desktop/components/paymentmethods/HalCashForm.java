@@ -29,7 +29,7 @@ import bisq.core.payment.HalCashAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.util.BSFormatter;
+import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
 import javafx.scene.control.TextField;
@@ -51,7 +51,7 @@ public class HalCashForm extends PaymentMethodForm {
     }
 
     public HalCashForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, HalCashValidator halCashValidator,
-                       InputValidator inputValidator, GridPane gridPane, int gridRow, BSFormatter formatter) {
+                       InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.halCashAccount = (HalCashAccount) paymentAccount;
         this.halCashValidator = halCashValidator;
