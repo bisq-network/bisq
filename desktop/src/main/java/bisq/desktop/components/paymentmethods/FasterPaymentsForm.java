@@ -44,7 +44,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        // do not translate as it is used in english only
+        // do not translate as it is used in English only
         addCompactTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE,
                 ((FasterPaymentsAccountPayload) paymentAccountPayload).getSortCode());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
@@ -66,7 +66,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
-        // do not translate as it is used in english only
+        // do not translate as it is used in English only
         sortCodeInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, UK_SORT_CODE);
         sortCodeInputTextField.setValidator(inputValidator);
         sortCodeInputTextField.setValidator(new BranchIdValidator("GB"));
@@ -102,7 +102,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
                 fasterPaymentsAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
-        // do not translate as it is used in english only
+        // do not translate as it is used in English only
         addCompactTopLabelTextField(gridPane, ++gridRow, UK_SORT_CODE, fasterPaymentsAccount.getSortCode());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"),
                 fasterPaymentsAccount.getAccountNr()).second;
