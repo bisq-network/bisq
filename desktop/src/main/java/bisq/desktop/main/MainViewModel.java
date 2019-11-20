@@ -17,6 +17,7 @@
 
 package bisq.desktop.main;
 
+import bisq.desktop.Navigation;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.components.BalanceWithConfirmationTextField;
@@ -34,6 +35,8 @@ import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
+import bisq.desktop.main.support.SupportView;
+import bisq.desktop.main.support.dispute.client.arbitration.ArbitrationClientView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
@@ -133,6 +136,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> tradesAndUIReady;
     private Queue<Overlay> popupQueue = new PriorityQueue<>(Comparator.comparing(Overlay::getDisplayOrderPriority));
+    private final Navigation navigation;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +165,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          BisqEnvironment bisqEnvironment,
                          AccountAgeWitnessService accountAgeWitnessService,
                          TorNetworkSettingsWindow torNetworkSettingsWindow,
-                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler) {
+                         CorruptedDatabaseFilesHandler corruptedDatabaseFilesHandler,
+                         Navigation navigation) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
         this.user = user;
@@ -183,6 +188,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.corruptedDatabaseFilesHandler = corruptedDatabaseFilesHandler;
+        this.navigation = navigation;
 
         TxIdTextField.setPreferences(preferences);
 
@@ -269,6 +275,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         notificationCenter.onAllServicesAndViewsInitialized();
 
         maybeAddNewTradeProtocolLaunchWindowToQueue();
+        maybeAddSupportTicketDialogToQueue();
         maybeShowPopupsFromQueue();
     }
 
@@ -648,6 +655,22 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             popupQueue.add(newTradeProtocolLaunchWindow);
 
             DontShowAgainLookup.dontShowAgain(newTradeProtocolWithAccountSigningLaunchPopupKey, true);
+        }
+    }
+
+    private void maybeAddSupportTicketDialogToQueue() {
+        String supportTicketDialogLaunchPopupKey = "supportTicketDialogLaunchPopupKey";
+        // Create modal pop-up with single button taking user to Support screen if there
+        // are active support tickets
+        if (getNumOpenSupportTickets() != null && Integer.parseInt(getNumOpenSupportTickets().get()) > 0) {
+            Popup<Object> supportTicketPopup = new Popup<>()
+                    .attention(Res.get("portfolio.pending.support.popup.attention"))
+                    .closeButtonTextWithGoTo("navigation.support")
+                    .dontShowAgainId(supportTicketDialogLaunchPopupKey)
+                    .onClose(() -> navigation.navigateTo(MainView.class, SupportView.class,
+                            ArbitrationClientView.class));
+            supportTicketPopup.setDisplayOrderPriority(1);
+            popupQueue.add(supportTicketPopup);
         }
     }
 
