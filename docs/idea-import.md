@@ -9,7 +9,7 @@ Most Bisq contributors use IDEA for development. The following instructions have
  1. Restart IDEA
  1. Go to `Import Project`, select the `settings.gradle` file and click `Open`
  1. In the `Import Project from Gradle` screen, check the `Use auto-import` option and click `OK`
- 1. When prompted whether to overwrite the existing `.idea` directory, click `Yes` (This step was not required with 2019.2 but is kept here incase you are running an older version)
+ 1. When prompted whether to overwrite the existing `.idea` directory, click `Yes` (This step was not required with 2019.2 but is kept here in case you are running an older version)
  1. In the `Project` tool window, right click on the root-level `.idea` folder, select `Git->Revert...` and click OK in the dialog that appears (to restore source-controlled `.idea` configuration files that get overwritten during project import)
  1. If you did not yet setup JDK10 in IntelliJ, Go to `File->Project Structure->Project` and under the `Project SDK` option locate your JAVA_HOME folder, then in `Project language level` beneath select `10 - ...`. (JDK10 is no longer supported but you can still download it from the [archive](https://jdk.java.net/archive/))
  1. Select JDK 10 for gradle as well. Go to `Preferences->Build, Execution, Deployment->Build Tools->Gradle` and select the JDK10 location for Gradle JVM

@@ -9,7 +9,7 @@ The *Settled* release features these metrics:
 - P2P Round Trip Time: A metric hitchhiking the Ping/Pong messages of the Keep-Alive-Mechanism to determine the Round Trip Time when issuing a Ping to a seed node.
 - P2P Seed Node Message Snapshot: Get absolute number and constellation of messages a fresh Bisq client will get on startup. Also reports diffs between seed nodes on a per-message-type basis.
 - P2P Network Load: listens to the P2P network and its broadcast messages. Reports every X seconds.
-- P2P Market Statistics: a demonstration metric which extracts market information from broadcast messages. This demo implementation reports the number of open offers per market .
+- P2P Market Statistics: a demonstration metric which extracts market information from broadcast messages. This demo implementation reports the number of open offers per market.
 
 
 The *Settled* release features these reporters:
@@ -243,4 +243,4 @@ A working connection to Graphite should let you add your data series in a *Graph
 
 ### Backup your data
 
-Grafana stores every dashboard as a JSON model. This model can be accessed (copied/restored) within the dashboards settings and its *JSON Model* tab. Do with the data whatever you want.
+Grafana stores every dashboard as a JSON model. This model can be accessed (copied/restored) within the dashboard's settings and its *JSON Model* tab. Do with the data whatever you want.
