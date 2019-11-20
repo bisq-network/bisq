@@ -204,6 +204,14 @@ public class P2PDataStorageProtectedStorageEntryTest {
                                                boolean expectedReturnValue,
                                                boolean expectInternalStateChange) {
 
+            doProtectedStorageRemoveAndVerify(entry, expectedReturnValue, expectInternalStateChange, expectInternalStateChange);
+        }
+
+        void doProtectedStorageRemoveAndVerify(ProtectedStorageEntry entry,
+                                               boolean expectedReturnValue,
+                                               boolean expectInternalStateChange,
+                                               boolean expectSeqNrWrite) {
+
             SavedTestState beforeState = this.testState.saveTestState(entry);
 
             boolean addResult = this.doRemove(entry);
@@ -211,7 +219,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             if (!this.useMessageHandler)
                 Assert.assertEquals(expectedReturnValue, addResult);
 
-            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, true, expectInternalStateChange, this.expectIsDataOwner());
+            this.testState.verifyProtectedStorageRemove(beforeState, entry, expectInternalStateChange, true, expectSeqNrWrite, this.expectIsDataOwner());
         }
 
         /// Valid Add Tests (isValidForAdd() and matchesRelevantPubKey() return true)
@@ -325,12 +333,12 @@ public class P2PDataStorageProtectedStorageEntryTest {
             doProtectedStorageRemoveAndVerify(entryForRemove, true, true);
         }
 
-        // TESTCASE: Removing an item before it was added
+        // TESTCASE: Removing an item before it was added. This triggers a SequenceNumberMap write, but nothing else
         @Test
         public void remove_notExists() {
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1);
 
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            doProtectedStorageRemoveAndVerify(entryForRemove, false, false, true);
         }
 
         // TESTCASE: Removing an item after successfully adding (remove seq # < add seq #)
@@ -415,17 +423,35 @@ public class P2PDataStorageProtectedStorageEntryTest {
         }
 
         // TESTCASE: Received remove for nonexistent item that was later received
-        // XXXBUGXXX: There may be cases where removes are reordered with adds (remove during pending GetDataRequest?).
-        // The proper behavior may be to not add the late messages, but the current code will successfully add them
-        // even in the AddOncePayload (mailbox) case.
         @Test
         public void remove_lateAdd() {
             ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
             ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(2);
 
-            doProtectedStorageRemoveAndVerify(entryForRemove, false, false);
+            this.doRemove(entryForRemove);
 
-            // should be (false, false)
+            doProtectedStorageAddAndVerify(entryForAdd, false, false);
+        }
+
+        // TESTCASE: Invalid remove doesn't block a valid add (isValidForRemove == false | matchesRelevantPubKey == false)
+        @Test
+        public void remove_entryNotIsValidForRemoveDoesntBlockAdd1() {
+            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
+            ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1, false, false);
+
+            this.doRemove(entryForRemove);
+
+            doProtectedStorageAddAndVerify(entryForAdd, true, true);
+        }
+
+        // TESTCASE: Invalid remove doesn't block a valid add (isValidForRemove == false | matchesRelevantPubKey == true)
+        @Test
+        public void remove_entryNotIsValidForRemoveDoesntBlockAdd2() {
+            ProtectedStorageEntry entryForAdd = this.getProtectedStorageEntryForAdd(1);
+            ProtectedStorageEntry entryForRemove = this.getProtectedStorageEntryForRemove(1, false, true);
+
+            this.doRemove(entryForRemove);
+
             doProtectedStorageAddAndVerify(entryForAdd, true, true);
         }
     }
@@ -584,7 +610,7 @@ public class P2PDataStorageProtectedStorageEntryTest {
             Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> beforeRestart = this.testState.mockedStorage.getMap();
 
             this.testState.simulateRestart();
-            
+
             Assert.assertEquals(beforeRestart, this.testState.mockedStorage.getMap());
         }
     }

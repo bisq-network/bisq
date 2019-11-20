@@ -482,13 +482,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
         ByteArray hashOfPayload = get32ByteHashAsByteArray(protectedStoragePayload);
 
-        // If we don't know about the target of this remove, ignore it
-        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
-        if (storedEntry == null) {
-            log.debug("Remove data ignored as we don't have an entry for that data.");
-            return false;
-        }
-
         // If we have seen a more recent operation for this payload, ignore this one
         if (!hasSequenceNrIncreased(protectedStorageEntry.getSequenceNumber(), hashOfPayload))
             return false;
@@ -498,18 +491,25 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return false;
 
         // If we have already seen an Entry with the same hash, verify the metadata is the same
-        if (!protectedStorageEntry.matchesRelevantPubKey(storedEntry))
+        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+        if (storedEntry != null && !protectedStorageEntry.matchesRelevantPubKey(storedEntry))
             return false;
-
-        // Valid remove entry, do the remove and signal listeners
-        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
-        printData("after remove");
 
         // Record the latest sequence number and persist it
         sequenceNumberMap.put(hashOfPayload, new MapValue(protectedStorageEntry.getSequenceNumber(), this.clock.millis()));
         sequenceNumberMapStorage.queueUpForSave(SequenceNumberMap.clone(sequenceNumberMap), 300);
 
         maybeAddToRemoveAddOncePayloads(protectedStoragePayload, hashOfPayload);
+
+        // This means the RemoveData or RemoveMailboxData was seen prior to the AddData. We have already updated
+        // the SequenceNumberMap appropriately so the stale Add will not pass validation, but we don't want to
+        // signal listeners for state changes since no original state existed.
+        if (storedEntry == null)
+            return false;
+
+        // Valid remove entry, do the remove and signal listeners
+        removeFromMapAndDataStore(protectedStorageEntry, hashOfPayload);
+        printData("after remove");
 
         if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry) {
             broadcast(new RemoveMailboxDataMessage((ProtectedMailboxStorageEntry) protectedStorageEntry), sender, null, isDataOwner);
