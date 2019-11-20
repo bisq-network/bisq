@@ -27,7 +27,7 @@ DisableDirPage=No
 DisableProgramGroupPage=Yes
 DisableReadyPage=No
 DisableFinishedPage=No
-DisableWelcomePage=Yes
+DisableWelcomePage=No
 DefaultGroupName=Bisq
 ;Optional License
 LicenseFile=
