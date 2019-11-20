@@ -219,7 +219,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                             key = "displayHalfTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
                                         trade.getShortId(),
                                         DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -229,7 +229,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                             key = "displayTradePeriodOver" + trade.getId();
                             if (DontShowAgainLookup.showAgain(key)) {
                                 DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup<>().warning(Res.get("popup.warning.tradePeriod.ended",
+                                new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
                                         trade.getShortId(),
                                         DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                         .show();
@@ -292,7 +292,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         }, 1));
 
         bisqSetup.setCryptoSetupFailedHandler(msg -> UserThread.execute(() ->
-                new Popup<>().warning(msg)
+                new Popup().warning(msg)
                         .useShutDownButton()
                         .useReportBugButton()
                         .show()));
@@ -302,16 +302,16 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             else
                 torNetworkSettingsWindow.hide();
         });
-        bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup<>().warning(msg)
+        bisqSetup.setSpvFileCorruptedHandler(msg -> new Popup().warning(msg)
                 .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
                 .onAction(() -> GUIUtil.reSyncSPVChain(preferences))
                 .show());
         bisqSetup.setVoteResultExceptionHandler(voteResultException -> log.warn(voteResultException.toString()));
 
-        bisqSetup.setChainFileLockedExceptionHandler(msg -> new Popup<>().warning(msg)
+        bisqSetup.setChainFileLockedExceptionHandler(msg -> new Popup().warning(msg)
                 .useShutDownButton()
                 .show());
-        bisqSetup.setLockedUpFundsHandler(msg -> new Popup<>().width(850).warning(msg).show());
+        bisqSetup.setLockedUpFundsHandler(msg -> new Popup().width(850).warning(msg).show());
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
                 .onAesKey(aesKeyHandler::accept)
@@ -334,22 +334,22 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 .onClose(() -> user.setDisplayedAlert(alert))
                 .show());
         bisqSetup.setDisplayPrivateNotificationHandler(privateNotification ->
-                new Popup<>().headLine(Res.get("popup.privateNotification.headline"))
+                new Popup().headLine(Res.get("popup.privateNotification.headline"))
                         .attention(privateNotification.getMessage())
                         .setHeadlineStyle("-fx-text-fill: -bs-error-red;  -fx-font-weight: bold;  -fx-font-size: 16;")
                         .onClose(privateNotificationManager::removePrivateNotification)
                         .useIUnderstandButton()
                         .show());
-        bisqSetup.setDaoErrorMessageHandler(errorMessage -> new Popup<>().error(errorMessage).show());
-        bisqSetup.setDaoWarnMessageHandler(warnMessage -> new Popup<>().warning(warnMessage).show());
+        bisqSetup.setDaoErrorMessageHandler(errorMessage -> new Popup().error(errorMessage).show());
+        bisqSetup.setDaoWarnMessageHandler(warnMessage -> new Popup().warning(warnMessage).show());
         bisqSetup.setDisplaySecurityRecommendationHandler(key ->
-                new Popup<>().headLine(Res.get("popup.securityRecommendation.headline"))
+                new Popup().headLine(Res.get("popup.securityRecommendation.headline"))
                         .information(Res.get("popup.securityRecommendation.msg"))
                         .dontShowAgainId(key)
                         .show());
         bisqSetup.setDisplayLocalhostHandler(key -> {
             if (!DevEnv.isDevMode()) {
-                Overlay popup = new Popup<>().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
+                Overlay popup = new Popup().backgroundInfo(Res.get("popup.bitcoinLocalhostNode.msg"))
                         .dontShowAgainId(key);
                 popup.setDisplayOrderPriority(5);
                 popupQueue.add(popup);
@@ -364,17 +364,17 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setDisplayPeerSignerHandler(key -> accountPresentation.showOneTimeAccountSigningPopup(
                 key, "popup.accountSigning.peerSigner"));
 
-        bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup<>().warning(msg).show());
+        bisqSetup.setWrongOSArchitectureHandler(msg -> new Popup().warning(msg).show());
 
-        bisqSetup.setRejectedTxErrorMessageHandler(msg -> new Popup<>().width(850).warning(msg).show());
+        bisqSetup.setRejectedTxErrorMessageHandler(msg -> new Popup().width(850).warning(msg).show());
 
-        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup<>()
+        corruptedDatabaseFilesHandler.getCorruptedDatabaseFiles().ifPresent(files -> new Popup()
                 .warning(Res.get("popup.warning.incompatibleDB", files.toString(),
                         bisqEnvironment.getProperty(AppOptionKeys.APP_DATA_DIR_KEY)))
                 .useShutDownButton()
                 .show());
 
-        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup<>()
+        tradeManager.setTakeOfferRequestErrorMessageHandler(errorMessage -> new Popup()
                 .warning(Res.get("popup.error.takeOfferRequestFailed", errorMessage))
                 .show());
 
@@ -382,7 +382,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             c.next();
             if (c.wasAdded()) {
                 c.getAddedSubList().forEach(trade -> {
-                    new Popup<>().warning(Res.get("popup.warning.trade.depositTxNull", trade.getShortId()))
+                    new Popup().warning(Res.get("popup.warning.trade.depositTxNull", trade.getShortId()))
                             .actionButtonText(Res.get("popup.warning.trade.depositTxNull.moveToFailedTrades"))
                             .onAction(() -> tradeManager.addTradeToFailedTrades(trade))
                             .show();
@@ -393,7 +393,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
         daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
 
-        bisqSetup.setFilterWarningHandler(warning -> new Popup<>().warning(warning).show());
+        bisqSetup.setFilterWarningHandler(warning -> new Popup().warning(warning).show());
     }
 
     private void setupP2PNumPeersWatcher() {
@@ -451,7 +451,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     }
 
     private void showFirstPopupIfResyncSPVRequested() {
-        Popup firstPopup = new Popup<>();
+        Popup firstPopup = new Popup();
         firstPopup.information(Res.get("settings.net.reSyncSPVAfterRestart")).show();
         if (bisqSetup.getBtcSyncProgress().get() == 1) {
             showSecondPopupIfResyncSPVRequested(firstPopup);
@@ -466,7 +466,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private void showSecondPopupIfResyncSPVRequested(Popup firstPopup) {
         firstPopup.hide();
         preferences.setResyncSpvRequested(false);
-        new Popup<>().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
+        new Popup().information(Res.get("settings.net.reSyncSPVAfterRestartCompleted"))
                 .hideCloseButton()
                 .useShutDownButton()
                 .show();

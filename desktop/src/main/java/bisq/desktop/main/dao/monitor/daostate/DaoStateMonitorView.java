@@ -215,7 +215,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
             });
 
             if (warningPopup == null) {
-                warningPopup = new Popup<>().headLine(Res.get("dao.monitor.daoState.utxoConflicts"))
+                warningPopup = new Popup().headLine(Res.get("dao.monitor.daoState.utxoConflicts"))
                         .warning(Utilities.toTruncatedString(sb.toString(), 500, false)).onClose(() -> {
                             warningPopup = null;
                         });

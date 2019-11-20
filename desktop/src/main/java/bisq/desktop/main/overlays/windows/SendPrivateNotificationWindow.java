@@ -140,14 +140,14 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                             @Override
                             public void onArrived() {
                                 log.info("PrivateNotificationPayload arrived at peer {}.", nodeAddress);
-                                new Popup<>().feedback(Res.get("shared.messageArrived"))
+                                new Popup().feedback(Res.get("shared.messageArrived"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
                             @Override
                             public void onStoredInMailbox() {
                                 log.info("PrivateNotificationPayload stored in mailbox for peer {}.", nodeAddress);
-                                new Popup<>().feedback(Res.get("shared.messageStoredInMailbox"))
+                                new Popup().feedback(Res.get("shared.messageStoredInMailbox"))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
 
@@ -155,11 +155,11 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
                             public void onFault(String errorMessage) {
                                 log.error("PrivateNotificationPayload failed: Peer {}, errorMessage={}", nodeAddress,
                                         errorMessage);
-                                new Popup<>().feedback(Res.get("shared.messageSendingFailed", errorMessage))
+                                new Popup().feedback(Res.get("shared.messageSendingFailed", errorMessage))
                                         .onClose(SendPrivateNotificationWindow.this::hide).show();
                             }
                         }))
-                    new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
+                    new Popup().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
             }
         });
 

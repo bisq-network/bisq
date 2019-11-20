@@ -129,7 +129,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         if (selectedTradeCurrency != null) {
             if (selectedTradeCurrency instanceof CryptoCurrency && ((CryptoCurrency) selectedTradeCurrency).isAsset()) {
                 String name = selectedTradeCurrency.getName();
-                new Popup<>().information(Res.get("account.altcoin.popup.wallet.msg",
+                new Popup().information(Res.get("account.altcoin.popup.wallet.msg",
                         selectedTradeCurrency.getCodeAndName(),
                         name,
                         name))
@@ -141,7 +141,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
             if (asset.isPresent()) {
                 final AltCoinAccountDisclaimer disclaimerAnnotation = asset.get().getClass().getAnnotation(AltCoinAccountDisclaimer.class);
                 if (disclaimerAnnotation != null) {
-                    new Popup<>()
+                    new Popup()
                             .width(asset.get() instanceof Monero ? 1000 : 669)
                             .maxMessageLength(2500)
                             .information(Res.get(disclaimerAnnotation.value()))
@@ -155,7 +155,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                 model.onSaveNewAccount(paymentAccount);
                 removeNewAccountForm();
             } else {
-                new Popup<>().warning(Res.get("shared.accountNameAlreadyUsed")).show();
+                new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
             }
 
             preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);

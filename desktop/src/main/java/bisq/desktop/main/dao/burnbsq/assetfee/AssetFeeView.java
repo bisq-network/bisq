@@ -187,10 +187,10 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                     }
                 } catch (InsufficientMoneyException | TxException e) {
                     e.printStackTrace();
-                    new Popup<>().error(e.toString()).show();
+                    new Popup().error(e.toString()).show();
                 }
             } else {
-                new Popup<>().warning(Res.get("dao.burnBsq.assets.toFewDays", minDays)).show();
+                new Popup().warning(Res.get("dao.burnBsq.assets.toFewDays", minDays)).show();
             }
         });
 
@@ -291,9 +291,9 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                 () -> {
                     assetComboBox.getSelectionModel().clearSelection();
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup().confirmation(Res.get("dao.tx.published.success")).show();
                 },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+                errorMessage -> new Popup().warning(errorMessage).show());
 
         feeAmountInputTextField.clear();
     }

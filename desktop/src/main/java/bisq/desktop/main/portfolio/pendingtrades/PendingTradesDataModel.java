@@ -455,7 +455,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         // in such cases. The mediators or arbitrators could not help anyway with a payout in such cases.
         if (depositTx == null) {
             log.error("Deposit tx must not be null");
-            new Popup<>().instruction(Res.get("portfolio.pending.error.depositTxNull")).show();
+            new Popup().instruction(Res.get("portfolio.pending.error.depositTxNull")).show();
             return;
         }
         String depositTxId = depositTx.getHashAsString();
@@ -527,7 +527,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     (errorMessage, throwable) -> {
                         if ((throwable instanceof DisputeAlreadyOpenException)) {
                             errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
-                            new Popup<>().warning(errorMessage)
+                            new Popup().warning(errorMessage)
                                     .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
                                     .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
                                             true,
@@ -538,7 +538,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .show();
                         } else {
-                            new Popup<>().warning(errorMessage).show();
+                            new Popup().warning(errorMessage).show();
                         }
                     });
         } else if (useRefundAgent) {
@@ -554,7 +554,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             TransactionConfidence confidenceForTxId = btcWalletService.getConfidenceForTxId(depositTxId);
             if (confidenceForTxId == null || confidenceForTxId.getConfidenceType() != TransactionConfidence.ConfidenceType.BUILDING) {
                 log.error("Confidence for deposit tx must be BUILDING, confidenceForTxId={}", confidenceForTxId);
-                new Popup<>().instruction(Res.get("portfolio.pending.error.depositTxNotConfirmed")).show();
+                new Popup().instruction(Res.get("portfolio.pending.error.depositTxNotConfirmed")).show();
                 return;
             }
 
@@ -562,7 +562,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             int bestChainHeight = btcWalletService.getBestChainHeight();
             long remaining = lockTime - bestChainHeight;
             if (remaining > 0) {
-                new Popup<>()
+                new Popup()
                         .instruction(Res.get("portfolio.pending.timeLockNotOver",
                                 FormattingUtils.getDateFromBlockHeight(remaining), remaining))
                         .show();
@@ -621,7 +621,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                 (errorMessage, throwable) -> {
                                     if ((throwable instanceof DisputeAlreadyOpenException)) {
                                         errorMessage += "\n\n" + Res.get("portfolio.pending.openAgainDispute.msg");
-                                        new Popup<>().warning(errorMessage)
+                                        new Popup().warning(errorMessage)
                                                 .actionButtonText(Res.get("portfolio.pending.openAgainDispute.button"))
                                                 .onAction(() -> disputeManager.sendOpenNewDisputeMessage(dispute,
                                                         true,
@@ -632,12 +632,12 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                                 .closeButtonText(Res.get("shared.cancel"))
                                                 .show();
                                     } else {
-                                        new Popup<>().warning(errorMessage).show();
+                                        new Popup().warning(errorMessage).show();
                                     }
                                 });
                     },
                     errorMessage -> {
-                        new Popup<>().error(errorMessage).show();
+                        new Popup().error(errorMessage).show();
                     });
 
         } else {

@@ -528,11 +528,11 @@ public class ChatView extends AnchorPane {
                 if (text.length() < 5_000) {
                     onSendMessage(text);
                 } else {
-                    new Popup<>().information(Res.get("popup.warning.messageTooLong")).show();
+                    new Popup().information(Res.get("popup.warning.messageTooLong")).show();
                 }
             }
         } else {
-            new Popup<>().information(Res.get("popup.warning.notFullyConnected")).show();
+            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
         }
     }
 
@@ -556,9 +556,9 @@ public class ChatView extends AnchorPane {
                         int size = filesAsBytes.length;
                         int newSize = totalSize + size;
                         if (newSize > maxMsgSize) {
-                            new Popup<>().warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
+                            new Popup().warning(Res.get("support.attachmentTooLarge", (newSize / 1024), maxSizeInKB)).show();
                         } else if (size > maxMsgSize) {
-                            new Popup<>().warning(Res.get("support.maxSize", maxSizeInKB)).show();
+                            new Popup().warning(Res.get("support.maxSize", maxSizeInKB)).show();
                         } else {
                             tempAttachments.add(new Attachment(result.getName(), filesAsBytes));
                             inputTextArea.setText(inputTextArea.getText() + "\n[" + Res.get("support.attachment") + " " + result.getName() + "]");
@@ -573,7 +573,7 @@ public class ChatView extends AnchorPane {
                 }
             }
         } else {
-            new Popup<>().warning(Res.get("support.tooManyAttachments")).show();
+            new Popup().warning(Res.get("support.tooManyAttachments")).show();
         }
     }
 

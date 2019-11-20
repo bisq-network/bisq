@@ -182,7 +182,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                 }
             } catch (InsufficientMoneyException | TxException e) {
                 e.printStackTrace();
-                new Popup<>().error(e.toString()).show();
+                new Popup().error(e.toString()).show();
             }
         });
 
@@ -288,9 +288,9 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         proofOfBurnService.publishTransaction(transaction, preImageAsString,
                 () -> {
                     if (!DevEnv.isDevMode())
-                        new Popup<>().confirmation(Res.get("dao.tx.published.success")).show();
+                        new Popup().confirmation(Res.get("dao.tx.published.success")).show();
                 },
-                errorMessage -> new Popup<>().warning(errorMessage).show());
+                errorMessage -> new Popup().warning(errorMessage).show());
 
         amountInputTextField.clear();
         preImageTextField.clear();

@@ -332,7 +332,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 applyMakerFee();
                             } catch (NumberFormatException t) {
                                 marketPriceMargin.set("");
-                                new Popup<>().warning(Res.get("validation.NaN")).show();
+                                new Popup().warning(Res.get("validation.NaN")).show();
                             }
                         } else {
                             log.debug("We don't have a market price. We use the static price instead.");
@@ -348,7 +348,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     if (!newValue.isEmpty() && !newValue.equals("-")) {
                         double percentage = ParsingUtils.parsePercentStringToDouble(newValue);
                         if (percentage >= 1 || percentage <= -1) {
-                            new Popup<>().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
+                            new Popup().warning(Res.get("popup.warning.tooLargePercentageValue") + "\n" +
                                     Res.get("popup.warning.examplePercentageValue"))
                                     .show();
                         } else {
@@ -381,7 +381,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                                 marketPriceMargin.set("");
                                 String id = "showNoPriceFeedAvailablePopup";
                                 if (preferences.showAgain(id)) {
-                                    new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                                    new Popup().warning(Res.get("popup.warning.noPriceFeedAvailable"))
                                             .dontShowAgainId(id)
                                             .show();
                                 }
@@ -391,11 +391,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup<>().warning(Res.get("validation.NaN")).show();
+                    new Popup().warning(Res.get("validation.NaN")).show();
                 } catch (Throwable t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup<>().warning(Res.get("validation.inputError", t.toString())).show();
+                    new Popup().warning(Res.get("validation.inputError", t.toString())).show();
                 }
             }
         };
@@ -695,7 +695,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             updateButtonDisableState();
             return true;
         } else {
-            new Popup<>().warning(Res.get("shared.notEnoughFunds",
+            new Popup().warning(Res.get("shared.notEnoughFunds",
                     btcFormatter.formatCoinWithCode(dataModel.totalToPayAsCoinProperty().get()),
                     btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
@@ -736,7 +736,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     minAmountValidationResult.set(isBtcInputValid(minAmount.get()));
             } else if (amount.get() != null && btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 amount.set(btcFormatter.formatCoin(btcValidator.getMaxTradeLimit()));
-                new Popup<>().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
+                new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
                         btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
                         Res.get("offerbook.warning.newVersionAnnouncement")))
                         .width(900)
@@ -885,7 +885,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
                     String postfix = dataModel.isBuyOffer() ?
                             Res.get("createOffer.tooLowSecDeposit.makerIsBuyer") :
                             Res.get("createOffer.tooLowSecDeposit.makerIsSeller");
-                    new Popup<>()
+                    new Popup()
                             .warning(Res.get("createOffer.tooLowSecDeposit.warning",
                                     FormattingUtils.formatToPercentWithSymbol(defaultSecurityDeposit)) + "\n\n" + postfix)
                             .width(800)
@@ -932,7 +932,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     private void displayPriceOutOfRangePopup() {
-        Popup popup = new Popup<>();
+        Popup popup = new Popup();
         popup.warning(Res.get("createOffer.priceOutSideOfDeviation",
                 FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())))
                 .actionButtonText(Res.get("createOffer.changePrice"))
@@ -1237,7 +1237,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
             marketPriceMargin.set("");
             String id = "showNoPriceFeedAvailablePopup";
             if (preferences.showAgain(id)) {
-                new Popup<>().warning(Res.get("popup.warning.noPriceFeedAvailable"))
+                new Popup().warning(Res.get("popup.warning.noPriceFeedAvailable"))
                         .dontShowAgainId(id)
                         .show();
             }

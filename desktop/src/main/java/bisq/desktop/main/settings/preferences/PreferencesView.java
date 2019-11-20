@@ -266,10 +266,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     int withdrawalTxFeePerByte = Integer.parseInt(transactionFeeInputTextField.getText());
                     final long minFeePerByte = BisqEnvironment.getBaseCurrencyNetwork().getDefaultMinFeePerByte();
                     if (withdrawalTxFeePerByte < minFeePerByte) {
-                        new Popup<>().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
+                        new Popup().warning(Res.get("setting.preferences.txFeeMin", minFeePerByte)).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else if (withdrawalTxFeePerByte > 5000) {
-                        new Popup<>().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
+                        new Popup().warning(Res.get("setting.preferences.txFeeTooLarge")).show();
                         transactionFeeInputTextField.setText(estimatedFee);
                     } else {
                         preferences.setWithdrawalTxFeeInBytes(withdrawalTxFeePerByte);
@@ -277,12 +277,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 } catch (NumberFormatException t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup<>().warning(Res.get("validation.integerOnly")).show();
+                    new Popup().warning(Res.get("validation.integerOnly")).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 } catch (Throwable t) {
                     log.error(t.toString());
                     t.printStackTrace();
-                    new Popup<>().warning(Res.get("validation.inputError", t.getMessage())).show();
+                    new Popup().warning(Res.get("validation.inputError", t.getMessage())).show();
                     transactionFeeInputTextField.setText(estimatedFee);
                 }
             }
@@ -300,7 +300,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 if (value <= maxDeviation) {
                     preferences.setMaxPriceDistanceInPercent(value);
                 } else {
-                    new Popup<>().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
+                    new Popup().warning(Res.get("setting.preferences.deviationToLarge", maxDeviation * 100)).show();
                     UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatPercentagePrice(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
@@ -430,7 +430,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                             label.setText(item.getNameAndCode());
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeFiatCurrency(item);
                                     if (!allFiatCurrencies.contains(item)) {
@@ -485,7 +485,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                             label.setText(item.getNameAndCode());
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
-                                    new Popup<>().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                    new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
                                     if (!allCryptoCurrencies.contains(item)) {
@@ -667,12 +667,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             String selectedItem = userLanguageComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
                 preferences.setUserLanguage(selectedItem);
-                new Popup<>().information(Res.get("settings.preferences.languageChange"))
+                new Popup().information(Res.get("settings.preferences.languageChange"))
                         .closeButtonText(Res.get("shared.ok"))
                         .show();
 
                 if (model.needsArbitrationLanguageWarning()) {
-                    new Popup<>().warning(Res.get("settings.preferences.arbitrationLanguageWarning",
+                    new Popup().warning(Res.get("settings.preferences.arbitrationLanguageWarning",
                             model.getArbitrationLanguages()))
                             .closeButtonText(Res.get("shared.ok"))
                             .show();
@@ -830,7 +830,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         updateDaoFields();
 
         resyncDaoButton.setOnAction(e -> daoFacade.resyncDao(() ->
-                new Popup<>().attention(Res.get("setting.preferences.dao.resync.popup"))
+                new Popup().attention(Res.get("setting.preferences.dao.resync.popup"))
                         .useShutDownButton()
                         .hideCloseButton()
                         .show()));
@@ -839,7 +839,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             String key = "daoFullModeInfoShown";
             if (isDaoFullNodeToggleButton.isSelected() && preferences.showAgain(key)) {
                 String url = "https://bisq.network/docs/dao-full-node";
-                new Popup<>().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
+                new Popup().backgroundInfo(Res.get("setting.preferences.dao.fullNodeInfo", url))
                         .onAction(() -> GUIUtil.openWebPage(url))
                         .actionButtonText(Res.get("setting.preferences.dao.fullNodeInfo.ok"))
                         .closeButtonText(Res.get("setting.preferences.dao.fullNodeInfo.cancel"))

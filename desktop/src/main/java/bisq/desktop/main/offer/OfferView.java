@@ -238,7 +238,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private void showNoArbitratorForUserLocaleWarning() {
         String key = "NoArbitratorForUserLocaleWarning";
-        new Popup<>().information(Res.get("offerbook.info.noArbitrationInUserLanguage",
+        new Popup().information(Res.get("offerbook.info.noArbitrationInUserLanguage",
                 getArbitrationLanguages(), LanguageUtil.getDisplayName(preferences.getUserLanguage())))
                 .closeButtonText(Res.get("shared.ok"))
                 .dontShowAgainId(key)

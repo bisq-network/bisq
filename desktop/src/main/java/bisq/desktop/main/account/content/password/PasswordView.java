@@ -115,7 +115,7 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
 
         pwButton.setOnAction(e -> {
             if (!walletsManager.areWalletsEncrypted()) {
-                new Popup<>().backgroundInfo(Res.get("password.backupReminder"))
+                new Popup().backgroundInfo(Res.get("password.backupReminder"))
                         .secondaryActionButtonText(Res.get("password.backupWasDone"))
                         .onSecondaryAction(() -> onApplyPassword(busyAnimation, deriveStatusLabel))
                         .actionButtonTextWithGoTo("navigation.account.walletSeed")
@@ -150,26 +150,26 @@ public class PasswordView extends ActivatableView<GridPane, Void> {
             if (walletsManager.areWalletsEncrypted()) {
                 if (walletsManager.checkAESKey(aesKey)) {
                     walletsManager.decryptWallets(aesKey);
-                    new Popup<>()
+                    new Popup()
                             .feedback(Res.get("password.walletDecrypted"))
                             .show();
                     backupWalletAndResetFields();
                 } else {
                     pwButton.setDisable(false);
-                    new Popup<>()
+                    new Popup()
                             .warning(Res.get("password.wrongPw"))
                             .show();
                 }
             } else {
                 try {
                     walletsManager.encryptWallets(keyCrypterScrypt, aesKey);
-                    new Popup<>()
+                    new Popup()
                             .feedback(Res.get("password.walletEncrypted"))
                             .show();
                     backupWalletAndResetFields();
                     walletsManager.clearBackup();
                 } catch (Throwable t) {
-                    new Popup<>()
+                    new Popup()
                             .warning(Res.get("password.walletEncryptionFailed"))
                             .show();
                 }

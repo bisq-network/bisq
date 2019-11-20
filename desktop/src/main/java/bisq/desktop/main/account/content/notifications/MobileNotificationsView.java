@@ -271,12 +271,12 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             });
         }, throwable -> {
             if (throwable instanceof NoWebCamFoundException) {
-                new Popup<>().warning(Res.get("account.notifications.noWebCamFound.warning")).show();
+                new Popup().warning(Res.get("account.notifications.noWebCamFound.warning")).show();
                 webCamButton.setDisable(false);
                 onNoWebCam();
             } else {
                 log.error(throwable.toString());
-                new Popup<>().error(throwable.toString()).show();
+                new Popup().error(throwable.toString()).show();
             }
         });
     }
@@ -292,7 +292,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             mobileNotificationService.sendEraseMessage();
             reset();
         } catch (Exception e) {
-            new Popup<>().error(e.toString()).show();
+            new Popup().error(e.toString()).show();
         }
     }
 
@@ -335,7 +335,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 });
             }
         } catch (Exception e) {
-            new Popup<>().error(e.toString()).show();
+            new Popup().error(e.toString()).show();
         }
     }
 
@@ -564,7 +564,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
                 if (priceAlertLowTextFieldValue != 0 && priceAlertHighTextFieldValue != 0) {
                     if (priceAlertHighTextFieldValue <= priceAlertLowTextFieldValue) {
-                        new Popup<>().warning(Res.get("account.notifications.priceAlert.warning.highPriceTooLow")).show();
+                        new Popup().warning(Res.get("account.notifications.priceAlert.warning.highPriceTooLow")).show();
                         UserThread.execute(() -> {
                             priceAlertHighInputTextField.clear();
                             updatePriceAlertFields();
@@ -589,7 +589,7 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
             long priceAlertLowTextFieldValue = getPriceAsLong(priceAlertLowInputTextField);
             if (priceAlertLowTextFieldValue != 0 && priceAlertHighTextFieldValue != 0) {
                 if (priceAlertLowTextFieldValue >= priceAlertHighTextFieldValue) {
-                    new Popup<>().warning(Res.get("account.notifications.priceAlert.warning.lowerPriceTooHigh")).show();
+                    new Popup().warning(Res.get("account.notifications.priceAlert.warning.lowerPriceTooHigh")).show();
                     UserThread.execute(() -> {
                         priceAlertLowInputTextField.clear();
                         updatePriceAlertFields();

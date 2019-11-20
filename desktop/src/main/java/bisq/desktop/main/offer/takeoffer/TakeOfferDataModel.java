@@ -168,7 +168,7 @@ class TakeOfferDataModel extends OfferDataModel {
             tradeManager.checkOfferAvailability(offer,
                     () -> {
                     },
-                    errorMessage -> new Popup<>().warning(errorMessage).show());
+                    errorMessage -> new Popup().warning(errorMessage).show());
         }
     }
 
@@ -306,15 +306,15 @@ class TakeOfferDataModel extends OfferDataModel {
             fundsNeededForTrade = fundsNeededForTrade.add(amount.get());
 
         if (filterManager.isCurrencyBanned(offer.getCurrencyCode())) {
-            new Popup<>().warning(Res.get("offerbook.warning.currencyBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.currencyBanned")).show();
         } else if (filterManager.isPaymentMethodBanned(offer.getPaymentMethod())) {
-            new Popup<>().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
+            new Popup().warning(Res.get("offerbook.warning.paymentMethodBanned")).show();
         } else if (filterManager.isOfferIdBanned(offer.getId())) {
-            new Popup<>().warning(Res.get("offerbook.warning.offerBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.offerBlocked")).show();
         } else if (filterManager.isNodeAddressBanned(offer.getMakerNodeAddress())) {
-            new Popup<>().warning(Res.get("offerbook.warning.nodeBlocked")).show();
+            new Popup().warning(Res.get("offerbook.warning.nodeBlocked")).show();
         } else if (filterManager.requireUpdateToNewVersionForTrading()) {
-            new Popup<>().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
+            new Popup().warning(Res.get("offerbook.warning.requireUpdateToNewVersion")).show();
         } else {
             tradeManager.onTakeOffer(amount.get(),
                     txFeeFromFeeService,
@@ -328,7 +328,7 @@ class TakeOfferDataModel extends OfferDataModel {
                     tradeResultHandler,
                     errorMessage -> {
                         log.warn(errorMessage);
-                        new Popup<>().warning(errorMessage).show();
+                        new Popup().warning(errorMessage).show();
                     }
             );
         }

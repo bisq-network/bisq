@@ -158,7 +158,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private Label splashP2PNetworkLabel;
     private ProgressBar btcSyncIndicator, p2pNetworkProgressBar;
     private Label btcSplashInfo;
-    private Popup<?> p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
+    private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
     @Inject
@@ -427,7 +427,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
     @Override
     public void onCheckpointFail() {
-        new Popup<>().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
+        new Popup().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
                 .useShutDownButton()
                 .show();
     }
@@ -715,7 +715,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                 btcInfoLabel.setId("splash-error-state-msg");
                 btcInfoLabel.getStyleClass().add("error-text");
                 if (btcNetworkWarnMsgPopup == null) {
-                    btcNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                    btcNetworkWarnMsgPopup = new Popup().warning(newValue);
                     btcNetworkWarnMsgPopup.show();
                 }
             } else {
@@ -774,7 +774,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         p2PNetworkLabel.idProperty().bind(model.getP2pNetworkLabelId());
         model.getP2pNetworkWarnMsg().addListener((ov, oldValue, newValue) -> {
             if (newValue != null) {
-                p2PNetworkWarnMsgPopup = new Popup<>().warning(newValue);
+                p2PNetworkWarnMsgPopup = new Popup().warning(newValue);
                 p2PNetworkWarnMsgPopup.show();
             } else if (p2PNetworkWarnMsgPopup != null) {
                 p2PNetworkWarnMsgPopup.hide();

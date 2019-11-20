@@ -297,7 +297,7 @@ public class SellerStep3View extends TradeStepView {
                 if (model.isSignWitnessTrade(true)) {
                     message += Res.get("portfolio.pending.step3_seller.onPaymentReceived.signer");
                 }
-                new Popup<>()
+                new Popup()
                         .headLine(Res.get("portfolio.pending.step3_seller.onPaymentReceived.confirm.headline"))
                         .confirmation(message)
                         .width(700)
@@ -357,7 +357,7 @@ public class SellerStep3View extends TradeStepView {
         }
         if (!DevEnv.isDevMode() && DontShowAgainLookup.showAgain(key)) {
             DontShowAgainLookup.dontShowAgain(key, true);
-            new Popup<>().headLine(Res.get("popup.attention.forTradeWithId", id))
+            new Popup().headLine(Res.get("popup.attention.forTradeWithId", id))
                     .attention(message)
                     .show();
         }
@@ -381,7 +381,7 @@ public class SellerStep3View extends TradeStepView {
         }, errorMessage -> {
             // confirmButton.setDisable(false);
             busyAnimation.stop();
-            new Popup<>().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
         });
     }
 
