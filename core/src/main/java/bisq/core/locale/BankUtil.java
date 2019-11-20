@@ -156,10 +156,8 @@ public class BankUtil {
             case "CA":
             case "HK":
                 return Res.get("payment.accountNr");
-            case "NO":
-                return "Kontonummer"; // do not translate as it is used in norwegian only
-            case "SE":
-                return "Bankgiro number"; // do not translate as it is used in swedish only
+            case "NO" || "SE":
+                return "Kontonummer"; // do not translate as it is used in norwegian and swedish only
             case "MX":
                 return "CLABE"; // do not translate as it is used in spanish only
             case "CL":
