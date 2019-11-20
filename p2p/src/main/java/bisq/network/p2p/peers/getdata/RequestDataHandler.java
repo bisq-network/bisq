@@ -49,7 +49,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -126,25 +125,10 @@ class RequestDataHandler implements MessageListener {
         if (!stopped) {
             GetDataRequest getDataRequest;
 
-            // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
-            // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
-            // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
-            // miss that event if we do not load the full set or use some delta handling.
-            Set<byte[]> excludedKeys = dataStorage.getAppendOnlyDataStoreMap().keySet().stream()
-                    .map(e -> e.bytes)
-                    .collect(Collectors.toSet());
-
-            Set<byte[]> excludedKeysFromPersistedEntryMap = dataStorage.getMap().keySet()
-                    .stream()
-                    .map(e -> e.bytes)
-                    .collect(Collectors.toSet());
-
-            excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
-
             if (isPreliminaryDataRequest)
-                getDataRequest = new PreliminaryGetDataRequest(nonce, excludedKeys);
+                getDataRequest = dataStorage.buildPreliminaryGetDataRequest(nonce);
             else
-                getDataRequest = new GetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, excludedKeys);
+                getDataRequest = dataStorage.buildGetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions

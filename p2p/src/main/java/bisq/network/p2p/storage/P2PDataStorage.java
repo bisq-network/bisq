@@ -25,6 +25,8 @@ import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
+import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddOncePayload;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
@@ -175,6 +177,46 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         resourceDataStoreService.readFromResources(postFix);
 
         map.putAll(protectedDataStoreService.getMap());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // RequestData API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Returns a PreliminaryGetDataRequest that can be sent to a peer node to request missing Payload data.
+     */
+    public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce) {
+        return new PreliminaryGetDataRequest(nonce, this.getKnownPayloadHashes());
+    }
+
+    /**
+     * Returns a GetUpdatedDataRequest that can be sent to a peer node to request missing Payload data.
+     */
+    public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
+        return new GetUpdatedDataRequest(senderNodeAddress, nonce, this.getKnownPayloadHashes());
+    }
+
+    /**
+     * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
+     */
+    private Set<byte[]> getKnownPayloadHashes() {
+        // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
+        // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
+        // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
+        // miss that event if we do not load the full set or use some delta handling.
+        Set<byte[]> excludedKeys =this.appendOnlyDataStoreService.getMap().keySet().stream()
+                .map(e -> e.bytes)
+                .collect(Collectors.toSet());
+
+        Set<byte[]> excludedKeysFromPersistedEntryMap = this.map.keySet()
+                .stream()
+                .map(e -> e.bytes)
+                .collect(Collectors.toSet());
+
+        excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
+
+        return excludedKeys;
     }
 
 
