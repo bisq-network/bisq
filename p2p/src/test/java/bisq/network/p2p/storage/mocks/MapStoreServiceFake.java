@@ -19,33 +19,52 @@ package bisq.network.p2p.storage.mocks;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
-import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
+import bisq.network.p2p.storage.persistence.MapStoreService;
+
+import bisq.common.proto.persistable.PersistableEnvelope;
+import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.storage.Storage;
+
+import java.io.File;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Getter;
+
+import static org.mockito.Mockito.mock;
+
 /**
- * Implementation of an in-memory ProtectedDataStoreService that can be used in tests. Removes overhead
+ * Implementation of an in-memory MapStoreService that can be used in tests. Removes overhead
  * involving files, resources, and services for tests that don't need it.
  *
  * @see <a href="https://martinfowler.com/articles/mocksArentStubs.html#TheDifferenceBetweenMocksAndStubs">Reference</a>
  */
-public class ProtectedDataStoreServiceFake extends ProtectedDataStoreService {
+public class MapStoreServiceFake extends MapStoreService {
+    @Getter
     private final Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> map;
 
-    public ProtectedDataStoreServiceFake() {
-        super();
-        map = new HashMap<>();
+    public MapStoreServiceFake() {
+        super(mock(File.class), mock(Storage.class));
+        this.map = new HashMap<>();
     }
 
-    public Map<P2PDataStorage.ByteArray, ProtectedStorageEntry> getMap() {
-        return map;
+    @Override
+    public String getFileName() {
+        return null;
     }
 
-    public void put(P2PDataStorage.ByteArray hashAsByteArray, ProtectedStorageEntry entry) {
-        map.put(hashAsByteArray, entry);
+    @Override
+    protected PersistableEnvelope createStore() {
+        return null;
     }
-    public ProtectedStorageEntry remove(P2PDataStorage.ByteArray hash, ProtectedStorageEntry protectedStorageEntry) {
-        return map.remove(hash);
+
+    @Override
+    public boolean canHandle(PersistablePayload payload) {
+        return true;
+    }
+
+    protected void readFromResources(String postFix) {
+        // do nothing. This Fake only supports in-memory storage.
     }
 }

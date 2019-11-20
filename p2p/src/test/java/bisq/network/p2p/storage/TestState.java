@@ -29,12 +29,13 @@ import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
 import bisq.network.p2p.storage.mocks.AppendOnlyDataStoreServiceFake;
 import bisq.network.p2p.storage.mocks.ClockFake;
-import bisq.network.p2p.storage.mocks.ProtectedDataStoreServiceFake;
+import bisq.network.p2p.storage.mocks.MapStoreServiceFake;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
+import bisq.network.p2p.storage.persistence.MapStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreListener;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
@@ -80,7 +81,7 @@ public class TestState {
         this.mockBroadcaster = mock(Broadcaster.class);
         this.mockSeqNrStorage = mock(Storage.class);
         this.clockFake = new ClockFake();
-        this.protectedDataStoreService = new ProtectedDataStoreServiceFake();
+        this.protectedDataStoreService = new ProtectedDataStoreService();
 
         this.mockedStorage = new P2PDataStorage(mock(NetworkNode.class),
                 this.mockBroadcaster,
@@ -91,6 +92,7 @@ public class TestState {
         this.appendOnlyDataStoreListener = mock(AppendOnlyDataStoreListener.class);
         this.protectedDataStoreListener = mock(ProtectedDataStoreListener.class);
         this.hashMapChangedListener = mock(HashMapChangedListener.class);
+        this.protectedDataStoreService.addService(new MapStoreServiceFake());
 
         this.mockedStorage = createP2PDataStorageForTest(
                 this.mockBroadcaster,
