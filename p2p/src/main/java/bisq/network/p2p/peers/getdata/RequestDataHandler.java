@@ -38,6 +38,7 @@ import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -92,7 +93,8 @@ class RequestDataHandler implements MessageListener {
     private final PeerManager peerManager;
     private final Listener listener;
     private Timer timeoutTimer;
-    private final int nonce = new Random().nextInt();
+    @VisibleForTesting
+    final int nonce = new Random().nextInt();
     private boolean stopped;
 
 
