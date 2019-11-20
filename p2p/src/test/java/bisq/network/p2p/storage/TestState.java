@@ -259,19 +259,19 @@ public class TestState {
                                       ProtectedStorageEntry protectedStorageEntry,
                                       boolean expectedStateChange,
                                       boolean expectedBroadcastOnStateChange,
-                                      boolean expectedSeqNrWriteOnStateChange,
+                                      boolean expectedSeqNrWrite,
                                       boolean expectedIsDataOwner) {
 
         verifyProtectedStorageRemove(beforeState, Collections.singletonList(protectedStorageEntry),
                 expectedStateChange, expectedBroadcastOnStateChange,
-                expectedSeqNrWriteOnStateChange, expectedIsDataOwner);
+                expectedSeqNrWrite, expectedIsDataOwner);
     }
 
     void verifyProtectedStorageRemove(SavedTestState beforeState,
                                       Collection<ProtectedStorageEntry> protectedStorageEntries,
                                       boolean expectedStateChange,
                                       boolean expectedBroadcastOnStateChange,
-                                      boolean expectedSeqNrWriteOnStateChange,
+                                      boolean expectedSeqNrWrite,
                                       boolean expectedIsDataOwner) {
 
         // The default matcher expects orders to stay the same. So, create a custom matcher function since
@@ -294,6 +294,14 @@ public class TestState {
         protectedStorageEntries.forEach(protectedStorageEntry -> {
             P2PDataStorage.ByteArray hashMapHash = P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload());
 
+            if (expectedSeqNrWrite) {
+                this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(
+                        protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
+            } else {
+                verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
+            }
+
+
             if (expectedStateChange) {
                 Assert.assertNull(this.mockedStorage.getMap().get(hashMapHash));
 
@@ -302,9 +310,6 @@ public class TestState {
 
                     verify(this.protectedDataStoreListener).onRemoved(protectedStorageEntry);
                 }
-
-                if (expectedSeqNrWriteOnStateChange)
-                    this.verifySequenceNumberMapWriteContains(P2PDataStorage.get32ByteHashAsByteArray(protectedStorageEntry.getProtectedStoragePayload()), protectedStorageEntry.getSequenceNumber());
 
                 if (expectedBroadcastOnStateChange) {
                     if (protectedStorageEntry instanceof ProtectedMailboxStorageEntry)
@@ -319,7 +324,6 @@ public class TestState {
                 verify(this.mockBroadcaster, never()).broadcast(any(BroadcastMessage.class), any(NodeAddress.class), any(BroadcastHandler.Listener.class), anyBoolean());
                 verify(this.hashMapChangedListener, never()).onAdded(Collections.singletonList(protectedStorageEntry));
                 verify(this.protectedDataStoreListener, never()).onAdded(protectedStorageEntry);
-                verify(this.mockSeqNrStorage, never()).queueUpForSave(any(SequenceNumberMap.class), anyLong());
             }
         });
     }
