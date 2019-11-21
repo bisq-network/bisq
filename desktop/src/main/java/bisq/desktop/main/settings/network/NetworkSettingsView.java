@@ -297,7 +297,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         reSyncSPVChainButton.setOnAction(event -> GUIUtil.reSyncSPVChain(preferences));
 
         renewIdButton.setOnAction(event -> {
-            new Popup<>().information(Res.get("settings.net.renewAddress"))
+            new Popup().information(Res.get("settings.net.renewAddress"))
                     .actionButtonText(Res.get("shared.applyAndShutDown"))
                     .onAction(() -> {
                         p2PService.renewHiddenService();
@@ -317,7 +317,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         });
 
         importIdButton.setOnAction(event -> {
-            new Popup<>().information(Res.get("settings.net.importAddress"))
+            new Popup().information(Res.get("settings.net.importAddress"))
                     .actionButtonText(Res.get("settings.net.importAddressFileDialog"))
                     .onAction(() -> {
                         FileChooser fileChooser = new FileChooser();
@@ -330,7 +330,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
                             p2PService.importHiddenService(file);
                             UserThread.runAfter(BisqApp.getShutDownHandler()::run, 500, TimeUnit.MILLISECONDS);
                         } catch (IOException e) {
-                            new Popup<>().error(Res.get("settings.net.importAddressError")).show();
+                            new Popup().error(Res.get("settings.net.importAddressError")).show();
                         }
                     })
                     .closeButtonText(Res.get("shared.cancel"))
