@@ -189,7 +189,6 @@ public class P2PDataStorageBuildGetDataResponseTest {
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP, send it back
-        // XXXBUGXXX: Truncation return has off-by-one error
         @Test
         public void buildGetDataResponse_unknownPNPSendBack() {
             PersistableNetworkPayload onlyLocal = new PersistableNetworkPayloadStub(new byte[]{1});
@@ -204,7 +203,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
             AtomicBoolean outPSETruncated = new AtomicBoolean(false);
             Capabilities peerCapabilities = new Capabilities();
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
-                    getDataRequest, 2, outPNPTruncated, outPSETruncated, peerCapabilities);
+                    getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
             Assert.assertFalse(outPNPTruncated.get());
             Assert.assertFalse(outPSETruncated.get());
@@ -355,7 +354,6 @@ public class P2PDataStorageBuildGetDataResponseTest {
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PSE, send it back
-        // XXXBUGXXX: Truncation return has off-by-one error
         @Test
         public void buildGetDataResponse_unknownPSESendBack() throws NoSuchAlgorithmException {
             ProtectedStorageEntry onlyLocal = getProtectedStorageEntryForAdd();
@@ -369,7 +367,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
             AtomicBoolean outPSETruncated = new AtomicBoolean(false);
             Capabilities peerCapabilities = new Capabilities();
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
-                    getDataRequest, 2, outPNPTruncated, outPSETruncated, peerCapabilities);
+                    getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
             Assert.assertFalse(outPNPTruncated.get());
             Assert.assertFalse(outPSETruncated.get());

@@ -248,7 +248,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                                       objToPayload.apply(networkPayload)))
                 .collect(Collectors.toSet());
 
-        if (limit.get() <= 0)
+        if (limit.get() < 0)
             outTruncated.set(true);
 
         return filteredResults;
