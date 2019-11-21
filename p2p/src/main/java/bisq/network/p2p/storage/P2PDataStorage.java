@@ -289,33 +289,19 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                                           int maxEntries,
                                                                           AtomicBoolean outProtectedStorageEntryOutputTruncated,
                                                                           Capabilities peerCapabilities) {
-        Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-
         AtomicInteger maxSize = new AtomicInteger(maxEntries);
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
         Set<ProtectedStorageEntry> filteredSet = this.map.entrySet().stream()
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
                 .filter(e -> maxSize.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
+                .filter(protectedStorageEntry -> shouldTransmitPayloadToPeer(peerCapabilities, protectedStorageEntry.getProtectedStoragePayload()))
                 .collect(Collectors.toSet());
 
         if (maxSize.get() <= 0)
             outProtectedStorageEntryOutputTruncated.set(true);
 
-        for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
-            final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
-            boolean doAdd = false;
-            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
-                if (shouldTransmitPayloadToPeer(peerCapabilities, protectedStoragePayload))
-                    doAdd = true;
-            } else {
-                doAdd = true;
-            }
-            if (doAdd) {
-                filteredDataSet.add(protectedStorageEntry);
-            }
-        }
-        return filteredDataSet;
+        return filteredSet;
     }
 
 
