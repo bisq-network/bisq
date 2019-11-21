@@ -93,6 +93,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -113,8 +114,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
-
-    private static final int MAX_ENTRIES = 10000;
 
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -228,20 +227,28 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
      */
-    public GetDataResponse buildGetDataResponse(GetDataRequest getDataRequest, String connectionInfo, Connection connection) {
-        return new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connectionInfo, connection),
-                getFilteredPersistableNetworkPayload(getDataRequest, connectionInfo, connection),
+    public GetDataResponse buildGetDataResponse(
+            GetDataRequest getDataRequest,
+            int maxEntriesPerType,
+            AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
+            AtomicBoolean outProtectedStorageEntryOutputTruncated,
+            Connection connection) {
+
+        return new GetDataResponse(
+                getFilteredProtectedStorageEntries(getDataRequest, maxEntriesPerType, outProtectedStorageEntryOutputTruncated, connection),
+                getFilteredPersistableNetworkPayload(getDataRequest, maxEntriesPerType, outPersistableNetworkPayloadOutputTruncated, connection),
                 getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
     }
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
-                                                                                String connectionInfo,
+                                                                                int maxEntries,
+                                                                                AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
                                                                                 Connection connection) {
         Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
 
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
-        AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
+        AtomicInteger maxSize = new AtomicInteger(maxEntries);
         Set<PersistableNetworkPayload> result = this.appendOnlyDataStoreService.getMap().entrySet().stream()
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
                 .filter(e -> maxSize.decrementAndGet() >= 0)
@@ -252,32 +259,30 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     return notContained;
                 })
                 .collect(Collectors.toSet());
-        if (maxSize.get() <= 0) {
-            log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
-                            "entries to get delivered. We limited the entries for the response to {} entries",
-                    connectionInfo, MAX_ENTRIES);
-        }
+
+        if (maxSize.get() <= 0)
+            outPersistableNetworkPayloadOutputTruncated.set(true);
+
         return result;
     }
 
     private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
-                                                                          String connectionInfo,
+                                                                          int maxEntries,
+                                                                          AtomicBoolean outProtectedStorageEntryOutputTruncated,
                                                                           Connection connection) {
         Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         Set<Integer> lookupSet = new HashSet<>();
 
-        AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
+        AtomicInteger maxSize = new AtomicInteger(maxEntries);
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
         Set<ProtectedStorageEntry> filteredSet = this.map.entrySet().stream()
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
                 .filter(e -> maxSize.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
-        if (maxSize.get() <= 0) {
-            log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
-                            "entries to get delivered. We limited the entries for the response to {} entries",
-                    connectionInfo, MAX_ENTRIES);
-        }
+
+        if (maxSize.get() <= 0)
+            outProtectedStorageEntryOutputTruncated.set(true);
 
         for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();

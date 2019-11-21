@@ -32,6 +32,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 90;
 
+    private static final int MAX_ENTRIES = 10000;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -84,7 +87,26 @@ public class GetDataRequestHandler {
                 .map(e -> "node address " + e.getFullAddress())
                 .orElseGet(() -> "connection UID " + connection.getUid());
 
-        GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(getDataRequest, connectionInfo, connection);
+        AtomicBoolean outPersistableNetworkPayloadOutputTruncated = new AtomicBoolean(false);
+        AtomicBoolean outProtectedStoragePayloadOutputTruncated = new AtomicBoolean(false);
+        GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(
+                getDataRequest,
+                MAX_ENTRIES,
+                outPersistableNetworkPayloadOutputTruncated,
+                outProtectedStoragePayloadOutputTruncated,
+                connection);
+
+        if (outPersistableNetworkPayloadOutputTruncated.get()) {
+            log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+
+        if (outProtectedStoragePayloadOutputTruncated.get()) {
+            log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
 
         log.info("The getDataResponse to peer with {} contains {} ProtectedStorageEntries and {} PersistableNetworkPayloads",
                 connectionInfo,
