@@ -290,10 +290,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         // We republish after a bit as it might be that our connected node still has the offer in the data map
         // but other peers have it already removed because of expired TTL.
         // Those other not directly connected peers would not get the broadcast of the new offer, as the first
-        // connected peer (seed node) does nto broadcast if it has the data in the map.
+        // connected peer (seed node) does not broadcast if it has the data in the map.
         // To update quickly to the whole network we repeat the republishOffers call after a few seconds when we
-        // are better connected to the network. There is no guarantee that all peers will receive it but we have
-        // also our periodic timer, so after that longer interval the offer should be available to all peers.
+        // are better connected to the network. There is no guarantee that all peers will receive it but we also
+        // have our periodic timer, so after that longer interval the offer should be available to all peers.
         if (retryRepublishOffersTimer == null)
             retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                     REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC);
@@ -847,8 +847,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         offerBookService.addOffer(openOffer.getOffer(),
                 () -> {
                     if (!stopped) {
-                        log.debug("Successful added offer to P2P network");
-                        // Refresh means we send only the dat needed to refresh the TTL (hash, signature and sequence no.)
+                        log.debug("Successfully added offer to P2P network.");
+                        // Refresh means we send only the data needed to refresh the TTL (hash, signature and sequence no.)
                         if (periodicRefreshOffersTimer == null)
                             startPeriodicRefreshOffersTimer();
                     } else {
@@ -857,7 +857,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 },
                 errorMessage -> {
                     if (!stopped) {
-                        log.error("Add offer to P2P network failed. " + errorMessage);
+                        log.error("Adding offer to P2P network failed. " + errorMessage);
                         stopRetryRepublishOffersTimer();
                         retryRepublishOffersTimer = UserThread.runAfter(OpenOfferManager.this::republishOffers,
                                 RETRY_REPUBLISH_DELAY_SEC);

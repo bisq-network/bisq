@@ -77,7 +77,7 @@ public class PriceAlert {
                     try {
                         mobileNotificationService.sendMessage(message);
 
-                        // If we got triggered an alert we remove the filter.
+                        // If an alert got triggered we remove the filter.
                         user.removePriceAlertFilter();
                     } catch (Exception e) {
                         log.error(e.toString());

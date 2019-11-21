@@ -20,7 +20,7 @@ package bisq.core.support;
 import bisq.common.proto.ProtoUtil;
 
 public enum SupportType {
-    ARBITRATION, // Need to be at index 0 to be the fall back for old clients
+    ARBITRATION, // Need to be at index 0 to be the fallback for old clients
     MEDIATION,
     TRADE,
     REFUND;

@@ -145,7 +145,7 @@ public abstract class DisputeManager<T extends DisputeList<? extends DisputeList
             if (dispute.getChatMessages().stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 dispute.addAndPersistChatMessage(message);
             } else {
-                log.warn("We got a chatMessage what we have already stored. UId = {} TradeId = {}",
+                log.warn("We got a chatMessage that we have already stored. UId = {} TradeId = {}",
                         message.getUid(), message.getTradeId());
             }
         });

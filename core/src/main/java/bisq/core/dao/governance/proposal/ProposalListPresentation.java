@@ -190,7 +190,7 @@ public class ProposalListPresentation implements DaoStateListener, HashMapChange
         // in the list.
         // If a tx is not found in the daoStateService it can be that it is either unconfirmed or invalid.
         // To avoid inclusion of invalid txs we add a check for the confidence type PENDING from the bsqWalletService.
-        // So we only add proposals if they are unconfirmed and therefor not yet parsed. Once confirmed they have to be
+        // So we only add proposals if they are unconfirmed and therefore not yet parsed. Once confirmed they have to be
         // found in the daoStateService.
         List<Proposal> myUnconfirmedProposals = myProposalListService.getList().stream()
                 .filter(p -> !daoStateService.getTx(p.getTxId()).isPresent()) // Tx is still not in our bsq blocks

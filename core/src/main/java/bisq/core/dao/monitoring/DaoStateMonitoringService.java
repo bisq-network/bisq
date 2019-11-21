@@ -69,7 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * Monitors the DaoState with using a hash fo the complete daoState and make it accessible to the network
+ * Monitors the DaoState by using a hash for the complete daoState and make it accessible to the network
  * so we can detect quickly if any consensus issue arise.
  * We create that hash after parsing and processing of a block is completed. There is one hash created per block.
  * The hash contains the hash of the previous block so we can ensure the validity of the whole history by
@@ -253,7 +253,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     }
 
     public void applySnapshot(LinkedList<DaoStateHash> persistedDaoStateHashChain) {
-        // We could got a reset from a reorg, so we clear all and start over from the genesis block.
+        // We could get a reset from a reorg, so we clear all and start over from the genesis block.
         daoStateHashChain.clear();
         daoStateBlockChain.clear();
         daoStateNetworkService.reset();

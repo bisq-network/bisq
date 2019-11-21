@@ -69,7 +69,7 @@ class BtcCoinSelector extends BisqDefaultCoinSelector {
         }
     }
 
-    // We ignore utxos which are considered dust attacks for spying on users wallets.
+    // We ignore utxos which are considered dust attacks for spying on users' wallets.
     // The ignoreDustThreshold value is set in the preferences. If not set we use default non dust
     // value of 546 sat.
     @Override

@@ -48,7 +48,7 @@ public final class Role implements PersistablePayload, NetworkPayload, BondedAss
 
     /**
      * @param name                      Full name or nickname
-     * @param link                      Github account or forum account of user
+     * @param link                      GitHub account or forum account of user
      * @param bondedRoleType            BondedRoleType
      */
     public Role(String name,
