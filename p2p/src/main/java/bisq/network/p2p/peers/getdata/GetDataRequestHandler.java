@@ -86,6 +86,11 @@ public class GetDataRequestHandler {
 
         GetDataResponse getDataResponse = dataStorage.buildGetDataResponse(getDataRequest, connectionInfo, connection);
 
+        log.info("The getDataResponse to peer with {} contains {} ProtectedStorageEntries and {} PersistableNetworkPayloads",
+                connectionInfo,
+                getDataResponse.getDataSet().size(),
+                getDataResponse.getPersistableNetworkPayloadSet().size());
+
         if (timeoutTimer == null) {
             timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
                         String errorMessage = "A timeout occurred for getDataResponse " +

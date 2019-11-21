@@ -257,8 +257,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                             "entries to get delivered. We limited the entries for the response to {} entries",
                     connectionInfo, MAX_ENTRIES);
         }
-        log.info("The getData request from peer with {} contains {} PersistableNetworkPayload entries ",
-                connectionInfo, result.size());
         return result;
     }
 
@@ -280,7 +278,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                             "entries to get delivered. We limited the entries for the response to {} entries",
                     connectionInfo, MAX_ENTRIES);
         }
-        log.info("getFilteredProtectedStorageEntries " + filteredSet.size());
 
         for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
@@ -300,9 +297,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                     filteredDataSet.add(protectedStorageEntry);
             }
         }
-
-        log.info("The getData request from peer with {} contains {} ProtectedStorageEntry entries ",
-                connectionInfo, filteredDataSet.size());
         return filteredDataSet;
     }
 
