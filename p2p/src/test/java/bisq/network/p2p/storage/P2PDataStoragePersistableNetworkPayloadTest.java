@@ -107,7 +107,9 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
                 testState.mockedStorage.onMessage(new AddPersistableNetworkPayloadMessage(persistableNetworkPayload), mockedConnection);
             }
 
-            this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedStateChange, this.expectBroadcastOnStateChange(), this.expectedIsDataOwner());
+            boolean expectedBroadcast = expectedStateChange && this.expectBroadcastOnStateChange();
+
+            this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedStateChange, expectedBroadcast, expectedBroadcast, this.expectedIsDataOwner());
         }
 
         @Before

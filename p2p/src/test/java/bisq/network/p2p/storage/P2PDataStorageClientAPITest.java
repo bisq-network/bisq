@@ -73,7 +73,7 @@ public class P2PDataStorageClientAPITest {
         SavedTestState beforeState = this.testState.saveTestState(protectedStorageEntry);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true);
+        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true, true, true, true);
     }
 
     // TESTCASE: Adding an entry from the getProtectedStorageEntry API of an existing item correctly updates the item
@@ -90,7 +90,7 @@ public class P2PDataStorageClientAPITest {
         protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true);
 
-        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true);
+        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true, true, true, true);
     }
 
     // TESTCASE: Adding an entry from the getProtectedStorageEntry API of an existing item (added from onMessage path) correctly updates the item
@@ -110,7 +110,7 @@ public class P2PDataStorageClientAPITest {
         protectedStorageEntry = this.testState.mockedStorage.getProtectedStorageEntry(protectedStoragePayload, ownerKeys);
         Assert.assertTrue(this.testState.mockedStorage.addProtectedStorageEntry(protectedStorageEntry, TestState.getTestNodeAddress(), null, true));
 
-        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true);
+        this.testState.verifyProtectedStorageAdd(beforeState, protectedStorageEntry, true, true, true, true, true);
     }
 
     // TESTCASE: Updating an entry from the getRefreshTTLMessage API correctly errors if the item hasn't been seen
