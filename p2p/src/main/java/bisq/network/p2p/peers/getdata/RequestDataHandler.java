@@ -25,10 +25,7 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
-import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
-import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.P2PDataStorage;
-import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
@@ -48,7 +45,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,7 +54,6 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 class RequestDataHandler implements MessageListener {
     private static final long TIMEOUT = 90;
-    private static boolean initialRequestApplied = false;
 
     private NodeAddress peersNodeAddress;
     /*
@@ -193,7 +188,6 @@ class RequestDataHandler implements MessageListener {
                     GetDataResponse getDataResponse = (GetDataResponse) networkEnvelope;
                     final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
                     Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
-
                     logContents(networkEnvelope, dataSet, persistableNetworkPayloadSet);
 
                     if (getDataResponse.getRequestNonce() == nonce) {
@@ -204,50 +198,8 @@ class RequestDataHandler implements MessageListener {
                             return;
                         }
 
-                        final NodeAddress sender = connection.getPeersNodeAddressOptional().get();
-
-                        long ts2 = System.currentTimeMillis();
-                        AtomicInteger counter = new AtomicInteger();
-                        dataSet.forEach(e -> {
-                            // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
-                            dataStorage.addProtectedStorageEntry(e, sender, null, false, false);
-                            counter.getAndIncrement();
-
-                        });
-                        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts2);
-
-                        /* // engage the firstRequest logic only if we are a seed node. Normal clients get here twice at most.
-                        if (!Capabilities.app.containsAll(Capability.SEED_NODE))
-                            firstRequest = true;*/
-
-                        if (persistableNetworkPayloadSet != null /*&& firstRequest*/) {
-                            ts2 = System.currentTimeMillis();
-                            persistableNetworkPayloadSet.forEach(e -> {
-                                if (e instanceof LazyProcessedPayload) {
-                                    // We use an optimized method as many checks are not required in that case to avoid
-                                    // performance issues.
-                                    // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
-                                    // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
-                                    // trade stats stats and all account age witness data.
-
-                                    // We only apply it once from first response
-                                    if (!initialRequestApplied) {
-                                        dataStorage.addPersistableNetworkPayloadFromInitialRequest(e);
-
-                                    }
-                                } else {
-                                    // We don't broadcast here as we are only connected to the seed node and would be pointless
-                                    dataStorage.addPersistableNetworkPayload(e, sender, false,
-                                            false, false, false);
-                                }
-                            });
-
-                            // We set initialRequestApplied to true after the loop, otherwise we would only process 1 entry
-                            initialRequestApplied = true;
-
-                            log.info("Processing {} persistableNetworkPayloads took {} ms.",
-                                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts2);
-                        }
+                        dataStorage.processGetDataResponse(getDataResponse,
+                                connection.getPeersNodeAddressOptional().get());
 
                         cleanup();
                         listener.onComplete();

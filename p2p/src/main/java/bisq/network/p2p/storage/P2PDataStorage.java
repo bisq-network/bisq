@@ -39,6 +39,7 @@ import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
+import bisq.network.p2p.storage.payload.LazyProcessedPayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedMailboxStorageEntry;
@@ -116,6 +117,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
+
+    private static boolean initialRequestApplied = false;
 
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -314,6 +317,58 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         }
 
         return shouldTransmit;
+    }
+
+    /**
+     * Processes a GetDataResponse message and updates internal state. Does not broadcast updates to the P2P network
+     * or domain listeners.
+     */
+    public void processGetDataResponse(GetDataResponse getDataResponse, NodeAddress sender) {
+        final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+        Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+
+        long ts2 = System.currentTimeMillis();
+        AtomicInteger counter = new AtomicInteger();
+        dataSet.forEach(e -> {
+            // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
+            addProtectedStorageEntry(e, sender, null, false, false);
+            counter.getAndIncrement();
+
+        });
+        log.info("Processing {} protectedStorageEntries took {} ms.", counter.get(), System.currentTimeMillis() - ts2);
+
+                        /* // engage the firstRequest logic only if we are a seed node. Normal clients get here twice at most.
+                        if (!Capabilities.app.containsAll(Capability.SEED_NODE))
+                            firstRequest = true;*/
+
+        if (persistableNetworkPayloadSet != null /*&& firstRequest*/) {
+            ts2 = System.currentTimeMillis();
+            persistableNetworkPayloadSet.forEach(e -> {
+                if (e instanceof LazyProcessedPayload) {
+                    // We use an optimized method as many checks are not required in that case to avoid
+                    // performance issues.
+                    // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
+                    // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
+                    // trade stats stats and all account age witness data.
+
+                    // We only apply it once from first response
+                    if (!initialRequestApplied) {
+                        addPersistableNetworkPayloadFromInitialRequest(e);
+
+                    }
+                } else {
+                    // We don't broadcast here as we are only connected to the seed node and would be pointless
+                    addPersistableNetworkPayload(e, sender, false,
+                            false, false, false);
+                }
+            });
+
+            // We set initialRequestApplied to true after the loop, otherwise we would only process 1 entry
+            initialRequestApplied = true;
+
+            log.info("Processing {} persistableNetworkPayloads took {} ms.",
+                    persistableNetworkPayloadSet.size(), System.currentTimeMillis() - ts2);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
