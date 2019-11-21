@@ -263,8 +263,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                                                 int maxEntries,
                                                                                 AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
                                                                                 Capabilities peerCapabilities) {
-        Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
-
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
         AtomicInteger maxSize = new AtomicInteger(maxEntries);
         Set<PersistableNetworkPayload> result = this.appendOnlyDataStoreService.getMap().entrySet().stream()
@@ -272,10 +270,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .filter(e -> maxSize.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
                 .filter(persistableNetworkPayload -> shouldTransmitPayloadToPeer(peerCapabilities, persistableNetworkPayload))
-                .filter(payload -> {
-                    boolean notContained = tempLookupSet.add(new P2PDataStorage.ByteArray(payload.getHash()));
-                    return notContained;
-                })
                 .collect(Collectors.toSet());
 
         if (maxSize.get() <= 0)
@@ -289,7 +283,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                                                                           AtomicBoolean outProtectedStorageEntryOutputTruncated,
                                                                           Capabilities peerCapabilities) {
         Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
-        Set<Integer> lookupSet = new HashSet<>();
 
         AtomicInteger maxSize = new AtomicInteger(maxEntries);
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
@@ -315,9 +308,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 doAdd = true;
             }
             if (doAdd) {
-                boolean notContained = lookupSet.add(protectedStoragePayload.hashCode());
-                if (notContained)
-                    filteredDataSet.add(protectedStorageEntry);
+                filteredDataSet.add(protectedStorageEntry);
             }
         }
         return filteredDataSet;
