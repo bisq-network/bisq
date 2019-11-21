@@ -15,11 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core;
+package bisq.core.app;
 
 import bisq.core.alert.AlertModule;
-import bisq.core.app.AppOptionKeys;
-import bisq.core.app.BisqEnvironment;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;

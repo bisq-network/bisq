@@ -18,10 +18,10 @@
 package bisq.grpc;
 
 import bisq.core.CoreApi;
-import bisq.core.CoreModule;
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.BisqHeadlessAppMain;
 import bisq.core.app.BisqSetup;
+import bisq.core.app.CoreModule;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;

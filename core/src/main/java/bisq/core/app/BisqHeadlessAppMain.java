@@ -17,8 +17,6 @@
 
 package bisq.core.app;
 
-import bisq.core.CoreModule;
-
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
