@@ -340,19 +340,13 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     private void showSendAlertMessagePopup(Injector injector) {
         AlertManager alertManager = injector.getInstance(AlertManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new SendAlertMessageWindow(useDevPrivilegeKeys)
-                .onAddAlertMessage(alertManager::addAlertMessageIfKeyIsValid)
-                .onRemoveAlertMessage(alertManager::removeAlertMessageIfKeyIsValid)
-                .show();
+        new SendAlertMessageWindow(alertManager, useDevPrivilegeKeys).show();
     }
 
     private void showFilterPopup(Injector injector) {
         FilterManager filterManager = injector.getInstance(FilterManager.class);
         boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new FilterWindow(filterManager, useDevPrivilegeKeys)
-                .onAddFilter(filterManager::addFilterMessageIfKeyIsValid)
-                .onRemoveFilter(filterManager::removeFilterMessageIfKeyIsValid)
-                .show();
+        new FilterWindow(filterManager, useDevPrivilegeKeys).show();
     }
 
     private void showBtcEmergencyWalletPopup(Injector injector) {

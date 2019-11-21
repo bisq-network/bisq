@@ -51,23 +51,8 @@ import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
 import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
-    private SendFilterMessageHandler sendFilterMessageHandler;
-    private RemoveFilterMessageHandler removeFilterMessageHandler;
     private final FilterManager filterManager;
     private final boolean useDevPrivilegeKeys;
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Interface
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    public interface SendFilterMessageHandler {
-        boolean handle(Filter filter, String privKey);
-    }
-
-    public interface RemoveFilterMessageHandler {
-        boolean handle(String privKey);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -89,16 +74,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
         addContent();
         applyStyles();
         display();
-    }
-
-    public FilterWindow onAddFilter(SendFilterMessageHandler sendFilterMessageHandler) {
-        this.sendFilterMessageHandler = sendFilterMessageHandler;
-        return this;
-    }
-
-    public FilterWindow onRemoveFilter(RemoveFilterMessageHandler removeFilterMessageHandler) {
-        this.removeFilterMessageHandler = removeFilterMessageHandler;
-        return this;
     }
 
 
@@ -166,7 +141,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         }
         Button sendButton = new AutoTooltipButton(Res.get("filterWindow.add"));
         sendButton.setOnAction(e -> {
-            if (sendFilterMessageHandler.handle(
+            if (filterManager.addFilterMessageIfKeyIsValid(
                     new Filter(
                             readAsList(offerIdsInputTextField),
                             readAsList(nodesInputTextField),
@@ -194,7 +169,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
         removeFilterMessageButton.setOnAction(e -> {
             if (keyInputTextField.getText().length() > 0) {
-                if (removeFilterMessageHandler.handle(keyInputTextField.getText()))
+                if (filterManager.removeFilterMessageIfKeyIsValid(keyInputTextField.getText()))
                     hide();
                 else
                     new Popup<>().warning(Res.get("shared.invalidKey")).width(300).onClose(this::blurAgain).show();
