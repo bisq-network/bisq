@@ -326,7 +326,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         });
                     });
             if (sb.length() != 0) {
-                new Popup<>().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
+                new Popup().information(Res.get("dao.results.invalidVotes", sb.toString())).show();
             }
         }
     }

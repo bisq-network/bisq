@@ -143,7 +143,7 @@ public abstract class TradeStepView extends AnchorPane {
 
         errorMessageListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
-                new Popup<>().error(newValue).show();
+                new Popup().error(newValue).show();
         };
 
         clockListener = new ClockWatcher.Listener() {
@@ -174,7 +174,7 @@ public abstract class TradeStepView extends AnchorPane {
 
         if (!isMediationClosedState()) {
             tradeStepInfo.setOnAction(e -> {
-                new Popup<>().attention(Res.get("portfolio.pending.support.popup.info"))
+                new Popup().attention(Res.get("portfolio.pending.support.popup.info"))
                         .actionButtonText(Res.get("portfolio.pending.support.popup.button"))
                         .onAction(this::openSupportTicket)
                         .closeButtonText(Res.get("shared.cancel"))
@@ -527,7 +527,7 @@ public abstract class TradeStepView extends AnchorPane {
             log.error("trade.getDepositTx() or trade.getDelayedPayoutTx() was null at openMediationResultPopup. " +
                     "We add the trade to failed trades. TradeId={}", trade.getId());
             model.dataModel.addTradeToFailedTrades();
-            new Popup<>().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
+            new Popup().warning(Res.get("portfolio.pending.mediationResult.error.depositTxNull")).show();
             return;
         }
 
@@ -546,7 +546,7 @@ public abstract class TradeStepView extends AnchorPane {
         String actionButtonText = hasSelfAccepted() ?
                 Res.get("portfolio.pending.mediationResult.popup.alreadyAccepted") : Res.get("shared.accept");
 
-        acceptMediationResultPopup = new Popup<>().width(900)
+        acceptMediationResultPopup = new Popup().width(900)
                 .headLine(headLine)
                 .instruction(Res.get("portfolio.pending.mediationResult.popup.info",
                         myPayoutAmount,
@@ -562,7 +562,7 @@ public abstract class TradeStepView extends AnchorPane {
                             },
                             errorMessage -> {
                                 UserThread.execute(() -> {
-                                    new Popup<>().error(errorMessage).show();
+                                    new Popup().error(errorMessage).show();
                                     if (acceptMediationResultPopup != null) {
                                         acceptMediationResultPopup.hide();
                                         acceptMediationResultPopup = null;

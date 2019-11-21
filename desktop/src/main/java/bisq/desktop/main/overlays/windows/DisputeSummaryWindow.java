@@ -612,7 +612,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     formatter.formatCoinWithCode(sellerPayoutAmount),
                     sellerPayoutAddressString);
         }
-        new Popup<>().width(900)
+        new Popup().width(900)
                 .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
                 .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
                         formatter.formatCoinWithCode(inputAmount),
@@ -658,13 +658,13 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 @Override
                 public void onFailure(TxBroadcastException exception) {
                     log.error("TxBroadcastException at doPayout", exception);
-                    new Popup<>().error(exception.toString()).show();
+                    new Popup().error(exception.toString()).show();
                     ;
                 }
             });
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
             log.error("Exception at doPayout", e);
-            new Popup<>().error(e.toString()).show();
+            new Popup().error(e.toString()).show();
         }
     }
 
@@ -688,7 +688,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         checkNotNull(getDisputeManager(dispute)).sendDisputeResultMessage(disputeResult, dispute, text);
 
         if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
-            UserThread.runAfter(() -> new Popup<>()
+            UserThread.runAfter(() -> new Popup()
                             .attention(Res.get("disputeSummaryWindow.close.closePeer"))
                             .show(),
                     200, TimeUnit.MILLISECONDS);

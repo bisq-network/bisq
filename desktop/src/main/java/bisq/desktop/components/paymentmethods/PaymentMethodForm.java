@@ -264,7 +264,7 @@ public abstract class PaymentMethodForm {
 
     void applyTradeCurrency(TradeCurrency tradeCurrency, FiatCurrency defaultCurrency) {
         if (!defaultCurrency.equals(tradeCurrency)) {
-            new Popup<>().warning(Res.get("payment.foreign.currency"))
+            new Popup().warning(Res.get("payment.foreign.currency"))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
                         paymentAccount.setSingleTradeCurrency(tradeCurrency);

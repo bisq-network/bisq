@@ -210,7 +210,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             if (!openOfferManager.getObservableList().isEmpty()) {
                 UserThread.runAfter(() ->
-                        new Popup<>().warning(Res.get("emptyWalletWindow.openOffers.warn"))
+                        new Popup().warning(Res.get("emptyWalletWindow.openOffers.warn"))
                                 .actionButtonText(Res.get("emptyWalletWindow.openOffers.yes"))
                                 .onAction(() -> doEmptyWallet2(aesKey))
                                 .show(), 300, TimeUnit.MILLISECONDS);
@@ -231,7 +231,7 @@ public class EmptyWalletWindow extends Overlay<EmptyWalletWindow> {
                             balanceTextField.setText(getFormatter().formatCoinWithCode(getWalletService().getAvailableConfirmedBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
-                            onClose(() -> UserThread.runAfter(() -> new Popup<>()
+                            onClose(() -> UserThread.runAfter(() -> new Popup()
                                     .feedback(Res.get("emptyWalletWindow.sent.success"))
                                     .show(), Transitions.DEFAULT_DURATION, TimeUnit.MILLISECONDS));
                             doClose();

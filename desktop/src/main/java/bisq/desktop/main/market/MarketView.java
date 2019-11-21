@@ -114,13 +114,13 @@ public class MarketView extends ActivatableView<TabPane, Void> {
         keyEventEventHandler = keyEvent -> {
             if (Utilities.isCtrlPressed(KeyCode.T, keyEvent)) {
                 String allTradesWithReferralId = getAllTradesWithReferralId();
-                new Popup<>().message(StringUtils.abbreviate(allTradesWithReferralId, 600))
+                new Popup().message(StringUtils.abbreviate(allTradesWithReferralId, 600))
                         .actionButtonText(Res.get("shared.copyToClipboard"))
                         .onAction(() -> Utilities.copyToClipboard(allTradesWithReferralId))
                         .show();
             } else if (Utilities.isCtrlPressed(KeyCode.O, keyEvent)) {
                 String allOffersWithReferralId = getAllOffersWithReferralId();
-                new Popup<>().message(StringUtils.abbreviate(allOffersWithReferralId, 600))
+                new Popup().message(StringUtils.abbreviate(allOffersWithReferralId, 600))
                         .actionButtonText(Res.get("shared.copyToClipboard"))
                         .onAction(() -> Utilities.copyToClipboard(allOffersWithReferralId))
                         .show();

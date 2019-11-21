@@ -153,14 +153,14 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 log.error("onSuccess");
                 UserThread.execute(() -> {
                     String txId = result != null ? result.getHashAsString() : "null";
-                    new Popup<>().information("Transaction successful published. Transaction ID: " + txId).show();
+                    new Popup().information("Transaction successful published. Transaction ID: " + txId).show();
                 });
             }
 
             @Override
             public void onFailure(TxBroadcastException exception) {
                 log.error(exception.toString());
-                UserThread.execute(() -> new Popup<>().warning(exception.toString()).show());
+                UserThread.execute(() -> new Popup().warning(exception.toString()).show());
             }
         };
         onAction(() -> {
@@ -184,7 +184,7 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
                 } catch (AddressFormatException | WalletException | TransactionVerificationException e) {
                     log.error(e.toString());
                     e.printStackTrace();
-                    UserThread.execute(() -> new Popup<>().warning(e.toString()).show());
+                    UserThread.execute(() -> new Popup().warning(e.toString()).show());
                 }
             }
         });

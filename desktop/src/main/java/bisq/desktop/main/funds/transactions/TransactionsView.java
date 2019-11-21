@@ -356,7 +356,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     } else {
                                         if (item.isDustAttackTx()) {
                                             hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
-                                            hyperlinkWithIcon.setOnAction(event -> new Popup<>().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
                                             setGraphic(hyperlinkWithIcon);
                                         } else {
                                             setGraphic(new AutoTooltipLabel(item.getDetails()));
@@ -547,10 +547,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                     if (tradable != null)
                         btcWalletService.swapAnyTradeEntryContextToAvailableEntry(tradable.getId());
 
-                    new Popup<>().information(Res.get("funds.tx.txSent")).show();
-                }, errorMessage -> new Popup<>().warning(errorMessage).show());
+                    new Popup().information(Res.get("funds.tx.txSent")).show();
+                }, errorMessage -> new Popup().warning(errorMessage).show());
             } catch (Throwable e) {
-                new Popup<>().warning(e.getMessage()).show();
+                new Popup().warning(e.getMessage()).show();
             }
         }
     }
@@ -640,7 +640,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         });
         // This is not intended for the public so we don't translate here
         String message = stringBuilder.toString() + "\nNo. of transactions by day:" + transactionsByDayStringBuilder.toString();
-        new Popup<>().headLine("Statistical info")
+        new Popup().headLine("Statistical info")
                 .information(message)
                 .actionButtonText("Copy")
                 .onAction(() -> Utilities.copyToClipboard(message +

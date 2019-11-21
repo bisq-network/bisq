@@ -204,7 +204,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         generateNewAddressButton.setOnAction(event -> {
             boolean hasUnUsedAddress = observableList.stream().anyMatch(e -> e.getNumTxOutputs() == 0);
             if (hasUnUsedAddress) {
-                new Popup<>().warning(Res.get("funds.deposit.selectUnused")).show();
+                new Popup().warning(Res.get("funds.deposit.selectUnused")).show();
             } else {
                 AddressEntry newSavingsAddressEntry = walletService.getFreshAddressEntry();
                 updateList();

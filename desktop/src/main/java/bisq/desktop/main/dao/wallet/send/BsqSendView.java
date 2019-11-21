@@ -258,7 +258,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                             });
                 } catch (BsqChangeBelowDustException e) {
                     String msg = Res.get("popup.warning.bsqChangeBelowDustException", bsqFormatter.formatCoinWithCode(e.getOutputValue()));
-                    new Popup<>().warning(msg).show();
+                    new Popup().warning(msg).show();
                 } catch (Throwable t) {
                     handleError(t);
                 }
@@ -321,7 +321,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                     }
                 } catch (BsqChangeBelowDustException e) {
                     String msg = Res.get("popup.warning.btcChangeBelowDustException", btcFormatter.formatCoinWithCode(e.getOutputValue()));
-                    new Popup<>().warning(msg).show();
+                    new Popup().warning(msg).show();
                 } catch (Throwable t) {
                     handleError(t);
                 }
@@ -333,14 +333,14 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         if (t instanceof InsufficientMoneyException) {
             final Coin missingCoin = ((InsufficientMoneyException) t).missing;
             final String missing = missingCoin != null ? missingCoin.toFriendlyString() : "null";
-            new Popup<>().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
+            new Popup().warning(Res.get("popup.warning.insufficientBtcFundsForBsqTx", missing))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
         } else {
             log.error(t.toString());
             t.printStackTrace();
-            new Popup<>().warning(t.getMessage()).show();
+            new Popup().warning(t.getMessage()).show();
         }
     }
 
@@ -352,7 +352,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                                     CoinFormatter amountFormatter, // can be BSQ or BTC formatter
                                     CoinFormatter feeFormatter,
                                     ResultHandler resultHandler) {
-        new Popup<>().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
+        new Popup().headLine(Res.get("dao.wallet.send.sendFunds.headline"))
                 .confirmation(Res.get("dao.wallet.send.sendFunds.details",
                         amountFormatter.formatCoinWithCode(receiverAmount),
                         address,
@@ -370,7 +370,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
 
                         @Override
                         public void onFailure(TxBroadcastException exception) {
-                            new Popup<>().warning(exception.toString());
+                            new Popup().warning(exception.toString());
                         }
                     });
                     resultHandler.handleResult();

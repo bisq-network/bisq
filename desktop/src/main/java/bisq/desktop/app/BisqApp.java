@@ -65,7 +65,6 @@ import javafx.stage.StageStyle;
 
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
@@ -149,7 +148,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     @Override
     public void stop() {
         if (!shutDownRequested) {
-            new Popup<>().headLine(Res.get("popup.shutDownInProgress.headline"))
+            new Popup().headLine(Res.get("popup.shutDownInProgress.headline"))
                     .backgroundInfo(Res.get("popup.shutDownInProgress.msg"))
                     .hideCloseButton()
                     .useAnimation(false)
@@ -182,7 +181,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 try {
                     if (!popupOpened) {
                         popupOpened = true;
-                        new Popup<>().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
+                        new Popup().error(Objects.requireNonNullElse(throwable.getMessage(), throwable.toString()))
                                 .onClose(() -> popupOpened = false)
                                 .show();
                     }
@@ -296,12 +295,12 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     if (walletsManager.areWalletsAvailable())
                         new ShowWalletDataWindow(walletsManager).show();
                     else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
                     if (injector.getInstance(BtcWalletService.class).isWalletReady())
                         injector.getInstance(ManualPayoutTxWindow.class).show();
                     else
-                        new Popup<>().warning(Res.get("popup.warning.walletNotInitialized")).show();
+                        new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
                     if (Utilities.isAltOrCtrlPressed(KeyCode.Z, keyEvent))
                         showDebugWindow(scene, injector);
@@ -327,7 +326,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         // We show a popup to inform user that open offers will be removed if Bisq is not running.
         String key = "showOpenOfferWarnPopupAtShutDown";
         if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
-            new Popup<>().information(Res.get("popup.info.shutDownWithOpenOffers"))
+            new Popup().information(Res.get("popup.info.shutDownWithOpenOffers"))
                     .dontShowAgainId(key)
                     .useShutDownButton()
                     .closeButtonText(Res.get("shared.cancel"))

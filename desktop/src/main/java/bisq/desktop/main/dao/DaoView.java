@@ -74,7 +74,7 @@ public class DaoView extends ActivatableView<TabPane, Void> {
         this.preferences = preferences;
 
         voteRevealService.addVoteRevealTxPublishedListener(txId -> {
-            new Popup<>().headLine(Res.get("dao.voteReveal.txPublished.headLine"))
+            new Popup().headLine(Res.get("dao.voteReveal.txPublished.headLine"))
                     .feedback(Res.get("dao.voteReveal.txPublished", txId))
                     .show();
         });

@@ -202,7 +202,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         // we use a hidden emergency shortcut to open support ticket
         keyEventEventHandler = keyEvent -> {
             if (Utilities.isAltOrCtrlPressed(KeyCode.O, keyEvent)) {
-                Popup popup = new Popup<>();
+                Popup popup = new Popup();
                 popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
                         .message(Res.get("portfolio.pending.openSupportTicket.msg"))
                         .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
@@ -211,7 +211,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                         .onClose(popup::hide)
                         .show();
             } else if (Utilities.isAltPressed(KeyCode.Y, keyEvent)) {
-                new Popup<>().warning(Res.get("portfolio.pending.removeFailedTrade"))
+                new Popup().warning(Res.get("portfolio.pending.removeFailedTrade"))
                         .onAction(model.dataModel::onMoveToFailedTrades)
                         .show();
             }
