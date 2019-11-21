@@ -256,7 +256,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             return true;
 
         // Otherwise, only transmit the Payload if the peer supports all capabilities required by the payload
-        return peerCapabilities.containsAll(((CapabilityRequiringPayload) payload).getRequiredCapabilities());
+        boolean shouldTransmit = peerCapabilities.containsAll(((CapabilityRequiringPayload) payload).getRequiredCapabilities());
+
+        if (!shouldTransmit) {
+            log.debug("We do not send the message to the peer because they do not support the required capability for that message type.\n" +
+                    "storagePayload is: " + Utilities.toTruncatedString(payload));
+        }
+
+        return shouldTransmit;
     }
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
@@ -301,9 +308,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
                 if (shouldTransmitPayloadToPeer(peerCapabilities, protectedStoragePayload))
                     doAdd = true;
-                else
-                    log.debug("We do not send the message to the peer because they do not support the required capability for that message type.\n" +
-                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
             } else {
                 doAdd = true;
             }
