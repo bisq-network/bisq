@@ -96,6 +96,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -226,6 +227,34 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     /**
+     * Generic function that can be used to filter a Map<ByteArray, ProtectedStorageEntry || PersistableNetworkPayload>
+     * by a given set of keys and peer capabilities.
+     */
+    static private <T extends NetworkPayload> Set<T> filterKnownHashes(
+            Map<ByteArray, T> toFilter,
+            Function<T, ? extends NetworkPayload> objToPayload,
+            Set<ByteArray> knownHashes,
+            Capabilities peerCapabilities,
+            int maxEntries,
+            AtomicBoolean outTruncated) {
+
+        AtomicInteger limit = new AtomicInteger(maxEntries);
+
+        Set<T> filteredResults = toFilter.entrySet().stream()
+                .filter(e -> !knownHashes.contains(e.getKey()))
+                .filter(e -> limit.decrementAndGet() >= 0)
+                .map(Map.Entry::getValue)
+                .filter(networkPayload -> shouldTransmitPayloadToPeer(peerCapabilities,
+                                                                      objToPayload.apply(networkPayload)))
+                .collect(Collectors.toSet());
+
+        if (limit.get() <= 0)
+            outTruncated.set(true);
+
+        return filteredResults;
+    }
+
+    /**
      * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
      */
     public GetDataResponse buildGetDataResponse(
@@ -235,28 +264,26 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             AtomicBoolean outProtectedStorageEntryOutputTruncated,
             Capabilities peerCapabilities) {
 
-        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
-        AtomicInteger maxSizePersistableNetworkPayloads = new AtomicInteger(maxEntriesPerType);
-        Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads = this.appendOnlyDataStoreService.getMap().entrySet().stream()
-                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
-                .filter(e -> maxSizePersistableNetworkPayloads.decrementAndGet() >= 0)
-                .map(Map.Entry::getValue)
-                .filter(persistableNetworkPayload -> shouldTransmitPayloadToPeer(peerCapabilities, persistableNetworkPayload))
-                .collect(Collectors.toSet());
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray =
+                P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
 
-        if (maxSizePersistableNetworkPayloads.get() <= 0)
-            outPersistableNetworkPayloadOutputTruncated.set(true);
+        Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
+                filterKnownHashes(
+                        this.appendOnlyDataStoreService.getMap(),
+                        Function.identity(),
+                        excludedKeysAsByteArray,
+                        peerCapabilities,
+                        maxEntriesPerType,
+                        outPersistableNetworkPayloadOutputTruncated);
 
-        AtomicInteger maxSizeProtectedStorageEntries = new AtomicInteger(maxEntriesPerType);
-        Set<ProtectedStorageEntry> filteredProtectedStorageEntries = this.map.entrySet().stream()
-                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
-                .filter(e -> maxSizeProtectedStorageEntries.decrementAndGet() >= 0)
-                .map(Map.Entry::getValue)
-                .filter(protectedStorageEntry -> shouldTransmitPayloadToPeer(peerCapabilities, protectedStorageEntry.getProtectedStoragePayload()))
-                .collect(Collectors.toSet());
-
-        if (maxSizeProtectedStorageEntries.get() <= 0)
-            outProtectedStorageEntryOutputTruncated.set(true);
+        Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
+                filterKnownHashes(
+                        this.map,
+                        ProtectedStorageEntry::getProtectedStoragePayload,
+                        excludedKeysAsByteArray,
+                        peerCapabilities,
+                        maxEntriesPerType,
+                        outProtectedStorageEntryOutputTruncated);
 
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
@@ -268,7 +295,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     /**
      * Returns true if a Payload should be transmit to a peer given the peer's supported capabilities.
      */
-    private boolean shouldTransmitPayloadToPeer(Capabilities peerCapabilities, NetworkPayload payload) {
+    private static boolean shouldTransmitPayloadToPeer(Capabilities peerCapabilities, NetworkPayload payload) {
 
         // Sanity check to ensure this isn't used outside P2PDataStorage
         if (!(payload instanceof ProtectedStoragePayload || payload instanceof PersistableNetworkPayload))
