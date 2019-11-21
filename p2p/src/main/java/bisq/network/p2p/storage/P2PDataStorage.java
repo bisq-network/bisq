@@ -25,6 +25,8 @@ import bisq.network.p2p.network.MessageListener;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.BroadcastHandler;
 import bisq.network.p2p.peers.Broadcaster;
+import bisq.network.p2p.peers.getdata.messages.GetDataRequest;
+import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
 import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.messages.AddDataMessage;
@@ -34,6 +36,7 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 import bisq.network.p2p.storage.messages.RefreshOfferMessage;
 import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.messages.RemoveMailboxDataMessage;
+import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.DateTolerantPayload;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.MailboxStoragePayload;
@@ -90,6 +93,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -109,6 +113,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
 
     @VisibleForTesting
     public static int CHECK_TTL_INTERVAL_SEC = 60;
+
+    private static final int MAX_ENTRIES = 10000;
 
     private final Broadcaster broadcaster;
     private final AppendOnlyDataStoreService appendOnlyDataStoreService;
@@ -217,6 +223,91 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         excludedKeys.addAll(excludedKeysFromPersistedEntryMap);
 
         return excludedKeys;
+    }
+
+    /**
+     * Returns a GetDataResponse object that contains the Payloads known locally, but not remotely.
+     */
+    public GetDataResponse buildGetDataResponse(GetDataRequest getDataRequest, Connection connection) {
+        return new GetDataResponse(getFilteredProtectedStorageEntries(getDataRequest, connection),
+                getFilteredPersistableNetworkPayload(getDataRequest, connection),
+                getDataRequest.getNonce(),
+                getDataRequest instanceof GetUpdatedDataRequest);
+    }
+
+    private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
+                                                                                Connection connection) {
+        Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
+
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
+        Set<PersistableNetworkPayload> result = this.appendOnlyDataStoreService.getMap().entrySet().stream()
+                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
+                .filter(e -> maxSize.decrementAndGet() >= 0)
+                .map(Map.Entry::getValue)
+                .filter(connection::noCapabilityRequiredOrCapabilityIsSupported)
+                .filter(payload -> {
+                    boolean notContained = tempLookupSet.add(new P2PDataStorage.ByteArray(payload.getHash()));
+                    return notContained;
+                })
+                .collect(Collectors.toSet());
+        if (maxSize.get() <= 0) {
+            log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+        log.info("The getData request from peer with {} contains {} PersistableNetworkPayload entries ",
+                connectionInfo, result.size());
+        return result;
+    }
+
+    private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
+                                                                          Connection connection) {
+        Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
+        Set<Integer> lookupSet = new HashSet<>();
+        String connectionInfo = "connectionInfo" + connection.getPeersNodeAddressOptional()
+                .map(e -> "node address " + e.getFullAddress())
+                .orElseGet(() -> "connection UID " + connection.getUid());
+
+        AtomicInteger maxSize = new AtomicInteger(MAX_ENTRIES);
+        Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
+        Set<ProtectedStorageEntry> filteredSet = this.map.entrySet().stream()
+                .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
+                .filter(e -> maxSize.decrementAndGet() >= 0)
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+        if (maxSize.get() <= 0) {
+            log.warn("The getData request from peer with {} caused too much ProtectedStorageEntry " +
+                            "entries to get delivered. We limited the entries for the response to {} entries",
+                    connectionInfo, MAX_ENTRIES);
+        }
+        log.info("getFilteredProtectedStorageEntries " + filteredSet.size());
+
+        for (ProtectedStorageEntry protectedStorageEntry : filteredSet) {
+            final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
+            boolean doAdd = false;
+            if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
+                if (connection.getCapabilities().containsAll(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
+                    doAdd = true;
+                else
+                    log.debug("We do not send the message to the peer because they do not support the required capability for that message type.\n" +
+                            "storagePayload is: " + Utilities.toTruncatedString(protectedStoragePayload));
+            } else {
+                doAdd = true;
+            }
+            if (doAdd) {
+                boolean notContained = lookupSet.add(protectedStoragePayload.hashCode());
+                if (notContained)
+                    filteredDataSet.add(protectedStorageEntry);
+            }
+        }
+
+        log.info("The getData request from peer with {} contains {} ProtectedStorageEntry entries ",
+                connectionInfo, filteredDataSet.size());
+        return filteredDataSet;
     }
 
 
