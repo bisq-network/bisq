@@ -230,6 +230,28 @@ configure(project(':p2p')) {
 
 
 configure(project(':core')) {
+    apply plugin: 'com.google.protobuf'
+
+    // FIXME we dont want to have one src dir inside the other....
+    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main"
+    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
+
+    protobuf {
+        protoc {
+            artifact = "com.google.protobuf:protoc:$protobufVersion"
+        }
+        plugins {
+            grpc {
+                artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+            }
+        }
+        generateProtoTasks {
+            all()*.plugins {
+                grpc {}
+            }
+        }
+    }
+
     dependencies {
         compile project(':assets')
         compile project(':p2p')
@@ -259,6 +281,40 @@ configure(project(':core')) {
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+        compile "com.google.protobuf:protobuf-java:$protobufVersion"
+        compile "com.google.api.grpc:proto-google-common-protos:$commonProtosVersion"
+
+        // FIXME Not clear which of the following libs have a newer version of guava which is not compatible with ours
+        compile ("io.grpc:grpc-alts:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        compile ("io.grpc:grpc-netty:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        compile ("io.grpc:grpc-protobuf:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        compile ("io.grpc:grpc-stub:$grpcVersion") {
+            exclude(module: 'guava')
+        }
+
+        // Used for TLS in HelloWorldServerTls
+        compile "io.netty:netty-tcnative-boringssl-static:${nettyTcNativeVersion}"
+
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "javax.annotation:javax.annotation-api:1.2"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
+        testCompile "io.grpc:grpc-testing:${grpcVersion}"
+        testCompile "org.mockito:mockito-core:$mockitoVersion"
+        testCompile "org.springframework:spring-test:$springVersion"
+        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
+
         testCompile "org.mockito:mockito-core:$mockitoVersion"
         testCompile "org.springframework:spring-test:$springVersion"
         testCompile "com.natpryce:make-it-easy:$easyVersion"
@@ -277,6 +333,8 @@ configure(project(':cli')) {
 
     dependencies {
         compile project(':core')
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
 
@@ -417,65 +475,12 @@ configure(project(':statsnode')) {
 }
 
 configure(project(':grpc')) {
-    apply plugin: 'com.google.protobuf'
-
     mainClassName = 'bisq.grpc.BisqGrpcServerMain'
-
-    // FIXME we dont want to have one src dir inside the other....
-    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main"
-    sourceSets.main.java.srcDir "$buildDir/generated/source/proto/main/java"
-
-    protobuf {
-        protoc {
-            artifact = "com.google.protobuf:protoc:$protobufVersion"
-        }
-        plugins {
-            grpc {
-                artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
-            }
-        }
-        generateProtoTasks {
-            all()*.plugins {
-                grpc {}
-            }
-        }
-    }
 
     dependencies {
         compile project(':core')
-        compile "com.google.protobuf:protobuf-java:$protobufVersion"
-        compile "com.google.api.grpc:proto-google-common-protos:$commonProtosVersion"
-
-        // FIXME Not clear which of the following libs have a newer version of guava which is not compatible with ours
-        compile ("io.grpc:grpc-alts:$grpcVersion") {
-            exclude(module: 'guava')
-        }
-
-        compile ("io.grpc:grpc-netty:$grpcVersion") {
-            exclude(module: 'guava')
-        }
-
-
-        compile ("io.grpc:grpc-protobuf:$grpcVersion") {
-            exclude(module: 'guava')
-        }
-
-        compile ("io.grpc:grpc-stub:$grpcVersion") {
-            exclude(module: 'guava')
-        }
-
-        // Used for TLS in HelloWorldServerTls
-        compile "io.netty:netty-tcnative-boringssl-static:${nettyTcNativeVersion}"
-
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         compileOnly "javax.annotation:javax.annotation-api:1.2"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-
-        testCompile "io.grpc:grpc-testing:${grpcVersion}"
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
-        testCompile "org.springframework:spring-test:$springVersion"
-        testCompile "com.natpryce:make-it-easy:$easyVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
