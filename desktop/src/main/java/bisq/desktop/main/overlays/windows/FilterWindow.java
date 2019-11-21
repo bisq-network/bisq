@@ -22,12 +22,17 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.app.AppOptionKeys;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
+
+import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -54,11 +59,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
     private final FilterManager filterManager;
     private final boolean useDevPrivilegeKeys;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public FilterWindow(FilterManager filterManager, boolean useDevPrivilegeKeys) {
+    @Inject
+    public FilterWindow(FilterManager filterManager,
+                        @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.filterManager = filterManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
@@ -75,11 +78,6 @@ public class FilterWindow extends Overlay<FilterWindow> {
         applyStyles();
         display();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Protected
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void setupKeyHandler(Scene scene) {

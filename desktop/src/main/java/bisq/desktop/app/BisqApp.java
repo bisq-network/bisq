@@ -273,9 +273,9 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.B, keyEvent)) {
                     showBsqEmergencyWalletPopup(injector);
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.M, keyEvent)) {
-                    showSendAlertMessagePopup(injector);
+                    injector.getInstance(SendAlertMessageWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.F, keyEvent)) {
-                    showFilterPopup(injector);
+                    injector.getInstance(FilterWindow.class).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.UP, keyEvent)) {
                     log.warn("We re-published all proposalPayloads and blindVotePayloads to the P2P network.");
                     injector.getInstance(MissingDataRequestService.class).reRepublishAllGovernanceData();
@@ -334,18 +334,6 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         } else {
             stop();
         }
-    }
-
-    private void showSendAlertMessagePopup(Injector injector) {
-        AlertManager alertManager = injector.getInstance(AlertManager.class);
-        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new SendAlertMessageWindow(alertManager, useDevPrivilegeKeys).show();
-    }
-
-    private void showFilterPopup(Injector injector) {
-        FilterManager filterManager = injector.getInstance(FilterManager.class);
-        boolean useDevPrivilegeKeys = injector.getInstance(Key.get(Boolean.class, Names.named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS)));
-        new FilterWindow(filterManager, useDevPrivilegeKeys).show();
     }
 
     private void showBtcEmergencyWalletPopup(Injector injector) {

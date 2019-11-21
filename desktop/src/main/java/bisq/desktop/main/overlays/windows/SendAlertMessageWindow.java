@@ -25,10 +25,15 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.Alert;
+import bisq.core.app.AppOptionKeys;
 import bisq.core.locale.Res;
 
 import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
+
+import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -50,11 +55,9 @@ public class SendAlertMessageWindow extends Overlay<SendAlertMessageWindow> {
     private final AlertManager alertManager;
     private final boolean useDevPrivilegeKeys;
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public SendAlertMessageWindow(AlertManager alertManager, boolean useDevPrivilegeKeys) {
+    @Inject
+    public SendAlertMessageWindow(AlertManager alertManager,
+                                  @Named(AppOptionKeys.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.alertManager = alertManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
