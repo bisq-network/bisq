@@ -17,6 +17,20 @@
 
 package bisq.cli.app;
 
+import bisq.core.grpc.GetBalanceGrpc;
+import bisq.core.grpc.GetBalanceRequest;
+import bisq.core.grpc.GetOffersGrpc;
+import bisq.core.grpc.GetOffersRequest;
+import bisq.core.grpc.GetPaymentAccountsGrpc;
+import bisq.core.grpc.GetPaymentAccountsRequest;
+import bisq.core.grpc.GetTradeStatisticsGrpc;
+import bisq.core.grpc.GetTradeStatisticsRequest;
+import bisq.core.grpc.GetVersionGrpc;
+import bisq.core.grpc.GetVersionRequest;
+import bisq.core.grpc.PlaceOfferGrpc;
+import bisq.core.grpc.PlaceOfferRequest;
+import bisq.core.grpc.StopServerGrpc;
+import bisq.core.grpc.StopServerRequest;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -39,20 +53,6 @@ import static java.lang.String.format;
 
 
 
-import bisq.grpc.protobuf.GetBalanceGrpc;
-import bisq.grpc.protobuf.GetBalanceRequest;
-import bisq.grpc.protobuf.GetOffersGrpc;
-import bisq.grpc.protobuf.GetOffersRequest;
-import bisq.grpc.protobuf.GetPaymentAccountsGrpc;
-import bisq.grpc.protobuf.GetPaymentAccountsRequest;
-import bisq.grpc.protobuf.GetTradeStatisticsGrpc;
-import bisq.grpc.protobuf.GetTradeStatisticsRequest;
-import bisq.grpc.protobuf.GetVersionGrpc;
-import bisq.grpc.protobuf.GetVersionRequest;
-import bisq.grpc.protobuf.PlaceOfferGrpc;
-import bisq.grpc.protobuf.PlaceOfferRequest;
-import bisq.grpc.protobuf.StopServerGrpc;
-import bisq.grpc.protobuf.StopServerRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;

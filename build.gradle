@@ -336,7 +336,6 @@ configure(project(':desktop')) {
 
     dependencies {
         compile project(':core')
-        compile project(':grpc')
         compile "net.glxn:qrgen:$qrgenVersion"
         compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
         compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"

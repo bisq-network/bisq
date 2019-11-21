@@ -17,11 +17,12 @@
 
 package bisq.grpc;
 
-import bisq.core.CoreApi;
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.BisqHeadlessAppMain;
 import bisq.core.app.BisqSetup;
 import bisq.core.app.CoreModule;
+import bisq.core.grpc.BisqGrpcServer;
+import bisq.core.grpc.CoreApi;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;

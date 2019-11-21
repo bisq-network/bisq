@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.grpc;
+package bisq.core.grpc;
 
-import bisq.core.CoreApi;
 import bisq.core.offer.Offer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.handlers.TransactionResultHandler;
@@ -32,30 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.grpc.protobuf.GetBalanceGrpc;
-import bisq.grpc.protobuf.GetBalanceReply;
-import bisq.grpc.protobuf.GetBalanceRequest;
-import bisq.grpc.protobuf.GetOffersGrpc;
-import bisq.grpc.protobuf.GetOffersReply;
-import bisq.grpc.protobuf.GetOffersRequest;
-import bisq.grpc.protobuf.GetPaymentAccountsGrpc;
-import bisq.grpc.protobuf.GetPaymentAccountsReply;
-import bisq.grpc.protobuf.GetPaymentAccountsRequest;
-import bisq.grpc.protobuf.GetTradeStatisticsGrpc;
-import bisq.grpc.protobuf.GetTradeStatisticsReply;
-import bisq.grpc.protobuf.GetTradeStatisticsRequest;
-import bisq.grpc.protobuf.GetVersionGrpc;
-import bisq.grpc.protobuf.GetVersionReply;
-import bisq.grpc.protobuf.GetVersionRequest;
-import bisq.grpc.protobuf.PlaceOfferGrpc;
-import bisq.grpc.protobuf.PlaceOfferReply;
-import bisq.grpc.protobuf.PlaceOfferRequest;
-import bisq.grpc.protobuf.StopServerGrpc;
-import bisq.grpc.protobuf.StopServerReply;
-import bisq.grpc.protobuf.StopServerRequest;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
+
 
 /**
  * gRPC server. Gets a instance of BisqFacade passed to access data from the running Bisq instance.
@@ -199,7 +178,7 @@ public class BisqGrpcServer {
      * Await termination on the main thread since the grpc library uses daemon threads.
      * Only used for headless version
      */
-    void blockUntilShutdown() throws InterruptedException {
+    public void blockUntilShutdown() throws InterruptedException {
         if (server != null) {
             server.awaitTermination();
         }

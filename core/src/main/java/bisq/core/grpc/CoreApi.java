@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core;
+package bisq.core.grpc;
 
 import bisq.core.btc.Balances;
 import bisq.core.monetary.Price;

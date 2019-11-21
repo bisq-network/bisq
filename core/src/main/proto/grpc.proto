@@ -21,7 +21,7 @@ package io.bisq.protobuffer;
 // FIXME: IntelliJ does not recognize the import but the compiler does
 import "pb.proto";
 
-option java_package = "bisq.grpc.protobuf";
+option java_package = "bisq.core.grpc";
 option java_multiple_files = true;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
