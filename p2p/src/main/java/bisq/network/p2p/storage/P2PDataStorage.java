@@ -53,6 +53,7 @@ import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Capabilities;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
@@ -232,19 +233,36 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             int maxEntriesPerType,
             AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
             AtomicBoolean outProtectedStorageEntryOutputTruncated,
-            Connection connection) {
+            Capabilities peerCapabilities) {
 
         return new GetDataResponse(
-                getFilteredProtectedStorageEntries(getDataRequest, maxEntriesPerType, outProtectedStorageEntryOutputTruncated, connection),
-                getFilteredPersistableNetworkPayload(getDataRequest, maxEntriesPerType, outPersistableNetworkPayloadOutputTruncated, connection),
+                getFilteredProtectedStorageEntries(getDataRequest, maxEntriesPerType, outProtectedStorageEntryOutputTruncated, peerCapabilities),
+                getFilteredPersistableNetworkPayload(getDataRequest, maxEntriesPerType, outPersistableNetworkPayloadOutputTruncated, peerCapabilities),
                 getDataRequest.getNonce(),
                 getDataRequest instanceof GetUpdatedDataRequest);
+    }
+
+    /**
+     * Returns true if a Payload should be transmit to a peer given the peer's supported capabilities.
+     */
+    private boolean shouldTransmitPayloadToPeer(Capabilities peerCapabilities, NetworkPayload payload) {
+
+        // Sanity check to ensure this isn't used outside P2PDataStorage
+        if (!(payload instanceof ProtectedStoragePayload || payload instanceof PersistableNetworkPayload))
+            return false;
+
+        // If the payload doesn't have a required capability, we should transmit it
+        if (!(payload instanceof CapabilityRequiringPayload))
+            return true;
+
+        // Otherwise, only transmit the Payload if the peer supports all capabilities required by the payload
+        return peerCapabilities.containsAll(((CapabilityRequiringPayload) payload).getRequiredCapabilities());
     }
 
     private Set<PersistableNetworkPayload> getFilteredPersistableNetworkPayload(GetDataRequest getDataRequest,
                                                                                 int maxEntries,
                                                                                 AtomicBoolean outPersistableNetworkPayloadOutputTruncated,
-                                                                                Connection connection) {
+                                                                                Capabilities peerCapabilities) {
         Set<P2PDataStorage.ByteArray> tempLookupSet = new HashSet<>();
 
         Set<P2PDataStorage.ByteArray> excludedKeysAsByteArray = P2PDataStorage.ByteArray.convertBytesSetToByteArraySet(getDataRequest.getExcludedKeys());
@@ -253,7 +271,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .filter(e -> !excludedKeysAsByteArray.contains(e.getKey()))
                 .filter(e -> maxSize.decrementAndGet() >= 0)
                 .map(Map.Entry::getValue)
-                .filter(connection::noCapabilityRequiredOrCapabilityIsSupported)
+                .filter(persistableNetworkPayload -> shouldTransmitPayloadToPeer(peerCapabilities, persistableNetworkPayload))
                 .filter(payload -> {
                     boolean notContained = tempLookupSet.add(new P2PDataStorage.ByteArray(payload.getHash()));
                     return notContained;
@@ -269,7 +287,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     private Set<ProtectedStorageEntry> getFilteredProtectedStorageEntries(GetDataRequest getDataRequest,
                                                                           int maxEntries,
                                                                           AtomicBoolean outProtectedStorageEntryOutputTruncated,
-                                                                          Connection connection) {
+                                                                          Capabilities peerCapabilities) {
         Set<ProtectedStorageEntry> filteredDataSet = new HashSet<>();
         Set<Integer> lookupSet = new HashSet<>();
 
@@ -288,7 +306,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             final ProtectedStoragePayload protectedStoragePayload = protectedStorageEntry.getProtectedStoragePayload();
             boolean doAdd = false;
             if (protectedStoragePayload instanceof CapabilityRequiringPayload) {
-                if (connection.getCapabilities().containsAll(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities()))
+                if (shouldTransmitPayloadToPeer(peerCapabilities, protectedStoragePayload))
                     doAdd = true;
                 else
                     log.debug("We do not send the message to the peer because they do not support the required capability for that message type.\n" +

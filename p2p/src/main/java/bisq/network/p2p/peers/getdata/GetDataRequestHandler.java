@@ -94,7 +94,7 @@ public class GetDataRequestHandler {
                 MAX_ENTRIES,
                 outPersistableNetworkPayloadOutputTruncated,
                 outProtectedStoragePayloadOutputTruncated,
-                connection);
+                connection.getCapabilities());
 
         if (outPersistableNetworkPayloadOutputTruncated.get()) {
             log.warn("The getData request from peer with {} caused too much PersistableNetworkPayload " +
