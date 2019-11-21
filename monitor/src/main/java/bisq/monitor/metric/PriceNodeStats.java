@@ -40,6 +40,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,72 +82,81 @@ public class PriceNodeStats extends Metric {
             checkNotNull(tor, "tor must not be null");
             Socks5Proxy proxy = tor.getProxy();
 
+            String[] hosts = configuration.getProperty(HOSTS, "").split(",");
+
+            Collections.shuffle(Arrays.asList(hosts));
+
             // for each configured host
-            for (String current : configuration.getProperty(HOSTS, "").split(",")) {
+            for (String current : hosts) {
                 Map<String, String> result = new HashMap<>();
                 // parse Url
                 NodeAddress tmp = OnionParser.getNodeAddress(current);
 
                 // connect
-                SocksSocket socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
+                try {
+                    SocksSocket socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
 
-                // prepare to receive data
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    // prepare to receive data
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                // ask for fee data
-                PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
-                out.println("GET /getFees/");
-                out.println();
-                out.flush();
+                    // ask for fee data
+                    PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+                    out.println("GET /getFees/");
+                    out.println();
+                    out.flush();
 
-                // sift through the received lines and see if we got something json-like
-                String line;
-                while((line = in.readLine()) != null) {
-                    Matcher matcher = stringNumberPattern.matcher(line);
-                    if(matcher.find())
-                        if(!IGNORE.contains(matcher.group(1)))
-                            result.put("fees." + matcher.group(1), matcher.group(2));
+                    // sift through the received lines and see if we got something json-like
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        Matcher matcher = stringNumberPattern.matcher(line);
+                        if (matcher.find())
+                            if (!IGNORE.contains(matcher.group(1)))
+                                result.put("fees." + matcher.group(1), matcher.group(2));
+                    }
+
+                    in.close();
+                    out.close();
+                    socket.close();
+
+                    // connect
+                    socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
+
+                    // prepare to receive data
+                    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+                    // ask for exchange rate data
+                    out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
+                    out.println("GET /getAllMarketPrices/");
+                    out.println();
+                    out.flush();
+
+                    String currencyCode = "";
+                    while ((line = in.readLine()) != null) {
+                        Matcher currencyCodeMatcher = currencyCodePattern.matcher(line);
+                        Matcher priceMatcher = pricePattern.matcher(line);
+                        if (currencyCodeMatcher.find()) {
+                            currencyCode = currencyCodeMatcher.group(1);
+                            if (!assets.contains(currencyCode))
+                                currencyCode = "";
+                        } else if (!"".equals(currencyCode) && priceMatcher.find())
+                            result.put("price." + currencyCode, priceMatcher.group(1));
+                    }
+
+                    // close all the things
+                    in.close();
+                    out.close();
+                    socket.close();
+
+                    // report
+                    reporter.report(result, getName());
+
+                    // only ask for data as long as we got none
+                    if (!result.isEmpty())
+                        break;
+                } catch (IOException e) {
+                    log.error("{} seems to be down. Trying next configured price node.", tmp.getHostName());
+                    e.printStackTrace();
                 }
-
-                in.close();
-                out.close();
-                socket.close();
-
-                // connect
-                socket = new SocksSocket(proxy, tmp.getHostName(), tmp.getPort());
-
-                // prepare to receive data
-                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                // ask for exchange rate data
-                out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())));
-                out.println("GET /getAllMarketPrices/");
-                out.println();
-                out.flush();
-
-                String currencyCode = "";
-                while((line = in.readLine()) != null) {
-                    Matcher currencyCodeMatcher = currencyCodePattern.matcher(line);
-                    Matcher priceMatcher = pricePattern.matcher(line);
-                    if(currencyCodeMatcher.find()) {
-                        currencyCode = currencyCodeMatcher.group(1);
-                        if(!assets.contains(currencyCode))
-                            currencyCode = "";
-                    } else if(!"".equals(currencyCode) && priceMatcher.find())
-                        result.put("price." + currencyCode, priceMatcher.group(1));
-                }
-
-                // close all the things
-                in.close();
-                out.close();
-                socket.close();
-
-                // report
-                reporter.report(result, getName());
-
-                // only ask for data as long as we got none
-                if(!result.isEmpty())
-                    break;
             }
         } catch (TorCtlException | IOException e) {
             // TODO Auto-generated catch block
